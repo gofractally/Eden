@@ -75,7 +75,7 @@ class datastream {
       *  @return true
       */
       inline bool read( char* d, size_t s) {
-        eosio::check( size_t(_end - _pos) >= (size_t)s, "read" );
+        eosio::check( size_t(_end - _pos) >= (size_t)s, "datastream attempted to read past the end" );
         memcpy( d, _pos, s );
         _pos += s;
         return true;
@@ -95,7 +95,7 @@ class datastream {
       *  @return true
       */
       inline bool write( const char* d, size_t s) {
-        eosio::check( _end - _pos >= (int32_t)s, "write" );
+        eosio::check( _end - _pos >= (int32_t)s, "datastream attempted to write past the end" );
         memcpy( (void*)_pos, d, s );
         _pos += s;
         return true;
@@ -390,6 +390,22 @@ T unpack( const char* buffer, size_t len ) {
    datastream<const char*> ds(buffer,len);
    ds >> result;
    return result;
+}
+
+/**
+ * Unpack data inside a fixed size buffer as T
+ *
+ * @ingroup datastream
+ * @tparam T - Type of the unpacked data
+ * @param res - Variable to fill with the unpacking
+ * @param buffer - Pointer to the buffer
+ * @param len - Length of the buffer
+ * @return T - The unpacked data
+ */
+template<typename T>
+void unpack( T& res, const char* buffer, size_t len ) {
+   datastream<const char*> ds(buffer,len);
+   ds >> res;
 }
 
 /**
