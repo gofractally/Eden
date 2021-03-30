@@ -4,10 +4,10 @@
  */
 #pragma once
 
-#include "../../contracts/eosio/action.hpp"
-#include "../../core/eosio/name.hpp"
-#include "../../core/eosio/serialize.hpp"
-#include "../../core/eosio/fixed_bytes.hpp"
+#include <eosio/action.hpp>
+#include <eosio/name.hpp>
+#include <eosio/serialize.hpp>
+#include <eosio/fixed_bytes.hpp>
 
 #include <vector>
 #include <tuple>
@@ -262,7 +262,7 @@ struct secondary_index_db_functions<TYPE> {\
    }\
 };
 
-#define WRAP_SECONDARY_ARRAY_TYPE(IDX, TYPE)\
+#define WRAP_SECONDARY_ARRAY_TYPE(IDX, TYPE, ELEMTYPE)   \
 template<>\
 struct secondary_index_db_functions<TYPE> {\
    static int32_t db_idx_next( int32_t iterator, uint64_t* primary )          { return internal_use_do_not_use::db_##IDX##_next( iterator, primary ); } \
@@ -270,22 +270,34 @@ struct secondary_index_db_functions<TYPE> {\
    static void    db_idx_remove( int32_t iterator )                           { internal_use_do_not_use::db_##IDX##_remove( iterator ); } \
    static int32_t db_idx_end( uint64_t code, uint64_t scope, uint64_t table ) { return internal_use_do_not_use::db_##IDX##_end( code, scope, table ); } \
    static int32_t db_idx_store( uint64_t scope, uint64_t table, uint64_t payer, uint64_t id, const TYPE& secondary ) {\
-     return internal_use_do_not_use::db_##IDX##_store( scope, table, payer, id, secondary.data(), TYPE::num_words() ); \
+     auto arr = secondary.extract_as_word_array<ELEMTYPE>(); \
+     return internal_use_do_not_use::db_##IDX##_store( scope, table, payer, id, arr.data(), arr.size() ); \
    }\
    static void    db_idx_update( int32_t iterator, uint64_t payer, const TYPE& secondary ) {\
-     internal_use_do_not_use::db_##IDX##_update( iterator, payer, secondary.data(), TYPE::num_words() ); \
+     auto arr = secondary.extract_as_word_array<ELEMTYPE>(); \
+     internal_use_do_not_use::db_##IDX##_update( iterator, payer, arr.data(), arr.size() ); \
    }\
    static int32_t db_idx_find_primary( uint64_t code, uint64_t scope, uint64_t table, uint64_t primary, TYPE& secondary ) {\
-     return internal_use_do_not_use::db_##IDX##_find_primary( code, scope, table, secondary.data(), TYPE::num_words(), primary ); \
+     decltype(secondary.extract_as_word_array<ELEMTYPE>()) arr; \
+     int32_t result = internal_use_do_not_use::db_##IDX##_find_primary( code, scope, table, arr.data(), arr.size(), primary ); \
+     secondary = TYPE(arr); \
+     return result; \
    }\
    static int32_t db_idx_find_secondary( uint64_t code, uint64_t scope, uint64_t table, const TYPE& secondary, uint64_t& primary ) {\
-     return internal_use_do_not_use::db_##IDX##_find_secondary( code, scope, table, secondary.data(), TYPE::num_words(), &primary ); \
+     auto arr = secondary.extract_as_word_array<ELEMTYPE>(); \
+     return internal_use_do_not_use::db_##IDX##_find_secondary( code, scope, table, arr.data(), arr.size(), &primary ); \
    }\
    static int32_t db_idx_lowerbound( uint64_t code, uint64_t scope, uint64_t table, TYPE& secondary, uint64_t& primary ) {\
-     return internal_use_do_not_use::db_##IDX##_lowerbound( code, scope, table, secondary.data(), TYPE::num_words(), &primary ); \
+     auto arr = secondary.extract_as_word_array<ELEMTYPE>(); \
+     int32_t result = internal_use_do_not_use::db_##IDX##_lowerbound( code, scope, table, arr.data(), arr.size(), &primary ); \
+     secondary = TYPE(arr); \
+     return result; \
    }\
    static int32_t db_idx_upperbound( uint64_t code, uint64_t scope, uint64_t table, TYPE& secondary, uint64_t& primary ) {\
-     return internal_use_do_not_use::db_##IDX##_upperbound( code, scope, table, secondary.data(), TYPE::num_words(), &primary ); \
+     auto arr = secondary.extract_as_word_array<ELEMTYPE>(); \
+     int32_t result = internal_use_do_not_use::db_##IDX##_upperbound( code, scope, table, arr.data(), arr.size(), &primary ); \
+     secondary = TYPE(arr); \
+     return result; \
    }\
 };
 
@@ -324,7 +336,7 @@ namespace _multi_index_detail {
       static constexpr long double true_lowest() { return -std::numeric_limits<long double>::infinity(); }
    };
 
-   WRAP_SECONDARY_ARRAY_TYPE(idx256, eosio::fixed_bytes<32>)
+   WRAP_SECONDARY_ARRAY_TYPE(idx256, eosio::fixed_bytes<32>, uint128_t)
    template<>
    struct secondary_key_traits<eosio::fixed_bytes<32>> {
       static constexpr eosio::fixed_bytes<32> true_lowest() { return eosio::fixed_bytes<32>(); }
@@ -485,7 +497,7 @@ class multi_index
             typedef typename std::decay<decltype( Extractor()(nullptr) )>::type secondary_key_type;
 
             constexpr static bool validate_index_name( eosio::name n ) {
-               return n.value != 0 && n != eosio::name("primary"); // Primary is a reserve index name.
+               return n.value != 0 && n != "primary"_n; // Primary is a reserve index name.
             }
 
             static_assert( validate_index_name( name(IndexName) ), "invalid index name used in multi_index" );
@@ -1010,10 +1022,10 @@ class multi_index
       const_iterator begin()const  { return cbegin(); }
 
       /**
-       *  Returns an iterator pointing to the `object_type` with the highest primary key value in the Multi-Index table.
+       *  Returns an iterator referring to the `past-the-end` element in the multi index container. The `past-the-end` element is the theoretical element that would follow the last element in the vector. It does not point to any element, and thus shall not be dereferenced.
        *  @ingroup multiindex
        *
-       *  @return An iterator pointing to the `object_type` with the highest primary key value in the Multi-Index table.
+       *  @return An iterator referring to the `past-the-end` element in the multi index container.
        *
        *  Example:
        *
@@ -1034,10 +1046,10 @@ class multi_index
       const_iterator cend()const   { return const_iterator( this ); }
 
       /**
-       *  Returns an iterator pointing to the `object_type` with the highest primary key value in the Multi-Index table.
+       *  Returns an iterator referring to the `past-the-end` element in the multi index container. The `past-the-end` element is the theoretical element that would follow the last element in the vector. It does not point to any element, and thus shall not be dereferenced.
        *  @ingroup multiindex
        *
-       *  @return An iterator pointing to the `object_type` with the highest primary key value in the Multi-Index table.
+       *  @return An iterator referring to the `past-the-end` element in the multi index container.
        *
        *  Example:
        *
@@ -1894,8 +1906,6 @@ class multi_index
 
          eosio::check( itr2 != _items_vector.rend(), "attempt to remove object that was not in multi_index" );
 
-         _items_vector.erase(--(itr2.base()));
-
          internal_use_do_not_use::db_remove_i64( objitem.__primary_itr );
 
          hana::for_each( _indices, [&]( auto& idx ) {
@@ -1909,6 +1919,8 @@ class multi_index
             if( i >= 0 )
                secondary_index_db_functions<typename index_type::secondary_key_type>::db_idx_remove( i );
          });
+
+         _items_vector.erase(--(itr2.base()));
       }
 
 };

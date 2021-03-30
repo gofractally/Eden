@@ -5,16 +5,19 @@
 #pragma once
 #include <cstdlib>
 
-#include "../../core/eosio/serialize.hpp"
-#include "../../core/eosio/datastream.hpp"
-#include "../../core/eosio/name.hpp"
-#include "../../core/eosio/ignore.hpp"
-#include "../../core/eosio/time.hpp"
+#include <eosio/serialize.hpp>
+#include <eosio/datastream.hpp>
+#include <eosio/name.hpp>
+#include <eosio/ignore.hpp>
+#include <eosio/time.hpp>
 
-#include <boost/preprocessor/variadic/size.hpp>
-#include <boost/preprocessor/variadic/to_tuple.hpp>
-#include <boost/preprocessor/tuple/enum.hpp>
+#include <boost/preprocessor/cat.hpp>
 #include <boost/preprocessor/facilities/overload.hpp>
+#include <boost/preprocessor/seq/for_each.hpp>
+#include <boost/preprocessor/tuple/enum.hpp>
+#include <boost/preprocessor/variadic/size.hpp>
+#include <boost/preprocessor/variadic/to_seq.hpp>
+#include <boost/preprocessor/variadic/to_tuple.hpp>
 
 namespace eosio {
 
@@ -348,7 +351,7 @@ namespace eosio {
        * @return the action data
        */
       template<typename T>
-      T data_as() {
+      T data_as() const {
          return unpack<T>( &data[0], data.size() );
       }
 
@@ -370,9 +373,17 @@ namespace eosio {
       auto get_args(R(Act::*p)(Args...)) {
          return std::tuple<std::decay_t<typename unwrap<Args>::type>...>{};
       }
+      template <typename R, typename Act, typename... Args>
+      auto get_args(R(Act::*p)(Args...)const ) {
+         return std::tuple<std::decay_t<typename unwrap<Args>::type>...>{};
+      }
 
       template <typename R, typename Act, typename... Args>
       auto get_args_nounwrap(R(Act::*p)(Args...)) {
+         return std::tuple<std::decay_t<Args>...>{};
+      }
+      template <typename R, typename Act, typename... Args>
+      auto get_args_nounwrap(R(Act::*p)(Args...)const) {
          return std::tuple<std::decay_t<Args>...>{};
       }
 
@@ -423,7 +434,7 @@ namespace eosio {
 
       template <auto Action, typename... Ts>
       constexpr bool type_check() {
-         static_assert(sizeof...(Ts) == std::tuple_size<deduced<Action>>::value);
+         static_assert(sizeof...(Ts) == std::tuple_size<deduced<Action>>::value, "incorrect number of arguments provided");
          if constexpr (sizeof...(Ts) != 0)
             return check_types<Action, 0, Ts...>::value;
          return true;
@@ -433,9 +444,9 @@ namespace eosio {
    }
 
    /**
-    * Wrapper for an action object. 
+    * Wrapper for an action object.
     *
-    * @brief Used to wrap an a particular action to simplify the process of other contracts sending inline actions to "wrapped" action. 
+    * @brief Used to wrap an a particular action to simplify the process of other contracts sending inline actions to "wrapped" action.
     * Example:
     * @code
     * // defined by contract writer of the actions
@@ -447,8 +458,20 @@ namespace eosio {
     * trans_action.send(st.issuer, to, quantity, memo);
     * @endcode
     */
-   template <eosio::name::raw Name, auto Action>
+   template <eosio::name::raw Name, auto Action, eosio::name::raw DefaultContract = ""_n>
    struct action_wrapper {
+      constexpr action_wrapper()
+         : code_name(DefaultContract), permissions() {}
+
+      constexpr action_wrapper( eosio::name user )
+         : code_name(DefaultContract), permissions({1,{user,"active"_n}}) {}
+
+      action_wrapper( eosio::permission_level l )
+         : code_name(DefaultContract), permissions({1,l}) {}
+
+      action_wrapper( std::vector<eosio::permission_level> l )
+         : code_name(DefaultContract), permissions(std::move(l)) {}
+
       template <typename Code>
       constexpr action_wrapper(Code&& code, std::vector<eosio::permission_level>&& perms)
          : code_name(std::forward<Code>(code)), permissions(std::move(perms)) {}
@@ -465,9 +488,11 @@ namespace eosio {
       constexpr action_wrapper(Code&& code, const eosio::permission_level& perm)
          : code_name(std::forward<Code>(code)), permissions({1, perm}) {}
 
+      /*
       template <typename Code>
       constexpr action_wrapper(Code&& code)
          : code_name(std::forward<Code>(code)) {}
+         */
 
       static constexpr eosio::name action_name = eosio::name(Name);
       eosio::name code_name;
@@ -475,6 +500,12 @@ namespace eosio {
 
       static constexpr auto get_mem_ptr() {
          return Action;
+      }
+
+      template <typename... Args>
+      action operator()(Args&&... args)const {
+         static_assert(detail::type_check<Action, Args...>());
+         return action(permissions, code_name, action_name, detail::deduced<Action>{std::forward<Args>(args)...});
       }
 
       template <typename... Args>
@@ -576,7 +607,7 @@ INLINE_ACTION_SENDER3( CONTRACT_CLASS, NAME, ::eosio::name(#NAME) )
  * Send an inline-action from inside a contract.
  *
  * @brief A macro to simplify calling inline actions
- * @details The send inline action macro is intended to simplify the process of calling inline actions. When calling new actions from existing actions 
+ * @details The send inline action macro is intended to simplify the process of calling inline actions. When calling new actions from existing actions
  * EOSIO supports two communication models, inline and deferred. Inline actions are executed as part of the current transaction. This macro
  * creates an @ref action using the supplied parameters and automatically calls action.send() on this newly created action.
  *
@@ -584,15 +615,15 @@ INLINE_ACTION_SENDER3( CONTRACT_CLASS, NAME, ::eosio::name(#NAME) )
  * @code
  * SEND_INLINE_ACTION( *this, transfer, {st.issuer,N(active)}, {st.issuer, to, quantity, memo} );
  * @endcode
- * 
- * The example above is taken from eosio.token. 
- * This example:  
- *       uses the passed in, dereferenced `this` pointer, to call this.get_self() i.e. the eosio.token contract; 
- *       calls the eosio.token::transfer() action; 
+ *
+ * The example above is taken from eosio.token.
+ * This example:
+ *       uses the passed in, dereferenced `this` pointer, to call this.get_self() i.e. the eosio.token contract;
+ *       calls the eosio.token::transfer() action;
  *       uses the active permission of the "issuer" account;
- *       uses parameters st.issuer, to, quantity and memo. 
+ *       uses parameters st.issuer, to, quantity and memo.
  * This macro creates an action struct used to 'send()' (call) transfer(account_name from, account_name to, asset quantity, string memo)
- * 
+ *
  * @param CONTRACT - The contract to call, which contains the action being sent, maps to the @ref account
  * @param NAME - The name of the action to be called, maps to a @ref name
  * @param ... - The authorising permission, maps to an @ref authorization , followed by the parameters of the action, maps to a @ref data.
@@ -601,3 +632,5 @@ INLINE_ACTION_SENDER3( CONTRACT_CLASS, NAME, ::eosio::name(#NAME) )
 #define SEND_INLINE_ACTION( CONTRACT, NAME, ... )\
 INLINE_ACTION_SENDER(std::decay_t<decltype(CONTRACT)>, NAME)( (CONTRACT).get_self(),\
 BOOST_PP_TUPLE_ENUM(BOOST_PP_VARIADIC_SIZE(__VA_ARGS__), BOOST_PP_VARIADIC_TO_TUPLE(__VA_ARGS__)) );
+
+
