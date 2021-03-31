@@ -6,7 +6,6 @@
 #include <eosio/action.hpp>
 #include <eosio/contract.hpp>
 #include <eosio/dispatcher.hpp>
-#include <eosio/key_value.hpp>
 #include <eosio/multi_index.hpp>
 #include <eosio/print.hpp>
 
