@@ -24,7 +24,7 @@ namespace eosio
     * and void foo(float, ignore<int>, int) is not allowed.
     */
    template <typename T>
-   struct [[eosio::ignore]] ignore
+   struct ignore
    {
       using type = T;
    };

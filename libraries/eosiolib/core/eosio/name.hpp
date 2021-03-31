@@ -14,7 +14,7 @@ namespace eosio
    {
       extern "C"
       {
-         __attribute__((eosio_wasm_import)) void printn(uint64_t);
+         [[clang::import_name("printn")]] void printn(uint64_t);
       }
    }  // namespace internal_use_do_not_use
 

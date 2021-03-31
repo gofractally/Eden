@@ -16,7 +16,9 @@ extern "C"
     * @param size - size of serialized return value in bytes
     * @pre `return_value` is a valid pointer to an array at least `size` bytes long
     */
-   __attribute__((eosio_wasm_import)) void set_action_return_value(void* return_value, size_t size);
+   [[clang::import_name("set_action_return_value")]] void set_action_return_value(
+       void* return_value,
+       size_t size);
 
 #ifdef __cplusplus
 }  // extern "C"
@@ -170,36 +172,7 @@ namespace eosio
 #define EOSIO_DISPATCH_HELPER(TYPE, MEMBERS) \
    BOOST_PP_SEQ_FOR_EACH(EOSIO_DISPATCH_INTERNAL, TYPE, MEMBERS)
 
-/// @endcond
-
-/**
- * Convenient macro to create contract apply handler
- *
- * @ingroup dispatcher
- * @note To be able to use this macro, the contract needs to be derived from eosio::contract
- * @param TYPE - The class name of the contract
- * @param MEMBERS - The sequence of available actions supported by this contract
- *
- * Example:
- * @code
- * EOSIO_DISPATCH( eosio::bios, (setpriv)(setalimits)(setglimits)(setprods)(reqauth) )
- * @endcode
- */
-#define EOSIO_DISPATCH(TYPE, MEMBERS)                                                     \
-   extern "C"                                                                             \
-   {                                                                                      \
-      [[eosio::wasm_entry]] void apply(uint64_t receiver, uint64_t code, uint64_t action) \
-      {                                                                                   \
-         if (code == receiver)                                                            \
-         {                                                                                \
-            switch (action)                                                               \
-            {                                                                             \
-               EOSIO_DISPATCH_HELPER(TYPE, MEMBERS)                                       \
-            }                                                                             \
-            /* does not allow destructor of thiscontract to run: eosio_exit(0); */        \
-         }                                                                                \
-      }                                                                                   \
-   }
+   /// @endcond
 
 #define EOSIO_ACTION_WRAPPER_DECL(r, data, action)    \
    using action = eosio::action_wrapper<BOOST_PP_CAT( \
@@ -224,13 +197,15 @@ namespace eosio
       }                                                                                          \
    }
 
-#define EOSIO_ACTION_DISPATCHER(NAMESPACE)                                                \
-   extern "C"                                                                             \
-   {                                                                                      \
-      [[eosio::wasm_entry]] void apply(uint64_t receiver, uint64_t code, uint64_t action) \
-      {                                                                                   \
-         NAMESPACE ::eosio_apply(receiver, code, action);                                 \
-      }                                                                                   \
+#define EOSIO_ACTION_DISPATCHER(NAMESPACE)                          \
+   extern "C"                                                       \
+   {                                                                \
+      void __wasm_call_ctors();                                     \
+      void apply(uint64_t receiver, uint64_t code, uint64_t action) \
+      {                                                             \
+         __wasm_call_ctors();                                       \
+         NAMESPACE ::eosio_apply(receiver, code, action);           \
+      }                                                             \
    }
 
 }  // namespace eosio

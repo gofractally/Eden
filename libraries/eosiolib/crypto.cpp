@@ -19,49 +19,50 @@ extern "C"
    {
       uint8_t hash[64];
    };
-   __attribute__((eosio_wasm_import)) void assert_sha256(const char* data,
-                                                         uint32_t length,
-                                                         const capi_checksum256* hash);
+   [[clang::import_name("assert_sha256")]] void assert_sha256(const char* data,
+                                                              uint32_t length,
+                                                              const capi_checksum256* hash);
 
-   __attribute__((eosio_wasm_import)) void assert_sha1(const char* data,
-                                                       uint32_t length,
-                                                       const capi_checksum160* hash);
+   [[clang::import_name("assert_sha1")]] void assert_sha1(const char* data,
+                                                          uint32_t length,
+                                                          const capi_checksum160* hash);
 
-   __attribute__((eosio_wasm_import)) void assert_sha512(const char* data,
-                                                         uint32_t length,
-                                                         const capi_checksum512* hash);
+   [[clang::import_name("assert_sha512")]] void assert_sha512(const char* data,
+                                                              uint32_t length,
+                                                              const capi_checksum512* hash);
 
-   __attribute__((eosio_wasm_import)) void assert_ripemd160(const char* data,
-                                                            uint32_t length,
-                                                            const capi_checksum160* hash);
+   [[clang::import_name("assert_ripemd160")]] void assert_ripemd160(const char* data,
+                                                                    uint32_t length,
+                                                                    const capi_checksum160* hash);
 
-   __attribute__((eosio_wasm_import)) void sha256(const char* data,
-                                                  uint32_t length,
-                                                  capi_checksum256* hash);
-
-   __attribute__((eosio_wasm_import)) void sha1(const char* data,
+   [[clang::import_name("sha256")]] void sha256(const char* data,
                                                 uint32_t length,
-                                                capi_checksum160* hash);
+                                                capi_checksum256* hash);
 
-   __attribute__((eosio_wasm_import)) void sha512(const char* data,
-                                                  uint32_t length,
-                                                  capi_checksum512* hash);
+   [[clang::import_name("sha1")]] void sha1(const char* data,
+                                            uint32_t length,
+                                            capi_checksum160* hash);
 
-   __attribute__((eosio_wasm_import)) void ripemd160(const char* data,
-                                                     uint32_t length,
-                                                     capi_checksum160* hash);
+   [[clang::import_name("sha512")]] void sha512(const char* data,
+                                                uint32_t length,
+                                                capi_checksum512* hash);
 
-   __attribute__((eosio_wasm_import)) int recover_key(const capi_checksum256* digest,
-                                                      const char* sig,
-                                                      size_t siglen,
-                                                      char* pub,
-                                                      size_t publen);
+   [[clang::import_name("ripemd160")]] void ripemd160(const char* data,
+                                                      uint32_t length,
+                                                      capi_checksum160* hash);
 
-   __attribute__((eosio_wasm_import)) void assert_recover_key(const capi_checksum256* digest,
-                                                              const char* sig,
-                                                              size_t siglen,
-                                                              const char* pub,
-                                                              size_t publen);
+   [[clang::import_name("recover_key")]] int recover_key(const capi_checksum256* digest,
+                                                         const char* sig,
+                                                         size_t siglen,
+                                                         char* pub,
+                                                         size_t publen);
+
+   [[clang::import_name("assert_recover_key")]] void assert_recover_key(
+       const capi_checksum256* digest,
+       const char* sig,
+       size_t siglen,
+       const char* pub,
+       size_t publen);
 }
 
 namespace eosio

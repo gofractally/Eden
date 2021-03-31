@@ -9,13 +9,16 @@ namespace eosio
 {
    extern "C"
    {
-      __attribute__((eosio_wasm_import)) uint64_t current_time();
-      __attribute__((eosio_wasm_import)) void set_blockchain_parameters_packed(char*, uint32_t);
-      __attribute__((eosio_wasm_import)) uint32_t get_blockchain_parameters_packed(char*, uint32_t);
-      __attribute__((eosio_wasm_import)) int64_t set_proposed_producers(
+      [[clang::import_name("current_time")]] uint64_t current_time();
+      [[clang::import_name("set_blockchain_parameters_packed")]] void
+      set_blockchain_parameters_packed(char*, uint32_t);
+      [[clang::import_name("get_blockchain_parameters_packed")]] uint32_t
+      get_blockchain_parameters_packed(char*, uint32_t);
+      [[clang::import_name("set_proposed_producers")]] int64_t set_proposed_producers(
           char* producer_data,
           uint32_t producer_data_size);
-      __attribute__((eosio_wasm_import)) uint32_t get_active_producers(uint64_t*, uint32_t);
+      [[clang::import_name("get_active_producers")]] uint32_t get_active_producers(uint64_t*,
+                                                                                   uint32_t);
    }
 
    // producer_schedule.hpp

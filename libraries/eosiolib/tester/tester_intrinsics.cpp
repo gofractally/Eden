@@ -71,21 +71,21 @@ extern "C"
       __builtin_unreachable();
    }
 
-   __attribute__((eosio_wasm_import)) void sha256(const char* data,
-                                                  uint32_t length,
-                                                  capi_checksum256* hash);
-
-   __attribute__((eosio_wasm_import)) void sha1(const char* data,
+   [[clang::import_name("sha256")]] void sha256(const char* data,
                                                 uint32_t length,
-                                                capi_checksum160* hash);
+                                                capi_checksum256* hash);
 
-   __attribute__((eosio_wasm_import)) void sha512(const char* data,
-                                                  uint32_t length,
-                                                  capi_checksum512* hash);
+   [[clang::import_name("sha1")]] void sha1(const char* data,
+                                            uint32_t length,
+                                            capi_checksum160* hash);
 
-   __attribute__((eosio_wasm_import)) void ripemd160(const char* data,
-                                                     uint32_t length,
-                                                     capi_checksum160* hash);
+   [[clang::import_name("sha512")]] void sha512(const char* data,
+                                                uint32_t length,
+                                                capi_checksum512* hash);
+
+   [[clang::import_name("ripemd160")]] void ripemd160(const char* data,
+                                                      uint32_t length,
+                                                      capi_checksum160* hash);
 
    void assert_sha1(const char* data, uint32_t len, const capi_checksum160* expected)
    {

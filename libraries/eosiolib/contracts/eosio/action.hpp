@@ -25,28 +25,32 @@ namespace eosio
    {
       extern "C"
       {
-         __attribute__((eosio_wasm_import)) uint32_t read_action_data(void* msg, uint32_t len);
+         [[clang::import_name("read_action_data")]] uint32_t read_action_data(void* msg,
+                                                                              uint32_t len);
 
-         __attribute__((eosio_wasm_import)) uint32_t action_data_size();
+         [[clang::import_name("action_data_size")]] uint32_t action_data_size();
 
-         __attribute__((eosio_wasm_import)) void require_recipient(uint64_t name);
+         [[clang::import_name("require_recipient")]] void require_recipient(uint64_t name);
 
-         __attribute__((eosio_wasm_import)) void require_auth(uint64_t name);
+         [[clang::import_name("require_auth")]] void require_auth(uint64_t name);
 
-         __attribute__((eosio_wasm_import)) bool has_auth(uint64_t name);
+         [[clang::import_name("has_auth")]] bool has_auth(uint64_t name);
 
-         __attribute__((eosio_wasm_import)) void require_auth2(uint64_t name, uint64_t permission);
+         [[clang::import_name("require_auth2")]] void require_auth2(uint64_t name,
+                                                                    uint64_t permission);
 
-         __attribute__((eosio_wasm_import)) bool is_account(uint64_t name);
+         [[clang::import_name("is_account")]] bool is_account(uint64_t name);
 
-         __attribute__((eosio_wasm_import)) void send_inline(char* serialized_action, size_t size);
+         [[clang::import_name("send_inline")]] void send_inline(char* serialized_action,
+                                                                size_t size);
 
-         __attribute__((eosio_wasm_import)) void send_context_free_inline(char* serialized_action,
-                                                                          size_t size);
+         [[clang::import_name("send_context_free_inline")]] void send_context_free_inline(
+             char* serialized_action,
+             size_t size);
 
-         __attribute__((eosio_wasm_import)) uint64_t publication_time();
+         [[clang::import_name("publication_time")]] uint64_t publication_time();
 
-         __attribute__((eosio_wasm_import)) uint64_t current_receiver();
+         [[clang::import_name("current_receiver")]] uint64_t current_receiver();
       }
    };  // namespace internal_use_do_not_use
 

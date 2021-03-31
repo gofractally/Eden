@@ -26,254 +26,246 @@ namespace eosio
    {
       extern "C"
       {
-         __attribute__((eosio_wasm_import)) int32_t db_store_i64(uint64_t,
-                                                                 uint64_t,
-                                                                 uint64_t,
-                                                                 uint64_t,
-                                                                 const void*,
-                                                                 uint32_t);
+         [[clang::import_name("db_store_i64")]] int32_t db_store_i64(uint64_t,
+                                                                     uint64_t,
+                                                                     uint64_t,
+                                                                     uint64_t,
+                                                                     const void*,
+                                                                     uint32_t);
 
-         __attribute__((eosio_wasm_import)) void db_update_i64(int32_t,
-                                                               uint64_t,
-                                                               const void*,
-                                                               uint32_t);
-
-         __attribute__((eosio_wasm_import)) void db_remove_i64(int32_t);
-
-         __attribute__((eosio_wasm_import)) int32_t db_get_i64(int32_t, const void*, uint32_t);
-
-         __attribute__((eosio_wasm_import)) int32_t db_next_i64(int32_t, uint64_t*);
-
-         __attribute__((eosio_wasm_import)) int32_t db_previous_i64(int32_t, uint64_t*);
-
-         __attribute__((eosio_wasm_import))
-         int32_t db_find_i64(uint64_t, uint64_t, uint64_t, uint64_t);
-
-         __attribute__((eosio_wasm_import))
-         int32_t db_lowerbound_i64(uint64_t, uint64_t, uint64_t, uint64_t);
-
-         __attribute__((eosio_wasm_import))
-         int32_t db_upperbound_i64(uint64_t, uint64_t, uint64_t, uint64_t);
-
-         __attribute__((eosio_wasm_import)) int32_t db_end_i64(uint64_t, uint64_t, uint64_t);
-
-         __attribute__((eosio_wasm_import)) int32_t db_idx64_store(uint64_t,
-                                                                   uint64_t,
-                                                                   uint64_t,
-                                                                   uint64_t,
-                                                                   const uint64_t*);
-
-         __attribute__((eosio_wasm_import)) void db_idx64_update(int32_t,
-                                                                 uint64_t,
-                                                                 const uint64_t*);
-
-         __attribute__((eosio_wasm_import)) void db_idx64_remove(int32_t);
-
-         __attribute__((eosio_wasm_import)) int32_t db_idx64_next(int32_t, uint64_t*);
-
-         __attribute__((eosio_wasm_import)) int32_t db_idx64_previous(int32_t, uint64_t*);
-
-         __attribute__((eosio_wasm_import)) int32_t db_idx64_find_primary(uint64_t,
-                                                                          uint64_t,
-                                                                          uint64_t,
-                                                                          uint64_t*,
-                                                                          uint64_t);
-
-         __attribute__((eosio_wasm_import)) int32_t db_idx64_find_secondary(uint64_t,
-                                                                            uint64_t,
-                                                                            uint64_t,
-                                                                            const uint64_t*,
-                                                                            uint64_t*);
-
-         __attribute__((eosio_wasm_import)) int32_t db_idx64_lowerbound(uint64_t,
-                                                                        uint64_t,
-                                                                        uint64_t,
-                                                                        uint64_t*,
-                                                                        uint64_t*);
-
-         __attribute__((eosio_wasm_import)) int32_t db_idx64_upperbound(uint64_t,
-                                                                        uint64_t,
-                                                                        uint64_t,
-                                                                        uint64_t*,
-                                                                        uint64_t*);
-
-         __attribute__((eosio_wasm_import)) int32_t db_idx64_end(uint64_t, uint64_t, uint64_t);
-
-         __attribute__((eosio_wasm_import)) int32_t db_idx128_store(uint64_t,
+         [[clang::import_name("db_update_i64")]] void db_update_i64(int32_t,
                                                                     uint64_t,
-                                                                    uint64_t,
-                                                                    uint64_t,
-                                                                    const uint128_t*);
-
-         __attribute__((eosio_wasm_import)) void db_idx128_update(int32_t,
-                                                                  uint64_t,
-                                                                  const uint128_t*);
-
-         __attribute__((eosio_wasm_import)) void db_idx128_remove(int32_t);
-
-         __attribute__((eosio_wasm_import)) int32_t db_idx128_next(int32_t, uint64_t*);
-
-         __attribute__((eosio_wasm_import)) int32_t db_idx128_previous(int32_t, uint64_t*);
-
-         __attribute__((eosio_wasm_import)) int32_t db_idx128_find_primary(uint64_t,
-                                                                           uint64_t,
-                                                                           uint64_t,
-                                                                           uint128_t*,
-                                                                           uint64_t);
-
-         __attribute__((eosio_wasm_import)) int32_t db_idx128_find_secondary(uint64_t,
-                                                                             uint64_t,
-                                                                             uint64_t,
-                                                                             const uint128_t*,
-                                                                             uint64_t*);
-
-         __attribute__((eosio_wasm_import)) int32_t db_idx128_lowerbound(uint64_t,
-                                                                         uint64_t,
-                                                                         uint64_t,
-                                                                         uint128_t*,
-                                                                         uint64_t*);
-
-         __attribute__((eosio_wasm_import)) int32_t db_idx128_upperbound(uint64_t,
-                                                                         uint64_t,
-                                                                         uint64_t,
-                                                                         uint128_t*,
-                                                                         uint64_t*);
-
-         __attribute__((eosio_wasm_import)) int32_t db_idx128_end(uint64_t, uint64_t, uint64_t);
-
-         __attribute__((eosio_wasm_import)) int32_t db_idx256_store(uint64_t,
-                                                                    uint64_t,
-                                                                    uint64_t,
-                                                                    uint64_t,
-                                                                    const uint128_t*,
+                                                                    const void*,
                                                                     uint32_t);
 
-         __attribute__((eosio_wasm_import)) void db_idx256_update(int32_t,
-                                                                  uint64_t,
-                                                                  const uint128_t*,
-                                                                  uint32_t);
+         [[clang::import_name("db_remove_i64")]] void db_remove_i64(int32_t);
 
-         __attribute__((eosio_wasm_import)) void db_idx256_remove(int32_t);
+         [[clang::import_name("db_get_i64")]] int32_t db_get_i64(int32_t, const void*, uint32_t);
 
-         __attribute__((eosio_wasm_import)) int32_t db_idx256_next(int32_t, uint64_t*);
+         [[clang::import_name("db_next_i64")]] int32_t db_next_i64(int32_t, uint64_t*);
 
-         __attribute__((eosio_wasm_import)) int32_t db_idx256_previous(int32_t, uint64_t*);
+         [[clang::import_name("db_previous_i64")]] int32_t db_previous_i64(int32_t, uint64_t*);
 
-         __attribute__((eosio_wasm_import)) int32_t db_idx256_find_primary(uint64_t,
-                                                                           uint64_t,
-                                                                           uint64_t,
-                                                                           uint128_t*,
-                                                                           uint32_t,
-                                                                           uint64_t);
+         [[clang::import_name("db_find_i64")]] int32_t db_find_i64(uint64_t,
+                                                                   uint64_t,
+                                                                   uint64_t,
+                                                                   uint64_t);
 
-         __attribute__((eosio_wasm_import)) int32_t db_idx256_find_secondary(uint64_t,
-                                                                             uint64_t,
-                                                                             uint64_t,
-                                                                             const uint128_t*,
-                                                                             uint32_t,
-                                                                             uint64_t*);
-
-         __attribute__((eosio_wasm_import)) int32_t db_idx256_lowerbound(uint64_t,
-                                                                         uint64_t,
-                                                                         uint64_t,
-                                                                         uint128_t*,
-                                                                         uint32_t,
-                                                                         uint64_t*);
-
-         __attribute__((eosio_wasm_import)) int32_t db_idx256_upperbound(uint64_t,
-                                                                         uint64_t,
-                                                                         uint64_t,
-                                                                         uint128_t*,
-                                                                         uint32_t,
-                                                                         uint64_t*);
-
-         __attribute__((eosio_wasm_import)) int32_t db_idx256_end(uint64_t, uint64_t, uint64_t);
-
-         __attribute__((eosio_wasm_import)) int32_t db_idx_double_store(uint64_t,
-                                                                        uint64_t,
-                                                                        uint64_t,
-                                                                        uint64_t,
-                                                                        const double*);
-
-         __attribute__((eosio_wasm_import)) void db_idx_double_update(int32_t,
-                                                                      uint64_t,
-                                                                      const double*);
-
-         __attribute__((eosio_wasm_import)) void db_idx_double_remove(int32_t);
-
-         __attribute__((eosio_wasm_import)) int32_t db_idx_double_next(int32_t, uint64_t*);
-
-         __attribute__((eosio_wasm_import)) int32_t db_idx_double_previous(int32_t, uint64_t*);
-
-         __attribute__((eosio_wasm_import)) int32_t db_idx_double_find_primary(uint64_t,
+         [[clang::import_name("db_lowerbound_i64")]] int32_t db_lowerbound_i64(uint64_t,
                                                                                uint64_t,
                                                                                uint64_t,
-                                                                               double*,
                                                                                uint64_t);
 
-         __attribute__((eosio_wasm_import)) int32_t db_idx_double_find_secondary(uint64_t,
-                                                                                 uint64_t,
-                                                                                 uint64_t,
-                                                                                 const double*,
+         [[clang::import_name("db_upperbound_i64")]] int32_t db_upperbound_i64(uint64_t,
+                                                                               uint64_t,
+                                                                               uint64_t,
+                                                                               uint64_t);
+
+         [[clang::import_name("db_end_i64")]] int32_t db_end_i64(uint64_t, uint64_t, uint64_t);
+
+         [[clang::import_name("db_idx64_store")]] int32_t db_idx64_store(uint64_t,
+                                                                         uint64_t,
+                                                                         uint64_t,
+                                                                         uint64_t,
+                                                                         const uint64_t*);
+
+         [[clang::import_name("db_idx64_update")]] void db_idx64_update(int32_t,
+                                                                        uint64_t,
+                                                                        const uint64_t*);
+
+         [[clang::import_name("db_idx64_remove")]] void db_idx64_remove(int32_t);
+
+         [[clang::import_name("db_idx64_next")]] int32_t db_idx64_next(int32_t, uint64_t*);
+
+         [[clang::import_name("db_idx64_previous")]] int32_t db_idx64_previous(int32_t, uint64_t*);
+
+         [[clang::import_name("db_idx64_find_primary")]] int32_t db_idx64_find_primary(uint64_t,
+                                                                                       uint64_t,
+                                                                                       uint64_t,
+                                                                                       uint64_t*,
+                                                                                       uint64_t);
+
+         [[clang::import_name("db_idx64_find_secondary")]] int32_t
+         db_idx64_find_secondary(uint64_t, uint64_t, uint64_t, const uint64_t*, uint64_t*);
+
+         [[clang::import_name("db_idx64_lowerbound")]] int32_t db_idx64_lowerbound(uint64_t,
+                                                                                   uint64_t,
+                                                                                   uint64_t,
+                                                                                   uint64_t*,
+                                                                                   uint64_t*);
+
+         [[clang::import_name("db_idx64_upperbound")]] int32_t db_idx64_upperbound(uint64_t,
+                                                                                   uint64_t,
+                                                                                   uint64_t,
+                                                                                   uint64_t*,
+                                                                                   uint64_t*);
+
+         [[clang::import_name("db_idx64_end")]] int32_t db_idx64_end(uint64_t, uint64_t, uint64_t);
+
+         [[clang::import_name("db_idx128_store")]] int32_t db_idx128_store(uint64_t,
+                                                                           uint64_t,
+                                                                           uint64_t,
+                                                                           uint64_t,
+                                                                           const uint128_t*);
+
+         [[clang::import_name("db_idx128_update")]] void db_idx128_update(int32_t,
+                                                                          uint64_t,
+                                                                          const uint128_t*);
+
+         [[clang::import_name("db_idx128_remove")]] void db_idx128_remove(int32_t);
+
+         [[clang::import_name("db_idx128_next")]] int32_t db_idx128_next(int32_t, uint64_t*);
+
+         [[clang::import_name("db_idx128_previous")]] int32_t db_idx128_previous(int32_t,
                                                                                  uint64_t*);
 
-         __attribute__((eosio_wasm_import)) int32_t db_idx_double_lowerbound(uint64_t,
-                                                                             uint64_t,
-                                                                             uint64_t,
-                                                                             double*,
-                                                                             uint64_t*);
+         [[clang::import_name("db_idx128_find_primary")]] int32_t db_idx128_find_primary(uint64_t,
+                                                                                         uint64_t,
+                                                                                         uint64_t,
+                                                                                         uint128_t*,
+                                                                                         uint64_t);
 
-         __attribute__((eosio_wasm_import)) int32_t db_idx_double_upperbound(uint64_t,
-                                                                             uint64_t,
-                                                                             uint64_t,
-                                                                             double*,
-                                                                             uint64_t*);
+         [[clang::import_name("db_idx128_find_secondary")]] int32_t
+         db_idx128_find_secondary(uint64_t, uint64_t, uint64_t, const uint128_t*, uint64_t*);
 
-         __attribute__((eosio_wasm_import)) int32_t db_idx_double_end(uint64_t, uint64_t, uint64_t);
+         [[clang::import_name("db_idx128_lowerbound")]] int32_t db_idx128_lowerbound(uint64_t,
+                                                                                     uint64_t,
+                                                                                     uint64_t,
+                                                                                     uint128_t*,
+                                                                                     uint64_t*);
 
-         __attribute__((eosio_wasm_import)) int32_t db_idx_long_double_store(uint64_t,
-                                                                             uint64_t,
-                                                                             uint64_t,
-                                                                             uint64_t,
-                                                                             const long double*);
+         [[clang::import_name("db_idx128_upperbound")]] int32_t db_idx128_upperbound(uint64_t,
+                                                                                     uint64_t,
+                                                                                     uint64_t,
+                                                                                     uint128_t*,
+                                                                                     uint64_t*);
 
-         __attribute__((eosio_wasm_import)) void db_idx_long_double_update(int32_t,
+         [[clang::import_name("db_idx128_end")]] int32_t db_idx128_end(uint64_t,
+                                                                       uint64_t,
+                                                                       uint64_t);
+
+         [[clang::import_name("db_idx256_store")]] int32_t db_idx256_store(uint64_t,
                                                                            uint64_t,
-                                                                           const long double*);
+                                                                           uint64_t,
+                                                                           uint64_t,
+                                                                           const uint128_t*,
+                                                                           uint32_t);
 
-         __attribute__((eosio_wasm_import)) void db_idx_long_double_remove(int32_t);
+         [[clang::import_name("db_idx256_update")]] void db_idx256_update(int32_t,
+                                                                          uint64_t,
+                                                                          const uint128_t*,
+                                                                          uint32_t);
 
-         __attribute__((eosio_wasm_import)) int32_t db_idx_long_double_next(int32_t, uint64_t*);
+         [[clang::import_name("db_idx256_remove")]] void db_idx256_remove(int32_t);
 
-         __attribute__((eosio_wasm_import)) int32_t db_idx_long_double_previous(int32_t, uint64_t*);
+         [[clang::import_name("db_idx256_next")]] int32_t db_idx256_next(int32_t, uint64_t*);
 
-         __attribute__((eosio_wasm_import)) int32_t db_idx_long_double_find_primary(uint64_t,
-                                                                                    uint64_t,
-                                                                                    uint64_t,
-                                                                                    long double*,
-                                                                                    uint64_t);
+         [[clang::import_name("db_idx256_previous")]] int32_t db_idx256_previous(int32_t,
+                                                                                 uint64_t*);
 
-         __attribute__((eosio_wasm_import)) int32_t db_idx_long_double_find_secondary(
+         [[clang::import_name("db_idx256_find_primary")]] int32_t db_idx256_find_primary(uint64_t,
+                                                                                         uint64_t,
+                                                                                         uint64_t,
+                                                                                         uint128_t*,
+                                                                                         uint32_t,
+                                                                                         uint64_t);
+
+         [[clang::import_name("db_idx256_find_secondary")]] int32_t db_idx256_find_secondary(
              uint64_t,
              uint64_t,
              uint64_t,
-             const long double*,
+             const uint128_t*,
+             uint32_t,
              uint64_t*);
 
-         __attribute__((eosio_wasm_import)) int32_t db_idx_long_double_lowerbound(uint64_t,
-                                                                                  uint64_t,
-                                                                                  uint64_t,
-                                                                                  long double*,
-                                                                                  uint64_t*);
+         [[clang::import_name("db_idx256_lowerbound")]] int32_t db_idx256_lowerbound(uint64_t,
+                                                                                     uint64_t,
+                                                                                     uint64_t,
+                                                                                     uint128_t*,
+                                                                                     uint32_t,
+                                                                                     uint64_t*);
 
-         __attribute__((eosio_wasm_import)) int32_t db_idx_long_double_upperbound(uint64_t,
-                                                                                  uint64_t,
-                                                                                  uint64_t,
-                                                                                  long double*,
-                                                                                  uint64_t*);
+         [[clang::import_name("db_idx256_upperbound")]] int32_t db_idx256_upperbound(uint64_t,
+                                                                                     uint64_t,
+                                                                                     uint64_t,
+                                                                                     uint128_t*,
+                                                                                     uint32_t,
+                                                                                     uint64_t*);
 
-         __attribute__((eosio_wasm_import))
-         int32_t db_idx_long_double_end(uint64_t, uint64_t, uint64_t);
+         [[clang::import_name("db_idx256_end")]] int32_t db_idx256_end(uint64_t,
+                                                                       uint64_t,
+                                                                       uint64_t);
+
+         [[clang::import_name("db_idx_double_store")]] int32_t db_idx_double_store(uint64_t,
+                                                                                   uint64_t,
+                                                                                   uint64_t,
+                                                                                   uint64_t,
+                                                                                   const double*);
+
+         [[clang::import_name("db_idx_double_update")]] void db_idx_double_update(int32_t,
+                                                                                  uint64_t,
+                                                                                  const double*);
+
+         [[clang::import_name("db_idx_double_remove")]] void db_idx_double_remove(int32_t);
+
+         [[clang::import_name("db_idx_double_next")]] int32_t db_idx_double_next(int32_t,
+                                                                                 uint64_t*);
+
+         [[clang::import_name("db_idx_double_previous")]] int32_t db_idx_double_previous(int32_t,
+                                                                                         uint64_t*);
+
+         [[clang::import_name("db_idx_double_find_primary")]] int32_t
+         db_idx_double_find_primary(uint64_t, uint64_t, uint64_t, double*, uint64_t);
+
+         [[clang::import_name("db_idx_double_find_secondary")]] int32_t
+         db_idx_double_find_secondary(uint64_t, uint64_t, uint64_t, const double*, uint64_t*);
+
+         [[clang::import_name("db_idx_double_lowerbound")]] int32_t
+         db_idx_double_lowerbound(uint64_t, uint64_t, uint64_t, double*, uint64_t*);
+
+         [[clang::import_name("db_idx_double_upperbound")]] int32_t
+         db_idx_double_upperbound(uint64_t, uint64_t, uint64_t, double*, uint64_t*);
+
+         [[clang::import_name("db_idx_double_end")]] int32_t db_idx_double_end(uint64_t,
+                                                                               uint64_t,
+                                                                               uint64_t);
+
+         [[clang::import_name("db_idx_long_double_store")]] int32_t
+         db_idx_long_double_store(uint64_t, uint64_t, uint64_t, uint64_t, const long double*);
+
+         [[clang::import_name("db_idx_long_double_update")]] void
+         db_idx_long_double_update(int32_t, uint64_t, const long double*);
+
+         [[clang::import_name("db_idx_long_double_remove")]] void db_idx_long_double_remove(
+             int32_t);
+
+         [[clang::import_name("db_idx_long_double_next")]] int32_t db_idx_long_double_next(
+             int32_t,
+             uint64_t*);
+
+         [[clang::import_name("db_idx_long_double_previous")]] int32_t db_idx_long_double_previous(
+             int32_t,
+             uint64_t*);
+
+         [[clang::import_name("db_idx_long_double_find_primary")]] int32_t
+         db_idx_long_double_find_primary(uint64_t, uint64_t, uint64_t, long double*, uint64_t);
+
+         [[clang::import_name("db_idx_long_double_find_secondary")]] int32_t
+         db_idx_long_double_find_secondary(uint64_t,
+                                           uint64_t,
+                                           uint64_t,
+                                           const long double*,
+                                           uint64_t*);
+
+         [[clang::import_name("db_idx_long_double_lowerbound")]] int32_t
+         db_idx_long_double_lowerbound(uint64_t, uint64_t, uint64_t, long double*, uint64_t*);
+
+         [[clang::import_name("db_idx_long_double_upperbound")]] int32_t
+         db_idx_long_double_upperbound(uint64_t, uint64_t, uint64_t, long double*, uint64_t*);
+
+         [[clang::import_name("db_idx_long_double_end")]] int32_t db_idx_long_double_end(uint64_t,
+                                                                                         uint64_t,
+                                                                                         uint64_t);
       }
    };  // namespace internal_use_do_not_use
 

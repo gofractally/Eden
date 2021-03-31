@@ -10,14 +10,6 @@
  * @brief Defines contract type which is %base class for every EOSIO contract
  */
 
-/**
- * Helper macros to reduce the verbosity for common contracts
- * @ingroup contract
- */
-#define CONTRACT class [[eosio::contract]]
-#define ACTION [[eosio::action]] void
-#define TABLE struct [[eosio::table]]
-
 namespace eosio
 {
    /**

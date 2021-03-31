@@ -14,17 +14,17 @@ namespace eosio
    {
       extern "C"
       {
-         __attribute__((eosio_wasm_import, noreturn)) void eosio_exit(int32_t code);
+         [[clang::import_name("eosio_exit"), noreturn]] void eosio_exit(int32_t code);
 
          struct __attribute__((aligned(16))) capi_checksum256
          {
             uint8_t hash[32];
          };
 
-         __attribute__((eosio_wasm_import)) bool is_feature_activated(
+         [[clang::import_name("is_feature_activated")]] bool is_feature_activated(
              const capi_checksum256* feature_digest);
 
-         __attribute__((eosio_wasm_import)) uint64_t get_sender();
+         [[clang::import_name("get_sender")]] uint64_t get_sender();
       }
    }  // namespace internal_use_do_not_use
 

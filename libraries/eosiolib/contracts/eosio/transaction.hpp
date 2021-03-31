@@ -16,27 +16,29 @@ namespace eosio
    {
       extern "C"
       {
-         __attribute__((eosio_wasm_import)) void send_deferred(const uint128_t&,
-                                                               uint64_t,
-                                                               const char*,
-                                                               size_t,
-                                                               uint32_t);
+         [[clang::import_name("send_deferred")]] void send_deferred(const uint128_t&,
+                                                                    uint64_t,
+                                                                    const char*,
+                                                                    size_t,
+                                                                    uint32_t);
 
-         __attribute__((eosio_wasm_import)) int cancel_deferred(const uint128_t&);
+         [[clang::import_name("cancel_deferred")]] int cancel_deferred(const uint128_t&);
 
-         __attribute__((eosio_wasm_import)) size_t read_transaction(char*, size_t);
+         [[clang::import_name("read_transaction")]] size_t read_transaction(char*, size_t);
 
-         __attribute__((eosio_wasm_import)) size_t transaction_size();
+         [[clang::import_name("transaction_size")]] size_t transaction_size();
 
-         __attribute__((eosio_wasm_import)) int tapos_block_num();
+         [[clang::import_name("tapos_block_num")]] int tapos_block_num();
 
-         __attribute__((eosio_wasm_import)) int tapos_block_prefix();
+         [[clang::import_name("tapos_block_prefix")]] int tapos_block_prefix();
 
-         __attribute__((eosio_wasm_import)) uint32_t expiration();
+         [[clang::import_name("expiration")]] uint32_t expiration();
 
-         __attribute__((eosio_wasm_import)) int get_action(uint32_t, uint32_t, char*, size_t);
+         [[clang::import_name("get_action")]] int get_action(uint32_t, uint32_t, char*, size_t);
 
-         __attribute__((eosio_wasm_import)) int get_context_free_data(uint32_t, char*, size_t);
+         [[clang::import_name("get_context_free_data")]] int get_context_free_data(uint32_t,
+                                                                                   char*,
+                                                                                   size_t);
       }
    }  // namespace internal_use_do_not_use
 

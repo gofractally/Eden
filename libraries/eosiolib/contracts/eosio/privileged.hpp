@@ -12,33 +12,35 @@ namespace eosio
    {
       extern "C"
       {
-         __attribute__((eosio_wasm_import)) bool is_privileged(uint64_t account);
+         [[clang::import_name("is_privileged")]] bool is_privileged(uint64_t account);
 
-         __attribute__((eosio_wasm_import)) void get_resource_limits(uint64_t account,
-                                                                     int64_t* ram_bytes,
-                                                                     int64_t* net_weight,
-                                                                     int64_t* cpu_weight);
+         [[clang::import_name("get_resource_limits")]] void get_resource_limits(
+             uint64_t account,
+             int64_t* ram_bytes,
+             int64_t* net_weight,
+             int64_t* cpu_weight);
 
-         __attribute__((eosio_wasm_import)) void set_resource_limits(uint64_t account,
-                                                                     int64_t ram_bytes,
-                                                                     int64_t net_weight,
-                                                                     int64_t cpu_weight);
+         [[clang::import_name("set_resource_limits")]] void set_resource_limits(uint64_t account,
+                                                                                int64_t ram_bytes,
+                                                                                int64_t net_weight,
+                                                                                int64_t cpu_weight);
 
-         __attribute__((eosio_wasm_import)) void set_privileged(uint64_t account, bool is_priv);
+         [[clang::import_name("set_privileged")]] void set_privileged(uint64_t account,
+                                                                      bool is_priv);
 
-         __attribute__((eosio_wasm_import)) void set_blockchain_parameters_packed(char* data,
-                                                                                  uint32_t datalen);
+         [[clang::import_name("set_blockchain_parameters_packed")]] void
+         set_blockchain_parameters_packed(char* data, uint32_t datalen);
 
-         __attribute__((eosio_wasm_import)) uint32_t get_blockchain_parameters_packed(
-             char* data,
-             uint32_t datalen);
+         [[clang::import_name("get_blockchain_parameters_packed")]] uint32_t
+         get_blockchain_parameters_packed(char* data, uint32_t datalen);
 
-         __attribute((eosio_wasm_import)) int64_t set_proposed_producers(char*, uint32_t);
+         [[clang::import_name("set_proposed_producers")]] int64_t set_proposed_producers(char*,
+                                                                                         uint32_t);
 
-         __attribute__((eosio_wasm_import)) void preactivate_feature(
+         [[clang::import_name("preactivate_feature")]] void preactivate_feature(
              const capi_checksum256* feature_digest);
 
-         __attribute__((eosio_wasm_import)) int64_t set_proposed_producers_ex(
+         [[clang::import_name("set_proposed_producers_ex")]] int64_t set_proposed_producers_ex(
              uint64_t producer_data_format,
              char* producer_data,
              uint32_t producer_data_size);
