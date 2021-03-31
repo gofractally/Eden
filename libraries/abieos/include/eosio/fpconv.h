@@ -3,7 +3,7 @@
 /// See accompanying license file
 
 #ifndef FPCONV_H
-#   define FPCONV_H
+#define FPCONV_H
 
 /* Fast and accurate double to string conversion based on Florian Loitsch's
  * Grisu-algorithm[1].
@@ -30,11 +30,11 @@
  *
  */
 
-#   ifdef __cplusplus
+#ifdef __cplusplus
 extern "C" int fpconv_dtoa(double fp, char dest[24]);
-#   else
+#else
 int fpconv_dtoa(double fp, char dest[24]);
-#   endif
+#endif
 
 #endif
 

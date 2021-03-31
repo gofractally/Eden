@@ -3,37 +3,50 @@
 
 int error_count;
 
-void report_error(const char* assertion, const char* file, int line) {
-    if(error_count <= 20) {
-       printf("%s:%d: failed %s\n", file, line, assertion);
-    }
-    ++error_count;
+void report_error(const char* assertion, const char* file, int line)
+{
+   if (error_count <= 20)
+   {
+      printf("%s:%d: failed %s\n", file, line, assertion);
+   }
+   ++error_count;
 }
 
-#define CHECK(...) do { if(__VA_ARGS__) {} else { report_error(#__VA_ARGS__, __FILE__, __LINE__); } } while(0)
+#define CHECK(...)                                       \
+   do                                                    \
+   {                                                     \
+      if (__VA_ARGS__)                                   \
+      {                                                  \
+      }                                                  \
+      else                                               \
+      {                                                  \
+         report_error(#__VA_ARGS__, __FILE__, __LINE__); \
+      }                                                  \
+   } while (0)
 
-using abieos::int128;
-using abieos::uint128;
-using abieos::varint32;
-using abieos::varuint32;
-using abieos::float128;
-using abieos::time_point;
-using abieos::time_point_sec;
+using abieos::asset;
 using abieos::block_timestamp;
-using eosio::name;
 using abieos::bytes;
 using abieos::checksum160;
 using abieos::checksum256;
 using abieos::checksum512;
-using abieos::public_key;
+using abieos::float128;
+using abieos::int128;
 using abieos::private_key;
+using abieos::public_key;
 using abieos::signature;
 using abieos::symbol;
 using abieos::symbol_code;
-using abieos::asset;
+using abieos::time_point;
+using abieos::time_point_sec;
+using abieos::uint128;
+using abieos::varint32;
+using abieos::varuint32;
+using eosio::name;
 
 using vec_type = std::vector<int>;
-struct struct_type {
+struct struct_type
+{
    std::vector<int> v;
    std::optional<int> o;
    std::variant<int, double> va;
@@ -42,44 +55,53 @@ EOSIO_REFLECT(struct_type, v, o, va);
 EOSIO_COMPARE(struct_type);
 
 // Verifies that the ordering of keys is the same as the ordering of the original objects
-template<typename T>
-void test_key(const T& x, const T& y) {
+template <typename T>
+void test_key(const T& x, const T& y)
+{
    auto keyx = eosio::convert_to_key(x);
    auto keyy = eosio::convert_to_key(y);
-   CHECK(std::lexicographical_compare(keyx.begin(), keyx.end(), keyy.begin(), keyy.end(), std::less<unsigned char>()) == (x < y));
-   CHECK(std::lexicographical_compare(keyy.begin(), keyy.end(), keyx.begin(), keyx.end(), std::less<unsigned char>()) == (y < x));
+   CHECK(std::lexicographical_compare(keyx.begin(), keyx.end(), keyy.begin(), keyy.end(),
+                                      std::less<unsigned char>()) == (x < y));
+   CHECK(std::lexicographical_compare(keyy.begin(), keyy.end(), keyx.begin(), keyx.end(),
+                                      std::less<unsigned char>()) == (y < x));
 }
 
-enum class enum_u8 : unsigned char {
+enum class enum_u8 : unsigned char
+{
    v0,
    v1,
    v2 = 255,
 };
-enum class enum_s8 : signed char {
+enum class enum_s8 : signed char
+{
    v0,
    v1,
    v2 = -1,
 };
 
-enum class enum_u16 : std::uint16_t {
+enum class enum_u16 : std::uint16_t
+{
    v0,
    v1,
    v2 = 65535,
 };
-enum class enum_s16 : std::int16_t {
+enum class enum_s16 : std::int16_t
+{
    v0,
    v1,
    v2 = -1,
 };
 
-template<typename T>
-std::size_t key_size(const T& obj) {
+template <typename T>
+std::size_t key_size(const T& obj)
+{
    eosio::size_stream ss;
    to_key(obj, ss);
    return ss.size;
 }
 
-void test_compare() {
+void test_compare()
+{
    test_key(true, true);
    test_key(false, false);
    test_key(false, true);
@@ -112,15 +134,23 @@ void test_compare() {
    test_key("a"_n, "b"_n);
    test_key("ab"_n, "a"_n);
    test_key(checksum256(), checksum256());
-   test_key(checksum256(), checksum256{std::array{0xffffffffffffffffull, 0xffffffffffffffffull, 0xffffffffffffffffull, 0xffffffffffffffffull}});
-   test_key(checksum256(std::array{0x00ffffffffffffffull, 0xffffffffffffffffull, 0xffffffffffffffffull, 0xffffffffffffffffull}),
-            checksum256(std::array{0xffffffffffffffffull, 0xffffffffffffffffull, 0xffffffffffffffffull, 0xffffffffffffff00ull}));
-   test_key(checksum256(std::array{0xffffffffffffffffull, 0xffffffffffffff00ull, 0xffffffffffffffffull, 0xffffffffffffffffull}),
-            checksum256(std::array{0xffffffffffffffffull, 0x00ffffffffffffffull, 0xffffffffffffffffull, 0xffffffffffffffffull}));
+   test_key(checksum256(), checksum256{std::array{0xffffffffffffffffull, 0xffffffffffffffffull,
+                                                  0xffffffffffffffffull, 0xffffffffffffffffull}});
+   test_key(checksum256(std::array{0x00ffffffffffffffull, 0xffffffffffffffffull,
+                                   0xffffffffffffffffull, 0xffffffffffffffffull}),
+            checksum256(std::array{0xffffffffffffffffull, 0xffffffffffffffffull,
+                                   0xffffffffffffffffull, 0xffffffffffffff00ull}));
+   test_key(checksum256(std::array{0xffffffffffffffffull, 0xffffffffffffff00ull,
+                                   0xffffffffffffffffull, 0xffffffffffffffffull}),
+            checksum256(std::array{0xffffffffffffffffull, 0x00ffffffffffffffull,
+                                   0xffffffffffffffffull, 0xffffffffffffffffull}));
    test_key(public_key(), public_key());
-   test_key(public_key(std::in_place_index<0>, eosio::ecc_public_key{1}), public_key(std::in_place_index<1>));
-   test_key(public_key(eosio::webauthn_public_key{{}, eosio::webauthn_public_key::user_presence_t::USER_PRESENCE_NONE, "b"}),
-            public_key(eosio::webauthn_public_key{{}, eosio::webauthn_public_key::user_presence_t::USER_PRESENCE_PRESENT, "a"}));
+   test_key(public_key(std::in_place_index<0>, eosio::ecc_public_key{1}),
+            public_key(std::in_place_index<1>));
+   test_key(public_key(eosio::webauthn_public_key{
+                {}, eosio::webauthn_public_key::user_presence_t::USER_PRESENCE_NONE, "b"}),
+            public_key(eosio::webauthn_public_key{
+                {}, eosio::webauthn_public_key::user_presence_t::USER_PRESENCE_PRESENT, "a"}));
 
    using namespace std::literals;
    test_key(""s, ""s);
@@ -212,7 +242,9 @@ void test_compare() {
    test_key(struct_type{{0, 1, 2}, 0, {0}}, struct_type{{0, 1, 2}, 0, {0.0}});
 }
 
-int main() {
+int main()
+{
    test_compare();
-   if(error_count) return 1;
+   if (error_count)
+      return 1;
 }

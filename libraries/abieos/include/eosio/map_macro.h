@@ -52,13 +52,14 @@
 
 // Macros below this point added by block.one
 
-#define EOSIO_MAP_REUSE_ARG0_0(f, arg0, x, peek, ...)                                                                  \
+#define EOSIO_MAP_REUSE_ARG0_0(f, arg0, x, peek, ...) \
    f(arg0, x) EOSIO_MAP_NEXT(peek, EOSIO_MAP_REUSE_ARG0_1)(f, arg0, peek, __VA_ARGS__)
-#define EOSIO_MAP_REUSE_ARG0_1(f, arg0, x, peek, ...)                                                                  \
+#define EOSIO_MAP_REUSE_ARG0_1(f, arg0, x, peek, ...) \
    f(arg0, x) EOSIO_MAP_NEXT(peek, EOSIO_MAP_REUSE_ARG0_0)(f, arg0, peek, __VA_ARGS__)
 // Handle 0 arguments
-#define EOSIO_MAP_REUSE_ARG0_I(f, arg0, peek, ...)                                                                     \
+#define EOSIO_MAP_REUSE_ARG0_I(f, arg0, peek, ...) \
    EOSIO_MAP_NEXT(peek, EOSIO_MAP_REUSE_ARG0_1)(f, arg0, peek, __VA_ARGS__)
-#define EOSIO_MAP_REUSE_ARG0(f, ...) EOSIO_EVAL(EOSIO_MAP_REUSE_ARG0_I(f, __VA_ARGS__, ()()(), ()()(), ()()(), 0))
+#define EOSIO_MAP_REUSE_ARG0(f, ...) \
+   EOSIO_EVAL(EOSIO_MAP_REUSE_ARG0_I(f, __VA_ARGS__, ()()(), ()()(), ()()(), 0))
 
 #endif
