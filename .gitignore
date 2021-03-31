@@ -1,0 +1,16 @@
+.DS_Store
+.nyc_output
+.vscode
+*.a
+*.log
+*.o
+*.tsbuildinfo
+*.wasm
+*.wat
+build
+build-*
+CMakeCache.txt
+CMakeFiles
+compile_commands.json
+dist
+Makefile
