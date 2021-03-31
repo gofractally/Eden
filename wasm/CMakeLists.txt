@@ -27,6 +27,7 @@ function(native_and_wasm_test N)
     wasm_test(${N})
 endfunction()
 
+add_subdirectory(../contracts contracts)
 add_subdirectory(../libraries libraries)
 add_subdirectory(../external external)
 add_subdirectory(boost)
