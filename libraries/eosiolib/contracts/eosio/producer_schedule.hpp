@@ -1,49 +1,50 @@
 #pragma once
-#include <vector>
-#include <eosio/name.hpp>
 #include <eosio/crypto.hpp>
+#include <eosio/name.hpp>
 #include <eosio/serialize.hpp>
+#include <vector>
 
-namespace eosio {
+namespace eosio
+{
+   /**
+    *  @defgroup producer_key Producer Key
+    *  @ingroup contracts
+    *  @ingroup types
+    *  @brief Maps producer with its signing key, used for producer schedule
+    */
 
-  /**
-   *  @defgroup producer_key Producer Key
-   *  @ingroup contracts
-   *  @ingroup types
-   *  @brief Maps producer with its signing key, used for producer schedule
-   */
+   /**
+    *  Maps producer with its signing key, used for producer schedule
+    *
+    *  @ingroup producer_key
+    */
+   struct producer_key
+   {
+      /**
+       *  Name of the producer
+       *
+       *  @ingroup producer_key
+       */
+      name producer_name;
 
-  /**
-   *  Maps producer with its signing key, used for producer schedule
-   *
-   *  @ingroup producer_key
-   */
-  struct producer_key {
+      /**
+       *  Block signing key used by this producer
+       *
+       *  @ingroup producer_key
+       */
+      public_key block_signing_key;
 
-    /**
-     *  Name of the producer
-     *
-     *  @ingroup producer_key
-     */
-    name             producer_name;
+      /// @cond OPERATORS
 
-    /**
-     *  Block signing key used by this producer
-     *
-     *  @ingroup producer_key
-     */
-    public_key       block_signing_key;
+      friend constexpr bool operator<(const producer_key& a, const producer_key& b)
+      {
+         return a.producer_name < b.producer_name;
+      }
 
-    /// @cond OPERATORS
+      /// @endcond
 
-    friend constexpr bool operator < ( const producer_key& a, const producer_key& b ) {
-      return a.producer_name < b.producer_name;
-    }
-
-    /// @endcond
-
-    EOSLIB_SERIALIZE( producer_key, (producer_name)(block_signing_key) )
-  };
+      EOSLIB_SERIALIZE(producer_key, (producer_name)(block_signing_key))
+   };
 
    /**
     *  @defgroup producer_schedule Producer Schedule
@@ -57,16 +58,17 @@ namespace eosio {
     *
     * @ingroup producer_schedule
     */
-   struct producer_schedule {
+   struct producer_schedule
+   {
       /**
        * Version number of the schedule. It is sequentially incrementing version number
        */
-      uint32_t                     version;
+      uint32_t version;
 
       /**
        * List of producers for this schedule, including its signing key
        */
-      std::vector<producer_key>    producers;
+      std::vector<producer_key> producers;
    };
 
    /**
@@ -81,7 +83,8 @@ namespace eosio {
     *
     * @ingroup producer_authority
     */
-   struct key_weight {
+   struct key_weight
+   {
       /**
        * public key used in a weighted threshold multi-sig authority
        *
@@ -90,13 +93,14 @@ namespace eosio {
       public_key key;
 
       /**
-       * weight associated with a signature from the private key associated with the accompanying public key
+       * weight associated with a signature from the private key associated with the accompanying
+       * public key
        *
        * @brief weight of the public key
        */
-      uint16_t   weight;
+      uint16_t weight;
 
-      EOSLIB_SERIALIZE( key_weight, (key)(weight) )
+      EOSLIB_SERIALIZE(key_weight, (key)(weight))
    };
 
    /**
@@ -107,24 +111,26 @@ namespace eosio {
     *
     * @brief weighted threshold multi-sig authority
     */
-   struct block_signing_authority_v0 {
+   struct block_signing_authority_v0
+   {
       /**
        * minimum threshold of accumulated weights from component keys that satisfies this authority
        *
-       * @brief minimum threshold of accumulated weights from component keys that satisfies this authority
+       * @brief minimum threshold of accumulated weights from component keys that satisfies this
+       * authority
        */
-      uint32_t                    threshold;
+      uint32_t threshold;
 
       /**
        * component keys and their associated weights
        *
        * @brief component keys and their associated weights
        */
-      std::vector<key_weight>     keys;
+      std::vector<key_weight> keys;
 
-      bool is_valid()const;
+      bool is_valid() const;
 
-      EOSLIB_SERIALIZE( block_signing_authority_v0, (threshold)(keys) )
+      EOSLIB_SERIALIZE(block_signing_authority_v0, (threshold)(keys))
    };
 
    /**
@@ -141,25 +147,26 @@ namespace eosio {
     *
     * @brief Maps producer with its signing key
     */
-   struct producer_authority {
-
+   struct producer_authority
+   {
       /**
        * Name of the producer
        *
        * @brief Name of the producer
        */
-      name             producer_name;
+      name producer_name;
 
       /**
        * The block signing authority used by this producer
        */
-      block_signing_authority       authority;
+      block_signing_authority authority;
 
-      friend constexpr bool operator < ( const producer_authority& a, const producer_authority& b ) {
+      friend constexpr bool operator<(const producer_authority& a, const producer_authority& b)
+      {
          return a.producer_name < b.producer_name;
       }
 
-      EOSLIB_SERIALIZE( producer_authority, (producer_name)(authority) )
+      EOSLIB_SERIALIZE(producer_authority, (producer_name)(authority))
    };
 
    /**
@@ -169,4 +176,4 @@ namespace eosio {
     */
    std::vector<name> get_active_producers();
 
-} /// namespace eosio
+}  // namespace eosio

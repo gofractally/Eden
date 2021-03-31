@@ -1,14 +1,20 @@
-#include <eosio/print.hpp>
 #include <string.h>
+#include <eosio/print.hpp>
 
-namespace eosio { namespace internal_use_do_not_use {
+namespace eosio
+{
+   namespace internal_use_do_not_use
+   {
+      extern "C" void printi(int64_t value)
+      {
+         if (value < 0)
+         {
+            prints("-");
+            printui(-value);
+         }
+         else
+            printui(value);
+      }
 
-extern "C" void printi(int64_t value) {
-   if (value < 0) {
-      prints("-");
-      printui(-value);
-   } else
-      printui(value);
-}
-
-}} // namespace eosio::internal_use_do_not_use
+   }  // namespace internal_use_do_not_use
+}  // namespace eosio

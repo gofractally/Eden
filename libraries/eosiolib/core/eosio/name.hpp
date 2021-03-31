@@ -8,19 +8,19 @@
 
 /// @cond IMPLEMENTATIONS
 
-namespace eosio {
-   namespace internal_use_do_not_use {
-      extern "C" {
-         __attribute__((eosio_wasm_import))
-         void printn(uint64_t);
+namespace eosio
+{
+   namespace internal_use_do_not_use
+   {
+      extern "C"
+      {
+         __attribute__((eosio_wasm_import)) void printn(uint64_t);
       }
-   }
+   }  // namespace internal_use_do_not_use
 
-   inline void print(name obj) {
-      internal_use_do_not_use::printn(obj.value);
-   }
+   inline void print(name obj) { internal_use_do_not_use::printn(obj.value); }
 
-}
+}  // namespace eosio
 
 using namespace eosio::literals;
 

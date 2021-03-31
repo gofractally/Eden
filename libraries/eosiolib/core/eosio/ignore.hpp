@@ -2,39 +2,48 @@
 
 #include "datastream.hpp"
 
-namespace eosio {
+namespace eosio
+{
    /**
     * @defgroup ignore
     * @ingroup core
-    * @brief Enables telling the datastream to ignore this type, but allowing abi generator to add the correct type.
+    * @brief Enables telling the datastream to ignore this type, but allowing abi generator to add
+    * the correct type.
     */
 
    /**
-    * Tells the datastream to ignore this type, but allows the abi generator to add the correct type.
+    * Tells the datastream to ignore this type, but allows the abi generator to add the correct
+    * type.
     *
     * @ingroup ignore
-    * @details Currently non-ignore types can not succeed an ignore type in a method definition, i.e. void foo(float, ignore<int>) is allowed and void foo(float, ignore<int>, int) is not allowed.
-    * @note This restriction will be relaxed in a later release. Currently non-ignore types can not succeed an ignore type in a method definition, i.e. void foo(float, ignore<int>) is allowed and void foo(float, ignore<int>, int) is not allowed.
+    * @details Currently non-ignore types can not succeed an ignore type in a method definition,
+    * i.e. void foo(float, ignore<int>) is allowed and void foo(float, ignore<int>, int) is not
+    * allowed.
+    * @note This restriction will be relaxed in a later release. Currently non-ignore types can not
+    * succeed an ignore type in a method definition, i.e. void foo(float, ignore<int>) is allowed
+    * and void foo(float, ignore<int>, int) is not allowed.
     */
    template <typename T>
-   struct [[eosio::ignore]] ignore {
+   struct [[eosio::ignore]] ignore
+   {
       using type = T;
    };
 
    /**
     * is_ignore_v<T> is true iff T is ignore<T2>
     */
-   template<typename T>
+   template <typename T>
    inline constexpr bool is_ignore_v = false;
 
-   template<typename T>
+   template <typename T>
    inline constexpr bool is_ignore_v<ignore<T>> = true;
 
-    /**
+   /**
     * Wrapper class to allow sending inline actions with the correct payload
     */
    template <typename T>
-   struct ignore_wrapper {
+   struct ignore_wrapper
+   {
       constexpr ignore_wrapper() {}
       constexpr ignore_wrapper(T val) : value(val) {}
       constexpr ignore_wrapper(ignore<T> val) {}
@@ -53,10 +62,11 @@ namespace eosio {
     *  @tparam DataStream - Type of datastream buffer
     *  @return DataStream& - Reference to the datastream
     */
-   template<typename DataStream, typename T>
-   inline DataStream& operator<<(DataStream& ds, const ::eosio::ignore_wrapper<T>& val) {
-     ds << val.value;
-     return ds;
+   template <typename DataStream, typename T>
+   inline DataStream& operator<<(DataStream& ds, const ::eosio::ignore_wrapper<T>& val)
+   {
+      ds << val.value;
+      return ds;
    }
 
    /**
@@ -68,9 +78,10 @@ namespace eosio {
     *  @tparam DataStream - Type of datastream buffer
     *  @return DataStream& - Reference to the datastream
     */
-   template<typename DataStream, typename T>
-   inline DataStream& operator<<(DataStream& ds, const ::eosio::ignore<T>& val) {
-     return ds;
+   template <typename DataStream, typename T>
+   inline DataStream& operator<<(DataStream& ds, const ::eosio::ignore<T>& val)
+   {
+      return ds;
    }
 
    /**
@@ -82,8 +93,9 @@ namespace eosio {
     *  @tparam DataStream - Type of datastream buffer
     *  @return DataStream& - Reference to the datastream
     */
-   template<typename DataStream, typename T>
-   inline DataStream& operator>>(DataStream& ds, ::eosio::ignore<T>&) {
-     return ds;
+   template <typename DataStream, typename T>
+   inline DataStream& operator>>(DataStream& ds, ::eosio::ignore<T>&)
+   {
+      return ds;
    }
-}
+}  // namespace eosio

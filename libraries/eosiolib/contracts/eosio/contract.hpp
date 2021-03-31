@@ -1,8 +1,7 @@
 #pragma once
 
-#include <eosio/name.hpp>
 #include <eosio/datastream.hpp>
-
+#include <eosio/name.hpp>
 
 /**
  * @defgroup contract Contract
@@ -16,19 +15,20 @@
  * @ingroup contract
  */
 #define CONTRACT class [[eosio::contract]]
-#define ACTION   [[eosio::action]] void
+#define ACTION [[eosio::action]] void
 #define TABLE struct [[eosio::table]]
 
-namespace eosio {
-
-/**
- * %Base class for EOSIO contract.
- *
- * @ingroup contract
- * @details %A new contract should derive from this class, so it can make use of EOSIO_ABI macro.
- */
-class contract {
-   public:
+namespace eosio
+{
+   /**
+    * %Base class for EOSIO contract.
+    *
+    * @ingroup contract
+    * @details %A new contract should derive from this class, so it can make use of EOSIO_ABI macro.
+    */
+   class contract
+   {
+     public:
       /**
        * Construct a new contract given the contract name
        *
@@ -36,7 +36,10 @@ class contract {
        * @param first_receiver - The account the incoming action was first received at.
        * @param ds - The datastream used
        */
-      contract( name self, name first_receiver, datastream<const char*> ds ):_self(self),_first_receiver(first_receiver),_ds(ds) {}
+      contract(name self, name first_receiver, datastream<const char*> ds)
+          : _self(self), _first_receiver(first_receiver), _ds(ds)
+      {
+      }
 
       /**
        *
@@ -44,22 +47,21 @@ class contract {
        *
        * @return name - The name of this contract
        */
-      inline name get_self()const { return _self; }
+      inline name get_self() const { return _self; }
 
       /**
        * The first_receiver name of the action this contract is processing.
        *
        * @return name - The first_receiver name of the action this contract is processing.
        */
-      [[deprecated]]
-      inline name get_code()const { return _first_receiver; }
+      [[deprecated]] inline name get_code() const { return _first_receiver; }
 
       /**
        * The account the incoming action was first received at.
        *
        * @return name - The first_receiver name of the action this contract is processing.
        */
-      inline name get_first_receiver()const { return _first_receiver; }
+      inline name get_first_receiver() const { return _first_receiver; }
 
       /**
        * Get the datastream for this contract
@@ -73,9 +75,9 @@ class contract {
        *
        * @return datastream<const char*> - The datastream for this contract
        */
-      inline const datastream<const char*>& get_datastream()const { return _ds; }
+      inline const datastream<const char*>& get_datastream() const { return _ds; }
 
-   protected:
+     protected:
       /**
        * The name of the account this contract is deployed on.
        */
@@ -90,5 +92,5 @@ class contract {
        * The datastream for this contract
        */
       datastream<const char*> _ds = datastream<const char*>(nullptr, 0);
-};
-}
+   };
+}  // namespace eosio
