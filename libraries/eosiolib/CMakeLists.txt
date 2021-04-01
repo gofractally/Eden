@@ -10,6 +10,7 @@ target_include_directories(eosio-contract PUBLIC contracts)
 target_link_options(eosio-contract INTERFACE
     -Wl,--stack-first
     -Wl,--entry,apply
+    -Wl,-z,stack-size=8192
     -nostdlib
     -lc++ -lc++abi -lc
     ${WASI_SDK_PREFIX}/lib/clang/11.0.0/lib/wasi/libclang_rt.builtins-wasm32.a
