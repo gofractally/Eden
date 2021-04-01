@@ -1,0 +1,14 @@
+{
+    "extends": "./tsconfig.build.json",
+
+    "compilerOptions": {
+        "baseUrl": ".",
+        "paths": {
+            "@edenos/*": ["packages/*/src"]
+        },
+        "jsx": "react",
+        "esModuleInterop": true,
+        "skipLibCheck": true,
+        "types": ["node"]
+    }
+}
