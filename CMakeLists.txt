@@ -30,3 +30,24 @@ if(DEFINED WASI_SDK_PREFIX)
 else()
     message(WARNING "WASI_SDK_PREFIX isn't defined; skipping wasm")
 endif()
+
+########## TS PACKAGES ####################
+if(NOT DEFINED SKIP_TS OR NOT SKIP_TS)
+    add_custom_target(yarn ALL
+        COMMAND yarn
+        COMMAND yarn build
+    )
+
+    add_custom_target(packages ALL
+        DEPENDS yarn
+        COMMAND rm -rf ${CMAKE_BINARY_DIR}/dist
+
+        COMMAND mkdir -p ${CMAKE_BINARY_DIR}/dist/webapp
+        COMMAND cp -a ${CMAKE_CURRENT_SOURCE_DIR}/packages/webapp/dist/* ${CMAKE_BINARY_DIR}/dist/webapp
+    )
+
+    add_custom_target(dev
+        DEPENDS yarn
+        COMMAND yarn dev --stream
+    )
+endif()

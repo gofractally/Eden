@@ -1,0 +1,12 @@
+{
+    "compilerOptions": {
+        "module": "commonjs",
+        "target": "ESNext",
+        "sourceMap": true,
+        "noEmitOnError": true,
+        "skipLibCheck": true,
+        "esModuleInterop": true
+    },
+
+    "exclude": ["node_modules", "dist"]
+}

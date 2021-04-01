@@ -14,3 +14,4 @@ CMakeFiles
 compile_commands.json
 dist
 Makefile
+node_modules
