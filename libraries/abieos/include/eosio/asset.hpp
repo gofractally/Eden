@@ -23,6 +23,12 @@ namespace eosio
     *  @brief Defines C++ API for managing assets
     */
 
+   struct no_check_t
+   {
+   };
+
+   inline constexpr no_check_t no_check;
+
    /**
     *  Stores information for owner of asset
     *
@@ -45,7 +51,7 @@ namespace eosio
        */
       static constexpr int64_t max_amount = (1LL << 62) - 1;
 
-      asset() {}
+      constexpr asset() : symbol{} {}
 
       /**
        * Construct a new asset given the symbol name and the amount
@@ -58,6 +64,8 @@ namespace eosio
          eosio::check(is_amount_within_range(), "magnitude of asset amount must be less than 2^62");
          eosio::check(symbol.is_valid(), "invalid symbol name");
       }
+
+      constexpr asset(int64_t a, class symbol s, no_check_t) : amount(a), symbol{s} {}
 
       /**
        * Check if the amount doesn't exceed the max amount

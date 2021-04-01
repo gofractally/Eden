@@ -1,6 +1,7 @@
 add_executable(eden
    src/actions/hi.cpp
    src/actions/transfer_handler.cpp
+   src/eden.cpp
    src/members.cpp
 )
 target_include_directories(eden PUBLIC include)

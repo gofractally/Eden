@@ -7,7 +7,7 @@
 
 namespace eden
 {
-   class [[eosio::contract("eden")]] eden : public eosio::contract
+   class eden : public eosio::contract
    {
      public:
       using contract::contract;
@@ -20,7 +20,8 @@ namespace eden
       [[eosio::on_notify("eosio.token::transfer")]] void transfer_handler(
           eosio::name from, eosio::name to, const eosio::asset& quantity, std::string memo);
 
-      [[eosio::action]] void hi(eosio::name user);
+      void hi(eosio::name user);
    };
 
+   EOSIO_ACTIONS(eden, "eden"_n, hi)
 }  // namespace eden
