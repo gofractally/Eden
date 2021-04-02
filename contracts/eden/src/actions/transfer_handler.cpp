@@ -3,15 +3,17 @@
 
 namespace eden
 {
-   void eden::transfer_handler(eosio::name from,
-                               eosio::name to,
-                               const eosio::asset& quantity,
-                               std::string memo)
+   void eden::notify_transfer(eosio::name from,
+                              eosio::name to,
+                              const eosio::asset& quantity,
+                              std::string memo)
    {
       print_f("transfer from name: %\n", from);
 
       eosio::check(to == get_self(), "only accepting transfers to us");
       eosio::check(quantity.symbol == default_token, "token must be a valid EOS");
+      eosio::check(get_first_receiver() == token_contract,
+                   "token must be from the right token contract");
 
       members{get_self()}.deposit(from, quantity);
    }

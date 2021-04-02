@@ -1,14 +1,15 @@
 #pragma once
 #include <boost/fusion/adapted/std_tuple.hpp>
 #include <boost/fusion/include/std_tuple.hpp>
+#include <boost/mp11/tuple.hpp>
+#include <boost/preprocessor/cat.hpp>
+#include <boost/preprocessor/facilities/check_empty.hpp>
+#include <boost/preprocessor/logical/bitand.hpp>
+#include <boost/preprocessor/logical/compl.hpp>
 #include <eosio/action.hpp>
 
-#include <boost/mp11/tuple.hpp>
-
-#ifdef __cplusplus
 extern "C"
 {
-#endif
    /**
     * Set the action return value which will be included in the action_receipt
     * @brief Set the action return value
@@ -19,57 +20,10 @@ extern "C"
    [[clang::import_name("set_action_return_value")]] void set_action_return_value(
        void* return_value,
        size_t size);
-
-#ifdef __cplusplus
 }  // extern "C"
-#endif
 
 namespace eosio
 {
-   /**
-    * @defgroup dispatcher Dispatcher
-    * @ingroup contracts
-    * @brief Defines C++ functions to dispatch action to proper action handler inside a contract
-    */
-
-   /// @cond IMPLEMENTATIONS
-
-   template <typename Contract, typename FirstAction>
-   bool dispatch(uint64_t code, uint64_t act)
-   {
-      if (code == FirstAction::get_account() && FirstAction::get_name() == act)
-      {
-         Contract().on(unpack_action_data<FirstAction>());
-         return true;
-      }
-      return false;
-   }
-
-   /// @endcond
-
-   /**
-    * This method will dynamically dispatch an incoming set of actions to
-    *
-    * ```
-    * static Contract::on( ActionType )
-    * ```
-    *
-    * For this to work the Actions must be derived from eosio::contract
-    *
-    * @ingroup dispatcher
-    *
-    */
-   template <typename Contract, typename FirstAction, typename SecondAction, typename... Actions>
-   bool dispatch(uint64_t code, uint64_t act)
-   {
-      if (code == FirstAction::get_account() && FirstAction::get_name() == act)
-      {
-         Contract().on(unpack_action_data<FirstAction>());
-         return true;
-      }
-      return eosio::dispatch<Contract, SecondAction, Actions...>(code, act);
-   }
-
    /**
     * Unpack the received action and execute the correponding action handler
     *
@@ -121,62 +75,51 @@ namespace eosio
       return true;
    }
 
-   template <typename T, typename R, typename... Args>
-   bool execute_action(name self, name code, R (T::*func)(Args...) const)
-   {
-      size_t size = action_data_size();
+#define EOSIO_EMPTY(...)
 
-      // using malloc/free here potentially is not exception-safe, although WASM doesn't support
-      // exceptions
-      void* buffer = nullptr;
-      if (size > 0)
-      {
-         buffer = malloc(size);
-         read_action_data(buffer, size);
-      }
+#define EOSIO_MATCH_CHECK_N(x, n, r, ...) \
+   BOOST_PP_BITAND(n, BOOST_PP_COMPL(BOOST_PP_CHECK_EMPTY(r)))
+#define EOSIO_MATCH_CHECK(...) EOSIO_MATCH_CHECK_N(__VA_ARGS__, 0, )
+#define EOSIO_MATCH_YES ~, 1,
+#define EOSIO_MATCH(base, x) EOSIO_MATCH_CHECK(BOOST_PP_CAT(base, x))
+#define EOSIO_EXTRACT_IMPL1(x, n, r) r
+#define EOSIO_EXTRACT_IMPL2(r) EOSIO_EXTRACT_IMPL1(r)
+#define EOSIO_EXTRACT(base, x) EOSIO_EXTRACT_IMPL2(BOOST_PP_CAT(base, x))
 
-      std::tuple<std::decay_t<Args>...> args;
-      datastream<const char*> ds((char*)buffer, size);
-      ds >> args;
+#define EOSIO_MATCH_NOTIFY(x) EOSIO_MATCH(EOSIO_MATCH_NOTIFY_, x)
+#define EOSIO_EXTRACT_NOTIFY(x) EOSIO_EXTRACT(EOSIO_MATCH_NOTIFY_, x)
+#define EOSIO_MATCH_NOTIFY_notify EOSIO_MATCH_YES
 
-      T inst(self, code, ds);
-
-      auto f2 = [&](auto... a) { return ((&inst)->*func)(a...); };
-
-      if constexpr (!std::is_same_v<void, R>)
-      {
-         auto r = eosio::pack(boost::mp11::tuple_apply(f2, args));
-         ::set_action_return_value(r.data(), r.size());
-      }
-      else
-      {
-         boost::mp11::tuple_apply(f2, args);
-      }
-
-      if (size)
-      {
-         free(buffer);
-      }
-      return true;
-   }
-
-   /// @cond INTERNAL
-
-// Helper macro for EOSIO_DISPATCH_INTERNAL
-#define EOSIO_DISPATCH_INTERNAL(r, OP, elem)                                                 \
-   case eosio::hash_name(BOOST_PP_STRINGIZE(elem)):                                          \
-      executed = eosio::execute_action(eosio::name(receiver), eosio::name(code), &OP::elem); \
+#define EOSIO_DISPATCH_ACTION_INTERNAL_1(r, type, member)                                        \
+   case eosio::hash_name(BOOST_PP_STRINGIZE(member)):                                            \
+      executed = eosio::execute_action(eosio::name(receiver), eosio::name(code), &type::member); \
       break;
+#define EOSIO_DISPATCH_ACTION_INTERNAL(r, type, member)                                    \
+   BOOST_PP_IIF(EOSIO_MATCH_NOTIFY(member), EOSIO_EMPTY, EOSIO_DISPATCH_ACTION_INTERNAL_1) \
+   (r, type, member)
+#define EOSIO_DISPATCH_ACTION(type, MEMBERS) \
+   BOOST_PP_SEQ_FOR_EACH(EOSIO_DISPATCH_ACTION_INTERNAL, type, MEMBERS)
 
-// Helper macro for EOSIO_DISPATCH
-#define EOSIO_DISPATCH_HELPER(TYPE, MEMBERS) \
-   BOOST_PP_SEQ_FOR_EACH(EOSIO_DISPATCH_INTERNAL, TYPE, MEMBERS)
+#define EOSIO_NOTIFY_ACTION_INTERNAL_1(r, type, member)                                      \
+   case eosio::hash_name(BOOST_PP_STRINGIZE(EOSIO_EXTRACT_NOTIFY(member))):                  \
+      executed =                                                                             \
+          eosio::execute_action(eosio::name(receiver), eosio::name(code),                    \
+                                &type::BOOST_PP_CAT(notify_, EOSIO_EXTRACT_NOTIFY(member))); \
+      break;
+#define EOSIO_DISPATCH_NOTIFY_INTERNAL(r, type, member)                                  \
+   BOOST_PP_IIF(EOSIO_MATCH_NOTIFY(member), EOSIO_NOTIFY_ACTION_INTERNAL_1, EOSIO_EMPTY) \
+   (r, type, member)
+#define EOSIO_DISPATCH_NOTIFY(type, MEMBERS) \
+   BOOST_PP_SEQ_FOR_EACH(EOSIO_DISPATCH_NOTIFY_INTERNAL, type, MEMBERS)
 
-   /// @endcond
-
-#define EOSIO_ACTION_WRAPPER_DECL(r, data, action)    \
+#define EOSIO_ACTION_WRAPPER_DECL_1(r, data, action)  \
    using action = eosio::action_wrapper<BOOST_PP_CAT( \
        BOOST_PP_STRINGIZE(action), _h), &__contract_class::action, __contract_account>;
+#define EOSIO_ACTION_WRAPPER_DECL_0(r, data, action)
+
+#define EOSIO_ACTION_WRAPPER_DECL(r, data, action)                                      \
+   BOOST_PP_CAT(EOSIO_ACTION_WRAPPER_DECL_, BOOST_PP_COMPL(EOSIO_MATCH_NOTIFY(action))) \
+   (r, data, action)
 
 #define EOSIO_ACTIONS(CONTRACT_CLASS, CONTRACT_ACCOUNT, ...)                                     \
    namespace actions                                                                             \
@@ -187,13 +130,22 @@ namespace eosio
                                                                                                  \
       inline void eosio_apply(uint64_t receiver, uint64_t code, uint64_t action)                 \
       {                                                                                          \
-         eosio::check(code == receiver, "notifications not supported by dispatcher");            \
          bool executed = false;                                                                  \
-         switch (action)                                                                         \
+         if (code == receiver)                                                                   \
          {                                                                                       \
-            EOSIO_DISPATCH_HELPER(CONTRACT_CLASS, BOOST_PP_VARIADIC_TO_SEQ(__VA_ARGS__))         \
+            switch (action)                                                                      \
+            {                                                                                    \
+               EOSIO_DISPATCH_ACTION(CONTRACT_CLASS, BOOST_PP_VARIADIC_TO_SEQ(__VA_ARGS__))      \
+            }                                                                                    \
+            eosio::check(executed == true, "unknown action");                                    \
          }                                                                                       \
-         eosio::check(executed == true, "unkown action");                                        \
+         else                                                                                    \
+         {                                                                                       \
+            switch (action)                                                                      \
+            {                                                                                    \
+               EOSIO_DISPATCH_NOTIFY(CONTRACT_CLASS, BOOST_PP_VARIADIC_TO_SEQ(__VA_ARGS__))      \
+            }                                                                                    \
+         }                                                                                       \
       }                                                                                          \
    }
 
