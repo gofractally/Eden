@@ -8,6 +8,7 @@
         "test": "yarn run build"
     },
     "dependencies": {
+        "csv-parse": "^4.15.3",
         "next": "~10",
         "react": "~17",
         "react-dom": "~17",

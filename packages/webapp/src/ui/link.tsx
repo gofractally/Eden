@@ -1,4 +1,5 @@
 import React from "react";
+import NextLink from "next/link";
 
 interface Props {
     children: React.ReactNode;
@@ -7,11 +8,11 @@ interface Props {
 }
 
 export const Link = ({ children, className, href }: Props) => {
-    const textClass = `${className || ""} text-yellow-500 hover:underline`;
+    const linkClass = `${className || ""} text-yellow-500 hover:underline`;
 
     return (
-        <a className={textClass} href={href}>
-            {children}
-        </a>
+        <NextLink href={href}>
+            <a className={linkClass}>{children}</a>
+        </NextLink>
     );
 };

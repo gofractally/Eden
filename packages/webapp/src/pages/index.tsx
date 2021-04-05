@@ -1,12 +1,13 @@
-import { MemberCard } from "members/card";
-import { Heading } from "ui";
+import { Heading, Link } from "ui";
 
 export const Index = () => (
     <>
         <Heading>Hello Eden Community!</Heading>
-        <p>Here is Dans Image:</p>
-        <img src="/images/dan-card.jpg" />
-        <MemberCard />
+        <ul>
+            <li>
+                <Link href="/members">Members Page</Link>
+            </li>
+        </ul>
     </>
 );
 
