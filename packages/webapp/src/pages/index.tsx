@@ -1,10 +1,13 @@
 import { MemberCard } from "members/card";
+import { Heading } from "ui";
 
-export default () => (
+export const Index = () => (
     <>
-        <h1>Hello Eden Community!</h1>
+        <Heading>Hello Eden Community!</Heading>
         <p>Here is Dans Image:</p>
         <img src="/images/dan-card.jpg" />
         <MemberCard />
     </>
 );
+
+export default Index;
