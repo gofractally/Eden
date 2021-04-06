@@ -9,7 +9,7 @@ import {
 } from "react-icons/fa";
 import Link from "next/link";
 
-import { Button, Heading, SmallText, SocialButton, Text } from "ui";
+import { Button, Heading, SmallText, SocialButton, Text } from "_app";
 
 import { MemberData } from "../interfaces";
 

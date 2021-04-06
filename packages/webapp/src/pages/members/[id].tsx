@@ -1,6 +1,6 @@
 import { GetServerSideProps } from "next";
 
-import { Heading } from "ui";
+import { RawLayout } from "_app";
 import { getMember, MemberCard, MemberCollections, MemberData } from "members";
 
 interface Props {
@@ -9,17 +9,13 @@ interface Props {
 
 export const MemberPage = ({ member }: Props) => {
     return (
-        <div className="bg-gray-50 min-h-screen">
-            <div className="px-8 pt-8">
-                <Heading>EdenOS Member Profile</Heading>
-                <hr />
-            </div>
+        <RawLayout title={`${member.name}'s Profile`}>
             <MemberCard member={member} />
             <MemberCollections
                 edenAccount={member.edenAccount}
                 templateId={member.templateId}
             />
-        </div>
+        </RawLayout>
     );
 };
 

@@ -1,7 +1,7 @@
 import React from "react";
 import Link from "next/link";
 
-import { SmallText } from "ui";
+import { SmallText } from "_app";
 
 import { MemberData } from "../interfaces";
 

@@ -1,14 +1,13 @@
-import { Heading, Link } from "ui";
+import { Link, SingleColLayout } from "_app";
 
 export const Index = () => (
-    <>
-        <Heading>Hello Eden Community!</Heading>
+    <SingleColLayout title="Community">
         <ul>
             <li>
                 <Link href="/members">Members Page</Link>
             </li>
         </ul>
-    </>
+    </SingleColLayout>
 );
 
 export default Index;
