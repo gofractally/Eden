@@ -79,7 +79,6 @@ const convertAtomicAssetToMember = (data: any): MemberData => ({
     edenAccount: data.immutable_data.edenacc,
     bio: data.immutable_data.bio,
     inductionVideo: data.immutable_data.inductionvid || "",
-    role: data.immutable_data.role,
     createdAt: parseInt(data.created_at_time),
     socialHandles: parseMemberSocialHandles(data.immutable_data.social),
 });

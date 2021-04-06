@@ -6,7 +6,6 @@ export interface MemberData {
     bio: string;
     socialHandles: MemberSocialHandles;
     inductionVideo: string;
-    role: string; // TODO: convert to enum
     createdAt: number;
 }
 
