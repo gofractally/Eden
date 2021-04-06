@@ -23,7 +23,7 @@ export default MemberPage;
 
 export const getServerSideProps: GetServerSideProps = async ({ params }) => {
     try {
-        const edenAccount = params.id as string;
+        const edenAccount = params!.id as string;
         const member = await getMember(edenAccount);
         console.info(member);
         return { props: { member } };

@@ -1,9 +1,14 @@
+import { FormEvent } from "react";
 import { FaSignOutAlt } from "react-icons/fa";
 import { Button, Link, SmallText } from "_app";
 
 import { demoTransaction } from "../transactions";
 
-export const CreatorForm = ({ ual }: any) => {
+interface WithUALProps {
+    ual: any;
+}
+
+export const CreatorForm = ({ ual }: WithUALProps) => {
     return (
         <div>
             {ual.activeUser ? (
@@ -15,8 +20,8 @@ export const CreatorForm = ({ ual }: any) => {
     );
 };
 
-const Form = ({ ual }) => {
-    const submitTransaction = async (e) => {
+const Form = ({ ual }: WithUALProps) => {
+    const submitTransaction = async (e: FormEvent) => {
         e.preventDefault();
 
         try {
@@ -43,7 +48,7 @@ const Form = ({ ual }) => {
     );
 };
 
-const LogoutFooter = ({ ual }) => (
+const LogoutFooter = ({ ual }: WithUALProps) => (
     <SmallText className="mt-6">
         Creating NFTs as {ual.activeUser.accountName}{" "}
         <Link onClick={ual.logout}>

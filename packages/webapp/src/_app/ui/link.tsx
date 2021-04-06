@@ -16,7 +16,7 @@ export const Link = ({ children, className, href, onClick }: Props) => {
             {children}
         </a>
     ) : (
-        <NextLink href={href}>
+        <NextLink href={href!}>
             <a className={linkClass}>{children}</a>
         </NextLink>
     );
