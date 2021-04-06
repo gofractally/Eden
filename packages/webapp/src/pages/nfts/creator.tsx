@@ -1,13 +1,13 @@
 import { UALProvider, withUAL } from "ual-reactjs-renderer";
 
-import { ClientOnly, SingleColLayout } from "_app";
+import { ClientOnly, RawLayout } from "_app";
 import { anchor, appName, chainConfig, CreatorForm } from "nfts";
 
 const CreatorUalForm = withUAL(CreatorForm);
 
 export const MembersCreatorPage = () => {
     return (
-        <SingleColLayout title="NFT Creator">
+        <RawLayout title="NFT Creator">
             <ClientOnly>
                 <UALProvider
                     chains={[chainConfig]}
@@ -17,7 +17,7 @@ export const MembersCreatorPage = () => {
                     <CreatorUalForm />
                 </UALProvider>
             </ClientOnly>
-        </SingleColLayout>
+        </RawLayout>
     );
 };
 
