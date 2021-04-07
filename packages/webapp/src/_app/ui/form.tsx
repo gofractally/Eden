@@ -13,7 +13,9 @@ export const Label: React.FC<{
 export const Input: React.FC<HTMLProps<HTMLInputElement>> = (props) => {
     return (
         <input
-            className="w-full bg-white rounded border border-gray-300 focus:border-yellow-500 focus:ring-2 focus:ring-yellow-200 text-base outline-none text-gray-700 py-1 px-3 leading-8 transition-colors duration-200 ease-in-out"
+            className={`w-full bg-white rounded border border-gray-300 focus:border-yellow-500 focus:ring-2 focus:ring-yellow-200 text-base outline-none text-gray-700 py-1 px-3 leading-8 transition-colors duration-200 ease-in-out ${
+                props.disabled ? "bg-gray-50" : ""
+            }`}
             {...props}
         />
     );
@@ -35,10 +37,12 @@ export const FileInput: React.FC<
     );
 };
 
-export const Select: React.FC = (props) => {
+export const Select: React.FC<HTMLProps<HTMLSelectElement>> = (props) => {
     return (
         <select
-            className="mt-1 block w-full py-2 px-3 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-yellow-500 sm:text-sm"
+            className={`mt-1 block w-full py-2 px-3 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-yellow-500 sm:text-sm ${
+                props.disabled ? "bg-gray-50" : ""
+            }`}
             {...props}
         >
             {props.children}
@@ -50,7 +54,9 @@ export const TextArea: React.FC<HTMLProps<HTMLTextAreaElement>> = (props) => {
     return (
         <textarea
             rows={3}
-            className="w-full bg-white rounded border border-gray-300 focus:border-yellow-500 focus:ring-2 focus:ring-yellow-200 h-32 text-base outline-none text-gray-700 py-1 px-3 resize-none leading-6 transition-colors duration-200 ease-in-out"
+            className={`w-full bg-white rounded border border-gray-300 focus:border-yellow-500 focus:ring-2 focus:ring-yellow-200 h-32 text-base outline-none text-gray-700 py-1 px-3 resize-none leading-6 transition-colors duration-200 ease-in-out ${
+                props.disabled ? "bg-gray-50" : ""
+            }`}
             {...props}
         ></textarea>
     );

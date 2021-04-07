@@ -4,6 +4,7 @@ if (
     !process.env.NEXT_PUBLIC_EOS_RPC_PORT ||
     !process.env.NEXT_PUBLIC_EOS_CHAIN_ID ||
     !process.env.NEXT_PUBLIC_AA_BASE_URL ||
+    !process.env.NEXT_PUBLIC_AA_HUB_URL ||
     !process.env.NEXT_PUBLIC_AA_CONTRACT ||
     !process.env.NEXT_PUBLIC_AA_COLLECTION_NAME ||
     !process.env.NEXT_PUBLIC_AA_SCHEMA_NAME ||
@@ -20,6 +21,7 @@ export const edenContractAccount =
     process.env.NEXT_PUBLIC_EDEN_CONTRACT_ACCOUNT;
 
 export const atomicAssets = {
+    hubUrl: process.env.NEXT_PUBLIC_AA_HUB_URL,
     apiBaseUrl: process.env.NEXT_PUBLIC_AA_BASE_URL,
     contract: process.env.NEXT_PUBLIC_AA_CONTRACT,
     collection: process.env.NEXT_PUBLIC_AA_COLLECTION_NAME,

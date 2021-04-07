@@ -6,18 +6,34 @@ interface Props {
     href?: string;
     className?: string;
     onClick?: () => void;
+    target?: string;
+    isExternal?: boolean;
 }
 
-export const Link = ({ children, className, href, onClick }: Props) => {
+export const Link = ({
+    children,
+    className,
+    href,
+    target,
+    isExternal,
+    onClick,
+}: Props) => {
     const linkClass = `${className || ""} text-yellow-500 hover:underline`;
 
-    return onClick ? (
-        <a className={linkClass} href="#" onClick={onClick}>
+    return isExternal || onClick ? (
+        <a
+            className={linkClass}
+            href={href || "#"}
+            onClick={onClick}
+            target={target}
+        >
             {children}
         </a>
     ) : (
         <NextLink href={href!}>
-            <a className={linkClass}>{children}</a>
+            <a className={linkClass} target={target}>
+                {children}
+            </a>
         </NextLink>
     );
 };

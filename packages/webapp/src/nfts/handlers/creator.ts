@@ -2,28 +2,29 @@ import {
     edenNftCreationTransaction,
     edenNftMintTransaction,
 } from "../transactions";
-import { EdenNftCreationData, EdenNftData } from "../interfaces";
+import { EdenNftData } from "../interfaces";
 import { getTemplates } from "nfts/api";
 import { edenContractAccount } from "config";
 
-export const createNft = async (
-    ual: any,
-    { inductors, nft }: EdenNftCreationData
-) => {
-    const assetsToMint = inductors.length + 2;
-
+export const validateAndConfirmCreation = (
+    nft: EdenNftData,
+    inductors: string[],
+    assetsToMint: number
+): boolean => {
     if (inductors.length < 1) {
         throw new Error("At least one inductor is required");
     }
 
-    if (
-        !confirm(
-            `By signing the following transaction, we are going to mint ${assetsToMint} NFTs. #1 goes to the eden community contract account, #2 goes to the new member ${nft.edenacc}, #3 goes to inviter account ${inductors[0]} and the rest goes to the remaining inductors. Do you want to proceed with the transaction?`
-        )
-    ) {
-        return;
-    }
+    return confirm(
+        `By signing the following transaction, we are going to mint ${assetsToMint} NFTs. #1 goes to the eden community on account ${edenContractAccount}, #2 goes to the new member ${nft.edenacc}, #3 goes to inviter account ${inductors[0]} and the rest goes to the remaining inductors. Do you want to proceed with the transaction?`
+    );
+};
 
+export const createNft = async (
+    ual: any,
+    nft: EdenNftData,
+    assetsToMint: number
+): Promise<number> => {
     if (nft.social === "{}") {
         delete nft.social;
     }
@@ -52,15 +53,23 @@ export const createNft = async (
     const createdTemplateId = await getcreatedTemplateId(nft);
     if (!createdTemplateId) {
         throw new Error(
-            "fail to create template. please check atomic assets and mint manually if necessary"
+            "fail to create template. please check atomic assets to make sure the template was not created"
         );
     }
-    console.info("created template", createdTemplateId, inductors);
+    return createdTemplateId;
+};
 
+export const mintAssets = async (
+    ual: any,
+    templateId: number,
+    edenAccount: string,
+    inductors: string[]
+) => {
+    const authorizerAccount = ual.activeUser.accountName;
     const mintingTransaction = edenNftMintTransaction(
         authorizerAccount,
-        createdTemplateId,
-        [edenContractAccount, nft.edenacc, ...inductors]
+        templateId,
+        [edenContractAccount, edenAccount, ...inductors]
     );
     const signedMintingTrx = await ual.activeUser.signTransaction(
         mintingTransaction,
@@ -69,8 +78,6 @@ export const createNft = async (
         }
     );
     console.info("mint transaction", signedMintingTrx);
-
-    alert("Transactions executed successfully!");
 };
 
 const getcreatedTemplateId = async (

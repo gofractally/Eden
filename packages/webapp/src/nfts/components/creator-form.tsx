@@ -1,13 +1,19 @@
-import { FormEvent } from "react";
+import { FormEvent, useState } from "react";
 import { FaSignOutAlt } from "react-icons/fa";
-import { Button, Link, SmallText, Form, useFormFields, Heading } from "_app";
 
 import {
-    EdenNftCreationData,
-    EdenNftData,
-    EdenNftSocialHandles,
-} from "../interfaces";
-import { createNft } from "../handlers";
+    Button,
+    Link,
+    SmallText,
+    Form,
+    useFormFields,
+    Heading,
+    Text,
+} from "_app";
+
+import { EdenNftData, EdenNftSocialHandles } from "../interfaces";
+import { createNft, validateAndConfirmCreation, mintAssets } from "../handlers";
+import { atomicAssets } from "config";
 
 interface WithUALProps {
     ual: any;
@@ -38,10 +44,45 @@ const initialForm = {
 
 const SubmissionForm = ({ ual }: WithUALProps) => {
     const [fields, setFields] = useFormFields({ ...initialForm });
+    const [templateId, setTemplateId] = useState(0);
+    const [isCreating, setCreating] = useState(false);
+    const [isMinted, setMinted] = useState(false);
     const onChangeFields = (e: React.ChangeEvent<HTMLInputElement>) =>
         setFields(e);
 
-    const fieldsToCreationNftData = (): EdenNftCreationData => {
+    const submitTransaction = async (e: FormEvent) => {
+        e.preventDefault();
+
+        if (isMinted) {
+            alert("asset already minted");
+            return;
+        }
+
+        try {
+            const { nft, inductors } = fieldsToCreationNftData();
+
+            const assetsToMint = inductors.length + 2;
+
+            setCreating(true);
+            let createdTemplateId = templateId;
+            if (
+                !createdTemplateId &&
+                validateAndConfirmCreation(nft, inductors, assetsToMint)
+            ) {
+                createdTemplateId = await createNft(ual, nft, assetsToMint);
+                setTemplateId(createdTemplateId);
+            }
+            await mintAssets(ual, createdTemplateId, nft.edenacc, inductors);
+            setMinted(true);
+        } catch (error) {
+            console.error(error);
+            alert("An error has occurred. \n" + JSON.stringify(error));
+        }
+
+        setCreating(false);
+    };
+
+    const fieldsToCreationNftData = () => {
         const socialHandles: EdenNftSocialHandles = {
             eosCommunity: fields.eosCommunity,
             twitter: fields.twitter,
@@ -71,18 +112,6 @@ const SubmissionForm = ({ ual }: WithUALProps) => {
             nft,
             inductors,
         };
-    };
-
-    const submitTransaction = async (e: FormEvent) => {
-        e.preventDefault();
-
-        try {
-            const creationData = fieldsToCreationNftData();
-            await createNft(ual, creationData);
-        } catch (error) {
-            console.error(error);
-            alert("An error has occurred. \n" + JSON.stringify(error));
-        }
     };
 
     return (
@@ -125,6 +154,9 @@ const SubmissionForm = ({ ual }: WithUALProps) => {
                                         <Form.Input
                                             id="name"
                                             type="text"
+                                            disabled={
+                                                isCreating || templateId > 0
+                                            }
                                             required
                                             value={fields.name}
                                             onChange={onChangeFields}
@@ -138,6 +170,9 @@ const SubmissionForm = ({ ual }: WithUALProps) => {
                                         <Form.Input
                                             id="edenAccount"
                                             type="text"
+                                            disabled={
+                                                isCreating || templateId > 0
+                                            }
                                             required
                                             value={fields.edenAccount}
                                             onChange={onChangeFields}
@@ -151,6 +186,9 @@ const SubmissionForm = ({ ual }: WithUALProps) => {
                                         <Form.Input
                                             id="image"
                                             type="text"
+                                            disabled={
+                                                isCreating || templateId > 0
+                                            }
                                             required
                                             placeholder="QmTYqoPYf7DiVebTnvwwFdTgsYXg2RnuPrt8uddjfW2kHS"
                                             value={fields.image}
@@ -165,6 +203,9 @@ const SubmissionForm = ({ ual }: WithUALProps) => {
                                         <Form.Input
                                             id="inductionVideo"
                                             type="text"
+                                            disabled={
+                                                isCreating || templateId > 0
+                                            }
                                             required
                                             placeholder="QmTYqoPYf7DiVebTnvwwFdTgsYXg2RnuPrt8uddjfW2kHS"
                                             value={fields.inductionVideo}
@@ -178,6 +219,9 @@ const SubmissionForm = ({ ual }: WithUALProps) => {
                                     >
                                         <Form.TextArea
                                             id="bio"
+                                            disabled={
+                                                isCreating || templateId > 0
+                                            }
                                             required
                                             value={fields.bio}
                                             onChange={(
@@ -194,6 +238,7 @@ const SubmissionForm = ({ ual }: WithUALProps) => {
                                             id="inductors"
                                             required
                                             value={fields.inductors}
+                                            disabled={isCreating}
                                             placeholder="inviter, endorser1, endorser2, endorser3, endorser4, endorser5"
                                             onChange={(
                                                 e: React.ChangeEvent<HTMLTextAreaElement>
@@ -211,6 +256,9 @@ const SubmissionForm = ({ ual }: WithUALProps) => {
                                         <Form.Input
                                             id="eosCommunity"
                                             type="text"
+                                            disabled={
+                                                isCreating || templateId > 0
+                                            }
                                             value={fields.eosCommunity}
                                             onChange={onChangeFields}
                                         />
@@ -223,6 +271,9 @@ const SubmissionForm = ({ ual }: WithUALProps) => {
                                         <Form.Input
                                             id="twitter"
                                             type="text"
+                                            disabled={
+                                                isCreating || templateId > 0
+                                            }
                                             value={fields.twitter}
                                             onChange={onChangeFields}
                                         />
@@ -235,6 +286,9 @@ const SubmissionForm = ({ ual }: WithUALProps) => {
                                         <Form.Input
                                             id="telegram"
                                             type="text"
+                                            disabled={
+                                                isCreating || templateId > 0
+                                            }
                                             value={fields.telegram}
                                             onChange={onChangeFields}
                                         />
@@ -247,6 +301,9 @@ const SubmissionForm = ({ ual }: WithUALProps) => {
                                         <Form.Input
                                             id="blog"
                                             type="text"
+                                            disabled={
+                                                isCreating || templateId > 0
+                                            }
                                             value={fields.blog}
                                             onChange={onChangeFields}
                                         />
@@ -259,6 +316,9 @@ const SubmissionForm = ({ ual }: WithUALProps) => {
                                         <Form.Input
                                             id="linkedin"
                                             type="text"
+                                            disabled={
+                                                isCreating || templateId > 0
+                                            }
                                             value={fields.linkedin}
                                             onChange={onChangeFields}
                                         />
@@ -271,14 +331,19 @@ const SubmissionForm = ({ ual }: WithUALProps) => {
                                         <Form.Input
                                             id="facebook"
                                             type="text"
+                                            disabled={
+                                                isCreating || templateId > 0
+                                            }
                                             value={fields.facebook}
                                             onChange={onChangeFields}
                                         />
                                     </Form.LabeledSet>
                                 </div>
-                                <div className="mt-4 mx-auto w-max">
-                                    <Button isSubmit>Submit</Button>
-                                </div>
+                                <FormSubmissionMenu
+                                    templateId={templateId}
+                                    isMinted={isMinted}
+                                    isCreating={isCreating}
+                                />
                             </div>
                         </div>
                     </form>
@@ -290,10 +355,43 @@ const SubmissionForm = ({ ual }: WithUALProps) => {
 };
 
 const LogoutFooter = ({ ual }: WithUALProps) => (
-    <SmallText className="mt-6 mx-auto w-max">
+    <SmallText className="py-6 mx-auto w-max">
         Creating NFTs as {ual.activeUser.accountName}{" "}
         <Link onClick={ual.logout}>
             logout <FaSignOutAlt className="inline-block" />
         </Link>
     </SmallText>
+);
+
+// TODO: need to revisit theses branches, just horrible but it works for now
+const FormSubmissionMenu = ({ templateId, isMinted, isCreating }: any) => (
+    <div className="mt-4 mx-auto w-max text-center">
+        {templateId ? (
+            <>
+                <Text>
+                    Created Template Id:{" "}
+                    <Link
+                        href={`${atomicAssets.hubUrl}/explorer/template/edenmembers1/${templateId}`}
+                        target="_blank"
+                        isExternal
+                    >
+                        {templateId}
+                    </Link>
+                </Text>
+                {isMinted ? (
+                    <p>Assets Minted Successfully</p>
+                ) : isCreating ? (
+                    "minting assets..."
+                ) : (
+                    <Button isSubmit>
+                        Retry to Mint Assets for this Template Id
+                    </Button>
+                )}
+            </>
+        ) : isCreating ? (
+            "creating template..."
+        ) : (
+            <Button isSubmit>Submit</Button>
+        )}
+    </div>
 );
