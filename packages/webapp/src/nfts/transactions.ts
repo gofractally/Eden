@@ -40,6 +40,35 @@ export const edenNftCreationTransaction = (
         },
     ];
 
+    const immutable_data = [
+        {
+            key: "name",
+            value: ["string", nft.name],
+        },
+        {
+            key: "img",
+            value: ["string", nft.img],
+        },
+        {
+            key: "edenacc",
+            value: ["string", nft.edenacc],
+        },
+        {
+            key: "bio",
+            value: ["string", nft.bio],
+        },
+        {
+            key: "inductionvid",
+            value: ["string", nft.inductionvid],
+        },
+    ];
+    if (nft.social) {
+        immutable_data.push({
+            key: "social",
+            value: ["string", nft.social],
+        });
+    }
+
     return {
         actions: [
             {
@@ -53,32 +82,7 @@ export const edenNftCreationTransaction = (
                     transferable: true,
                     burnable: true,
                     max_supply: maxSupply,
-                    immutable_data: [
-                        {
-                            key: "name",
-                            value: ["string", nft.name],
-                        },
-                        {
-                            key: "img",
-                            value: ["string", nft.img],
-                        },
-                        {
-                            key: "edenacc",
-                            value: ["string", nft.edenacc],
-                        },
-                        {
-                            key: "bio",
-                            value: ["string", nft.bio],
-                        },
-                        {
-                            key: "inductionvid",
-                            value: ["string", nft.inductionvid],
-                        },
-                        {
-                            key: "social",
-                            value: ["string", nft.social],
-                        },
-                    ],
+                    immutable_data,
                 },
             },
         ],

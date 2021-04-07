@@ -4,17 +4,21 @@ import { RawLayout } from "_app";
 import { getMember, MemberCard, MemberCollections, MemberData } from "members";
 
 interface Props {
-    member: MemberData;
+    member?: MemberData;
 }
 
 export const MemberPage = ({ member }: Props) => {
-    return (
+    return member ? (
         <RawLayout title={`${member.name}'s Profile`}>
             <MemberCard member={member} />
             <MemberCollections
                 edenAccount={member.edenAccount}
                 templateId={member.templateId}
             />
+        </RawLayout>
+    ) : (
+        <RawLayout title="Member not found">
+            <div className="text-center max-w">:(</div>
         </RawLayout>
     );
 };
@@ -26,7 +30,7 @@ export const getServerSideProps: GetServerSideProps = async ({ params }) => {
         const edenAccount = params!.id as string;
         const member = await getMember(edenAccount);
         console.info(member);
-        return { props: { member } };
+        return { props: { member: member || null } };
     } catch (error) {
         console.error(">>> Fail to list eden members:" + error);
         return { props: { error: "Fail to list eden members" } };

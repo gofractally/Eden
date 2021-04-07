@@ -3,6 +3,7 @@ if (
     !process.env.NEXT_PUBLIC_EOS_RPC_HOST ||
     !process.env.NEXT_PUBLIC_EOS_RPC_PORT ||
     !process.env.NEXT_PUBLIC_EOS_CHAIN_ID ||
+    !process.env.NEXT_PUBLIC_AA_BASE_URL ||
     !process.env.NEXT_PUBLIC_AA_CONTRACT ||
     !process.env.NEXT_PUBLIC_AA_COLLECTION_NAME ||
     !process.env.NEXT_PUBLIC_AA_SCHEMA_NAME ||
@@ -16,6 +17,7 @@ export const shortAppName = process.env.NEXT_PUBLIC_APP_SHORT_NAME;
 export const appName = process.env.NEXT_PUBLIC_APP_NAME;
 
 export const atomicAssets = {
+    apiBaseUrl: process.env.NEXT_PUBLIC_AA_BASE_URL,
     contract: process.env.NEXT_PUBLIC_AA_CONTRACT,
     collection: process.env.NEXT_PUBLIC_AA_COLLECTION_NAME,
     schema: process.env.NEXT_PUBLIC_AA_SCHEMA_NAME,

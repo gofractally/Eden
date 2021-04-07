@@ -1,13 +1,11 @@
-import csvParse from "csv-parse/lib/sync";
-import { MemberData, MemberSocialHandles } from "../interfaces";
-
-const BASE_URL = "https://test.wax.api.atomicassets.io/atomicassets/v1";
-const COLLECTION_NAME = "edenmembers1";
-const SCHEMA_NAME = "edenmembers1";
+import { getAccountCollection, getOwners, getTemplates } from "nfts/api";
+import { EdenNftSocialHandles } from "nfts/interfaces";
+import { MemberData } from "../interfaces";
 
 export const getMember = async (
     edenAccount: string
 ): Promise<MemberData | undefined> => {
+    // TODO: revisit
     // to lookup for a member template we need to read the whole edenAccount
     // collection and then filter itself (we don't have an easier way to lookup
     // from the `edenacc` field on the immutable data of the NFT)
@@ -22,26 +20,14 @@ export const getMembers = async (
     sortField = "created",
     order = "asc"
 ): Promise<MemberData[]> => {
-    let url = `${BASE_URL}/templates?collection_name=${COLLECTION_NAME}&schema_name=${SCHEMA_NAME}&page=${page}&limit=${limit}&order=${order}&sort=${sortField}`;
-
-    url += "&lower_bound=66281"; // TODO: remove when resetting collection
-
-    if (ids.length) {
-        url += `&ids=${ids.join(",")}`;
-    }
-
-    const { data } = await executeAtomicAssetRequest(url);
-    console.info("members data", data);
+    const data = await getTemplates(page, limit, ids, sortField, order);
     return data.map(convertAtomicAssetToMember);
 };
 
 export const getCollection = async (
     edenAccount: string
 ): Promise<MemberData[]> => {
-    const url = `${BASE_URL}/accounts/${edenAccount}/${COLLECTION_NAME}`;
-    const {
-        data: { templates },
-    } = await executeAtomicAssetRequest(url);
+    const { templates } = await getAccountCollection(edenAccount);
 
     const templateIds: string[] = templates.map(
         (template: any) => template.template_id
@@ -54,18 +40,14 @@ export const getCollection = async (
 };
 
 export const getCollectedBy = async (
-    templateId: number,
-    page = 1,
-    limit = 20,
-    sortField = "created",
-    order = "asc"
+    templateId: number
 ): Promise<MemberData[]> => {
-    const url = `${BASE_URL}/assets?collection_name=${COLLECTION_NAME}&schema_name=${SCHEMA_NAME}&template_id=${templateId}&page=${page}&limit=${limit}&order=${order}&sort=${sortField}`;
-    const { data } = await executeAtomicAssetRequest(url);
-
-    const edenAccs: string[] = data.map((item: any) => item.owner);
+    const edenAccs: string[] = await getOwners(templateId);
 
     // TODO: very expensive lookups here, we need to revisit
+    // maybe not, since each card will not be minted more than 20 times...
+    // so a given template will have a MAXIMUM number of 20 owners.
+    // even though, it would generate 20 api calls... not good.
     const collectedMembers = edenAccs.map(getMember);
     const members = await Promise.all(collectedMembers);
 
@@ -80,55 +62,14 @@ const convertAtomicAssetToMember = (data: any): MemberData => ({
     bio: data.immutable_data.bio,
     inductionVideo: data.immutable_data.inductionvid || "",
     createdAt: parseInt(data.created_at_time),
-    socialHandles: parseMemberSocialHandles(data.immutable_data.social),
+    socialHandles: parseSocial(data.immutable_data.social),
 });
 
-const executeAtomicAssetRequest = async (url: string): Promise<any> => {
-    const response = await fetch(url);
-    if (!response.ok) {
-        console.error(response);
-        throw new Error("response not ok");
-    }
-
-    const json = await response.json();
-    if (!json.success || !json.data) {
-        console.error("unsuccessfull response", json);
-    }
-
-    return json;
-};
-
-const parseMemberSocialHandles = (csvSocial: string): MemberSocialHandles => {
+const parseSocial = (socialHandlesJsonString: string): EdenNftSocialHandles => {
     try {
-        const social: MemberSocialHandles = {};
-
-        const socialHandles: string[] = csvParse(csvSocial)[0];
-        socialHandles.forEach((value) =>
-            fillSocialHandlesFromAtomicAssetValue(social, value)
-        );
-
-        return social;
+        return JSON.parse(socialHandlesJsonString);
     } catch (e) {
-        console.error("fail to parse social handles", e);
+        console.error("fail to parse social handles ", socialHandlesJsonString);
         return {};
-    }
-};
-
-const HANDLE_SEPARATOR = ":";
-const ATOMIC_ASSETS_SOCIAL_MAP: { [key: string]: keyof MemberSocialHandles } = {
-    twitter: "twitter",
-    telegram: "telegram",
-    eoscommunity: "eosCommunity",
-    blog: "blogUrl",
-};
-
-const fillSocialHandlesFromAtomicAssetValue = (
-    social: MemberSocialHandles,
-    value: string
-) => {
-    const [type, ...handle] = value.split(HANDLE_SEPARATOR);
-    const socialHandleKey = ATOMIC_ASSETS_SOCIAL_MAP[type];
-    if (socialHandleKey) {
-        social[socialHandleKey] = handle.join(HANDLE_SEPARATOR);
     }
 };

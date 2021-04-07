@@ -2,7 +2,11 @@ import { FormEvent } from "react";
 import { FaSignOutAlt } from "react-icons/fa";
 import { Button, Link, SmallText, Form, useFormFields, Heading } from "_app";
 
-import { EdenNftCreationData, EdenNftSocialHandles } from "../interfaces";
+import {
+    EdenNftCreationData,
+    EdenNftData,
+    EdenNftSocialHandles,
+} from "../interfaces";
 import { createNft } from "../handlers";
 
 interface WithUALProps {
@@ -51,15 +55,17 @@ const SubmissionForm = ({ ual }: WithUALProps) => {
             if (!socialHandles[key]) delete socialHandles[key];
         });
 
+        const nft: EdenNftData = {
+            name: fields.name,
+            edenacc: fields.edenAccount,
+            img: fields.image,
+            bio: fields.bio,
+            inductionvid: fields.inductionVideo,
+            social: JSON.stringify(socialHandles),
+        };
+
         return {
-            nft: {
-                name: fields.name,
-                edenacc: fields.edenAccount,
-                img: fields.image,
-                bio: fields.bio,
-                inductionvid: fields.inductionVideo,
-                social: JSON.stringify(socialHandles),
-            },
+            nft,
             inductors: fields.inductors.split(","),
         };
     };
@@ -111,7 +117,7 @@ const SubmissionForm = ({ ual }: WithUALProps) => {
                                     <Form.LabeledSet
                                         label="Name"
                                         htmlFor="name"
-                                        className="mcol-span-6 sm:col-span-3"
+                                        className="col-span-6 sm:col-span-3"
                                     >
                                         <Form.Input
                                             id="name"
@@ -202,7 +208,6 @@ const SubmissionForm = ({ ual }: WithUALProps) => {
                                         <Form.Input
                                             id="eosCommunity"
                                             type="text"
-                                            required
                                             value={fields.eosCommunity}
                                             onChange={onChangeFields}
                                         />
@@ -215,7 +220,6 @@ const SubmissionForm = ({ ual }: WithUALProps) => {
                                         <Form.Input
                                             id="twitter"
                                             type="text"
-                                            required
                                             value={fields.twitter}
                                             onChange={onChangeFields}
                                         />
@@ -228,7 +232,6 @@ const SubmissionForm = ({ ual }: WithUALProps) => {
                                         <Form.Input
                                             id="telegram"
                                             type="text"
-                                            required
                                             value={fields.telegram}
                                             onChange={onChangeFields}
                                         />
@@ -241,7 +244,6 @@ const SubmissionForm = ({ ual }: WithUALProps) => {
                                         <Form.Input
                                             id="blog"
                                             type="text"
-                                            required
                                             value={fields.blog}
                                             onChange={onChangeFields}
                                         />
@@ -254,7 +256,6 @@ const SubmissionForm = ({ ual }: WithUALProps) => {
                                         <Form.Input
                                             id="linkedin"
                                             type="text"
-                                            required
                                             value={fields.linkedin}
                                             onChange={onChangeFields}
                                         />
@@ -267,7 +268,6 @@ const SubmissionForm = ({ ual }: WithUALProps) => {
                                         <Form.Input
                                             id="facebook"
                                             type="text"
-                                            required
                                             value={fields.facebook}
                                             onChange={onChangeFields}
                                         />

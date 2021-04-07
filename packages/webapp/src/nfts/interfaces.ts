@@ -4,7 +4,7 @@ export interface EdenNftData {
     edenacc: string;
     bio: string;
     inductionvid: string;
-    social: string;
+    social?: string;
 }
 
 export interface EdenNftSocialHandles {
