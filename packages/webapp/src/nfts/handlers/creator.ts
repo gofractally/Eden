@@ -1,6 +1,10 @@
-import { edenNftCreationTransaction } from "../transactions";
+import {
+    edenNftCreationTransaction,
+    edenNftMintTransaction,
+} from "../transactions";
 import { EdenNftCreationData, EdenNftData } from "../interfaces";
 import { getTemplates } from "nfts/api";
+import { edenContractAccount } from "config";
 
 export const createNft = async (
     ual: any,
@@ -25,33 +29,51 @@ export const createNft = async (
     }
 
     const authorizerAccount = ual.activeUser.accountName;
-    const transaction = edenNftCreationTransaction(
+    const createTemplateTransaction = edenNftCreationTransaction(
         authorizerAccount,
         nft,
         assetsToMint
     );
-    const signedTrx = await ual.activeUser.signTransaction(transaction, {
-        broadcast: true,
-    });
-    console.info(signedTrx);
+    const signedCreateTemplTrx = await ual.activeUser.signTransaction(
+        createTemplateTransaction,
+        {
+            broadcast: true,
+        }
+    );
+    console.info("create templ transaction", signedCreateTemplTrx);
+
     // TODO: parse signedTrx.transaction.processed.action_traces[0].inline_traces[0].act
     // do we get that in EOS MainNet?
     // act.account = "atomicassets"
     // act.name = "lognewtempl"
     // act.data => read abi => act.data.template_id: 71543
-
     await sleep(3000);
-    const createdTemplate = await getCreatedTemplate(nft);
-    if (!createdTemplate) {
+
+    const createdTemplateId = await getcreatedTemplateId(nft);
+    if (!createdTemplateId) {
         throw new Error(
             "fail to create template. please check atomic assets and mint manually if necessary"
         );
     }
+    console.info("created template", createdTemplateId, inductors);
 
-    console.info("created template", createdTemplate);
+    const mintingTransaction = edenNftMintTransaction(
+        authorizerAccount,
+        createdTemplateId,
+        [edenContractAccount, nft.edenacc, ...inductors]
+    );
+    const signedMintingTrx = await ual.activeUser.signTransaction(
+        mintingTransaction,
+        {
+            broadcast: true,
+        }
+    );
+    console.info("mint transaction", signedMintingTrx);
+
+    alert("Transactions executed successfully!");
 };
 
-const getCreatedTemplate = async (
+const getcreatedTemplateId = async (
     createdNft: EdenNftData
 ): Promise<number | undefined> => {
     const lastCreatedTemplates = await getTemplates(

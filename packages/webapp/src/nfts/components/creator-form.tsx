@@ -64,9 +64,12 @@ const SubmissionForm = ({ ual }: WithUALProps) => {
             social: JSON.stringify(socialHandles),
         };
 
+        const inductors = fields.inductors
+            .split(",")
+            .map((inductor) => inductor.trim());
         return {
             nft,
-            inductors: fields.inductors.split(","),
+            inductors,
         };
     };
 

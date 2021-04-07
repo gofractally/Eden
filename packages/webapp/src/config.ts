@@ -8,13 +8,16 @@ if (
     !process.env.NEXT_PUBLIC_AA_COLLECTION_NAME ||
     !process.env.NEXT_PUBLIC_AA_SCHEMA_NAME ||
     !process.env.NEXT_PUBLIC_APP_SHORT_NAME ||
-    !process.env.NEXT_PUBLIC_APP_NAME
+    !process.env.NEXT_PUBLIC_APP_NAME ||
+    !process.env.NEXT_PUBLIC_EDEN_CONTRACT_ACCOUNT
 ) {
     throw new Error("Eden WebApp Environment Variables are not set");
 }
 
 export const shortAppName = process.env.NEXT_PUBLIC_APP_SHORT_NAME;
 export const appName = process.env.NEXT_PUBLIC_APP_NAME;
+export const edenContractAccount =
+    process.env.NEXT_PUBLIC_EDEN_CONTRACT_ACCOUNT;
 
 export const atomicAssets = {
     apiBaseUrl: process.env.NEXT_PUBLIC_AA_BASE_URL,

@@ -33,13 +33,6 @@ export const edenNftCreationTransaction = (
     nft: EdenNftData,
     maxSupply: number
 ) => {
-    const authorization = [
-        {
-            actor: authorizerAccount,
-            permission: "active",
-        },
-    ];
-
     const immutable_data = [
         {
             key: "name",
@@ -74,7 +67,7 @@ export const edenNftCreationTransaction = (
             {
                 account: atomicAssets.contract,
                 name: "createtempl",
-                authorization,
+                authorization: activeAccountAuthorization(authorizerAccount),
                 data: {
                     authorized_creator: authorizerAccount,
                     collection_name: atomicAssets.collection,
@@ -88,3 +81,34 @@ export const edenNftCreationTransaction = (
         ],
     };
 };
+
+export const edenNftMintTransaction = (
+    authorizerAccount: string,
+    template_id: number,
+    owners: string[]
+) => {
+    return {
+        actions: owners.map((new_asset_owner) => ({
+            account: atomicAssets.contract,
+            name: "mintasset",
+            authorization: activeAccountAuthorization(authorizerAccount),
+            data: {
+                authorized_minter: authorizerAccount,
+                collection_name: atomicAssets.collection,
+                schema_name: atomicAssets.schema,
+                template_id,
+                new_asset_owner,
+                immutable_data: [],
+                mutable_data: [],
+                tokens_to_back: [],
+            },
+        })),
+    };
+};
+
+const activeAccountAuthorization = (account: string) => [
+    {
+        actor: account,
+        permission: "active",
+    },
+];
