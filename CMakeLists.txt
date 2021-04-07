@@ -12,6 +12,11 @@ endif()
 
 file(WRITE ${CMAKE_BINARY_DIR}/CTestTestfile.cmake)
 
+option(BUILD_NATIVE "Build native code" ON)
+if(BUILD_NATIVE)
+    add_subdirectory(native)
+endif()
+
 if(DEFINED WASI_SDK_PREFIX)
     ExternalProject_Add(wasm
         SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/wasm
