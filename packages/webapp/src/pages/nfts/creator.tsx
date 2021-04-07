@@ -1,7 +1,8 @@
 import { UALProvider, withUAL } from "ual-reactjs-renderer";
 
 import { ClientOnly, RawLayout } from "_app";
-import { anchor, appName, chainConfig, CreatorForm } from "nfts";
+import { appName, chainConfig } from "config";
+import { anchor, CreatorForm } from "nfts";
 
 const CreatorUalForm = withUAL(CreatorForm);
 

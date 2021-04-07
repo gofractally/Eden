@@ -1,3 +1,7 @@
+import { atomicAssets } from "config";
+
+import { EdenNftData } from "./interfaces";
+
 export const demoTransaction = (
     authorizerAccount: string,
     to: string,
@@ -24,18 +28,10 @@ export const demoTransaction = (
     ],
 });
 
-const ATOMIC_ASSETS_CONTRACT = "atomicassets";
-const COLLECTION_NAME = "edenmembers1";
-const SCHEMA_NAME = "edenmembers1";
-
 export const edenNftCreationTransaction = (
     authorizerAccount: string,
-    inductors: string[],
-    name: string,
-    img: string,
-    edenacc: string,
-    bio: string,
-    inductionvid: string
+    nft: EdenNftData,
+    maxSupply: number
 ) => {
     const authorization = [
         {
@@ -47,36 +43,40 @@ export const edenNftCreationTransaction = (
     return {
         actions: [
             {
-                account: ATOMIC_ASSETS_CONTRACT,
+                account: atomicAssets.contract,
                 name: "createtempl",
                 authorization,
                 data: {
                     authorized_creator: authorizerAccount,
-                    collection_name: COLLECTION_NAME,
-                    schema_name: SCHEMA_NAME,
+                    collection_name: atomicAssets.collection,
+                    schema_name: atomicAssets.schema,
                     transferable: true,
                     burnable: true,
-                    max_supply: inductors.length + 2,
+                    max_supply: maxSupply,
                     immutable_data: [
                         {
                             key: "name",
-                            value: ["string", name],
+                            value: ["string", nft.name],
                         },
                         {
                             key: "img",
-                            value: ["string", img],
+                            value: ["string", nft.img],
                         },
                         {
                             key: "edenacc",
-                            value: ["string", edenacc],
+                            value: ["string", nft.edenacc],
                         },
                         {
                             key: "bio",
-                            value: ["string", bio],
+                            value: ["string", nft.bio],
                         },
                         {
                             key: "inductionvid",
-                            value: ["string", inductionvid],
+                            value: ["string", nft.inductionvid],
+                        },
+                        {
+                            key: "social",
+                            value: ["string", nft.social],
                         },
                     ],
                 },

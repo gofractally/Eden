@@ -1,27 +1,5 @@
+import { chainConfig, shortAppName } from "config";
 import { Anchor } from "ual-anchor";
-
-export const shortAppName = "eden-community-app";
-export const appName = "Eden Community App";
-
-if (
-    !process.env.NEXT_PUBLIC_EOS_RPC_PROTOCOL ||
-    !process.env.NEXT_PUBLIC_EOS_RPC_HOST ||
-    !process.env.NEXT_PUBLIC_EOS_RPC_PORT ||
-    !process.env.NEXT_PUBLIC_EOS_CHAIN_ID
-) {
-    throw new Error("EOS Chain Environment Variables are not set");
-}
-
-export const rpcEndpoint = {
-    protocol: process.env.NEXT_PUBLIC_EOS_RPC_PROTOCOL,
-    host: process.env.NEXT_PUBLIC_EOS_RPC_HOST,
-    port: Number(process.env.NEXT_PUBLIC_EOS_RPC_PORT),
-};
-
-export const chainConfig = {
-    chainId: process.env.NEXT_PUBLIC_EOS_CHAIN_ID,
-    rpcEndpoints: [rpcEndpoint],
-};
 
 export const anchor = new Anchor([chainConfig], {
     // Required: The app name, required by anchor-link. Short string identifying the app

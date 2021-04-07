@@ -2,7 +2,8 @@ import { FormEvent } from "react";
 import { FaSignOutAlt } from "react-icons/fa";
 import { Button, Link, SmallText, Form, useFormFields, Heading } from "_app";
 
-import { edenNftCreationTransaction } from "../transactions";
+import { EdenNftCreationData, EdenNftSocialHandles } from "../interfaces";
+import { createNft } from "../handlers";
 
 interface WithUALProps {
     ual: any;
@@ -25,6 +26,7 @@ const initialForm = {
     inductors: "",
     eosCommunity: "",
     twitter: "",
+    linkedin: "",
     telegram: "",
     facebook: "",
     blog: "",
@@ -35,48 +37,39 @@ const SubmissionForm = ({ ual }: WithUALProps) => {
     const onChangeFields = (e: React.ChangeEvent<HTMLInputElement>) =>
         setFields(e);
 
+    const fieldsToCreationNftData = (): EdenNftCreationData => {
+        const socialHandles: EdenNftSocialHandles = {
+            eosCommunity: fields.eosCommunity,
+            twitter: fields.twitter,
+            linkedin: fields.linkedin,
+            telegram: fields.telegram,
+            facebook: fields.facebook,
+            blog: fields.blog,
+        };
+        Object.keys(socialHandles).forEach((keyString) => {
+            const key = keyString as keyof EdenNftSocialHandles;
+            if (!socialHandles[key]) delete socialHandles[key];
+        });
+
+        return {
+            nft: {
+                name: fields.name,
+                edenacc: fields.edenAccount,
+                img: fields.image,
+                bio: fields.bio,
+                inductionvid: fields.inductionVideo,
+                social: JSON.stringify(socialHandles),
+            },
+            inductors: fields.inductors.split(","),
+        };
+    };
+
     const submitTransaction = async (e: FormEvent) => {
         e.preventDefault();
 
-        const inductors = fields.inductors.split(",");
-
-        const assetsToMint = inductors.length + 2;
-
-        if (inductors.length < 1) {
-            alert("At least one inductor is required");
-            return;
-        }
-
-        if (
-            !confirm(
-                `By signing the following transaction, we are going to mint ${assetsToMint} NFTs. #1 goes to the eden community contract account, #2 goes to the new member ${fields.edenAccount}, #3 goes to inviter account ${inductors[0]} and the rest goes to the remaining inductors. Do you agree?`
-            )
-        ) {
-            return;
-        }
-
         try {
-            const transaction = edenNftCreationTransaction(
-                ual.activeUser.accountName,
-                fields.inductors.split(","),
-                fields.name,
-                fields.image,
-                fields.edenAccount,
-                fields.bio,
-                fields.inductionVideo
-            );
-            const signedTrx = await ual.activeUser.signTransaction(
-                transaction,
-                {
-                    broadcast: true,
-                }
-            );
-            console.info(signedTrx);
-            // TODO: parse signedTrx.transaction.processed.action_traces[0].inline_traces[0].act
-            // do we get that in EOS MainNet?
-            // act.account = "atomicassets"
-            // act.name = "lognewtempl"
-            // act.data => read abi => act.data.template_id: 71543
+            const creationData = fieldsToCreationNftData();
+            await createNft(ual, creationData);
         } catch (error) {
             console.error(error);
             alert("An error has occurred. \n" + JSON.stringify(error));
@@ -250,6 +243,19 @@ const SubmissionForm = ({ ual }: WithUALProps) => {
                                             type="text"
                                             required
                                             value={fields.blog}
+                                            onChange={onChangeFields}
+                                        />
+                                    </Form.LabeledSet>
+                                    <Form.LabeledSet
+                                        label="Linkedin Public Handle"
+                                        htmlFor="linkedin"
+                                        className="col-span-6 sm:col-span-2"
+                                    >
+                                        <Form.Input
+                                            id="linkedin"
+                                            type="text"
+                                            required
+                                            value={fields.linkedin}
                                             onChange={onChangeFields}
                                         />
                                     </Form.LabeledSet>
