@@ -6,7 +6,7 @@ set(ROOT_BINARY_DIR ${CMAKE_BINARY_DIR})
 
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
-set(CMAKE_CXX_EXTENSIONS OFF)
+set(CMAKE_CXX_EXTENSIONS ON)
 
 function(native_test N)
     add_test(
@@ -24,3 +24,5 @@ function(native_and_wasm_test N)
 endfunction()
 
 add_subdirectory(../external external)
+add_subdirectory(../libraries libraries)
+add_subdirectory(../programs programs)
