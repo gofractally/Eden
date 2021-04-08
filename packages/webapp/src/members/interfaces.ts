@@ -1,4 +1,4 @@
-import { EdenNftSocialHandles } from "nfts/interfaces";
+import { EdenNftSocialHandles, NftPrice } from "nfts/interfaces";
 
 export interface MemberData {
     templateId: number;
@@ -9,4 +9,10 @@ export interface MemberData {
     socialHandles: EdenNftSocialHandles;
     inductionVideo: string;
     createdAt: number;
+    salesData?: MemberSalesData;
+}
+
+export interface MemberSalesData {
+    price: NftPrice;
+    bidEndTime?: number;
 }

@@ -1,5 +1,14 @@
-import { getAccountCollection, getOwners, getTemplates } from "nfts/api";
-import { EdenNftSocialHandles } from "nfts/interfaces";
+import {
+    getAccountCollection,
+    getAuctions,
+    getOwners,
+    getTemplates,
+} from "nfts/api";
+import {
+    AuctionableEdenTemplateData,
+    EdenNftSocialHandles,
+    EdenTemplateData,
+} from "nfts/interfaces";
 import { MemberData } from "../interfaces";
 
 export const getMember = async (
@@ -22,6 +31,11 @@ export const getMembers = async (
 ): Promise<MemberData[]> => {
     const data = await getTemplates(page, limit, ids, sortField, order);
     return data.map(convertAtomicAssetToMember);
+};
+
+export const getNewMembers = async (): Promise<MemberData[]> => {
+    const data = await getAuctions();
+    return data.map(convertAtomicAssetToMemberWithSalesData);
 };
 
 export const getCollection = async (
@@ -54,16 +68,29 @@ export const getCollectedBy = async (
     return members.filter((member) => member !== undefined) as MemberData[];
 };
 
-const convertAtomicAssetToMember = (data: any): MemberData => ({
-    templateId: data.template_id,
+const convertAtomicAssetToMember = (data: EdenTemplateData): MemberData => ({
+    templateId: parseInt(data.template_id),
+    createdAt: parseInt(data.created_at_time),
     name: data.immutable_data.name,
     image: data.immutable_data.img,
     edenAccount: data.immutable_data.edenacc,
     bio: data.immutable_data.bio,
-    inductionVideo: data.immutable_data.inductionvid || "",
-    createdAt: parseInt(data.created_at_time),
-    socialHandles: parseSocial(data.immutable_data.social),
+    inductionVideo: data.immutable_data.inductionvid,
+    socialHandles: parseSocial(data.immutable_data.social || "{}"),
 });
+
+const convertAtomicAssetToMemberWithSalesData = (
+    data: AuctionableEdenTemplateData
+): MemberData => {
+    const member = convertAtomicAssetToMember(data);
+    if (data.currentBid) {
+        member.salesData = {
+            price: data.currentBid,
+            bidEndTime: data.endTime,
+        };
+    }
+    return member;
+};
 
 const parseSocial = (socialHandlesJsonString: string): EdenNftSocialHandles => {
     try {

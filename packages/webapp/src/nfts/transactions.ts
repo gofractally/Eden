@@ -112,3 +112,126 @@ const activeAccountAuthorization = (account: string) => [
         permission: "active",
     },
 ];
+
+/* Auction
+
+auctioning dan
+[
+  {
+    "account": "atomicmarket",
+    "name": "announceauct",
+    "authorization": [
+      {
+        "actor": "edenmembers1",
+        "permission": "active"
+      }
+    ],
+    "data": {
+      "seller": "edenmembers1",
+      "asset_ids": [
+        "1099513503173"
+      ],
+      "starting_bid": "10.00000000 WAX",
+      "duration": 604800,
+      "maker_marketplace": ""
+    }
+  },
+  {
+    "account": "atomicassets",
+    "name": "transfer",
+    "authorization": [
+      {
+        "actor": "edenmembers1",
+        "permission": "active"
+      }
+    ],
+    "data": {
+      "from": "edenmembers1",
+      "to": "atomicmarket",
+      "asset_ids": [
+        "1099513503173"
+      ],
+      "memo": "auction"
+    }
+  }
+]
+
+
+auctioning captomega
+[
+  {
+    "account": "atomicmarket",
+    "name": "announceauct",
+    "authorization": [
+      {
+        "actor": "edenmembers1",
+        "permission": "active"
+      }
+    ],
+    "data": {
+      "seller": "edenmembers1",
+      "asset_ids": [
+        "1099513503181"
+      ],
+      "starting_bid": "10.00000000 WAX",
+      "duration": 604800,
+      "maker_marketplace": ""
+    }
+  },
+  {
+    "account": "atomicassets",
+    "name": "transfer",
+    "authorization": [
+      {
+        "actor": "edenmembers1",
+        "permission": "active"
+      }
+    ],
+    "data": {
+      "from": "edenmembers1",
+      "to": "atomicmarket",
+      "asset_ids": [
+        "1099513503181"
+      ],
+      "memo": "auction"
+    }
+  }
+]
+
+
+------------------- placing a bid
+[
+  {
+    "account": "eosio.token",
+    "name": "transfer",
+    "authorization": [
+      {
+        "actor": "edtcaptomega",
+        "permission": "active"
+      }
+    ],
+    "data": {
+      "from": "edtcaptomega",
+      "to": "atomicmarket",
+      "quantity": "12.59782000 WAX",
+      "memo": "deposit"
+    }
+  },
+  {
+    "account": "atomicmarket",
+    "name": "auctionbid",
+    "authorization": [
+      {
+        "actor": "edtcaptomega",
+        "permission": "active"
+      }
+    ],
+    "data": {
+      "bidder": "edtcaptomega",
+      "auction_id": 14,
+      "bid": "12.59782000 WAX",
+      "taker_marketplace": ""
+    }
+  }
+]
+*/
