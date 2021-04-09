@@ -82,47 +82,23 @@ struct assert_exception : std::exception
    const char* what() const noexcept override { return msg.c_str(); }
 };
 
-// HACK: UB.  Unfortunately, I can't think of a way to allow a transaction_context
-// to be constructed outside of controller in 2.0 that doesn't have undefined behavior.
-// A better solution would be to factor database access out of apply_context, but
-// that can't really be backported to 2.0 at this point.
-namespace
-{
-   struct __attribute__((__may_alias__)) xxx_transaction_checktime_timer
-   {
-      std::atomic_bool& expired;
-      eosio::chain::platform_timer& _timer;
-   };
-   struct transaction_checktime_factory
-   {
-      eosio::chain::platform_timer timer;
-      std::atomic_bool expired;
-      eosio::chain::transaction_checktime_timer get()
-      {
-         xxx_transaction_checktime_timer result{expired, timer};
-         return std::move(*reinterpret_cast<eosio::chain::transaction_checktime_timer*>(&result));
-      }
-   };
-};  // namespace
-
 struct intrinsic_context
 {
    eosio::chain::controller& control;
+   eosio::chain::platform_timer timer;
    eosio::chain::packed_transaction trx;
    std::unique_ptr<eosio::chain::transaction_context> trx_ctx;
    std::unique_ptr<eosio::chain::apply_context> apply_context;
 
    intrinsic_context(eosio::chain::controller& control) : control{control}
    {
-      static transaction_checktime_factory xxx_timer;
-
       eosio::chain::signed_transaction strx;
       strx.actions.emplace_back();
       strx.actions.back().account = eosio::chain::name{"eosio.null"};
       strx.actions.back().authorization.push_back(
           {eosio::chain::name{"eosio"}, eosio::chain::name{"active"}});
-      trx_ctx = std::make_unique<eosio::chain::transaction_context>(
-          control, strx, strx.id(), xxx_timer.get(), fc::time_point::now());
+      trx_ctx = std::make_unique<eosio::chain::transaction_context>(control, strx, strx.id(), timer,
+                                                                    fc::time_point::now());
       trx_ctx->init_for_implicit_trx(0);
       trx_ctx->exec();
       apply_context = std::make_unique<eosio::chain::apply_context>(control, *trx_ctx, 1, 0);
@@ -1076,7 +1052,7 @@ static void run(const char* wasm, const std::vector<std::string>& args)
 }
 
 const char usage[] =
-    "usage: eosio-tester [-h or --help] [-v or --verbose] file.wasm [args for wasm]\n";
+    "usage: eden-tester [-h or --help] [-v or --verbose] file.wasm [args for wasm]\n";
 
 int main(int argc, char* argv[])
 {
