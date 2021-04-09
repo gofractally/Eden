@@ -52,4 +52,5 @@ if(IS_NATIVE)
         -lgmp
         -lrt
     )
+    add_dependencies(chain eos)
 endif()
