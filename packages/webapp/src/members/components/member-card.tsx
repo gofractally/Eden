@@ -89,12 +89,12 @@ const MemberSocialLinks = ({ member }: { member: MemberData }) => (
                 href={`https://eoscommunity.org/u/${member.socialHandles.eosCommunity}`}
             />
         )}
-        {member.socialHandles.blogUrl && (
+        {member.socialHandles.blog && (
             <SocialButton
                 handle="Blog"
                 icon={FaBlogger}
                 color="yellow"
-                href={member.socialHandles.blogUrl}
+                href={member.socialHandles.blog}
             />
         )}
     </nav>
