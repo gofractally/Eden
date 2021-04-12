@@ -15,10 +15,10 @@ jobs:
         container: sparkplug0025/clarion:latest
 
         steps:
-            - name: Checkout code
+            - name: ✅ Checkout code
               uses: actions/checkout@v2
 
-            - name: Build Clarion OS
+            - name: 🛠 Build
               run: |
                   git submodule update --init --recursive
                   mkdir build
@@ -26,7 +26,7 @@ jobs:
                   cmake -DCMAKE_BUILD_TYPE=Release ..
                   make -j$(nproc)
 
-            - name: Run tests with CTest
+            - name: 🧪 Run tests with CTest
               run: cd build && ctest -j$(nproc)
 
             # TODO: define what needs to be packaged
@@ -38,5 +38,5 @@ jobs:
             # - name: Upload the Build Artifact
             #   uses: actions/upload-artifact@v2.2.2
             #   with:
-            #       name: Clarion
+            #       name: Eden
             #       path: build.tar
