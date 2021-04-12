@@ -10,7 +10,7 @@ on:
 
 jobs:
     build:
-        name: Build clarion
+        name: Build Eden Community Apps
         runs-on: ubuntu-latest
         container: sparkplug0025/clarion:latest
 
