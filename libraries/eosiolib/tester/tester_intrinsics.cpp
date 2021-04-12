@@ -123,8 +123,7 @@ namespace eosio
       {
          void eosio_assert(uint32_t test, const char* msg)
          {
-            if (!test)
-               eosio_assert_message(test, msg, strlen(msg));
+            eosio_assert_message(false, msg, strlen(msg));
          }
 
          void eosio_assert_code(uint32_t test, uint64_t code)

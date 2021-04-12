@@ -4,7 +4,7 @@ target_compile_options(simple-malloc PUBLIC -fno-exceptions -D__eosio_cdt__)
 target_sources(simple-malloc PRIVATE simple_malloc.cpp)
 
 add_library(eosio-core)
-target_link_libraries(eosio-core PUBLIC abieos)
+target_link_libraries(eosio-core PUBLIC abieos boost)
 target_include_directories(eosio-core PUBLIC core)
 target_compile_options(eosio-core PUBLIC -fno-exceptions -D__eosio_cdt__)
 target_sources(eosio-core PRIVATE crypto.cpp)
@@ -16,7 +16,6 @@ target_link_options(eosio-contract-base INTERFACE
     -Wl,--stack-first
     -Wl,--entry,apply
     -Wl,-z,stack-size=8192
-    -Wl,--allow-undefined
     -nostdlib
 )
 string(TOLOWER ${CMAKE_BUILD_TYPE} BUILD_TYPE_LOWER)
@@ -53,3 +52,12 @@ target_link_libraries(eosio-contract PUBLIC
     ${WASI_SDK_PREFIX}/lib/clang/11.0.0/lib/wasi/libclang_rt.builtins-wasm32.a
 )
 target_sources(eosio-contract PRIVATE eosiolib.cpp)
+
+add_library(testlib)
+target_sources(testlib PRIVATE
+    tester/tester.cpp
+    tester/tester_intrinsics.cpp
+)
+target_link_libraries(testlib PUBLIC eosio-core fmt boost)
+target_include_directories(testlib PUBLIC contracts tester)
+add_dependencies(testlib fmt)
