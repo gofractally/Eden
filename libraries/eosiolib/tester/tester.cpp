@@ -15,7 +15,6 @@ namespace
       [[clang::import_name("exec_deferred")]]               bool     exec_deferred(uint32_t chain_index, void* cb_alloc_data, cb_alloc_type cb_alloc);
       [[clang::import_name("execute")]]                     int32_t  execute(const char* command, uint32_t command_size);
       [[clang::import_name("finish_block")]]                void     finish_block(uint32_t chain_index);
-      [[clang::import_name("get_args")]]                    uint32_t get_args(char* dest, uint32_t dest_size);
       [[clang::import_name("get_chain_path")]]              uint32_t get_chain_path(uint32_t chain, char* dest, uint32_t dest_size);
       [[clang::import_name("get_head_block_info")]]         void     get_head_block_info(uint32_t chain_index, void* cb_alloc_data, cb_alloc_type cb_alloc);
       [[clang::import_name("push_transaction")]]            void     push_transaction(uint32_t chain_index, const char* args_packed, uint32_t args_packed_size, void* cb_alloc_data, cb_alloc_type cb_alloc);
@@ -40,18 +39,6 @@ namespace
       [[clang::import_name("rodeos_sync_block")]]           bool     rodeos_sync_block(uint32_t rodeos);
       */
       // clang-format on
-   }
-
-   inline const std::vector<char>& get_args()
-   {
-      static std::optional<std::vector<char>> bytes;
-      if (!bytes)
-      {
-         bytes.emplace();
-         bytes->resize(get_args(nullptr, 0));
-         get_args(bytes->data(), bytes->size());
-      }
-      return *bytes;
    }
 
    template <typename Alloc_fn>
@@ -107,18 +94,6 @@ namespace
    }
 #endif
 }  // namespace
-
-const std::vector<std::string>& eosio::get_args()
-{
-   static std::optional<std::vector<std::string>> args;
-   if (!args)
-   {
-      auto& bytes = ::get_args();
-      args.emplace();
-      args = convert_from_bin<std::vector<std::string>>(bytes);
-   }
-   return *args;
-}
 
 std::vector<char> eosio::read_whole_file(std::string_view filename)
 {

@@ -440,7 +440,7 @@ struct state
    const char* wasm;
    eosio::vm::wasm_allocator& wa;
    backend_t& backend;
-   std::vector<char> args;
+   std::vector<std::string> args;
    std::vector<file> files;
    std::vector<std::unique_ptr<test_chain>> chains;
    std::optional<uint32_t> selected_chain_index;
@@ -638,7 +638,7 @@ struct callbacks
       memcpy(alloc(cb_alloc_data, cb_alloc, data.size()), data.data(), data.size());
    }
 
-   void abort() { throw std::runtime_error("called abort"); }
+   void tester_abort() { throw std::runtime_error("called tester_abort"); }
 
    void eosio_assert_message(bool condition, span<const char> msg)
    {
@@ -648,11 +648,25 @@ struct callbacks
 
    void prints_l(span<const char> str) { std::cerr.write(str.data(), str.size()); }
 
-   uint32_t get_args(span<char> dest)
+   void tester_get_arg_counts(uint32_t* argc, uint32_t* argv_buf_size)
    {
-      memcpy(dest.data(), state.args.data(), std::min(dest.size(), state.args.size()));
-      return state.args.size();
-   }
+      uint32_t size = 0;
+      for (auto& a : state.args)
+         size += a.size() + 1;
+      *argc = state.args.size();
+      *argv_buf_size = size;
+   };
+
+   void tester_get_args(uint8_t** argv, uint8_t* argv_buf)
+   {
+      for (auto& a : state.args)
+      {
+         *argv++ = argv_buf;
+         for (auto ch : a)
+            *argv_buf++ = ch;
+         *argv_buf++ = 0;
+      }
+   };
 
    int32_t clock_gettime(int32_t id, void* data)
    {
@@ -990,10 +1004,11 @@ struct callbacks
 
 void register_callbacks()
 {
-   rhf_t::add<&callbacks::abort>("env", "abort");
+   rhf_t::add<&callbacks::tester_abort>("env", "tester_abort");
    rhf_t::add<&callbacks::eosio_assert_message>("env", "eosio_assert_message");
    rhf_t::add<&callbacks::prints_l>("env", "prints_l");
-   rhf_t::add<&callbacks::get_args>("env", "get_args");
+   // rhf_t::add<&callbacks::tester_get_arg_counts>("env", "tester_get_arg_counts");
+   // rhf_t::add<&callbacks::tester_get_args>("env", "tester_get_args");
    rhf_t::add<&callbacks::clock_gettime>("env", "clock_gettime");
    rhf_t::add<&callbacks::open_file>("env", "open_file");
    rhf_t::add<&callbacks::isatty>("env", "isatty");
@@ -1039,7 +1054,7 @@ static void run(const char* wasm, const std::vector<std::string>& args)
    eosio::vm::wasm_allocator wa;
    auto code = eosio::vm::read_wasm(wasm);
    backend_t backend(code, nullptr);
-   ::state state{wasm, wa, backend, eosio::convert_to_bin(args)};
+   ::state state{wasm, wa, backend, args};
    callbacks cb{state};
    state.files.emplace_back(stdin, false);
    state.files.emplace_back(stdout, false);

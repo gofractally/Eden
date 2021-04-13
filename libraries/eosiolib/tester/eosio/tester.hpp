@@ -26,8 +26,6 @@ namespace eosio
 
    }  // namespace internal_use_do_not_use
 
-   const std::vector<std::string>& get_args();
-
    std::vector<char> read_whole_file(std::string_view filename);
 
    int32_t execute(std::string_view command);
