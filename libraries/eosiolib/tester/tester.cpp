@@ -7,34 +7,40 @@ namespace
 {
    using cb_alloc_type = void* (*)(void* cb_alloc_data, size_t size);
 
-   // clang-format off
-   // TESTER_INTRINSIC void     connect_rodeos(uint32_t rodeos, uint32_t chain);
-   TESTER_INTRINSIC uint32_t create_chain(const char* snapshot, uint32_t snapshot_size);
-   // TESTER_INTRINSIC uint32_t create_rodeos();
-   TESTER_INTRINSIC void     destroy_chain(uint32_t chain);
-   // TESTER_INTRINSIC void     destroy_rodeos(uint32_t rodeos);
-   TESTER_INTRINSIC bool     exec_deferred(uint32_t chain_index, void* cb_alloc_data, cb_alloc_type cb_alloc);
-   TESTER_INTRINSIC int32_t  execute(const char* command, uint32_t command_size);
-   TESTER_INTRINSIC void     finish_block(uint32_t chain_index);
-   TESTER_INTRINSIC uint32_t get_args(char* dest, uint32_t dest_size);
-   TESTER_INTRINSIC uint32_t get_chain_path(uint32_t chain, char* dest, uint32_t dest_size);
-   TESTER_INTRINSIC void     get_head_block_info(uint32_t chain_index, void* cb_alloc_data, cb_alloc_type cb_alloc);
-   // TESTER_INTRINSIC uint32_t get_history(uint32_t chain_index, uint32_t block_num, char* dest, uint32_t dest_size);
-   TESTER_INTRINSIC void     push_transaction(uint32_t chain_index, const char* args_packed, uint32_t args_packed_size, void* cb_alloc_data, cb_alloc_type cb_alloc);
-   TESTER_INTRINSIC bool     read_whole_file(const char* filename, uint32_t filename_size, void* cb_alloc_data, cb_alloc_type cb_alloc);
-   TESTER_INTRINSIC void     replace_account_keys(uint32_t chain_index, uint64_t account, uint64_t permission, const char* key, uint32_t key_size);
-   TESTER_INTRINSIC void     replace_producer_keys(uint32_t chain_index, const char* key, uint32_t key_size);
-   // TESTER_INTRINSIC void     rodeos_add_filter(uint32_t rodeos, uint64_t name, const char* wasm_filename, uint32_t wasm_filename_size);
-   // TESTER_INTRINSIC void     rodeos_enable_queries(uint32_t rodeos, uint32_t max_console_size, uint32_t wasm_cache_size, uint64_t max_exec_time_ms, const char* contract_dir, uint32_t contract_dir_size);
-   // TESTER_INTRINSIC uint32_t rodeos_get_num_pushed_data(uint32_t rodeos);
-   // TESTER_INTRINSIC uint32_t rodeos_get_pushed_data(uint32_t rodeos, uint32_t index, char* dest, uint32_t dest_size);
-   // TESTER_INTRINSIC void     rodeos_push_transaction(uint32_t rodeos, const char* packed_args, uint32_t packed_args_size, void* cb_alloc_data, cb_alloc_type cb_alloc);
-   // TESTER_INTRINSIC bool     rodeos_sync_block(uint32_t rodeos);
-   TESTER_INTRINSIC void     select_chain_for_db(uint32_t chain_index);
-   TESTER_INTRINSIC void     shutdown_chain(uint32_t chain);
-   TESTER_INTRINSIC void     start_block(uint32_t chain_index, int64_t skip_miliseconds);
-   TESTER_INTRINSIC uint32_t sign(const void* key, uint32_t keylen, const void* digest, void* sig, uint32_t siglen);
-   // clang-format on
+   extern "C"
+   {
+      // clang-format off
+      [[clang::import_name("create_chain")]]                uint32_t create_chain(const char* snapshot, uint32_t snapshot_size);
+      [[clang::import_name("destroy_chain")]]               void     destroy_chain(uint32_t chain);
+      [[clang::import_name("exec_deferred")]]               bool     exec_deferred(uint32_t chain_index, void* cb_alloc_data, cb_alloc_type cb_alloc);
+      [[clang::import_name("execute")]]                     int32_t  execute(const char* command, uint32_t command_size);
+      [[clang::import_name("finish_block")]]                void     finish_block(uint32_t chain_index);
+      [[clang::import_name("get_args")]]                    uint32_t get_args(char* dest, uint32_t dest_size);
+      [[clang::import_name("get_chain_path")]]              uint32_t get_chain_path(uint32_t chain, char* dest, uint32_t dest_size);
+      [[clang::import_name("get_head_block_info")]]         void     get_head_block_info(uint32_t chain_index, void* cb_alloc_data, cb_alloc_type cb_alloc);
+      [[clang::import_name("push_transaction")]]            void     push_transaction(uint32_t chain_index, const char* args_packed, uint32_t args_packed_size, void* cb_alloc_data, cb_alloc_type cb_alloc);
+      [[clang::import_name("read_whole_file")]]             bool     read_whole_file(const char* filename, uint32_t filename_size, void* cb_alloc_data, cb_alloc_type cb_alloc);
+      [[clang::import_name("replace_account_keys")]]        void     replace_account_keys(uint32_t chain_index, uint64_t account, uint64_t permission, const char* key, uint32_t key_size);
+      [[clang::import_name("replace_producer_keys")]]       void     replace_producer_keys(uint32_t chain_index, const char* key, uint32_t key_size);
+      [[clang::import_name("select_chain_for_db")]]         void     select_chain_for_db(uint32_t chain_index);
+      [[clang::import_name("shutdown_chain")]]              void     shutdown_chain(uint32_t chain);
+      [[clang::import_name("sign")]]                        uint32_t sign(const void* key, uint32_t keylen, const void* digest, void* sig, uint32_t siglen);
+      [[clang::import_name("start_block")]]                 void     start_block(uint32_t chain_index, int64_t skip_miliseconds);
+
+      /*
+      [[clang::import_name("connect_rodeos")]]              void     connect_rodeos(uint32_t rodeos, uint32_t chain);
+      [[clang::import_name("create_rodeos")]]               uint32_t create_rodeos();
+      [[clang::import_name("destroy_rodeos")]]              void     destroy_rodeos(uint32_t rodeos);
+      [[clang::import_name("get_history")]]                 uint32_t get_history(uint32_t chain_index, uint32_t block_num, char* dest, uint32_t dest_size);
+      [[clang::import_name("rodeos_add_filter")]]           void     rodeos_add_filter(uint32_t rodeos, uint64_t name, const char* wasm_filename, uint32_t wasm_filename_size);
+      [[clang::import_name("rodeos_enable_queries")]]       void     rodeos_enable_queries(uint32_t rodeos, uint32_t max_console_size, uint32_t wasm_cache_size, uint64_t max_exec_time_ms, const char* contract_dir, uint32_t contract_dir_size);
+      [[clang::import_name("rodeos_get_num_pushed_data")]]  uint32_t rodeos_get_num_pushed_data(uint32_t rodeos);
+      [[clang::import_name("rodeos_get_pushed_data")]]      uint32_t rodeos_get_pushed_data(uint32_t rodeos, uint32_t index, char* dest, uint32_t dest_size);
+      [[clang::import_name("rodeos_push_transaction")]]     void     rodeos_push_transaction(uint32_t rodeos, const char* packed_args, uint32_t packed_args_size, void* cb_alloc_data, cb_alloc_type cb_alloc);
+      [[clang::import_name("rodeos_sync_block")]]           bool     rodeos_sync_block(uint32_t rodeos);
+      */
+      // clang-format on
+   }
 
    inline const std::vector<char>& get_args()
    {
