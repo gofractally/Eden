@@ -1,4 +1,7 @@
 include(ExternalProject)
+include(ProcessorCount)
+
+ProcessorCount(NUM_PROCS)
 
 add_library(rapidjson INTERFACE)
 target_include_directories(rapidjson INTERFACE rapidjson/include)
@@ -10,7 +13,7 @@ if(IS_NATIVE)
         BUILD_ALWAYS 1
         TEST_EXCLUDE_FROM_MAIN 1
         EXCLUDE_FROM_ALL 1
-        BUILD_COMMAND cmake --build . -t eosio_chain
+        BUILD_COMMAND cmake --build . -t eosio_chain -j ${NUM_PROCS}
         INSTALL_COMMAND sh -c "mkdir -p ${ROOT_BINARY_DIR}/eos && cp -p `find . -name *.a` ${ROOT_BINARY_DIR}/eos"
         CMAKE_ARGS
             -DENABLE_OC=OFF
@@ -71,3 +74,23 @@ add_library(fmt INTERFACE)
 target_include_directories(fmt INTERFACE ${CMAKE_BINARY_DIR}/fmt/include)
 target_link_libraries(fmt INTERFACE ${CMAKE_BINARY_DIR}/fmt/lib/libfmt.a)
 add_dependencies(fmt fmt-ext)
+
+ExternalProject_Add(catch2-ext
+    SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/Catch2
+    BINARY_DIR catch2
+    TEST_EXCLUDE_FROM_MAIN 1
+    EXCLUDE_FROM_ALL 1
+    CMAKE_ARGS
+        -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
+        -DCMAKE_INSTALL_PREFIX=${CMAKE_BINARY_DIR}/catch2
+        -DCATCH_INSTALL_DOCS=FALSE
+        -DCATCH_INSTALL_EXTRAS=FALSE
+)
+
+add_library(catch2 INTERFACE)
+target_include_directories(catch2 INTERFACE ${CMAKE_BINARY_DIR}/catch2/include)
+add_dependencies(catch2 catch2-ext)
+
+if(IS_WASM)
+    target_compile_options(catch2 INTERFACE -DCATCH_CONFIG_NO_POSIX_SIGNALS -DCATCH_CONFIG_DISABLE_EXCEPTIONS)
+endif()

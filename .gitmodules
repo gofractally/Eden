@@ -3,7 +3,10 @@
 	url = https://github.com/Tencent/rapidjson.git
 [submodule "external/eos"]
 	path = external/eos
-	url = git@github.com:eoscommunity/eos.git
+	url = https://github.com/eoscommunity/eos.git
 [submodule "external/fmt"]
 	path = external/fmt
 	url = https://github.com/fmtlib/fmt.git
+[submodule "external/Catch2"]
+	path = external/Catch2
+	url = https://github.com/catchorg/Catch2.git

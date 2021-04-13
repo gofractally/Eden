@@ -48,6 +48,8 @@ namespace token
       {
          eosio::asset balance;
 
+         bool operator==(const account&) const = default;
+         bool operator!=(const account&) const = default;
          uint64_t primary_key() const { return balance.symbol.code().raw(); }
       };
 
@@ -57,6 +59,8 @@ namespace token
          eosio::asset max_supply;
          eosio::name issuer;
 
+         bool operator==(const currency_stats&) const = default;
+         bool operator!=(const currency_stats&) const = default;
          uint64_t primary_key() const { return supply.symbol.code().raw(); }
       };
 

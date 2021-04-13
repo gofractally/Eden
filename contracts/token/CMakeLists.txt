@@ -3,3 +3,8 @@ target_include_directories(token PUBLIC include)
 target_link_libraries(token eosio-contract-simple-malloc)
 set_target_properties(token PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${ROOT_BINARY_DIR})
 configure_file(token.abi ${ROOT_BINARY_DIR}/token.abi COPYONLY)
+
+add_executable(test_token tests/test_token.cpp)
+target_include_directories(test_token PUBLIC include)
+target_link_libraries(test_token testlib catch2)
+set_target_properties(test_token PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${ROOT_BINARY_DIR})
