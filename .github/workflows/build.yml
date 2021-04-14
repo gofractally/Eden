@@ -1,0 +1,42 @@
+name: build
+
+on:
+    push:
+        branches:
+            - main
+            - "test/*"
+    pull_request:
+        types: [assigned, opened, synchronize, reopened, labeled]
+
+jobs:
+    build:
+        name: Build Eden Community Apps
+        runs-on: ubuntu-latest
+        container: sparkplug0025/clarion:latest
+
+        steps:
+            - name: ✅ Checkout code
+              uses: actions/checkout@v2
+
+            - name: 🛠 Build
+              run: |
+                  git submodule update --init --recursive
+                  mkdir build
+                  cd build
+                  cmake -DCMAKE_BUILD_TYPE=Release ..
+                  make -j$(nproc)
+
+            - name: 🧪 Run tests with CTest
+              run: cd build && ctest -j$(nproc)
+
+            # TODO: define what needs to be packaged
+            # - name: Cleanup before Artifact Upload
+            #   run: |
+            #       rm -rf build/wasm/boost
+            #       tar -cvf build.tar .
+
+            # - name: Upload the Build Artifact
+            #   uses: actions/upload-artifact@v2.2.2
+            #   with:
+            #       name: Eden
+            #       path: build.tar
