@@ -6,36 +6,53 @@ if(CMAKE_BINARY_DIR STREQUAL CMAKE_CURRENT_SOURCE_DIR)
     message(FATAL_ERROR "Building in-source is not supported; create a build dir and remove ${CMAKE_SOURCE_DIR}/CMakeCache.txt and ${CMAKE_SOURCE_DIR}/CMakeFiles")
 endif()
 
+if(NOT DEFINED WASI_SDK_PREFIX AND DEFINED ENV{WASI_SDK_PREFIX})
+    set(WASI_SDK_PREFIX $ENV{WASI_SDK_PREFIX})
+endif()
+
 file(WRITE ${CMAKE_BINARY_DIR}/CTestTestfile.cmake)
 
-if(DEFINED EOSIO_CONTRACTS OR EOSIO_CONTRACTS)
-    message(STATUS "Building eosio contracts")
+if(DEFINED WASI_SDK_PREFIX)
+    if(NOT DEFINED TOKEN_SYMBOL AND NOT DEFINED ENV{TOKEN_SYMBOL})
+        set(TOKEN_SYMBOL "WAX")
+    elseif(NOT DEFINED TOKEN_SYMBOL AND DEFINED ENV{TOKEN_SYMBOL})
+        set(TOKEN_SYMBOL $ENV{TOKEN_SYMBOL})
+    endif()
+    message(STATUS "Using TOKEN_SYMBOL ${TOKEN_SYMBOL}")
 
-    find_package(eosio.cdt)
-    set(EOSIO_CDT_VERSION_MIN "1.7")
-    set(EOSIO_CDT_VERSION_SOFT_MAX "1.7")
-    set(EOSIO_CDT_VERSION_HARD_MAX "")
+    if(NOT DEFINED TOKEN_PRECISION AND NOT DEFINED ENV{TOKEN_PRECISION})
+        set(TOKEN_PRECISION 8)
+    elseif(NOT DEFINED TOKEN_PRECISION AND DEFINED ENV{TOKEN_PRECISION})
+        set(TOKEN_PRECISION $ENV{TOKEN_PRECISION})
+    endif()
+    message(STATUS "Using TOKEN_PRECISION ${TOKEN_PRECISION}")
 
-    ### Check the version of eosio.cdt
-    set(VERSION_MATCH_ERROR_MSG "eosio.cdt version incorrect version, we expect 1.7")
-    EOSIO_CHECK_VERSION(VERSION_OUTPUT "${EOSIO_CDT_VERSION}"
-                                       "${EOSIO_CDT_VERSION_MIN}"
-                                       "${EOSIO_CDT_VERSION_SOFT_MAX}"
-                                       "${EOSIO_CDT_VERSION_HARD_MAX}"
-                                       VERSION_MATCH_ERROR_MSG)
+    if(NOT DEFINED TOKEN_MINIMUM_DONATION AND NOT DEFINED ENV{TOKEN_PRECISION})
+        set(TOKEN_MINIMUM_DONATION 1000000000)
+    elseif(NOT DEFINED TOKEN_MINIMUM_DONATION AND DEFINED ENV{TOKEN_MINIMUM_DONATION})
+        set(TOKEN_MINIMUM_DONATION $ENV{TOKEN_MINIMUM_DONATION})
+    endif()
+    message(STATUS "Using TOKEN_MINIMUM_DONATION ${TOKEN_MINIMUM_DONATION}")
 
-    ExternalProject_Add(contracts
-        SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/contracts
-        BINARY_DIR ${CMAKE_BINARY_DIR}/contracts
-        CMAKE_ARGS -DCMAKE_TOOLCHAIN_FILE=${EOSIO_CDT_ROOT}/lib/cmake/eosio.cdt/EosioWasmToolchain.cmake
-        UPDATE_COMMAND ""
-        PATCH_COMMAND ""
-        TEST_COMMAND ""
+    ExternalProject_Add(wasm
+        SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/wasm
+        BINARY_DIR wasm
         INSTALL_COMMAND ""
         BUILD_ALWAYS 1
+        TEST_EXCLUDE_FROM_MAIN 1
+        CMAKE_ARGS
+            -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
+            -DCMAKE_TOOLCHAIN_FILE=${CMAKE_CURRENT_SOURCE_DIR}/wasm/toolchain.cmake
+            -DWASI_SDK_PREFIX=${WASI_SDK_PREFIX}
+            -DTOKEN_SYMBOL=${TOKEN_SYMBOL}
+            -DTOKEN_PRECISION=${TOKEN_PRECISION}
+            -DTOKEN_MINIMUM_DONATION=${TOKEN_MINIMUM_DONATION}
+            -DCMAKE_SYSROOT=${WASI_SDK_PREFIX}/share/wasi-sysroot
     )
+    file(APPEND ${CMAKE_BINARY_DIR}/CTestTestfile.cmake "subdirs(\"wasm\")\n")
+    ExternalProject_Add_StepTargets(wasm test)
 else()
-    message(WARNING "EOSIO_CONTRACTS isn't defined; skipping eosio build")
+    message(WARNING "WASI_SDK_PREFIX isn't defined; skipping wasm")
 endif()
 
 ########## TS PACKAGES ####################

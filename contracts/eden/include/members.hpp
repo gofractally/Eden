@@ -7,7 +7,8 @@
 
 namespace eden
 {
-   inline const eosio::asset minimum_membership_donation{10, default_token};
+   inline constexpr eosio::asset minimum_membership_donation{minimum_donation, default_token,
+                                                             eosio::no_check};
 
    using member_status_type = uint8_t;
    enum member_status : member_status_type
@@ -17,7 +18,7 @@ namespace eden
       expired = 2
    };
 
-   struct [[eosio::table("members"), eosio::contract("eden")]] member
+   struct member
    {
       eosio::name member;
       eosio::asset balance;
@@ -25,6 +26,8 @@ namespace eden
 
       uint64_t primary_key() const { return member.value; }
    };
+   EOSIO_REFLECT(member, member, balance, status)
+
    using members_table_type = eosio::multi_index<"members"_n, member>;
 
    class members
