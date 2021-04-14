@@ -29,6 +29,10 @@ if(IS_NATIVE)
     set(Boost_USE_STATIC_LIBS   ON)
     find_package(Boost 1.67 REQUIRED COMPONENTS date_time filesystem chrono iostreams)
 
+    if(CMAKE_BUILD_TYPE STREQUAL "Debug")
+        set(FC_SUFFIX _debug)
+    endif()
+
     add_library(chain INTERFACE)
     target_include_directories(chain INTERFACE
         ${ROOT_SOURCE_DIR}/external/eos/libraries/chain/include
@@ -49,8 +53,8 @@ if(IS_NATIVE)
         -lbuiltins
         -lsoftfloat
         -lchainbase
-        -lfc
-        -lsecp256k1
+        -lfc${FC_SUFFIX}
+        -lsecp256k1${FC_SUFFIX}
         Boost::date_time Boost::filesystem Boost::chrono Boost::iostreams Threads::Threads
         ${OPENSSL_LIBRARIES}
         ${ZLIB_LIBRARIES}

@@ -99,6 +99,8 @@ struct intrinsic_context
           {eosio::chain::name{"eosio"}, eosio::chain::name{"active"}});
       trx_ctx = std::make_unique<eosio::chain::transaction_context>(control, strx, strx.id(), timer,
                                                                     fc::time_point::now());
+      timer.start(fc::time_point::maximum());
+      trx_ctx->explicit_billed_cpu_time = true;
       trx_ctx->init_for_implicit_trx(0);
       trx_ctx->exec();
       apply_context = std::make_unique<eosio::chain::apply_context>(control, *trx_ctx, 1, 0);
@@ -1079,7 +1081,7 @@ static void run(const char* wasm, const std::vector<std::string>& args)
 
    rhf_t::resolve(backend.get_module());
    backend.initialize(&cb);
-   backend(cb, "env", "start", 0);
+   backend(cb, "env", "_start");
 }
 
 const char usage[] =
@@ -1114,7 +1116,7 @@ int main(int argc, char* argv[])
    }
    try
    {
-      std::vector<std::string> args{argv + next_arg + 1, argv + argc};
+      std::vector<std::string> args{argv + next_arg, argv + argc};
       register_callbacks();
       run(argv[next_arg], args);
       return 0;

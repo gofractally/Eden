@@ -19,7 +19,7 @@ struct token_tester
       chain.create_account("bob"_n);
       chain.create_account("carol"_n);
       chain.create_code_account("eosio.token"_n);
-      chain.set_code("eosio.token"_n, "contracts/eosio.token/eosio.token.wasm");
+      chain.set_code("eosio.token"_n, "token.wasm");
    }
 
    transaction_trace create(name issuer,
