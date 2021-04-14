@@ -4,8 +4,7 @@ namespace eden
 {
    void members::deposit(eosio::name member, eosio::asset quantity)
    {
-      eosio::check(quantity >= minimum_membership_donation,
-                   "minimum donation value is 10.0000 EOS");
+      eosio::check(quantity >= minimum_membership_donation, "insufficient minimum donation");
 
       auto itr = members_tb.find(member.value);
       if (itr == members_tb.end())

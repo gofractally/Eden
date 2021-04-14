@@ -12,7 +12,7 @@ cmake -DCMAKE_BUILD_TYPE=Release ..
 make -j
 ```
 
-## Ubuntu 20.04
+### Ubuntu 20.04
 
 ```sh
 sudo apt-get update
@@ -35,4 +35,12 @@ tar xf wasi-sdk-12.0-linux.tar.gz
 wget https://nodejs.org/dist/v14.16.0/node-v14.16.0-linux-x64.tar.xz
 tar xf node-v14.16.0-linux-x64.tar.xz
 npm i -g yarn
+```
+
+## Running Eden Community WebApp locally
+
+```sh
+yarn
+yarn dev --stream
+open http://localhost:3000
 ```
