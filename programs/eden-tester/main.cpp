@@ -640,6 +640,8 @@ struct callbacks
 
    void tester_abort() { throw std::runtime_error("called tester_abort"); }
 
+   void eosio_exit(int32_t) { throw std::runtime_error("called eosio_exit"); }
+
    void eosio_assert_message(bool condition, span<const char> msg)
    {
       if (!condition)
@@ -648,7 +650,7 @@ struct callbacks
 
    void prints_l(span<const char> str) { std::cerr.write(str.data(), str.size()); }
 
-   void tester_get_arg_counts(uint32_t* argc, uint32_t* argv_buf_size)
+   void tester_get_arg_counts(wasm_ptr<uint32_t> argc, wasm_ptr<uint32_t> argv_buf_size)
    {
       uint32_t size = 0;
       for (auto& a : state.args)
@@ -657,14 +659,26 @@ struct callbacks
       *argv_buf_size = size;
    };
 
-   void tester_get_args(uint8_t** argv, uint8_t* argv_buf)
+   // uint8_t** argv, uint8_t* argv_buf
+   void tester_get_args(uint32_t argv, uint32_t argv_buf)
    {
+      auto* memory = state.backend.get_context().linear_memory();
+      auto get_argv = [&]() -> uint32_t& { return *reinterpret_cast<uint32_t*>(memory + argv); };
+      auto get_argv_buf = [&]() -> uint8_t& {
+         return *reinterpret_cast<uint8_t*>(memory + argv_buf);
+      };
+
       for (auto& a : state.args)
       {
-         *argv++ = argv_buf;
+         get_argv() = argv_buf;
+         argv += 4;
          for (auto ch : a)
-            *argv_buf++ = ch;
-         *argv_buf++ = 0;
+         {
+            get_argv_buf() = ch;
+            ++argv_buf;
+         }
+         get_argv_buf() = 0;
+         ++argv_buf;
       }
    };
 
@@ -1006,10 +1020,11 @@ struct callbacks
 void register_callbacks()
 {
    rhf_t::add<&callbacks::tester_abort>("env", "tester_abort");
+   rhf_t::add<&callbacks::eosio_exit>("env", "eosio_exit");
    rhf_t::add<&callbacks::eosio_assert_message>("env", "eosio_assert_message");
    rhf_t::add<&callbacks::prints_l>("env", "prints_l");
-   // rhf_t::add<&callbacks::tester_get_arg_counts>("env", "tester_get_arg_counts");
-   // rhf_t::add<&callbacks::tester_get_args>("env", "tester_get_args");
+   rhf_t::add<&callbacks::tester_get_arg_counts>("env", "tester_get_arg_counts");
+   rhf_t::add<&callbacks::tester_get_args>("env", "tester_get_args");
    rhf_t::add<&callbacks::clock_gettime>("env", "clock_gettime");
    rhf_t::add<&callbacks::open_file>("env", "open_file");
    rhf_t::add<&callbacks::isatty>("env", "isatty");
