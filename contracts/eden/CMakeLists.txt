@@ -3,7 +3,7 @@ include_directories(${CMAKE_BINARY_DIR}/generated/)
 
 add_executable(eden
    src/actions/hi.cpp
-   src/actions/transfer_handler.cpp
+   src/actions/notify_transfer.cpp
    src/eden.cpp
    src/members.cpp
 )
