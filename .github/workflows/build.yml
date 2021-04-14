@@ -27,7 +27,7 @@ jobs:
                   make -j$(nproc)
                   cp eden.wasm eden-wax.wasm
                   cmake -DTOKEN_SYMBOL=EOS -DTOKEN_PRECISION=4 -DTOKEN_MINIMUM_DONATION=100000 ..
-                  touch ../contracts/eden/src/eden.cpp
+                  touch ../contracts/eden/include/constants.hpp
                   make -j$(nproc)
 
             - name: 🧪 Run tests with CTest

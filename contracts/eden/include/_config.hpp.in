@@ -4,6 +4,6 @@
 
 namespace eden
 {
-   inline constexpr uint64_t minimum_donation = ${TOKEN_MINIMUM_DONATION};
    inline constexpr eosio::symbol default_token{"${TOKEN_SYMBOL}", ${TOKEN_PRECISION}};
+   inline constexpr uint64_t minimum_donation = ${TOKEN_MINIMUM_DONATION};
 }  // namespace eden
