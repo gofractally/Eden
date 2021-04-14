@@ -1,0 +1,43 @@
+name: build
+
+on:
+    push:
+        branches:
+            - main
+            - "test/*"
+    pull_request:
+        types: [assigned, opened, synchronize, reopened, labeled]
+
+jobs:
+    build:
+        name: Build Eden Community Apps
+        runs-on: ubuntu-latest
+        container: sparkplug0025/clarion:latest
+
+        steps:
+            - name: ✅ Checkout code
+              uses: actions/checkout@v2
+
+            - name: 🛠 Build
+              run: |
+                  git submodule update --init --recursive
+                  mkdir build
+                  cd build
+                  cmake -DCMAKE_BUILD_TYPE=Release ..
+                  make -j$(nproc)
+                  cp eden.wasm eden-wax.wasm
+                  cmake -DTOKEN_SYMBOL=EOS -DTOKEN_PRECISION=4 -DTOKEN_MINIMUM_DONATION=100000 ..
+                  touch ../contracts/eden/include/constants.hpp
+                  make -j$(nproc)
+
+            - name: 🧪 Run tests with CTest
+              run: cd build && ctest -j$(nproc)
+
+            - name: 📃 Upload Eden Smart Contract
+              uses: actions/upload-artifact@v2
+              with:
+                  name: Eden Smart Contract
+                  path: |
+                      build/eden.abi
+                      build/eden.wasm
+                      build/eden-wax.wasm

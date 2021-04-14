@@ -7,7 +7,8 @@
 
 namespace eden
 {
-   inline constexpr eosio::asset minimum_membership_donation{10, default_token, eosio::no_check};
+   inline constexpr eosio::asset minimum_membership_donation{minimum_donation, default_token,
+                                                             eosio::no_check};
 
    using member_status_type = uint8_t;
    enum member_status : member_status_type
