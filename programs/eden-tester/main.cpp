@@ -725,7 +725,7 @@ struct callbacks
       return fread(content.data(), 1, content.size(), f.f);
    }
 
-   bool read_whole_file(span<const char> filename, uint32_t cb_alloc_data, uint32_t cb_alloc)
+   bool tester_read_whole_file(span<const char> filename, uint32_t cb_alloc_data, uint32_t cb_alloc)
    {
       file f = fopen(span_str(filename).c_str(), "r");
       if (!f.f)
@@ -744,7 +744,7 @@ struct callbacks
       return true;
    }
 
-   int32_t execute(span<const char> command) { return system(span_str(command).c_str()); }
+   int32_t tester_execute(span<const char> command) { return system(span_str(command).c_str()); }
 
    test_chain& assert_chain(uint32_t chain, bool require_control = true)
    {
@@ -756,7 +756,7 @@ struct callbacks
       return result;
    }
 
-   uint32_t create_chain(span<const char> snapshot)
+   uint32_t tester_create_chain(span<const char> snapshot)
    {
       state.chains.push_back(std::make_unique<test_chain>(span_str(snapshot).c_str()));
       if (state.chains.size() == 1)
@@ -764,7 +764,7 @@ struct callbacks
       return state.chains.size() - 1;
    }
 
-   void destroy_chain(uint32_t chain)
+   void tester_destroy_chain(uint32_t chain)
    {
       assert_chain(chain, false);
       if (state.selected_chain_index && *state.selected_chain_index == chain)
@@ -776,13 +776,13 @@ struct callbacks
       }
    }
 
-   void shutdown_chain(uint32_t chain)
+   void tester_shutdown_chain(uint32_t chain)
    {
       auto& c = assert_chain(chain);
       c.control.reset();
    }
 
-   uint32_t get_chain_path(uint32_t chain, span<char> dest)
+   uint32_t tester_get_chain_path(uint32_t chain, span<char> dest)
    {
       auto& c = assert_chain(chain, false);
       auto s = c.dir.path().string();
@@ -790,17 +790,17 @@ struct callbacks
       return s.size();
    }
 
-   void replace_producer_keys(uint32_t chain_index, span<const char> key)
+   void tester_replace_producer_keys(uint32_t chain_index, span<const char> key)
    {
       auto& chain = assert_chain(chain_index);
       auto k = unpack<eosio::chain::public_key_type>(key);
       chain.control->replace_producer_keys(k);
    }
 
-   void replace_account_keys(uint32_t chain_index,
-                             uint64_t account,
-                             uint64_t permission,
-                             span<const char> key)
+   void tester_replace_account_keys(uint32_t chain_index,
+                                    uint64_t account,
+                                    uint64_t permission,
+                                    span<const char> key)
    {
       auto& chain = assert_chain(chain_index);
       auto k = unpack<eosio::chain::public_key_type>(key);
@@ -808,14 +808,14 @@ struct callbacks
                                           eosio::chain::name{permission}, k);
    }
 
-   void start_block(uint32_t chain_index, int64_t skip_miliseconds)
+   void tester_start_block(uint32_t chain_index, int64_t skip_miliseconds)
    {
       assert_chain(chain_index).start_block(skip_miliseconds);
    }
 
-   void finish_block(uint32_t chain_index) { assert_chain(chain_index).finish_block(); }
+   void tester_finish_block(uint32_t chain_index) { assert_chain(chain_index).finish_block(); }
 
-   void get_head_block_info(uint32_t chain_index, uint32_t cb_alloc_data, uint32_t cb_alloc)
+   void tester_get_head_block_info(uint32_t chain_index, uint32_t cb_alloc_data, uint32_t cb_alloc)
    {
       auto& chain = assert_chain(chain_index);
       chain_types::block_info info;
@@ -825,10 +825,10 @@ struct callbacks
       set_data(cb_alloc_data, cb_alloc, convert_to_bin(info));
    }
 
-   void push_transaction(uint32_t chain_index,
-                         span<const char> args_packed,
-                         uint32_t cb_alloc_data,
-                         uint32_t cb_alloc)
+   void tester_push_transaction(uint32_t chain_index,
+                                span<const char> args_packed,
+                                uint32_t cb_alloc_data,
+                                uint32_t cb_alloc)
    {
       auto args = unpack<push_trx_args>(args_packed);
       auto transaction = unpack<eosio::chain::transaction>(args.transaction);
@@ -854,7 +854,7 @@ struct callbacks
                convert_to_bin(chain_types::transaction_trace{convert(*result)}));
    }
 
-   bool exec_deferred(uint32_t chain_index, uint32_t cb_alloc_data, uint32_t cb_alloc)
+   bool tester_exec_deferred(uint32_t chain_index, uint32_t cb_alloc_data, uint32_t cb_alloc)
    {
       auto& chain = assert_chain(chain_index);
       chain.start_if_needed();
@@ -873,7 +873,7 @@ struct callbacks
       return false;
    }
 
-   void select_chain_for_db(uint32_t chain_index)
+   void tester_select_chain_for_db(uint32_t chain_index)
    {
       assert_chain(chain_index);
       state.selected_chain_index = chain_index;
@@ -884,7 +884,8 @@ struct callbacks
       if (!state.selected_chain_index || *state.selected_chain_index >= state.chains.size() ||
           !state.chains[*state.selected_chain_index] ||
           !state.chains[*state.selected_chain_index]->control)
-         throw std::runtime_error("select_chain_for_db() must be called before using multi_index");
+         throw std::runtime_error(
+             "tester_select_chain_for_db() must be called before using multi_index");
       return state.chains[*state.selected_chain_index]->get_apply_context();
    }
 
@@ -953,7 +954,7 @@ struct callbacks
    // DB_WRAPPERS_FLOAT_SECONDARY(idx_long_double, float128_t)
    // clang-format on
 
-   uint32_t sign(span<const char> private_key, const void* hash_val, span<char> signature)
+   uint32_t tester_sign(span<const char> private_key, const void* hash_val, span<char> signature)
    {
       auto k = unpack<fc::crypto::private_key>(private_key);
       fc::sha256 hash;
@@ -1015,20 +1016,20 @@ void register_callbacks()
    rhf_t::add<&callbacks::close_file>("env", "close_file");
    rhf_t::add<&callbacks::write_file>("env", "write_file");
    rhf_t::add<&callbacks::read_file>("env", "read_file");
-   rhf_t::add<&callbacks::read_whole_file>("env", "read_whole_file");
-   rhf_t::add<&callbacks::execute>("env", "execute");
-   rhf_t::add<&callbacks::create_chain>("env", "create_chain");
-   rhf_t::add<&callbacks::destroy_chain>("env", "destroy_chain");
-   rhf_t::add<&callbacks::shutdown_chain>("env", "shutdown_chain");
-   rhf_t::add<&callbacks::get_chain_path>("env", "get_chain_path");
-   rhf_t::add<&callbacks::replace_producer_keys>("env", "replace_producer_keys");
-   rhf_t::add<&callbacks::replace_account_keys>("env", "replace_account_keys");
-   rhf_t::add<&callbacks::start_block>("env", "start_block");
-   rhf_t::add<&callbacks::finish_block>("env", "finish_block");
-   rhf_t::add<&callbacks::get_head_block_info>("env", "get_head_block_info");
-   rhf_t::add<&callbacks::push_transaction>("env", "push_transaction");
-   rhf_t::add<&callbacks::exec_deferred>("env", "exec_deferred");
-   rhf_t::add<&callbacks::select_chain_for_db>("env", "select_chain_for_db");
+   rhf_t::add<&callbacks::tester_read_whole_file>("env", "tester_read_whole_file");
+   rhf_t::add<&callbacks::tester_execute>("env", "tester_execute");
+   rhf_t::add<&callbacks::tester_create_chain>("env", "tester_create_chain");
+   rhf_t::add<&callbacks::tester_destroy_chain>("env", "tester_destroy_chain");
+   rhf_t::add<&callbacks::tester_shutdown_chain>("env", "tester_shutdown_chain");
+   rhf_t::add<&callbacks::tester_get_chain_path>("env", "tester_get_chain_path");
+   rhf_t::add<&callbacks::tester_replace_producer_keys>("env", "tester_replace_producer_keys");
+   rhf_t::add<&callbacks::tester_replace_account_keys>("env", "tester_replace_account_keys");
+   rhf_t::add<&callbacks::tester_start_block>("env", "tester_start_block");
+   rhf_t::add<&callbacks::tester_finish_block>("env", "tester_finish_block");
+   rhf_t::add<&callbacks::tester_get_head_block_info>("env", "tester_get_head_block_info");
+   rhf_t::add<&callbacks::tester_push_transaction>("env", "tester_push_transaction");
+   rhf_t::add<&callbacks::tester_exec_deferred>("env", "tester_exec_deferred");
+   rhf_t::add<&callbacks::tester_select_chain_for_db>("env", "tester_select_chain_for_db");
 
    rhf_t::add<&callbacks::db_get_i64>("env", "db_get_i64");
    rhf_t::add<&callbacks::db_next_i64>("env", "db_next_i64");
@@ -1042,7 +1043,7 @@ void register_callbacks()
    // DB_REGISTER_SECONDARY(idx256)
    // DB_REGISTER_SECONDARY(idx_double)
    // DB_REGISTER_SECONDARY(idx_long_double)
-   rhf_t::add<&callbacks::sign>("env", "sign");
+   rhf_t::add<&callbacks::tester_sign>("env", "tester_sign");
    rhf_t::add<&callbacks::sha1>("env", "sha1");
    rhf_t::add<&callbacks::sha256>("env", "sha256");
    rhf_t::add<&callbacks::sha512>("env", "sha512");
