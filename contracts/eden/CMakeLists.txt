@@ -1,3 +1,6 @@
+configure_file(include/_config.hpp.in ${CMAKE_BINARY_DIR}/generated/config.hpp)
+include_directories(${CMAKE_BINARY_DIR}/generated/)
+
 add_executable(eden
    src/actions/hi.cpp
    src/actions/transfer_handler.cpp
@@ -7,4 +10,4 @@ add_executable(eden
 target_include_directories(eden PUBLIC include)
 target_link_libraries(eden eosio-contract)
 set_target_properties(eden PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${ROOT_BINARY_DIR})
-# configure_file(eden.abi ${ROOT_BINARY_DIR}/eden.abi COPYONLY)
+configure_file(eden.abi ${ROOT_BINARY_DIR}/eden.abi COPYONLY)

@@ -13,6 +13,29 @@ endif()
 file(WRITE ${CMAKE_BINARY_DIR}/CTestTestfile.cmake)
 
 if(DEFINED WASI_SDK_PREFIX)
+
+    if(NOT DEFINED TOKEN_SYMBOL)
+        set(TOKEN_SYMBOL "WAX")
+        message(STATUS "TOKEN_SYMBOL not defined, defaulting to ${TOKEN_SYMBOL}")
+    else()
+        message(STATUS "Using TOKEN_SYMBOL ${TOKEN_SYMBOL}")
+    endif()
+
+    if(NOT DEFINED TOKEN_PRECISION)
+        set(TOKEN_PRECISION 8)
+        message(STATUS "TOKEN_SYMBOL not defined, defaulting to ${TOKEN_PRECISION}")
+    else()
+        message(STATUS "Using TOKEN_PRECISION ${TOKEN_PRECISION}")
+    endif()
+
+    if(NOT DEFINED TOKEN_MINIMUM_DONATION)
+        set(TOKEN_MINIMUM_DONATION 1000000000)
+        message(STATUS "TOKEN_MINIMUM_DONATION not defined, defaulting to ${TOKEN_MINIMUM_DONATION}")
+    else()
+        message(STATUS "Using TOKEN_MINIMUM_DONATION ${TOKEN_MINIMUM_DONATION}")
+    endif()
+
+
     ExternalProject_Add(wasm
         SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/wasm
         BINARY_DIR wasm
@@ -23,6 +46,9 @@ if(DEFINED WASI_SDK_PREFIX)
             -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
             -DCMAKE_TOOLCHAIN_FILE=${CMAKE_CURRENT_SOURCE_DIR}/wasm/toolchain.cmake
             -DWASI_SDK_PREFIX=${WASI_SDK_PREFIX}
+            -DTOKEN_SYMBOL=${TOKEN_SYMBOL}
+            -DTOKEN_PRECISION=${TOKEN_PRECISION}
+            -DTOKEN_MINIMUM_DONATION=${TOKEN_MINIMUM_DONATION}
             -DCMAKE_SYSROOT=${WASI_SDK_PREFIX}/share/wasi-sysroot
     )
     file(APPEND ${CMAKE_BINARY_DIR}/CTestTestfile.cmake "subdirs(\"wasm\")\n")
