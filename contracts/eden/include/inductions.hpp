@@ -4,6 +4,7 @@
 #include <eosio/asset.hpp>
 #include <eosio/eosio.hpp>
 #include <string>
+#include <utils.hpp>
 
 namespace eden
 {
@@ -28,6 +29,7 @@ namespace eden
       new_member_profile new_member_profile;
 
       uint64_t primary_key() const { return id; }
+      uint128_t get_invitee_inviter() const { return combine_names(invitee, inviter); }
    };
    EOSIO_REFLECT(induction,
                  id,
@@ -39,7 +41,12 @@ namespace eden
                  video,
                  new_member_profile)
 
-   using induction_table_type = eosio::multi_index<"induction"_n, induction>;
+   using induction_table_type = eosio::multi_index<
+       "induction"_n,
+       induction,
+       eosio::indexed_by<
+           "byinvitee"_n,
+           eosio::const_mem_fun<induction, uint128_t, &induction::get_invitee_inviter>>>;
 
    class inductions
    {
@@ -47,15 +54,17 @@ namespace eden
       eosio::name contract;
       induction_table_type induction_tb;
 
-      void create(){};
-      void remove(){};
+      void check_new_induction(eosio::name inviter, eosio::name invitee) const;
 
      public:
       inductions(eosio::name contract) : contract(contract), induction_tb(contract, default_scope)
       {
       }
 
-      void init(){};
+      void initialize_induction(uint64_t id,
+                                eosio::name inviter,
+                                eosio::name invitee,
+                                const std::vector<eosio::name>& witnesses);
    };
 
 }  // namespace eden

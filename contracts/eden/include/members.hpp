@@ -35,13 +35,15 @@ namespace eden
       eosio::name contract;
       member_table_type member_tb;
 
-      bool is_new_member(const eosio::name account) const;
-      void create(const eosio::name account);
+      bool is_new_member(eosio::name account) const;
+      void create(eosio::name account);
 
      public:
       members(eosio::name contract) : contract(contract), member_tb(contract, default_scope) {}
 
-      void deposit(const eosio::name account, const eosio::asset& quantity);
+      void check_active_member(eosio::name account);
+      void check_pending_member(eosio::name account);
+      void deposit(eosio::name account, const eosio::asset& quantity);
    };
 
 }  // namespace eden
