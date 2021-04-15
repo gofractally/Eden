@@ -54,7 +54,9 @@ namespace eden
       eosio::name contract;
       induction_table_type induction_tb;
 
-      void check_new_induction(eosio::name inviter, eosio::name invitee) const;
+      void check_new_induction(eosio::name invitee, eosio::name inviter) const;
+      induction get_valid_induction(eosio::name invitee, eosio::name inviter) const;
+      void validate_profile(const new_member_profile& new_member_profile) const;
 
      public:
       inductions(eosio::name contract) : contract(contract), induction_tb(contract, default_scope)
@@ -65,6 +67,10 @@ namespace eden
                                 eosio::name inviter,
                                 eosio::name invitee,
                                 const std::vector<eosio::name>& witnesses);
+
+      void set_profile(eosio::name inviter,
+                       eosio::name invitee,
+                       const new_member_profile& new_member_profile);
    };
 
 }  // namespace eden

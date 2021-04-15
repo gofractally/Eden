@@ -21,4 +21,16 @@ namespace eden
 
       inductions{get_self()}.initialize_induction(id, inviter, invitee, witnesses);
    }
+
+   void eden::inductprofil(eosio::name inviter,
+                           eosio::name invitee,
+                           new_member_profile new_member_profile)
+   {
+      require_auth(invitee);
+
+      members members{get_self()};
+      members.check_pending_member(invitee);
+
+      inductions{get_self()}.set_profile(inviter, invitee, new_member_profile);
+   }
 }  // namespace eden

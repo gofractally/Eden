@@ -3,8 +3,7 @@ include_directories(${CMAKE_BINARY_DIR}/generated/)
 
 add_executable(eden
    src/actions/hi.cpp
-   src/actions/inductinit.cpp
-   src/actions/inductprofil.cpp
+   src/actions/induct.cpp
    src/actions/notify_transfer.cpp
    src/eden.cpp
    src/inductions.cpp
