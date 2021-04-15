@@ -5,13 +5,19 @@
 #include <catch2/catch.hpp>
 
 using namespace eosio;
+namespace actions = token::actions;
 using std::string;
 using account = token::contract::account;
 using currency_stats = token::contract::currency_stats;
+using user_context = test_chain::user_context;
 
 struct token_tester
 {
    test_chain chain;
+   user_context eosio_token = chain.as("eosio.token"_n);
+   user_context alice = chain.as("alice"_n);
+   user_context bob = chain.as("bob"_n);
+   user_context carol = chain.as("carol"_n);
 
    token_tester()
    {
@@ -20,67 +26,6 @@ struct token_tester
       chain.create_account("carol"_n);
       chain.create_code_account("eosio.token"_n);
       chain.set_code("eosio.token"_n, "token.wasm");
-   }
-
-   transaction_trace create(name issuer,
-                            const asset& maximum_supply,
-                            const char* expected_except = nullptr)
-   {
-      return chain.transact(
-          {token::actions::create{"eosio.token"_n, {"eosio.token"_n, "active"_n}}.to_action(
-              issuer, maximum_supply)},
-          expected_except);
-   }
-
-   transaction_trace issue(name issuer,
-                           name to,
-                           const asset& quantity,
-                           const string& memo,
-                           const char* expected_except = nullptr)
-   {
-      return chain.transact({token::actions::issue{"eosio.token"_n, {issuer, "active"_n}}.to_action(
-                                to, quantity, memo)},
-                            expected_except);
-   }
-
-   transaction_trace retire(name issuer,
-                            const asset& quantity,
-                            const string& memo,
-                            const char* expected_except = nullptr)
-   {
-      return chain.transact(
-          {token::actions::retire{"eosio.token"_n, {issuer, "active"_n}}.to_action(quantity, memo)},
-          expected_except);
-   }
-
-   transaction_trace transfer(name from,
-                              name to,
-                              const asset& quantity,
-                              const string& memo,
-                              const char* expected_except = nullptr)
-   {
-      return chain.transact(
-          {token::actions::transfer{"eosio.token"_n, {from, "active"_n}}.to_action(from, to,
-                                                                                   quantity, memo)},
-          expected_except);
-   }
-
-   transaction_trace open(name owner,
-                          const symbol& symbol,
-                          name ram_payer,
-                          const char* expected_except = nullptr)
-   {
-      return chain.transact(
-          {token::actions::open{"eosio.token"_n, {ram_payer, "active"_n}}.to_action(owner, symbol,
-                                                                                    ram_payer)},
-          expected_except);
-   }
-
-   transaction_trace close(name owner, const symbol& symbol, const char* expected_except = nullptr)
-   {
-      return chain.transact(
-          {token::actions::close{"eosio.token"_n, {owner, "active"_n}}.to_action(owner, symbol)},
-          expected_except);
    }
 
    auto get_stats(symbol_code sym_code)
@@ -104,7 +49,7 @@ TEST_CASE("Create a token", "[create]")
 {
    token_tester t;
 
-   t.create("alice"_n, s2a("1000.000 TKN"));
+   t.eosio_token.act<actions::create>("alice"_n, s2a("1000.000 TKN"));
    REQUIRE(t.get_stats(symbol_code{"TKN"}) == (currency_stats{
                                                   .supply = s2a("0.000 TKN"),
                                                   .max_supply = s2a("1000.000 TKN"),
@@ -115,27 +60,29 @@ TEST_CASE("Create a token", "[create]")
 TEST_CASE("Create a token with negative max supply", "[create_negative_max_supply]")
 {
    token_tester t;
-   t.create("alice"_n, s2a("-1000.000 TKN"), "max-supply must be positive");
+   expect(t.eosio_token.trace<actions::create>("alice"_n, s2a("-1000.000 TKN")),
+          "max-supply must be positive");
 }
 
 TEST_CASE("Create token with a symbol that already exists", "[symbol_already_exists]")
 {
    token_tester t;
 
-   t.create("alice"_n, s2a("1000 TKN"));
+   t.eosio_token.act<actions::create>("alice"_n, s2a("1000 TKN"));
    REQUIRE(t.get_stats(symbol_code{"TKN"}) == (currency_stats{
                                                   .supply = s2a("0 TKN"),
                                                   .max_supply = s2a("1000 TKN"),
                                                   .issuer = "alice"_n,
                                               }));
-   t.create("alice"_n, s2a("100 TKN"), "token with symbol already exists");
+   expect(t.eosio_token.trace<actions::create>("alice"_n, s2a("100 TKN")),
+          "token with symbol already exists");
 }
 
 TEST_CASE("Create a token whose max supply is to large", "[create_max_supply]")
 {
    token_tester t;
 
-   t.create("alice"_n, s2a("4611686018427387903 TKN"));
+   t.eosio_token.act<actions::create>("alice"_n, s2a("4611686018427387903 TKN"));
    REQUIRE(t.get_stats(symbol_code{"TKN"}) == (currency_stats{
                                                   .supply = s2a("0 TKN"),
                                                   .max_supply = s2a("4611686018427387903 TKN"),
@@ -144,14 +91,14 @@ TEST_CASE("Create a token whose max supply is to large", "[create_max_supply]")
 
    auto too_big = s2a("4611686018427387903 NKT");
    ++too_big.amount;
-   t.create("alice"_n, too_big, "invalid supply");
+   expect(t.eosio_token.trace<actions::create>("alice"_n, too_big), "invalid supply");
 }
 
 TEST_CASE("Create a token whose precision is too high", "[precision_too_high]")
 {
    token_tester t;
 
-   t.create("alice"_n, asset{1, symbol{"TKN", 18}});
+   t.eosio_token.act<actions::create>("alice"_n, asset{1, symbol{"TKN", 18}});
    REQUIRE(t.get_stats(symbol_code{"TKN"}) ==  //
            (currency_stats{
                .supply = s2a("0.000000000000000000 TKN"),
@@ -160,15 +107,15 @@ TEST_CASE("Create a token whose precision is too high", "[precision_too_high]")
            }));
 
    // eosio.token fails to check precision. Verify this broken behavior is still present.
-   t.create("alice"_n, asset{1, symbol{"NKT", 50}});
+   t.eosio_token.act<actions::create>("alice"_n, asset{1, symbol{"NKT", 50}});
 }
 
 TEST_CASE("Test issuing a token", "[issue_tests]")
 {
    token_tester t;
 
-   t.create("alice"_n, s2a("1000.000 TKN"));
-   t.issue("alice"_n, "alice"_n, s2a("500.000 TKN"), "hola");
+   t.eosio_token.act<actions::create>("alice"_n, s2a("1000.000 TKN"));
+   t.alice.act<actions::issue>("alice"_n, s2a("500.000 TKN"), "hola");
    REQUIRE(t.get_stats(symbol_code{"TKN"}) ==  //
            (currency_stats{
                .supply = s2a("500.000 TKN"),
@@ -177,17 +124,19 @@ TEST_CASE("Test issuing a token", "[issue_tests]")
            }));
    REQUIRE(token::contract::get_balance("eosio.token"_n, "alice"_n, symbol_code{"TKN"}) ==
            s2a("500.000 TKN"));
-   t.issue("alice"_n, "alice"_n, s2a("500.001 TKN"), "hola", "quantity exceeds available supply");
-   t.issue("alice"_n, "alice"_n, s2a("-1.000 TKN"), "hola", "must issue positive quantity");
-   t.issue("alice"_n, "alice"_n, s2a("1.000 TKN"), "hola");
+   expect(t.alice.trace<actions::issue>("alice"_n, s2a("500.001 TKN"), "hola"),
+          "quantity exceeds available supply");
+   expect(t.alice.trace<actions::issue>("alice"_n, s2a("-1.000 TKN"), "hola"),
+          "must issue positive quantity");
+   t.alice.act<actions::issue>("alice"_n, s2a("1.000 TKN"), "hola");
 }
 
 TEST_CASE("Retire tokens", "[retire_tests]")
 {
    token_tester t;
 
-   t.create("alice"_n, s2a("1000.000 TKN"));
-   t.issue("alice"_n, "alice"_n, s2a("500.000 TKN"), "hola");
+   t.eosio_token.act<actions::create>("alice"_n, s2a("1000.000 TKN"));
+   t.alice.act<actions::issue>("alice"_n, s2a("500.000 TKN"), "hola");
    REQUIRE(t.get_stats(symbol_code{"TKN"}) ==  //
            (currency_stats{
                .supply = s2a("500.000 TKN"),
@@ -197,7 +146,7 @@ TEST_CASE("Retire tokens", "[retire_tests]")
 
    REQUIRE(token::contract::get_balance("eosio.token"_n, "alice"_n, symbol_code{"TKN"}) ==
            s2a("500.000 TKN"));
-   t.retire("alice"_n, s2a("200.000 TKN"), "hola");
+   t.alice.act<actions::retire>(s2a("200.000 TKN"), "hola");
 
    REQUIRE(t.get_stats(symbol_code{"TKN"}) ==  //
            (currency_stats{
@@ -209,15 +158,15 @@ TEST_CASE("Retire tokens", "[retire_tests]")
            s2a("300.000 TKN"));
 
    // should fail to retire more than current balance
-   t.retire("alice"_n, s2a("500.000 TKN"), "hola", "overdrawn balance");
+   expect(t.alice.trace<actions::retire>(s2a("500.000 TKN"), "hola"), "overdrawn balance");
 
-   t.transfer("alice"_n, "bob"_n, s2a("200.000 TKN"), "hola");
+   t.alice.act<actions::transfer>("alice"_n, "bob"_n, s2a("200.000 TKN"), "hola");
    // should fail to retire since tokens are not on the issuer's balance
-   t.retire("alice"_n, s2a("300.000 TKN"), "hola", "overdrawn balance");
+   expect(t.alice.trace<actions::retire>(s2a("300.000 TKN"), "hola"), "overdrawn balance");
    // transfer tokens back
-   t.transfer("bob"_n, "alice"_n, s2a("200.000 TKN"), "hola");
+   t.bob.act<actions::transfer>("bob"_n, "alice"_n, s2a("200.000 TKN"), "hola");
 
-   t.retire("alice"_n, s2a("300.000 TKN"), "hola");
+   t.alice.act<actions::retire>(s2a("300.000 TKN"), "hola");
    REQUIRE(t.get_stats(symbol_code{"TKN"}) ==  //
            (currency_stats{
                .supply = s2a("0.000 TKN"),
@@ -229,15 +178,15 @@ TEST_CASE("Retire tokens", "[retire_tests]")
            s2a("0.000 TKN"));
 
    // trying to retire tokens with zero balance
-   t.retire("alice"_n, s2a("1.000 TKN"), "hola", "overdrawn balance");
+   expect(t.alice.trace<actions::retire>(s2a("1.000 TKN"), "hola"), "overdrawn balance");
 }
 
 TEST_CASE("Transfer tokens", "[transfer_tests]")
 {
    token_tester t;
 
-   t.create("alice"_n, s2a("1000 CERO"));
-   t.issue("alice"_n, "alice"_n, s2a("1000 CERO"), "hola");
+   t.eosio_token.act<actions::create>("alice"_n, s2a("1000 CERO"));
+   t.alice.act<actions::issue>("alice"_n, s2a("1000 CERO"), "hola");
 
    REQUIRE(t.get_stats(symbol_code{"CERO"}) ==  //
            (currency_stats{
@@ -248,58 +197,64 @@ TEST_CASE("Transfer tokens", "[transfer_tests]")
 
    REQUIRE(token::contract::get_balance("eosio.token"_n, "alice"_n, symbol_code{"CERO"}) ==
            s2a("1000 CERO"));
-   t.transfer("alice"_n, "bob"_n, s2a("300 CERO"), "hola");
+   t.alice.act<actions::transfer>("alice"_n, "bob"_n, s2a("300 CERO"), "hola");
    REQUIRE(token::contract::get_balance("eosio.token"_n, "alice"_n, symbol_code{"CERO"}) ==
            s2a("700 CERO"));
    REQUIRE(token::contract::get_balance("eosio.token"_n, "bob"_n, symbol_code{"CERO"}) ==
            s2a("300 CERO"));
 
-   t.transfer("alice"_n, "bob"_n, s2a("701 CERO"), "hola", "overdrawn balance");
-   t.transfer("alice"_n, "bob"_n, s2a("-1000 CERO"), "hola", "must transfer positive quantity");
+   expect(t.alice.trace<actions::transfer>("alice"_n, "bob"_n, s2a("701 CERO"), "hola"),
+          "overdrawn balance");
+   expect(t.alice.trace<actions::transfer>("alice"_n, "bob"_n, s2a("-1000 CERO"), "hola"),
+          "must transfer positive quantity");
 }
 
 TEST_CASE("Open token balance", "[open_tests]")
 {
    token_tester t;
 
-   t.create("alice"_n, s2a("1000 CERO"));
+   t.eosio_token.act<actions::create>("alice"_n, s2a("1000 CERO"));
 
    REQUIRE(t.get_account_optional("alice"_n, symbol_code("CERO")) == std::nullopt);
-   t.issue("alice"_n, "bob"_n, s2a("1000 CERO"), "", "tokens can only be issued to issuer account");
-   t.issue("alice"_n, "alice"_n, s2a("1000 CERO"), "issue");
+   expect(t.alice.trace<actions::issue>("bob"_n, s2a("1000 CERO"), ""),
+          "tokens can only be issued to issuer account");
+   t.alice.act<actions::issue>("alice"_n, s2a("1000 CERO"), "issue");
 
    REQUIRE(token::contract::get_balance("eosio.token"_n, "alice"_n, symbol_code{"CERO"}) ==
            s2a("1000 CERO"));
    REQUIRE(t.get_account_optional("bob"_n, symbol_code("CERO")) == std::nullopt);
 
-   t.open("nonexistent"_n, symbol{"CERO", 0}, "alice"_n, "owner account does not exist");
-   t.open("bob"_n, symbol{"CERO", 0}, "alice"_n);
+   expect(t.alice.trace<actions::open>("nonexistent"_n, symbol{"CERO", 0}, "alice"_n),
+          "owner account does not exist");
+   t.alice.act<actions::open>("bob"_n, symbol{"CERO", 0}, "alice"_n);
 
    REQUIRE(token::contract::get_balance("eosio.token"_n, "bob"_n, symbol_code{"CERO"}) ==
            s2a("0 CERO"));
-   t.transfer("alice"_n, "bob"_n, s2a("200 CERO"), "hola");
+   t.alice.act<actions::transfer>("alice"_n, "bob"_n, s2a("200 CERO"), "hola");
    REQUIRE(token::contract::get_balance("eosio.token"_n, "bob"_n, symbol_code{"CERO"}) ==
            s2a("200 CERO"));
 
-   t.open("carol"_n, symbol{"INVALID", 0}, "alice"_n, "symbol does not exist");
-   t.open("carol"_n, symbol{"CERO", 1}, "alice"_n, "symbol precision mismatch");
+   expect(t.alice.trace<actions::open>("carol"_n, symbol{"INVALID", 0}, "alice"_n),
+          "symbol does not exist");
+   expect(t.alice.trace<actions::open>("carol"_n, symbol{"CERO", 1}, "alice"_n),
+          "symbol precision mismatch");
 }
 
 TEST_CASE("Close token balance", "[close_tests]")
 {
    token_tester t;
 
-   t.create("alice"_n, s2a("1000 CERO"));
+   t.eosio_token.act<actions::create>("alice"_n, s2a("1000 CERO"));
    REQUIRE(t.get_account_optional("alice"_n, symbol_code("CERO")) == std::nullopt);
 
-   t.issue("alice"_n, "alice"_n, s2a("1000 CERO"), "hola");
+   t.alice.act<actions::issue>("alice"_n, s2a("1000 CERO"), "hola");
    REQUIRE(token::contract::get_balance("eosio.token"_n, "alice"_n, symbol_code{"CERO"}) ==
            s2a("1000 CERO"));
 
-   t.transfer("alice"_n, "bob"_n, s2a("1000 CERO"), "hola");
+   t.alice.act<actions::transfer>("alice"_n, "bob"_n, s2a("1000 CERO"), "hola");
    REQUIRE(token::contract::get_balance("eosio.token"_n, "alice"_n, symbol_code{"CERO"}) ==
            s2a("0 CERO"));
 
-   t.close("alice"_n, symbol{"CERO", 0});
+   t.alice.act<actions::close>("alice"_n, symbol{"CERO", 0});
    REQUIRE(t.get_account_optional("alice"_n, symbol_code("CERO")) == std::nullopt);
 }
