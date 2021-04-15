@@ -2,22 +2,41 @@
 
 namespace eden
 {
-   void members::deposit(eosio::name member, eosio::asset quantity)
+   void members::deposit(eosio::name account, const eosio::asset& quantity)
    {
       eosio::check(quantity >= minimum_membership_donation, "insufficient minimum donation");
+      if (is_new_member(account))
+      {
+         create(account);
+      }
+   }
 
-      auto itr = members_tb.find(member.value);
-      if (itr == members_tb.end())
-      {
-         members_tb.emplace(contract, [&](auto& row) {
-            row.member = member;
-            row.balance = quantity;
-            row.status = member_status::pending;
-         });
-      }
-      else
-      {
-         members_tb.modify(itr, eosio::same_payer, [&](auto& row) { row.balance += quantity; });
-      }
+   void members::check_active_member(eosio::name account)
+   {
+      auto member = member_tb.get(account.value);
+      eosio::check(member.status == member_status::active_member,
+                   "inactive member " + account.to_string());
+   }
+
+   void members::check_pending_member(eosio::name account)
+   {
+      auto member = member_tb.get(account.value);
+      eosio::check(member.status == member_status::pending_membership,
+                   "member " + account.to_string() + " is not pending");
+   }
+
+   bool members::is_new_member(eosio::name account) const
+   {
+      auto itr = member_tb.find(account.value);
+      return itr == member_tb.end();
+   }
+
+   void members::create(eosio::name account)
+   {
+      member_tb.emplace(contract, [&](auto& row) {
+         row.account = account;
+         row.status = member_status::pending_membership;
+         row.nft_template_id = 0;
+      });
    }
 }  // namespace eden

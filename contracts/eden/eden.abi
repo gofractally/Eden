@@ -45,7 +45,7 @@
     ],
     "tables": [
         {
-            "name": "members",
+            "name": "member",
             "type": "member",
             "index_type": "i64",
             "key_names": [],
