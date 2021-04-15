@@ -3,7 +3,9 @@
 #include <constants.hpp>
 #include <eosio/asset.hpp>
 #include <eosio/eosio.hpp>
+#include <inductions.hpp>
 #include <string>
+#include <vector>
 
 namespace eden
 {
@@ -23,7 +25,16 @@ namespace eden
                            std::string memo);
 
       void hi(eosio::name user);
+
+      void inductinit(uint64_t id,
+                      eosio::name inviter,
+                      eosio::name invitee,
+                      std::vector<eosio::name> witnesses);
+
+      void inductprofil(eosio::name inviter,
+                        eosio::name invitee,
+                        new_member_profile new_member_profile);
    };
 
-   EOSIO_ACTIONS(eden, "eden"_n, hi, notify transfer)
+   EOSIO_ACTIONS(eden, "eden"_n, hi, inductinit, inductprofil, notify transfer)
 }  // namespace eden

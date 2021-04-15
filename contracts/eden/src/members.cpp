@@ -2,22 +2,27 @@
 
 namespace eden
 {
-   void members::deposit(eosio::name member, eosio::asset quantity)
+   void members::deposit(const eosio::name account, const eosio::asset& quantity)
    {
       eosio::check(quantity >= minimum_membership_donation, "insufficient minimum donation");
+      if (is_new_member(account))
+      {
+         create(account);
+      }
+   }
 
-      auto itr = members_tb.find(member.value);
-      if (itr == members_tb.end())
-      {
-         members_tb.emplace(contract, [&](auto& row) {
-            row.member = member;
-            row.balance = quantity;
-            row.status = member_status::pending;
-         });
-      }
-      else
-      {
-         members_tb.modify(itr, eosio::same_payer, [&](auto& row) { row.balance += quantity; });
-      }
+   bool members::is_new_member(const eosio::name account) const
+   {
+      auto itr = member_tb.find(account.value);
+      return itr == member_tb.end();
+   }
+
+   void members::create(const eosio::name account)
+   {
+      member_tb.emplace(contract, [&](auto& row) {
+         row.account = account;
+         row.status = member_status::pending_membership;
+         row.nft_template_id = 0;
+      });
    }
 }  // namespace eden
