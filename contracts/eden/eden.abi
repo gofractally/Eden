@@ -8,6 +8,16 @@
     ],
     "structs": [
         {
+            "name": "block_timestamp",
+            "base": "",
+            "fields": [
+                {
+                    "name": "slot",
+                    "type": "uint32"
+                }
+            ]
+        },
+        {
             "name": "hi",
             "base": "",
             "fields": [
