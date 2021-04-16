@@ -643,7 +643,7 @@ uint32_t eosio::test_rodeos::sync_blocks()
    return n;
 }
 
-[[nodiscard]] eosio::transaction_trace eosio::test_rodeos::tester_push_transaction(
+[[nodiscard]] eosio::transaction_trace eosio::test_rodeos::push_transaction(
     const transaction& trx,
     const std::vector<private_key>& keys,
     const std::vector<std::vector<char>>& context_free_data,
@@ -667,7 +667,7 @@ eosio::transaction_trace eosio::test_rodeos::transact(std::vector<action>&& acti
                                                       const std::vector<private_key>& keys,
                                                       const char* expected_except)
 {
-   auto trace = tester_push_transaction(connected->make_transaction(std::move(actions)), keys);
+   auto trace = push_transaction(connected->make_transaction(std::move(actions)), keys);
    expect_rodeos(trace, expected_except);
    return trace;
 }

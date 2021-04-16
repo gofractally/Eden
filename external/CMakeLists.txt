@@ -14,7 +14,7 @@ if(IS_NATIVE)
         TEST_EXCLUDE_FROM_MAIN 1
         EXCLUDE_FROM_ALL 1
         BUILD_COMMAND cmake --build . -t eosio_chain -j ${NUM_PROCS}
-        INSTALL_COMMAND sh -c "mkdir -p ${ROOT_BINARY_DIR}/eos && cp -p `find . -name *.a` ${ROOT_BINARY_DIR}/eos"
+        INSTALL_COMMAND sh -c "mkdir -p ${ROOT_BINARY_DIR}/eos && cp -p `find . -name '*.a'` ${ROOT_BINARY_DIR}/eos"
         CMAKE_ARGS
             -DENABLE_OC=OFF
             -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
