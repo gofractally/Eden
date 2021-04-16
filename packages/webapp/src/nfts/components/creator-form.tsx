@@ -14,10 +14,7 @@ import {
 import { EdenNftData, EdenNftSocialHandles } from "../interfaces";
 import { createNft, validateAndConfirmCreation, mintAssets } from "../handlers";
 import { atomicAssets } from "config";
-
-interface WithUALProps {
-    ual: any;
-}
+import { WithUALProps } from "_app/ual";
 
 export const CreatorForm = ({ ual }: WithUALProps) => {
     return ual.activeUser ? (

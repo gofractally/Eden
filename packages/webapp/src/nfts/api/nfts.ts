@@ -17,7 +17,6 @@ export const getTemplates = async (
     }
 
     const { data } = await executeAtomicAssetRequest(url);
-    console.info("templates data", data);
     return data;
 };
 
