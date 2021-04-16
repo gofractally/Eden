@@ -4,7 +4,7 @@ const RPC_URL = `${rpcEndpoint.protocol}://${rpcEndpoint.host}:${rpcEndpoint.por
 const RPC_GET_TABLE_ROWS = `${RPC_URL}/v1/chain/get_table_rows`;
 
 const CONTRACT_SCOPE = "0";
-const CONTRACT_MEMBER_TABLE = "members";
+const CONTRACT_MEMBER_TABLE = "member";
 
 export const getEdenMember = async (member: string) => {
     const requestBody = {
@@ -28,7 +28,7 @@ export const getEdenMember = async (member: string) => {
     });
 
     const data = await response.json();
-    console.info("got eden member", data);
+    console.info("fetched eden member data", data);
 
     if (!data || !data.rows) {
         throw new Error("Invalid table results");

@@ -20,7 +20,7 @@ export const CreatorForm = ({ ual }: WithUALProps) => {
     return ual.activeUser ? (
         <SubmissionForm ual={ual} />
     ) : (
-        <Button onClick={ual.showModal}>Login</Button>
+        <p>Please Login using your Wallet.</p>
     );
 };
 
