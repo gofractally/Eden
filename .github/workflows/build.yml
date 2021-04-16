@@ -12,7 +12,7 @@ jobs:
     build:
         name: Build Eden Community Apps
         runs-on: ubuntu-latest
-        container: sparkplug0025/clarion:latest
+        container: ghcr.io/eoscommunity/eden-builder:latest
 
         steps:
             - name: ✅ Checkout code
