@@ -50,11 +50,12 @@ TEST_CASE("Create a token", "[create]")
    token_tester t;
 
    t.eosio_token.act<actions::create>("alice"_n, s2a("1000.000 TKN"));
-   REQUIRE(t.get_stats(symbol_code{"TKN"}) == (currency_stats{
-                                                  .supply = s2a("0.000 TKN"),
-                                                  .max_supply = s2a("1000.000 TKN"),
-                                                  .issuer = "alice"_n,
-                                              }));
+   REQUIRE(t.get_stats(symbol_code{"TKN"}) ==  //
+           (currency_stats{
+               .supply = s2a("0.000 TKN"),
+               .max_supply = s2a("1000.000 TKN"),
+               .issuer = "alice"_n,
+           }));
 }
 
 TEST_CASE("Create a token with negative max supply", "[create_negative_max_supply]")
@@ -69,11 +70,12 @@ TEST_CASE("Create token with a symbol that already exists", "[symbol_already_exi
    token_tester t;
 
    t.eosio_token.act<actions::create>("alice"_n, s2a("1000 TKN"));
-   REQUIRE(t.get_stats(symbol_code{"TKN"}) == (currency_stats{
-                                                  .supply = s2a("0 TKN"),
-                                                  .max_supply = s2a("1000 TKN"),
-                                                  .issuer = "alice"_n,
-                                              }));
+   REQUIRE(t.get_stats(symbol_code{"TKN"}) ==  //
+           (currency_stats{
+               .supply = s2a("0 TKN"),
+               .max_supply = s2a("1000 TKN"),
+               .issuer = "alice"_n,
+           }));
    expect(t.eosio_token.trace<actions::create>("alice"_n, s2a("100 TKN")),
           "token with symbol already exists");
 }
@@ -83,11 +85,12 @@ TEST_CASE("Create a token whose max supply is to large", "[create_max_supply]")
    token_tester t;
 
    t.eosio_token.act<actions::create>("alice"_n, s2a("4611686018427387903 TKN"));
-   REQUIRE(t.get_stats(symbol_code{"TKN"}) == (currency_stats{
-                                                  .supply = s2a("0 TKN"),
-                                                  .max_supply = s2a("4611686018427387903 TKN"),
-                                                  .issuer = "alice"_n,
-                                              }));
+   REQUIRE(t.get_stats(symbol_code{"TKN"}) ==  //
+           (currency_stats{
+               .supply = s2a("0 TKN"),
+               .max_supply = s2a("4611686018427387903 TKN"),
+               .issuer = "alice"_n,
+           }));
 
    auto too_big = s2a("4611686018427387903 NKT");
    ++too_big.amount;

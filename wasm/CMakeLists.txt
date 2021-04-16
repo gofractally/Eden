@@ -19,17 +19,13 @@ endif()
 function(native_test N)
 endfunction()
 
-function(wasm_test N)
+function(eden_tester_test N)
     add_test(
-        NAME w-${N}
+        NAME t-${N}
         WORKING_DIRECTORY ${ROOT_BINARY_DIR}
-        COMMAND node dist/tester ${N}.wasm
+        COMMAND ./eden-tester ${N}.wasm
     )
-    set_tests_properties(w-${N} PROPERTIES ENVIRONMENT NODE_PATH=dist)
-endfunction()
-
-function(native_and_wasm_test N)
-    wasm_test(${N})
+    set_tests_properties(t-${N} PROPERTIES ENVIRONMENT NODE_PATH=dist)
 endfunction()
 
 add_subdirectory(../contracts contracts)
