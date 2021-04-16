@@ -1,3 +1,5 @@
+import { Asset } from "_app";
+
 export interface EdenNftData {
     name: string;
     img: string;
@@ -22,13 +24,7 @@ export interface EdenTemplateData {
     created_at_time: string;
 }
 
-export interface NftPrice {
-    quantity: number;
-    symbol: string;
-    precision: number;
-}
-
 export interface AuctionableEdenTemplateData extends EdenTemplateData {
-    currentBid: NftPrice;
+    currentBid: Asset;
     endTime: number;
 }

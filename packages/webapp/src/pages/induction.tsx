@@ -9,7 +9,9 @@ export const InductionPage = () => {
 
     return (
         <SingleColLayout title="Induction">
-            {edenMember && edenMember.status === 1 ? (
+            {!ualAccount ? (
+                <div>Please login using yout wallet.</div>
+            ) : edenMember && edenMember.status === 1 ? (
                 <p>Your account is activated! Do you want to invite someone?</p>
             ) : (
                 <Donation
