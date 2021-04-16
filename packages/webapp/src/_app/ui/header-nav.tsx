@@ -1,8 +1,10 @@
 import Link from "next/link";
 import { useRouter } from "next/router";
 import { useState } from "react";
+import { FaSignOutAlt } from "react-icons/fa";
 
-import { UALAccount } from "_app/ual";
+import { useUALAccount } from "_app/ual";
+import Button from "./button";
 
 interface MenuItem {
     href: string;
@@ -31,7 +33,7 @@ export const HeaderNav = () => {
                         <HeaderLogo />
                         <HeaderItems menuItems={menuItems} />
                     </div>
-                    <UALAccount />
+                    <AccountMenu />
                 </div>
             </div>
             {/* <HeaderMobileMenu
@@ -46,7 +48,7 @@ export const HeaderNav = () => {
 const HeaderLogo = () => (
     <div className="flex-shrink-0 flex items-center">
         <Link href="/">
-            <a className="text-2xl text-white font-bold">EdenOS</a>
+            <a className="text-2xl text-yellow-500 font-bold">EdenOS</a>
         </Link>
     </div>
 );
@@ -91,5 +93,24 @@ const HeaderItemLink = ({
                 {children}
             </a>
         </Link>
+    );
+};
+
+const AccountMenu = () => {
+    const [ualAccount, ualLogout, ualShowModal] = useUALAccount();
+    return ualAccount ? (
+        <div className="space-x-3">
+            <Button href="/induction">Induction</Button>
+            <Link href={`/members/${ualAccount.accountName}`}>
+                <a className="text-gray-200 hover:underline">
+                    {ualAccount.accountName || "(unknown)"}
+                </a>
+            </Link>
+            <a href="#" onClick={ualLogout} className="text-gray-500">
+                <FaSignOutAlt className="inline-block" />
+            </a>
+        </div>
+    ) : (
+        <Button onClick={ualShowModal}>Login</Button>
     );
 };

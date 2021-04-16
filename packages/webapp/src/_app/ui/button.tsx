@@ -1,3 +1,4 @@
+import Link from "next/link";
 import React from "react";
 import { IconType } from "react-icons/lib";
 
@@ -51,9 +52,11 @@ export const Button = ({
     );
 
     return href ? (
-        <a href={href} className={buttonClass} target={target}>
-            {content}
-        </a>
+        <Link href={href}>
+            <a className={buttonClass} target={target}>
+                {content}
+            </a>
+        </Link>
     ) : (
         <button
             onClick={onClick}

@@ -1,2 +1,2 @@
 export * from "./interfaces";
-export * from "./UALAccount";
+export * from "./hooks";
