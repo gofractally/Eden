@@ -1,4 +1,5 @@
 #include <inductions.hpp>
+#include <set>
 
 namespace eden
 {
@@ -8,6 +9,7 @@ namespace eden
                                          const std::vector<eosio::name>& witnesses)
    {
       check_new_induction(invitee, inviter);
+      check_valid_endorsers(inviter, witnesses);
 
       induction_tb.emplace(contract, [&](auto& row) {
          row.id = id;
@@ -33,6 +35,20 @@ namespace eden
          row.new_member_profile = new_member_profile;
          row.endorsements = {};
       });
+   }
+
+   void inductions::check_valid_endorsers(eosio::name inviter,
+                                          const std::vector<eosio::name>& witnesses) const
+   {
+      eosio::check(witnesses.size() >= 2 && witnesses.size() <= 5,
+                   "2 to 5 witnesses are required for induction");
+
+      std::set<eosio::name> unique_witnesses_set(witnesses.begin(), witnesses.end());
+      eosio::check(unique_witnesses_set.size() == witnesses.size(),
+                   "the witnesses list has a duplicated entry");
+
+      eosio::check(!unique_witnesses_set.contains(inviter),
+                   "inviter cannot be is in the witnesses list");
    }
 
    void inductions::check_new_induction(eosio::name invitee, eosio::name inviter) const
