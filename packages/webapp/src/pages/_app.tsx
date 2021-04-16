@@ -1,9 +1,19 @@
+import dynamic from "next/dynamic";
 import { AppProps } from "next/app";
 
 import "tailwindcss/tailwind.css";
 
 const WebApp = ({ Component, pageProps }: AppProps) => {
-    return <Component {...pageProps} />;
+    return (
+        <EdenUALProviderWithNoSSR>
+            <Component {...pageProps} />
+        </EdenUALProviderWithNoSSR>
+    );
 };
+
+const EdenUALProviderWithNoSSR = dynamic(
+    () => import("../_app/ual/EdenUALProvider"),
+    { ssr: false }
+);
 
 export default WebApp;

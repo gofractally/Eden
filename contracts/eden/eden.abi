@@ -8,6 +8,16 @@
     ],
     "structs": [
         {
+            "name": "block_timestamp",
+            "base": "",
+            "fields": [
+                {
+                    "name": "slot",
+                    "type": "uint32"
+                }
+            ]
+        },
+        {
             "name": "hi",
             "base": "",
             "fields": [
@@ -26,12 +36,112 @@
                     "type": "name"
                 },
                 {
-                    "name": "balance",
-                    "type": "asset"
-                },
-                {
                     "name": "status",
                     "type": "member_status_type"
+                },
+                {
+                    "name": "nft_template_id",
+                    "type": "uint64"
+                }
+            ]
+        },
+        {
+            "name": "induction",
+            "base": "",
+            "fields": [
+                {
+                    "name": "id",
+                    "type": "uint64"
+                },
+                {
+                    "name": "inviter",
+                    "type": "name"
+                },
+                {
+                    "name": "invitee",
+                    "type": "name"
+                },
+                {
+                    "name": "witnesses",
+                    "type": "name[]"
+                },
+                {
+                    "name": "endorsements",
+                    "type": "name[]"
+                },
+                {
+                    "name": "created_at",
+                    "type": "block_timestamp"
+                },
+                {
+                    "name": "video",
+                    "type": "string"
+                },
+                {
+                    "name": "new_member_profile",
+                    "type": "new_member_profile"
+                }
+            ]
+        },
+        {
+            "name": "new_member_profile",
+            "base": "",
+            "fields": [
+                {
+                    "name": "name",
+                    "type": "string"
+                },
+                {
+                    "name": "img",
+                    "type": "string"
+                },
+                {
+                    "name": "bio",
+                    "type": "string"
+                },
+                {
+                    "name": "social",
+                    "type": "string"
+                }
+            ]
+        },
+        {
+            "name": "inductinit",
+            "base": "",
+            "fields": [
+                {
+                    "name": "id",
+                    "type": "uint64"
+                },
+                {
+                    "name": "inviter",
+                    "type": "name"
+                },
+                {
+                    "name": "invitee",
+                    "type": "name"
+                },
+                {
+                    "name": "witnesses",
+                    "type": "name[]"
+                }
+            ]
+        },
+        {
+            "name": "inductprofil",
+            "base": "",
+            "fields": [
+                {
+                    "name": "inviter",
+                    "type": "name"
+                },
+                {
+                    "name": "invitee",
+                    "type": "name"
+                },
+                {
+                    "name": "new_member_profile",
+                    "type": "new_member_profile"
                 }
             ]
         }
@@ -40,6 +150,16 @@
         {
             "name": "hi",
             "type": "hi",
+            "ricardian_contract": ""
+        },
+        {
+            "name": "inductinit",
+            "type": "inductinit",
+            "ricardian_contract": ""
+        },
+        {
+            "name": "inductprofil",
+            "type": "inductprofil",
             "ricardian_contract": ""
         }
     ],
