@@ -684,9 +684,8 @@ struct callbacks
       }
    };
 
-   int32_t clock_gettime(int32_t id, void* data)
+   int32_t tester_clock_time_get(uint32_t id, uint64_t precision, wasm_ptr<uint64_t> time)
    {
-      check_bounds((char*)data, 8);
       std::chrono::nanoseconds result;
       if (id == 0)
       {  // CLOCK_REALTIME
@@ -698,13 +697,9 @@ struct callbacks
       }
       else
       {
-         return -1;
+         return EINVAL;
       }
-      int32_t sec = result.count() / 1000000000;
-      int32_t nsec = result.count() % 1000000000;
-      fc::datastream<char*> ds((char*)data, 8);
-      fc::raw::pack(ds, sec);
-      fc::raw::pack(ds, nsec);
+      *time = result.count();
       return 0;
    }
 
@@ -1027,7 +1022,7 @@ void register_callbacks()
    rhf_t::add<&callbacks::prints_l>("env", "prints_l");
    rhf_t::add<&callbacks::tester_get_arg_counts>("env", "tester_get_arg_counts");
    rhf_t::add<&callbacks::tester_get_args>("env", "tester_get_args");
-   rhf_t::add<&callbacks::clock_gettime>("env", "clock_gettime");
+   rhf_t::add<&callbacks::tester_clock_time_get>("env", "tester_clock_time_get");
    rhf_t::add<&callbacks::open_file>("env", "open_file");
    rhf_t::add<&callbacks::isatty>("env", "isatty");
    rhf_t::add<&callbacks::close_file>("env", "close_file");
