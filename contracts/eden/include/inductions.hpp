@@ -57,6 +57,8 @@ namespace eden
       void check_new_induction(eosio::name invitee, eosio::name inviter) const;
       induction get_valid_induction(eosio::name invitee, eosio::name inviter) const;
       void validate_profile(const new_member_profile& new_member_profile) const;
+      void check_valid_endorsers(eosio::name inviter,
+                                 const std::vector<eosio::name>& witnesses) const;
 
      public:
       inductions(eosio::name contract) : contract(contract), induction_tb(contract, default_scope)
