@@ -1,6 +1,6 @@
 import Head from "next/head";
 
-import { Heading } from "../ui";
+import { HeaderNav, Heading } from "../ui";
 
 interface Props {
     title?: string;
@@ -9,6 +9,7 @@ interface Props {
 
 export const RawLayout = ({ children, title }: Props) => (
     <div className="bg-gray-50 min-h-screen">
+        <HeaderNav />
         <Head>
             <title>{title && `${title} | `} Eden</title>
         </Head>
