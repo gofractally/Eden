@@ -1,6 +1,6 @@
 import { GetServerSideProps } from "next";
 
-import { Link, RawLayout } from "_app";
+import { RawLayout } from "_app";
 import { getMember, MemberCard, MemberCollections, MemberData } from "members";
 
 interface Props {
@@ -10,10 +10,6 @@ interface Props {
 export const MemberPage = ({ member }: Props) => {
     return member ? (
         <RawLayout title={`${member.name}'s Profile`}>
-            <div className="ml-8 mt-1 text-sm">
-                <Link href="/members">Back to Members List</Link>
-            </div>
-
             <MemberCard member={member} />
             <MemberCollections
                 edenAccount={member.edenAccount}
