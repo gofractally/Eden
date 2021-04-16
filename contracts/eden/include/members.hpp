@@ -13,33 +13,37 @@ namespace eden
    using member_status_type = uint8_t;
    enum member_status : member_status_type
    {
-      pending = 0,
-      active = 1,
-      expired = 2
+      pending_membership = 0,
+      active_member = 1
    };
 
    struct member
    {
-      eosio::name member;
-      eosio::asset balance;
+      eosio::name account;
       member_status_type status;
+      uint64_t nft_template_id;
 
-      uint64_t primary_key() const { return member.value; }
+      uint64_t primary_key() const { return account.value; }
    };
-   EOSIO_REFLECT(member, member, balance, status)
+   EOSIO_REFLECT(member, account, status, nft_template_id)
 
-   using members_table_type = eosio::multi_index<"members"_n, member>;
+   using member_table_type = eosio::multi_index<"member"_n, member>;
 
    class members
    {
      private:
       eosio::name contract;
-      members_table_type members_tb;
+      member_table_type member_tb;
+
+      bool is_new_member(eosio::name account) const;
+      void create(eosio::name account);
 
      public:
-      members(eosio::name contract) : contract(contract), members_tb(contract, default_scope) {}
+      members(eosio::name contract) : contract(contract), member_tb(contract, default_scope) {}
 
-      void deposit(eosio::name member, eosio::asset quantity);
+      void check_active_member(eosio::name account);
+      void check_pending_member(eosio::name account);
+      void deposit(eosio::name account, const eosio::asset& quantity);
    };
 
 }  // namespace eden
