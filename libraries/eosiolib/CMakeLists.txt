@@ -73,7 +73,7 @@ target_sources(testlib PRIVATE
     tester/wasi_polyfill/__wasi_path_open.cpp
     tester/wasi_polyfill/__wasi_proc_exit.cpp
 )
-target_link_libraries(testlib PUBLIC eosio-core fmt boost)
+target_link_libraries(testlib PUBLIC fmt boost eosio-core)
 target_include_directories(testlib PUBLIC contracts tester)
 target_link_options(testlib INTERFACE -Wl,--export-table)
 add_dependencies(testlib fmt)

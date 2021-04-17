@@ -35,6 +35,26 @@ inline constexpr int block_interval_ms = 500;
 inline constexpr int block_interval_us = block_interval_ms * 1000;
 inline constexpr uint32_t billed_cpu_time_use = 2000;
 
+inline constexpr int32_t wasi_root_dir_fd = 3;
+
+inline constexpr uint8_t wasi_filetype_character_device = 2;
+inline constexpr uint8_t wasi_filetype_directory = 3;
+inline constexpr uint8_t wasi_filetype_regular_file = 4;
+
+inline constexpr uint64_t wasi_rights_fd_read = 2;
+inline constexpr uint64_t wasi_rights_fd_write = 64;
+
+inline constexpr uint16_t wasi_oflags_creat = 1;
+inline constexpr uint16_t wasi_oflags_directory = 2;
+inline constexpr uint16_t wasi_oflags_excl = 4;
+inline constexpr uint16_t wasi_oflags_trunc = 8;
+
+inline constexpr uint16_t wasi_fdflags_append = 1;
+inline constexpr uint16_t wasi_fdflags_dsync = 2;
+inline constexpr uint16_t wasi_fdflags_nonblock = 4;
+inline constexpr uint16_t wasi_fdflags_rsync = 8;
+inline constexpr uint16_t wasi_fdflags_sync = 1;
+
 // Handle eosio version differences
 namespace
 {
@@ -703,37 +723,154 @@ struct callbacks
       return 0;
    }
 
-   int32_t open_file(span<const char> filename, span<const char> mode)
-   {
-      file f = fopen(span_str(filename).c_str(), span_str(mode).c_str());
-      if (!f.f)
-         return -1;
-      state.files.push_back(std::move(f));
-      return state.files.size() - 1;
-   }
-
-   file& assert_file(int32_t file_index)
+   file* get_file(int32_t file_index)
    {
       if (file_index < 0 || static_cast<uint32_t>(file_index) >= state.files.size() ||
           !state.files[file_index].f)
-         throw std::runtime_error("file is not opened");
-      return state.files[file_index];
+         return nullptr;
+      return &state.files[file_index];
    }
 
-   bool isatty(int32_t file_index) { return !assert_file(file_index).owns; }
-
-   void close_file(int32_t file_index) { assert_file(file_index).close(); }
-
-   bool write_file(int32_t file_index, span<const char> content)
+   uint32_t tester_fdstat_get(int32_t fd,
+                              wasm_ptr<uint8_t> fs_filetype,
+                              wasm_ptr<uint16_t> fs_flags,
+                              wasm_ptr<uint64_t> fs_rights_base,
+                              wasm_ptr<uint64_t> fs_rights_inheriting)
    {
-      auto& f = assert_file(file_index);
-      return fwrite(content.data(), content.size(), 1, f.f) == 1;
+      if (fd == STDIN_FILENO)
+      {
+         *fs_filetype = wasi_filetype_character_device;
+         *fs_flags = 0;
+         *fs_rights_base = wasi_rights_fd_read;
+         *fs_rights_inheriting = 0;
+         return 0;
+      }
+      if (fd == STDOUT_FILENO || fd == STDERR_FILENO)
+      {
+         *fs_filetype = wasi_filetype_character_device;
+         *fs_flags = wasi_fdflags_append;
+         *fs_rights_base = wasi_rights_fd_write;
+         *fs_rights_inheriting = 0;
+         return 0;
+      }
+      if (fd == wasi_root_dir_fd)
+      {
+         *fs_filetype = wasi_filetype_directory;
+         *fs_flags = 0;
+         *fs_rights_base = 0;
+         *fs_rights_inheriting = wasi_rights_fd_read | wasi_rights_fd_write;
+         return 0;
+      }
+      if (get_file(fd))
+      {
+         *fs_filetype = wasi_filetype_regular_file;
+         *fs_flags = 0;
+         *fs_rights_base = wasi_rights_fd_read | wasi_rights_fd_write;
+         *fs_rights_inheriting = 0;
+         return 0;
+      }
+      return EBADF;
    }
 
-   int32_t read_file(int32_t file_index, span<char> content)
+   uint32_t tester_open_file(span<const char> path,
+                             uint32_t oflags,
+                             uint64_t fs_rights_base,
+                             uint32_t fdflags,
+                             wasm_ptr<int32_t> opened_fd)
    {
-      auto& f = assert_file(file_index);
-      return fread(content.data(), 1, content.size(), f.f);
+      if (oflags & wasi_oflags_directory)
+         return EINVAL;
+      if (fdflags & wasi_fdflags_nonblock)
+         return EINVAL;
+
+      bool read = fs_rights_base & wasi_rights_fd_read;
+      bool write = fs_rights_base & wasi_rights_fd_write;
+      bool create = oflags & wasi_oflags_creat;
+      bool excl = oflags & wasi_oflags_excl;
+      bool trunc = oflags & wasi_oflags_trunc;
+      bool append = fdflags & wasi_fdflags_append;
+
+      // TODO: move away from fopen to allow more flexible options
+      const char* mode = nullptr;
+      if (read && !create && !excl && !trunc && !append)
+      {
+         if (write)
+            mode = "r+";
+         else
+            mode = "r";
+      }
+      else if (write && create && trunc)
+      {
+         if (read)
+         {
+            if (excl)
+               mode = "w+x";
+            else
+               mode = "w+";
+         }
+         else
+         {
+            if (excl)
+               mode = "wx";
+            else
+               mode = "w";
+         }
+      }
+      else if (write && create && append)
+      {
+         if (read)
+         {
+            if (excl)
+               mode = "a+x";
+            else
+               mode = "a+";
+         }
+         else
+         {
+            if (excl)
+               mode = "ax";
+            else
+               mode = "a";
+         }
+      }
+
+      if (!mode)
+         return EINVAL;
+
+      file f = fopen(span_str(path).c_str(), mode);
+      if (!f.f)
+         return ENOENT;
+      state.files.push_back(std::move(f));
+      *opened_fd = state.files.size() - 1;
+      return 0;
+   }
+
+   uint32_t tester_close_file(int32_t fd)
+   {
+      auto* file = get_file(fd);
+      if (!file)
+         return EBADF;
+      file->close();
+      return 0;
+   }
+
+   uint32_t tester_write_file(int32_t fd, span<const char> content)
+   {
+      auto* file = get_file(fd);
+      if (!file)
+         return EBADF;
+      if (fwrite(content.data(), content.size(), 1, file->f) == 1)
+         return 0;
+      return EIO;
+   }
+
+   uint32_t tester_read_file(int32_t fd, span<char> content, wasm_ptr<int32_t> result)
+   {
+      auto* file = get_file(fd);
+      if (!file)
+         return EBADF;
+      *result = fread(content.data(), 1, content.size(), file->f);
+      return 0;
    }
 
    bool tester_read_whole_file(span<const char> filename, uint32_t cb_alloc_data, uint32_t cb_alloc)
@@ -1023,11 +1160,11 @@ void register_callbacks()
    rhf_t::add<&callbacks::tester_get_arg_counts>("env", "tester_get_arg_counts");
    rhf_t::add<&callbacks::tester_get_args>("env", "tester_get_args");
    rhf_t::add<&callbacks::tester_clock_time_get>("env", "tester_clock_time_get");
-   rhf_t::add<&callbacks::open_file>("env", "open_file");
-   rhf_t::add<&callbacks::isatty>("env", "isatty");
-   rhf_t::add<&callbacks::close_file>("env", "close_file");
-   rhf_t::add<&callbacks::write_file>("env", "write_file");
-   rhf_t::add<&callbacks::read_file>("env", "read_file");
+   rhf_t::add<&callbacks::tester_fdstat_get>("env", "tester_fdstat_get");
+   rhf_t::add<&callbacks::tester_open_file>("env", "tester_open_file");
+   rhf_t::add<&callbacks::tester_close_file>("env", "tester_close_file");
+   rhf_t::add<&callbacks::tester_write_file>("env", "tester_write_file");
+   rhf_t::add<&callbacks::tester_read_file>("env", "tester_read_file");
    rhf_t::add<&callbacks::tester_read_whole_file>("env", "tester_read_whole_file");
    rhf_t::add<&callbacks::tester_execute>("env", "tester_execute");
    rhf_t::add<&callbacks::tester_create_chain>("env", "tester_create_chain");
@@ -1072,6 +1209,7 @@ static void run(const char* wasm, const std::vector<std::string>& args)
    state.files.emplace_back(stdin, false);
    state.files.emplace_back(stdout, false);
    state.files.emplace_back(stderr, false);
+   state.files.emplace_back();  // reserve space for fd 3: root dir
    backend.set_wasm_allocator(&wa);
 
    rhf_t::resolve(backend.get_module());
