@@ -1,9 +1,12 @@
 import { GetServerSideProps } from "next";
 
 import { RawLayout, SingleColLayout, useFetchedData } from "_app";
-import { getMember, getInduction, Induction } from "members";
-import { InductionProfileForm } from "members/components/induction-profile-form";
-import { InductionStepProfile } from "members/components/induction-step-profile";
+import {
+    getInduction,
+    Induction,
+    InductionStepProfile,
+    InductionStepVideo,
+} from "members";
 
 interface Props {
     inductionId?: string;
@@ -37,7 +40,7 @@ export const InductionPage = ({ inductionId }: Props) => {
             case InductionStatus.waitingForProfile:
                 return <InductionStepProfile induction={induction} />;
             case InductionStatus.waitingForVideo:
-                return "Phase 2/3: Waiting for Induction Video Upload";
+                return <InductionStepVideo induction={induction} />;
             case InductionStatus.waitingForEndorsement:
                 return "Phase 3/3: Waiting for Endorsements";
             default:
