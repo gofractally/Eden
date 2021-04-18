@@ -24,6 +24,13 @@ export enum MemberStatus {
     ActiveMember = 1,
 }
 
+export interface NewMemberProfile {
+    name: string;
+    img: string;
+    bio: string;
+    social: string;
+}
+
 export interface Induction {
     id: string;
     inviter: string;
@@ -32,10 +39,5 @@ export interface Induction {
     endorsements: string[];
     created_at: number;
     video: string;
-    new_member_profile: {
-        name: string;
-        img: string;
-        bio: string;
-        social: string;
-    };
+    new_member_profile: NewMemberProfile;
 }

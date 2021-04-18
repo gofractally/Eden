@@ -1,21 +1,31 @@
 import { GetServerSideProps } from "next";
 
-import { RawLayout, useFetchedData } from "_app";
-import { getMember, getInduction } from "members";
+import { RawLayout, SingleColLayout, useFetchedData } from "_app";
+import { getMember, getInduction, Induction } from "members";
+import { InductionProfileForm } from "members/components/induction-profile-form";
 
 interface Props {
     inductionId?: string;
 }
 
 export const MemberPage = ({ inductionId }: Props) => {
-    const [induction, isLoading] = useFetchedData(getInduction, inductionId);
+    const [induction, isLoading] = useFetchedData<Induction>(
+        getInduction,
+        inductionId
+    );
 
     return isLoading ? (
         <p>Loading Induction...</p>
     ) : induction ? (
-        <RawLayout title={`Induction #${inductionId}`}>
-            todo: show induction stuff...
-        </RawLayout>
+        <SingleColLayout title={`Induction #${inductionId}`}>
+            <div className="text-lg mb-4 text-gray-900">
+                Phase 1/3: Waiting for New Member Profile
+            </div>
+            <InductionProfileForm
+                newMemberProfile={induction.new_member_profile}
+                disabled={true}
+            />
+        </SingleColLayout>
     ) : (
         <RawLayout title="Induction not found">
             <div className="text-center max-w p-8">
