@@ -2,7 +2,7 @@ import { useState } from "react";
 
 import { Link, Text, useUALAccount } from "_app";
 import { Induction, NewMemberProfile } from "../interfaces";
-import { setInductionProfileTransaction, hiTransaction } from "../transactions";
+import { setInductionProfileTransaction } from "../transactions";
 import { InductionProfileForm } from "./induction-profile-form";
 
 interface Props {

@@ -1,7 +1,7 @@
 import React from "react";
 import { FaVideo } from "react-icons/fa";
 
-import { Button, Heading, Text } from "_app";
+import { Button } from "_app";
 
 import { MemberData } from "../interfaces";
 import { MemberSocialLinks } from "./member-social-links";

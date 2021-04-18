@@ -1,8 +1,6 @@
-import { EdenNftSocialHandles } from "nfts/interfaces";
 import { FormEvent, useState } from "react";
 
-import { Button, useFormFields, Form, Heading } from "_app";
-import { NewMemberProfile } from "../interfaces";
+import { Button, Form } from "_app";
 
 interface Props {
     video: string;
