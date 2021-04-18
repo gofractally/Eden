@@ -16,20 +16,6 @@ export interface InitInductionFormData {
     witness2: string;
 }
 
-const convertNewMemberProfileSocial = (
-    social: string
-): EdenNftSocialHandles => {
-    const socialHandles = JSON.parse(social || "{}");
-    return {
-        eosCommunity: socialHandles.eosCommunity || "",
-        twitter: socialHandles.twitter || "",
-        linkedin: socialHandles.linkedin || "",
-        telegram: socialHandles.telegram || "",
-        facebook: socialHandles.facebook || "",
-        blog: socialHandles.blog || "",
-    };
-};
-
 export const InductionProfileForm = ({
     newMemberProfile,
     disabled,
@@ -198,4 +184,18 @@ export const InductionProfileForm = ({
             )}
         </form>
     );
+};
+
+const convertNewMemberProfileSocial = (
+    social: string
+): EdenNftSocialHandles => {
+    const socialHandles = JSON.parse(social || "{}");
+    return {
+        eosCommunity: socialHandles.eosCommunity || "",
+        twitter: socialHandles.twitter || "",
+        linkedin: socialHandles.linkedin || "",
+        telegram: socialHandles.telegram || "",
+        facebook: socialHandles.facebook || "",
+        blog: socialHandles.blog || "",
+    };
 };

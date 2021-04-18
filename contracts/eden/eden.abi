@@ -140,14 +140,27 @@
                     "type": "new_member_profile"
                 }
             ]
+        },
+        {
+            "name": "inductvideo",
+            "base": "",
+            "fields": [
+                {
+                    "name": "account",
+                    "type": "name"
+                },
+                {
+                    "name": "id",
+                    "type": "uint64"
+                },
+                {
+                    "name": "video",
+                    "type": "string"
+                }
+            ]
         }
     ],
     "actions": [
-        {
-            "name": "hi",
-            "type": "hi",
-            "ricardian_contract": ""
-        },
         {
             "name": "inductinit",
             "type": "inductinit",
@@ -156,6 +169,11 @@
         {
             "name": "inductprofil",
             "type": "inductprofil",
+            "ricardian_contract": ""
+        },
+        {
+            "name": "inductvideo",
+            "type": "inductvideo",
             "ricardian_contract": ""
         }
     ],

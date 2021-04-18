@@ -2,9 +2,8 @@ import { useState } from "react";
 
 import { Heading, Link, Text, useUALAccount } from "_app";
 import { Induction, MemberData, NewMemberProfile } from "../interfaces";
-import { setInductionProfileTransaction, hiTransaction } from "../transactions";
-import { InductionProfileForm } from "./induction-profile-form";
-import { MemberCard } from "./member-card";
+import { setInductionVideoTransaction } from "../transactions";
+import { InductionVideoForm } from "./induction-video-form";
 import { NewMemberCardPreview } from "./new-member-card-preview";
 
 interface Props {
@@ -14,24 +13,22 @@ interface Props {
 export const InductionStepVideo = ({ induction }: Props) => {
     const [ualAccount] = useUALAccount();
 
-    const [submittedProfile, setSubmittedProfile] = useState(false);
+    const [submittedVideo, setSubmittedVideo] = useState(false);
 
-    const submitInductionProfileTransaction = async (
-        newMemberProfile: NewMemberProfile
-    ) => {
+    const submitInductionVideo = async (videoHash: string) => {
         try {
             const authorizerAccount = ualAccount.accountName;
-            const transaction = setInductionProfileTransaction(
+            const transaction = setInductionVideoTransaction(
                 authorizerAccount,
                 induction.id,
-                newMemberProfile
+                videoHash
             );
             console.info(transaction);
             const signedTrx = await ualAccount.signTransaction(transaction, {
                 broadcast: true,
             });
-            console.info("inductprofil trx", signedTrx);
-            setSubmittedProfile(true);
+            console.info("inductvideo trx", signedTrx);
+            setSubmittedVideo(true);
         } catch (error) {
             console.error(error);
             alert(
@@ -46,56 +43,48 @@ export const InductionStepVideo = ({ induction }: Props) => {
         induction.new_member_profile
     );
 
+    const isEndorser = () =>
+        ualAccount?.accountName === induction.inviter ||
+        induction.witnesses.indexOf(ualAccount?.accountName) >= 0;
+
     return (
         <>
-            {submittedProfile ? (
+            <div className="text-lg mb-4 text-gray-900">
+                Step 2/3: Waiting for Induction Video Upload
+            </div>
+            <div className="grid grid-cols-2 gap-6 max-w-full">
                 <div>
-                    <Text className="mb-4">
-                        Thanks for submitting your profile!
-                    </Text>
-                    <Link onClick={() => window.location.reload()}>
-                        Click here to refresh the page and view your induction
-                        process status.
-                    </Link>
+                    <Heading size={3} className="mb-4">
+                        Induction Process Details
+                    </Heading>
+                    {submittedVideo ? (
+                        <div>
+                            <Text className="mb-4">
+                                Thanks for submitting the induction video! Next
+                                step is the endorsement phase of this induction.
+                            </Text>
+                            <Link onClick={() => window.location.reload()}>
+                                Click here to refresh the page and view your
+                                induction process status.
+                            </Link>
+                        </div>
+                    ) : isEndorser() ? (
+                        <InductionVideoForm
+                            video={induction.video}
+                            onSubmit={submitInductionVideo}
+                        />
+                    ) : (
+                        <div>
+                            Waiting for induction ceremony video upload from one
+                            of the endorsers (inviter or witnesses).
+                        </div>
+                    )}
                 </div>
-            ) : (
-                <>
-                    <div className="text-lg mb-4 text-gray-900">
-                        Step 2/3: Waiting for Induction Video Upload
-                    </div>
-                    <div className="grid grid-cols-2 gap-6 max-w-full">
-                        <div>
-                            <Heading size={3} className="mb-4">
-                                Induction Process Details
-                            </Heading>
-                            {ualAccount?.accountName === induction.inviter ||
-                            induction.witnesses.indexOf(
-                                ualAccount?.accountName
-                            ) >= 0 ? (
-                                "Video Form"
-                            ) : (
-                                // <InductionVideoForm
-                                //     newMemberProfile={
-                                //         induction.new_member_profile
-                                //     }
-                                //     onSubmit={
-                                //         submitInductionProfileTransaction
-                                //     }
-                                // />
-                                <div>
-                                    Waiting for induction ceremony video upload
-                                    from one of the endorsers (inviter or
-                                    witnesses).
-                                </div>
-                            )}
-                        </div>
-                        <div>
-                            <Heading size={3}>New Member Card Preview</Heading>
-                            <NewMemberCardPreview member={memberData} />
-                        </div>
-                    </div>
-                </>
-            )}
+                <div>
+                    <Heading size={3}>New Member Card Preview</Heading>
+                    <NewMemberCardPreview member={memberData} />
+                </div>
+            </div>
         </>
     );
 };

@@ -83,12 +83,16 @@ export const setInductionProfileTransaction = (
     };
 };
 
-export const hiTransaction = (authorizerAccount: string) => {
+export const setInductionVideoTransaction = (
+    authorizerAccount: string,
+    id: string,
+    video: string
+) => {
     return {
         actions: [
             {
                 account: edenContractAccount,
-                name: "hi",
+                name: "inductvideo",
                 authorization: [
                     {
                         actor: authorizerAccount,
@@ -96,7 +100,9 @@ export const hiTransaction = (authorizerAccount: string) => {
                     },
                 ],
                 data: {
-                    user: "eosio.token",
+                    account: authorizerAccount,
+                    id,
+                    video,
                 },
             },
         ],
