@@ -56,6 +56,10 @@ export const InitInduction = ({ ualAccount }: Props) => {
                             {initializedInductionId}
                         </Link>
                     </Text>
+                    <Text className="mb-4 text-red-500 italic">
+                        You have 7 days to complete this induction otherwise it
+                        will expire.
+                    </Text>
                 </>
             ) : (
                 <InitInductionForm onSubmit={submitTransaction} />

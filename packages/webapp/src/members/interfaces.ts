@@ -23,3 +23,19 @@ export enum MemberStatus {
     PendingMembership = 0,
     ActiveMember = 1,
 }
+
+export interface Induction {
+    id: string;
+    inviter: string;
+    invitee: string;
+    witnesses: string[];
+    endorsements: string[];
+    created_at: number;
+    video: string;
+    new_member_profile: {
+        name: string;
+        img: string;
+        bio: string;
+        social: string;
+    };
+}

@@ -1,11 +1,13 @@
-import { SingleColLayout, useFetchedData } from "_app";
-import { getEdenMember, MemberStatus } from "members";
-import { useUALAccount } from "_app/ual";
-import { Donation } from "members";
+import { SingleColLayout, useFetchedData, useUALAccount } from "_app";
+
+import { getEdenMember, MemberStatus, Donation } from "members";
 
 export const InductionPage = () => {
     const [ualAccount] = useUALAccount();
-    const [edenMember] = useFetchedData(getEdenMember, ualAccount?.accountName);
+    const [edenMember, isLoading] = useFetchedData(
+        getEdenMember,
+        ualAccount?.accountName
+    );
 
     return (
         <SingleColLayout title="Induction">
@@ -14,6 +16,8 @@ export const InductionPage = () => {
             ) : edenMember &&
               edenMember.status === MemberStatus.ActiveMember ? (
                 <p>Your account is activated! Do you want to invite someone?</p>
+            ) : isLoading ? (
+                <p>Loading...</p>
             ) : (
                 <Donation
                     ualAccount={ualAccount}
