@@ -1,13 +1,12 @@
-import { GetServerSideProps } from "next";
+import { useRouter } from "next/router";
 
 import { RawLayout, SingleColLayout, useFetchedData } from "_app";
-import { getMember, getInduction, Induction } from "members";
-import { InductionProfileForm } from "members/components/induction-profile-form";
-import { InductionStepProfile } from "members/components/induction-step-profile";
-
-interface Props {
-    inductionId?: string;
-}
+import {
+    getInduction,
+    Induction,
+    InductionStepProfile,
+    InductionStepVideo,
+} from "members";
 
 enum InductionStatus {
     invalid,
@@ -16,7 +15,10 @@ enum InductionStatus {
     waitingForEndorsement,
 }
 
-export const InductionPage = ({ inductionId }: Props) => {
+export const InductionPage = () => {
+    const router = useRouter();
+    const inductionId = router.query.id;
+
     const [induction, isLoading] = useFetchedData<Induction>(
         getInduction,
         inductionId
@@ -37,7 +39,7 @@ export const InductionPage = ({ inductionId }: Props) => {
             case InductionStatus.waitingForProfile:
                 return <InductionStepProfile induction={induction} />;
             case InductionStatus.waitingForVideo:
-                return "Phase 2/3: Waiting for Induction Video Upload";
+                return <InductionStepVideo induction={induction} />;
             case InductionStatus.waitingForEndorsement:
                 return "Phase 3/3: Waiting for Endorsements";
             default:
@@ -65,13 +67,3 @@ export const InductionPage = ({ inductionId }: Props) => {
 };
 
 export default InductionPage;
-
-export const getServerSideProps: GetServerSideProps = async ({ params }) => {
-    try {
-        const inductionId = params!.id as string;
-        return { props: { inductionId: inductionId || null } };
-    } catch (error) {
-        console.error(">>> Fail to parse induction id: " + error);
-        return { props: { error: "Fail to get induction id" } };
-    }
-};

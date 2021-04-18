@@ -1,17 +1,11 @@
 import React from "react";
-import {
-    FaAirbnb,
-    FaBitcoin,
-    FaBlogger,
-    FaTelegram,
-    FaTwitter,
-    FaVideo,
-} from "react-icons/fa";
+import { FaVideo } from "react-icons/fa";
 import Link from "next/link";
 
-import { Button, Heading, SmallText, SocialButton, Text } from "_app";
+import { Button, Heading, SmallText, Text } from "_app";
 
 import { MemberData } from "../interfaces";
+import { MemberSocialLinks } from "./member-social-links";
 
 interface Props {
     member: MemberData;
@@ -56,46 +50,3 @@ export const MemberCard = ({ member }: Props) => {
         </div>
     );
 };
-
-const MemberSocialLinks = ({ member }: { member: MemberData }) => (
-    <nav className="space-y-2 flex flex-col">
-        <SocialButton
-            handle={member.edenAccount}
-            icon={FaBitcoin}
-            color="black"
-            href={`https://bloks.io/account/${member.edenAccount}`}
-        />
-        {member.socialHandles.telegram && (
-            <SocialButton
-                handle={member.socialHandles.telegram}
-                icon={FaTelegram}
-                color="indigo"
-                href={`https://t.me/${member.socialHandles.telegram}`}
-            />
-        )}
-        {member.socialHandles.twitter && (
-            <SocialButton
-                handle={member.socialHandles.twitter}
-                icon={FaTwitter}
-                color="blue"
-                href={`https://twitter.com/${member.socialHandles.twitter}`}
-            />
-        )}
-        {member.socialHandles.eosCommunity && (
-            <SocialButton
-                handle={member.socialHandles.eosCommunity}
-                icon={FaAirbnb}
-                color="red"
-                href={`https://eoscommunity.org/u/${member.socialHandles.eosCommunity}`}
-            />
-        )}
-        {member.socialHandles.blog && (
-            <SocialButton
-                handle="Blog"
-                icon={FaBlogger}
-                color="yellow"
-                href={member.socialHandles.blog}
-            />
-        )}
-    </nav>
-);
