@@ -7,6 +7,7 @@ import {
     InductionStepProfile,
     InductionStepVideo,
 } from "members";
+import { InductionStepEndorsement } from "members/components/induction-step-endorsement";
 
 enum InductionStatus {
     invalid,
@@ -41,7 +42,7 @@ export const InductionPage = () => {
             case InductionStatus.waitingForVideo:
                 return <InductionStepVideo induction={induction} />;
             case InductionStatus.waitingForEndorsement:
-                return "Phase 3/3: Waiting for Endorsements";
+                return <InductionStepEndorsement induction={induction} />;
             default:
                 return "";
         }

@@ -17,7 +17,7 @@ export const getEdenMember = (account: string) =>
 
 export const getInduction = async (inductionId: string) =>
     // TODO: remove mock when table is fixed
-    (INDUCTION_NEW_MOCK && INDUCTION_PENDING_VIDEO_MOCK) ||
+    (INDUCTION_NEW_MOCK && INDUCTION_PENDING_ENDORSEMENTS_MOCK) ||
     getRow(CONTRACT_INDUCTION_TABLE, "id", inductionId);
 
 const getRow = async (table: string, keyName: string, keyValue: string) => {

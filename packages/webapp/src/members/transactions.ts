@@ -1,6 +1,6 @@
 import { edenContractAccount, minimumDonationAmount } from "config";
 import { assetToString } from "_app";
-import { NewMemberProfile } from "./interfaces";
+import { Induction, NewMemberProfile } from "./interfaces";
 import { primaryKeyFromAccountInstant } from "./utils";
 
 export const donationTransaction = (authorizerAccount: string) => ({
@@ -103,6 +103,32 @@ export const setInductionVideoTransaction = (
                     account: authorizerAccount,
                     id,
                     video,
+                },
+            },
+        ],
+    };
+};
+
+export const submitEndorsementTransaction = (
+    authorizerAccount: string,
+    induction: Induction
+) => {
+    return {
+        actions: [
+            {
+                account: edenContractAccount,
+                name: "inductendors",
+                authorization: [
+                    {
+                        actor: authorizerAccount,
+                        permission: "active",
+                    },
+                ],
+                data: {
+                    account: authorizerAccount,
+                    id: induction.id,
+                    video: induction.video,
+                    new_member_profile: induction.new_member_profile,
                 },
             },
         ],

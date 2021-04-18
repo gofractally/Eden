@@ -41,11 +41,11 @@ export const NewMemberCardPreview = ({ member }: Props) => {
             </div>
 
             {member.inductionVideo && (
-                <div className="mx-auto">
+                <div className="mx-auto mt-4">
                     <Button
                         href={`https://ipfs.video/#/ipfs/${member.inductionVideo}`}
                         target="_blank"
-                        className="mt-10 inline-flex"
+                        className="inline-flex"
                         icon={FaVideo}
                     >
                         Induction Ceremony
