@@ -1,4 +1,4 @@
-import { GetServerSideProps } from "next";
+import { useRouter } from "next/router";
 
 import { RawLayout, SingleColLayout, useFetchedData } from "_app";
 import {
@@ -8,10 +8,6 @@ import {
     InductionStepVideo,
 } from "members";
 
-interface Props {
-    inductionId?: string;
-}
-
 enum InductionStatus {
     invalid,
     waitingForProfile,
@@ -19,7 +15,10 @@ enum InductionStatus {
     waitingForEndorsement,
 }
 
-export const InductionPage = ({ inductionId }: Props) => {
+export const InductionPage = () => {
+    const router = useRouter();
+    const inductionId = router.query.id;
+
     const [induction, isLoading] = useFetchedData<Induction>(
         getInduction,
         inductionId
@@ -69,12 +68,12 @@ export const InductionPage = ({ inductionId }: Props) => {
 
 export default InductionPage;
 
-export const getServerSideProps: GetServerSideProps = async ({ params }) => {
-    try {
-        const inductionId = params!.id as string;
-        return { props: { inductionId: inductionId || null } };
-    } catch (error) {
-        console.error(">>> Fail to parse induction id: " + error);
-        return { props: { error: "Fail to get induction id" } };
-    }
-};
+// export const getServerSideProps: GetServerSideProps = async ({ params }) => {
+//     try {
+//         const inductionId = params!.id as string;
+//         return { props: { inductionId: inductionId || null } };
+//     } catch (error) {
+//         console.error(">>> Fail to parse induction id: " + error);
+//         return { props: { error: "Fail to get induction id" } };
+//     }
+// };
