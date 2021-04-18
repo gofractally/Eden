@@ -1,7 +1,8 @@
 import { useState } from "react";
 
 import { Heading, Link, Text, useUALAccount } from "_app";
-import { Induction, MemberData, NewMemberProfile } from "../interfaces";
+import { convertPendingProfileToMemberData } from "../utils";
+import { Induction } from "../interfaces";
 import { setInductionVideoTransaction } from "../transactions";
 import { InductionVideoForm } from "./induction-video-form";
 import { NewMemberCardPreview } from "./new-member-card-preview";
@@ -38,10 +39,7 @@ export const InductionStepVideo = ({ induction }: Props) => {
         }
     };
 
-    const memberData = convertPendingProfileToMemberData(
-        induction.invitee,
-        induction.new_member_profile
-    );
+    const memberData = convertPendingProfileToMemberData(induction);
 
     const isEndorser = () =>
         ualAccount?.accountName === induction.inviter ||
@@ -87,20 +85,4 @@ export const InductionStepVideo = ({ induction }: Props) => {
             </div>
         </>
     );
-};
-
-const convertPendingProfileToMemberData = (
-    newMemberAccount: string,
-    newMemberProfile: NewMemberProfile
-): MemberData => {
-    return {
-        templateId: 0,
-        name: newMemberProfile.name,
-        image: newMemberProfile.img,
-        edenAccount: newMemberAccount,
-        bio: newMemberProfile.bio,
-        socialHandles: JSON.parse(newMemberProfile.social || "{}"),
-        inductionVideo: "",
-        createdAt: 0,
-    };
 };
