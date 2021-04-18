@@ -24,7 +24,7 @@ export const InductionVideoForm = ({ video, onSubmit }: Props) => {
             <Form.LabeledSet
                 label="Induction Video (IPFS Hash)"
                 htmlFor="name"
-                description="You, as an official endorser, need to upload the video of the induction ceremony to an IPFS node and paste the IPFS Hash here."
+                description="As an official endorser, you need to upload the video of the induction ceremony to an IPFS node and paste the IPFS Hash here."
             >
                 <Form.Input
                     id="name"
