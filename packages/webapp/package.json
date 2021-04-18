@@ -9,6 +9,7 @@
     },
     "dependencies": {
         "eosjs": "^21.0.3",
+        "hash.js": "^1.1.7",
         "next": "~10",
         "react": "~17",
         "react-dom": "~17",
