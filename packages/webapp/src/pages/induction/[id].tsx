@@ -67,13 +67,3 @@ export const InductionPage = () => {
 };
 
 export default InductionPage;
-
-// export const getServerSideProps: GetServerSideProps = async ({ params }) => {
-//     try {
-//         const inductionId = params!.id as string;
-//         return { props: { inductionId: inductionId || null } };
-//     } catch (error) {
-//         console.error(">>> Fail to parse induction id: " + error);
-//         return { props: { error: "Fail to get induction id" } };
-//     }
-// };
