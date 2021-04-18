@@ -1,23 +1,47 @@
 import { edenContractAccount, rpcEndpoint } from "config";
+import {
+    INDUCTION_NEW_MOCK,
+    INDUCTION_PENDING_ENDORSEMENTS_MOCK,
+    INDUCTION_PENDING_VIDEO_MOCK,
+} from "members/__mocks__/inductions";
 
 const RPC_URL = `${rpcEndpoint.protocol}://${rpcEndpoint.host}:${rpcEndpoint.port}`;
 const RPC_GET_TABLE_ROWS = `${RPC_URL}/v1/chain/get_table_rows`;
 
 const CONTRACT_SCOPE = "0";
 const CONTRACT_MEMBER_TABLE = "member";
+const CONTRACT_INDUCTION_TABLE = "induction";
 
-export const getEdenMember = async (member: string) => {
+export const getEdenMember = (account: string) =>
+    getRow(CONTRACT_MEMBER_TABLE, "account", account);
+
+export const getInduction = async (inductionId: string) =>
+    // TODO: remove mock when table is fixed
+    INDUCTION_NEW_MOCK || getRow(CONTRACT_INDUCTION_TABLE, "id", inductionId);
+
+const getRow = async (table: string, keyName: string, keyValue: string) => {
+    const rows = await getTableRows(table, keyValue);
+    return rows.length > 0 && rows[0][keyName] === keyValue
+        ? rows[0]
+        : undefined;
+};
+
+const getTableRows = async (
+    table: string,
+    lowerBound: any,
+    limit = 1
+): Promise<any[]> => {
     const requestBody = {
         code: edenContractAccount,
         index_position: 1,
         json: true,
         key_type: "",
-        limit: "1",
-        lower_bound: member,
+        limit: `${limit}`,
+        lower_bound: lowerBound,
         reverse: false,
         scope: CONTRACT_SCOPE,
         show_payer: false,
-        table: CONTRACT_MEMBER_TABLE,
+        table: table,
         table_key: "",
         upper_bound: null,
     };
@@ -34,6 +58,5 @@ export const getEdenMember = async (member: string) => {
         throw new Error("Invalid table results");
     }
 
-    const rows = data.rows as any[];
-    return rows.length > 0 && rows[0].member === member ? rows[0] : undefined;
+    return data.rows;
 };

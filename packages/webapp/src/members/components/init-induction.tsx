@@ -23,11 +23,10 @@ export const InitInduction = ({ ualAccount }: Props) => {
                 [newInduction.witness1, newInduction.witness2]
             );
             console.info(transaction);
-            // TODO: enable
-            // const signedTrx = await ualAccount.signTransaction(transaction, {
-            //     broadcast: true,
-            // });
-            // console.info("inductinit trx", signedTrx);
+            const signedTrx = await ualAccount.signTransaction(transaction, {
+                broadcast: true,
+            });
+            console.info("inductinit trx", signedTrx);
             setInitializedInductionId(id);
         } catch (error) {
             alert(
@@ -55,6 +54,10 @@ export const InitInduction = ({ ualAccount }: Props) => {
                             {window.location.hostname}/induction/
                             {initializedInductionId}
                         </Link>
+                    </Text>
+                    <Text className="mb-4 text-red-500 italic">
+                        You have 7 days to complete this induction otherwise it
+                        will expire.
                     </Text>
                 </>
             ) : (

@@ -32,7 +32,7 @@
             "base": "",
             "fields": [
                 {
-                    "name": "member",
+                    "name": "account",
                     "type": "name"
                 },
                 {
@@ -132,12 +132,8 @@
             "base": "",
             "fields": [
                 {
-                    "name": "inviter",
-                    "type": "name"
-                },
-                {
-                    "name": "invitee",
-                    "type": "name"
+                    "name": "id",
+                    "type": "uint64"
                 },
                 {
                     "name": "new_member_profile",
@@ -167,6 +163,13 @@
         {
             "name": "member",
             "type": "member",
+            "index_type": "i64",
+            "key_names": [],
+            "key_types": []
+        },
+        {
+            "name": "induction",
+            "type": "induction",
             "index_type": "i64",
             "key_names": [],
             "key_types": []
