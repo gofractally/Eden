@@ -3,30 +3,51 @@ import { GetServerSideProps } from "next";
 import { RawLayout, SingleColLayout, useFetchedData } from "_app";
 import { getMember, getInduction, Induction } from "members";
 import { InductionProfileForm } from "members/components/induction-profile-form";
+import { InductionStepProfile } from "members/components/induction-step-profile";
 
 interface Props {
     inductionId?: string;
 }
 
-export const MemberPage = ({ inductionId }: Props) => {
+enum InductionStatus {
+    invalid,
+    waitingForProfile,
+    waitingForVideo,
+    waitingForEndorsement,
+}
+
+export const InductionPage = ({ inductionId }: Props) => {
     const [induction, isLoading] = useFetchedData<Induction>(
         getInduction,
         inductionId
     );
 
+    const phase = !induction
+        ? InductionStatus.invalid
+        : !induction.new_member_profile.name
+        ? InductionStatus.waitingForProfile
+        : !induction.video
+        ? InductionStatus.waitingForVideo
+        : InductionStatus.waitingForEndorsement;
+
+    const renderInductionStep = () => {
+        if (!induction) return "";
+
+        switch (phase) {
+            case InductionStatus.waitingForProfile:
+                return <InductionStepProfile induction={induction} />;
+            case InductionStatus.waitingForVideo:
+                return "Phase 2/3: Waiting for Induction Video Upload";
+            case InductionStatus.waitingForEndorsement:
+                return "Phase 3/3: Waiting for Endorsements";
+            default:
+                return "";
+        }
+    };
+
     return isLoading ? (
         <p>Loading Induction...</p>
-    ) : induction ? (
-        <SingleColLayout title={`Induction #${inductionId}`}>
-            <div className="text-lg mb-4 text-gray-900">
-                Phase 1/3: Waiting for New Member Profile
-            </div>
-            <InductionProfileForm
-                newMemberProfile={induction.new_member_profile}
-                disabled={true}
-            />
-        </SingleColLayout>
-    ) : (
+    ) : phase === InductionStatus.invalid ? (
         <RawLayout title="Induction not found">
             <div className="text-center max-w p-8">
                 <p>:(</p>
@@ -36,10 +57,14 @@ export const MemberPage = ({ inductionId }: Props) => {
                 </p>
             </div>
         </RawLayout>
+    ) : (
+        <SingleColLayout title={`Induction #${inductionId}`}>
+            {renderInductionStep()}
+        </SingleColLayout>
     );
 };
 
-export default MemberPage;
+export default InductionPage;
 
 export const getServerSideProps: GetServerSideProps = async ({ params }) => {
     try {

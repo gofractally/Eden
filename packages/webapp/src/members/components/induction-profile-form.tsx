@@ -7,7 +7,7 @@ import { NewMemberProfile } from "../interfaces";
 interface Props {
     newMemberProfile: NewMemberProfile;
     disabled?: boolean;
-    onSubmit?: (data: NewMemberProfile) => Promise<void>;
+    onSubmit?: (newMemberProfile: NewMemberProfile) => Promise<void>;
 }
 
 export interface InitInductionFormData {

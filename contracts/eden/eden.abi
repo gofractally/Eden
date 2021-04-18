@@ -132,12 +132,8 @@
             "base": "",
             "fields": [
                 {
-                    "name": "inviter",
-                    "type": "name"
-                },
-                {
-                    "name": "invitee",
-                    "type": "name"
+                    "name": "id",
+                    "type": "uint64"
                 },
                 {
                     "name": "new_member_profile",

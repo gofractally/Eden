@@ -24,6 +24,12 @@ export enum MemberStatus {
     ActiveMember = 1,
 }
 
+export interface EdenMember {
+    account: string;
+    status: MemberStatus;
+    nft_template_id: number;
+}
+
 export interface NewMemberProfile {
     name: string;
     img: string;

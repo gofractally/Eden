@@ -1,6 +1,7 @@
 import { edenContractAccount, minimumDonationAmount } from "config";
 import { assetToString } from "_app";
-import { pkFromAccountInstant } from "./utils";
+import { NewMemberProfile } from "./interfaces";
+import { primaryKeyFromAccountInstant } from "./utils";
 
 export const donationTransaction = (authorizerAccount: string) => ({
     actions: [
@@ -31,14 +32,14 @@ export const initializeInductionTransaction = (
     invitee: string,
     witnesses: string[]
 ) => {
-    const id = pkFromAccountInstant(authorizerAccount);
+    const id = primaryKeyFromAccountInstant(authorizerAccount);
     return {
         id,
         transaction: {
             actions: [
                 {
-                    account: "eosio.token",
-                    name: "transfer",
+                    account: edenContractAccount,
+                    name: "inductinit",
                     authorization: [
                         {
                             actor: authorizerAccount,
@@ -54,5 +55,50 @@ export const initializeInductionTransaction = (
                 },
             ],
         },
+    };
+};
+
+export const setInductionProfileTransaction = (
+    authorizerAccount: string,
+    id: string,
+    newMemberProfile: NewMemberProfile
+) => {
+    return {
+        actions: [
+            {
+                account: edenContractAccount,
+                name: "inductprofil",
+                authorization: [
+                    {
+                        actor: authorizerAccount,
+                        permission: "active",
+                    },
+                ],
+                data: {
+                    id,
+                    new_member_profile: newMemberProfile,
+                },
+            },
+        ],
+    };
+};
+
+export const hiTransaction = (authorizerAccount: string) => {
+    return {
+        actions: [
+            {
+                account: edenContractAccount,
+                name: "hi",
+                authorization: [
+                    {
+                        actor: authorizerAccount,
+                        permission: "active",
+                    },
+                ],
+                data: {
+                    user: "eosio.token",
+                },
+            },
+        ],
     };
 };

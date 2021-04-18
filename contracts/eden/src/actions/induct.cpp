@@ -22,15 +22,14 @@ namespace eden
       inductions{get_self()}.initialize_induction(id, inviter, invitee, witnesses);
    }
 
-   void eden::inductprofil(eosio::name inviter,
-                           eosio::name invitee,
-                           new_member_profile new_member_profile)
+   void eden::inductprofil(uint64_t id, new_member_profile new_member_profile)
    {
-      require_auth(invitee);
+      inductions inductions{get_self()};
+      auto induction = inductions.get_induction(id);
+      require_auth(induction.invitee);
 
-      members members{get_self()};
-      members.check_pending_member(invitee);
+      members{get_self()}.check_pending_member(induction.invitee);
 
-      inductions{get_self()}.set_profile(inviter, invitee, new_member_profile);
+      inductions.update_profile(induction, new_member_profile);
    }
 }  // namespace eden

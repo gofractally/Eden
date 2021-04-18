@@ -1,10 +1,10 @@
 import { SingleColLayout, useFetchedData, useUALAccount } from "_app";
 
-import { getEdenMember, MemberStatus, Donation } from "members";
+import { getEdenMember, MemberStatus, Donation, EdenMember } from "members";
 
 export const InductionPage = () => {
     const [ualAccount] = useUALAccount();
-    const [edenMember, isLoading] = useFetchedData(
+    const [edenMember, isLoading] = useFetchedData<EdenMember>(
         getEdenMember,
         ualAccount?.accountName
     );

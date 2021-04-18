@@ -3,7 +3,7 @@ import { Induction } from "../interfaces";
 export const INDUCTION_NEW_MOCK: Induction = {
     id: "16493099469611189919",
     inviter: "edtcaptomega",
-    invitee: "spark",
+    invitee: "edenmember11",
     witnesses: ["coolant", "crank"],
     endorsements: [],
     created_at: 1618748340699,
@@ -19,7 +19,7 @@ export const INDUCTION_NEW_MOCK: Induction = {
 export const INDUCTION_PENDING_VIDEO_MOCK: Induction = {
     id: "16493099469611189919",
     inviter: "edtcaptomega",
-    invitee: "spark",
+    invitee: "edenmember11",
     witnesses: ["coolant", "crank"],
     endorsements: [],
     created_at: 1618748340699,
@@ -35,7 +35,7 @@ export const INDUCTION_PENDING_VIDEO_MOCK: Induction = {
 export const INDUCTION_PENDING_ENDORSEMENTS_MOCK: Induction = {
     id: "16493099469611189919",
     inviter: "edtcaptomega",
-    invitee: "spark",
+    invitee: "edenmember11",
     witnesses: ["coolant", "crank"],
     endorsements: [],
     created_at: 1618748340699,
@@ -51,7 +51,7 @@ export const INDUCTION_PENDING_ENDORSEMENTS_MOCK: Induction = {
 export const INDUCTION_PENDING_LAST_ENDORSEMENT_MOCK: Induction = {
     id: "16493099469611189919",
     inviter: "edtcaptomega",
-    invitee: "spark",
+    invitee: "edenmember11",
     witnesses: ["coolant", "crank"],
     endorsements: ["crank"],
     created_at: 1618748340699,

@@ -2,6 +2,7 @@ import { edenContractAccount, rpcEndpoint } from "config";
 import {
     INDUCTION_NEW_MOCK,
     INDUCTION_PENDING_ENDORSEMENTS_MOCK,
+    INDUCTION_PENDING_VIDEO_MOCK,
 } from "members/__mocks__/inductions";
 
 const RPC_URL = `${rpcEndpoint.protocol}://${rpcEndpoint.host}:${rpcEndpoint.port}`;
@@ -16,8 +17,7 @@ export const getEdenMember = (account: string) =>
 
 export const getInduction = async (inductionId: string) =>
     // TODO: remove mock when table is fixed
-    (INDUCTION_NEW_MOCK && INDUCTION_PENDING_ENDORSEMENTS_MOCK) ||
-    getRow(CONTRACT_INDUCTION_TABLE, "id", inductionId);
+    INDUCTION_NEW_MOCK || getRow(CONTRACT_INDUCTION_TABLE, "id", inductionId);
 
 const getRow = async (table: string, keyName: string, keyValue: string) => {
     const rows = await getTableRows(table, keyValue);
