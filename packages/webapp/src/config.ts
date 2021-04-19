@@ -1,4 +1,4 @@
-import { assetFromString } from "_app";
+import { assetFromString } from "./_app/utils/asset";
 
 if (
     !process.env.NEXT_PUBLIC_EOS_RPC_PROTOCOL ||

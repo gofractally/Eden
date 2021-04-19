@@ -4,17 +4,11 @@ import { RawLayout, SingleColLayout, useFetchedData } from "_app";
 import {
     getInduction,
     Induction,
+    InductionStepEndorsement,
     InductionStepProfile,
     InductionStepVideo,
-} from "members";
-import { InductionStepEndorsement } from "members/components/induction-step-endorsement";
-
-enum InductionStatus {
-    invalid,
-    waitingForProfile,
-    waitingForVideo,
-    waitingForEndorsement,
-}
+    InductionStatus,
+} from "inductions";
 
 export const InductionPage = () => {
     const router = useRouter();

@@ -12,7 +12,7 @@ const WebApp = ({ Component, pageProps }: AppProps) => {
 };
 
 const EdenUALProviderWithNoSSR = dynamic(
-    () => import("../_app/ual/EdenUALProvider"),
+    () => import("../_app/eos/ual/EdenUALProvider"),
     { ssr: false }
 );
 

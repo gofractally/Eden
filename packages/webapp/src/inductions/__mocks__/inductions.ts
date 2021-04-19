@@ -53,7 +53,7 @@ export const INDUCTION_PENDING_LAST_ENDORSEMENT_MOCK: Induction = {
     inviter: "edtcaptomega",
     invitee: "edenmember11",
     witnesses: ["coolant", "crank"],
-    endorsements: ["crank"],
+    endorsements: ["edtcaptomega", "coolant"],
     created_at: 1618748340699,
     video: "QmTYqoPYf7DiVebTnvwwFdTgsYXg2RnuPrt8uddjfW2kHS",
     new_member_profile: {

@@ -1,10 +1,7 @@
-import React from "react";
 import { FaVideo } from "react-icons/fa";
 
 import { Button } from "_app";
-
-import { MemberData } from "../interfaces";
-import { MemberSocialLinks } from "./member-social-links";
+import { MemberData, MemberSocialLinks } from "members";
 
 interface Props {
     member: MemberData;

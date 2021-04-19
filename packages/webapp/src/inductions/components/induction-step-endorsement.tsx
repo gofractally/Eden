@@ -1,11 +1,11 @@
 import { useState } from "react";
+import { useRouter } from "next/router";
 
 import { Button, Form, Heading, Text, useUALAccount } from "_app";
 import { Induction } from "../interfaces";
 import { submitEndorsementTransaction } from "../transactions";
 import { NewMemberCardPreview } from "./new-member-card-preview";
 import { convertPendingProfileToMemberData } from "../utils";
-import { useRouter } from "next/router";
 
 interface Props {
     induction: Induction;

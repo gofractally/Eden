@@ -1,4 +1,3 @@
-import { MemberData } from "members/interfaces";
 import {
     FaAirbnb,
     FaBitcoin,
@@ -8,6 +7,7 @@ import {
 } from "react-icons/fa";
 
 import { SocialButton } from "_app";
+import { MemberData } from "../interfaces";
 
 interface Props {
     member: MemberData;

@@ -29,21 +29,3 @@ export interface EdenMember {
     status: MemberStatus;
     nft_template_id: number;
 }
-
-export interface NewMemberProfile {
-    name: string;
-    img: string;
-    bio: string;
-    social: string;
-}
-
-export interface Induction {
-    id: string;
-    inviter: string;
-    invitee: string;
-    witnesses: string[];
-    endorsements: string[];
-    created_at: number;
-    video: string;
-    new_member_profile: NewMemberProfile;
-}

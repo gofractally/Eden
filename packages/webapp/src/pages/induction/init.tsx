@@ -1,5 +1,6 @@
 import { SingleColLayout, useFetchedData, useUALAccount } from "_app";
-import { getEdenMember, InitInduction } from "members";
+import { getEdenMember } from "members";
+import { InitInduction } from "inductions";
 
 export const InitInductionPage = () => {
     const [ualAccount] = useUALAccount();

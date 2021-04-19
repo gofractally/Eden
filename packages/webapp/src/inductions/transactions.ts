@@ -1,7 +1,7 @@
+import { assetToString, primaryKeyFromAccountInstant } from "_app";
 import { edenContractAccount, minimumDonationAmount } from "config";
-import { assetToString } from "_app";
+
 import { Induction, NewMemberProfile } from "./interfaces";
-import { primaryKeyFromAccountInstant } from "./utils";
 
 export const donationTransaction = (authorizerAccount: string) => ({
     actions: [
