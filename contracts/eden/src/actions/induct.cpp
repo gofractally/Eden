@@ -32,4 +32,16 @@ namespace eden
 
       inductions.update_profile(induction, new_member_profile);
    }
+
+   void eden::inductvideo(eosio::name account,
+			  uint64_t id,
+			  std::string video)
+   {
+      require_auth(account);
+      inductions inductions{get_self()};
+      auto induction = inductions.get_induction(id);
+      eosio::check(account == induction.inviter || std::find(std::begin(induction.witnesses), std::end(induction.witnesses), account) != std::end(induction.witnesses),
+		   "Video can only be set by inviter or a witness");
+      inductions.update_video(induction, video);
+   }
 }  // namespace eden

@@ -1,5 +1,6 @@
 #include <inductions.hpp>
 #include <set>
+#include <algorithm>
 
 namespace eden
 {
@@ -72,6 +73,18 @@ namespace eden
                    "induction has expired");
    }
 
+   void inductions::update_video(const induction& induction,
+				 const std::string& video)
+   {
+      check_valid_induction(induction);
+      validate_video(video);
+
+      induction_tb.modify(induction_tb.iterator_to(induction), eosio::same_payer, [&](auto& row) {
+         row.video = video;
+         row.endorsements = {};
+      });
+   }
+
    void inductions::validate_profile(const new_member_profile& new_member_profile) const
    {
       eosio::check(!new_member_profile.name.empty(), "new member profile name is empty");
@@ -80,4 +93,8 @@ namespace eden
       // TODO: add more checks (valid ipfs img, bio and name minimum length)
    }
 
+   void inductions::validate_video(const std::string& video) const
+   {
+      // TODO: check that video is a valid IPFS CID.
+   }
 }  // namespace eden

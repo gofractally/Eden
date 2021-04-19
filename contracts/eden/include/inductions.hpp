@@ -57,6 +57,7 @@ namespace eden
       void check_new_induction(eosio::name invitee, eosio::name inviter) const;
       void check_valid_induction(const induction& induction) const;
       void validate_profile(const new_member_profile& new_member_profile) const;
+      void validate_video(const std::string& video) const;
       void check_valid_endorsers(eosio::name inviter,
                                  const std::vector<eosio::name>& witnesses) const;
 
@@ -73,6 +74,9 @@ namespace eden
                                 const std::vector<eosio::name>& witnesses);
 
       void update_profile(const induction& induction, const new_member_profile& new_member_profile);
+
+      void update_video(const induction& induction,
+		        const std::string& video);
    };
 
 }  // namespace eden

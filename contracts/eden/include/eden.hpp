@@ -32,7 +32,11 @@ namespace eden
                       std::vector<eosio::name> witnesses);
 
       void inductprofil(uint64_t id, new_member_profile new_member_profile);
+
+      void inductvideo(eosio::name account,
+		       uint64_t id,
+		       std::string video);
    };
 
-   EOSIO_ACTIONS(eden, "eden"_n, hi, inductinit, inductprofil, notify transfer)
+   EOSIO_ACTIONS(eden, "eden"_n, hi, inductinit, inductprofil, inductvideo, notify transfer)
 }  // namespace eden
