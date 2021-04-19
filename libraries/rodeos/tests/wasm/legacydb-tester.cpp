@@ -1,5 +1,5 @@
-#include "legacydb-test-contract.hpp"
 #include <eosio/tester.hpp>
+#include "legacydb-test-contract.hpp"
 
 #define CATCH_CONFIG_MAIN
 #include <catch2/catch.hpp>
@@ -8,8 +8,9 @@ using namespace eosio;
 using namespace legacydb;
 using namespace legacydb::actions;
 
-TEST_CASE("xx", "") {
-   test_chain  chain;
+TEST_CASE("xx", "")
+{
+   test_chain chain;
    test_rodeos rodeos;
    rodeos.connect(chain);
    rodeos.enable_queries(1024 * 1024, 10, 1000, "");

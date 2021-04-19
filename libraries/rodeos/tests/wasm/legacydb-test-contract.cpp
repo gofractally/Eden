@@ -5,150 +5,231 @@ using namespace eosio;
 using namespace eosio::internal_use_do_not_use;
 using namespace legacydb;
 
-const std::vector<char> data_0{ 9, 7, 6 };
-const std::vector<char> data_1{ 1, 2, 3, 4, 0, 4, 3, 2, 1 };
-const std::vector<char> data_2{ 3, 4, 3, 4 };
+const std::vector<char> data_0{9, 7, 6};
+const std::vector<char> data_1{1, 2, 3, 4, 0, 4, 3, 2, 1};
+const std::vector<char> data_2{3, 4, 3, 4};
 const std::vector<char> data_3{};
-const std::vector<char> data_4{ 4, 5, 6, 7 };
+const std::vector<char> data_4{4, 5, 6, 7};
 
-void store_i64(name scope, name table, name payer, uint64_t id, const std::vector<char>& data) {
+void store_i64(name scope, name table, name payer, uint64_t id, const std::vector<char>& data)
+{
    db_store_i64(scope.value, table.value, payer.value, id, data.data(), data.size());
 }
 
-int find_i64(name code, name scope, name table, uint64_t id) {
+int find_i64(name code, name scope, name table, uint64_t id)
+{
    return db_find_i64(code.value, scope.value, table.value, id);
 }
 
-int lowerbound_i64(name code, name scope, name table, uint64_t id) {
+int lowerbound_i64(name code, name scope, name table, uint64_t id)
+{
    return db_lowerbound_i64(code.value, scope.value, table.value, id);
 }
 
-int upperbound_i64(name code, name scope, name table, uint64_t id) {
+int upperbound_i64(name code, name scope, name table, uint64_t id)
+{
    return db_upperbound_i64(code.value, scope.value, table.value, id);
 }
 
-int end_i64(name code, name scope, name table) { return db_end_i64(code.value, scope.value, table.value); }
+int end_i64(name code, name scope, name table)
+{
+   return db_end_i64(code.value, scope.value, table.value);
+}
 
 template <typename T>
 int32_t find_primary_fix_cdt(name code, name scope, name table, T& secondary, uint64_t primary);
 
-int32_t find_primary_fix_cdt(name code, name scope, name table, checksum256& secondary, uint64_t primary) {
-   // The CDT version leaves arr uninitialized, which makes checking whether the intrinsic writes to it impossible.
-   auto    arr    = secondary.extract_as_word_array<uint128_t>();
-   int32_t result = internal_use_do_not_use::db_idx256_find_primary(code.value, scope.value, table.value, arr.data(),
-                                                                    arr.size(), primary);
-   secondary      = checksum256(arr);
+int32_t find_primary_fix_cdt(name code,
+                             name scope,
+                             name table,
+                             checksum256& secondary,
+                             uint64_t primary)
+{
+   // The CDT version leaves arr uninitialized, which makes checking whether the intrinsic writes to
+   // it impossible.
+   auto arr = secondary.extract_as_word_array<uint128_t>();
+   int32_t result = internal_use_do_not_use::db_idx256_find_primary(
+       code.value, scope.value, table.value, arr.data(), arr.size(), primary);
+   secondary = checksum256(arr);
    return result;
 }
 
-#define WRAP_SECONDARY(NAME, TYPE)                                                                                     \
-   struct NAME {                                                                                                       \
-      using cdt_wrapper = eosio::_multi_index_detail::secondary_index_db_functions<TYPE>;                              \
-      static int32_t store(name scope, name table, name payer, uint64_t id, const TYPE& secondary) {                   \
-         return cdt_wrapper::db_idx_store(scope.value, table.value, payer.value, id, secondary);                       \
-      }                                                                                                                \
-      static void update(int32_t iterator, name payer, const TYPE& secondary) {                                        \
-         return cdt_wrapper::db_idx_update(iterator, payer.value, secondary);                                          \
-      }                                                                                                                \
-      static void    remove(int32_t iterator) { return cdt_wrapper::db_idx_remove(iterator); }                         \
-      static int32_t find_secondary(name code, name scope, name table, const TYPE& secondary, uint64_t& primary) {     \
-         return cdt_wrapper::db_idx_find_secondary(code.value, scope.value, table.value, secondary, primary);          \
-      }                                                                                                                \
-      static int32_t find_primary(name code, name scope, name table, TYPE& secondary, uint64_t primary) {              \
-         if constexpr (std::is_same_v<TYPE, checksum256>)                                                              \
-            return find_primary_fix_cdt(code, scope, table, secondary, primary);                                       \
-         else                                                                                                          \
-            return cdt_wrapper::db_idx_find_primary(code.value, scope.value, table.value, primary, secondary);         \
-      }                                                                                                                \
-      static int32_t lowerbound(name code, name scope, name table, TYPE& secondary, uint64_t& primary) {               \
-         return cdt_wrapper::db_idx_lowerbound(code.value, scope.value, table.value, secondary, primary);              \
-      }                                                                                                                \
-      static int32_t upperbound(name code, name scope, name table, TYPE& secondary, uint64_t& primary) {               \
-         return cdt_wrapper::db_idx_upperbound(code.value, scope.value, table.value, secondary, primary);              \
-      }                                                                                                                \
-      static int32_t end(name code, name scope, name table) {                                                          \
-         return cdt_wrapper::db_idx_end(code.value, scope.value, table.value);                                         \
-      }                                                                                                                \
-      static int32_t next(int32_t iterator, uint64_t& primary) {                                                       \
-         return cdt_wrapper::db_idx_next(iterator, &primary);                                                          \
-      }                                                                                                                \
-      static int32_t previous(int32_t iterator, uint64_t& primary) {                                                   \
-         return cdt_wrapper::db_idx_previous(iterator, &primary);                                                      \
-      }                                                                                                                \
-      static void check_end(name code, name scope, name table, int expected_itr) {                                     \
-         auto itr = end(code, scope, table);                                                                           \
-         eosio::check(itr == expected_itr, "check_end failure: wrong iterator. code: " + code.to_string() +            \
-                                                 " scope: " + scope.to_string() + " table: " + table.to_string() +     \
-                                                 " itr: " + to_string(itr) +                                           \
-                                                 " expected_itr: " + to_string(expected_itr) + "\n");                  \
-      }                                                                                                                \
-      static void check_find_secondary(name code, name scope, name table, int expected_itr, uint64_t expected_primary, \
-                                       const TYPE& secondary_search) {                                                 \
-         uint64_t primary   = 0xfeedbeef;                                                                              \
-         auto     secondary = secondary_search;                                                                        \
-         auto     itr       = find_secondary(code, scope, table, secondary, primary);                                  \
-         eosio::check(itr == expected_itr && primary == expected_primary,                                              \
-                      "check_find failure: code: " + code.to_string() + " scope: " + scope.to_string() + " table: " +  \
-                            table.to_string() + " secondary_search: " + convert_to_json(secondary_search) +            \
-                            " itr: " + convert_to_json(itr) + " expected_itr: " + convert_to_json(expected_itr) +      \
-                            " secondary: " + convert_to_json(secondary) + " primary: " + convert_to_json(primary) +    \
-                            " expected_primary: " + convert_to_json(expected_primary) + "\n");                         \
-      }                                                                                                                \
-      static void check_find_primary(name code, name scope, name table, int expected_itr, uint64_t primary,            \
-                                     const TYPE& expected_secondary) {                                                 \
-         auto secondary = expected_secondary;                                                                          \
-         auto itr       = find_primary(code, scope, table, secondary, primary);                                        \
-         eosio::check(itr == expected_itr && secondary == expected_secondary,                                          \
-                      "check_findprimary failure: code: " + code.to_string() + " scope: " + scope.to_string() +        \
-                            " table: " + table.to_string() + " primary: " + convert_to_json(primary) +                 \
-                            " itr: " + convert_to_json(itr) + " expected_itr: " + convert_to_json(expected_itr) +      \
-                            " secondary: " + convert_to_json(secondary) +                                              \
-                            " expected_secondary: " + convert_to_json(expected_secondary) + "\n");                     \
-      }                                                                                                                \
-      static void check_next(int32_t iterator, int expected_itr, uint64_t expected_primary) {                          \
-         uint64_t primary = 0xfeedbeef;                                                                                \
-         auto     itr     = next(iterator, primary);                                                                   \
-         eosio::check(itr == expected_itr && primary == expected_primary,                                              \
-                      "check_next failure: itr: " + convert_to_json(itr) + " expected_itr: " +                         \
-                            convert_to_json(expected_itr) + " primary: " + convert_to_json(primary) +                  \
-                            " expected_primary: " + convert_to_json(expected_primary) + "\n");                         \
-      }                                                                                                                \
-      static void check_prev(int32_t iterator, int expected_itr, uint64_t expected_primary) {                          \
-         uint64_t primary = 0xfeedbeef;                                                                                \
-         auto     itr     = previous(iterator, primary);                                                               \
-         eosio::check(itr == expected_itr && primary == expected_primary,                                              \
-                      "check_prev failure: itr: " + convert_to_json(itr) + " expected_itr: " +                         \
-                            convert_to_json(expected_itr) + " primary: " + convert_to_json(primary) +                  \
-                            " expected_primary: " + convert_to_json(expected_primary) + "\n");                         \
-      }                                                                                                                \
-      static void check_lowerbound(name code, name scope, name table, int expected_itr, uint64_t expected_primary,     \
-                                   const TYPE& secondary_search, const TYPE& expected_secondary) {                     \
-         uint64_t primary   = 0xfeedbeef;                                                                              \
-         auto     secondary = secondary_search;                                                                        \
-         auto     itr       = lowerbound(code, scope, table, secondary, primary);                                      \
-         eosio::check(itr == expected_itr && primary == expected_primary && secondary == expected_secondary,           \
-                      "check_lowerbound failure: code: " + code.to_string() + " scope: " + scope.to_string() +         \
-                            " table: " + table.to_string() +                                                           \
-                            " secondary_search: " + convert_to_json(secondary_search) +                                \
-                            " itr: " + convert_to_json(itr) + " expected_itr: " + convert_to_json(expected_itr) +      \
-                            " secondary: " + convert_to_json(secondary) + " expected_secondary: " +                    \
-                            convert_to_json(expected_secondary) + " primary: " + convert_to_json(primary) +            \
-                            " expected_primary: " + convert_to_json(expected_primary) + "\n");                         \
-      }                                                                                                                \
-      static void check_upperbound(name code, name scope, name table, int expected_itr, uint64_t expected_primary,     \
-                                   const TYPE& secondary_search, const TYPE& expected_secondary) {                     \
-         uint64_t primary   = 0xfeedbeef;                                                                              \
-         auto     secondary = secondary_search;                                                                        \
-         auto     itr       = upperbound(code, scope, table, secondary, primary);                                      \
-         eosio::check(itr == expected_itr && primary == expected_primary && secondary == expected_secondary,           \
-                      "check_upperbound failure: code: " + code.to_string() + " scope: " + scope.to_string() +         \
-                            " table: " + table.to_string() +                                                           \
-                            " secondary_search: " + convert_to_json(secondary_search) +                                \
-                            " itr: " + convert_to_json(itr) + " expected_itr: " + convert_to_json(expected_itr) +      \
-                            " secondary: " + convert_to_json(secondary) + " expected_secondary: " +                    \
-                            convert_to_json(expected_secondary) + " primary: " + convert_to_json(primary) +            \
-                            " expected_primary: " + convert_to_json(expected_primary) + "\n");                         \
-      }                                                                                                                \
+#define WRAP_SECONDARY(NAME, TYPE)                                                                 \
+   struct NAME                                                                                     \
+   {                                                                                               \
+      using cdt_wrapper = eosio::_multi_index_detail::secondary_index_db_functions<TYPE>;          \
+      static int32_t store(name scope, name table, name payer, uint64_t id, const TYPE& secondary) \
+      {                                                                                            \
+         return cdt_wrapper::db_idx_store(scope.value, table.value, payer.value, id, secondary);   \
+      }                                                                                            \
+      static void update(int32_t iterator, name payer, const TYPE& secondary)                      \
+      {                                                                                            \
+         return cdt_wrapper::db_idx_update(iterator, payer.value, secondary);                      \
+      }                                                                                            \
+      static void remove(int32_t iterator) { return cdt_wrapper::db_idx_remove(iterator); }        \
+      static int32_t find_secondary(name code,                                                     \
+                                    name scope,                                                    \
+                                    name table,                                                    \
+                                    const TYPE& secondary,                                         \
+                                    uint64_t& primary)                                             \
+      {                                                                                            \
+         return cdt_wrapper::db_idx_find_secondary(code.value, scope.value, table.value,           \
+                                                   secondary, primary);                            \
+      }                                                                                            \
+      static int32_t find_primary(name code,                                                       \
+                                  name scope,                                                      \
+                                  name table,                                                      \
+                                  TYPE& secondary,                                                 \
+                                  uint64_t primary)                                                \
+      {                                                                                            \
+         if constexpr (std::is_same_v<TYPE, checksum256>)                                          \
+            return find_primary_fix_cdt(code, scope, table, secondary, primary);                   \
+         else                                                                                      \
+            return cdt_wrapper::db_idx_find_primary(code.value, scope.value, table.value, primary, \
+                                                    secondary);                                    \
+      }                                                                                            \
+      static int32_t lowerbound(name code,                                                         \
+                                name scope,                                                        \
+                                name table,                                                        \
+                                TYPE& secondary,                                                   \
+                                uint64_t& primary)                                                 \
+      {                                                                                            \
+         return cdt_wrapper::db_idx_lowerbound(code.value, scope.value, table.value, secondary,    \
+                                               primary);                                           \
+      }                                                                                            \
+      static int32_t upperbound(name code,                                                         \
+                                name scope,                                                        \
+                                name table,                                                        \
+                                TYPE& secondary,                                                   \
+                                uint64_t& primary)                                                 \
+      {                                                                                            \
+         return cdt_wrapper::db_idx_upperbound(code.value, scope.value, table.value, secondary,    \
+                                               primary);                                           \
+      }                                                                                            \
+      static int32_t end(name code, name scope, name table)                                        \
+      {                                                                                            \
+         return cdt_wrapper::db_idx_end(code.value, scope.value, table.value);                     \
+      }                                                                                            \
+      static int32_t next(int32_t iterator, uint64_t& primary)                                     \
+      {                                                                                            \
+         return cdt_wrapper::db_idx_next(iterator, &primary);                                      \
+      }                                                                                            \
+      static int32_t previous(int32_t iterator, uint64_t& primary)                                 \
+      {                                                                                            \
+         return cdt_wrapper::db_idx_previous(iterator, &primary);                                  \
+      }                                                                                            \
+      static void check_end(name code, name scope, name table, int expected_itr)                   \
+      {                                                                                            \
+         auto itr = end(code, scope, table);                                                       \
+         eosio::check(itr == expected_itr,                                                         \
+                      "check_end failure: wrong iterator. code: " + code.to_string() +             \
+                          " scope: " + scope.to_string() + " table: " + table.to_string() +        \
+                          " itr: " + to_string(itr) +                                              \
+                          " expected_itr: " + to_string(expected_itr) + "\n");                     \
+      }                                                                                            \
+      static void check_find_secondary(name code,                                                  \
+                                       name scope,                                                 \
+                                       name table,                                                 \
+                                       int expected_itr,                                           \
+                                       uint64_t expected_primary,                                  \
+                                       const TYPE& secondary_search)                               \
+      {                                                                                            \
+         uint64_t primary = 0xfeedbeef;                                                            \
+         auto secondary = secondary_search;                                                        \
+         auto itr = find_secondary(code, scope, table, secondary, primary);                        \
+         eosio::check(itr == expected_itr && primary == expected_primary,                          \
+                      "check_find failure: code: " + code.to_string() +                            \
+                          " scope: " + scope.to_string() + " table: " + table.to_string() +        \
+                          " secondary_search: " + convert_to_json(secondary_search) +              \
+                          " itr: " + convert_to_json(itr) +                                        \
+                          " expected_itr: " + convert_to_json(expected_itr) + " secondary: " +     \
+                          convert_to_json(secondary) + " primary: " + convert_to_json(primary) +   \
+                          " expected_primary: " + convert_to_json(expected_primary) + "\n");       \
+      }                                                                                            \
+      static void check_find_primary(name code,                                                    \
+                                     name scope,                                                   \
+                                     name table,                                                   \
+                                     int expected_itr,                                             \
+                                     uint64_t primary,                                             \
+                                     const TYPE& expected_secondary)                               \
+      {                                                                                            \
+         auto secondary = expected_secondary;                                                      \
+         auto itr = find_primary(code, scope, table, secondary, primary);                          \
+         eosio::check(itr == expected_itr && secondary == expected_secondary,                      \
+                      "check_findprimary failure: code: " + code.to_string() +                     \
+                          " scope: " + scope.to_string() + " table: " + table.to_string() +        \
+                          " primary: " + convert_to_json(primary) +                                \
+                          " itr: " + convert_to_json(itr) +                                        \
+                          " expected_itr: " + convert_to_json(expected_itr) +                      \
+                          " secondary: " + convert_to_json(secondary) +                            \
+                          " expected_secondary: " + convert_to_json(expected_secondary) + "\n");   \
+      }                                                                                            \
+      static void check_next(int32_t iterator, int expected_itr, uint64_t expected_primary)        \
+      {                                                                                            \
+         uint64_t primary = 0xfeedbeef;                                                            \
+         auto itr = next(iterator, primary);                                                       \
+         eosio::check(itr == expected_itr && primary == expected_primary,                          \
+                      "check_next failure: itr: " + convert_to_json(itr) +                         \
+                          " expected_itr: " + convert_to_json(expected_itr) +                      \
+                          " primary: " + convert_to_json(primary) +                                \
+                          " expected_primary: " + convert_to_json(expected_primary) + "\n");       \
+      }                                                                                            \
+      static void check_prev(int32_t iterator, int expected_itr, uint64_t expected_primary)        \
+      {                                                                                            \
+         uint64_t primary = 0xfeedbeef;                                                            \
+         auto itr = previous(iterator, primary);                                                   \
+         eosio::check(itr == expected_itr && primary == expected_primary,                          \
+                      "check_prev failure: itr: " + convert_to_json(itr) +                         \
+                          " expected_itr: " + convert_to_json(expected_itr) +                      \
+                          " primary: " + convert_to_json(primary) +                                \
+                          " expected_primary: " + convert_to_json(expected_primary) + "\n");       \
+      }                                                                                            \
+      static void check_lowerbound(name code,                                                      \
+                                   name scope,                                                     \
+                                   name table,                                                     \
+                                   int expected_itr,                                               \
+                                   uint64_t expected_primary,                                      \
+                                   const TYPE& secondary_search,                                   \
+                                   const TYPE& expected_secondary)                                 \
+      {                                                                                            \
+         uint64_t primary = 0xfeedbeef;                                                            \
+         auto secondary = secondary_search;                                                        \
+         auto itr = lowerbound(code, scope, table, secondary, primary);                            \
+         eosio::check(itr == expected_itr && primary == expected_primary &&                        \
+                          secondary == expected_secondary,                                         \
+                      "check_lowerbound failure: code: " + code.to_string() +                      \
+                          " scope: " + scope.to_string() + " table: " + table.to_string() +        \
+                          " secondary_search: " + convert_to_json(secondary_search) +              \
+                          " itr: " + convert_to_json(itr) +                                        \
+                          " expected_itr: " + convert_to_json(expected_itr) +                      \
+                          " secondary: " + convert_to_json(secondary) +                            \
+                          " expected_secondary: " + convert_to_json(expected_secondary) +          \
+                          " primary: " + convert_to_json(primary) +                                \
+                          " expected_primary: " + convert_to_json(expected_primary) + "\n");       \
+      }                                                                                            \
+      static void check_upperbound(name code,                                                      \
+                                   name scope,                                                     \
+                                   name table,                                                     \
+                                   int expected_itr,                                               \
+                                   uint64_t expected_primary,                                      \
+                                   const TYPE& secondary_search,                                   \
+                                   const TYPE& expected_secondary)                                 \
+      {                                                                                            \
+         uint64_t primary = 0xfeedbeef;                                                            \
+         auto secondary = secondary_search;                                                        \
+         auto itr = upperbound(code, scope, table, secondary, primary);                            \
+         eosio::check(itr == expected_itr && primary == expected_primary &&                        \
+                          secondary == expected_secondary,                                         \
+                      "check_upperbound failure: code: " + code.to_string() +                      \
+                          " scope: " + scope.to_string() + " table: " + table.to_string() +        \
+                          " secondary_search: " + convert_to_json(secondary_search) +              \
+                          " itr: " + convert_to_json(itr) +                                        \
+                          " expected_itr: " + convert_to_json(expected_itr) +                      \
+                          " secondary: " + convert_to_json(secondary) +                            \
+                          " expected_secondary: " + convert_to_json(expected_secondary) +          \
+                          " primary: " + convert_to_json(primary) +                                \
+                          " expected_primary: " + convert_to_json(expected_primary) + "\n");       \
+      }                                                                                            \
    };
 
 WRAP_SECONDARY(idx64, uint64_t);
@@ -156,82 +237,121 @@ WRAP_SECONDARY(idx128, uint128_t);
 WRAP_SECONDARY(idx_double, double);
 WRAP_SECONDARY(idx256, checksum256);
 
-std::vector<char> get_i64(int itr) {
+std::vector<char> get_i64(int itr)
+{
    std::vector<char> result(db_get_i64(itr, nullptr, 0));
    db_get_i64(itr, result.data(), result.size());
    return result;
 }
 
-void check_lowerbound_i64(name code, name scope, name table, uint64_t id, int expected_itr,
-                          const std::vector<char>& expected_data) {
+void check_lowerbound_i64(name code,
+                          name scope,
+                          name table,
+                          uint64_t id,
+                          int expected_itr,
+                          const std::vector<char>& expected_data)
+{
    auto itr = lowerbound_i64(code, scope, table, id);
-   eosio::check(itr == expected_itr, "check_lowerbound_i64 failure: wrong iterator. code: " + code.to_string() +
-                                           " scope: " + scope.to_string() + " table: " + table.to_string() +
-                                           " id: " + to_string(id) + " itr: " + to_string(itr) +
-                                           " expected_itr: " + to_string(expected_itr) + "\n");
+   eosio::check(itr == expected_itr,
+                "check_lowerbound_i64 failure: wrong iterator. code: " + code.to_string() +
+                    " scope: " + scope.to_string() + " table: " + table.to_string() +
+                    " id: " + to_string(id) + " itr: " + to_string(itr) +
+                    " expected_itr: " + to_string(expected_itr) + "\n");
    if (expected_itr >= 0)
-      eosio::check(get_i64(expected_itr) == expected_data, "check_lowerbound_i64 failure: wrong data");
+      eosio::check(get_i64(expected_itr) == expected_data,
+                   "check_lowerbound_i64 failure: wrong data");
 }
 
-void check_upperbound_i64(name code, name scope, name table, uint64_t id, int expected_itr,
-                          const std::vector<char>& expected_data) {
+void check_upperbound_i64(name code,
+                          name scope,
+                          name table,
+                          uint64_t id,
+                          int expected_itr,
+                          const std::vector<char>& expected_data)
+{
    auto itr = upperbound_i64(code, scope, table, id);
-   eosio::check(itr == expected_itr, "check_upperbound_i64 failure: wrong iterator. code: " + code.to_string() +
-                                           " scope: " + scope.to_string() + " table: " + table.to_string() +
-                                           " id: " + to_string(id) + " itr: " + to_string(itr) +
-                                           " expected_itr: " + to_string(expected_itr) + "\n");
+   eosio::check(itr == expected_itr,
+                "check_upperbound_i64 failure: wrong iterator. code: " + code.to_string() +
+                    " scope: " + scope.to_string() + " table: " + table.to_string() +
+                    " id: " + to_string(id) + " itr: " + to_string(itr) +
+                    " expected_itr: " + to_string(expected_itr) + "\n");
    if (expected_itr >= 0)
-      eosio::check(get_i64(expected_itr) == expected_data, "check_upperbound_i64 failure: wrong data");
+      eosio::check(get_i64(expected_itr) == expected_data,
+                   "check_upperbound_i64 failure: wrong data");
 }
 
-void check_find_i64(name code, name scope, name table, uint64_t id, int expected_itr,
-                    const std::vector<char>& expected_data) {
+void check_find_i64(name code,
+                    name scope,
+                    name table,
+                    uint64_t id,
+                    int expected_itr,
+                    const std::vector<char>& expected_data)
+{
    auto itr = find_i64(code, scope, table, id);
-   eosio::check(itr == expected_itr, "check_find_i64 failure: wrong iterator. code: " + code.to_string() +
-                                           " scope: " + scope.to_string() + " table: " + table.to_string() +
-                                           " id: " + to_string(id) + " itr: " + to_string(itr) +
-                                           " expected_itr: " + to_string(expected_itr) + "\n");
+   eosio::check(itr == expected_itr,
+                "check_find_i64 failure: wrong iterator. code: " + code.to_string() + " scope: " +
+                    scope.to_string() + " table: " + table.to_string() + " id: " + to_string(id) +
+                    " itr: " + to_string(itr) + " expected_itr: " + to_string(expected_itr) + "\n");
    if (expected_itr >= 0)
       eosio::check(get_i64(expected_itr) == expected_data, "check_find_i64 failure: wrong data");
 }
 
-void check_end_i64(name code, name scope, name table, int expected_itr) {
+void check_end_i64(name code, name scope, name table, int expected_itr)
+{
    auto itr = end_i64(code, scope, table);
-   eosio::check(itr == expected_itr, "check_end_i64 failure: wrong iterator. code: " + code.to_string() +
-                                           " scope: " + scope.to_string() + " table: " + table.to_string() + " itr: " +
-                                           to_string(itr) + " expected_itr: " + to_string(expected_itr) + "\n");
+   eosio::check(itr == expected_itr,
+                "check_end_i64 failure: wrong iterator. code: " + code.to_string() +
+                    " scope: " + scope.to_string() + " table: " + table.to_string() +
+                    " itr: " + to_string(itr) + " expected_itr: " + to_string(expected_itr) + "\n");
 }
 
-void check_next_i64(int itr, int expected_itr, uint64_t expected_id) {
-   uint64_t id       = 0xfeedbeef;
-   auto     next_itr = db_next_i64(itr, &id);
-   eosio::check(next_itr == expected_itr, "check_next_i64 failure: wrong iterator. itr: " + to_string(itr) + " next: " +
-                                                to_string(next_itr) + " expected: " + to_string(expected_itr) + "\n");
+void check_next_i64(int itr, int expected_itr, uint64_t expected_id)
+{
+   uint64_t id = 0xfeedbeef;
+   auto next_itr = db_next_i64(itr, &id);
+   eosio::check(next_itr == expected_itr, "check_next_i64 failure: wrong iterator. itr: " +
+                                              to_string(itr) + " next: " + to_string(next_itr) +
+                                              " expected: " + to_string(expected_itr) + "\n");
    eosio::check(id == expected_id, "check_next_i64 failure: wrong id. itr: " + to_string(itr) +
-                                         " next: " + to_string(next_itr) + " id: " + to_string(id) +
-                                         " expected: " + to_string(expected_id));
+                                       " next: " + to_string(next_itr) + " id: " + to_string(id) +
+                                       " expected: " + to_string(expected_id));
 }
 
-void check_prev_i64(int itr, int expected_itr, uint64_t expected_id) {
-   uint64_t id       = 0xfeedbeef;
-   auto     next_itr = db_previous_i64(itr, &id);
-   eosio::check(next_itr == expected_itr, "check_prev_i64 failure: wrong iterator. itr: " + to_string(itr) + " prev: " +
-                                                to_string(next_itr) + " expected: " + to_string(expected_itr) + "\n");
+void check_prev_i64(int itr, int expected_itr, uint64_t expected_id)
+{
+   uint64_t id = 0xfeedbeef;
+   auto next_itr = db_previous_i64(itr, &id);
+   eosio::check(next_itr == expected_itr, "check_prev_i64 failure: wrong iterator. itr: " +
+                                              to_string(itr) + " prev: " + to_string(next_itr) +
+                                              " expected: " + to_string(expected_itr) + "\n");
    eosio::check(id == expected_id, "check_prev_i64 failure: wrong id. itr: " + to_string(itr) +
-                                         " prev: " + to_string(next_itr) + " id: " + to_string(id) +
-                                         " expected: " + to_string(expected_id));
+                                       " prev: " + to_string(next_itr) + " id: " + to_string(id) +
+                                       " expected: " + to_string(expected_id));
 }
 
-name p(name prefix, name suffix) { return name{ prefix.value | (suffix.value >> 10) }; }
+name p(name prefix, name suffix)
+{
+   return name{prefix.value | (suffix.value >> 10)};
+}
 
-checksum256 to_cs(const char (&cs)[65]) {
+checksum256 to_cs(const char (&cs)[65])
+{
    uint8_t bytes[32];
    (void)unhex(bytes, cs, cs + 64);
-   return checksum256{ bytes };
+   return checksum256{bytes};
 }
 
-void store_multiple(name scope, name table, name payer, uint64_t id, const std::vector<char>& data, uint64_t i64,
-                    uint128_t i128, double d, const char (&cs)[65], bool store_primary = true) {
+void store_multiple(name scope,
+                    name table,
+                    name payer,
+                    uint64_t id,
+                    const std::vector<char>& data,
+                    uint64_t i64,
+                    uint128_t i128,
+                    double d,
+                    const char (&cs)[65],
+                    bool store_primary = true)
+{
    if (store_primary)
       store_i64(scope, table, payer, id, data);
    idx64::store(p("a"_n, scope), p("a"_n, table), payer, id, i64);
@@ -240,79 +360,130 @@ void store_multiple(name scope, name table, name payer, uint64_t id, const std::
    idx256::store(p("d"_n, scope), p("d"_n, table), payer, id, to_cs(cs));
 }
 
-void check_end_multiple(name code, name scope, name table, int expected_itr) {
+void check_end_multiple(name code, name scope, name table, int expected_itr)
+{
    idx64::check_end(code, p("a"_n, scope), p("a"_n, table), expected_itr);
    idx128::check_end(code, p("b"_n, scope), p("b"_n, table), expected_itr);
    idx_double::check_end(code, p("c"_n, scope), p("c"_n, table), expected_itr);
    idx256::check_end(code, p("d"_n, scope), p("d"_n, table), expected_itr);
 }
 
-void check_lowerbound_multiple(name code, name scope, name table, int expected_itr, uint64_t expected_primary,
-                               uint64_t idx64_search, uint64_t idx64_expected, uint128_t idx128_search,
-                               uint128_t idx128_expected, double dbl_search, double dbl_expected,
-                               const char (&cs_search)[65], const char (&cs_expected)[65]) {
-   idx64::check_lowerbound(code, p("a"_n, scope), p("a"_n, table), expected_itr, expected_primary, idx64_search,
-                           idx64_expected);
-   idx128::check_lowerbound(code, p("b"_n, scope), p("b"_n, table), expected_itr, expected_primary, idx128_search,
-                            idx128_expected);
-   idx_double::check_lowerbound(code, p("c"_n, scope), p("c"_n, table), expected_itr, expected_primary, dbl_search,
-                                dbl_expected);
-   idx256::check_lowerbound(code, p("d"_n, scope), p("d"_n, table), expected_itr, expected_primary, to_cs(cs_search),
-                            to_cs(cs_expected));
+void check_lowerbound_multiple(name code,
+                               name scope,
+                               name table,
+                               int expected_itr,
+                               uint64_t expected_primary,
+                               uint64_t idx64_search,
+                               uint64_t idx64_expected,
+                               uint128_t idx128_search,
+                               uint128_t idx128_expected,
+                               double dbl_search,
+                               double dbl_expected,
+                               const char (&cs_search)[65],
+                               const char (&cs_expected)[65])
+{
+   idx64::check_lowerbound(code, p("a"_n, scope), p("a"_n, table), expected_itr, expected_primary,
+                           idx64_search, idx64_expected);
+   idx128::check_lowerbound(code, p("b"_n, scope), p("b"_n, table), expected_itr, expected_primary,
+                            idx128_search, idx128_expected);
+   idx_double::check_lowerbound(code, p("c"_n, scope), p("c"_n, table), expected_itr,
+                                expected_primary, dbl_search, dbl_expected);
+   idx256::check_lowerbound(code, p("d"_n, scope), p("d"_n, table), expected_itr, expected_primary,
+                            to_cs(cs_search), to_cs(cs_expected));
 }
 
-void check_next_multiple(int32_t iterator, int expected_itr, uint64_t expected_primary) {
+void check_next_multiple(int32_t iterator, int expected_itr, uint64_t expected_primary)
+{
    idx64::check_next(iterator, expected_itr, expected_primary);
    idx128::check_next(iterator, expected_itr, expected_primary);
    idx_double::check_next(iterator, expected_itr, expected_primary);
    idx256::check_next(iterator, expected_itr, expected_primary);
 }
 
-void check_prev_multiple(int32_t iterator, int expected_itr, uint64_t expected_primary) {
+void check_prev_multiple(int32_t iterator, int expected_itr, uint64_t expected_primary)
+{
    idx64::check_prev(iterator, expected_itr, expected_primary);
    idx128::check_prev(iterator, expected_itr, expected_primary);
    idx_double::check_prev(iterator, expected_itr, expected_primary);
    idx256::check_prev(iterator, expected_itr, expected_primary);
 }
 
-void check_upperbound_multiple(name code, name scope, name table, int expected_itr, uint64_t expected_primary,
-                               uint64_t idx64_search, uint64_t idx64_expected, uint128_t idx128_search,
-                               uint128_t idx128_expected, double dbl_search, double dbl_expected,
-                               const char (&cs_search)[65], const char (&cs_expected)[65]) {
-   idx64::check_upperbound(code, p("a"_n, scope), p("a"_n, table), expected_itr, expected_primary, idx64_search,
-                           idx64_expected);
-   idx128::check_upperbound(code, p("b"_n, scope), p("b"_n, table), expected_itr, expected_primary, idx128_search,
-                            idx128_expected);
-   idx_double::check_upperbound(code, p("c"_n, scope), p("c"_n, table), expected_itr, expected_primary, dbl_search,
-                                dbl_expected);
-   idx256::check_upperbound(code, p("d"_n, scope), p("d"_n, table), expected_itr, expected_primary, to_cs(cs_search),
-                            to_cs(cs_expected));
+void check_upperbound_multiple(name code,
+                               name scope,
+                               name table,
+                               int expected_itr,
+                               uint64_t expected_primary,
+                               uint64_t idx64_search,
+                               uint64_t idx64_expected,
+                               uint128_t idx128_search,
+                               uint128_t idx128_expected,
+                               double dbl_search,
+                               double dbl_expected,
+                               const char (&cs_search)[65],
+                               const char (&cs_expected)[65])
+{
+   idx64::check_upperbound(code, p("a"_n, scope), p("a"_n, table), expected_itr, expected_primary,
+                           idx64_search, idx64_expected);
+   idx128::check_upperbound(code, p("b"_n, scope), p("b"_n, table), expected_itr, expected_primary,
+                            idx128_search, idx128_expected);
+   idx_double::check_upperbound(code, p("c"_n, scope), p("c"_n, table), expected_itr,
+                                expected_primary, dbl_search, dbl_expected);
+   idx256::check_upperbound(code, p("d"_n, scope), p("d"_n, table), expected_itr, expected_primary,
+                            to_cs(cs_search), to_cs(cs_expected));
 }
 
-void check_find_secondary_multiple(name code, name scope, name table, int expected_itr, uint64_t expected_primary,
-                                   uint64_t idx64_search, uint128_t idx128_search, double dbl_search,
-                                   const char (&cs_search)[65]) {
-   idx64::check_find_secondary(code, p("a"_n, scope), p("a"_n, table), expected_itr, expected_primary, idx64_search);
-   idx128::check_find_secondary(code, p("b"_n, scope), p("b"_n, table), expected_itr, expected_primary, idx128_search);
-   idx_double::check_find_secondary(code, p("c"_n, scope), p("c"_n, table), expected_itr, expected_primary, dbl_search);
-   idx256::check_find_secondary(code, p("d"_n, scope), p("d"_n, table), expected_itr, expected_primary,
-                                to_cs(cs_search));
+void check_find_secondary_multiple(name code,
+                                   name scope,
+                                   name table,
+                                   int expected_itr,
+                                   uint64_t expected_primary,
+                                   uint64_t idx64_search,
+                                   uint128_t idx128_search,
+                                   double dbl_search,
+                                   const char (&cs_search)[65])
+{
+   idx64::check_find_secondary(code, p("a"_n, scope), p("a"_n, table), expected_itr,
+                               expected_primary, idx64_search);
+   idx128::check_find_secondary(code, p("b"_n, scope), p("b"_n, table), expected_itr,
+                                expected_primary, idx128_search);
+   idx_double::check_find_secondary(code, p("c"_n, scope), p("c"_n, table), expected_itr,
+                                    expected_primary, dbl_search);
+   idx256::check_find_secondary(code, p("d"_n, scope), p("d"_n, table), expected_itr,
+                                expected_primary, to_cs(cs_search));
 }
 
-void check_find_primary_multiple(name code, name scope, name table, int expected_itr, uint64_t primary,
-                                 uint64_t idx64_expected, uint128_t idx128_expected, double dbl_expected,
-                                 const char (&cs_expected)[65]) {
-   idx64::check_find_primary(code, p("a"_n, scope), p("a"_n, table), expected_itr, primary, idx64_expected);
-   idx128::check_find_primary(code, p("b"_n, scope), p("b"_n, table), expected_itr, primary, idx128_expected);
-   idx_double::check_find_primary(code, p("c"_n, scope), p("c"_n, table), expected_itr, primary, dbl_expected);
-   idx256::check_find_primary(code, p("d"_n, scope), p("d"_n, table), expected_itr, primary, to_cs(cs_expected));
+void check_find_primary_multiple(name code,
+                                 name scope,
+                                 name table,
+                                 int expected_itr,
+                                 uint64_t primary,
+                                 uint64_t idx64_expected,
+                                 uint128_t idx128_expected,
+                                 double dbl_expected,
+                                 const char (&cs_expected)[65])
+{
+   idx64::check_find_primary(code, p("a"_n, scope), p("a"_n, table), expected_itr, primary,
+                             idx64_expected);
+   idx128::check_find_primary(code, p("b"_n, scope), p("b"_n, table), expected_itr, primary,
+                              idx128_expected);
+   idx_double::check_find_primary(code, p("c"_n, scope), p("c"_n, table), expected_itr, primary,
+                                  dbl_expected);
+   idx256::check_find_primary(code, p("d"_n, scope), p("d"_n, table), expected_itr, primary,
+                              to_cs(cs_expected));
 }
 
-auto big(uint64_t msb, uint64_t lsb) { return (uint128_t(msb) << 64) | lsb; }
+auto big(uint64_t msb, uint64_t lsb)
+{
+   return (uint128_t(msb) << 64) | lsb;
+}
 
-auto big(uint64_t lsb) { return big(0xffff'ffff'ffff'ffff, lsb); }
+auto big(uint64_t lsb)
+{
+   return big(0xffff'ffff'ffff'ffff, lsb);
+}
 
-void legacydb_contract::write() {
+void legacydb_contract::write()
+{
    print("write\n");
 
    // clang-format off
@@ -382,7 +553,7 @@ void legacydb_contract::write() {
 
    idx64::store("nope"_n, "just.2nd"_n, get_self(), 42, 42);
    idx128::store("nope"_n, "just.2ndb"_n, get_self(), 42, 42);
-} // legacydb_contract::write()
+}  // legacydb_contract::write()
 
 // This is one big test to help make sure:
 // * Iterator indexes are reused when they should be. CDT's multi_index depends on this.
@@ -395,8 +566,10 @@ void legacydb_contract::write() {
 //   of conditions.
 //
 // Unintential side effect of this test: if someone makes a change to nodeos which changes the
-// specific iterator indexes it returns, this test may catch it. Such a change is consensus breaking.
-void legacydb_contract::read() {
+// specific iterator indexes it returns, this test may catch it. Such a change is consensus
+// breaking.
+void legacydb_contract::read()
+{
    print("read\n");
 
    /////////////////////////////////
@@ -405,9 +578,9 @@ void legacydb_contract::read() {
    /////////////////////////////////
 
    check_lowerbound_i64(get_self(), "scope1"_n, "table1"_n, 0, 0, data_0);
-   check_lowerbound_i64(get_self(), "scope1"_n, "table1"_n, 20, 0, data_0); // reuse existing itr
+   check_lowerbound_i64(get_self(), "scope1"_n, "table1"_n, 20, 0, data_0);  // reuse existing itr
    check_lowerbound_i64(get_self(), "scope1"_n, "table1"_n, 21, 1, data_1);
-   check_lowerbound_i64(get_self(), "scope1"_n, "table1"_n, 21, 1, data_1); // reuse existing itr
+   check_lowerbound_i64(get_self(), "scope1"_n, "table1"_n, 21, 1, data_1);  // reuse existing itr
    check_lowerbound_i64(get_self(), "scope1"_n, "table1"_n, 22, 2, data_2);
    check_lowerbound_i64(get_self(), "scope1"_n, "table1"_n, 23, 3, data_3);
    check_lowerbound_i64(get_self(), "scope1"_n, "table1"_n, 24, 4, data_4);
@@ -802,8 +975,8 @@ void legacydb_contract::read() {
    check_end_i64(get_self(), "scope1"_n, "table3"_n, -4);
    check_end_i64(get_self(), "scope2"_n, "table1"_n, -5);
    check_end_i64(get_self(), "scope2"_n, "atable"_n, -6);
-   check_end_i64(get_self(), "scope.x"_n, "table2"_n, -7); // not searched for yet
-   check_end_i64(get_self(), "scope.x"_n, "table1"_n, -8); // not searched for yet
+   check_end_i64(get_self(), "scope.x"_n, "table2"_n, -7);  // not searched for yet
+   check_end_i64(get_self(), "scope.x"_n, "table1"_n, -8);  // not searched for yet
    check_end_i64(get_self(), "nope"_n, "nada"_n, -1);
 
    check_end_multiple(get_self(), "scope1"_n, "table1"_n, -2);
@@ -811,8 +984,8 @@ void legacydb_contract::read() {
    check_end_multiple(get_self(), "scope1"_n, "table3"_n, -4);
    check_end_multiple(get_self(), "scope2"_n, "table1"_n, -5);
    check_end_multiple(get_self(), "scope2"_n, "atable"_n, -6);
-   check_end_multiple(get_self(), "scope.x"_n, "table2"_n, -7); // not searched for yet
-   check_end_multiple(get_self(), "scope.x"_n, "table1"_n, -8); // not searched for yet
+   check_end_multiple(get_self(), "scope.x"_n, "table2"_n, -7);  // not searched for yet
+   check_end_multiple(get_self(), "scope.x"_n, "table1"_n, -8);  // not searched for yet
    check_end_multiple(get_self(), "nope"_n, "nada"_n, -1);
 
    /////////////////////////////////
@@ -1015,6 +1188,6 @@ void legacydb_contract::read() {
    check_find_secondary_multiple(get_self(), "scope3"_n, "table4"_n, -13, 0xfeedbeef, 0x0000, 0x0000'0000, -3.0, "0000000000000000000000000000000000000000000000000000000000000000");
    check_find_secondary_multiple(get_self(), "scope3"_n, "table4"_n, -13, 0xfeedbeef, 0x3535, 0x3535'3535,  7.5, "ff00000000000000000000000000000000000000000000000000000000000000");
    // clang-format on
-} // legacydb_contract::read()
+}  // legacydb_contract::read()
 
 EOSIO_ACTION_DISPATCHER(legacydb::actions)
