@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useRouter } from "next/router";
 
-import { Button, Form, Heading, Text, useUALAccount } from "_app";
+import { Button, Form, Heading, Link, Text, useUALAccount } from "_app";
 import { Induction } from "../interfaces";
 import { submitEndorsementTransaction } from "../transactions";
 import { NewMemberCardPreview } from "./new-member-card-preview";
@@ -9,6 +9,7 @@ import { convertPendingProfileToMemberData } from "../utils";
 
 interface Props {
     induction: Induction;
+    setReviewStep: (step: "profile" | "video") => void;
 }
 
 export const InductionStepEndorsement = (props: Props) => {
@@ -65,9 +66,14 @@ export const InductionStepEndorsement = (props: Props) => {
 
     const memberData = convertPendingProfileToMemberData(induction);
 
+    const isInvitee = () => ualAccount?.accountName === induction.invitee;
+
+    const isEndorser = () =>
+        ualAccount?.accountName === induction.inviter ||
+        induction.witnesses.indexOf(ualAccount?.accountName) >= 0;
+
     const isPendingEndorser = () =>
-        (ualAccount?.accountName === induction.inviter ||
-            induction.witnesses.indexOf(ualAccount?.accountName) >= 0) &&
+        isEndorser() &&
         induction.endorsements.indexOf(ualAccount?.accountName) < 0;
 
     const getEndorserStatus = (endorser: string) =>
@@ -136,6 +142,28 @@ export const InductionStepEndorsement = (props: Props) => {
                         <div>
                             Waiting for all the endorsements to complete the
                             induction process.
+                        </div>
+                    )}
+
+                    {isInvitee() && (
+                        <div className="mt-4 text-center">
+                            <Text>Your profile looks wrong?</Text>
+                            <Link
+                                onClick={() => props.setReviewStep("profile")}
+                            >
+                                Click Here to adjust Profile
+                            </Link>
+                        </div>
+                    )}
+
+                    {isEndorser() && (
+                        <div className="mt-4 text-center">
+                            <Text>
+                                The Induction Ceremony Video is Incorrect?
+                            </Text>
+                            <Link onClick={() => props.setReviewStep("video")}>
+                                Click Here to adjust Induction Ceremony Video
+                            </Link>
                         </div>
                     )}
                 </div>

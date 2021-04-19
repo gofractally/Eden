@@ -9,9 +9,10 @@ import { NewMemberCardPreview } from "./new-member-card-preview";
 
 interface Props {
     induction: Induction;
+    isReviewing?: boolean;
 }
 
-export const InductionStepVideo = ({ induction }: Props) => {
+export const InductionStepVideo = ({ induction, isReviewing }: Props) => {
     const [ualAccount] = useUALAccount();
 
     const [submittedVideo, setSubmittedVideo] = useState(false);
@@ -48,7 +49,9 @@ export const InductionStepVideo = ({ induction }: Props) => {
     return (
         <>
             <div className="text-lg mb-4 text-gray-900">
-                Step 2/3: Waiting for Induction Video Upload
+                {isReviewing
+                    ? "Reviewing Induction Video"
+                    : "Step 2/3: Waiting for Induction Video Upload"}
             </div>
             <div className="grid grid-cols-2 gap-6 max-w-full">
                 <div>
@@ -58,8 +61,7 @@ export const InductionStepVideo = ({ induction }: Props) => {
                     {submittedVideo ? (
                         <div>
                             <Text className="mb-4">
-                                Thanks for submitting the induction video! Next
-                                step is the endorsement phase of this induction.
+                                Thanks for submitting the induction video!
                             </Text>
                             <Link onClick={() => window.location.reload()}>
                                 Click here to refresh the page and view your

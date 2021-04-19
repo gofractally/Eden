@@ -7,9 +7,10 @@ import { InductionProfileForm } from "./induction-profile-form";
 
 interface Props {
     induction: Induction;
+    isReviewing?: boolean;
 }
 
-export const InductionStepProfile = ({ induction }: Props) => {
+export const InductionStepProfile = ({ induction, isReviewing }: Props) => {
     const [ualAccount] = useUALAccount();
 
     const [submittedProfile, setSubmittedProfile] = useState(false);
@@ -54,7 +55,9 @@ export const InductionStepProfile = ({ induction }: Props) => {
             ) : (
                 <>
                     <div className="text-lg mb-4 text-gray-900">
-                        Step 1/3: Pending New Member Profile
+                        {isReviewing
+                            ? "Reviewing Profile"
+                            : "Step 1/3: Pending New Member Profile"}
                     </div>
                     {ualAccount?.accountName === induction.invitee ? (
                         <InductionProfileForm
