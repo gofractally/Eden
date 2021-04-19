@@ -62,6 +62,42 @@ if(IS_NATIVE)
         -lrt
     )
     add_dependencies(chain eos)
+
+    add_library(eos-fc INTERFACE)
+    target_include_directories(eos-fc INTERFACE
+        ${ROOT_SOURCE_DIR}/external/eos/libraries/fc/include
+    )
+    target_link_libraries(eos-fc INTERFACE
+        -L${ROOT_BINARY_DIR}/eos
+        -lfc${FC_SUFFIX}
+        -lsecp256k1${FC_SUFFIX}
+        Boost::date_time Boost::filesystem Boost::chrono Boost::iostreams Threads::Threads
+        ${OPENSSL_LIBRARIES}
+        ${ZLIB_LIBRARIES}
+    )
+    add_dependencies(eos-fc eos)
+
+    ExternalProject_Add(rocksdb-ext
+        SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/rocksdb
+        BINARY_DIR rocksdb-ext
+        TEST_EXCLUDE_FROM_MAIN 1
+        EXCLUDE_FROM_ALL 1
+        CMAKE_ARGS
+            -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
+            -DCMAKE_INSTALL_PREFIX=${ROOT_BINARY_DIR}/rocksdb
+            -DPORTABLE=ON # don't use sse4.2
+            -DWITH_GFLAGS=OFF
+            -DWITH_TESTS=OFF
+            -DWITH_TOOLS=OFF
+            -DWITH_BENCHMARK_TOOLS=OFF
+            -DFAIL_ON_WARNINGS=OFF
+            -DCMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT=OFF
+        )
+
+        add_library(rocksdb INTERFACE)
+        target_include_directories(rocksdb INTERFACE ${CMAKE_BINARY_DIR}/rocksdb/include)
+        target_link_libraries(rocksdb INTERFACE ${CMAKE_BINARY_DIR}/rocksdb/lib/librocksdb.a)
+        add_dependencies(rocksdb rocksdb-ext)
 endif()
 
 ExternalProject_Add(fmt-ext
