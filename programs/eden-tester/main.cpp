@@ -35,7 +35,12 @@ inline constexpr int block_interval_ms = 500;
 inline constexpr int block_interval_us = block_interval_ms * 1000;
 inline constexpr uint32_t billed_cpu_time_use = 2000;
 
-inline constexpr int32_t wasi_root_dir_fd = 3;
+inline constexpr int32_t polyfill_root_dir_fd = 3;
+
+inline constexpr uint16_t wasi_errno_badf = 8;
+inline constexpr uint16_t wasi_errno_inval = 28;
+inline constexpr uint16_t wasi_errno_io = 29;
+inline constexpr uint16_t wasi_errno_noent = 44;
 
 inline constexpr uint8_t wasi_filetype_character_device = 2;
 inline constexpr uint8_t wasi_filetype_directory = 3;
@@ -717,7 +722,7 @@ struct callbacks
       }
       else
       {
-         return EINVAL;
+         return wasi_errno_inval;
       }
       *time = result.count();
       return 0;
@@ -753,7 +758,7 @@ struct callbacks
          *fs_rights_inheriting = 0;
          return 0;
       }
-      if (fd == wasi_root_dir_fd)
+      if (fd == polyfill_root_dir_fd)
       {
          *fs_filetype = wasi_filetype_directory;
          *fs_flags = 0;
@@ -769,7 +774,7 @@ struct callbacks
          *fs_rights_inheriting = 0;
          return 0;
       }
-      return EBADF;
+      return wasi_errno_badf;
    }
 
    uint32_t tester_open_file(span<const char> path,
@@ -779,9 +784,9 @@ struct callbacks
                              wasm_ptr<int32_t> opened_fd)
    {
       if (oflags & wasi_oflags_directory)
-         return EINVAL;
+         return wasi_errno_inval;
       if (fdflags & wasi_fdflags_nonblock)
-         return EINVAL;
+         return wasi_errno_inval;
 
       bool read = fs_rights_base & wasi_rights_fd_read;
       bool write = fs_rights_base & wasi_rights_fd_write;
@@ -835,11 +840,11 @@ struct callbacks
       }
 
       if (!mode)
-         return EINVAL;
+         return wasi_errno_inval;
 
       file f = fopen(span_str(path).c_str(), mode);
       if (!f.f)
-         return ENOENT;
+         return wasi_errno_noent;
       state.files.push_back(std::move(f));
       *opened_fd = state.files.size() - 1;
       return 0;
@@ -849,7 +854,7 @@ struct callbacks
    {
       auto* file = get_file(fd);
       if (!file)
-         return EBADF;
+         return wasi_errno_badf;
       file->close();
       return 0;
    }
@@ -858,17 +863,17 @@ struct callbacks
    {
       auto* file = get_file(fd);
       if (!file)
-         return EBADF;
+         return wasi_errno_badf;
       if (fwrite(content.data(), content.size(), 1, file->f) == 1)
          return 0;
-      return EIO;
+      return wasi_errno_io;
    }
 
    uint32_t tester_read_file(int32_t fd, span<char> content, wasm_ptr<int32_t> result)
    {
       auto* file = get_file(fd);
       if (!file)
-         return EBADF;
+         return wasi_errno_badf;
       *result = fread(content.data(), 1, content.size(), file->f);
       return 0;
    }
