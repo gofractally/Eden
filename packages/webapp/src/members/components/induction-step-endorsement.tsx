@@ -1,6 +1,6 @@
 import { useState } from "react";
 
-import { Button, Heading, Text, useUALAccount } from "_app";
+import { Button, Form, Heading, Text, useUALAccount } from "_app";
 import { Induction } from "../interfaces";
 import { submitEndorsementTransaction } from "../transactions";
 import { NewMemberCardPreview } from "./new-member-card-preview";
@@ -15,6 +15,7 @@ export const InductionStepEndorsement = (props: Props) => {
     const router = useRouter();
     const [ualAccount] = useUALAccount();
     const [induction, setInduction] = useState({ ...props.induction });
+    const [isReviewed, setReviewed] = useState(false);
     const [isLoading, setLoading] = useState(false);
 
     const submitEndorsement = async () => {
@@ -114,14 +115,22 @@ export const InductionStepEndorsement = (props: Props) => {
                                 the induction video seems wrong, please reupload
                                 the induction video.
                             </Text>
-                            <Button
-                                onClick={submitEndorsement}
-                                disabled={isLoading}
-                            >
-                                {isLoading
-                                    ? "Submitting endorsement..."
-                                    : "I carefully reviewed the New Member data and confirm my endorsement"}
-                            </Button>
+                            <Form.Checkbox
+                                id="reviewed"
+                                label="I carefully reviewed the New Member data and confirm my endorsement"
+                                value={Number(isReviewed)}
+                                onChange={() => setReviewed(!isReviewed)}
+                            />
+                            <div className="w-max mx-auto">
+                                <Button
+                                    onClick={submitEndorsement}
+                                    disabled={isLoading || !isReviewed}
+                                >
+                                    {isLoading
+                                        ? "Submitting endorsement..."
+                                        : "Submit"}
+                                </Button>
+                            </div>
                         </div>
                     ) : (
                         <div>

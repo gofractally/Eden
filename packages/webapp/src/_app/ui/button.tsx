@@ -30,11 +30,36 @@ export const Button = ({
     disabled,
     className,
 }: Props) => {
-    const buttonColor = color || "yellow";
-    const buttonColorSet = outline
-        ? ` border-${buttonColor}-300 text-${buttonColor}-600 bg-white hover:bg-${buttonColor}-50`
-        : ` border-transparent text-white bg-${buttonColor}-500 hover:bg-${buttonColor}-600`;
-    const buttonClass = BASE_CLASS + buttonColorSet + ` ${className || ""}`;
+    const buttonColor = disabled ? "gray" : color || "yellow";
+
+    const buttonColorBg = outline
+        ? "bg-white"
+        : disabled
+        ? `bg-gray-300`
+        : `bg-${buttonColor}-500`;
+
+    const buttonColorBgHover = disabled
+        ? ``
+        : outline
+        ? `hover:bg-${buttonColor}-50`
+        : `hover:bg-${buttonColor}-600`;
+
+    const buttonBorderColor = outline
+        ? `border-${buttonColor}-300`
+        : `border-transparent`;
+    const buttonTextColor = outline ? `text-${buttonColor}-600` : `text-white`;
+
+    const buttonCursor = disabled ? "cursor-not-allowed" : "cursor-pointer";
+
+    const buttonClass = [
+        BASE_CLASS,
+        buttonBorderColor,
+        buttonTextColor,
+        buttonColorBg,
+        buttonColorBgHover,
+        buttonCursor,
+        className || "",
+    ].join(" ");
 
     const iconOutlineColor = outline ? `text-${color}-500` : "";
 
