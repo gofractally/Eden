@@ -3,6 +3,13 @@ target_link_libraries(simple-malloc PUBLIC abieos)
 target_compile_options(simple-malloc PUBLIC -fno-exceptions -D__eosio_cdt__)
 target_sources(simple-malloc PRIVATE simple_malloc.cpp)
 
+add_library(contracts-wasi-polyfill)
+target_sources(contracts-wasi-polyfill PRIVATE
+    contracts/wasi-polyfill/__wasi_fd_close.cpp
+    contracts/wasi-polyfill/__wasi_fd_seek.cpp
+    contracts/wasi-polyfill/__wasi_fd_write.cpp
+)
+
 add_library(eosio-core)
 target_link_libraries(eosio-core PUBLIC abieos)
 target_include_directories(eosio-core PUBLIC core)
@@ -33,6 +40,7 @@ target_link_libraries(eosio-contract-simple-malloc PUBLIC
     -lc++abi
     -lc-no-malloc
     simple-malloc
+    contracts-wasi-polyfill
     ${WASI_SDK_PREFIX}/lib/clang/11.0.0/lib/wasi/libclang_rt.builtins-wasm32.a
 )
 add_custom_command(
@@ -50,6 +58,7 @@ target_link_libraries(eosio-contract PUBLIC
     -lc++
     -lc++abi
     -lc
+    contracts-wasi-polyfill
     ${WASI_SDK_PREFIX}/lib/clang/11.0.0/lib/wasi/libclang_rt.builtins-wasm32.a
 )
 target_sources(eosio-contract PRIVATE eosiolib.cpp)
