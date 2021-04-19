@@ -11,7 +11,7 @@ target_sources(contracts-wasi-polyfill PRIVATE
 )
 
 add_library(eosio-core)
-target_link_libraries(eosio-core PUBLIC abieos)
+target_link_libraries(eosio-core PUBLIC abieos boost)
 target_include_directories(eosio-core PUBLIC core)
 target_compile_options(eosio-core PUBLIC -fno-exceptions -D__eosio_cdt__)
 target_sources(eosio-core PRIVATE crypto.cpp)
@@ -23,7 +23,6 @@ target_link_options(eosio-contract-base INTERFACE
     -Wl,--stack-first
     -Wl,--entry,apply
     -Wl,-z,stack-size=8192
-    -Wl,--allow-undefined
     -nostdlib
 )
 string(TOLOWER ${CMAKE_BUILD_TYPE} BUILD_TYPE_LOWER)
@@ -62,3 +61,28 @@ target_link_libraries(eosio-contract PUBLIC
     ${WASI_SDK_PREFIX}/lib/clang/11.0.0/lib/wasi/libclang_rt.builtins-wasm32.a
 )
 target_sources(eosio-contract PRIVATE eosiolib.cpp)
+
+add_library(testlib)
+target_sources(testlib PRIVATE
+    tester/tester.cpp
+    tester/tester_intrinsics.cpp
+    tester/wasi_polyfill/__wasi_args_get.cpp
+    tester/wasi_polyfill/__wasi_args_sizes_get.cpp
+    tester/wasi_polyfill/__wasi_clock_time_get.cpp
+    tester/wasi_polyfill/__wasi_environ_get.cpp
+    tester/wasi_polyfill/__wasi_environ_sizes_get.cpp
+    tester/wasi_polyfill/__wasi_fd_close.cpp
+    tester/wasi_polyfill/__wasi_fd_fdstat_get.cpp
+    tester/wasi_polyfill/__wasi_fd_fdstat_set_flags.cpp
+    tester/wasi_polyfill/__wasi_fd_prestat_dir_name.cpp
+    tester/wasi_polyfill/__wasi_fd_prestat_get.cpp
+    tester/wasi_polyfill/__wasi_fd_read.cpp
+    tester/wasi_polyfill/__wasi_fd_seek.cpp
+    tester/wasi_polyfill/__wasi_fd_write.cpp
+    tester/wasi_polyfill/__wasi_path_open.cpp
+    tester/wasi_polyfill/__wasi_proc_exit.cpp
+)
+target_link_libraries(testlib PUBLIC fmt boost eosio-core)
+target_include_directories(testlib PUBLIC contracts tester)
+target_link_options(testlib INTERFACE -Wl,--export-table)
+add_dependencies(testlib fmt)

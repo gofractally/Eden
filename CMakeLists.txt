@@ -12,6 +12,11 @@ endif()
 
 file(WRITE ${CMAKE_BINARY_DIR}/CTestTestfile.cmake)
 
+option(BUILD_NATIVE "Build native code" ON)
+if(BUILD_NATIVE)
+    add_subdirectory(native)
+endif()
+
 if(DEFINED WASI_SDK_PREFIX)
     if(NOT DEFINED TOKEN_SYMBOL AND NOT DEFINED ENV{TOKEN_SYMBOL})
         set(TOKEN_SYMBOL "WAX")
@@ -48,6 +53,7 @@ if(DEFINED WASI_SDK_PREFIX)
             -DTOKEN_PRECISION=${TOKEN_PRECISION}
             -DTOKEN_MINIMUM_DONATION=${TOKEN_MINIMUM_DONATION}
             -DCMAKE_SYSROOT=${WASI_SDK_PREFIX}/share/wasi-sysroot
+            -DFORCE_COLORED_OUTPUT=${FORCE_COLORED_OUTPUT}
     )
     file(APPEND ${CMAKE_BINARY_DIR}/CTestTestfile.cmake "subdirs(\"wasm\")\n")
     ExternalProject_Add_StepTargets(wasm test)

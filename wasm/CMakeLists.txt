@@ -11,20 +11,21 @@ set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
+option(FORCE_COLORED_OUTPUT "Always produce ANSI-colored output" TRUE)
+if(${FORCE_COLORED_OUTPUT})
+    add_compile_options(-fcolor-diagnostics)
+endif()
+
 function(native_test N)
 endfunction()
 
-function(wasm_test N)
+function(eden_tester_test N)
     add_test(
-        NAME w-${N}
+        NAME t-${N}
         WORKING_DIRECTORY ${ROOT_BINARY_DIR}
-        COMMAND node dist/tester ${N}.wasm
+        COMMAND ./eden-tester ${N}.wasm
     )
-    set_tests_properties(w-${N} PROPERTIES ENVIRONMENT NODE_PATH=dist)
-endfunction()
-
-function(native_and_wasm_test N)
-    wasm_test(${N})
+    set_tests_properties(t-${N} PROPERTIES ENVIRONMENT NODE_PATH=dist)
 endfunction()
 
 add_subdirectory(../contracts contracts)

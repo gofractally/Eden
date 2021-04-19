@@ -22,20 +22,25 @@ mkdir build
 cd build
 cmake -DCMAKE_BUILD_TYPE=Release ..
 make -j
+ctest -j
 ```
 
 #### Ubuntu 20.04
 
 ```sh
 sudo apt-get update
-sudo apt-get install -yq     \
-    binaryen                 \
-    build-essential          \
-    cmake                    \
-    git                      \
-    libboost-all-dev         \
-    libssl-dev               \
-    libgmp-dev
+sudo apt-get install -yq    \
+    binaryen                \
+    build-essential         \
+    cmake                   \
+    git                     \
+    libboost-all-dev        \
+    libcurl4-openssl-dev    \
+    libgmp-dev              \
+    libssl-dev              \
+    libusb-1.0-0-dev        \
+    pkg-config              \
+    wget
 
 export WASI_SDK_PREFIX=~/work/wasi-sdk-12.0
 export PATH=~/work/node-v14.16.0-linux-x64/bin:$PATH

@@ -1,51 +1,42 @@
 #include <eosio/from_string.hpp>
 #include <eosio/tester.hpp>
 
-#define TESTER_INTRINSIC extern "C" __attribute__((eosio_wasm_import))
-
 namespace
 {
    using cb_alloc_type = void* (*)(void* cb_alloc_data, size_t size);
 
-   // clang-format off
-   TESTER_INTRINSIC void     connect_rodeos(uint32_t rodeos, uint32_t chain);
-   TESTER_INTRINSIC uint32_t create_chain(const char* snapshot, uint32_t snapshot_size);
-   TESTER_INTRINSIC uint32_t create_rodeos();
-   TESTER_INTRINSIC void     destroy_chain(uint32_t chain);
-   TESTER_INTRINSIC void     destroy_rodeos(uint32_t rodeos);
-   TESTER_INTRINSIC bool     exec_deferred(uint32_t chain_index, void* cb_alloc_data, cb_alloc_type cb_alloc);
-   TESTER_INTRINSIC int32_t  execute(const char* command, uint32_t command_size);
-   TESTER_INTRINSIC void     finish_block(uint32_t chain_index);
-   TESTER_INTRINSIC uint32_t get_args(char* dest, uint32_t dest_size);
-   TESTER_INTRINSIC uint32_t get_chain_path(uint32_t chain, char* dest, uint32_t dest_size);
-   TESTER_INTRINSIC void     get_head_block_info(uint32_t chain_index, void* cb_alloc_data, cb_alloc_type cb_alloc);
-   TESTER_INTRINSIC uint32_t get_history(uint32_t chain_index, uint32_t block_num, char* dest, uint32_t dest_size);
-   TESTER_INTRINSIC void     push_transaction(uint32_t chain_index, const char* args_packed, uint32_t args_packed_size, void* cb_alloc_data, cb_alloc_type cb_alloc);
-   TESTER_INTRINSIC bool     read_whole_file(const char* filename, uint32_t filename_size, void* cb_alloc_data, cb_alloc_type cb_alloc);
-   TESTER_INTRINSIC void     replace_account_keys(uint32_t chain_index, uint64_t account, uint64_t permission, const char* key, uint32_t key_size);
-   TESTER_INTRINSIC void     replace_producer_keys(uint32_t chain_index, const char* key, uint32_t key_size);
-   TESTER_INTRINSIC void     rodeos_add_filter(uint32_t rodeos, uint64_t name, const char* wasm_filename, uint32_t wasm_filename_size);
-   TESTER_INTRINSIC void     rodeos_enable_queries(uint32_t rodeos, uint32_t max_console_size, uint32_t wasm_cache_size, uint64_t max_exec_time_ms, const char* contract_dir, uint32_t contract_dir_size);
-   TESTER_INTRINSIC uint32_t rodeos_get_num_pushed_data(uint32_t rodeos);
-   TESTER_INTRINSIC uint32_t rodeos_get_pushed_data(uint32_t rodeos, uint32_t index, char* dest, uint32_t dest_size);
-   TESTER_INTRINSIC void     rodeos_push_transaction(uint32_t rodeos, const char* packed_args, uint32_t packed_args_size, void* cb_alloc_data, cb_alloc_type cb_alloc);
-   TESTER_INTRINSIC bool     rodeos_sync_block(uint32_t rodeos);
-   TESTER_INTRINSIC void     select_chain_for_db(uint32_t chain_index);
-   TESTER_INTRINSIC void     shutdown_chain(uint32_t chain);
-   TESTER_INTRINSIC void     start_block(uint32_t chain_index, int64_t skip_miliseconds);
-   TESTER_INTRINSIC uint32_t sign(const void* key, uint32_t keylen, const void* digest, void* sig, uint32_t siglen);
-   // clang-format on
-
-   inline const std::vector<char>& get_args()
+   extern "C"
    {
-      static std::optional<std::vector<char>> bytes;
-      if (!bytes)
-      {
-         bytes.emplace();
-         bytes->resize(get_args(nullptr, 0));
-         get_args(bytes->data(), bytes->size());
-      }
-      return *bytes;
+      // clang-format off
+      [[clang::import_name("tester_create_chain")]]                uint32_t tester_create_chain(const char* snapshot, uint32_t snapshot_size);
+      [[clang::import_name("tester_destroy_chain")]]               void     tester_destroy_chain(uint32_t chain);
+      [[clang::import_name("tester_exec_deferred")]]               bool     tester_exec_deferred(uint32_t chain_index, void* cb_alloc_data, cb_alloc_type cb_alloc);
+      [[clang::import_name("tester_execute")]]                     int32_t  tester_execute(const char* command, uint32_t command_size);
+      [[clang::import_name("tester_finish_block")]]                void     tester_finish_block(uint32_t chain_index);
+      [[clang::import_name("tester_get_chain_path")]]              uint32_t tester_get_chain_path(uint32_t chain, char* dest, uint32_t dest_size);
+      [[clang::import_name("tester_get_head_block_info")]]         void     tester_get_head_block_info(uint32_t chain_index, void* cb_alloc_data, cb_alloc_type cb_alloc);
+      [[clang::import_name("tester_push_transaction")]]            void     tester_push_transaction(uint32_t chain_index, const char* args_packed, uint32_t args_packed_size, void* cb_alloc_data, cb_alloc_type cb_alloc);
+      [[clang::import_name("tester_read_whole_file")]]             bool     tester_read_whole_file(const char* filename, uint32_t filename_size, void* cb_alloc_data, cb_alloc_type cb_alloc);
+      [[clang::import_name("tester_replace_account_keys")]]        void     tester_replace_account_keys(uint32_t chain_index, uint64_t account, uint64_t permission, const char* key, uint32_t key_size);
+      [[clang::import_name("tester_replace_producer_keys")]]       void     tester_replace_producer_keys(uint32_t chain_index, const char* key, uint32_t key_size);
+      [[clang::import_name("tester_select_chain_for_db")]]         void     tester_select_chain_for_db(uint32_t chain_index);
+      [[clang::import_name("tester_shutdown_chain")]]              void     tester_shutdown_chain(uint32_t chain);
+      [[clang::import_name("tester_sign")]]                        uint32_t tester_sign(const void* key, uint32_t keylen, const void* digest, void* sig, uint32_t siglen);
+      [[clang::import_name("tester_start_block")]]                 void     tester_start_block(uint32_t chain_index, int64_t skip_miliseconds);
+
+      /*
+      [[clang::import_name("tester_connect_rodeos")]]              void     tester_connect_rodeos(uint32_t rodeos, uint32_t chain);
+      [[clang::import_name("tester_create_rodeos")]]               uint32_t tester_create_rodeos();
+      [[clang::import_name("tester_destroy_rodeos")]]              void     tester_destroy_rodeos(uint32_t rodeos);
+      [[clang::import_name("tester_get_history")]]                 uint32_t tester_get_history(uint32_t chain_index, uint32_t block_num, char* dest, uint32_t dest_size);
+      [[clang::import_name("tester_rodeos_add_filter")]]           void     tester_rodeos_add_filter(uint32_t rodeos, uint64_t name, const char* wasm_filename, uint32_t wasm_filename_size);
+      [[clang::import_name("tester_rodeos_enable_queries")]]       void     tester_rodeos_enable_queries(uint32_t rodeos, uint32_t max_console_size, uint32_t wasm_cache_size, uint64_t max_exec_time_ms, const char* contract_dir, uint32_t contract_dir_size);
+      [[clang::import_name("tester_rodeos_get_num_pushed_data")]]  uint32_t tester_rodeos_get_num_pushed_data(uint32_t rodeos);
+      [[clang::import_name("tester_rodeos_get_pushed_data")]]      uint32_t tester_rodeos_get_pushed_data(uint32_t rodeos, uint32_t index, char* dest, uint32_t dest_size);
+      [[clang::import_name("tester_rodeos_push_transaction")]]     void     tester_rodeos_push_transaction(uint32_t rodeos, const char* packed_args, uint32_t packed_args_size, void* cb_alloc_data, cb_alloc_type cb_alloc);
+      [[clang::import_name("tester_rodeos_sync_block")]]           bool     tester_rodeos_sync_block(uint32_t rodeos);
+      */
+      // clang-format on
    }
 
    template <typename Alloc_fn>
@@ -53,18 +44,19 @@ namespace
                                uint32_t filename_size,
                                Alloc_fn alloc_fn)
    {
-      return read_whole_file(filename_begin, filename_size, &alloc_fn,
-                             [](void* cb_alloc_data, size_t size) -> void* {  //
-                                return (*reinterpret_cast<Alloc_fn*>(cb_alloc_data))(size);
-                             });
+      return tester_read_whole_file(filename_begin, filename_size, &alloc_fn,
+                                    [](void* cb_alloc_data, size_t size) -> void* {  //
+                                       return (*reinterpret_cast<Alloc_fn*>(cb_alloc_data))(size);
+                                    });
    }
 
    template <typename Alloc_fn>
    inline void get_head_block_info(uint32_t chain, Alloc_fn alloc_fn)
    {
-      get_head_block_info(chain, &alloc_fn, [](void* cb_alloc_data, size_t size) -> void* {  //
-         return (*reinterpret_cast<Alloc_fn*>(cb_alloc_data))(size);
-      });
+      tester_get_head_block_info(chain, &alloc_fn,
+                                 [](void* cb_alloc_data, size_t size) -> void* {  //
+                                    return (*reinterpret_cast<Alloc_fn*>(cb_alloc_data))(size);
+                                 });
    }
 
    template <typename Alloc_fn>
@@ -73,20 +65,22 @@ namespace
                                 uint32_t args_size,
                                 Alloc_fn alloc_fn)
    {
-      push_transaction(chain, args_begin, args_size, &alloc_fn,
-                       [](void* cb_alloc_data, size_t size) -> void* {  //
-                          return (*reinterpret_cast<Alloc_fn*>(cb_alloc_data))(size);
-                       });
+      tester_push_transaction(chain, args_begin, args_size, &alloc_fn,
+                              [](void* cb_alloc_data, size_t size) -> void* {  //
+                                 return (*reinterpret_cast<Alloc_fn*>(cb_alloc_data))(size);
+                              });
    }
 
    template <typename Alloc_fn>
    inline bool exec_deferred(uint32_t chain, Alloc_fn alloc_fn)
    {
-      return exec_deferred(chain, &alloc_fn, [](void* cb_alloc_data, size_t size) -> void* {  //
-         return (*reinterpret_cast<Alloc_fn*>(cb_alloc_data))(size);
-      });
+      return tester_exec_deferred(chain, &alloc_fn,
+                                  [](void* cb_alloc_data, size_t size) -> void* {  //
+                                     return (*reinterpret_cast<Alloc_fn*>(cb_alloc_data))(size);
+                                  });
    }
 
+#ifdef XXX
    template <typename Alloc_fn>
    inline void rodeos_push_transaction(uint32_t rodeos,
                                        const char* args_begin,
@@ -98,20 +92,8 @@ namespace
                                  return (*reinterpret_cast<Alloc_fn*>(cb_alloc_data))(size);
                               });
    }
-
+#endif
 }  // namespace
-
-const std::vector<std::string>& eosio::get_args()
-{
-   static std::optional<std::vector<std::string>> args;
-   if (!args)
-   {
-      auto& bytes = ::get_args();
-      args.emplace();
-      args = convert_from_bin<std::vector<std::string>>(bytes);
-   }
-   return *args;
-}
 
 std::vector<char> eosio::read_whole_file(std::string_view filename)
 {
@@ -126,7 +108,7 @@ std::vector<char> eosio::read_whole_file(std::string_view filename)
 
 int32_t eosio::execute(std::string_view command)
 {
-   return ::execute(command.data(), command.size());
+   return ::tester_execute(command.data(), command.size());
 }
 
 eosio::asset eosio::string_to_asset(const char* s)
@@ -228,12 +210,13 @@ eosio::signature eosio::sign(const eosio::private_key& key, const eosio::checksu
    auto raw_key = eosio::convert_to_bin(key);
    constexpr uint32_t buffer_size = 80;
    std::vector<char> buffer(buffer_size);
-   unsigned sz =
-       ::sign(raw_key.data(), raw_key.size(), raw_digest.data(), buffer.data(), buffer.size());
+   unsigned sz = ::tester_sign(raw_key.data(), raw_key.size(), raw_digest.data(), buffer.data(),
+                               buffer.size());
    buffer.resize(sz);
    if (sz > buffer_size)
    {
-      ::sign(raw_key.data(), raw_key.size(), raw_digest.data(), buffer.data(), buffer.size());
+      ::tester_sign(raw_key.data(), raw_key.size(), raw_digest.data(), buffer.data(),
+                    buffer.size());
    }
    return eosio::convert_from_bin<eosio::signature>(buffer);
 }
@@ -276,7 +259,7 @@ const eosio::private_key eosio::test_chain::default_priv_key =
 static eosio::test_chain* current_chain = nullptr;
 
 eosio::test_chain::test_chain(const char* snapshot)
-    : id{::create_chain(snapshot ? snapshot : "", snapshot ? strlen(snapshot) : 0)}
+    : id{::tester_create_chain(snapshot ? snapshot : "", snapshot ? strlen(snapshot) : 0)}
 {
    current_chain = this;
 }
@@ -284,26 +267,26 @@ eosio::test_chain::test_chain(const char* snapshot)
 eosio::test_chain::~test_chain()
 {
    current_chain = nullptr;
-   ::destroy_chain(id);
+   ::tester_destroy_chain(id);
 }
 
 void eosio::test_chain::shutdown()
 {
-   ::shutdown_chain(id);
+   ::tester_shutdown_chain(id);
 }
 
 std::string eosio::test_chain::get_path()
 {
-   size_t len = get_chain_path(id, nullptr, 0);
+   size_t len = tester_get_chain_path(id, nullptr, 0);
    std::string result(len, 0);
-   get_chain_path(id, result.data(), len);
+   tester_get_chain_path(id, result.data(), len);
    return result;
 }
 
 void eosio::test_chain::replace_producer_keys(const eosio::public_key& key)
 {
    std::vector<char> packed = pack(key);
-   ::replace_producer_keys(id, packed.data(), packed.size());
+   ::tester_replace_producer_keys(id, packed.data(), packed.size());
 }
 
 void eosio::test_chain::replace_account_keys(name account,
@@ -311,14 +294,14 @@ void eosio::test_chain::replace_account_keys(name account,
                                              const eosio::public_key& key)
 {
    std::vector<char> packed = pack(key);
-   ::replace_account_keys(id, account.value, permission.value, packed.data(), packed.size());
+   ::tester_replace_account_keys(id, account.value, permission.value, packed.data(), packed.size());
 }
 
 void eosio::test_chain::replace_account_keys(name account, const eosio::public_key& key)
 {
    std::vector<char> packed = pack(key);
-   ::replace_account_keys(id, account.value, "owner"_n.value, packed.data(), packed.size());
-   ::replace_account_keys(id, account.value, "active"_n.value, packed.data(), packed.size());
+   ::tester_replace_account_keys(id, account.value, "owner"_n.value, packed.data(), packed.size());
+   ::tester_replace_account_keys(id, account.value, "active"_n.value, packed.data(), packed.size());
 }
 
 void eosio::test_chain::start_block(int64_t skip_miliseconds)
@@ -327,19 +310,19 @@ void eosio::test_chain::start_block(int64_t skip_miliseconds)
    if (skip_miliseconds >= 500)
    {
       // Guarantee that there is a recent block for fill_tapos to use.
-      ::start_block(id, skip_miliseconds - 500);
-      ::start_block(id, 0);
+      ::tester_start_block(id, skip_miliseconds - 500);
+      ::tester_start_block(id, 0);
    }
    else
    {
-      ::start_block(id, skip_miliseconds);
+      ::tester_start_block(id, skip_miliseconds);
    }
 }
 
 void eosio::test_chain::finish_block()
 {
    head_block_info.reset();
-   ::finish_block(id);
+   ::tester_finish_block(id);
 }
 
 const eosio::block_info& eosio::test_chain::get_head_block_info()
@@ -421,6 +404,7 @@ eosio::transaction_trace eosio::test_chain::transact(std::vector<action>&& actio
    return convert_from_bin<transaction_trace>(bin);
 }
 
+#ifdef XXX
 void build_history_result(eosio::test_chain::get_history_result& history_result,
                           eosio::ship_protocol::get_blocks_result_v0& blocks_result)
 {
@@ -480,6 +464,7 @@ std::optional<eosio::test_chain::get_history_result> eosio::test_chain::get_hist
    std::visit([&ret](auto& v) { build_history_result(*ret, v); }, r);
    return ret;
 }
+#endif
 
 eosio::transaction_trace eosio::test_chain::create_account(name ac,
                                                            const public_key& pub_key,
@@ -617,6 +602,7 @@ eosio::transaction_trace eosio::test_chain::issue_and_transfer(const name& contr
        expected_except);
 }
 
+#ifdef XXX
 eosio::test_rodeos::test_rodeos() : id{create_rodeos()} {}
 
 eosio::test_rodeos::~test_rodeos()
@@ -712,6 +698,7 @@ std::string eosio::test_rodeos::get_pushed_data_str(uint32_t index)
    rodeos_get_pushed_data(id, index, result.data(), len);
    return result;
 }
+#endif
 
 std::ostream& eosio::ship_protocol::operator<<(std::ostream& os,
                                                eosio::ship_protocol::transaction_status t)

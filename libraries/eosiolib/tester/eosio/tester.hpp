@@ -26,8 +26,6 @@ namespace eosio
 
    }  // namespace internal_use_do_not_use
 
-   const std::vector<std::string>& get_args();
-
    std::vector<char> read_whole_file(std::string_view filename);
 
    int32_t execute(std::string_view command);
@@ -74,8 +72,7 @@ namespace eosio
       std::vector<char> return_value = {};
    };
 
-   auto conversion_kind(chain_types::action_trace_v0, action_trace) -> widening_conversion;
-   auto conversion_kind(chain_types::action_trace_v1, action_trace) -> strict_conversion;
+   auto conversion_kind(chain_types::action_trace_v0, action_trace) -> strict_conversion;
 
    struct transaction_trace
    {
@@ -328,6 +325,7 @@ namespace eosio
        */
       [[nodiscard]] std::optional<transaction_trace> exec_deferred();
 
+#ifdef XXX
       struct get_history_result
       {
          /** The other members refer to memory owned here */
@@ -345,6 +343,7 @@ namespace eosio
        * available.
        */
       std::optional<get_history_result> get_history(uint32_t block_num);
+#endif
 
       transaction_trace create_account(name ac,
                                        const public_key& pub_key,
@@ -409,6 +408,7 @@ namespace eosio
                                            const char* expected_except = nullptr);
    };  // test_chain
 
+#ifdef XXX
    /**
     * Manages a rodeos instance
     */
@@ -535,7 +535,7 @@ namespace eosio
       auto as() { return user_context{*this}; }
 
    };  // test_rodeos
-
+#endif
 }  // namespace eosio
 
 namespace eosio
