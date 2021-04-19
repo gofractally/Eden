@@ -17,3 +17,15 @@ export interface MemberSalesData {
     price: Asset;
     bidEndTime?: number;
 }
+
+// it needs to replicate our contract status, see /contracts/eden/include/members.hpp
+export enum MemberStatus {
+    PendingMembership = 0,
+    ActiveMember = 1,
+}
+
+export interface EdenMember {
+    account: string;
+    status: MemberStatus;
+    nft_template_id: number;
+}

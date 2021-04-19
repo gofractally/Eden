@@ -2,7 +2,7 @@ import { useState } from "react";
 
 import { Button, Text } from "_app";
 import { minimumDonationAmount } from "config";
-import { donationTransaction } from "members/transactions";
+import { donationTransaction } from "../transactions";
 import { assetToString } from "_app";
 
 interface Props {

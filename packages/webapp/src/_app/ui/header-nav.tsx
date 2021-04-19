@@ -3,7 +3,7 @@ import { useRouter } from "next/router";
 import { useState } from "react";
 import { FaSignOutAlt } from "react-icons/fa";
 
-import { useUALAccount } from "_app/ual";
+import { useUALAccount } from "../eos";
 import Button from "./button";
 
 interface MenuItem {

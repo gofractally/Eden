@@ -1,7 +1,10 @@
 import { useEffect, useState } from "react";
 
-export const useFetchedData = (fetchFn: any, ...params: any) => {
-    const [data, setData] = useState<any>(null);
+export const useFetchedData = <T>(
+    fetchFn: any,
+    ...params: any
+): [T | undefined, boolean, any] => {
+    const [data, setData] = useState<T | undefined>(undefined);
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState<any>(undefined);
 

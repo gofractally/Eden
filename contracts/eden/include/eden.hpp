@@ -31,9 +31,7 @@ namespace eden
                       eosio::name invitee,
                       std::vector<eosio::name> witnesses);
 
-      void inductprofil(eosio::name inviter,
-                        eosio::name invitee,
-                        new_member_profile new_member_profile);
+      void inductprofil(uint64_t id, new_member_profile new_member_profile);
    };
 
    EOSIO_ACTIONS(eden, "eden"_n, hi, inductinit, inductprofil, notify transfer)

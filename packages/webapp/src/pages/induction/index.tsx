@@ -1,18 +1,24 @@
-import { SingleColLayout, useFetchedData } from "_app";
-import { getEdenMember } from "members";
-import { useUALAccount } from "_app/ual";
-import { Donation } from "members/components/donation";
+import { SingleColLayout, useFetchedData, useUALAccount } from "_app";
+
+import { Donation } from "inductions";
+import { getEdenMember, MemberStatus, EdenMember } from "members";
 
 export const InductionPage = () => {
     const [ualAccount] = useUALAccount();
-    const [edenMember] = useFetchedData(getEdenMember, ualAccount?.accountName);
+    const [edenMember, isLoading] = useFetchedData<EdenMember>(
+        getEdenMember,
+        ualAccount?.accountName
+    );
 
     return (
         <SingleColLayout title="Induction">
             {!ualAccount ? (
                 <div>Please login using yout wallet.</div>
-            ) : edenMember && edenMember.status === 1 ? (
+            ) : edenMember &&
+              edenMember.status === MemberStatus.ActiveMember ? (
                 <p>Your account is activated! Do you want to invite someone?</p>
+            ) : isLoading ? (
+                <p>Loading...</p>
             ) : (
                 <Donation
                     ualAccount={ualAccount}

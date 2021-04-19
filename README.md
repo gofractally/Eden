@@ -1,6 +1,18 @@
 # Eden
 
-## Build
+## Eden Community WebApp
+
+### Running Eden Community WebApp locally
+
+```sh
+yarn
+yarn dev --stream
+open http://localhost:3000
+```
+
+## Eden Contracts
+
+### Build
 
 Set the `WASI_SDK_PREFIX` environment variable before building (see architecture-specific instructions below). Alternatively, use cmake's `-DWASI_SDK_PREFIX=....` option. Also make sure `nodejs 14`, `npm 6.14`, and `yarn 1.22` are in your path.
 
@@ -13,7 +25,7 @@ make -j
 ctest -j
 ```
 
-### Ubuntu 20.04
+#### Ubuntu 20.04
 
 ```sh
 sudo apt-get update
@@ -40,12 +52,4 @@ tar xf wasi-sdk-12.0-linux.tar.gz
 wget https://nodejs.org/dist/v14.16.0/node-v14.16.0-linux-x64.tar.xz
 tar xf node-v14.16.0-linux-x64.tar.xz
 npm i -g yarn
-```
-
-## Running Eden Community WebApp locally
-
-```sh
-yarn
-yarn dev --stream
-open http://localhost:3000
 ```

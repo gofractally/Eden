@@ -30,9 +30,11 @@ export const MemberSquare = ({ member }: { member: MemberData }) => (
 export const MembersGrid = ({ members }: Props) => {
     return (
         <div className="grid grid-cols-3 gap-4 max-w-4xl mx-auto p-8">
-            {members.map((member, index) => (
-                <MemberSquare key={index} member={member} />
-            ))}
+            {(members.length &&
+                members.map((member, index) => (
+                    <MemberSquare key={index} member={member} />
+                ))) ||
+                "No members to list."}
         </div>
     );
 };

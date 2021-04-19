@@ -55,7 +55,7 @@ namespace eden
       induction_table_type induction_tb;
 
       void check_new_induction(eosio::name invitee, eosio::name inviter) const;
-      induction get_valid_induction(eosio::name invitee, eosio::name inviter) const;
+      void check_valid_induction(const induction& induction) const;
       void validate_profile(const new_member_profile& new_member_profile) const;
       void check_valid_endorsers(eosio::name inviter,
                                  const std::vector<eosio::name>& witnesses) const;
@@ -65,14 +65,14 @@ namespace eden
       {
       }
 
+      const induction& get_induction(uint64_t id) const;
+
       void initialize_induction(uint64_t id,
                                 eosio::name inviter,
                                 eosio::name invitee,
                                 const std::vector<eosio::name>& witnesses);
 
-      void set_profile(eosio::name inviter,
-                       eosio::name invitee,
-                       const new_member_profile& new_member_profile);
+      void update_profile(const induction& induction, const new_member_profile& new_member_profile);
    };
 
 }  // namespace eden

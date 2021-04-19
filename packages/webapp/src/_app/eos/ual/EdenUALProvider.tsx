@@ -1,7 +1,7 @@
 import { UALProvider } from "ual-reactjs-renderer";
 
 import { appName, chainConfig } from "config";
-import { anchor } from "nfts";
+import { anchor } from "./config";
 
 export const EdenUALProvider: React.FC = ({ children }) => {
     return (

@@ -23,13 +23,11 @@ namespace eden
       });
    }
 
-   void inductions::set_profile(eosio::name inviter,
-                                eosio::name invitee,
-                                const new_member_profile& new_member_profile)
+   void inductions::update_profile(const induction& induction,
+                                   const new_member_profile& new_member_profile)
    {
+      check_valid_induction(induction);
       validate_profile(new_member_profile);
-
-      auto induction = get_valid_induction(invitee, inviter);
 
       induction_tb.modify(induction_tb.iterator_to(induction), eosio::same_payer, [&](auto& row) {
          row.new_member_profile = new_member_profile;
@@ -62,17 +60,16 @@ namespace eden
                    "induction for this invitation is already in progress");
    }
 
-   induction inductions::get_valid_induction(eosio::name invitee, eosio::name inviter) const
+   const induction& inductions::get_induction(uint64_t id) const
    {
-      auto invitee_index = induction_tb.get_index<"byinvitee"_n>();
-      auto invitee_key = combine_names(invitee, inviter);
+      return induction_tb.get(id, "unable to find induction");
+   }
 
-      auto induction = invitee_index.get(invitee_key);
+   void inductions::check_valid_induction(const induction& induction) const
+   {
       auto induction_lifetime = eosio::current_time_point() - induction.created_at.to_time_point();
       eosio::check(induction_lifetime.to_seconds() <= induction_expiration_secs,
                    "induction has expired");
-
-      return induction;
    }
 
    void inductions::validate_profile(const new_member_profile& new_member_profile) const
