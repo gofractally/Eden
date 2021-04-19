@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { useRouter } from "next/router";
 
 import { RawLayout, SingleColLayout, useFetchedData } from "_app";
@@ -13,6 +14,9 @@ import {
 export const InductionPage = () => {
     const router = useRouter();
     const inductionId = router.query.id;
+    const [reviewStep, setReviewStep] = useState<
+        "profile" | "video" | undefined
+    >();
 
     const [induction, isLoading] = useFetchedData<Induction>(
         getInduction,
@@ -30,13 +34,26 @@ export const InductionPage = () => {
     const renderInductionStep = () => {
         if (!induction) return "";
 
+        if (reviewStep === "profile") {
+            return <InductionStepProfile induction={induction} isReviewing />;
+        }
+
+        if (reviewStep === "video") {
+            return <InductionStepVideo induction={induction} isReviewing />;
+        }
+
         switch (phase) {
             case InductionStatus.waitingForProfile:
                 return <InductionStepProfile induction={induction} />;
             case InductionStatus.waitingForVideo:
                 return <InductionStepVideo induction={induction} />;
             case InductionStatus.waitingForEndorsement:
-                return <InductionStepEndorsement induction={induction} />;
+                return (
+                    <InductionStepEndorsement
+                        induction={induction}
+                        setReviewStep={setReviewStep}
+                    />
+                );
             default:
                 return "";
         }
