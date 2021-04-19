@@ -16,8 +16,7 @@ struct unimplemented_filter_callbacks {
 
    template <typename Rft>
    static void register_callbacks() {
-      // todo: preconditions
-      RODEOS_REGISTER_CALLBACK(Rft, Derived, current_time);
+      Rft::template add<&Derived::current_time>("env", "current_time");
    }
 }; // unimplemented_filter_callbacks
 

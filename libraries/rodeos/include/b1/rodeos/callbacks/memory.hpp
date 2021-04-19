@@ -33,11 +33,10 @@ struct memory_callbacks {
 
    template <typename Rft>
    static void register_callbacks() {
-      // todo: preconditions
-      b1::rodeos::register_host_function<Rft, &Derived::memcpy_impl>(BOOST_HANA_STRING("memcpy"));
-      b1::rodeos::register_host_function<Rft, &Derived::memmove_impl>(BOOST_HANA_STRING("memmove"));
-      b1::rodeos::register_host_function<Rft, &Derived::memcmp_impl>(BOOST_HANA_STRING("memcmp"));
-      b1::rodeos::register_host_function<Rft, &Derived::memset_impl>(BOOST_HANA_STRING("memset"));
+      Rft::template add<&Derived::memcpy_impl>("env", "memcpy");
+      Rft::template add<&Derived::memmove_impl>("env", "memmove");
+      Rft::template add<&Derived::memcmp_impl>("env", "memcmp");
+      Rft::template add<&Derived::memset_impl>("env", "memset");
    }
 }; // memory_callbacks
 

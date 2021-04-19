@@ -46,37 +46,10 @@ struct unimplemented_callbacks {
    int db_##IDX##_next(int, int) { return unimplemented<int>("db_" #IDX "_next"); }                                    \
    int db_##IDX##_previous(int, int) { return unimplemented<int>("db_" #IDX "_previous"); }
 
-#define DB_SECONDARY_INDEX_METHODS_ARRAY(IDX)                                                                          \
-   int db_##IDX##_store(int64_t, int64_t, int64_t, int64_t, int, int) {                                                \
-      return unimplemented<int>("db_" #IDX "_store");                                                                  \
-   }                                                                                                                   \
-   void db_##IDX##_remove(int) { return unimplemented<void>("db_" #IDX "_remove"); }                                   \
-   void db_##IDX##_update(int, int64_t, int, int) { return unimplemented<void>("db_" #IDX "_update"); }                \
-   int  db_##IDX##_find_primary(int64_t, int64_t, int64_t, int, int, int64_t) {                                        \
-      return unimplemented<int>("db_" #IDX "_find_primary");                                                          \
-   }                                                                                                                   \
-   int db_##IDX##_find_secondary(int64_t, int64_t, int64_t, int, int, int) {                                           \
-      return unimplemented<int>("db_" #IDX "_find_secondary");                                                         \
-   }                                                                                                                   \
-   int db_##IDX##_lowerbound(int64_t, int64_t, int64_t, int, int, int) {                                               \
-      return unimplemented<int>("db_" #IDX "_lowerbound");                                                             \
-   }                                                                                                                   \
-   int db_##IDX##_upperbound(int64_t, int64_t, int64_t, int, int, int) {                                               \
-      return unimplemented<int>("db_" #IDX "_upperbound");                                                             \
-   }                                                                                                                   \
-   int db_##IDX##_end(int64_t, int64_t, int64_t) { return unimplemented<int>("db_" #IDX "_end"); }                     \
-   int db_##IDX##_next(int, int) { return unimplemented<int>("db_" #IDX "_next"); }                                    \
-   int db_##IDX##_previous(int, int) { return unimplemented<int>("db_" #IDX "_previous"); }
-
    // database_api
-   DB_SECONDARY_INDEX_METHODS_SIMPLE(idx64)
-   DB_SECONDARY_INDEX_METHODS_SIMPLE(idx128)
-   DB_SECONDARY_INDEX_METHODS_ARRAY(idx256)
-   DB_SECONDARY_INDEX_METHODS_SIMPLE(idx_double)
    DB_SECONDARY_INDEX_METHODS_SIMPLE(idx_long_double)
 
 #undef DB_SECONDARY_INDEX_METHODS_SIMPLE
-#undef DB_SECONDARY_INDEX_METHODS_ARRAY
 
    // permission_api
    int check_transaction_authorization(int, int, int, int, int, int) {
@@ -123,8 +96,6 @@ struct unimplemented_callbacks {
 
    template <typename Rft>
    static void register_callbacks() {
-      // todo: preconditions
-
       // privileged_api
       RODEOS_REGISTER_CALLBACK(Rft, Derived, is_feature_active);
       RODEOS_REGISTER_CALLBACK(Rft, Derived, activate_feature);
@@ -152,27 +123,10 @@ struct unimplemented_callbacks {
    RODEOS_REGISTER_CALLBACK(Rft, Derived, db_##IDX##_next);                                                            \
    RODEOS_REGISTER_CALLBACK(Rft, Derived, db_##IDX##_previous);
 
-#define DB_SECONDARY_INDEX_METHODS_ARRAY(IDX)                                                                          \
-   RODEOS_REGISTER_CALLBACK(Rft, Derived, db_##IDX##_store);                                                           \
-   RODEOS_REGISTER_CALLBACK(Rft, Derived, db_##IDX##_remove);                                                          \
-   RODEOS_REGISTER_CALLBACK(Rft, Derived, db_##IDX##_update);                                                          \
-   RODEOS_REGISTER_CALLBACK(Rft, Derived, db_##IDX##_find_primary);                                                    \
-   RODEOS_REGISTER_CALLBACK(Rft, Derived, db_##IDX##_find_secondary);                                                  \
-   RODEOS_REGISTER_CALLBACK(Rft, Derived, db_##IDX##_lowerbound);                                                      \
-   RODEOS_REGISTER_CALLBACK(Rft, Derived, db_##IDX##_upperbound);                                                      \
-   RODEOS_REGISTER_CALLBACK(Rft, Derived, db_##IDX##_end);                                                             \
-   RODEOS_REGISTER_CALLBACK(Rft, Derived, db_##IDX##_next);                                                            \
-   RODEOS_REGISTER_CALLBACK(Rft, Derived, db_##IDX##_previous);
-
       // database_api
-      DB_SECONDARY_INDEX_METHODS_SIMPLE(idx64)
-      DB_SECONDARY_INDEX_METHODS_SIMPLE(idx128)
-      DB_SECONDARY_INDEX_METHODS_ARRAY(idx256)
-      DB_SECONDARY_INDEX_METHODS_SIMPLE(idx_double)
       DB_SECONDARY_INDEX_METHODS_SIMPLE(idx_long_double)
 
 #undef DB_SECONDARY_INDEX_METHODS_SIMPLE
-#undef DB_SECONDARY_INDEX_METHODS_ARRAY
 
       // permission_api
       RODEOS_REGISTER_CALLBACK(Rft, Derived, check_transaction_authorization);
