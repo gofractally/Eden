@@ -2,8 +2,14 @@
 FROM node:alpine AS deps
 # Check https://github.com/nodejs/docker-node/tree/b4117f9333da4138b03a546ec926ef50a31506c3#nodealpine to understand why libc6-compat might be needed.
 RUN apk add --no-cache libc6-compat
+
 WORKDIR /app
+
+ENV PATH /app/node_modules/.bin:$PATH
+
 COPY package.json yarn.lock ./
+COPY ./packages/webapp/package.json ./packages/webapp/
+
 RUN yarn install --frozen-lockfile
 
 # Rebuild the source code only when needed
@@ -20,15 +26,13 @@ WORKDIR /app
 ENV NODE_ENV production
 
 # You only need to copy next.config.js if you are NOT using the default configuration
-# COPY --from=builder /app/next.config.js ./
-COPY --from=builder /app/packages/webapp/public ./public
-COPY --from=builder /app/packages/webapp/dist ./dist
-COPY --from=builder /app/packages/webapp/node_modules ./node_modules
-COPY --from=builder /app/packages/webapp/package.json ./package.json
+COPY --from=builder /app/packages/webapp ./packages/webapp
+# COPY --from=builder /app/packages/webapp/node_modules/* ./node_modules/*
+COPY --from=builder /app/package.json ./package.json
 
 RUN addgroup -g 1001 -S nodejs
 RUN adduser -S nextjs -u 1001
-RUN chown -R nextjs:nodejs /app/dist
+RUN chown -R nextjs:nodejs /app/packages/webapp/dist
 USER nextjs
 
 EXPOSE 3000
@@ -37,5 +41,5 @@ EXPOSE 3000
 # Learn more here: https://nextjs.org/telemetry
 # Uncomment the following line in case you want to disable telemetry.
 # RUN npx next telemetry disable
-
+WORKDIR /app/packages/webapp
 CMD ["yarn", "start"]
