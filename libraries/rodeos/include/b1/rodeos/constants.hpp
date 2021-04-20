@@ -8,6 +8,6 @@ namespace b1::rodeos
    inline constexpr eosio::name state_database{"eosio.state"};
 
    // account within state_database which stores state
-   inline constexpr eosio::name state_account{"state"};
+   inline constexpr eosio::name state_account{"eosio.state"};
 
 }  // namespace b1::rodeos

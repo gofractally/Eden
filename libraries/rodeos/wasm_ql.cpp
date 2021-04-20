@@ -32,7 +32,7 @@ using boost::multi_index::sequenced;
 using boost::multi_index::tag;
 
 using eosio::ship_protocol::action_receipt_v0;
-using eosio::ship_protocol::action_trace_v1;
+using eosio::ship_protocol::action_trace_v0;
 using eosio::ship_protocol::transaction_trace_v0;
 
 namespace eosio
@@ -55,14 +55,6 @@ namespace eosio
 
 namespace b1::rodeos::wasm_ql
 {
-   template <class... Ts>
-   struct overloaded : Ts...
-   {
-      using Ts::operator()...;
-   };
-   template <class... Ts>
-   overloaded(Ts...) -> overloaded<Ts...>;
-
    struct wasm_ql_backend_options
    {
       std::uint32_t max_pages = 528;  // 33 MiB
@@ -249,7 +241,7 @@ namespace b1::rodeos::wasm_ql
    void run_action(wasm_ql::thread_state& thread_state,
                    const std::vector<char>& contract_kv_prefix,
                    ship_protocol::action& action,
-                   action_trace_v1& atrace,
+                   action_trace_v0& atrace,
                    const rocksdb::Snapshot* snapshot,
                    const std::chrono::steady_clock::time_point& stop_time,
                    std::vector<std::vector<char>>& memory)
@@ -332,7 +324,7 @@ namespace b1::rodeos::wasm_ql
 
       atrace.console = std::move(thread_state.console);
       memory.push_back(std::move(thread_state.action_return_value));
-      atrace.return_value = memory.back();
+      // atrace.return_value = memory.back();
    }  // run_action
 
    const std::vector<char>& query_get_info(wasm_ql::thread_state& thread_state,
@@ -654,12 +646,9 @@ namespace b1::rodeos::wasm_ql
       }
       if (params.compression != "0" && params.compression != "none")
          throw std::runtime_error("Compression must be 0 or none");  // todo
-      ship_protocol::packed_transaction trx{
-          0,
-          {ship_protocol::prunable_data_type::full_legacy{std::move(params.signatures),
-                                                          params.packed_context_free_data.data}},
-          params.packed_trx.data};
-
+      ship_protocol::packed_transaction trx{std::move(params.signatures), 0,
+                                            params.packed_context_free_data.data,
+                                            params.packed_trx.data};
       rocksdb::ManagedSnapshot snapshot{thread_state.shared->db->rdb.get()};
 
       std::vector<std::vector<char>> memory;
@@ -674,25 +663,6 @@ namespace b1::rodeos::wasm_ql
       thread_state.action_return_value.assign(json.begin(), json.end());
       return thread_state.action_return_value;
    }  // query_send_transaction
-
-   bool is_signatures_empty(const ship_protocol::prunable_data_type& data)
-   {
-      return std::visit(
-          overloaded{[](const ship_protocol::prunable_data_type::none&) { return true; },
-                     [](const auto& v) { return v.signatures.empty(); }},
-          data.prunable_data);
-   }
-
-   bool is_context_free_data_empty(const ship_protocol::prunable_data_type& data)
-   {
-      return std::visit(
-          overloaded{[](const ship_protocol::prunable_data_type::none&) { return true; },
-                     [](const ship_protocol::prunable_data_type::full_legacy& v) {
-                        return v.packed_context_free_data.pos == v.packed_context_free_data.end;
-                     },
-                     [](const auto& v) { return v.context_free_segments.empty(); }},
-          data.prunable_data);
-   }
 
    transaction_trace_v0 query_send_transaction(wasm_ql::thread_state& thread_state,           //
                                                const std::vector<char>& contract_kv_prefix,   //
@@ -714,15 +684,12 @@ namespace b1::rodeos::wasm_ql
       if (s.end != s.pos)
          throw std::runtime_error("Extra data in packed_trx");
 
-      if (!is_signatures_empty(trx.prunable_data))
+      if (!trx.signatures.empty())
          throw std::runtime_error("Signatures must be empty");  // todo
-
       if (trx.compression)
          throw std::runtime_error("Compression must be 0 or none");  // todo
-
-      if (!is_context_free_data_empty(trx.prunable_data))
+      if (trx.packed_context_free_data.pos != trx.packed_context_free_data.end)
          throw std::runtime_error("packed_context_free_data must be empty");
-
       // todo: verify query transaction extension is present, but no others
       // todo: redirect if transaction extension not present?
       if (!unpacked.transaction_extensions.empty())
@@ -748,7 +715,7 @@ namespace b1::rodeos::wasm_ql
       for (auto& action : unpacked.actions)
       {
          tt.action_traces.emplace_back();
-         auto& at = tt.action_traces.back().emplace<action_trace_v1>();
+         auto& at = tt.action_traces.back().emplace<action_trace_v0>();
          at.action_ordinal.value = tt.action_traces.size();  // starts at 1
          at.receiver = action.account;
          at.act = action;

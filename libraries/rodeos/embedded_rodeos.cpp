@@ -189,11 +189,11 @@ void with_result(const char* data, uint64_t size, F f)
    if (result_v0)
       return f(*result_v0);
 
-   auto* result_v1 = std::get_if<eosio::ship_protocol::get_blocks_result_v1>(&result);
-   if (result_v1)
-      return f(*result_v1);
+   // auto* result_v1 = std::get_if<eosio::ship_protocol::get_blocks_result_v1>(&result);
+   // if (result_v1)
+   //    return f(*result_v1);
 
-   throw std::runtime_error("expected a get_blocks_result_v0 or get_blocks_result_v1");
+   throw std::runtime_error("expected a get_blocks_result_v0");
 }
 
 extern "C" rodeos_bool rodeos_start_block(rodeos_error* error,

@@ -24,8 +24,8 @@ namespace b1::rodeos
    using contract_row = eosio::ship_protocol::contract_row;
    using contract_table = eosio::ship_protocol::contract_table;
    using global_property = eosio::ship_protocol::global_property;
-   using key_value = eosio::ship_protocol::key_value;
-   using key_value_v0 = eosio::ship_protocol::key_value_v0;
+   // using key_value = eosio::ship_protocol::key_value;
+   // using key_value_v0 = eosio::ship_protocol::key_value_v0;
    using producer_schedule = eosio::ship_protocol::producer_schedule;
    using table_delta = eosio::ship_protocol::table_delta;
    using table_delta_v0 = eosio::ship_protocol::table_delta_v0;
@@ -350,6 +350,7 @@ namespace b1::rodeos
       }
    }
 
+#if 0
    template <typename F>
    void store_delta_kv(eosio::kv_environment environment, table_delta_v0& delta, F f)
    {
@@ -366,6 +367,7 @@ namespace b1::rodeos
                                  obj0.key.remaining());
       }
    }
+#endif
 
    template <typename F>
    inline void store_delta(eosio::kv_environment environment,
@@ -393,15 +395,15 @@ namespace b1::rodeos
          store_delta_typed<contract_index_double_kv>(environment, delta, bypass_preexist_check, f);
       else if (delta.name == "contract_index256")
          store_delta_typed<contract_index256_kv>(environment, delta, bypass_preexist_check, f);
-      else if (delta.name == "key_value")
-         store_delta_kv(environment, delta, f);
+      // else if (delta.name == "key_value")
+      //    store_delta_kv(environment, delta, f);
    }
 
    inline void store_deltas(eosio::kv_environment environment,
                             std::vector<table_delta>& deltas,
                             bool bypass_preexist_check)
    {
-      for (auto& delta : deltas)  //
+      for (auto& delta : deltas)
          store_delta(environment, std::get<table_delta_v0>(delta), bypass_preexist_check, [] {});
    }
 

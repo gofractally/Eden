@@ -35,6 +35,7 @@ if(IS_NATIVE)
 
     add_library(chain INTERFACE)
     target_include_directories(chain INTERFACE
+        ${ROOT_SOURCE_DIR}/external/eos/libraries/builtins
         ${ROOT_SOURCE_DIR}/external/eos/libraries/chain/include
         ${ROOT_SOURCE_DIR}/external/eos/libraries/chainbase/include
         ${ROOT_SOURCE_DIR}/external/eos/libraries/eos-vm/include
