@@ -15,11 +15,34 @@ namespace eden
          row.id = id;
          row.inviter = inviter;
          row.invitee = invitee;
-         row.witnesses = witnesses;
-         row.endorsements = {};
+         row.endorsements = witnesses.size() + 1;
          row.created_at = eosio::current_block_time();
          row.video = "";
          row.new_member_profile = {};
+      });
+
+      // create endorsement for inviter
+      create_endorsement(inviter, invitee, inviter, id);
+
+      // create endorsement for each witness
+      for (const auto& witness : witnesses)
+      {
+         create_endorsement(inviter, invitee, inviter, id);
+      }
+   }
+
+   void inductions::create_endorsement(eosio::name inviter,
+                                       eosio::name invitee,
+                                       eosio::name endorser,
+                                       uint64_t induction_id)
+   {
+      endorsement_tb.emplace(contract, [&](auto& row) {
+         row.id = endorsement_tb.available_primary_key();
+         row.inviter = inviter;
+         row.invitee = invitee;
+         row.endorser = endorser;
+         row.induction_id = induction_id;
+         row.endorsed = false;
       });
    }
 
@@ -46,7 +69,7 @@ namespace eden
                    "the witnesses list has a duplicated entry");
 
       eosio::check(!unique_witnesses_set.contains(inviter),
-                   "inviter cannot be is in the witnesses list");
+                   "inviter cannot be in the witnesses list");
    }
 
    void inductions::check_new_induction(eosio::name invitee, eosio::name inviter) const
