@@ -1,4 +1,5 @@
 #include <inductions.hpp>
+#include <atomicassets.hpp>
 #include <set>
 #include <algorithm>
 #include <eosio/crypto.hpp>
@@ -134,17 +135,26 @@ namespace eden
       eosio::check(!endorsement.endorsed, "Already endorsed");
       endorsement_tb.modify(endorsement, eosio::same_payer, [&](auto& row) { row.endorsed = true; });
 
-      maybe_create_nft(induction.id);
+      maybe_create_nft(induction);
    }
 
-   void inductions::maybe_create_nft(uint64_t induction_id) {
+   void inductions::maybe_create_nft(const induction& induction) {
       auto endorsement_idx = endorsement_tb.get_index<"byinduction"_n>();
-      auto itr = endorsement_idx.lower_bound(induction_id);
-      while (itr != endorsement_idx.end() && itr->induction_id == induction_id)
+      auto itr = endorsement_idx.lower_bound(induction.id);
+      while (itr != endorsement_idx.end() && itr->induction_id == induction.id)
       {
          if(!itr->endorsed) return;
       }
-      // TODO: Create NFT
+
+      atomicassets::attribute_map immutable_data = {
+         {"edenac", induction.invitee.to_string()},
+         {"name", induction.new_member_profile.name},
+         {"img", induction.new_member_profile.img},
+         {"bio", induction.new_member_profile.bio},
+         {"social", induction.new_member_profile.social},
+         {"inductionvid", induction.video}
+      };
+      eosio::action{{contract, "active"_n}, atomic_assets_account, "createtempl"_n, std::tuple{contract, collection_name, schema_name, true, true, uint32_t{induction.endorsements + 2}, immutable_data}}.send();
    }
 
    void inductions::validate_profile(const new_member_profile& new_member_profile) const
