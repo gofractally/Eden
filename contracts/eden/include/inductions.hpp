@@ -94,6 +94,7 @@ namespace eden
                               eosio::name invitee,
                               eosio::name endorser,
                               uint64_t induction_id);
+      void reset_endorsements(uint64_t induction_id);
 
      public:
       inductions(eosio::name contract)

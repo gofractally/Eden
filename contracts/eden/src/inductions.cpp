@@ -52,10 +52,20 @@ namespace eden
       check_valid_induction(induction);
       validate_profile(new_member_profile);
 
-      induction_tb.modify(induction_tb.iterator_to(induction), eosio::same_payer, [&](auto& row) {
-         row.new_member_profile = new_member_profile;
-         row.endorsements = {};
-      });
+      induction_tb.modify(induction_tb.iterator_to(induction), eosio::same_payer,
+                          [&](auto& row) { row.new_member_profile = new_member_profile; });
+
+      reset_endorsements(induction.id);
+   }
+
+   void inductions::reset_endorsements(uint64_t induction_id)
+   {
+      auto endorsement_idx = endorsement_tb.get_index<"byinduction"_n>();
+      auto itr = endorsement_idx.lower_bound(induction_id);
+      while (itr != endorsement_idx.end() && itr->induction_id == induction_id)
+      {
+         endorsement_idx.modify(itr, eosio::same_payer, [&](auto& row) { row.endorsed = false; });
+      }
    }
 
    void inductions::check_valid_endorsers(eosio::name inviter,
