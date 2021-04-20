@@ -112,10 +112,10 @@ namespace eden
       check_valid_induction(induction);
       validate_video(video);
 
-      induction_tb.modify(induction_tb.iterator_to(induction), eosio::same_payer, [&](auto& row) {
-         row.video = video;
-         row.endorsements = {};
-      });
+      induction_tb.modify(induction_tb.iterator_to(induction), eosio::same_payer,
+                          [&](auto& row) { row.video = video; });
+
+      reset_endorsements(induction.id);
    }
 
    void inductions::validate_profile(const new_member_profile& new_member_profile) const
@@ -130,4 +130,11 @@ namespace eden
    {
       // TODO: check that video is a valid IPFS CID.
    }
+
+   bool inductions::is_endorser(uint64_t id, eosio::name witness) const
+   {
+      auto endorser_idx = endorsement_tb.get_index<"byendorser"_n>();
+      return endorser_idx.find(uint128_t{witness.value} << 64 | id) != endorser_idx.end();
+   }
+
 }  // namespace eden

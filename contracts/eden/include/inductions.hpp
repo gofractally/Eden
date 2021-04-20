@@ -63,7 +63,7 @@ namespace eden
       bool endorsed;
 
       uint64_t primary_key() const { return id; }
-      uint128_t get_endorser_key() const { return uint128_t{endorser.value} << 64 | id; }
+      uint128_t get_endorser_key() const { return uint128_t{endorser.value} << 64 | induction_id; }
       uint64_t induction_id_key() const { return induction_id; }
    };
    EOSIO_REFLECT(endorsement, id, inviter, invitee, endorser, induction_id, endorsed)
@@ -116,6 +116,8 @@ namespace eden
 
       void update_video(const induction& induction,
 		        const std::string& video);
+
+      bool is_endorser(uint64_t id, eosio::name witness) const;
    };
 
 }  // namespace eden

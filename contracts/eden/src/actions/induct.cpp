@@ -40,7 +40,7 @@ namespace eden
       require_auth(account);
       inductions inductions{get_self()};
       auto induction = inductions.get_induction(id);
-      eosio::check(account == induction.inviter || std::find(std::begin(induction.witnesses), std::end(induction.witnesses), account) != std::end(induction.witnesses),
+      eosio::check(inductions.is_endorser(id, account),
 		   "Video can only be set by inviter or a witness");
       inductions.update_video(induction, video);
    }
