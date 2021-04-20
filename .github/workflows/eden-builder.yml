@@ -47,4 +47,4 @@ jobs:
               with:
                   push: true
                   file: docker/eden-builder.Dockerfile
-                  tags: ${{ steps.prep.outputs.tags.outputs.lowercase }}
+                  tags: ${{ steps.prep.outputs.tags.lowercase }}
