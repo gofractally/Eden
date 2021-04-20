@@ -62,12 +62,8 @@
                     "type": "name"
                 },
                 {
-                    "name": "witnesses",
-                    "type": "name[]"
-                },
-                {
                     "name": "endorsements",
-                    "type": "name[]"
+                    "type": "uint32"
                 },
                 {
                     "name": "created_at",
@@ -80,6 +76,36 @@
                 {
                     "name": "new_member_profile",
                     "type": "new_member_profile"
+                }
+            ]
+        },
+        {
+            "name": "endorsement",
+            "base": "",
+            "fields": [
+                {
+                    "name": "id",
+                    "type": "uint64"
+                },
+                {
+                    "name": "inviter",
+                    "type": "name"
+                },
+                {
+                    "name": "invitee",
+                    "type": "name"
+                },
+                {
+                    "name": "endorser",
+                    "type": "name"
+                },
+                {
+                    "name": "induction_id",
+                    "type": "uint64"
+                },
+                {
+                    "name": "endorsed",
+                    "type": "bool"
                 }
             ]
         },
@@ -215,6 +241,13 @@
         {
             "name": "induction",
             "type": "induction",
+            "index_type": "i64",
+            "key_names": [],
+            "key_types": []
+        },
+        {
+            "name": "endorsement",
+            "type": "endorsement",
             "index_type": "i64",
             "key_names": [],
             "key_types": []
