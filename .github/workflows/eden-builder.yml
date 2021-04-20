@@ -1,0 +1,33 @@
+name: build
+
+on:
+    push:
+        branches:
+            - main
+            - "test/*"
+        paths:
+            - "docker/eden-builder.Dockerfile"
+    pull_request:
+        types: [assigned, opened, synchronize, reopened, labeled]
+        paths:
+            - "docker/eden-builder.Dockerfile"
+
+jobs:
+    build:
+        name: Updates Eden Builder Image
+        runs-on: ubuntu-latest
+
+        steps:
+            - name: ✅ Checkout code
+              uses: actions/checkout@v2
+
+            - name: 🛠 Build & Publish Image
+              uses: docker/build-push-action@v1
+              with:
+                  context: ./docker/eden-builder.Dockerfile
+                  username: ${{ github.actor }}
+                  password: ${{ secrets.GITHUB_TOKEN }}
+                  registry: docker.pkg.github.com
+                  repository: ${{ github.repository }}/test-eden-builder
+                  tag_with_sha: true
+                  tag_with_ref: true
