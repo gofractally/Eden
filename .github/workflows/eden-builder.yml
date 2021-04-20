@@ -24,7 +24,8 @@ jobs:
             - name: 🛠 Build & Publish Image
               uses: docker/build-push-action@v1
               with:
-                  context: ./docker/eden-builder.Dockerfile
+                  path: docker
+                  dockerfile: eden-builder.Dockerfile
                   username: ${{ github.actor }}
                   password: ${{ secrets.GITHUB_TOKEN }}
                   registry: docker.pkg.github.com
