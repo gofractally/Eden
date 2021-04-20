@@ -25,7 +25,7 @@ jobs:
               id: prep
               run: |
                   REGISTRY="docker.pkg.github.com"
-                  IMAGE="${REGISTRY}/${{ github.repository }}/eden-builder-test"
+                  IMAGE="${REGISTRY}/${{ github.repository }}/eden-builder"
                   TAGS="${IMAGE}:${{ github.sha }}"
                   if [[ $GITHUB_REF == ref/head/master ]]; then
                     TAGS="${TAGS},${IMAGE}:latest"
