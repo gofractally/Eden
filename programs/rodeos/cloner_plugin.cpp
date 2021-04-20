@@ -1,13 +1,9 @@
 #include "cloner_plugin.hpp"
 #include "config.hpp"
 #include "ship_client.hpp"
-#include "streams/stream.hpp"
+// #include "streams/stream.hpp"
 
 #include <b1/rodeos/rodeos.hpp>
-
-#include <fc/log/logger.hpp>
-#include <fc/log/logger_config.hpp>
-#include <fc/log/trace.hpp>
 
 #include <boost/asio/connect.hpp>
 #include <boost/asio/ip/tcp.hpp>
@@ -55,7 +51,7 @@ namespace b1
       std::shared_ptr<cloner_config> config = std::make_shared<cloner_config>();
       std::shared_ptr<cloner_session> session;
       boost::asio::deadline_timer timer;
-      std::shared_ptr<streamer_t> streamer;
+      // std::shared_ptr<streamer_t> streamer;
 
       cloner_plugin_impl() : timer(app().get_io_service()) {}
 
@@ -129,6 +125,7 @@ namespace b1
 
       bool received(get_status_result_v0& status, eosio::input_stream bin) override
       {
+#if 0
          ilog("nodeos has chain ${c}", ("c", eosio::convert_to_json(status.chain_id)));
          if (rodeos_snapshot->chain_id == eosio::checksum256{})
             rodeos_snapshot->chain_id = status.chain_id;
@@ -136,6 +133,7 @@ namespace b1
             throw std::runtime_error(
                 "database is for chain " + eosio::convert_to_json(rodeos_snapshot->chain_id) +
                 " but nodeos has chain " + eosio::convert_to_json(status.chain_id));
+#endif
          ilog("request blocks");
          connection->request_blocks(status, std::max(config->skip_to, rodeos_snapshot->head + 1),
                                     get_positions(),
@@ -202,18 +200,20 @@ namespace b1
 
          if (filter)
          {
-            if (my->streamer)
-               my->streamer->start_block(result.this_block->block_num);
+            // if (my->streamer)
+            //    my->streamer->start_block(result.this_block->block_num);
             filter->process(*rodeos_snapshot, result, bin,
                             [&](const char* data, uint64_t data_size) {
-                               if (my->streamer)
-                               {
-                                  my->streamer->stream_data(data, data_size);
-                               }
+                               //  if (my->streamer)
+                               //  {
+                               //     my->streamer->stream_data(data, data_size);
+                               //  }
                             });
-            if (my->streamer)
-               my->streamer->stop_block(result.this_block->block_num);
+            // if (my->streamer)
+            //    my->streamer->stop_block(result.this_block->block_num);
          }
+         if (app().is_quiting())
+            return false;
 
          rodeos_snapshot->end_block(result, false);
          return true;
@@ -224,10 +224,12 @@ namespace b1
          return process_received(result, bin);
       }
 
+#if 0
       bool received(get_blocks_result_v1& result, eosio::input_stream bin) override
       {
          return process_received(result, bin);
       }
+#endif
 
       void closed(bool retry) override
       {
@@ -276,13 +278,6 @@ namespace b1
       clop("clone-stop,x", bpo::value<uint32_t>(), "Stop before block [arg]");
       op("clone-exit-on-filter-wasm-error", bpo::bool_switch()->default_value(false),
          "Shutdown application if filter wasm throws an exception");
-      op("telemetry-url", bpo::value<std::string>(),
-         "Send Zipkin spans to url. e.g. http://127.0.0.1:9411/api/v2/spans");
-      op("telemetry-service-name",
-         bpo::value<std::string>()->default_value(b1::rodeos::config::rodeos_executable_name),
-         "Zipkin localEndpoint.serviceName sent with each span");
-      op("telemetry-timeout-us", bpo::value<uint32_t>()->default_value(200000),
-         "Timeout for sending Zipkin span.");
       // todo: remove
       op("filter-name", bpo::value<std::string>(), "Filter name");
       op("filter-wasm", bpo::value<std::string>(), "Filter wasm");
@@ -345,12 +340,6 @@ namespace b1
          if (options["eos-vm-oc-enable"].as<bool>())
             my->config->eosvmoc_tierup = true;
 #endif
-         if (options.count("telemetry-url"))
-         {
-            fc::zipkin_config::init(options["telemetry-url"].as<std::string>(),
-                                    options["telemetry-service-name"].as<std::string>(),
-                                    options["telemetry-timeout-us"].as<uint32_t>());
-         }
       }
       FC_LOG_AND_RETHROW()
    }
@@ -366,15 +355,15 @@ namespace b1
       if (my->session)
          my->session->connection->close(false);
       my->timer.cancel();
-      fc::zipkin_config::shutdown();
       ilog("cloner_plugin stopped");
    }
 
    void cloner_plugin::handle_sighup() {}
 
+#if 0
    void cloner_plugin::set_streamer(std::shared_ptr<streamer_t> streamer)
    {
       my->streamer = std::move(streamer);
    }
-
+#endif
 }  // namespace b1

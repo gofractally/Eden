@@ -18,7 +18,7 @@ namespace b1
       void plugin_shutdown();
       void handle_sighup() override;
 
-      void set_streamer(std::shared_ptr<struct streamer_t> streamer);
+      // void set_streamer(std::shared_ptr<struct streamer_t> streamer);
 
      private:
       std::shared_ptr<struct cloner_plugin_impl> my;

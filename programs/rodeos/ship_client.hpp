@@ -4,11 +4,11 @@
 
 #include <eosio/ship_protocol.hpp>
 
-#include <abieos.hpp>
 #include <boost/asio/connect.hpp>
 #include <boost/asio/ip/tcp.hpp>
 #include <boost/beast/core.hpp>
 #include <boost/beast/websocket.hpp>
+#include <eosio/abi.hpp>
 #include <fc/exception/exception.hpp>
 
 namespace b1::ship_client
@@ -35,10 +35,12 @@ namespace b1::ship_client
       {
          return true;
       }
+#if 0
       virtual bool received(ship::get_blocks_result_v1& result, eosio::input_stream bin)
       {
          return true;
       }
+#endif
       virtual void closed(bool retry) = 0;
    };
 
@@ -138,7 +140,7 @@ namespace b1::ship_client
          eosio::json_token_stream stream{json.data()};
          from_json(abi, stream);
          std::string error;
-         if (!abieos::check_abi_version(abi.version, error))
+         if (!eosio::check_abi_version(abi.version, error))
             throw std::runtime_error(error);
          eosio::abi a;
          convert(abi, a);

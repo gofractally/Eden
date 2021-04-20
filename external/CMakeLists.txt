@@ -13,7 +13,7 @@ if(IS_NATIVE)
         BUILD_ALWAYS 1
         TEST_EXCLUDE_FROM_MAIN 1
         EXCLUDE_FROM_ALL 1
-        BUILD_COMMAND cmake --build . -t eosio_chain -j ${NUM_PROCS}
+        BUILD_COMMAND cmake --build . -t eosio_chain -t appbase -j ${NUM_PROCS}
         INSTALL_COMMAND sh -c "mkdir -p ${ROOT_BINARY_DIR}/eos && cp -p `find . -name '*.a'` ${ROOT_BINARY_DIR}/eos"
         CMAKE_ARGS
             -DENABLE_OC=OFF
@@ -35,6 +35,7 @@ if(IS_NATIVE)
 
     add_library(chain INTERFACE)
     target_include_directories(chain INTERFACE
+        ${ROOT_SOURCE_DIR}/external/eos/libraries/appbase/include
         ${ROOT_SOURCE_DIR}/external/eos/libraries/builtins
         ${ROOT_SOURCE_DIR}/external/eos/libraries/chain/include
         ${ROOT_SOURCE_DIR}/external/eos/libraries/chainbase/include
@@ -56,6 +57,7 @@ if(IS_NATIVE)
         -lchainbase
         -lfc${FC_SUFFIX}
         -lsecp256k1${FC_SUFFIX}
+        -lappbase
         Boost::date_time Boost::filesystem Boost::chrono Boost::iostreams Threads::Threads
         ${OPENSSL_LIBRARIES}
         ${ZLIB_LIBRARIES}

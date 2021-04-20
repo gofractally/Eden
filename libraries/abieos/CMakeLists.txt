@@ -1,4 +1,6 @@
 add_library(abieos
+    include/eosio/fpconv.c
+    src/abi.cpp
     src/crypto.cpp
 )
 target_link_libraries(abieos PUBLIC rapidjson)

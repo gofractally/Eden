@@ -1,7 +1,7 @@
 #include <appbase/application.hpp>
 #include <boost/dll/runtime_symbol_info.hpp>
 #include <boost/exception/diagnostic_information.hpp>
-#include <eosio/version/version.hpp>
+// #include <eosio/version/version.hpp>
 #include <fc/exception/exception.hpp>
 #include <fc/filesystem.hpp>
 #include <fc/log/appender.hpp>
@@ -90,8 +90,8 @@ int main(int argc, char** argv)
    try
    {
       app().set_version(b1::rodeos::config::version);
-      app().set_version_string(eosio::version::version_client());
-      app().set_full_version_string(eosio::version::version_full());
+      // app().set_version_string(eosio::version::version_client());
+      // app().set_full_version_string(eosio::version::version_full());
 
       auto root = fc::app_path();
       app().set_default_data_dir(root / "eosio" / b1::rodeos::config::rodeos_executable_name /
@@ -123,11 +123,11 @@ int main(int argc, char** argv)
       app().set_thread_priority_max();
       app().exec();
    }
-   catch (const fc::std_exception_wrapper& e)
-   {
-      elog("${e}", ("e", e.to_detail_string()));
-      return other_fail;
-   }
+   // catch (const fc::std_exception_wrapper& e)
+   // {
+   //    elog("${e}", ("e", e.to_detail_string()));
+   //    return other_fail;
+   // }
    catch (const fc::exception& e)
    {
       elog("${e}", ("e", e.to_detail_string()));
