@@ -3,17 +3,12 @@
 #include <b1/rodeos/callbacks/kv.hpp>
 #include <b1/rodeos/rodeos_tables.hpp>
 
-#include <fc/log/trace.hpp>
-
 namespace b1::rodeos
 {
    namespace ship_protocol = eosio::ship_protocol;
 
-   using ship_protocol::get_blocks_result_base;
    using ship_protocol::get_blocks_result_v0;
-   using ship_protocol::get_blocks_result_v1;
    using ship_protocol::signed_block_header;
-   using ship_protocol::signed_block_variant;
 
    rodeos_db_snapshot::rodeos_db_snapshot(std::shared_ptr<rodeos_db_partition> partition,
                                           bool persistent)
@@ -90,7 +85,7 @@ namespace b1::rodeos
       write_session->write_changes(*undo_stack);
    }
 
-   void rodeos_db_snapshot::start_block(const get_blocks_result_base& result)
+   void rodeos_db_snapshot::start_block(const get_blocks_result_v0& result)
    {
       if (!undo_stack)
          throw std::runtime_error("Can only write to persistent snapshots");
@@ -128,7 +123,7 @@ namespace b1::rodeos
       writing_block = result.this_block->block_num;
    }
 
-   void rodeos_db_snapshot::end_block(const get_blocks_result_base& result, bool force_write)
+   void rodeos_db_snapshot::end_block(const get_blocks_result_v0& result, bool force_write)
    {
       if (!undo_stack)
          throw std::runtime_error("Can only write to persistent snapshots");
@@ -151,7 +146,7 @@ namespace b1::rodeos
          db->flush(false, false);
    }
 
-   void rodeos_db_snapshot::check_write(const ship_protocol::get_blocks_result_base& result)
+   void rodeos_db_snapshot::check_write(const ship_protocol::get_blocks_result_v0& result)
    {
       if (!undo_stack)
          throw std::runtime_error("Can only write to persistent snapshots");
@@ -185,15 +180,6 @@ namespace b1::rodeos
       table.put(info);
    }
 
-   namespace
-   {
-      std::string to_string(const eosio::checksum256& cs)
-      {
-         auto bytes = cs.extract_as_byte_array();
-         return fc::to_hex((const char*)bytes.data(), bytes.size());
-      }
-   }  // namespace
-
    void rodeos_db_snapshot::write_block_info(const ship_protocol::get_blocks_result_v0& result)
    {
       check_write(result);
@@ -205,41 +191,12 @@ namespace b1::rodeos
       signed_block_header block;
       from_bin(block, bin);
 
-      auto blk_trace = fc_create_trace_with_id("Block", result.this_block->block_id);
-      auto blk_span = fc_create_span(blk_trace, "rodeos-received");
-      fc_add_tag(blk_span, "block_id", to_string(result.this_block->block_id));
-      fc_add_tag(blk_span, "block_num", block_num);
-      fc_add_tag(blk_span, "block_time", block.timestamp.to_time_point().elapsed.count());
-
       write_block_info(block_num, result.this_block->block_id, block);
    }
 
-   void rodeos_db_snapshot::write_block_info(const ship_protocol::get_blocks_result_v1& result)
-   {
-      check_write(result);
-      if (!result.block)
-         return;
-
-      uint32_t block_num = result.this_block->block_num;
-
-      const signed_block_header& header =
-          std::visit([](const auto& blk) { return static_cast<const signed_block_header&>(blk); },
-                     *result.block);
-
-      auto blk_trace = fc_create_trace_with_id("Block", result.this_block->block_id);
-      auto blk_span = fc_create_span(blk_trace, "rodeos-received");
-      fc_add_tag(blk_span, "block_id", to_string(result.this_block->block_id));
-      fc_add_tag(blk_span, "block_num", block_num);
-      fc_add_tag(blk_span, "block_time",
-                 eosio::microseconds_to_str(header.timestamp.to_time_point().elapsed.count()));
-
-      write_block_info(block_num, result.this_block->block_id, header);
-   }
-
-   void rodeos_db_snapshot::write_deltas(
-       uint32_t block_num,
-       eosio::opaque<std::vector<ship_protocol::table_delta>> deltas,
-       std::function<bool()> shutdown)
+   void rodeos_db_snapshot::write_deltas(uint32_t block_num,
+                                         eosio::input_stream& bin,
+                                         std::function<bool()> shutdown)
    {
       db_view_state view_state{state_account, *db, *write_session, partition->contract_kv_prefix};
       view_state.kv_ram.enable_write = true;
@@ -247,11 +204,12 @@ namespace b1::rodeos
       view_state.kv_disk.enable_write = true;
       view_state.kv_disk.bypass_receiver_check = true;
       view_state.kv_state.enable_write = true;
-      uint32_t num = deltas.unpack_size();
+      uint32_t num;
+      eosio::varuint32_from_bin(num, bin);
       for (uint32_t i = 0; i < num; ++i)
       {
          ship_protocol::table_delta delta;
-         deltas.unpack_next(delta);
+         from_bin(delta, bin);
          auto& delta_v0 = std::get<0>(delta);
          size_t num_processed = 0;
          store_delta({view_state}, delta_v0, head == 0, [&]() {
@@ -281,20 +239,9 @@ namespace b1::rodeos
          return;
 
       uint32_t block_num = result.this_block->block_num;
-      write_deltas(block_num,
-                   eosio::opaque<std::vector<ship_protocol::table_delta>>(*result.deltas),
-                   shutdown);
-   }
+      eosio::input_stream bin = *result.deltas;
 
-   void rodeos_db_snapshot::write_deltas(const ship_protocol::get_blocks_result_v1& result,
-                                         std::function<bool()> shutdown)
-   {
-      check_write(result);
-      if (result.deltas.empty())
-         return;
-
-      uint32_t block_num = result.this_block->block_num;
-      write_deltas(block_num, result.deltas, shutdown);
+      write_deltas(block_num, bin, shutdown);
    }
 
    std::once_flag registered_filter_callbacks;
@@ -349,7 +296,7 @@ namespace b1::rodeos
 
    void rodeos_filter::process(
        rodeos_db_snapshot& snapshot,
-       const ship_protocol::get_blocks_result_base& result,
+       const ship_protocol::get_blocks_result_v0& result,
        eosio::input_stream bin,
        const std::function<void(const char* data, uint64_t size)>& push_data)
    {
