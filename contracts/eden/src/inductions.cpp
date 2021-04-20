@@ -1,6 +1,7 @@
 #include <inductions.hpp>
 #include <set>
 #include <algorithm>
+#include <eosio/crypto.hpp>
 
 namespace eden
 {
@@ -123,6 +124,10 @@ namespace eden
       check_valid_induction(induction);
       eosio::check(!induction.video.empty(), "Video not set");
       eosio::check(!induction.new_member_profile.name.empty(), "Profile not set");
+
+      auto bin = eosio::convert_to_bin(std::tuple(induction.video, induction.new_member_profile));
+      auto actual_hash = eosio::sha256(bin.data(), bin.size());
+      eosio::check(actual_hash == induction_data_hash, "Outdated endorsement");
 
       auto endorsement_idx = endorsement_tb.get_index<"byendorser"_n>();
       auto endorsement = endorsement_idx.get(uint128_t{account.value} << 64 | induction.id);
