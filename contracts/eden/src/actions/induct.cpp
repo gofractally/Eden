@@ -34,8 +34,8 @@ namespace eden
    }
 
    void eden::inductvideo(eosio::name account,
-			  uint64_t id,
-			  std::string video)
+                          uint64_t id,
+                          std::string video)
    {
       require_auth(account);
       inductions inductions{get_self()};
@@ -44,4 +44,17 @@ namespace eden
 		   "Video can only be set by inviter or a witness");
       inductions.update_video(induction, video);
    }
+
+   void eden::inductendorse(eosio::name account,
+                      uint64_t id,
+                      eosio::checksum256 induction_data_hash)
+   {
+      require_auth(account);
+      inductions inductions{get_self()};
+      auto induction = inductions.get_induction(id);
+      eosio::check(inductions.is_endorser(id, account),
+                   "Induction  can only be endorsed by inviter or a witness");
+      inductions.endorse(induction, account, induction_data_hash);
+   }
+
 }  // namespace eden

@@ -96,6 +96,7 @@ namespace eden
                               eosio::name endorser,
                               uint64_t induction_id);
       void reset_endorsements(uint64_t induction_id);
+      void maybe_create_nft(uint64_t induction_id);
 
      public:
       inductions(eosio::name contract)
@@ -114,8 +115,9 @@ namespace eden
 
       void update_profile(const induction& induction, const new_member_profile& new_member_profile);
 
-      void update_video(const induction& induction,
-		        const std::string& video);
+      void update_video(const induction& induction, const std::string& video);
+
+      void endorse(const induction& induction, eosio::name account, eosio::checksum256 induction_data_hash);
 
       bool is_endorser(uint64_t id, eosio::name witness) const;
    };

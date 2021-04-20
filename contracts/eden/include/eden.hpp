@@ -34,9 +34,11 @@ namespace eden
       void inductprofil(uint64_t id, new_member_profile new_member_profile);
 
       void inductvideo(eosio::name account,
-		       uint64_t id,
-		       std::string video);
+                       uint64_t id,
+                       std::string video);
+
+      void inductendorse(eosio::name account, uint64_t id, eosio::checksum256 induction_data_hash);
    };
 
-   EOSIO_ACTIONS(eden, "eden"_n, hi, inductinit, inductprofil, inductvideo, notify transfer)
+   EOSIO_ACTIONS(eden, "eden"_n, hi, inductinit, inductprofil, inductvideo, inductendorse, notify transfer)
 }  // namespace eden

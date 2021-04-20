@@ -107,7 +107,7 @@ namespace eden
    }
 
    void inductions::update_video(const induction& induction,
-				 const std::string& video)
+                                 const std::string& video)
    {
       check_valid_induction(induction);
       validate_video(video);
@@ -116,6 +116,30 @@ namespace eden
                           [&](auto& row) { row.video = video; });
 
       reset_endorsements(induction.id);
+   }
+
+   void inductions::endorse(const induction& induction, eosio::name account, eosio::checksum256 induction_data_hash)
+   {
+      check_valid_induction(induction);
+      eosio::check(!induction.video.empty(), "Video not set");
+      eosio::check(!induction.new_member_profile.name.empty(), "Profile not set");
+
+      auto endorsement_idx = endorsement_tb.get_index<"byendorser"_n>();
+      auto endorsement = endorsement_idx.get(uint128_t{account.value} << 64 | induction.id);
+      eosio::check(!endorsement.endorsed, "Already endorsed");
+      endorsement_tb.modify(endorsement, eosio::same_payer, [&](auto& row) { row.endorsed = true; });
+
+      maybe_create_nft(induction.id);
+   }
+
+   void inductions::maybe_create_nft(uint64_t induction_id) {
+      auto endorsement_idx = endorsement_tb.get_index<"byinduction"_n>();
+      auto itr = endorsement_idx.lower_bound(induction_id);
+      while (itr != endorsement_idx.end() && itr->induction_id == induction_id)
+      {
+         if(!itr->endorsed) return;
+      }
+      // TODO: Create NFT
    }
 
    void inductions::validate_profile(const new_member_profile& new_member_profile) const
