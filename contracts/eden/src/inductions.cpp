@@ -103,6 +103,12 @@ namespace eden
       return induction_tb.get(id, "unable to find induction");
    }
 
+   const induction& inductions::get_endorsed_induction(eosio::name invitee) const
+   {
+      endorsed_induction_table_type endorsed_induction_tb(contract, default_scope);
+      return get_induction(endorsed_induction_tb.get(invitee.value).induction_id);
+   }
+
    void inductions::check_valid_induction(const induction& induction) const
    {
       auto induction_lifetime = eosio::current_time_point() - induction.created_at.to_time_point();
@@ -148,8 +154,14 @@ namespace eden
          if(!itr->endorsed) return;
       }
 
+      endorsed_induction_table_type endorsed_induction_tb(contract, default_scope);
+      endorsed_induction_tb.emplace(contract, [&](auto& row){
+         row.invitee = induction.invitee;
+         row.induction_id = induction.id;
+      });
+
       atomicassets::attribute_map immutable_data = {
-         {"edenac", induction.invitee.to_string()},
+         {"edenacc", induction.invitee.to_string()},
          {"name", induction.new_member_profile.name},
          {"img", induction.new_member_profile.img},
          {"bio", induction.new_member_profile.bio},
@@ -157,6 +169,9 @@ namespace eden
          {"inductionvid", induction.video}
       };
       eosio::action{{contract, "active"_n}, atomic_assets_account, "createtempl"_n, std::tuple{contract, collection_name, schema_name, true, true, uint32_t{induction.endorsements + 2}, immutable_data}}.send();
+
+      // Finalize and clean up induction state.  Must happen last.
+      eosio::action{{contract, "active"_n}, contract, "inducted"_n, induction.invitee}.send();
    }
 
    void inductions::create_nfts(const induction& induction, int32_t template_id)
@@ -177,7 +192,7 @@ namespace eden
       }
    }
 
-   void inductions::start_auction(const induction& induction, int32_t template_id, uint64_t asset_id)
+   void inductions::start_auction(const induction& induction, uint64_t asset_id)
    {
       eosio::action{{contract, "active"_n}, atomic_market_account, "announceauct"_n, std::tuple(contract, std::vector{asset_id}, auction_starting_bid, auction_duration, eosio::name{})}.send();
       eosio::action{{contract, "active"_n}, atomic_assets_account, "transfer"_n, std::tuple(contract, atomic_market_account, std::vector{asset_id}, "auction"s)}.send();

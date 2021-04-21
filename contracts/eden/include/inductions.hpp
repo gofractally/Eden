@@ -78,6 +78,20 @@ namespace eden
            "byinduction"_n,
            eosio::const_mem_fun<endorsement, uint64_t, &endorsement::induction_id_key>>>;
 
+   // This table is temporary.  It is used to forward information required by the
+   // NFT creation notifications.  Rows should always be deleted in the same
+   // transaction in which they are created.
+   struct endorsed_induction {
+      eosio::name invitee;
+      uint64_t induction_id;
+      uint64_t primary_key() const { return invitee.value; }
+   };
+   EOSIO_REFLECT(endorsed_induction, invitee, induction_id);
+   using endorsed_induction_table_type = eosio::multi_index<
+      "endind"_n,
+      endorsed_induction
+   >;
+
    class inductions
    {
      private:
@@ -107,6 +121,7 @@ namespace eden
       }
 
       const induction& get_induction(uint64_t id) const;
+      const induction& get_endorsed_induction(eosio::name invitee) const;
 
       void initialize_induction(uint64_t id,
                                 eosio::name inviter,
@@ -122,7 +137,7 @@ namespace eden
       bool is_endorser(uint64_t id, eosio::name witness) const;
 
       void create_nfts(const induction& induction, int32_t template_id);
-      void start_auction(const induction& induction, int32_t template_id, uint64_t asset_id);
+      void start_auction(const induction& induction, uint64_t asset_id);
       void erase_induction(const induction& induction);
    };
 
