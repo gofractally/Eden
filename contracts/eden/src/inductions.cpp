@@ -28,13 +28,15 @@ namespace eden
                                      uint32_t endorsements)
    {
       induction_tb.emplace(contract, [&](auto& row) {
-         row.id = id;
-         row.inviter = inviter;
-         row.invitee = invitee;
-         row.endorsements = endorsements;
-         row.created_at = eosio::current_block_time();
-         row.video = "";
-         row.new_member_profile = {};
+         row.value = induction_v0{
+            .id = id,
+            .inviter = inviter,
+            .invitee = invitee,
+            .endorsements = endorsements,
+            .created_at = eosio::current_block_time(),
+            .video = "",
+            .new_member_profile = {}
+         };
       });
    }
 
@@ -60,9 +62,9 @@ namespace eden
       validate_profile(new_member_profile);
 
       induction_tb.modify(induction_tb.iterator_to(induction), eosio::same_payer,
-                          [&](auto& row) { row.new_member_profile = new_member_profile; });
+                          [&](auto& row) { row.new_member_profile() = new_member_profile; });
 
-      reset_endorsements(induction.id);
+      reset_endorsements(induction.id());
    }
 
    void inductions::reset_endorsements(uint64_t induction_id)
@@ -107,7 +109,7 @@ namespace eden
 
    void inductions::check_valid_induction(const induction& induction) const
    {
-      auto induction_lifetime = eosio::current_time_point() - induction.created_at.to_time_point();
+      auto induction_lifetime = eosio::current_time_point() - induction.created_at().to_time_point();
       eosio::check(induction_lifetime.to_seconds() <= induction_expiration_secs,
                    "induction has expired");
    }

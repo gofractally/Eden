@@ -3,8 +3,17 @@
 #include <constants.hpp>
 #include <eosio/asset.hpp>
 #include <eosio/eosio.hpp>
+#include <eosio/map_macro.h>
 #include <string>
 #include <utils.hpp>
+
+#define EDEN_FORWARD_FUNCTION(var, fun) auto fun() const { return std::visit([](auto& value){ return value.fun(); }, var); }
+#define EDEN_FORWARD_FUNCTIONS(var, ...) EOSIO_MAP_REUSE_ARG0(EDEN_FORWARD_FUNCTION, var, __VA_ARGS__)
+
+#define EDEN_FORWARD_MEMBER(var, member)                                \
+   decltype(auto) member() { return std::visit([](auto& value) -> decltype(auto) { return (value.member); }, var); } \
+   decltype(auto) member() const { return std::visit([](auto& value) -> decltype(auto) { return (value.member); }, var); }
+#define EDEN_FORWARD_MEMBERS(var, ...) EOSIO_MAP_REUSE_ARG0(EDEN_FORWARD_MEMBER, var, __VA_ARGS__)
 
 namespace eden
 {
@@ -17,7 +26,7 @@ namespace eden
    };
    EOSIO_REFLECT(new_member_profile, name, img, bio, social)
 
-   struct induction
+   struct induction_v0
    {
       uint64_t id;
       eosio::name inviter;
@@ -32,7 +41,7 @@ namespace eden
       uint128_t get_inviter_invitee() const { return combine_names(inviter, invitee); }
       uint64_t get_created_key() const { return uint64_t{created_at.slot}; }
    };
-   EOSIO_REFLECT(induction,
+   EOSIO_REFLECT(induction_v0,
                  id,
                  inviter,
                  invitee,
@@ -40,6 +49,13 @@ namespace eden
                  created_at,
                  video,
                  new_member_profile)
+
+   struct induction {
+      std::variant<induction_v0> value;
+      EDEN_FORWARD_MEMBERS(value, id, inviter, invitee, endorsements, created_at, video, new_member_profile)
+      EDEN_FORWARD_FUNCTIONS(value, primary_key, get_invitee_inviter, get_inviter_invitee, get_created_key)
+   };
+   EOSIO_REFLECT(induction, value)
 
    using induction_table_type = eosio::multi_index<
        "induction"_n,

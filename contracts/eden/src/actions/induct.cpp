@@ -26,9 +26,9 @@ namespace eden
    {
       inductions inductions{get_self()};
       auto induction = inductions.get_induction(id);
-      require_auth(induction.invitee);
+      require_auth(induction.invitee());
 
-      members{get_self()}.check_pending_member(induction.invitee);
+      members{get_self()}.check_pending_member(induction.invitee());
 
       inductions.update_profile(induction, new_member_profile);
    }
