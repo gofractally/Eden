@@ -25,16 +25,12 @@ namespace eden
          members.create(invitee);
          inductions.create_induction(induction_id, get_self(), genesis_pool[i], total_endorsements);
 
-         auto endorsement = 0;
-         while (endorsement <= total_endorsements)
+         for (const auto& endorser : genesis_pool)
          {
-            const auto& endorser = genesis_pool[endorsement++];
-
-            if (endorser == invitee)  // skips itself
+            if (endorser == invitee)
             {
-               continue;
+               continue;  // skips itself
             }
-
             inductions.create_endorsement(inviter, invitee, endorser, induction_id);
          }
       }
