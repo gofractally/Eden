@@ -1,10 +1,12 @@
 {
     "name": "@edenos/webapp",
+    "description": "Eden WebApp",
     "version": "0.1.0",
     "license": "MIT",
     "scripts": {
         "dev": "next dev",
         "build": "next build",
+        "start": "next start",
         "test": "yarn run build"
     },
     "dependencies": {
