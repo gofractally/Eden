@@ -8,12 +8,12 @@ on:
     pull_request:
         types: [assigned, opened, synchronize, reopened, labeled]
         paths:
-            - "contracts"
-            - "external"
-            - "libraries"
-            - "native"
-            - "programs"
-            - "wasm"
+            - "contracts/**"
+            - "external/CMakeLists.txt"
+            - "libraries/**"
+            - "native/**"
+            - "programs/**"
+            - "wasm/**"
 
 jobs:
     build:

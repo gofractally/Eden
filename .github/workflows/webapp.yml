@@ -13,7 +13,7 @@ on:
             - ".eslintrc.js"
             - ".prettierrc.json"
             - "lerna.json"
-            - "packages"
+            - "packages/**"
             - "package.json"
             - "tsconfig.build.json"
             - "tsconfig.json"
