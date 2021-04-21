@@ -2,7 +2,7 @@ configure_file(include/_config.hpp.in ${CMAKE_BINARY_DIR}/generated/config.hpp)
 include_directories(${CMAKE_BINARY_DIR}/generated/)
 
 add_executable(eden
-   src/actions/hi.cpp
+   src/actions/genesis.cpp
    src/actions/induct.cpp
    src/actions/notify_transfer.cpp
    src/eden.cpp

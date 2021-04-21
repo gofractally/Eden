@@ -39,4 +39,11 @@ namespace eden
          row.nft_template_id = 0;
       });
    }
+
+   void members::clear_all()
+   {
+      auto members_itr = member_tb.lower_bound(0);
+      while (members_itr != member_tb.end())
+         member_tb.erase(members_itr++);
+   }
 }  // namespace eden

@@ -8,22 +8,17 @@
     ],
     "structs": [
         {
+            "name": "genesis",
+            "base": "",
+            "fields": []
+        },
+        {
             "name": "block_timestamp",
             "base": "",
             "fields": [
                 {
                     "name": "slot",
                     "type": "uint32"
-                }
-            ]
-        },
-        {
-            "name": "hi",
-            "base": "",
-            "fields": [
-                {
-                    "name": "user",
-                    "type": "name"
                 }
             ]
         },
@@ -209,6 +204,11 @@
         }
     ],
     "actions": [
+        {
+            "name": "genesis",
+            "type": "genesis",
+            "ricardian_contract": ""
+        },
         {
             "name": "inductinit",
             "type": "inductinit",
