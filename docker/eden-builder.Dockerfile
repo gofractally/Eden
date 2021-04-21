@@ -5,6 +5,7 @@ RUN export DEBIAN_FRONTEND=noninteractive \
     && apt-get install -yq      \
         binaryen                \
         build-essential         \
+        ccache                  \
         cmake                   \
         curl                    \
         git                     \
