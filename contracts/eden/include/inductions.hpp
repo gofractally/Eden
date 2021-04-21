@@ -120,6 +120,10 @@ namespace eden
       void endorse(const induction& induction, eosio::name account, eosio::checksum256 induction_data_hash);
 
       bool is_endorser(uint64_t id, eosio::name witness) const;
+
+      void create_nfts(const induction& induction, int32_t template_id);
+      void start_auction(const induction& induction, int32_t template_id, uint64_t asset_id);
+      void erase_induction(const induction& induction);
    };
 
 }  // namespace eden

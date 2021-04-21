@@ -39,4 +39,14 @@ namespace eden
          row.nft_template_id = 0;
       });
    }
+
+   void members::induct(eosio::name account, int32_t nft_template_id)
+   {
+      check_pending_member(account);
+      const auto& member = member_tb.get(account.value);
+      member_tb.modify(member, eosio::same_payer, [&](auto& row) {
+         row.status = member_status::active_member;
+         row.nft_template_id = nft_template_id;
+      });
+   }
 }  // namespace eden

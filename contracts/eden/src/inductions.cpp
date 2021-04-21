@@ -4,6 +4,8 @@
 #include <algorithm>
 #include <eosio/crypto.hpp>
 
+using namespace std::literals::string_literals;
+
 namespace eden
 {
    void inductions::initialize_induction(uint64_t id,
@@ -155,6 +157,41 @@ namespace eden
          {"inductionvid", induction.video}
       };
       eosio::action{{contract, "active"_n}, atomic_assets_account, "createtempl"_n, std::tuple{contract, collection_name, schema_name, true, true, uint32_t{induction.endorsements + 2}, immutable_data}}.send();
+   }
+
+   void inductions::create_nfts(const induction& induction, int32_t template_id)
+   {
+      std::vector<eosio::name> new_owners;
+      new_owners.push_back(contract);
+      new_owners.push_back(induction.invitee);
+      auto endorsement_idx = endorsement_tb.get_index<"byinduction"_n>();
+      auto itr = endorsement_idx.lower_bound(induction.id);
+      while (itr != endorsement_idx.end() && itr->induction_id == induction.id)
+      {
+         new_owners.push_back(itr->endorser);
+      }
+
+      for(eosio::name new_asset_owner : new_owners)
+      {
+         eosio::action{{contract, "active"_n}, atomic_assets_account, "mintasset"_n, std::tuple{contract, collection_name, schema_name, template_id, new_asset_owner, atomicassets::attribute_map{}, atomicassets::attribute_map{}, std::vector<eosio::asset>{}}}.send();
+      }
+   }
+
+   void inductions::start_auction(const induction& induction, int32_t template_id, uint64_t asset_id)
+   {
+      eosio::action{{contract, "active"_n}, atomic_market_account, "announceauct"_n, std::tuple(contract, std::vector{asset_id}, auction_starting_bid, auction_duration, eosio::name{})}.send();
+      eosio::action{{contract, "active"_n}, atomic_assets_account, "transfer"_n, std::tuple(contract, atomic_market_account, std::vector{asset_id}, "auction"s)}.send();
+   }
+
+   void inductions::erase_induction(const induction& induction)
+   {
+      auto endorsement_idx = endorsement_tb.get_index<"byinduction"_n>();
+      auto itr = endorsement_idx.lower_bound(induction.id);
+      while (itr != endorsement_idx.end() && itr->induction_id == induction.id)
+      {
+         itr = endorsement_idx.erase(itr);
+      }
+      induction_tb.erase(induction);
    }
 
    void inductions::validate_profile(const new_member_profile& new_member_profile) const

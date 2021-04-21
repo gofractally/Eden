@@ -44,6 +44,7 @@ namespace eden
       void check_active_member(eosio::name account);
       void check_pending_member(eosio::name account);
       void deposit(eosio::name account, const eosio::asset& quantity);
+      void induct(eosio::name account, int32_t nft_template_id);
    };
 
 }  // namespace eden
