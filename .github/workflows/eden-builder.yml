@@ -60,4 +60,4 @@ jobs:
 
             - name: Push image with containerd
               run: |
-                  sudo ctr --debug i push --eoscommunity "${{ github.repository_owner }}:${{ secrets.GITHUB_TOKEN }}" ghcr.io/eoscommunity/eden-builder:latest
+                  sudo ctr --debug i push --user eoscommunity "${{ github.repository_owner }}:${{ secrets.GITHUB_TOKEN }}" ghcr.io/eoscommunity/eden-builder:latest
