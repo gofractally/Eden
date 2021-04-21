@@ -25,7 +25,7 @@ jobs:
               id: prep
               run: |
                   REGISTRY="ghcr.io"
-                  IMAGE="${REGISTRY}/eden-webapp"
+                  IMAGE="${REGISTRY}/${{ github.repository_owner }}/eden-webapp"
                   TAGS="${IMAGE}:${{ github.sha }}"
                   if [[ $GITHUB_REF == ref/head/master ]]; then
                     TAGS="${TAGS},${IMAGE}:latest"
