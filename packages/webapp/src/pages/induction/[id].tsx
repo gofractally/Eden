@@ -9,6 +9,7 @@ import {
     InductionStepProfile,
     InductionStepVideo,
     InductionStatus,
+    getInductionStatus,
 } from "inductions";
 
 export const InductionPage = () => {
@@ -23,13 +24,7 @@ export const InductionPage = () => {
         inductionId
     );
 
-    const phase = !induction
-        ? InductionStatus.invalid
-        : !induction.new_member_profile.name
-        ? InductionStatus.waitingForProfile
-        : !induction.video
-        ? InductionStatus.waitingForVideo
-        : InductionStatus.waitingForEndorsement;
+    const status = getInductionStatus(induction);
 
     const renderInductionStep = () => {
         if (!induction) return "";
@@ -42,7 +37,7 @@ export const InductionPage = () => {
             return <InductionStepVideo induction={induction} isReviewing />;
         }
 
-        switch (phase) {
+        switch (status) {
             case InductionStatus.waitingForProfile:
                 return <InductionStepProfile induction={induction} />;
             case InductionStatus.waitingForVideo:
@@ -61,7 +56,7 @@ export const InductionPage = () => {
 
     return isLoading ? (
         <p>Loading Induction...</p>
-    ) : phase === InductionStatus.invalid ? (
+    ) : status === InductionStatus.invalid ? (
         <RawLayout title="Induction not found">
             <div className="text-center max-w p-8">
                 <p>:(</p>

@@ -22,3 +22,11 @@ export enum InductionStatus {
     waitingForVideo,
     waitingForEndorsement,
 }
+
+export interface Endorsement {
+    inviter: string;
+    invitee: string;
+    endorser: string;
+    induction_id: string;
+    endorsed: boolean;
+}
