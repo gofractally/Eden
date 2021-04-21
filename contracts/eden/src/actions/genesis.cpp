@@ -27,11 +27,10 @@ namespace eden
 
          for (const auto& endorser : genesis_pool)
          {
-            if (endorser == invitee)
+            if (endorser != invitee)
             {
-               continue;  // skips itself
+               inductions.create_endorsement(inviter, invitee, endorser, induction_id);
             }
-            inductions.create_endorsement(inviter, invitee, endorser, induction_id);
          }
       }
    }
