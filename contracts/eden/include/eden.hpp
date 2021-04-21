@@ -24,7 +24,7 @@ namespace eden
                            const eosio::asset& quantity,
                            std::string memo);
 
-      void hi(eosio::name user);
+      void hi(eosio::name user);  // TODO: remove action
 
       void inductinit(uint64_t id,
                       eosio::name inviter,
