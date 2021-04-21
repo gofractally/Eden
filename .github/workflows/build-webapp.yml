@@ -20,7 +20,7 @@ on:
 
 jobs:
     build:
-        name: Build Eden Community Apps
+        name: Build Eden Community WebApp
         runs-on: ubuntu-latest
 
         steps:

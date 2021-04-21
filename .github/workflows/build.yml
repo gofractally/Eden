@@ -17,7 +17,7 @@ on:
 
 jobs:
     build:
-        name: Build Eden Community Apps
+        name: Build Eden Community Contracts and WASMs
         runs-on: ubuntu-latest
         container: ghcr.io/eoscommunity/eden-builder:latest
 
