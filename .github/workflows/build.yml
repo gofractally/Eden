@@ -1,4 +1,4 @@
-name: build
+name: build eosio contracts
 
 on:
     push:
@@ -7,6 +7,13 @@ on:
             - "test/*"
     pull_request:
         types: [assigned, opened, synchronize, reopened, labeled]
+        paths:
+            - "contracts"
+            - "external"
+            - "libraries"
+            - "native"
+            - "programs"
+            - "wasm"
 
 jobs:
     build:
