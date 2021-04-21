@@ -13,8 +13,8 @@ on:
             - "docker/eden-webapp.Dockerfile"
 
 jobs:
-    build:
-        name: Updates Eden Builder Image
+    eden-webapp-container:
+        name: eden-webapp container
         runs-on: ubuntu-latest
 
         steps:
