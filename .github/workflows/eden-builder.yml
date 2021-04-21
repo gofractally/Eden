@@ -1,4 +1,4 @@
-name: build
+name: eden-builder container
 
 on:
     push:
@@ -25,7 +25,7 @@ jobs:
               id: prep
               run: |
                   REGISTRY="ghcr.io"
-                  IMAGE="${REGISTRY}/${{ github.repository }}/eden-builder"
+                  IMAGE="${REGISTRY}/eden-builder"
                   TAGS="${IMAGE}:${{ github.sha }}"
                   if [[ $GITHUB_REF == ref/head/master ]]; then
                     TAGS="${TAGS},${IMAGE}:latest"
