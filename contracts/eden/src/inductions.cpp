@@ -16,24 +16,31 @@ namespace eden
       check_new_induction(invitee, inviter);
       check_valid_endorsers(inviter, witnesses);
 
-      induction_tb.emplace(contract, [&](auto& row) {
-         row.id = id;
-         row.inviter = inviter;
-         row.invitee = invitee;
-         row.endorsements = witnesses.size() + 1;
-         row.created_at = eosio::current_block_time();
-         row.video = "";
-         row.new_member_profile = {};
-      });
+      uint32_t total_endorsements = witnesses.size() + 1;
+      create_induction(id, inviter, invitee, total_endorsements);
 
-      // create endorsement for inviter
+      // create endorsement for inviter and witnesses (witnesses + 1)
       create_endorsement(inviter, invitee, inviter, id);
-
-      // create endorsement for each witness
       for (const auto& witness : witnesses)
       {
          create_endorsement(inviter, invitee, inviter, id);
       }
+   }
+
+   void inductions::create_induction(uint64_t id,
+                                     eosio::name inviter,
+                                     eosio::name invitee,
+                                     uint32_t endorsements)
+   {
+      induction_tb.emplace(contract, [&](auto& row) {
+         row.id = id;
+         row.inviter = inviter;
+         row.invitee = invitee;
+         row.endorsements = endorsements;
+         row.created_at = eosio::current_block_time();
+         row.video = "";
+         row.new_member_profile = {};
+      });
    }
 
    void inductions::create_endorsement(eosio::name inviter,
@@ -226,6 +233,21 @@ namespace eden
    {
       auto endorser_idx = endorsement_tb.get_index<"byendorser"_n>();
       return endorser_idx.find(uint128_t{witness.value} << 64 | id) != endorser_idx.end();
+   }
+
+   void inductions::clear_all()
+   {
+      auto inductions_itr = induction_tb.lower_bound(0);
+      while (inductions_itr != induction_tb.end())
+      {
+         induction_tb.erase(inductions_itr++);
+      }
+
+      auto endorsements_itr = endorsement_tb.lower_bound(0);
+      while (endorsements_itr != endorsement_tb.end())
+      {
+         endorsement_tb.erase(endorsements_itr++);
+      }
    }
 
 }  // namespace eden

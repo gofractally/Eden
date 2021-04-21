@@ -15,7 +15,7 @@ namespace eden
       std::string bio;
       std::string social;
    };
-   EOSIO_REFLECT(new_member_profile, name, img, bio)
+   EOSIO_REFLECT(new_member_profile, name, img, bio, social)
 
    struct induction
    {
@@ -105,10 +105,6 @@ namespace eden
       void validate_video(const std::string& video) const;
       void check_valid_endorsers(eosio::name inviter,
                                  const std::vector<eosio::name>& witnesses) const;
-      void create_endorsement(eosio::name inviter,
-                              eosio::name invitee,
-                              eosio::name endorser,
-                              uint64_t induction_id);
       void reset_endorsements(uint64_t induction_id);
       void maybe_create_nft(const induction& induction_id);
 
@@ -139,6 +135,19 @@ namespace eden
       void create_nfts(const induction& induction, int32_t template_id);
       void start_auction(const induction& induction, uint64_t asset_id);
       void erase_induction(const induction& induction);
+      void create_induction(uint64_t id,
+                            eosio::name inviter,
+                            eosio::name invitee,
+                            uint32_t endorsements);
+
+      void create_endorsement(eosio::name inviter,
+                              eosio::name invitee,
+                              eosio::name endorser,
+                              uint64_t induction_id);
+
+      // this method is used only for administrative purposes,
+      // it should never be used outside genesis or test environments
+      void clear_all();
    };
 
 }  // namespace eden

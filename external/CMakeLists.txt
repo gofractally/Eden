@@ -72,6 +72,8 @@ ExternalProject_Add(fmt-ext
     CMAKE_ARGS
         -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
         -DCMAKE_INSTALL_PREFIX=${CMAKE_BINARY_DIR}/fmt
+        -DCMAKE_INSTALL_LIBDIR=lib
+    BUILD_BYPRODUCTS ${CMAKE_BINARY_DIR}/fmt/lib/libfmt.a
 )
 
 add_library(fmt INTERFACE)

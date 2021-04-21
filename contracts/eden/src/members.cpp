@@ -57,4 +57,11 @@ namespace eden
          row.status = member_status::active_member;
       });
    }
+
+   void members::clear_all()
+   {
+      auto members_itr = member_tb.lower_bound(0);
+      while (members_itr != member_tb.end())
+         member_tb.erase(members_itr++);
+   }
 }  // namespace eden
