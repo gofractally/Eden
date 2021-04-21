@@ -53,4 +53,4 @@ jobs:
               with:
                   push: true
                   file: docker/eden-builder.Dockerfile
-                  tags: eoscommunity/eden-builder:latest
+                  tags: ghcr.io/eoscommunity/eden-builder:latest
