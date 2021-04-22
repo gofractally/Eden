@@ -9,9 +9,8 @@ export interface Induction {
     id: string;
     inviter: string;
     invitee: string;
-    witnesses: string[];
-    endorsements: string[];
-    created_at: number;
+    endorsements: number;
+    created_at: string;
     video: string;
     new_member_profile: NewMemberProfile;
 }
@@ -24,9 +23,10 @@ export enum InductionStatus {
 }
 
 export interface Endorsement {
+    id: string;
     inviter: string;
     invitee: string;
     endorser: string;
     induction_id: string;
-    endorsed: boolean;
+    endorsed: number;
 }

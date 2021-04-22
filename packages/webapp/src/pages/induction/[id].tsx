@@ -10,6 +10,7 @@ import {
     InductionStepVideo,
     InductionStatus,
     getInductionStatus,
+    Endorsement,
 } from "inductions";
 
 export const InductionPage = () => {
@@ -19,10 +20,18 @@ export const InductionPage = () => {
         "profile" | "video" | undefined
     >();
 
-    const [induction, isLoading] = useFetchedData<Induction>(
-        getInduction,
-        inductionId
-    );
+    const [inductionEndorsements, isLoading] = useFetchedData<{
+        induction: Induction;
+        endorsements: Endorsement[];
+    }>(getInduction, inductionId);
+
+    const induction = inductionEndorsements
+        ? inductionEndorsements.induction
+        : undefined;
+
+    const endorsements = inductionEndorsements
+        ? inductionEndorsements.endorsements
+        : [];
 
     const status = getInductionStatus(induction);
 
@@ -34,18 +43,30 @@ export const InductionPage = () => {
         }
 
         if (reviewStep === "video") {
-            return <InductionStepVideo induction={induction} isReviewing />;
+            return (
+                <InductionStepVideo
+                    induction={induction}
+                    endorsements={endorsements}
+                    isReviewing
+                />
+            );
         }
 
         switch (status) {
             case InductionStatus.waitingForProfile:
                 return <InductionStepProfile induction={induction} />;
             case InductionStatus.waitingForVideo:
-                return <InductionStepVideo induction={induction} />;
+                return (
+                    <InductionStepVideo
+                        induction={induction}
+                        endorsements={endorsements}
+                    />
+                );
             case InductionStatus.waitingForEndorsement:
                 return (
                     <InductionStepEndorsement
                         induction={induction}
+                        endorsements={endorsements}
                         setReviewStep={setReviewStep}
                     />
                 );
@@ -59,10 +80,9 @@ export const InductionPage = () => {
     ) : status === InductionStatus.invalid ? (
         <RawLayout title="Induction not found">
             <div className="text-center max-w p-8">
-                <p>:(</p>
                 <p>
-                    Perhaps this induction was expired after 7 days? Or the
-                    invitee was approved through another induction process.
+                    Perhaps this induction was completed successfully or, in the
+                    worst case scenario, it was expired after 7 days.
                 </p>
             </div>
         </RawLayout>

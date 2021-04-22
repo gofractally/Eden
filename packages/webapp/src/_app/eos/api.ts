@@ -14,7 +14,7 @@ export const getRow = async (
     keyValue: string
 ) => {
     const rows = await getTableRows(table, keyValue);
-    return rows.length > 0 && rows[0][keyName] === keyValue
+    return rows.length > 0 && `${rows[0][keyName]}` === keyValue
         ? rows[0]
         : undefined;
 };
@@ -68,7 +68,7 @@ export const getTableIndexRows = async (
         | "ripemd160",
     lowerBound: any,
     upperBound?: any,
-    limit = 20
+    limit = 100
 ) => {
     const requestBody = {
         code: edenContractAccount,
