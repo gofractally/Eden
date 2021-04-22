@@ -2,22 +2,25 @@ import { useState } from "react";
 import { useRouter } from "next/router";
 
 import { Button, Form, Heading, Link, Text, useUALAccount } from "_app";
-import { Induction } from "../interfaces";
+import { Endorsement, Induction } from "../interfaces";
 import { submitEndorsementTransaction } from "../transactions";
 import { NewMemberCardPreview } from "./new-member-card-preview";
 import { convertPendingProfileToMemberData } from "../utils";
 
 interface Props {
     induction: Induction;
+    endorsements: Endorsement[];
     setReviewStep: (step: "profile" | "video") => void;
 }
 
 export const InductionStepEndorsement = (props: Props) => {
     const router = useRouter();
     const [ualAccount] = useUALAccount();
-    const [induction, setInduction] = useState({ ...props.induction });
     const [isReviewed, setReviewed] = useState(false);
     const [isLoading, setLoading] = useState(false);
+    const [endorsements, setEndorsements] = useState([...props.endorsements]);
+
+    const induction = props.induction;
 
     const submitEndorsement = async () => {
         try {
@@ -49,35 +52,38 @@ export const InductionStepEndorsement = (props: Props) => {
 
     const updateEndorsements = async () => {
         // check if it's the last endorsement
-        const totalEndorsers = induction.witnesses.length + 1;
-        if (induction.endorsements.length === totalEndorsers - 1) {
-            // router go to the newly created member page after some tolerance interval
+        const totalEndorsers = endorsements.length;
+        if (endorsements.length === totalEndorsers - 1) {
+            // router goes to the newly created member page after some tolerance
+            // time to make sure blockchain processed the transactions
             await new Promise((resolve) => setTimeout(resolve, 4000));
             router.push(`/members/${induction.invitee}`);
             return;
         }
 
         // update the current endorsers list
-        setInduction({
-            ...induction,
-            endorsements: [...induction.endorsements, ualAccount.accountName],
-        });
+        const updatedEndorsements = endorsements.map((endorsement) =>
+            endorsement.endorser === ualAccount.accountName
+                ? { ...endorsement, endorsed: 1 }
+                : endorsement
+        );
+        setEndorsements(updatedEndorsements);
     };
 
     const memberData = convertPendingProfileToMemberData(induction);
 
     const isInvitee = () => ualAccount?.accountName === induction.invitee;
 
-    const isEndorser = () =>
-        ualAccount?.accountName === induction.inviter ||
-        induction.witnesses.indexOf(ualAccount?.accountName) >= 0;
+    const userEndorsement = endorsements.find(
+        (endorsement) => endorsement.endorser === ualAccount?.accountName
+    );
 
     const isPendingEndorser = () =>
-        isEndorser() &&
-        induction.endorsements.indexOf(ualAccount?.accountName) < 0;
+        userEndorsement && !userEndorsement.endorsed;
 
-    const getEndorserStatus = (endorser: string) =>
-        induction.endorsements.indexOf(endorser) >= 0 ? (
+    console.info(endorsements, userEndorsement, ualAccount?.accountName);
+    const getEndorserStatus = (endorsement: Endorsement) =>
+        endorsement.endorsed ? (
             <span title="Endorsement Submitted" className="mr-2">
                 ✅
             </span>
@@ -98,13 +104,12 @@ export const InductionStepEndorsement = (props: Props) => {
                         Endorsers
                     </Heading>
                     <ul className="mb-4">
-                        {[induction.inviter, ...induction.witnesses].map(
-                            (endorser) => (
-                                <li key={endorser}>
-                                    {getEndorserStatus(endorser)} {endorser}
-                                </li>
-                            )
-                        )}
+                        {endorsements.map((endorser) => (
+                            <li key={endorser.id}>
+                                {getEndorserStatus(endorser)}{" "}
+                                {endorser.endorser}
+                            </li>
+                        ))}
                     </ul>
                     {isPendingEndorser() ? (
                         <div className="space-y-3">
@@ -156,7 +161,7 @@ export const InductionStepEndorsement = (props: Props) => {
                         </div>
                     )}
 
-                    {isEndorser() && (
+                    {userEndorsement ? (
                         <div className="mt-4 text-center">
                             <Text>
                                 The Induction Ceremony Video is Incorrect?
@@ -165,6 +170,8 @@ export const InductionStepEndorsement = (props: Props) => {
                                 Click Here to adjust Induction Ceremony Video
                             </Link>
                         </div>
+                    ) : (
+                        ""
                     )}
                 </div>
                 <div>

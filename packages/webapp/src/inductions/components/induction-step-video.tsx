@@ -2,17 +2,22 @@ import { useState } from "react";
 
 import { Heading, Link, Text, useUALAccount } from "_app";
 import { convertPendingProfileToMemberData } from "../utils";
-import { Induction } from "../interfaces";
+import { Endorsement, Induction } from "../interfaces";
 import { setInductionVideoTransaction } from "../transactions";
 import { InductionVideoForm } from "./induction-video-form";
 import { NewMemberCardPreview } from "./new-member-card-preview";
 
 interface Props {
     induction: Induction;
+    endorsements: Endorsement[];
     isReviewing?: boolean;
 }
 
-export const InductionStepVideo = ({ induction, isReviewing }: Props) => {
+export const InductionStepVideo = ({
+    induction,
+    endorsements,
+    isReviewing,
+}: Props) => {
     const [ualAccount] = useUALAccount();
 
     const [submittedVideo, setSubmittedVideo] = useState(false);
@@ -43,8 +48,9 @@ export const InductionStepVideo = ({ induction, isReviewing }: Props) => {
     const memberData = convertPendingProfileToMemberData(induction);
 
     const isEndorser = () =>
-        ualAccount?.accountName === induction.inviter ||
-        induction.witnesses.indexOf(ualAccount?.accountName) >= 0;
+        endorsements.find(
+            (endorsement) => endorsement.endorser === ualAccount?.accountName
+        );
 
     return (
         <>

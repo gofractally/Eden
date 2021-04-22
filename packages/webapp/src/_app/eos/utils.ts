@@ -13,3 +13,19 @@ export const primaryKeyFromAccountInstant = (account: string): string => {
     const bytes = serialBuffer.getUint8Array(8);
     return eosjsNumeric.binaryToDecimal(bytes);
 };
+
+export const i128BoundsForAccount = (account: string) => {
+    return {
+        lower: accountsToI128(account, "............"),
+        upper: accountsToI128(account, "zzzzzzzzzzzzj"),
+    };
+};
+
+export const accountsToI128 = (account1: string, account2: string): string => {
+    const serialBuffer = new eosjsSerialize.SerialBuffer();
+    // respects little endianness for eos i128 secondary keys
+    serialBuffer.pushName(account2);
+    serialBuffer.pushName(account1);
+    const bytes = serialBuffer.getUint8Array(16);
+    return eosjsNumeric.binaryToDecimal(bytes);
+};

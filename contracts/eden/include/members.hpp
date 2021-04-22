@@ -45,6 +45,8 @@ namespace eden
       void check_active_member(eosio::name account);
       void check_pending_member(eosio::name account);
       void deposit(eosio::name account, const eosio::asset& quantity);
+      void set_nft(eosio::name account, int32_t nft_template_id);
+      void set_active(eosio::name account);
 
       // this method is used only for administrative purposes,
       // it should never be used outside genesis or test environments

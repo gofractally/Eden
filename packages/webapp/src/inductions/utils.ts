@@ -1,5 +1,5 @@
 import { MemberData } from "members";
-import { Induction } from "./interfaces";
+import { Induction, InductionStatus } from "./interfaces";
 
 export const convertPendingProfileToMemberData = (
     induction: Induction
@@ -14,4 +14,28 @@ export const convertPendingProfileToMemberData = (
         inductionVideo: induction.video || "",
         createdAt: 0,
     };
+};
+
+export const getInductionStatus = (induction?: Induction) => {
+    return !induction
+        ? InductionStatus.invalid
+        : !induction.new_member_profile.name
+        ? InductionStatus.waitingForProfile
+        : !induction.video
+        ? InductionStatus.waitingForVideo
+        : InductionStatus.waitingForEndorsement;
+};
+
+export const getInductionStatusLabel = (induction?: Induction) => {
+    const status = getInductionStatus(induction);
+    switch (status) {
+        case InductionStatus.waitingForProfile:
+            return "🟡 Pending Profile";
+        case InductionStatus.waitingForVideo:
+            return "🟡 Pending Induction Video";
+        case InductionStatus.waitingForEndorsement:
+            return "🟡 Waiting for Endorsements";
+        default:
+            return "🛑 Invalid";
+    }
 };
