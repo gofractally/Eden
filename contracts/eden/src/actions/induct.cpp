@@ -40,6 +40,9 @@ namespace eden
       require_auth(account);
       inductions inductions{get_self()};
       auto induction = inductions.get_induction(id);
+
+      members{get_self()}.check_pending_member(induction.invitee);
+
       eosio::check(inductions.is_endorser(id, account),
 		   "Video can only be set by inviter or a witness");
       inductions.update_video(induction, video);
@@ -52,6 +55,9 @@ namespace eden
       require_auth(account);
       inductions inductions{get_self()};
       const auto& induction = inductions.get_induction(id);
+
+      members{get_self()}.check_pending_member(induction.invitee);
+
       eosio::check(inductions.is_endorser(id, account),
                    "Induction  can only be endorsed by inviter or a witness");
       inductions.endorse(induction, account, induction_data_hash);
