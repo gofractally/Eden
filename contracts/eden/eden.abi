@@ -41,7 +41,7 @@
             ]
         },
         {
-            "name": "induction",
+            "name": "induction_v0",
             "base": "",
             "fields": [
                 {
@@ -256,5 +256,10 @@
     "ricardian_clauses": [],
     "error_messages": [],
     "abi_extensions": [],
-    "variants": []
+    "variants": [
+        {
+            "name": "induction",
+            "types": ["induction_v0"]
+        }
+    ]
 }
