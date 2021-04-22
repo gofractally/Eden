@@ -72,8 +72,8 @@ namespace eosio
          std::vector<table_delta> deltas;
          const auto& table_id_index = db.get_index<chain::table_id_multi_index>();
          std::map<uint64_t, const chain::table_id_object*> removed_table_id;
-         for (auto& rem : table_id_index.last_undo_session().removed_values)
-            removed_table_id[rem.id._id] = &rem;
+         for (auto& rem : table_id_index.stack().back().removed_values)
+            removed_table_id[rem.first._id] = &rem.second;
 
          auto get_table_id = [&](uint64_t tid) -> const chain::table_id_object& {
             auto obj = table_id_index.find(tid);
@@ -105,23 +105,25 @@ namespace eosio
             }
             else
             {
-               auto undo = index.last_undo_session();
-               if (undo.old_values.empty() && undo.new_values.empty() &&
-                   undo.removed_values.empty())
+               if (index.stack().empty())
+                  return;
+               auto& undo = index.stack().back();
+               if (undo.old_values.empty() && undo.new_ids.empty() && undo.removed_values.empty())
                   return;
                deltas.push_back({});
                auto& delta = deltas.back();
                delta.name = name;
                for (auto& old : undo.old_values)
                {
-                  auto& row = index.get(old.id);
-                  if (include_delta(old, row))
+                  auto& row = index.get(old.first);
+                  if (include_delta(old.second, row))
                      delta.rows.obj.emplace_back(true, pack_row(row));
                }
                for (auto& old : undo.removed_values)
-                  delta.rows.obj.emplace_back(false, pack_row(old));
-               for (auto& row : undo.new_values)
+                  delta.rows.obj.emplace_back(false, pack_row(old.second));
+               for (auto id : undo.new_ids)
                {
+                  auto& row = index.get(id);
                   delta.rows.obj.emplace_back(true, pack_row(row));
                }
             }
@@ -142,8 +144,6 @@ namespace eosio
                        pack_contract_row);
          process_table("contract_index_long_double", db.get_index<chain::index_long_double_index>(),
                        pack_contract_row);
-
-         process_table("key_value", db.get_index<chain::kv_index>(), pack_row);
 
          process_table("global_property", db.get_index<chain::global_property_multi_index>(),
                        pack_row);
