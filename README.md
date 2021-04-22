@@ -25,6 +25,8 @@ make -j
 ctest -j
 ```
 
+To speed up builds, use `-DCMAKE_CXX_COMPILER_LAUNCHER=ccache -DCMAKE_C_COMPILER_LAUNCHER=ccache`
+
 #### Ubuntu 20.04
 
 ```sh

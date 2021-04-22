@@ -55,6 +55,8 @@ if(DEFINED WASI_SDK_PREFIX)
             -DTOKEN_MINIMUM_DONATION=${TOKEN_MINIMUM_DONATION}
             -DCMAKE_SYSROOT=${WASI_SDK_PREFIX}/share/wasi-sysroot
             -DFORCE_COLORED_OUTPUT=${FORCE_COLORED_OUTPUT}
+            -DCMAKE_C_COMPILER_LAUNCHER=${CMAKE_C_COMPILER_LAUNCHER}
+            -DCMAKE_CXX_COMPILER_LAUNCHER=${CMAKE_CXX_COMPILER_LAUNCHER}
     )
     file(APPEND ${CMAKE_BINARY_DIR}/CTestTestfile.cmake "subdirs(\"wasm\")\n")
     ExternalProject_Add_StepTargets(wasm test)

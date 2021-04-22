@@ -24,7 +24,7 @@ namespace eden
                            const eosio::asset& quantity,
                            std::string memo);
 
-      void hi(eosio::name user);
+      void genesis();
 
       void inductinit(uint64_t id,
                       eosio::name inviter,
@@ -34,5 +34,5 @@ namespace eden
       void inductprofil(uint64_t id, new_member_profile new_member_profile);
    };
 
-   EOSIO_ACTIONS(eden, "eden"_n, hi, inductinit, inductprofil, notify transfer)
+   EOSIO_ACTIONS(eden, "eden"_n, genesis, inductinit, inductprofil, notify transfer)
 }  // namespace eden
