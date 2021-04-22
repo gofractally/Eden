@@ -10,9 +10,12 @@ namespace eden
    {
       print_f("transfer from name: %\n", from);
 
+      globals globals{get_self()};
+      globals.check_active();
+
       eosio::check(to == get_self(), "only accepting transfers to us");
-      eosio::check(quantity.symbol == default_token,
-                   "token must be a valid " + default_token.to_string());
+      eosio::check(quantity.symbol == globals.default_token(),
+                   "token must be a valid " + globals.default_token().to_string());
       eosio::check(get_first_receiver() == token_contract,
                    "token must be from the right token contract");
 

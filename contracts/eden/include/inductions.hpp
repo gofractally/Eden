@@ -1,6 +1,7 @@
 #pragma once
 
 #include <constants.hpp>
+#include <globals.hpp>
 #include <eosio/asset.hpp>
 #include <eosio/eosio.hpp>
 #include <string>
@@ -98,6 +99,7 @@ namespace eden
       eosio::name contract;
       induction_table_type induction_tb;
       endorsement_table_type endorsement_tb;
+      globals globals;
 
       void check_new_induction(eosio::name invitee, eosio::name inviter) const;
       void check_valid_induction(const induction& induction) const;
@@ -112,7 +114,8 @@ namespace eden
       inductions(eosio::name contract)
           : contract(contract),
             induction_tb(contract, default_scope),
-            endorsement_tb(contract, default_scope)
+            endorsement_tb(contract, default_scope),
+            globals(contract)
       {
       }
 
@@ -144,6 +147,9 @@ namespace eden
                               eosio::name invitee,
                               eosio::name endorser,
                               uint64_t induction_id);
+
+      // Should only be used during genesis
+      void endorse_all(const induction& induction);
 
       // this method is used only for administrative purposes,
       // it should never be used outside genesis or test environments

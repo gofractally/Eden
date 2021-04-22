@@ -11,6 +11,8 @@ namespace eden
    {
       require_auth(inviter);
 
+      globals{get_self()}.check_active();
+
       members members{get_self()};
       members.check_active_member(inviter);
       for (const auto& witness : witnesses)
@@ -31,6 +33,12 @@ namespace eden
       members{get_self()}.check_pending_member(induction.invitee);
 
       inductions.update_profile(induction, new_member_profile);
+
+      globals globals{get_self()};
+      if(globals.get().stage == contract_stage::genesis)
+      {
+         inductions.endorse_all(induction);
+      }
    }
 
    void eden::inductvideo(eosio::name account,
@@ -41,6 +49,7 @@ namespace eden
       inductions inductions{get_self()};
       auto induction = inductions.get_induction(id);
 
+      globals{get_self()}.check_active();
       members{get_self()}.check_pending_member(induction.invitee);
 
       eosio::check(inductions.is_endorser(id, account),
@@ -73,6 +82,16 @@ namespace eden
       inductions inductions(get_self());
       const auto& induction = inductions.get_endorsed_induction(inductee);
       inductions.erase_induction(induction);
+
+      // If this is the last genesis member, activate the contract
+      globals globals{get_self()};
+      if(globals.get().stage == contract_stage::genesis)
+      {
+         if(members.stats().pending_members == 0)
+         {
+            globals.set_stage(contract_stage::active);
+         }
+      }
    }
 
 }  // namespace eden

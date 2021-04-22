@@ -153,6 +153,17 @@ namespace eden
       maybe_create_nft(induction);
    }
 
+   void inductions::endorse_all(const induction& induction)
+   {
+      auto endorsement_idx = endorsement_tb.get_index<"byinduction"_n>();
+      auto itr = endorsement_idx.lower_bound(induction.id);
+      while (itr != endorsement_idx.end() && itr->induction_id == induction.id)
+      {
+         endorsement_idx.modify(itr, eosio::same_payer, [](auto& row) { row.endorsed = true; });
+      }
+      maybe_create_nft(induction);
+   }
+
    void inductions::maybe_create_nft(const induction& induction) {
       auto endorsement_idx = endorsement_tb.get_index<"byinduction"_n>();
       auto itr = endorsement_idx.lower_bound(induction.id);
@@ -201,7 +212,7 @@ namespace eden
 
    void inductions::start_auction(const induction& induction, uint64_t asset_id)
    {
-      eosio::action{{contract, "active"_n}, atomic_market_account, "announceauct"_n, std::tuple(contract, std::vector{asset_id}, auction_starting_bid, auction_duration, eosio::name{})}.send();
+      eosio::action{{contract, "active"_n}, atomic_market_account, "announceauct"_n, std::tuple(contract, std::vector{asset_id}, globals.get().auction_starting_bid, globals.get().auction_duration, eosio::name{})}.send();
       eosio::action{{contract, "active"_n}, atomic_assets_account, "transfer"_n, std::tuple(contract, atomic_market_account, std::vector{asset_id}, "auction"s)}.send();
    }
 

@@ -1,15 +1,13 @@
 #pragma once
 
 #include <constants.hpp>
+#include <globals.hpp>
 #include <eosio/asset.hpp>
 #include <eosio/eosio.hpp>
 #include <string>
 
 namespace eden
 {
-   inline constexpr eosio::asset minimum_membership_donation{minimum_donation, default_token,
-                                                             eosio::no_check};
-
    using member_status_type = uint8_t;
    enum member_status : member_status_type
    {
@@ -29,17 +27,34 @@ namespace eden
 
    using member_table_type = eosio::multi_index<"member"_n, member>;
 
+   struct member_stats {
+      uint16_t active_members;
+      uint16_t pending_members;
+      uint16_t completed_waiting_inductions;
+   };
+   EOSIO_REFLECT(member_stats, active_members, pending_members, completed_waiting_inductions);
+
+   using member_stats_singleton = eosio::singleton<"memberstats"_n, member_stats>;
+
    class members
    {
      private:
       eosio::name contract;
       member_table_type member_tb;
+      globals globals;
+      member_stats_singleton member_stats;
 
       bool is_new_member(eosio::name account) const;
 
      public:
 
-      members(eosio::name contract) : contract(contract), member_tb(contract, default_scope) {}
+      members(eosio::name contract)
+         : contract(contract),
+           member_tb(contract, default_scope),
+           globals(contract),
+           member_stats(contract, default_scope)
+      {
+      }
 
       void create(eosio::name account);
       void check_active_member(eosio::name account);
@@ -47,6 +62,7 @@ namespace eden
       void deposit(eosio::name account, const eosio::asset& quantity);
       void set_nft(eosio::name account, int32_t nft_template_id);
       void set_active(eosio::name account);
+      struct member_stats stats();
 
       // this method is used only for administrative purposes,
       // it should never be used outside genesis or test environments

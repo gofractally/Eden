@@ -25,7 +25,14 @@ namespace eden
                            const eosio::asset& quantity,
                            std::string memo);
 
-      void genesis();
+      void genesis(std::string community,
+                   eosio::symbol community_symbol,
+                   eosio::asset minimum_donation,
+                   std::vector<eosio::name> initial_members,
+                   std::string genesis_video,
+                   eosio::asset auction_starting_bid,
+                   uint32_t auction_duration,
+                   eosio::ignore<std::string> memo);
 
       void inductinit(uint64_t id,
                       eosio::name inviter,
