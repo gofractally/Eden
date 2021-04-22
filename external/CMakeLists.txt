@@ -79,6 +79,7 @@ if(IS_NATIVE)
         Boost::date_time Boost::filesystem Boost::chrono Boost::iostreams Threads::Threads
         ${OPENSSL_LIBRARIES}
         ${ZLIB_LIBRARIES}
+        -lgmp
     )
     add_dependencies(eos-fc eos)
 
