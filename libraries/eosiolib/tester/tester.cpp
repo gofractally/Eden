@@ -24,7 +24,6 @@ namespace
       [[clang::import_name("tester_sign")]]                        uint32_t tester_sign(const void* key, uint32_t keylen, const void* digest, void* sig, uint32_t siglen);
       [[clang::import_name("tester_start_block")]]                 void     tester_start_block(uint32_t chain_index, int64_t skip_miliseconds);
 
-      /*
       [[clang::import_name("tester_connect_rodeos")]]              void     tester_connect_rodeos(uint32_t rodeos, uint32_t chain);
       [[clang::import_name("tester_create_rodeos")]]               uint32_t tester_create_rodeos();
       [[clang::import_name("tester_destroy_rodeos")]]              void     tester_destroy_rodeos(uint32_t rodeos);
@@ -35,7 +34,6 @@ namespace
       [[clang::import_name("tester_rodeos_get_pushed_data")]]      uint32_t tester_rodeos_get_pushed_data(uint32_t rodeos, uint32_t index, char* dest, uint32_t dest_size);
       [[clang::import_name("tester_rodeos_push_transaction")]]     void     tester_rodeos_push_transaction(uint32_t rodeos, const char* packed_args, uint32_t packed_args_size, void* cb_alloc_data, cb_alloc_type cb_alloc);
       [[clang::import_name("tester_rodeos_sync_block")]]           bool     tester_rodeos_sync_block(uint32_t rodeos);
-      */
       // clang-format on
    }
 
@@ -80,19 +78,17 @@ namespace
                                   });
    }
 
-#ifdef XXX
    template <typename Alloc_fn>
    inline void rodeos_push_transaction(uint32_t rodeos,
                                        const char* args_begin,
                                        uint32_t args_size,
                                        Alloc_fn alloc_fn)
    {
-      rodeos_push_transaction(rodeos, args_begin, args_size, &alloc_fn,
-                              [](void* cb_alloc_data, size_t size) -> void* {
-                                 return (*reinterpret_cast<Alloc_fn*>(cb_alloc_data))(size);
-                              });
+      tester_rodeos_push_transaction(rodeos, args_begin, args_size, &alloc_fn,
+                                     [](void* cb_alloc_data, size_t size) -> void* {
+                                        return (*reinterpret_cast<Alloc_fn*>(cb_alloc_data))(size);
+                                     });
    }
-#endif
 }  // namespace
 
 std::vector<char> eosio::read_whole_file(std::string_view filename)
@@ -404,7 +400,6 @@ eosio::transaction_trace eosio::test_chain::transact(std::vector<action>&& actio
    return convert_from_bin<transaction_trace>(bin);
 }
 
-#ifdef XXX
 void build_history_result(eosio::test_chain::get_history_result& history_result,
                           eosio::ship_protocol::get_blocks_result_v0& blocks_result)
 {
@@ -424,6 +419,7 @@ void build_history_result(eosio::test_chain::get_history_result& history_result,
    }
 }
 
+#if 0
 void build_history_result(eosio::test_chain::get_history_result& history_result,
                           eosio::ship_protocol::get_blocks_result_v1& blocks_result)
 {
@@ -441,6 +437,7 @@ void build_history_result(eosio::test_chain::get_history_result& history_result,
       blocks_result.deltas.unpack(history_result.deltas);
    }
 }
+#endif
 
 template <typename T>
 void build_history_result(eosio::test_chain::get_history_result&, const T&)
@@ -452,19 +449,18 @@ std::optional<eosio::test_chain::get_history_result> eosio::test_chain::get_hist
     uint32_t block_num)
 {
    std::optional<get_history_result> ret;
-   auto size = ::get_history(id, block_num, nullptr, 0);
+   auto size = ::tester_get_history(id, block_num, nullptr, 0);
    if (!size)
       return ret;
    ret.emplace();
    ret->memory.resize(size);
-   ::get_history(id, block_num, ret->memory.data(), size);
+   ::tester_get_history(id, block_num, ret->memory.data(), size);
    ship_protocol::result r;
    (void)convert_from_bin(r, ret->memory);
 
    std::visit([&ret](auto& v) { build_history_result(*ret, v); }, r);
    return ret;
 }
-#endif
 
 eosio::transaction_trace eosio::test_chain::create_account(name ac,
                                                            const public_key& pub_key,
@@ -602,23 +598,22 @@ eosio::transaction_trace eosio::test_chain::issue_and_transfer(const name& contr
        expected_except);
 }
 
-#ifdef XXX
-eosio::test_rodeos::test_rodeos() : id{create_rodeos()} {}
+eosio::test_rodeos::test_rodeos() : id{tester_create_rodeos()} {}
 
 eosio::test_rodeos::~test_rodeos()
 {
-   destroy_rodeos(id);
+   tester_destroy_rodeos(id);
 }
 
 void eosio::test_rodeos::connect(test_chain& chain)
 {
    connected = &chain;
-   connect_rodeos(id, chain.id);
+   tester_connect_rodeos(id, chain.id);
 }
 
 void eosio::test_rodeos::add_filter(eosio::name name, const char* wasm_filename)
 {
-   rodeos_add_filter(id, name.value, wasm_filename, strlen(wasm_filename));
+   tester_rodeos_add_filter(id, name.value, wasm_filename, strlen(wasm_filename));
 }
 
 void eosio::test_rodeos::enable_queries(uint32_t max_console_size,
@@ -626,13 +621,14 @@ void eosio::test_rodeos::enable_queries(uint32_t max_console_size,
                                         uint64_t max_exec_time_ms,
                                         const char* contract_dir)
 {
-   rodeos_enable_queries(id, max_console_size, wasm_cache_size, max_exec_time_ms,
-                         contract_dir ? contract_dir : "", contract_dir ? strlen(contract_dir) : 0);
+   tester_rodeos_enable_queries(id, max_console_size, wasm_cache_size, max_exec_time_ms,
+                                contract_dir ? contract_dir : "",
+                                contract_dir ? strlen(contract_dir) : 0);
 }
 
 bool eosio::test_rodeos::sync_block()
 {
-   return rodeos_sync_block(id);
+   return tester_rodeos_sync_block(id);
 }
 
 uint32_t eosio::test_rodeos::sync_blocks()
@@ -680,25 +676,24 @@ eosio::transaction_trace eosio::test_rodeos::transact(std::vector<action>&& acti
 
 uint32_t eosio::test_rodeos::get_num_pushed_data()
 {
-   return rodeos_get_num_pushed_data(id);
+   return tester_rodeos_get_num_pushed_data(id);
 }
 
 std::vector<char> eosio::test_rodeos::get_pushed_data(uint32_t index)
 {
-   size_t len = rodeos_get_pushed_data(id, index, nullptr, 0);
+   size_t len = tester_rodeos_get_pushed_data(id, index, nullptr, 0);
    std::vector<char> result(len);
-   rodeos_get_pushed_data(id, index, result.data(), len);
+   tester_rodeos_get_pushed_data(id, index, result.data(), len);
    return result;
 }
 
 std::string eosio::test_rodeos::get_pushed_data_str(uint32_t index)
 {
-   size_t len = rodeos_get_pushed_data(id, index, nullptr, 0);
+   size_t len = tester_rodeos_get_pushed_data(id, index, nullptr, 0);
    std::string result(len, 0);
-   rodeos_get_pushed_data(id, index, result.data(), len);
+   tester_rodeos_get_pushed_data(id, index, result.data(), len);
    return result;
 }
-#endif
 
 std::ostream& eosio::ship_protocol::operator<<(std::ostream& os,
                                                eosio::ship_protocol::transaction_status t)

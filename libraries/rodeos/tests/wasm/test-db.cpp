@@ -1,12 +1,11 @@
 #include <eosio/tester.hpp>
-#include "legacydb-test-contract.hpp"
+#include "test-db-contract.hpp"
 
 #define CATCH_CONFIG_MAIN
 #include <catch2/catch.hpp>
 
 using namespace eosio;
-using namespace legacydb;
-using namespace legacydb::actions;
+using namespace test_db;
 
 TEST_CASE("xx", "")
 {
@@ -16,14 +15,14 @@ TEST_CASE("xx", "")
    rodeos.enable_queries(1024 * 1024, 10, 1000, "");
 
    chain.create_code_account(account);
-   chain.set_code(account, "legacydb.wasm");
+   chain.set_code(account, "test-db-contract.wasm");
 
-   chain.as(account).act<write>();
-   chain.as(account).act<read>();
+   chain.as(account).act<actions::write>();
+   chain.as(account).act<actions::read>();
 
    chain.start_block();
    rodeos.sync_blocks();
 
-   expect(rodeos.as().trace<write>(), "unimplemented: db_store_i64");
-   rodeos.as().act<read>();
+   expect(rodeos.as().trace<actions::write>(), "unimplemented: db_store_i64");
+   rodeos.as().act<actions::read>();
 }

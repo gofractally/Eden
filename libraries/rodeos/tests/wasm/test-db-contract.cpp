@@ -1,9 +1,9 @@
-#include "legacydb-test-contract.hpp"
+#include "test-db-contract.hpp"
 
 using namespace std;
 using namespace eosio;
 using namespace eosio::internal_use_do_not_use;
-using namespace legacydb;
+using namespace test_db;
 
 const std::vector<char> data_0{9, 7, 6};
 const std::vector<char> data_1{1, 2, 3, 4, 0, 4, 3, 2, 1};
@@ -482,7 +482,7 @@ auto big(uint64_t lsb)
    return big(0xffff'ffff'ffff'ffff, lsb);
 }
 
-void legacydb_contract::write()
+void test_db_contract::write()
 {
    print("write\n");
 
@@ -553,7 +553,7 @@ void legacydb_contract::write()
 
    idx64::store("nope"_n, "just.2nd"_n, get_self(), 42, 42);
    idx128::store("nope"_n, "just.2ndb"_n, get_self(), 42, 42);
-}  // legacydb_contract::write()
+}  // test_db_contract::write()
 
 // This is one big test to help make sure:
 // * Iterator indexes are reused when they should be. CDT's multi_index depends on this.
@@ -568,7 +568,7 @@ void legacydb_contract::write()
 // Unintential side effect of this test: if someone makes a change to nodeos which changes the
 // specific iterator indexes it returns, this test may catch it. Such a change is consensus
 // breaking.
-void legacydb_contract::read()
+void test_db_contract::read()
 {
    print("read\n");
 
@@ -1188,6 +1188,8 @@ void legacydb_contract::read()
    check_find_secondary_multiple(get_self(), "scope3"_n, "table4"_n, -13, 0xfeedbeef, 0x0000, 0x0000'0000, -3.0, "0000000000000000000000000000000000000000000000000000000000000000");
    check_find_secondary_multiple(get_self(), "scope3"_n, "table4"_n, -13, 0xfeedbeef, 0x3535, 0x3535'3535,  7.5, "ff00000000000000000000000000000000000000000000000000000000000000");
    // clang-format on
-}  // legacydb_contract::read()
 
-EOSIO_ACTION_DISPATCHER(legacydb::actions)
+   print("read passed\n");
+}  // test_db_contract::read()
+
+EOSIO_ACTION_DISPATCHER(test_db::actions)
