@@ -10,6 +10,7 @@ namespace eden
       require_auth(get_self());
       members{get_self()}.clear_all();
       inductions{get_self()}.clear_all();
+      get_global_singleton(get_self()).remove();
    }
 
    void eden::genesis(std::string community,
