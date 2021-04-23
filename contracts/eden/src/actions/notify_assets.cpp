@@ -22,7 +22,7 @@ namespace eden
       eosio::check(pos != immutable_data.end(), "Missing account lognewtempl");
       eosio::name invitee(pos->value);
       inductions inductions{get_self()};
-      auto induction = inductions.get_endorsed_induction(eosio::name(invitee));
+      const auto& induction = inductions.get_endorsed_induction(eosio::name(invitee));
       inductions.create_nfts(induction, template_id);
 
       members members{get_self()};
@@ -50,7 +50,7 @@ namespace eden
       eosio::check(pos != immutable_data.end(), "Missing account logmint");
       eosio::name invitee(pos->value);
       inductions inductions{get_self()};
-      auto induction = inductions.get_endorsed_induction(eosio::name(invitee));
+      const auto& induction = inductions.get_endorsed_induction(eosio::name(invitee));
       inductions.start_auction(induction, asset_id);
    }
 }  // namespace eden
