@@ -21,7 +21,12 @@ namespace eden
       uint32_t auction_duration;
       contract_stage_type stage;
    };
-   EOSIO_REFLECT(global_data, community, minimum_donation, stage)
+   EOSIO_REFLECT(global_data,
+                 community,
+                 minimum_donation,
+                 auction_starting_bid,
+                 auction_duration,
+                 stage)
 
    using global_singleton = eosio::singleton<"global"_n, global_data>;
 

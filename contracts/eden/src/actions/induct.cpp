@@ -27,7 +27,7 @@ namespace eden
    void eden::inductprofil(uint64_t id, new_member_profile new_member_profile)
    {
       inductions inductions{get_self()};
-      auto induction = inductions.get_induction(id);
+      const auto& induction = inductions.get_induction(id);
       require_auth(induction.invitee);
 
       members{get_self()}.check_pending_member(induction.invitee);
@@ -45,7 +45,7 @@ namespace eden
    {
       require_auth(account);
       inductions inductions{get_self()};
-      auto induction = inductions.get_induction(id);
+      const auto& induction = inductions.get_induction(id);
 
       globals{get_self()}.check_active();
       members{get_self()}.check_pending_member(induction.invitee);
