@@ -1,11 +1,11 @@
 #pragma once
 
-#include <eosio/singleton.hpp>
-#include <eosio/asset.hpp>
 #include <constants.hpp>
+#include <eosio/asset.hpp>
+#include <eosio/singleton.hpp>
 
-namespace eden {
-
+namespace eden
+{
    using contract_stage_type = uint8_t;
    enum contract_stage : contract_stage_type
    {
@@ -13,7 +13,8 @@ namespace eden {
       active
    };
 
-   struct global_data {
+   struct global_data
+   {
       std::string community;
       eosio::asset minimum_donation;
       eosio::asset auction_starting_bid;
@@ -26,16 +27,21 @@ namespace eden {
 
    global_singleton& get_global_singleton(eosio::name contract);
 
-   struct globals {
-   private:
+   struct globals
+   {
+     private:
       eosio::name contract;
       global_data data;
-   public:
-      explicit globals(eosio::name contract) : contract(contract), data(get_global_singleton(contract).get()) {}
+
+     public:
+      explicit globals(eosio::name contract)
+          : contract(contract), data(get_global_singleton(contract).get())
+      {
+      }
       explicit globals(eosio::name contract, const global_data& initial_value);
       const global_data& get() { return data; }
       void check_active() const;
       eosio::symbol default_token() const { return data.minimum_donation.symbol; }
       void set_stage(contract_stage stage);
    };
-}
+}  // namespace eden

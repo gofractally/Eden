@@ -1,7 +1,7 @@
 #include <eden.hpp>
+#include <globals.hpp>
 #include <inductions.hpp>
 #include <members.hpp>
-#include <globals.hpp>
 
 namespace eden
 {
@@ -16,18 +16,17 @@ namespace eden
    {
       require_auth(get_self());
 
-      eosio::check(community_symbol == minimum_donation.symbol, "community symbol does not match minimum donation");
-      eosio::check(community_symbol == auction_starting_bid.symbol, "community symbol does not match auction starting bid");
+      eosio::check(community_symbol == minimum_donation.symbol,
+                   "community symbol does not match minimum donation");
+      eosio::check(community_symbol == auction_starting_bid.symbol,
+                   "community symbol does not match auction starting bid");
 
       globals{get_self(),
-         {
-            .community = community,
-            .minimum_donation = minimum_donation,
-            .auction_starting_bid = auction_starting_bid,
-            .auction_duration = auction_duration,
-            .stage = contract_stage::genesis
-         }
-      };
+              {.community = community,
+               .minimum_donation = minimum_donation,
+               .auction_starting_bid = auction_starting_bid,
+               .auction_duration = auction_duration,
+               .stage = contract_stage::genesis}};
       members members{get_self()};
       inductions inductions{get_self()};
 
@@ -43,7 +42,8 @@ namespace eden
          auto total_endorsements = initial_members.size() - 1;
 
          members.create(invitee);
-         inductions.create_induction(induction_id, get_self(), initial_members[i], total_endorsements);
+         inductions.create_induction(induction_id, get_self(), initial_members[i],
+                                     total_endorsements);
 
          for (const auto& endorser : initial_members)
          {

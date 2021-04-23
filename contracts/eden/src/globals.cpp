@@ -1,15 +1,16 @@
-#include <globals.hpp>
 #include <constants.hpp>
+#include <globals.hpp>
 
-namespace eden {
-
+namespace eden
+{
    global_singleton& get_global_singleton(eosio::name contract)
    {
       static global_singleton result(contract, default_scope);
       return result;
    }
 
-   globals::globals(eosio::name contract, const global_data& initial_value) : contract(contract), data(initial_value)
+   globals::globals(eosio::name contract, const global_data& initial_value)
+       : contract(contract), data(initial_value)
    {
       auto& singleton = get_global_singleton(contract);
       eosio::check(!singleton.exists(), "Singleton is already initialized");
@@ -26,4 +27,4 @@ namespace eden {
       data.stage = stage;
       get_global_singleton(contract).set(data, eosio::same_payer);
    }
-}
+}  // namespace eden

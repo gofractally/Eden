@@ -41,9 +41,7 @@ namespace eden
 
       void inductprofil(uint64_t id, new_member_profile new_member_profile);
 
-      void inductvideo(eosio::name account,
-                       uint64_t id,
-                       std::string video);
+      void inductvideo(eosio::name account, uint64_t id, std::string video);
 
       void inductendorse(eosio::name account, uint64_t id, eosio::checksum256 induction_data_hash);
 
@@ -69,5 +67,15 @@ namespace eden
                           std::vector<eosio::asset> tokens_to_back);
    };
 
-   EOSIO_ACTIONS(eden, "eden"_n, genesis, inductinit, inductprofil, inductvideo, inductendorse, inducted, notify transfer, notify lognewtempl, notify logmint)
+   EOSIO_ACTIONS(eden,
+                 "eden"_n,
+                 genesis,
+                 inductinit,
+                 inductprofil,
+                 inductvideo,
+                 inductendorse,
+                 inducted,
+                 notify transfer,
+                 notify lognewtempl,
+                 notify logmint)
 }  // namespace eden

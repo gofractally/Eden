@@ -1,9 +1,9 @@
 #pragma once
 
 #include <constants.hpp>
-#include <globals.hpp>
 #include <eosio/asset.hpp>
 #include <eosio/eosio.hpp>
+#include <globals.hpp>
 #include <string>
 
 namespace eden
@@ -27,7 +27,8 @@ namespace eden
 
    using member_table_type = eosio::multi_index<"member"_n, member>;
 
-   struct member_stats {
+   struct member_stats
+   {
       uint16_t active_members;
       uint16_t pending_members;
       uint16_t completed_waiting_inductions;
@@ -47,12 +48,11 @@ namespace eden
       bool is_new_member(eosio::name account) const;
 
      public:
-
       members(eosio::name contract)
-         : contract(contract),
-           member_tb(contract, default_scope),
-           globals(contract),
-           member_stats(contract, default_scope)
+          : contract(contract),
+            member_tb(contract, default_scope),
+            globals(contract),
+            member_stats(contract, default_scope)
       {
       }
 

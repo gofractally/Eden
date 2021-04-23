@@ -48,30 +48,26 @@ namespace eden
    {
       check_pending_member(account);
       const auto& member = member_tb.get(account.value);
-      member_tb.modify(member, eosio::same_payer, [&](auto& row) {
-         row.nft_template_id = nft_template_id;
-      });
+      member_tb.modify(member, eosio::same_payer,
+                       [&](auto& row) { row.nft_template_id = nft_template_id; });
    }
 
    void members::set_active(eosio::name account)
    {
       auto stats = member_stats.get();
       eosio::check(stats.pending_members > 0, "Invariant failure: no pending members");
-      eosio::check(stats.active_members < max_active_members, "Invariant failure: active members too high");
+      eosio::check(stats.active_members < max_active_members,
+                   "Invariant failure: active members too high");
       --stats.pending_members;
       ++stats.active_members;
       member_stats.set(stats, eosio::same_payer);
       check_pending_member(account);
       const auto& member = member_tb.get(account.value);
-      member_tb.modify(member, eosio::same_payer, [&](auto& row) {
-         row.status = member_status::active_member;
-      });
+      member_tb.modify(member, eosio::same_payer,
+                       [&](auto& row) { row.status = member_status::active_member; });
    }
 
-   struct member_stats members::stats()
-   {
-      return member_stats.get();
-   }
+   struct member_stats members::stats() { return member_stats.get(); }
 
    void members::clear_all()
    {

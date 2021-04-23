@@ -1,9 +1,9 @@
 #pragma once
 
 #include <constants.hpp>
-#include <globals.hpp>
 #include <eosio/asset.hpp>
 #include <eosio/eosio.hpp>
+#include <globals.hpp>
 #include <string>
 #include <utils.hpp>
 
@@ -82,16 +82,14 @@ namespace eden
    // This table is temporary.  It is used to forward information required by the
    // NFT creation notifications.  Rows should always be deleted in the same
    // transaction in which they are created.
-   struct endorsed_induction {
+   struct endorsed_induction
+   {
       eosio::name invitee;
       uint64_t induction_id;
       uint64_t primary_key() const { return invitee.value; }
    };
    EOSIO_REFLECT(endorsed_induction, invitee, induction_id);
-   using endorsed_induction_table_type = eosio::multi_index<
-      "endind"_n,
-      endorsed_induction
-   >;
+   using endorsed_induction_table_type = eosio::multi_index<"endind"_n, endorsed_induction>;
 
    class inductions
    {
@@ -131,7 +129,9 @@ namespace eden
 
       void update_video(const induction& induction, const std::string& video);
 
-      void endorse(const induction& induction, eosio::name account, eosio::checksum256 induction_data_hash);
+      void endorse(const induction& induction,
+                   eosio::name account,
+                   eosio::checksum256 induction_data_hash);
 
       bool is_endorser(uint64_t id, eosio::name witness) const;
 
