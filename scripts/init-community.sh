@@ -24,4 +24,6 @@ GENESIS_ACTION_DATA="{
 }"
 echo $GENESIS_ACTION_DATA
 
+# cleos set account permission edenmembers1 active --add-code
+
 $CLEOS push action $CONTRACT genesis "$GENESIS_ACTION_DATA" -p $CONTRACT@active

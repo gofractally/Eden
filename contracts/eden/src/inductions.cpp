@@ -78,6 +78,7 @@ namespace eden
       while (itr != endorsement_idx.end() && itr->induction_id == induction_id)
       {
          endorsement_idx.modify(itr, eosio::same_payer, [&](auto& row) { row.endorsed = false; });
+         itr++;
       }
    }
 
@@ -163,6 +164,7 @@ namespace eden
       while (itr != endorsement_idx.end() && itr->induction_id == induction.id)
       {
          endorsement_idx.modify(itr, eosio::same_payer, [](auto& row) { row.endorsed = true; });
+         itr++;
       }
       maybe_create_nft(induction);
    }
@@ -175,6 +177,7 @@ namespace eden
       {
          if (!itr->endorsed)
             return;
+         itr++;
       }
 
       endorsed_induction_table_type endorsed_induction_tb(contract, default_scope);
@@ -210,6 +213,7 @@ namespace eden
       while (itr != endorsement_idx.end() && itr->induction_id == induction.id)
       {
          new_owners.push_back(itr->endorser);
+         itr++;
       }
 
       for (eosio::name new_asset_owner : new_owners)

@@ -19,7 +19,7 @@ namespace eden
       eosio::check(schema_name == ::eden::schema_name, "Wrong schema");
       auto pos = std::find_if(immutable_data.begin(), immutable_data.end(),
                               [](const auto& attr) { return attr.key == "edenacc"; });
-      eosio::check(pos != immutable_data.end(), "Missing account");
+      eosio::check(pos != immutable_data.end(), "Missing account lognewtempl");
       eosio::name invitee(pos->value);
       inductions inductions{get_self()};
       auto induction = inductions.get_endorsed_induction(eosio::name(invitee));
@@ -47,7 +47,7 @@ namespace eden
       eosio::check(schema_name == ::eden::schema_name, "Wrong schema");
       auto pos = std::find_if(immutable_data.begin(), immutable_data.end(),
                               [](const auto& attr) { return attr.key == "edenacc"; });
-      eosio::check(pos != immutable_data.end(), "Missing account");
+      eosio::check(pos != immutable_data.end(), "Missing account logmint");
       eosio::name invitee(pos->value);
       inductions inductions{get_self()};
       auto induction = inductions.get_endorsed_induction(eosio::name(invitee));

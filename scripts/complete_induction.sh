@@ -5,7 +5,6 @@ CLEOS="cleos -u https://wax-test.eosdac.io"
 CONTRACT="edenmembers1"
 
 INVITEE="edenmember13"
-GENESIS_VIDEO="Qmb7WmZiSDXss5HfuKfoSf6jxTDrHzr8AoAUDeDMLNDuws"
 INDUCTION_ID="3"
 NAME="Sparky"
 IMAGE="Qmb7WmZiSDXss5HfuKfoSf6jxTDrHzr8AoAUDeDMLNDuws"
@@ -16,8 +15,6 @@ SOCIAL_LINKEDIN="sparkplug0025"
 SOCIAL_TELEGRAM="sparkplug0025"
 SOCIAL_FACEBOOK="sparkplug0025"
 SOCIAL_BLOG="moreequalanimals.com"
-GENESIS_MEMO="A community is born."
-GENESIS_MEMBERS='"edenmember11", "edenmember12", "edenmember13"'
 
 PROFILE_ACTION_DATA="{
   \"id\": $INDUCTION_ID,
