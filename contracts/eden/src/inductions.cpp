@@ -30,7 +30,8 @@ namespace eden
    void inductions::create_induction(uint64_t id,
                                      eosio::name inviter,
                                      eosio::name invitee,
-                                     uint32_t endorsements)
+                                     uint32_t endorsements,
+                                     const std::string& video)
    {
       induction_tb.emplace(contract, [&](auto& row) {
          row.id = id;
@@ -38,7 +39,7 @@ namespace eden
          row.invitee = invitee;
          row.endorsements = endorsements;
          row.created_at = eosio::current_block_time();
-         row.video = "";
+         row.video = video;
          row.new_member_profile = {};
       });
    }

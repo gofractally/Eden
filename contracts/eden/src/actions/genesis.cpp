@@ -43,7 +43,7 @@ namespace eden
 
          members.create(invitee);
          inductions.create_induction(induction_id, get_self(), initial_members[i],
-                                     total_endorsements);
+                                     total_endorsements, genesis_video);
 
          for (const auto& endorser : initial_members)
          {
@@ -52,8 +52,6 @@ namespace eden
                inductions.create_endorsement(inviter, invitee, endorser, induction_id);
             }
          }
-
-         inductions.update_video(inductions.get_induction(induction_id), genesis_video);
       }
    }
 

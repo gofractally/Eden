@@ -141,7 +141,8 @@ namespace eden
       void create_induction(uint64_t id,
                             eosio::name inviter,
                             eosio::name invitee,
-                            uint32_t endorsements);
+                            uint32_t endorsements,
+                            const std::string& video = {});
 
       void create_endorsement(eosio::name inviter,
                               eosio::name invitee,
