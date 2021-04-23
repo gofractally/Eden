@@ -103,7 +103,7 @@ namespace b1
          ilog("cloner database status:");
          ilog("    revisions:    ${f} - ${r}", ("f", rodeos_snapshot->undo_stack->first_revision())(
                                                    "r", rodeos_snapshot->undo_stack->revision()));
-         ilog("    chain:        ${a}", ("a", eosio::convert_to_json(rodeos_snapshot->chain_id)));
+         // ilog("    chain:        ${a}", ("a", eosio::convert_to_json(rodeos_snapshot->chain_id)));
          ilog("    head:         ${a} ${b}",
               ("a", rodeos_snapshot->head)("b", eosio::convert_to_json(rodeos_snapshot->head_id)));
          ilog("    irreversible: ${a} ${b}",

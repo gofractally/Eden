@@ -25,4 +25,12 @@ TEST_CASE("xx", "")
 
    expect(rodeos.as().trace<actions::write>(), "unimplemented: db_store_i64");
    rodeos.as().act<actions::read>();
+
+   chain.start_block();
+   chain.start_block();
+   execute(
+       "rm -rf test-chains/test-db && "
+       "mkdir -p test-chains/test-db/blocks && "
+       "cp '" +
+       chain.get_path() + "'/blocks/blocks.log test-chains/test-db/blocks");
 }
