@@ -24,6 +24,8 @@ extern "C"
 
 namespace eosio
 {
+   inline constexpr name any_contract;
+
    /**
     * Unpack the received action and execute the correponding action handler
     *
@@ -82,13 +84,13 @@ namespace eosio
 #define EOSIO_MATCH_CHECK(...) EOSIO_MATCH_CHECK_N(__VA_ARGS__, 0, )
 #define EOSIO_MATCH_YES ~, 1,
 #define EOSIO_MATCH(base, x) EOSIO_MATCH_CHECK(BOOST_PP_CAT(base, x))
-#define EOSIO_EXTRACT_IMPL1(x, n, r) r
-#define EOSIO_EXTRACT_IMPL2(r) EOSIO_EXTRACT_IMPL1(r)
-#define EOSIO_EXTRACT(base, x) EOSIO_EXTRACT_IMPL2(BOOST_PP_CAT(base, x))
 
 #define EOSIO_MATCH_NOTIFY(x) EOSIO_MATCH(EOSIO_MATCH_NOTIFY_, x)
-#define EOSIO_EXTRACT_NOTIFY(x) EOSIO_EXTRACT(EOSIO_MATCH_NOTIFY_, x)
 #define EOSIO_MATCH_NOTIFY_notify EOSIO_MATCH_YES
+#define EOSIO_EXTRACT_NOTIFY_CODE(x) BOOST_PP_CAT(EOSIO_EXTRACT_NOTIFY_CODE_, x)
+#define EOSIO_EXTRACT_NOTIFY_CODE_notify(code, action) code
+#define EOSIO_EXTRACT_NOTIFY_ACTION(x) BOOST_PP_CAT(EOSIO_EXTRACT_NOTIFY_ACTION_, x)
+#define EOSIO_EXTRACT_NOTIFY_ACTION_notify(code, action) action
 
 #define EOSIO_DISPATCH_ACTION_INTERNAL_1(r, type, member)                                        \
    case eosio::hash_name(BOOST_PP_STRINGIZE(member)):                                            \
@@ -100,15 +102,19 @@ namespace eosio
 #define EOSIO_DISPATCH_ACTION(type, MEMBERS) \
    BOOST_PP_SEQ_FOR_EACH(EOSIO_DISPATCH_ACTION_INTERNAL, type, MEMBERS)
 
-#define EOSIO_NOTIFY_ACTION_INTERNAL_1(r, type, member)                                      \
-   case eosio::hash_name(BOOST_PP_STRINGIZE(EOSIO_EXTRACT_NOTIFY(member))):                  \
-      executed =                                                                             \
-          eosio::execute_action(eosio::name(receiver), eosio::name(code),                    \
-                                &type::BOOST_PP_CAT(notify_, EOSIO_EXTRACT_NOTIFY(member))); \
-      break;
-#define EOSIO_DISPATCH_NOTIFY_INTERNAL(r, type, member)                                  \
-   BOOST_PP_IIF(EOSIO_MATCH_NOTIFY(member), EOSIO_NOTIFY_ACTION_INTERNAL_1, EOSIO_EMPTY) \
-   (r, type, member)
+#define EOSIO_NOTIFY_ACTION_INTERNAL_1(r, type, notification)                                    \
+   else if ((EOSIO_EXTRACT_NOTIFY_CODE(notification) == eosio::any_contract ||                   \
+             eosio::name{code} == EOSIO_EXTRACT_NOTIFY_CODE(notification)) &&                    \
+            action ==                                                                            \
+                eosio::hash_name(BOOST_PP_STRINGIZE(EOSIO_EXTRACT_NOTIFY_ACTION(notification)))) \
+   {                                                                                             \
+      eosio::execute_action(                                                                     \
+          eosio::name(receiver), eosio::name(code),                                              \
+          &type::BOOST_PP_CAT(notify_, EOSIO_EXTRACT_NOTIFY_ACTION(notification)));              \
+   }
+#define EOSIO_DISPATCH_NOTIFY_INTERNAL(r, type, notification)                                  \
+   BOOST_PP_IIF(EOSIO_MATCH_NOTIFY(notification), EOSIO_NOTIFY_ACTION_INTERNAL_1, EOSIO_EMPTY) \
+   (r, type, notification)
 #define EOSIO_DISPATCH_NOTIFY(type, MEMBERS) \
    BOOST_PP_SEQ_FOR_EACH(EOSIO_DISPATCH_NOTIFY_INTERNAL, type, MEMBERS)
 
@@ -130,9 +136,9 @@ namespace eosio
                                                                                                  \
       inline void eosio_apply(uint64_t receiver, uint64_t code, uint64_t action)                 \
       {                                                                                          \
-         bool executed = false;                                                                  \
          if (code == receiver)                                                                   \
          {                                                                                       \
+            bool executed = false;                                                               \
             switch (action)                                                                      \
             {                                                                                    \
                EOSIO_DISPATCH_ACTION(CONTRACT_CLASS, BOOST_PP_VARIADIC_TO_SEQ(__VA_ARGS__))      \
@@ -141,10 +147,10 @@ namespace eosio
          }                                                                                       \
          else                                                                                    \
          {                                                                                       \
-            switch (action)                                                                      \
+            if (false)                                                                           \
             {                                                                                    \
-               EOSIO_DISPATCH_NOTIFY(CONTRACT_CLASS, BOOST_PP_VARIADIC_TO_SEQ(__VA_ARGS__))      \
             }                                                                                    \
+            EOSIO_DISPATCH_NOTIFY(CONTRACT_CLASS, BOOST_PP_VARIADIC_TO_SEQ(__VA_ARGS__))         \
          }                                                                                       \
       }                                                                                          \
    }

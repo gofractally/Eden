@@ -78,7 +78,7 @@ namespace eden
                  inductvideo,
                  inductendorse,
                  inducted,
-                 notify transfer,
-                 notify lognewtempl,
-                 notify logmint)
+                 notify(token_contract, transfer),
+                 notify(eosio::any_contract, lognewtempl),
+                 notify(eosio::any_contract, logmint))
 }  // namespace eden
