@@ -25,7 +25,16 @@ namespace eden
                            const eosio::asset& quantity,
                            std::string memo);
 
-      void genesis();
+      void genesis(std::string community,
+                   eosio::symbol community_symbol,
+                   eosio::asset minimum_donation,
+                   std::vector<eosio::name> initial_members,
+                   std::string genesis_video,
+                   eosio::asset auction_starting_bid,
+                   uint32_t auction_duration,
+                   eosio::ignore<std::string> memo);
+
+      void clearall();
 
       void inductinit(uint64_t id,
                       eosio::name inviter,
@@ -34,9 +43,7 @@ namespace eden
 
       void inductprofil(uint64_t id, new_member_profile new_member_profile);
 
-      void inductvideo(eosio::name account,
-                       uint64_t id,
-                       std::string video);
+      void inductvideo(eosio::name account, uint64_t id, std::string video);
 
       void inductendorse(eosio::name account, uint64_t id, eosio::checksum256 induction_data_hash);
 
@@ -62,5 +69,16 @@ namespace eden
                           std::vector<eosio::asset> tokens_to_back);
    };
 
-   EOSIO_ACTIONS(eden, "eden"_n, genesis, inductinit, inductprofil, inductvideo, inductendorse, inducted, notify transfer, notify lognewtempl, notify logmint)
+   EOSIO_ACTIONS(eden,
+                 "eden"_n,
+                 clearall,
+                 genesis,
+                 inductinit,
+                 inductprofil,
+                 inductvideo,
+                 inductendorse,
+                 inducted,
+                 notify transfer,
+                 notify lognewtempl,
+                 notify logmint)
 }  // namespace eden

@@ -3,6 +3,7 @@
 #include <constants.hpp>
 #include <eosio/asset.hpp>
 #include <eosio/eosio.hpp>
+#include <globals.hpp>
 #include <string>
 #include <utils.hpp>
 
@@ -81,16 +82,14 @@ namespace eden
    // This table is temporary.  It is used to forward information required by the
    // NFT creation notifications.  Rows should always be deleted in the same
    // transaction in which they are created.
-   struct endorsed_induction {
+   struct endorsed_induction
+   {
       eosio::name invitee;
       uint64_t induction_id;
       uint64_t primary_key() const { return invitee.value; }
    };
    EOSIO_REFLECT(endorsed_induction, invitee, induction_id);
-   using endorsed_induction_table_type = eosio::multi_index<
-      "endind"_n,
-      endorsed_induction
-   >;
+   using endorsed_induction_table_type = eosio::multi_index<"endind"_n, endorsed_induction>;
 
    class inductions
    {
@@ -98,6 +97,7 @@ namespace eden
       eosio::name contract;
       induction_table_type induction_tb;
       endorsement_table_type endorsement_tb;
+      globals globals;
 
       void check_new_induction(eosio::name invitee, eosio::name inviter) const;
       void check_valid_induction(const induction& induction) const;
@@ -112,7 +112,8 @@ namespace eden
       inductions(eosio::name contract)
           : contract(contract),
             induction_tb(contract, default_scope),
-            endorsement_tb(contract, default_scope)
+            endorsement_tb(contract, default_scope),
+            globals(contract)
       {
       }
 
@@ -128,7 +129,9 @@ namespace eden
 
       void update_video(const induction& induction, const std::string& video);
 
-      void endorse(const induction& induction, eosio::name account, eosio::checksum256 induction_data_hash);
+      void endorse(const induction& induction,
+                   eosio::name account,
+                   eosio::checksum256 induction_data_hash);
 
       bool is_endorser(uint64_t id, eosio::name witness) const;
 
@@ -138,12 +141,16 @@ namespace eden
       void create_induction(uint64_t id,
                             eosio::name inviter,
                             eosio::name invitee,
-                            uint32_t endorsements);
+                            uint32_t endorsements,
+                            const std::string& video = {});
 
       void create_endorsement(eosio::name inviter,
                               eosio::name invitee,
                               eosio::name endorser,
                               uint64_t induction_id);
+
+      // Should only be used during genesis
+      void endorse_all(const induction& induction);
 
       // this method is used only for administrative purposes,
       // it should never be used outside genesis or test environments

@@ -36,13 +36,13 @@ export const PendingInductions = ({ isActive }: Props) => {
                     </Text>
                 )}
                 <InductionsList inductions={inductions} isInviter={isActive} />
-            </div>
 
-            {endorsements.length ? (
-                <EndorsementsList endorsements={endorsements} />
-            ) : (
-                ""
-            )}
+                {isActive && endorsements.length ? (
+                    <EndorsementsList endorsements={endorsements} />
+                ) : (
+                    ""
+                )}
+            </div>
         </>
     );
 };

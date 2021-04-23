@@ -1,17 +1,13 @@
 import { useState } from "react";
 
-import { Button, Text, assetToString } from "_app";
+import { Button, Text, assetToString, useUALAccount } from "_app";
 import { minimumDonationAmount } from "config";
 import { donationTransaction } from "../transactions";
-import { PendingInductions } from "./pending-inductions";
 
-interface Props {
-    ualAccount: any;
-    alreadyDonated: boolean;
-}
-
-export const Donation = ({ ualAccount, alreadyDonated }: Props) => {
+export const Donation = () => {
+    const [ualAccount] = useUALAccount();
     const [justDonated, setDonated] = useState(false);
+
     const donate = async () => {
         try {
             const authorizerAccount = ualAccount.accountName;
@@ -31,8 +27,6 @@ export const Donation = ({ ualAccount, alreadyDonated }: Props) => {
         <div className="space-y-3">
             {justDonated ? (
                 <DonationThanks />
-            ) : alreadyDonated ? (
-                <PendingInductions />
             ) : (
                 <DonationForm donate={donate} />
             )}
