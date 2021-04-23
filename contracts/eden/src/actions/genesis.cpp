@@ -5,6 +5,14 @@
 
 namespace eden
 {
+   void eden::clearall()
+   {
+      require_auth(get_self());
+      members{get_self()}.clear_all();
+      inductions{get_self()}.clear_all();
+      get_global_singleton(get_self()).remove();
+   }
+
    void eden::genesis(std::string community,
                       eosio::symbol community_symbol,
                       eosio::asset minimum_donation,
@@ -18,6 +26,7 @@ namespace eden
 
       eosio::check(community_symbol == minimum_donation.symbol,
                    "community symbol does not match minimum donation");
+
       eosio::check(community_symbol == auction_starting_bid.symbol,
                    "community symbol does not match auction starting bid");
 
@@ -30,20 +39,16 @@ namespace eden
       members members{get_self()};
       inductions inductions{get_self()};
 
-      members.clear_all();
-      inductions.clear_all();
-
       auto inviter = get_self();
+      auto total_endorsements = initial_members.size() - 1;
+      uint64_t induction_id = 1;
 
-      for (int i = 0; i < initial_members.size(); i++)
+      for (const auto& invitee : initial_members)
       {
-         auto induction_id = i + 1;
-         const auto& invitee = initial_members[i];
-         auto total_endorsements = initial_members.size() - 1;
-
          members.create(invitee);
-         inductions.create_induction(induction_id, get_self(), initial_members[i],
-                                     total_endorsements, genesis_video);
+
+         inductions.create_induction(induction_id, inviter, invitee, total_endorsements,
+                                     genesis_video);
 
          for (const auto& endorser : initial_members)
          {
@@ -52,6 +57,8 @@ namespace eden
                inductions.create_endorsement(inviter, invitee, endorser, induction_id);
             }
          }
+
+         induction_id++;
       }
    }
 

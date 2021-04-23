@@ -74,5 +74,6 @@ namespace eden
       auto members_itr = member_tb.lower_bound(0);
       while (members_itr != member_tb.end())
          member_tb.erase(members_itr++);
+      member_stats.remove();
    }
 }  // namespace eden
