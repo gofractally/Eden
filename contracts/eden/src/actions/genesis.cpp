@@ -17,6 +17,7 @@ namespace eden
       require_auth(get_self());
 
       eosio::check(community_symbol == minimum_donation.symbol, "community symbol does not match minimum donation");
+      eosio::check(community_symbol == auction_starting_bid.symbol, "community symbol does not match auction starting bid");
 
       globals{get_self(),
          {
