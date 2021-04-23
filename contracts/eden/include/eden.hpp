@@ -34,6 +34,8 @@ namespace eden
                    uint32_t auction_duration,
                    eosio::ignore<std::string> memo);
 
+      void clearall();
+
       void inductinit(uint64_t id,
                       eosio::name inviter,
                       eosio::name invitee,
@@ -69,6 +71,7 @@ namespace eden
 
    EOSIO_ACTIONS(eden,
                  "eden"_n,
+                 clearall,
                  genesis,
                  inductinit,
                  inductprofil,

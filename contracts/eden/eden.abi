@@ -13,14 +13,9 @@
             "fields": []
         },
         {
-            "name": "block_timestamp",
+            "name": "clearall",
             "base": "",
-            "fields": [
-                {
-                    "name": "slot",
-                    "type": "uint32"
-                }
-            ]
+            "fields": []
         },
         {
             "name": "member",
@@ -62,7 +57,7 @@
                 },
                 {
                     "name": "created_at",
-                    "type": "block_timestamp"
+                    "type": "block_timestamp_type"
                 },
                 {
                     "name": "video",
@@ -207,6 +202,11 @@
         {
             "name": "genesis",
             "type": "genesis",
+            "ricardian_contract": ""
+        },
+        {
+            "name": "clearall",
+            "type": "clearall",
             "ricardian_contract": ""
         },
         {
