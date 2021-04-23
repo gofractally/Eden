@@ -10,12 +10,13 @@ MINIMUM_DONATION="10.00000000 WAX"
 AUCTION_STARTING_BID="1.00000000 WAX"
 AUCTION_DURATION=604800
 GENESIS_MEMO="A community is born."
+GENESIS_MEMBERS='"edenmember11", "edenmember12", "edenmember13","edenmember14", "edenmember15", "edenmember21","edenmember22", "edenmember23", "edenmember24","edenmember25", "edenmember31", "edenmember32","edenmember33", "edenmember34", "edenmember35", "edenmember41", "edenmember42","edenmember43", "edenmember44", "edenmember45"'
 
 GENESIS_ACTION_DATA="{
     \"community\": \"$COMMUNITY_NAME\",
     \"community_symbol\": \"$SYMBOL\",
     \"minimum_donation\": \"$MINIMUM_DONATION\",
-    \"initial_members\": [\"edenmember11\", \"edenmember12\", \"edenmember13\"],
+    \"initial_members\": [$GENESIS_MEMBERS],
     \"genesis_video\": \"$GENESIS_VIDEO\",
     \"auction_starting_bid\": \"$AUCTION_STARTING_BID\",
     \"auction_duration\": $AUCTION_DURATION,
