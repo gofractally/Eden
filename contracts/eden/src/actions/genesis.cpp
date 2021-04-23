@@ -40,16 +40,15 @@ namespace eden
       inductions inductions{get_self()};
 
       auto inviter = get_self();
+      auto total_endorsements = initial_members.size() - 1;
+      uint64_t induction_id = 1;
 
-      for (int i = 0; i < initial_members.size(); i++)
+      for (const auto& invitee : initial_members)
       {
-         auto induction_id = i + 1;
-         const auto& invitee = initial_members[i];
-         auto total_endorsements = initial_members.size() - 1;
-
          members.create(invitee);
-         inductions.create_induction(induction_id, get_self(), initial_members[i],
-                                     total_endorsements, genesis_video);
+
+         inductions.create_induction(induction_id, inviter, invitee, total_endorsements,
+                                     genesis_video);
 
          for (const auto& endorser : initial_members)
          {
@@ -58,6 +57,8 @@ namespace eden
                inductions.create_endorsement(inviter, invitee, endorser, induction_id);
             }
          }
+
+         induction_id++;
       }
    }
 

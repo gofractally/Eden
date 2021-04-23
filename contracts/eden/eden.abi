@@ -4,18 +4,103 @@
         {
             "new_type_name": "member_status_type",
             "type": "uint8"
+        },
+        {
+            "new_type_name": "contract_stage_type",
+            "type": "uint8"
         }
     ],
     "structs": [
         {
-            "name": "genesis",
+            "name": "clearall",
             "base": "",
             "fields": []
         },
         {
-            "name": "clearall",
+            "name": "genesis",
             "base": "",
-            "fields": []
+            "fields": [
+                {
+                    "name": "community",
+                    "type": "string"
+                },
+                {
+                    "name": "community_symbol",
+                    "type": "symbol"
+                },
+                {
+                    "name": "minimum_donation",
+                    "type": "asset"
+                },
+                {
+                    "name": "initial_members",
+                    "type": "name[]"
+                },
+                {
+                    "name": "genesis_video",
+                    "type": "string"
+                },
+                {
+                    "name": "auction_starting_bid",
+                    "type": "asset"
+                },
+                {
+                    "name": "auction_duration",
+                    "type": "uint32"
+                },
+                {
+                    "name": "memo",
+                    "type": "string"
+                }
+            ]
+        },
+        {
+            "name": "global",
+            "base": "",
+            "fields": [
+                {
+                    "name": "id",
+                    "type": "uint64"
+                },
+                {
+                    "name": "community",
+                    "type": "string"
+                },
+                {
+                    "name": "minimum_donation",
+                    "type": "asset"
+                },
+                {
+                    "name": "auction_starting_bid",
+                    "type": "asset"
+                },
+                {
+                    "name": "stage",
+                    "type": "contract_stage_type"
+                }
+            ]
+        },
+        {
+            "name": "memberstats",
+            "base": "",
+            "fields": [
+                {
+                    "name": "id",
+                    "type": "uint64"
+                },
+                {
+                    "name": "active_members",
+                    "type": "uint16"
+                },
+                {
+                    "name": "pending_members",
+                    "type": "uint16"
+                },
+                {
+                    "name": "completed_waiting_inductions",
+                    "type": "uint16"
+                }
+            ]
         },
         {
             "name": "member",
@@ -248,6 +333,20 @@
         {
             "name": "endorsement",
             "type": "endorsement",
+            "index_type": "i64",
+            "key_names": [],
+            "key_types": []
+        },
+        {
+            "name": "global",
+            "type": "global",
+            "index_type": "i64",
+            "key_names": [],
+            "key_types": []
+        },
+        {
+            "name": "memberstats",
+            "type": "memberstats",
             "index_type": "i64",
             "key_names": [],
             "key_types": []
