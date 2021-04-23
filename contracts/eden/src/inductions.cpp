@@ -1,5 +1,5 @@
 #include <algorithm>
-#include <atomicassets.hpp>
+#include <eden-atomicassets.hpp>
 #include <eosio/crypto.hpp>
 #include <inductions.hpp>
 #include <set>

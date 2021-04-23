@@ -1,6 +1,6 @@
 #pragma once
 
-#include <atomicassets.hpp>
+#include <eden-atomicassets.hpp>
 #include <constants.hpp>
 #include <eosio/asset.hpp>
 #include <eosio/eosio.hpp>
@@ -64,9 +64,9 @@ namespace eden
                           eosio::name schema_name,
                           int32_t template_id,
                           eosio::name new_asset_owner,
-                          const atomicassets::attribute_map& immutable_data,
-                          const atomicassets::attribute_map& mutable_data,
-                          std::vector<eosio::asset> tokens_to_back);
+                          eosio::ignore<atomicassets::attribute_map>,
+                          eosio::ignore<atomicassets::attribute_map>,
+                          eosio::ignore<std::vector<eosio::asset>>);
    };
 
    EOSIO_ACTIONS(eden,

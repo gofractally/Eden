@@ -10,3 +10,6 @@
 [submodule "external/Catch2"]
 	path = external/Catch2
 	url = https://github.com/catchorg/Catch2.git
+[submodule "external/atomicassets-contract"]
+	path = external/atomicassets-contract
+	url = https://github.com/pinknetworkx/atomicassets-contract.git
