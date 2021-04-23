@@ -4,7 +4,7 @@ namespace eden
 {
    void members::deposit(eosio::name account, const eosio::asset& quantity)
    {
-      eosio::check(quantity >= minimum_membership_donation, "insufficient minimum donation");
+      eosio::check(quantity >= globals.get().minimum_donation, "insufficient minimum donation");
       if (is_new_member(account))
       {
          create(account);
@@ -33,6 +33,10 @@ namespace eden
 
    void members::create(eosio::name account)
    {
+      auto stats = member_stats.get_or_default();
+      ++stats.pending_members;
+      eosio::check(stats.pending_members != 0, "Integer overflow");
+      member_stats.set(stats, contract);
       member_tb.emplace(contract, [&](auto& row) {
          row.account = account;
          row.status = member_status::pending_membership;
@@ -44,19 +48,26 @@ namespace eden
    {
       check_pending_member(account);
       const auto& member = member_tb.get(account.value);
-      member_tb.modify(member, eosio::same_payer, [&](auto& row) {
-         row.nft_template_id = nft_template_id;
-      });
+      member_tb.modify(member, eosio::same_payer,
+                       [&](auto& row) { row.nft_template_id = nft_template_id; });
    }
 
    void members::set_active(eosio::name account)
    {
+      auto stats = member_stats.get();
+      eosio::check(stats.pending_members > 0, "Invariant failure: no pending members");
+      eosio::check(stats.active_members < max_active_members,
+                   "Invariant failure: active members too high");
+      --stats.pending_members;
+      ++stats.active_members;
+      member_stats.set(stats, eosio::same_payer);
       check_pending_member(account);
       const auto& member = member_tb.get(account.value);
-      member_tb.modify(member, eosio::same_payer, [&](auto& row) {
-         row.status = member_status::active_member;
-      });
+      member_tb.modify(member, eosio::same_payer,
+                       [&](auto& row) { row.status = member_status::active_member; });
    }
+
+   struct member_stats members::stats() { return member_stats.get(); }
 
    void members::clear_all()
    {
