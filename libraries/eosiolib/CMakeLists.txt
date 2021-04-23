@@ -5,6 +5,7 @@ target_sources(simple-malloc PRIVATE simple_malloc.cpp)
 
 add_library(contracts-wasi-polyfill)
 target_sources(contracts-wasi-polyfill PRIVATE
+    contracts/wasi-polyfill/__wasi_fd_fdstat_get.cpp
     contracts/wasi-polyfill/__wasi_fd_close.cpp
     contracts/wasi-polyfill/__wasi_fd_seek.cpp
     contracts/wasi-polyfill/__wasi_fd_write.cpp
