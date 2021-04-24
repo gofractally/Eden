@@ -51,11 +51,16 @@ export const InductionStepEndorsement = (props: Props) => {
     };
 
     const updateEndorsements = async () => {
-        // check if it's the last endorsement
-        const totalEndorseds = endorsements.filter(
-            (endorsement) => endorsement.endorsed
-        ).length;
-        if (totalEndorseds === endorsements.length - 1) {
+        // update the current endorsers list
+        const updatedEndorsements = endorsements.map((endorsement) =>
+            endorsement.endorser === ualAccount.accountName
+                ? { ...endorsement, endorsed: 1 }
+                : endorsement
+        );
+
+        // check if it's the final endorsement
+        const endorseds = updatedEndorsements.filter((item) => item.endorsed);
+        if (endorseds.length === endorsements.length) {
             // router goes to the newly created member page after some tolerance
             // time to make sure blockchain processed the transactions
             await new Promise((resolve) => setTimeout(resolve, 4000));
@@ -63,12 +68,6 @@ export const InductionStepEndorsement = (props: Props) => {
             return;
         }
 
-        // update the current endorsers list
-        const updatedEndorsements = endorsements.map((endorsement) =>
-            endorsement.endorser === ualAccount.accountName
-                ? { ...endorsement, endorsed: 1 }
-                : endorsement
-        );
         setEndorsements(updatedEndorsements);
     };
 
