@@ -4,7 +4,7 @@ import { InitInduction } from "inductions";
 
 export const InitInductionPage = () => {
     const [ualAccount] = useUALAccount();
-    const [edenMember] = useFetchedData<EdenMember>(
+    const [edenMember, isLoading] = useFetchedData<EdenMember>(
         getEdenMember,
         ualAccount?.accountName
     );
@@ -13,6 +13,8 @@ export const InitInductionPage = () => {
         <SingleColLayout title="Induction">
             {!ualAccount ? (
                 <div>Please login using yout wallet.</div>
+            ) : isLoading ? (
+                <div>Loading...</div>
             ) : !edenMember ||
               edenMember.status !== MemberStatus.ActiveMember ? (
                 <p className="text-red-500">

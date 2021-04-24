@@ -1,7 +1,7 @@
 #pragma once
 
-#include <eden-atomicassets.hpp>
 #include <constants.hpp>
+#include <eden-atomicassets.hpp>
 #include <eosio/asset.hpp>
 #include <eosio/eosio.hpp>
 #include <inductions.hpp>
@@ -47,6 +47,8 @@ namespace eden
 
       void inductendorse(eosio::name account, uint64_t id, eosio::checksum256 induction_data_hash);
 
+      void inductcancel(eosio::name account, uint64_t id);
+
       void inducted(eosio::name inductee);
 
       void notify_lognewtempl(int32_t template_id,
@@ -78,6 +80,7 @@ namespace eden
                  inductvideo,
                  inductendorse,
                  inducted,
+                 inductcancel,
                  notify transfer,
                  notify lognewtempl,
                  notify logmint)

@@ -10,6 +10,9 @@ export const InductionPage = () => {
         ualAccount?.accountName
     );
 
+    const isActiveMember =
+        edenMember && edenMember.status === MemberStatus.ActiveMember;
+
     return (
         <SingleColLayout title="Induction">
             {!ualAccount ? (
@@ -18,7 +21,7 @@ export const InductionPage = () => {
                 <p>Loading...</p>
             ) : edenMember ? (
                 <>
-                    {edenMember.status === MemberStatus.ActiveMember && (
+                    {isActiveMember && (
                         <p className="mb-4">
                             Hello, fellow eden member! Your account is{" "}
                             <strong>active</strong>!
@@ -27,7 +30,7 @@ export const InductionPage = () => {
                             </Link>
                         </p>
                     )}
-                    <PendingInductions />
+                    <PendingInductions isActive={isActiveMember} />
                 </>
             ) : (
                 <Donation />

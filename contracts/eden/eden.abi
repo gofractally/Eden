@@ -277,6 +277,20 @@
                     "type": "new_member_profile"
                 }
             ]
+        },
+        {
+            "name": "inductcancel",
+            "base": "",
+            "fields": [
+                {
+                    "name": "account",
+                    "type": "name"
+                },
+                {
+                    "name": "id",
+                    "type": "uint64"
+                }
+            ]
         }
     ],
     "actions": [
@@ -308,6 +322,11 @@
         {
             "name": "inductendors",
             "type": "inductendors",
+            "ricardian_contract": ""
+        },
+        {
+            "name": "inductcancel",
+            "type": "inductcancel",
             "ricardian_contract": ""
         }
     ],

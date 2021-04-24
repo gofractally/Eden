@@ -23,7 +23,7 @@ namespace eden
       create_endorsement(inviter, invitee, inviter, id);
       for (const auto& witness : witnesses)
       {
-         create_endorsement(inviter, invitee, inviter, id);
+         create_endorsement(inviter, invitee, witness, id);
       }
    }
 
