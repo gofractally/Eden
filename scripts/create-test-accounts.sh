@@ -2,6 +2,8 @@
 set -xe
 
 CLEOS="cleos -u https://wax-test.eosdac.io"
-ACCOUNT="edenmembersd"
+CREATOR="edenmembers1"
+ACCOUNT="edenmember35"
 
-$CLEOS system newaccount edenmembers1 --transfer $ACCOUNT EOS5s3s1cAxBMFqTE5tDX1FtPQA3Artk4s3xMjgpbQBGBED9FM1zp --stake-net "100.00000000 WAX" --stake-cpu "100.00000000 WAX" --buy-ram-kbytes 100
+$CLEOS system newaccount $CREATOR --transfer $ACCOUNT EOS5s3s1cAxBMFqTE5tDX1FtPQA3Artk4s3xMjgpbQBGBED9FM1zp --stake-net "20.00000000 WAX" --stake-cpu "20.00000000 WAX" --buy-ram-kbytes 8
+$CLEOS transfer $CREATOR $ACCOUNT "10.00000000 WAX" "eden-test"
