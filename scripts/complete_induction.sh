@@ -4,7 +4,7 @@ set -xe
 CLEOS="cleos -u https://wax-test.eosdac.io"
 CONTRACT="edenmembers1"
 
-INVITEE="edenmember13"
+INVITEE="edenmember11"
 INDUCTION_ID="3"
 NAME="Sparky"
 IMAGE="Qmb7WmZiSDXss5HfuKfoSf6jxTDrHzr8AoAUDeDMLNDuws"

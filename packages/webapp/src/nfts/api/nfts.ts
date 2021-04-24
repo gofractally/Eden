@@ -1,6 +1,13 @@
 import { atomicAssets, edenContractAccount } from "config";
 import { AuctionableEdenTemplateData } from "../interfaces";
 
+export const getTemplate = async (templateId: string) => {
+    const templates = await getTemplates(1, 20, [templateId]);
+    return templates.length ? templates[0] : undefined;
+};
+
+const LAUNCH_TIMESTAMP = "&after=1619230179000";
+
 export const getTemplates = async (
     page = 1,
     limit = 20,
@@ -8,9 +15,7 @@ export const getTemplates = async (
     sortField = "created",
     order = "asc"
 ): Promise<any[]> => {
-    let url = `${atomicAssets.apiBaseUrl}/templates?collection_name=${atomicAssets.collection}&schema_name=${atomicAssets.schema}&page=${page}&limit=${limit}&order=${order}&sort=${sortField}`;
-
-    url += "&lower_bound=71855"; // TODO: remove when resetting collection
+    let url = `${atomicAssets.apiBaseUrl}/templates?collection_name=${atomicAssets.collection}&schema_name=${atomicAssets.schema}&page=${page}&limit=${limit}&order=${order}&sort=${sortField}${LAUNCH_TIMESTAMP}`;
 
     if (ids.length) {
         url += `&ids=${ids.join(",")}`;
@@ -36,7 +41,8 @@ export const getOwners = async (templateId: number): Promise<string[]> => {
 };
 
 export const getAuctions = async (): Promise<AuctionableEdenTemplateData[]> => {
-    const url = `${atomicAssets.apiMarketUrl}/auctions?state=1&collection_name=${atomicAssets.collection}&schema_name=${atomicAssets.schema}&page=1&limit=9999&order=desc&sort=created`;
+    const url = `${atomicAssets.apiMarketUrl}/auctions?state=1&collection_name=${atomicAssets.collection}&schema_name=${atomicAssets.schema}&seller=${edenContractAccount}&page=1&limit=9999&order=desc&sort=created${LAUNCH_TIMESTAMP}`;
+
     const { data } = await executeAtomicAssetRequest(url);
 
     return data
