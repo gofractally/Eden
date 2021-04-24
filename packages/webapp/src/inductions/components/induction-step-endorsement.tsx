@@ -25,7 +25,7 @@ export const InductionStepEndorsement = (props: Props) => {
     const submitEndorsement = async () => {
         try {
             const authorizerAccount = ualAccount.accountName;
-            const transaction = submitEndorsementTransaction(
+            const transaction = await submitEndorsementTransaction(
                 authorizerAccount,
                 induction
             );
@@ -52,8 +52,10 @@ export const InductionStepEndorsement = (props: Props) => {
 
     const updateEndorsements = async () => {
         // check if it's the last endorsement
-        const totalEndorsers = endorsements.length;
-        if (endorsements.length === totalEndorsers - 1) {
+        const totalEndorseds = endorsements.filter(
+            (endorsement) => endorsement.endorsed
+        ).length;
+        if (totalEndorseds === endorsements.length - 1) {
             // router goes to the newly created member page after some tolerance
             // time to make sure blockchain processed the transactions
             await new Promise((resolve) => setTimeout(resolve, 4000));

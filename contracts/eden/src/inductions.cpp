@@ -149,7 +149,7 @@ namespace eden
       eosio::check(actual_hash == induction_data_hash, "Outdated endorsement");
 
       auto endorsement_idx = endorsement_tb.get_index<"byendorser"_n>();
-      auto endorsement = endorsement_idx.get(uint128_t{account.value} << 64 | induction.id);
+      const auto& endorsement = endorsement_idx.get(uint128_t{account.value} << 64 | induction.id);
       eosio::check(!endorsement.endorsed, "Already endorsed");
       endorsement_tb.modify(endorsement, eosio::same_payer,
                             [&](auto& row) { row.endorsed = true; });
@@ -265,7 +265,7 @@ namespace eden
       eosio::check(!new_member_profile.name.empty(), "new member profile name is empty");
       eosio::check(!new_member_profile.img.empty(), "new member profile img is empty");
       eosio::check(!new_member_profile.bio.empty(), "new member profile bio is empty");
-      // TODO: add more checks (valid ipfs img, bio and name minimum length)
+      // TODO: add more checks (valid ipfs img)
    }
 
    void inductions::validate_video(const std::string& video) const

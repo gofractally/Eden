@@ -1,4 +1,10 @@
-import { assetToString, primaryKeyFromAccountInstant } from "_app";
+import { SerialBuffer } from "eosjs/dist/eosjs-serialize";
+import {
+    assetToString,
+    hash256EosjsSerialBuffer,
+    primaryKeyFromAccountInstant,
+    serializeType,
+} from "_app";
 import { edenContractAccount, minimumDonationAmount } from "config";
 
 import { Induction, NewMemberProfile } from "./interfaces";
@@ -109,15 +115,25 @@ export const setInductionVideoTransaction = (
     };
 };
 
-export const submitEndorsementTransaction = (
+export const submitEndorsementTransaction = async (
     authorizerAccount: string,
     induction: Induction
 ) => {
+    const buffer = new SerialBuffer();
+    buffer.pushString(induction.video);
+    await serializeType(
+        edenContractAccount,
+        "new_member_profile",
+        buffer,
+        induction.new_member_profile
+    );
+    const inductionDataHash = hash256EosjsSerialBuffer(buffer);
+
     return {
         actions: [
             {
                 account: edenContractAccount,
-                name: "inductendors",
+                name: "inductendorse",
                 authorization: [
                     {
                         actor: authorizerAccount,
@@ -127,8 +143,7 @@ export const submitEndorsementTransaction = (
                 data: {
                     account: authorizerAccount,
                     id: induction.id,
-                    video: induction.video,
-                    new_member_profile: induction.new_member_profile,
+                    induction_data_hash: inductionDataHash,
                 },
             },
         ],

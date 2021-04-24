@@ -257,7 +257,7 @@
             ]
         },
         {
-            "name": "inductendors",
+            "name": "inductendorse",
             "base": "",
             "fields": [
                 {
@@ -269,12 +269,8 @@
                     "type": "uint64"
                 },
                 {
-                    "name": "video",
-                    "type": "string"
-                },
-                {
-                    "name": "new_member_profile",
-                    "type": "new_member_profile"
+                    "name": "induction_data_hash",
+                    "type": "checksum256"
                 }
             ]
         },
@@ -320,8 +316,8 @@
             "ricardian_contract": ""
         },
         {
-            "name": "inductendors",
-            "type": "inductendors",
+            "name": "inductendorse",
+            "type": "inductendorse",
             "ricardian_contract": ""
         },
         {
