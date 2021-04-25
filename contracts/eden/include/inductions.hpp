@@ -20,6 +20,8 @@ namespace eden
 
    struct induction
    {
+      induction() = default;
+      induction(const induction&) = delete;
       uint64_t id;
       eosio::name inviter;
       eosio::name invitee;
