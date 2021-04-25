@@ -8,7 +8,8 @@ namespace eden
                               const eosio::asset& quantity,
                               std::string memo)
    {
-      print_f("transfer from name: %\n", from);
+      if (to != get_self())
+         return;
 
       globals globals{get_self()};
       globals.check_active();
