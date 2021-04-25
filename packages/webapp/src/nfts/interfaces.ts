@@ -18,13 +18,20 @@ export interface EdenNftSocialHandles {
     blog?: string;
 }
 
-export interface EdenTemplateData {
+export interface TemplateData {
     template_id: string;
     immutable_data: EdenNftData;
     created_at_time: string;
 }
 
-export interface AuctionableEdenTemplateData extends EdenTemplateData {
+export interface AssetData {
+    asset_id: string;
+    template_mint: string;
+    template: TemplateData;
+}
+
+export interface AuctionableTemplateData extends TemplateData {
+    auctionId: string;
     currentBid: Asset;
     endTime: number;
 }
