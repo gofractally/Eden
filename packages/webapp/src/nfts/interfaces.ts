@@ -31,6 +31,7 @@ export interface AssetData {
 }
 
 export interface AuctionableTemplateData extends TemplateData {
+    auctionId: string;
     currentBid: Asset;
     endTime: number;
 }

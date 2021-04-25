@@ -3,6 +3,7 @@ import Link from "next/link";
 
 import { atomicAssets, ipfsBaseUrl } from "config";
 import { MemberData } from "../interfaces";
+import { assetToString } from "_app";
 
 interface Props {
     members: MemberData[];
@@ -45,6 +46,17 @@ export const MemberSquare = ({ member }: { member: MemberData }) => (
                 </a>
             </div>
         )}
+        {member.auctionData && (
+            <div className={styles.memberAuctionBadge}>
+                <a
+                    href={`${atomicAssets.hubUrl}/market/auction/${member.auctionData.auctionId}`}
+                    className="text-white"
+                    target="_blank"
+                >
+                    ⏳ {assetToString(member.auctionData.price, 2)}
+                </a>
+            </div>
+        )}
     </div>
 );
 
@@ -55,4 +67,5 @@ const styles = {
     memberImg: `max-h-44 block rounded-md mx-auto`,
     memberNameBadge: `${baseBadge} bottom-2 left-2 bg-yellow-500`,
     memberAssetBadge: `${baseBadge} bottom-2 right-2`,
+    memberAuctionBadge: `${baseBadge} bottom-2 right-2 bg-red-700`,
 };

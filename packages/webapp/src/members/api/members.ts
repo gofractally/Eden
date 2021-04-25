@@ -86,7 +86,8 @@ const convertAtomicAssetToMemberWithSalesData = (
 ): MemberData => {
     const member = convertAtomicTemplateToMember(data);
     if (data.currentBid) {
-        member.salesData = {
+        member.auctionData = {
+            auctionId: data.auctionId,
             price: data.currentBid,
             bidEndTime: data.endTime,
         };

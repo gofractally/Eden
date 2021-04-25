@@ -60,6 +60,7 @@ export const getAuctions = async (): Promise<AuctionableTemplateData[]> => {
         )
         .map((item: any) => {
             const asset = item.assets[0];
+            const auctionId = item.auction_id;
             const currentBid = {
                 quantity: parseInt(item.price.amount),
                 symbol: item.price.token_symbol,
@@ -67,9 +68,10 @@ export const getAuctions = async (): Promise<AuctionableTemplateData[]> => {
             };
             return {
                 ...asset.template,
+                auctionId,
                 currentBid,
                 endTime: parseInt(item.end_time),
-            };
+            } as AuctionableTemplateData;
         });
 };
 
