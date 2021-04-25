@@ -2,6 +2,7 @@ import {
     getAccountCollection,
     getAuctions,
     getOwners,
+    getTemplate,
     getTemplates,
 } from "nfts/api";
 import {
@@ -10,21 +11,21 @@ import {
     EdenTemplateData,
 } from "nfts/interfaces";
 import { MemberData } from "../interfaces";
+import { getEdenMember } from "./eden-contract";
 
 export const getMember = async (
     edenAccount: string
 ): Promise<MemberData | undefined> => {
-    // TODO: revisit
-    // to lookup for a member template we need to read the whole edenAccount
-    // collection and then filter itself (we don't have an easier way to lookup
-    // from the `edenacc` field on the immutable data of the NFT)
-    const members = await getCollection(edenAccount);
-    return members.find((member) => member.edenAccount === edenAccount);
+    const member = await getEdenMember(edenAccount);
+    if (member && member.nft_template_id > 0) {
+        const template = await getTemplate(`${member.nft_template_id}`);
+        return template ? convertAtomicAssetToMember(template) : undefined;
+    }
 };
 
 export const getMembers = async (
     page = 1,
-    limit = 20,
+    limit = 200,
     ids: string[] = [],
     sortField = "created",
     order = "asc"
