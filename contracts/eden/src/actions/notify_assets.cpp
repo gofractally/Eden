@@ -13,7 +13,6 @@ namespace eden
                                  uint32_t max_supply,
                                  const atomicassets::attribute_map& immutable_data)
    {
-      eosio::check(get_first_receiver() == atomic_assets_account, "Wrong atomicassets contract");
       eosio::check(authorized_creator == get_self(), "Wrong authorized creator");
       eosio::check(collection_name == ::eden::collection_name, "Wrong collection");
       eosio::check(schema_name == ::eden::schema_name, "Wrong schema");
@@ -41,11 +40,11 @@ namespace eden
    {
       if (new_asset_owner != get_self())
          return;
-      eosio::check(get_first_receiver() == atomic_assets_account, "Wrong atomicassets contract");
       eosio::check(authorized_minter == get_self(), "Wrong authorized creator");
       eosio::check(collection_name == ::eden::collection_name, "Wrong collection");
       eosio::check(schema_name == ::eden::schema_name, "Wrong schema");
-      auto immutable_data = atomicassets::read_immutable_data(atomic_assets_account, collection_name, template_id);
+      auto immutable_data =
+          atomicassets::read_immutable_data(atomic_assets_account, collection_name, template_id);
       auto pos = std::find_if(immutable_data.begin(), immutable_data.end(),
                               [](const auto& attr) { return attr.key == "edenacc"; });
       eosio::check(pos != immutable_data.end(), "Missing account logmint");
