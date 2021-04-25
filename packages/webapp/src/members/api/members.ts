@@ -6,9 +6,10 @@ import {
     getTemplates,
 } from "nfts/api";
 import {
-    AuctionableEdenTemplateData,
+    AssetData,
+    AuctionableTemplateData,
     EdenNftSocialHandles,
-    EdenTemplateData,
+    TemplateData,
 } from "nfts/interfaces";
 import { MemberData } from "../interfaces";
 import { getEdenMember } from "./eden-contract";
@@ -19,7 +20,7 @@ export const getMember = async (
     const member = await getEdenMember(edenAccount);
     if (member && member.nft_template_id > 0) {
         const template = await getTemplate(`${member.nft_template_id}`);
-        return template ? convertAtomicAssetToMember(template) : undefined;
+        return template ? convertAtomicTemplateToMember(template) : undefined;
     }
 };
 
@@ -31,7 +32,7 @@ export const getMembers = async (
     order = "asc"
 ): Promise<MemberData[]> => {
     const data = await getTemplates(page, limit, ids, sortField, order);
-    return data.map(convertAtomicAssetToMember);
+    return data.map(convertAtomicTemplateToMember);
 };
 
 export const getNewMembers = async (): Promise<MemberData[]> => {
@@ -42,16 +43,8 @@ export const getNewMembers = async (): Promise<MemberData[]> => {
 export const getCollection = async (
     edenAccount: string
 ): Promise<MemberData[]> => {
-    const { templates } = await getAccountCollection(edenAccount);
-
-    const templateIds: string[] = templates.map(
-        (template: any) => template.template_id
-    );
-    if (templateIds.length === 0) {
-        return [];
-    }
-
-    return getMembers(1, 9999, templateIds);
+    const assets = await getAccountCollection(edenAccount);
+    return assets.map(convertAtomicAssetToMember);
 };
 
 export const getCollectedBy = async (
@@ -69,7 +62,7 @@ export const getCollectedBy = async (
     return members.filter((member) => member !== undefined) as MemberData[];
 };
 
-const convertAtomicAssetToMember = (data: EdenTemplateData): MemberData => ({
+const convertAtomicTemplateToMember = (data: TemplateData): MemberData => ({
     templateId: parseInt(data.template_id),
     createdAt: parseInt(data.created_at_time),
     name: data.immutable_data.name,
@@ -80,10 +73,18 @@ const convertAtomicAssetToMember = (data: EdenTemplateData): MemberData => ({
     socialHandles: parseSocial(data.immutable_data.social || "{}"),
 });
 
+const convertAtomicAssetToMember = (data: AssetData): MemberData => ({
+    ...convertAtomicTemplateToMember(data.template),
+    assetData: {
+        assetId: data.asset_id,
+        templateMint: parseInt(data.template_mint),
+    },
+});
+
 const convertAtomicAssetToMemberWithSalesData = (
-    data: AuctionableEdenTemplateData
+    data: AuctionableTemplateData
 ): MemberData => {
-    const member = convertAtomicAssetToMember(data);
+    const member = convertAtomicTemplateToMember(data);
     if (data.currentBid) {
         member.salesData = {
             price: data.currentBid,

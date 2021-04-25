@@ -1,5 +1,5 @@
 import { atomicAssets, edenContractAccount } from "config";
-import { AuctionableEdenTemplateData } from "../interfaces";
+import { AuctionableTemplateData } from "../interfaces";
 
 export const getTemplate = async (templateId: string) => {
     const templates = await getTemplates(1, 20, [templateId]);
@@ -26,9 +26,13 @@ export const getTemplates = async (
 };
 
 export const getAccountCollection = async (
-    edenAccount: string
+    edenAccount: string,
+    page = 1,
+    limit = 9999,
+    sortField = "transferred",
+    order = "asc"
 ): Promise<any> => {
-    const url = `${atomicAssets.apiBaseUrl}/accounts/${edenAccount}/${atomicAssets.collection}`;
+    const url = `${atomicAssets.apiBaseUrl}/assets?owner=${edenAccount}&collection_name=${atomicAssets.collection}&page=${page}&limit=${limit}&order=${order}&sort=${sortField}${LAUNCH_TIMESTAMP}`;
     const { data } = await executeAtomicAssetRequest(url);
     return data;
 };
@@ -40,7 +44,7 @@ export const getOwners = async (templateId: number): Promise<string[]> => {
     return owners;
 };
 
-export const getAuctions = async (): Promise<AuctionableEdenTemplateData[]> => {
+export const getAuctions = async (): Promise<AuctionableTemplateData[]> => {
     const url = `${atomicAssets.apiMarketUrl}/auctions?state=1&collection_name=${atomicAssets.collection}&schema_name=${atomicAssets.schema}&seller=${edenContractAccount}&page=1&limit=9999&order=desc&sort=created${LAUNCH_TIMESTAMP}`;
 
     const { data } = await executeAtomicAssetRequest(url);

@@ -11,6 +11,12 @@ export interface MemberData {
     inductionVideo: string;
     createdAt: number;
     salesData?: MemberSalesData;
+    assetData?: AssetData;
+}
+
+export interface AssetData {
+    assetId: string;
+    templateMint: number;
 }
 
 export interface MemberSalesData {
