@@ -16,8 +16,6 @@ namespace eden
       eosio::check(to == get_self(), "only accepting transfers to us");
       eosio::check(quantity.symbol == globals.default_token(),
                    "token must be a valid " + globals.default_token().to_string());
-      eosio::check(get_first_receiver() == token_contract,
-                   "token must be from the right token contract");
 
       members{get_self()}.deposit(from, quantity);
    }
