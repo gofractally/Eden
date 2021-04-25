@@ -257,7 +257,7 @@
             ]
         },
         {
-            "name": "inductendors",
+            "name": "inductendorse",
             "base": "",
             "fields": [
                 {
@@ -269,12 +269,22 @@
                     "type": "uint64"
                 },
                 {
-                    "name": "video",
-                    "type": "string"
+                    "name": "induction_data_hash",
+                    "type": "checksum256"
+                }
+            ]
+        },
+        {
+            "name": "inductcancel",
+            "base": "",
+            "fields": [
+                {
+                    "name": "account",
+                    "type": "name"
                 },
                 {
-                    "name": "new_member_profile",
-                    "type": "new_member_profile"
+                    "name": "id",
+                    "type": "uint64"
                 }
             ]
         }
@@ -306,8 +316,13 @@
             "ricardian_contract": ""
         },
         {
-            "name": "inductendors",
-            "type": "inductendors",
+            "name": "inductendorse",
+            "type": "inductendorse",
+            "ricardian_contract": ""
+        },
+        {
+            "name": "inductcancel",
+            "type": "inductcancel",
             "ricardian_contract": ""
         }
     ],

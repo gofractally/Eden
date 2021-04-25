@@ -92,4 +92,17 @@ namespace eden
       }
    }
 
+   void eden::inductcancel(eosio::name account, uint64_t id)
+   {
+      eosio::require_auth(account);
+
+      globals{get_self()}.check_active();
+
+      inductions inductions{get_self()};
+      eosio::check(inductions.is_endorser(id, account),
+                   "Induction can only be canceled by inviter or a witness");
+
+      inductions.erase_induction(inductions.get_induction(id));
+   }
+
 }  // namespace eden
