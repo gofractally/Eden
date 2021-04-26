@@ -4,6 +4,7 @@
 #include <eosio/asset.hpp>
 #include <eosio/eosio.hpp>
 #include <eosio/map_macro.h>
+#include <globals.hpp>
 #include <string>
 #include <utils.hpp>
 
@@ -28,6 +29,8 @@ namespace eden
 
    struct induction_v0
    {
+      induction() = default;
+      induction(const induction&) = delete;
       uint64_t id;
       eosio::name inviter;
       eosio::name invitee;
@@ -79,7 +82,7 @@ namespace eden
       bool endorsed;
 
       uint64_t primary_key() const { return id; }
-      uint128_t get_endorser_key() const { return uint128_t{endorser.value} << 64 | id; }
+      uint128_t get_endorser_key() const { return uint128_t{endorser.value} << 64 | induction_id; }
       uint64_t induction_id_key() const { return induction_id; }
    };
    EOSIO_REFLECT(endorsement, id, inviter, invitee, endorser, induction_id, endorsed)
@@ -94,29 +97,46 @@ namespace eden
            "byinduction"_n,
            eosio::const_mem_fun<endorsement, uint64_t, &endorsement::induction_id_key>>>;
 
+   // This table is temporary.  It is used to forward information required by the
+   // NFT creation notifications.  Rows should always be deleted in the same
+   // transaction in which they are created.
+   struct endorsed_induction
+   {
+      eosio::name invitee;
+      uint64_t induction_id;
+      uint64_t primary_key() const { return invitee.value; }
+   };
+   EOSIO_REFLECT(endorsed_induction, invitee, induction_id);
+   using endorsed_induction_table_type = eosio::multi_index<"endind"_n, endorsed_induction>;
+
    class inductions
    {
      private:
       eosio::name contract;
       induction_table_type induction_tb;
       endorsement_table_type endorsement_tb;
+      globals globals;
 
       void check_new_induction(eosio::name invitee, eosio::name inviter) const;
       void check_valid_induction(const induction& induction) const;
       void validate_profile(const new_member_profile& new_member_profile) const;
+      void validate_video(const std::string& video) const;
       void check_valid_endorsers(eosio::name inviter,
                                  const std::vector<eosio::name>& witnesses) const;
       void reset_endorsements(uint64_t induction_id);
+      void maybe_create_nft(const induction& induction_id);
 
      public:
       inductions(eosio::name contract)
           : contract(contract),
             induction_tb(contract, default_scope),
-            endorsement_tb(contract, default_scope)
+            endorsement_tb(contract, default_scope),
+            globals(contract)
       {
       }
 
       const induction& get_induction(uint64_t id) const;
+      const induction& get_endorsed_induction(eosio::name invitee) const;
 
       void initialize_induction(uint64_t id,
                                 eosio::name inviter,
@@ -125,15 +145,30 @@ namespace eden
 
       void update_profile(const induction& induction, const new_member_profile& new_member_profile);
 
+      void update_video(const induction& induction, const std::string& video);
+
+      void endorse(const induction& induction,
+                   eosio::name account,
+                   eosio::checksum256 induction_data_hash);
+
+      bool is_endorser(uint64_t id, eosio::name witness) const;
+
+      void create_nfts(const induction& induction, int32_t template_id);
+      void start_auction(const induction& induction, uint64_t asset_id);
+      void erase_induction(const induction& induction);
       void create_induction(uint64_t id,
                             eosio::name inviter,
                             eosio::name invitee,
-                            uint32_t endorsements);
+                            uint32_t endorsements,
+                            const std::string& video = {});
 
       void create_endorsement(eosio::name inviter,
                               eosio::name invitee,
                               eosio::name endorser,
                               uint64_t induction_id);
+
+      // Should only be used during genesis
+      void endorse_all(const induction& induction);
 
       // this method is used only for administrative purposes,
       // it should never be used outside genesis or test environments

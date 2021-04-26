@@ -8,12 +8,14 @@ on:
     pull_request:
         types: [assigned, opened, synchronize, reopened, labeled]
         paths:
+            - "CMakeLists.txt"
             - "contracts/**"
             - "external/CMakeLists.txt"
             - "libraries/**"
             - "native/**"
             - "programs/**"
             - "wasm/**"
+            - ".github/workflows/build.yml"
 
 jobs:
     build:
@@ -25,17 +27,51 @@ jobs:
             - name: ✅ Checkout code
               uses: actions/checkout@v2
 
+            - name: Prepare ccache timestamp
+              id: ccache_cache_timestamp
+              shell: cmake -P {0}
+              run: |
+                  string(TIMESTAMP current_date "%Y-%m-%d-%H-%M-%S" UTC)
+                  message("::set-output name=timestamp::${current_date}")
+
+            - name: show_cache
+              id: show_cache
+              run: echo "${{ runner.os }}-ccache-${{ steps.ccache_cache_timestamp.outputs.timestamp }}"
+
+            - name: ccache cache files
+              uses: actions/cache@v1.1.0
+              with:
+                  path: .ccache
+                  key: ${{ runner.os }}-ccache-${{ steps.ccache_cache_timestamp.outputs.timestamp }}
+                  restore-keys: |
+                      ${{ runner.os }}-ccache-
+
             - name: 🛠 Build
               run: |
+                  set -e
+                  export CCACHE_DIR=${GITHUB_WORKSPACE}/.ccache
+                  echo =====
+                  ccache -s
+                  echo =====
+
                   git submodule update --init --recursive
                   mkdir build
                   cd build
-                  cmake -DCMAKE_BUILD_TYPE=Release ..
+                  cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_CXX_COMPILER_LAUNCHER=ccache -DCMAKE_C_COMPILER_LAUNCHER=ccache -DSKIP_TS=Yes -DEDEN_ATOMIC_ASSETS_ACCOUNT=atomicassets -DEDEN_ATOMIC_MARKET_ACCOUNT=atomicmarket -DEDEN_COLLECTION_NAME=edenmembers1 -DEDEN_SCHEMA_NAME=edenmembers1 ..
                   make -j$(nproc)
+
+                  echo =====
+                  ccache -s
+                  echo =====
+
                   cp eden.wasm eden-wax.wasm
-                  cmake -DTOKEN_SYMBOL=EOS -DTOKEN_PRECISION=4 -DTOKEN_MINIMUM_DONATION=100000 ..
+                  cmake -DEDEN_ATOMIC_ASSETS_ACCOUNT=atomicassets -DEDEN_ATOMIC_MARKET_ACCOUNT=atomicmarket -DEDEN_COLLECTION_NAME=edenmembers1 -DEDEN_SCHEMA_NAME=edenmembers1 -DCMAKE_BUILD_TYPE=Release -DCMAKE_CXX_COMPILER_LAUNCHER=ccache -DCMAKE_C_COMPILER_LAUNCHER=ccache -DSKIP_TS=Yes ..
                   touch ../contracts/eden/include/constants.hpp
-                  make -j$(nproc)
+                  make -j$(nproc) wasm
+
+                  echo =====
+                  ccache -s
+                  echo =====
 
             - name: 🧪 Run tests with CTest
               run: cd build && ctest -j$(nproc)

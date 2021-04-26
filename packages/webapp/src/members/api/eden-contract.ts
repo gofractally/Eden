@@ -1,4 +1,5 @@
+import { EdenMember } from "members/interfaces";
 import { CONTRACT_MEMBER_TABLE, getRow } from "_app";
 
 export const getEdenMember = (account: string) =>
-    getRow(CONTRACT_MEMBER_TABLE, "account", account);
+    getRow<EdenMember>(CONTRACT_MEMBER_TABLE, "account", account);

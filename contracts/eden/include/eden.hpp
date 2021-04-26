@@ -1,6 +1,7 @@
 #pragma once
 
 #include <constants.hpp>
+#include <eden-atomicassets.hpp>
 #include <eosio/asset.hpp>
 #include <eosio/eosio.hpp>
 #include <inductions.hpp>
@@ -24,7 +25,16 @@ namespace eden
                            const eosio::asset& quantity,
                            std::string memo);
 
-      void genesis();
+      void genesis(std::string community,
+                   eosio::symbol community_symbol,
+                   eosio::asset minimum_donation,
+                   std::vector<eosio::name> initial_members,
+                   std::string genesis_video,
+                   eosio::asset auction_starting_bid,
+                   uint32_t auction_duration,
+                   eosio::ignore<std::string> memo);
+
+      void clearall();
 
       void inductinit(uint64_t id,
                       eosio::name inviter,
@@ -32,7 +42,46 @@ namespace eden
                       std::vector<eosio::name> witnesses);
 
       void inductprofil(uint64_t id, new_member_profile new_member_profile);
+
+      void inductvideo(eosio::name account, uint64_t id, std::string video);
+
+      void inductendorse(eosio::name account, uint64_t id, eosio::checksum256 induction_data_hash);
+
+      void inductcancel(eosio::name account, uint64_t id);
+
+      void inducted(eosio::name inductee);
+
+      void notify_lognewtempl(int32_t template_id,
+                              eosio::name authorized_creator,
+                              eosio::name collection_name,
+                              eosio::name schema_name,
+                              bool transferable,
+                              bool burnable,
+                              uint32_t max_supply,
+                              const atomicassets::attribute_map& immutable_data);
+
+      void notify_logmint(uint64_t asset_id,
+                          eosio::name authorized_minter,
+                          eosio::name collection_name,
+                          eosio::name schema_name,
+                          int32_t template_id,
+                          eosio::name new_asset_owner,
+                          eosio::ignore<atomicassets::attribute_map>,
+                          eosio::ignore<atomicassets::attribute_map>,
+                          eosio::ignore<std::vector<eosio::asset>>);
    };
 
-   EOSIO_ACTIONS(eden, "eden"_n, genesis, inductinit, inductprofil, notify transfer)
+   EOSIO_ACTIONS(eden,
+                 "eden"_n,
+                 clearall,
+                 genesis,
+                 inductinit,
+                 inductprofil,
+                 inductvideo,
+                 inductendorse,
+                 inducted,
+                 inductcancel,
+                 notify(token_contract, transfer),
+                 notify(atomic_assets_account, lognewtempl),
+                 notify(atomic_assets_account, logmint))
 }  // namespace eden
