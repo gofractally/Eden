@@ -13,7 +13,7 @@ namespace eden
       active
    };
 
-   struct global_data
+   struct global_data_v0
    {
       std::string community;
       eosio::asset minimum_donation;
@@ -21,14 +21,14 @@ namespace eden
       uint32_t auction_duration;
       contract_stage_type stage;
    };
-   EOSIO_REFLECT(global_data,
+   EOSIO_REFLECT(global_data_v0,
                  community,
                  minimum_donation,
                  auction_starting_bid,
                  auction_duration,
                  stage)
 
-   using global_singleton = eosio::singleton<"global"_n, global_data>;
+   using global_singleton = eosio::singleton<"global"_n, std::variant<global_data_v0>>;
 
    global_singleton& get_global_singleton(eosio::name contract);
 
@@ -36,15 +36,15 @@ namespace eden
    {
      private:
       eosio::name contract;
-      global_data data;
+      global_data_v0 data;
 
      public:
       explicit globals(eosio::name contract)
-          : contract(contract), data(get_global_singleton(contract).get())
+         : contract(contract), data(std::get<global_data_v0>(get_global_singleton(contract).get()))
       {
       }
-      explicit globals(eosio::name contract, const global_data& initial_value);
-      const global_data& get() { return data; }
+      explicit globals(eosio::name contract, const global_data_v0& initial_value);
+      const global_data_v0& get() { return data; }
       void check_active() const;
       eosio::symbol default_token() const { return data.minimum_donation.symbol; }
       void set_stage(contract_stage stage);

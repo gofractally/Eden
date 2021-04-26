@@ -55,7 +55,7 @@
             ]
         },
         {
-            "name": "global",
+            "name": "global_v0",
             "base": "",
             "fields": [
                 {
@@ -370,6 +370,10 @@
         {
             "name": "induction",
             "types": ["induction_v0"]
+        },
+        {
+            "name": "global",
+            "types": ["global_v0"]
         }
     ]
 }
