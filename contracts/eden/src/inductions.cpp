@@ -133,9 +133,9 @@ namespace eden
       validate_video(video);
 
       induction_tb.modify(induction_tb.iterator_to(induction), eosio::same_payer,
-                          [&](auto& row) { row.video = video; });
+                          [&](auto& row) { row.video() = video; });
 
-      reset_endorsements(induction.id);
+      reset_endorsements(induction.id());
    }
 
    void inductions::endorse(const induction& induction,
@@ -143,15 +143,15 @@ namespace eden
                             eosio::checksum256 induction_data_hash)
    {
       check_valid_induction(induction);
-      eosio::check(!induction.video.empty(), "Video not set");
-      eosio::check(!induction.new_member_profile.name.empty(), "Profile not set");
+      eosio::check(!induction.video().empty(), "Video not set");
+      eosio::check(!induction.new_member_profile().name.empty(), "Profile not set");
 
-      auto bin = eosio::convert_to_bin(std::tuple(induction.video, induction.new_member_profile));
+      auto bin = eosio::convert_to_bin(std::tuple(induction.video(), induction.new_member_profile()));
       auto actual_hash = eosio::sha256(bin.data(), bin.size());
       eosio::check(actual_hash == induction_data_hash, "Outdated endorsement");
 
       auto endorsement_idx = endorsement_tb.get_index<"byendorser"_n>();
-      const auto& endorsement = endorsement_idx.get(uint128_t{account.value} << 64 | induction.id);
+      const auto& endorsement = endorsement_idx.get(uint128_t{account.value} << 64 | induction.id());
       eosio::check(!endorsement.endorsed, "Already endorsed");
       endorsement_tb.modify(endorsement, eosio::same_payer,
                             [&](auto& row) { row.endorsed = true; });
@@ -162,8 +162,8 @@ namespace eden
    void inductions::endorse_all(const induction& induction)
    {
       auto endorsement_idx = endorsement_tb.get_index<"byinduction"_n>();
-      auto itr = endorsement_idx.lower_bound(induction.id);
-      while (itr != endorsement_idx.end() && itr->induction_id == induction.id)
+      auto itr = endorsement_idx.lower_bound(induction.id());
+      while (itr != endorsement_idx.end() && itr->induction_id == induction.id())
       {
          endorsement_idx.modify(itr, eosio::same_payer, [](auto& row) { row.endorsed = true; });
          itr++;
@@ -174,8 +174,8 @@ namespace eden
    void inductions::maybe_create_nft(const induction& induction)
    {
       auto endorsement_idx = endorsement_tb.get_index<"byinduction"_n>();
-      auto itr = endorsement_idx.lower_bound(induction.id);
-      while (itr != endorsement_idx.end() && itr->induction_id == induction.id)
+      auto itr = endorsement_idx.lower_bound(induction.id());
+      while (itr != endorsement_idx.end() && itr->induction_id == induction.id())
       {
          if (!itr->endorsed)
             return;
@@ -184,35 +184,35 @@ namespace eden
 
       endorsed_induction_table_type endorsed_induction_tb(contract, default_scope);
       endorsed_induction_tb.emplace(contract, [&](auto& row) {
-         row.invitee = induction.invitee;
-         row.induction_id = induction.id;
+         row.invitee = induction.invitee();
+         row.induction_id = induction.id();
       });
 
-      atomicassets::attribute_map immutable_data = {{"edenacc", induction.invitee.to_string()},
-                                                    {"name", induction.new_member_profile.name},
-                                                    {"img", induction.new_member_profile.img},
-                                                    {"bio", induction.new_member_profile.bio},
-                                                    {"social", induction.new_member_profile.social},
-                                                    {"inductionvid", induction.video}};
+      atomicassets::attribute_map immutable_data = {{"edenacc", induction.invitee().to_string()},
+                                                    {"name", induction.new_member_profile().name},
+                                                    {"img", induction.new_member_profile().img},
+                                                    {"bio", induction.new_member_profile().bio},
+                                                    {"social", induction.new_member_profile().social},
+                                                    {"inductionvid", induction.video()}};
       eosio::action{{contract, "active"_n},
                     atomic_assets_account,
                     "createtempl"_n,
                     std::tuple{contract, collection_name, schema_name, true, true,
-                               uint32_t{induction.endorsements + 2}, immutable_data}}
+                    uint32_t{induction.endorsements() + 2}, immutable_data}}
           .send();
 
       // Finalize and clean up induction state.  Must happen last.
-      eosio::action{{contract, "active"_n}, contract, "inducted"_n, induction.invitee}.send();
+      eosio::action{{contract, "active"_n}, contract, "inducted"_n, induction.invitee()}.send();
    }
 
    void inductions::create_nfts(const induction& induction, int32_t template_id)
    {
       std::vector<eosio::name> new_owners;
       new_owners.push_back(contract);
-      new_owners.push_back(induction.invitee);
+      new_owners.push_back(induction.invitee());
       auto endorsement_idx = endorsement_tb.get_index<"byinduction"_n>();
-      auto itr = endorsement_idx.lower_bound(induction.id);
-      while (itr != endorsement_idx.end() && itr->induction_id == induction.id)
+      auto itr = endorsement_idx.lower_bound(induction.id());
+      while (itr != endorsement_idx.end() && itr->induction_id == induction.id())
       {
          new_owners.push_back(itr->endorser);
          itr++;
@@ -248,14 +248,14 @@ namespace eden
    void inductions::erase_induction(const induction& induction)
    {
       auto endorsement_idx = endorsement_tb.get_index<"byinduction"_n>();
-      auto itr = endorsement_idx.lower_bound(induction.id);
-      while (itr != endorsement_idx.end() && itr->induction_id == induction.id)
+      auto itr = endorsement_idx.lower_bound(induction.id());
+      while (itr != endorsement_idx.end() && itr->induction_id == induction.id())
       {
          itr = endorsement_idx.erase(itr);
       }
       induction_tb.erase(induction);
       endorsed_induction_table_type endorsed_induction_tb(contract, default_scope);
-      if (auto itr = endorsed_induction_tb.find(induction.invitee.value);
+      if (auto itr = endorsed_induction_tb.find(induction.invitee().value);
           itr != endorsed_induction_tb.end())
       {
          endorsed_induction_tb.erase(itr);

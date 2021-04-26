@@ -29,8 +29,6 @@ namespace eden
 
    struct induction_v0
    {
-      induction() = default;
-      induction(const induction&) = delete;
       uint64_t id;
       eosio::name inviter;
       eosio::name invitee;
@@ -54,6 +52,8 @@ namespace eden
                  new_member_profile)
 
    struct induction {
+      induction() = default;
+      induction(const induction&) = delete;
       std::variant<induction_v0> value;
       EDEN_FORWARD_MEMBERS(value, id, inviter, invitee, endorsements, created_at, video, new_member_profile)
       EDEN_FORWARD_FUNCTIONS(value, primary_key, get_invitee_inviter, get_inviter_invitee, get_created_key)
