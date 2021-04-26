@@ -81,7 +81,7 @@
             ]
         },
         {
-            "name": "memberstats",
+            "name": "memberstats_v0",
             "base": "",
             "fields": [
                 {
@@ -99,7 +99,7 @@
             ]
         },
         {
-            "name": "member",
+            "name": "member_v0",
             "base": "",
             "fields": [
                 {
@@ -368,12 +368,20 @@
     "abi_extensions": [],
     "variants": [
         {
+            "name": "global",
+            "types": ["global_v0"]
+        },
+        {
+            "name": "memberstats",
+            "types": ["memberstats_v0"]
+        },
+        {
+            "name": "member",
+            "types": ["member_v0"]
+        },
+        {
             "name": "induction",
             "types": ["induction_v0"]
         },
-        {
-            "name": "global",
-            "types": ["global_v0"]
-        }
     ]
 }
