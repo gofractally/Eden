@@ -8,17 +8,19 @@ interface Props {
 }
 
 export const RawLayout = ({ children, title }: Props) => (
-    <div className="bg-gray-0 min-h-screen">
+    <div className="bg-gray-50 min-h-screen">
         <HeaderNav />
         <Head>
             <title>{title && `${title} | `} Eden</title>
         </Head>
-        {title && (
-            <div className="px-8 pt-8">
-                <Heading>{title}</Heading>
-                <hr />
-            </div>
-        )}
-        {children}
+        <div className="md:container md:mx-auto pt-8 px-4">
+            {title && (
+                <>
+                    <Heading>{title}</Heading>
+                    <hr />
+                </>
+            )}
+            {children}
+        </div>
     </div>
 );
