@@ -12,6 +12,7 @@ export interface MemberData {
     createdAt: number;
     auctionData?: MemberAuctionData;
     assetData?: AssetData;
+    saleId?: string;
 }
 
 export interface AssetData {
