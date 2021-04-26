@@ -28,10 +28,13 @@ export interface AssetData {
     asset_id: string;
     template_mint: string;
     template: TemplateData;
+    sales: Array<{ sale_id: string }>;
 }
 
 export interface AuctionableTemplateData extends TemplateData {
     auctionId: string;
     currentBid: Asset;
     endTime: number;
+    assetId: string;
+    templateMint: number;
 }
