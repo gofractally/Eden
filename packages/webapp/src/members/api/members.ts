@@ -50,7 +50,7 @@ export const getCollection = async (
     assetsOnAuction
         .map(convertAtomicAssetToMemberWithSalesData)
         .forEach((asset) => members.push(asset));
-    return members;
+    return members.sort((a, b) => a.createdAt - b.createdAt);
 };
 
 export const getCollectedBy = async (
