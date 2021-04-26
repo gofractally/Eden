@@ -2,6 +2,7 @@ import {
     getAccountCollection,
     getAuctions,
     getOwners,
+    getSalesForTemplates,
     getTemplate,
     getTemplates,
 } from "nfts/api";
@@ -44,7 +45,12 @@ export const getCollection = async (
     edenAccount: string
 ): Promise<MemberData[]> => {
     const assets = await getAccountCollection(edenAccount);
-    return assets.map(convertAtomicAssetToMember);
+    const members: MemberData[] = assets.map(convertAtomicAssetToMember);
+    const assetsOnAuction = await getAuctions(edenAccount);
+    assetsOnAuction
+        .map(convertAtomicAssetToMemberWithSalesData)
+        .forEach((asset) => members.push(asset));
+    return members.sort((a, b) => a.createdAt - b.createdAt);
 };
 
 export const getCollectedBy = async (
@@ -79,12 +85,18 @@ const convertAtomicAssetToMember = (data: AssetData): MemberData => ({
         assetId: data.asset_id,
         templateMint: parseInt(data.template_mint),
     },
+    saleId: data.sales && data.sales.length ? data.sales[0].sale_id : undefined,
 });
 
 const convertAtomicAssetToMemberWithSalesData = (
     data: AuctionableTemplateData
 ): MemberData => {
     const member = convertAtomicTemplateToMember(data);
+    console.info(data);
+    member.assetData = {
+        assetId: data.assetId,
+        templateMint: data.templateMint,
+    };
     if (data.currentBid) {
         member.auctionData = {
             auctionId: data.auctionId,

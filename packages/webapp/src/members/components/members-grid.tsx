@@ -57,6 +57,17 @@ export const MemberSquare = ({ member }: { member: MemberData }) => (
                 </a>
             </div>
         )}
+        {member.saleId && (
+            <div className={styles.memberAuctionBadge}>
+                <a
+                    href={`${atomicAssets.hubUrl}/market/sale/${member.saleId}`}
+                    className="text-white"
+                    target="_blank"
+                >
+                    ON SALE
+                </a>
+            </div>
+        )}
     </div>
 );
 
@@ -66,6 +77,6 @@ const styles = {
     container: `grid grid-cols-3 gap-4 max-w-4xl mx-auto p-8`,
     memberImg: `max-h-44 block rounded-md mx-auto`,
     memberNameBadge: `${baseBadge} bottom-2 left-2 bg-yellow-500`,
-    memberAssetBadge: `${baseBadge} bottom-2 right-2`,
+    memberAssetBadge: `${baseBadge} top-2 right-2`,
     memberAuctionBadge: `${baseBadge} bottom-2 right-2 bg-red-700`,
 };
