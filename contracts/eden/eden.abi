@@ -55,7 +55,7 @@
             ]
         },
         {
-            "name": "global",
+            "name": "global_v0",
             "base": "",
             "fields": [
                 {
@@ -81,7 +81,7 @@
             ]
         },
         {
-            "name": "memberstats",
+            "name": "memberstats_v0",
             "base": "",
             "fields": [
                 {
@@ -99,7 +99,7 @@
             ]
         },
         {
-            "name": "member",
+            "name": "member_v0",
             "base": "",
             "fields": [
                 {
@@ -117,7 +117,7 @@
             ]
         },
         {
-            "name": "induction",
+            "name": "induction_v0",
             "base": "",
             "fields": [
                 {
@@ -151,7 +151,7 @@
             ]
         },
         {
-            "name": "endorsement",
+            "name": "endorsement_v0",
             "base": "",
             "fields": [
                 {
@@ -366,5 +366,26 @@
     "ricardian_clauses": [],
     "error_messages": [],
     "abi_extensions": [],
-    "variants": []
+    "variants": [
+        {
+            "name": "global",
+            "types": ["global_v0"]
+        },
+        {
+            "name": "memberstats",
+            "types": ["memberstats_v0"]
+        },
+        {
+            "name": "member",
+            "types": ["member_v0"]
+        },
+        {
+            "name": "induction",
+            "types": ["induction_v0"]
+        },
+        {
+            "name": "endorsement",
+            "types": ["endorsement_v0"]
+        }
+    ]
 }

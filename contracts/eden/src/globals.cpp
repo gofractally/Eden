@@ -9,7 +9,7 @@ namespace eden
       return result;
    }
 
-   globals::globals(eosio::name contract, const global_data& initial_value)
+   globals::globals(eosio::name contract, const global_data_v0& initial_value)
        : contract(contract), data(initial_value)
    {
       auto& singleton = get_global_singleton(contract);
