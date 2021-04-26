@@ -151,7 +151,7 @@
             ]
         },
         {
-            "name": "endorsement",
+            "name": "endorsement_v0",
             "base": "",
             "fields": [
                 {
@@ -383,5 +383,9 @@
             "name": "induction",
             "types": ["induction_v0"]
         },
+        {
+            "name": "endorsement",
+            "types": ["endorsement_v0"]
+        }
     ]
 }

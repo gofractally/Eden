@@ -64,7 +64,7 @@ namespace eden
        eosio::indexed_by<"bycreated"_n,
                          eosio::const_mem_fun<induction, uint64_t, &induction::get_created_key>>>;
 
-   struct endorsement
+   struct endorsement_v0
    {
       uint64_t id;
       eosio::name inviter;
@@ -77,7 +77,15 @@ namespace eden
       uint128_t get_endorser_key() const { return uint128_t{endorser.value} << 64 | induction_id; }
       uint64_t induction_id_key() const { return induction_id; }
    };
-   EOSIO_REFLECT(endorsement, id, inviter, invitee, endorser, induction_id, endorsed)
+   EOSIO_REFLECT(endorsement_v0, id, inviter, invitee, endorser, induction_id, endorsed)
+
+   struct endorsement
+   {
+      std::variant<endorsement_v0> value;
+      EDEN_FORWARD_MEMBERS(value, id, inviter, invitee, endorser, induction_id, endorsed)
+      EDEN_FORWARD_FUNCTIONS(value, primary_key, get_endorser_key, induction_id_key)
+   };
+   EOSIO_REFLECT(endorsement, value)
 
    using endorsement_table_type = eosio::multi_index<
        "endorsement"_n,

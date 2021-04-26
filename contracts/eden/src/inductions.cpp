@@ -52,12 +52,12 @@ namespace eden
                                        uint64_t induction_id)
    {
       endorsement_tb.emplace(contract, [&](auto& row) {
-         row.id = endorsement_tb.available_primary_key();
-         row.inviter = inviter;
-         row.invitee = invitee;
-         row.endorser = endorser;
-         row.induction_id = induction_id;
-         row.endorsed = false;
+         row.id() = endorsement_tb.available_primary_key();
+         row.inviter() = inviter;
+         row.invitee() = invitee;
+         row.endorser() = endorser;
+         row.induction_id() = induction_id;
+         row.endorsed() = false;
       });
    }
 
@@ -77,9 +77,9 @@ namespace eden
    {
       auto endorsement_idx = endorsement_tb.get_index<"byinduction"_n>();
       auto itr = endorsement_idx.lower_bound(induction_id);
-      while (itr != endorsement_idx.end() && itr->induction_id == induction_id)
+      while (itr != endorsement_idx.end() && itr->induction_id() == induction_id)
       {
-         endorsement_idx.modify(itr, eosio::same_payer, [&](auto& row) { row.endorsed = false; });
+         endorsement_idx.modify(itr, eosio::same_payer, [&](auto& row) { row.endorsed() = false; });
          itr++;
       }
    }
@@ -152,9 +152,9 @@ namespace eden
 
       auto endorsement_idx = endorsement_tb.get_index<"byendorser"_n>();
       const auto& endorsement = endorsement_idx.get(uint128_t{account.value} << 64 | induction.id());
-      eosio::check(!endorsement.endorsed, "Already endorsed");
+      eosio::check(!endorsement.endorsed(), "Already endorsed");
       endorsement_tb.modify(endorsement, eosio::same_payer,
-                            [&](auto& row) { row.endorsed = true; });
+                            [&](auto& row) { row.endorsed() = true; });
 
       maybe_create_nft(induction);
    }
@@ -163,9 +163,9 @@ namespace eden
    {
       auto endorsement_idx = endorsement_tb.get_index<"byinduction"_n>();
       auto itr = endorsement_idx.lower_bound(induction.id());
-      while (itr != endorsement_idx.end() && itr->induction_id == induction.id())
+      while (itr != endorsement_idx.end() && itr->induction_id() == induction.id())
       {
-         endorsement_idx.modify(itr, eosio::same_payer, [](auto& row) { row.endorsed = true; });
+         endorsement_idx.modify(itr, eosio::same_payer, [](auto& row) { row.endorsed() = true; });
          itr++;
       }
       maybe_create_nft(induction);
@@ -175,9 +175,9 @@ namespace eden
    {
       auto endorsement_idx = endorsement_tb.get_index<"byinduction"_n>();
       auto itr = endorsement_idx.lower_bound(induction.id());
-      while (itr != endorsement_idx.end() && itr->induction_id == induction.id())
+      while (itr != endorsement_idx.end() && itr->induction_id() == induction.id())
       {
-         if (!itr->endorsed)
+         if (!itr->endorsed())
             return;
          itr++;
       }
@@ -212,9 +212,9 @@ namespace eden
       new_owners.push_back(induction.invitee());
       auto endorsement_idx = endorsement_tb.get_index<"byinduction"_n>();
       auto itr = endorsement_idx.lower_bound(induction.id());
-      while (itr != endorsement_idx.end() && itr->induction_id == induction.id())
+      while (itr != endorsement_idx.end() && itr->induction_id() == induction.id())
       {
-         new_owners.push_back(itr->endorser);
+         new_owners.push_back(itr->endorser());
          itr++;
       }
 
@@ -249,7 +249,7 @@ namespace eden
    {
       auto endorsement_idx = endorsement_tb.get_index<"byinduction"_n>();
       auto itr = endorsement_idx.lower_bound(induction.id());
-      while (itr != endorsement_idx.end() && itr->induction_id == induction.id())
+      while (itr != endorsement_idx.end() && itr->induction_id() == induction.id())
       {
          itr = endorsement_idx.erase(itr);
       }
