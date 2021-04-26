@@ -54,7 +54,7 @@ const HeaderItems = ({ menuItems }: { menuItems: MenuItem[] }) => {
 };
 
 const HEADER_LINK_BASE_CLASS =
-    "mr-5 hover:text-gray-900 ";
+    "mr-5 last:mr-0 hover:text-gray-900 ";
 
 const HeaderItemLink = ({
     href,
