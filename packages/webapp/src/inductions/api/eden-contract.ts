@@ -1,4 +1,3 @@
-import { Endorsement, Induction } from "inductions/interfaces";
 import {
     CONTRACT_INDUCTION_TABLE,
     getRow,
@@ -6,6 +5,8 @@ import {
     getTableIndexRows,
     CONTRACT_ENDORSEMENT_TABLE,
 } from "_app";
+
+import { Endorsement, Induction } from "../interfaces";
 
 // eosio secondary indexes for inductions defined at:
 // /contracts/eden/include/inductions.hpp
@@ -16,14 +17,20 @@ const INDEX_BY_INDUCTION = 3;
 
 export const getInduction = async (
     inductionId: string
-): Promise<{
-    induction: Induction;
-    endorsements: Endorsement[];
-}> => {
-    const induction = await getRow(CONTRACT_INDUCTION_TABLE, "id", inductionId);
+): Promise<
+    | {
+          induction: Induction;
+          endorsements: Endorsement[];
+      }
+    | undefined
+> => {
+    const induction = await getRow<Induction>(
+        CONTRACT_INDUCTION_TABLE,
+        "id",
+        inductionId
+    );
     console.info("retrieved induction", induction);
 
-    let endorsements: Endorsement[] = [];
     if (induction) {
         const endorsementsRows = await getTableIndexRows(
             CONTRACT_ENDORSEMENT_TABLE,
@@ -31,13 +38,13 @@ export const getInduction = async (
             "i64",
             induction.id
         );
-        endorsements = endorsementsRows.filter(
+        const endorsements = endorsementsRows.filter(
             (endorsement: Endorsement) =>
                 endorsement.induction_id === induction.id
         );
-    }
 
-    return { induction, endorsements };
+        return { induction, endorsements };
+    }
 };
 
 export const getCurrentInductions = async (

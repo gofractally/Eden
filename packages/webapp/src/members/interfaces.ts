@@ -10,10 +10,18 @@ export interface MemberData {
     socialHandles: EdenNftSocialHandles;
     inductionVideo: string;
     createdAt: number;
-    salesData?: MemberSalesData;
+    auctionData?: MemberAuctionData;
+    assetData?: AssetData;
+    saleId?: string;
 }
 
-export interface MemberSalesData {
+export interface AssetData {
+    assetId: string;
+    templateMint: number;
+}
+
+export interface MemberAuctionData {
+    auctionId: string;
     price: Asset;
     bidEndTime?: number;
 }

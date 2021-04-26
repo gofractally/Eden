@@ -13,3 +13,6 @@
 [submodule "external/rocksdb"]
 	path = external/rocksdb
 	url = https://github.com/facebook/rocksdb.git
+[submodule "external/atomicassets-contract"]
+	path = external/atomicassets-contract
+	url = https://github.com/pinknetworkx/atomicassets-contract.git
