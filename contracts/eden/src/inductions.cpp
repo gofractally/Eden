@@ -34,15 +34,13 @@ namespace eden
                                      const std::string& video)
    {
       induction_tb.emplace(contract, [&](auto& row) {
-         row.value = induction_v0{
-            .id = id,
-            .inviter = inviter,
-            .invitee = invitee,
-            .endorsements = endorsements,
-            .created_at = eosio::current_block_time(),
-            .video = video,
-            .new_member_profile = {}
-         };
+         row.value = induction_v0{.id = id,
+                                  .inviter = inviter,
+                                  .invitee = invitee,
+                                  .endorsements = endorsements,
+                                  .created_at = eosio::current_block_time(),
+                                  .video = video,
+                                  .new_member_profile = {}};
       });
    }
 
@@ -122,7 +120,8 @@ namespace eden
 
    void inductions::check_valid_induction(const induction& induction) const
    {
-      auto induction_lifetime = eosio::current_time_point() - induction.created_at().to_time_point();
+      auto induction_lifetime =
+          eosio::current_time_point() - induction.created_at().to_time_point();
       eosio::check(induction_lifetime.to_seconds() <= induction_expiration_secs,
                    "induction has expired");
    }
@@ -146,12 +145,14 @@ namespace eden
       eosio::check(!induction.video().empty(), "Video not set");
       eosio::check(!induction.new_member_profile().name.empty(), "Profile not set");
 
-      auto bin = eosio::convert_to_bin(std::tuple(induction.video(), induction.new_member_profile()));
+      auto bin =
+          eosio::convert_to_bin(std::tuple(induction.video(), induction.new_member_profile()));
       auto actual_hash = eosio::sha256(bin.data(), bin.size());
       eosio::check(actual_hash == induction_data_hash, "Outdated endorsement");
 
       auto endorsement_idx = endorsement_tb.get_index<"byendorser"_n>();
-      const auto& endorsement = endorsement_idx.get(uint128_t{account.value} << 64 | induction.id());
+      const auto& endorsement =
+          endorsement_idx.get(uint128_t{account.value} << 64 | induction.id());
       eosio::check(!endorsement.endorsed(), "Already endorsed");
       endorsement_tb.modify(endorsement, eosio::same_payer,
                             [&](auto& row) { row.endorsed() = true; });
@@ -188,17 +189,18 @@ namespace eden
          row.induction_id = induction.id();
       });
 
-      atomicassets::attribute_map immutable_data = {{"edenacc", induction.invitee().to_string()},
-                                                    {"name", induction.new_member_profile().name},
-                                                    {"img", induction.new_member_profile().img},
-                                                    {"bio", induction.new_member_profile().bio},
-                                                    {"social", induction.new_member_profile().social},
-                                                    {"inductionvid", induction.video()}};
+      atomicassets::attribute_map immutable_data = {
+          {"edenacc", induction.invitee().to_string()},
+          {"name", induction.new_member_profile().name},
+          {"img", induction.new_member_profile().img},
+          {"bio", induction.new_member_profile().bio},
+          {"social", induction.new_member_profile().social},
+          {"inductionvid", induction.video()}};
       eosio::action{{contract, "active"_n},
                     atomic_assets_account,
                     "createtempl"_n,
                     std::tuple{contract, collection_name, schema_name, true, true,
-                    uint32_t{induction.endorsements() + 2}, immutable_data}}
+                               uint32_t{induction.endorsements() + 2}, immutable_data}}
           .send();
 
       // Finalize and clean up induction state.  Must happen last.

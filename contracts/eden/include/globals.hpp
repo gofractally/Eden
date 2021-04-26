@@ -40,7 +40,7 @@ namespace eden
 
      public:
       explicit globals(eosio::name contract)
-         : contract(contract), data(std::get<global_data_v0>(get_global_singleton(contract).get()))
+          : contract(contract), data(std::get<global_data_v0>(get_global_singleton(contract).get()))
       {
       }
       explicit globals(eosio::name contract, const global_data_v0& initial_value);

@@ -1,9 +1,9 @@
 #pragma once
 
+#include <eosio/map_macro.h>
 #include <constants.hpp>
 #include <eosio/asset.hpp>
 #include <eosio/eosio.hpp>
-#include <eosio/map_macro.h>
 #include <globals.hpp>
 #include <string>
 #include <utils.hpp>
@@ -43,12 +43,24 @@ namespace eden
                  video,
                  new_member_profile)
 
-   struct induction {
+   struct induction
+   {
       induction() = default;
       induction(const induction&) = delete;
       std::variant<induction_v0> value;
-      EDEN_FORWARD_MEMBERS(value, id, inviter, invitee, endorsements, created_at, video, new_member_profile)
-      EDEN_FORWARD_FUNCTIONS(value, primary_key, get_invitee_inviter, get_inviter_invitee, get_created_key)
+      EDEN_FORWARD_MEMBERS(value,
+                           id,
+                           inviter,
+                           invitee,
+                           endorsements,
+                           created_at,
+                           video,
+                           new_member_profile)
+      EDEN_FORWARD_FUNCTIONS(value,
+                             primary_key,
+                             get_invitee_inviter,
+                             get_inviter_invitee,
+                             get_created_key)
    };
    EOSIO_REFLECT(induction, value)
 

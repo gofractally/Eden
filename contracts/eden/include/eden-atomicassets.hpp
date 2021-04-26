@@ -1,8 +1,8 @@
 #pragma once
 
 #include <eosio/check.hpp>
-#include <eosio/reflection.hpp>
 #include <eosio/name.hpp>
+#include <eosio/reflection.hpp>
 #include <string>
 #include <vector>
 
@@ -27,5 +27,7 @@ namespace eden::atomicassets
 
    using attribute_map = std::vector<attribute>;
 
-   attribute_map read_immutable_data(eosio::name contract, eosio::name collection, int32_t template_id);
-}  // namespace atomicassets
+   attribute_map read_immutable_data(eosio::name contract,
+                                     eosio::name collection,
+                                     int32_t template_id);
+}  // namespace eden::atomicassets
