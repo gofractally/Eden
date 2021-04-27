@@ -2,12 +2,13 @@
 #include <clio/reflect.hpp>
 #include <vector>
 
-namespace clio {
+namespace clio
+{
+   struct bytes
+   {
+      std::vector<char> data;
+   };
 
-struct bytes {
-   std::vector<char> data;
-};
+   CLIO_REFLECT(bytes, data);
 
-CLIO_REFLECT(bytes, data);
-
-} // namespace clio 
+}  // namespace clio

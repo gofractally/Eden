@@ -1,28 +1,35 @@
 #pragma once
 #include <tuple>
 
-namespace clio {
-enum class tuple_error {
-   no_error,
-   invalid_tuple_index
-}; // tuple_error
-} // namespace clio 
+namespace clio
+{
+   enum class tuple_error
+   {
+      no_error,
+      invalid_tuple_index
+   };  // tuple_error
+}  // namespace clio
 
-namespace std {
-    template <>
-    struct is_error_code_enum<clio::tuple_error> : true_type {};
-} // namespace std
+namespace std
+{
+   template <>
+   struct is_error_code_enum<clio::tuple_error> : true_type
+   {
+   };
+}  // namespace std
 
+namespace clio
+{
+   class tuple_error_category_type : public std::error_category
+   {
+     public:
+      const char* name() const noexcept override final { return "ConversionError"; }
 
-namespace clio {
-
-class tuple_error_category_type : public std::error_category {
- public:
-   const char* name() const noexcept override final { return "ConversionError"; }
-
-   std::string message(int c) const override final {
-      switch (static_cast<tuple_error>(c)) {
-            // clang-format off
+      std::string message(int c) const override final
+      {
+         switch (static_cast<tuple_error>(c))
+         {
+               // clang-format off
          case tuple_error::no_error:                 return "No error";
          case tuple_error::invalid_tuple_index:      return "invalid tuple index";
          default: return "unknown";
