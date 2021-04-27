@@ -18,7 +18,9 @@ export const MemberPage = ({ member }: Props) => {
         </RawLayout>
     ) : (
         <RawLayout title="Member not found">
-            <div className="text-center max-w">:(</div>
+            <div className="text-center max-w mt-4">
+                This account is not an <strong>active eden member</strong>.
+            </div>
         </RawLayout>
     );
 };
