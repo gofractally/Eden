@@ -72,7 +72,7 @@ namespace eden
    };
 
    EOSIO_ACTIONS(eden,
-                 "eden"_n,
+                 "eden.gm"_n,
                  clearall,
                  genesis,
                  inductinit,

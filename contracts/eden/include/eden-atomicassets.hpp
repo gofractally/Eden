@@ -1,6 +1,8 @@
 #pragma once
 
 #include <eosio/check.hpp>
+#include <eosio/contract.hpp>
+#include <eosio/dispatcher.hpp>
 #include <eosio/name.hpp>
 #include <eosio/reflection.hpp>
 #include <string>
@@ -26,6 +28,31 @@ namespace eden::atomicassets
    }
 
    using attribute_map = std::vector<attribute>;
+
+   struct format
+   {
+      std::string name;
+      std::string type;
+   };
+   EOSIO_REFLECT(format, name, type);
+
+   struct atomicassets_contract : eosio::contract
+   {
+      using contract::contract;
+      void init();
+      void createcol(eosio::name author,
+                     eosio::name collection_name,
+                     bool allow_notify,
+                     const std::vector<eosio::name>& authorized_accounts,
+                     const std::vector<eosio::name>& notify_accounts,
+                     double market_fee,
+                     const attribute_map& data);
+      void createschema(eosio::name authorized_creator,
+                        eosio::name collection_name,
+                        eosio::name schema_name,
+                        const std::vector<format>& schema_format);
+   };
+   EOSIO_ACTIONS(atomicassets_contract, "atomicassets"_n, init, createcol, createschema);
 
    attribute_map read_immutable_data(eosio::name contract,
                                      eosio::name collection,

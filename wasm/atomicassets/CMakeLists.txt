@@ -1,0 +1,25 @@
+set(ATOMICASSETS_URL https://github.com/eoscommunity/Eden/releases/download/deps/atomicassets.tar.bz2)
+set(ATOMICASSETS_ARCHIVE ${CMAKE_CURRENT_BINARY_DIR}/atomicassets.tar.bz2)
+set(ATOMICASSETS_EXTRACTED ${ROOT_BINARY_DIR}/atomicassets.wasm)
+
+if(NOT EXISTS ${ATOMICASSETS_ARCHIVE})
+    message("Downloading ${ATOMICASSETS_URL}")
+    file(DOWNLOAD ${ATOMICASSETS_URL} ${ATOMICASSETS_ARCHIVE}
+        STATUS ATOMICASSETS_DOWNLOAD_STATUS
+        TIMEOUT 60
+        SHOW_PROGRESS
+        TLS_VERIFY ON)
+    list(POP_BACK ATOMICASSETS_DOWNLOAD_STATUS ATOMICASSETS_DOWNLOAD_STATUS_MSG)
+    if(NOT ATOMICASSETS_DOWNLOAD_STATUS EQUAL 0)
+        file(REMOVE ${ATOMICASSETS_ARCHIVE})
+        message(FATAL_ERROR "Download ${ATOMICASSETS_URL} failed. ${ATOMICASSETS_DOWNLOAD_STATUS_MSG}")
+    endif()
+endif()
+
+if(NOT EXISTS ${ATOMICASSETS_EXTRACTED})
+    message("Extracting ${ATOMICASSETS_ARCHIVE}")
+    execute_process(
+        WORKING_DIRECTORY ${ROOT_BINARY_DIR}
+        COMMAND tar xf ${ATOMICASSETS_ARCHIVE} --strip-components=1
+    )
+endif()
