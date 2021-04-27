@@ -1,8 +1,8 @@
+import { atomicAssets, edenContractAccount } from "config";
 import {
     getAccountCollection,
     getAuctions,
     getOwners,
-    getSalesForTemplates,
     getTemplate,
     getTemplates,
 } from "nfts/api";
@@ -12,6 +12,7 @@ import {
     EdenNftSocialHandles,
     TemplateData,
 } from "nfts/interfaces";
+
 import { MemberData } from "../interfaces";
 import { getEdenMember } from "./eden-contract";
 
@@ -37,7 +38,7 @@ export const getMembers = async (
 };
 
 export const getNewMembers = async (): Promise<MemberData[]> => {
-    const data = await getAuctions();
+    const data = await getAuctions(edenContractAccount);
     return data.map(convertAtomicAssetToMemberWithSalesData);
 };
 
@@ -55,17 +56,36 @@ export const getCollection = async (
 
 export const getCollectedBy = async (
     templateId: number
-): Promise<MemberData[]> => {
-    const edenAccs: string[] = await getOwners(templateId);
+): Promise<{ members: MemberData[]; unknownOwners: string[] }> => {
+    const [owners, auctions] = await Promise.all([
+        getOwners(templateId),
+        getAuctions(undefined, [`${templateId}`]),
+    ]);
 
-    // TODO: very expensive lookups here, we need to revisit
+    const auctionsOwners = auctions
+        .filter((auction) => auction.seller !== edenContractAccount)
+        .map((auction) => auction.seller);
+
+    // the real eden owners are the current owners + pending auctions by current owners
+    const edenAccs = owners.concat(auctionsOwners);
+
+    // TODO: revisit very expensive lookups here, we need to revisit
     // maybe not, since each card will not be minted more than 20 times...
     // so a given template will have a MAXIMUM number of 20 owners.
     // even though, it would generate 20 api calls... not good.
     const collectedMembers = edenAccs.map(getMember);
-    const members = await Promise.all(collectedMembers);
+    const membersData = await Promise.all(collectedMembers);
 
-    return members.filter((member) => member !== undefined) as MemberData[];
+    const members = membersData.filter(
+        (member) => member !== undefined
+    ) as MemberData[];
+    const unknownOwners = edenAccs.filter(
+        (acc) =>
+            acc !== atomicAssets.marketContract &&
+            !members.find((member) => member.edenAccount === acc)
+    );
+
+    return { members, unknownOwners };
 };
 
 const convertAtomicTemplateToMember = (data: TemplateData): MemberData => ({
@@ -92,7 +112,6 @@ const convertAtomicAssetToMemberWithSalesData = (
     data: AuctionableTemplateData
 ): MemberData => {
     const member = convertAtomicTemplateToMember(data);
-    console.info(data);
     member.assetData = {
         assetId: data.assetId,
         templateMint: data.templateMint,

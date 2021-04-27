@@ -6,7 +6,7 @@ export const getTemplate = async (templateId: string) => {
     return templates.length ? templates[0] : undefined;
 };
 
-const LAUNCH_TIMESTAMP = "&after=1619230179000";
+const LAUNCH_TIMESTAMP = "&after=1619486647000";
 
 export const getTemplates = async (
     page = 1,
@@ -61,10 +61,14 @@ export const getOwners = async (templateId: number): Promise<string[]> => {
 };
 
 export const getAuctions = async (
-    seller = edenContractAccount,
+    seller?: string,
     templateIds?: string[]
 ): Promise<AuctionableTemplateData[]> => {
-    let url = `${atomicAssets.apiMarketUrl}/auctions?state=1&collection_name=${atomicAssets.collection}&schema_name=${atomicAssets.schema}&seller=${seller}&page=1&limit=9999&order=desc&sort=created${LAUNCH_TIMESTAMP}`;
+    let url = `${atomicAssets.apiMarketUrl}/auctions?state=1&collection_name=${atomicAssets.collection}&schema_name=${atomicAssets.schema}&page=1&limit=9999&order=desc&sort=created${LAUNCH_TIMESTAMP}`;
+
+    if (seller) {
+        url += `&seller=${seller}`;
+    }
 
     if (templateIds && templateIds.length) {
         url += `&template_id=${templateIds.join(",")}`;
@@ -75,8 +79,8 @@ export const getAuctions = async (
     return data
         .filter((item: any) => item.assets.length === 1)
         .map((item: any) => {
+            const seller = item.seller;
             const asset = item.assets[0];
-            console.info(asset);
             const auctionId = item.auction_id;
             const assetId = asset.asset_id;
             const templateMint = parseInt(asset.template_mint);
@@ -87,6 +91,7 @@ export const getAuctions = async (
                 precision: parseInt(item.price.token_precision),
             };
             return {
+                seller,
                 ...asset.template,
                 auctionId,
                 currentBid,
