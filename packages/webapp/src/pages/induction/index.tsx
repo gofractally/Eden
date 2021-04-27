@@ -14,9 +14,9 @@ export const InductionPage = () => {
         edenMember && edenMember.status === MemberStatus.ActiveMember;
 
     return (
-        <SingleColLayout title="Induction">
+        <SingleColLayout>
             {!ualAccount ? (
-                <div>Please login using yout wallet.</div>
+                <div>Please login using your wallet.</div>
             ) : isLoading ? (
                 <p>Loading...</p>
             ) : edenMember ? (
