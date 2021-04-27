@@ -18,12 +18,18 @@ export const MemberCollections = ({ edenAccount, templateId }: Props) => {
 
     useEffect(() => {
         const loadMember = async () => {
-            const collectionRequest =
-                tab === "collection"
-                    ? getCollection(edenAccount)
-                    : getCollectedBy(templateId);
-            const members = await collectionRequest;
-            setMembers(members);
+            if (tab === "collection") {
+                const members = await getCollection(edenAccount);
+                setMembers(members);
+            } else {
+                const { members, unknownOwners } = await getCollectedBy(
+                    templateId
+                );
+                setMembers([
+                    ...members,
+                    ...unknownOwners.map(externalOwnersCards),
+                ]);
+            }
             setLoading(false);
         };
         setLoading(true);
@@ -59,4 +65,17 @@ export const MemberCollections = ({ edenAccount, templateId }: Props) => {
             </div>
         </div>
     );
+};
+
+const externalOwnersCards = (owner: string): MemberData => {
+    return {
+        templateId: 0,
+        name: `(external) ${owner}`,
+        image: "",
+        edenAccount: owner,
+        bio: "",
+        socialHandles: {},
+        inductionVideo: "",
+        createdAt: 0,
+    };
 };

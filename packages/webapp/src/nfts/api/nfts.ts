@@ -76,7 +76,6 @@ export const getAuctions = async (
         .filter((item: any) => item.assets.length === 1)
         .map((item: any) => {
             const asset = item.assets[0];
-            console.info(asset);
             const auctionId = item.auction_id;
             const assetId = asset.asset_id;
             const templateMint = parseInt(asset.template_mint);

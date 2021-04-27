@@ -1,3 +1,4 @@
+import { atomicAssets } from "config";
 import {
     getAccountCollection,
     getAuctions,
@@ -55,7 +56,7 @@ export const getCollection = async (
 
 export const getCollectedBy = async (
     templateId: number
-): Promise<MemberData[]> => {
+): Promise<{ members: MemberData[]; unknownOwners: string[] }> => {
     const edenAccs: string[] = await getOwners(templateId);
 
     // TODO: very expensive lookups here, we need to revisit
@@ -63,9 +64,19 @@ export const getCollectedBy = async (
     // so a given template will have a MAXIMUM number of 20 owners.
     // even though, it would generate 20 api calls... not good.
     const collectedMembers = edenAccs.map(getMember);
-    const members = await Promise.all(collectedMembers);
+    const membersData = await Promise.all(collectedMembers);
 
-    return members.filter((member) => member !== undefined) as MemberData[];
+    // TODO WIP: working on getting unknown owners
+    const members = membersData.filter(
+        (member) => member !== undefined
+    ) as MemberData[];
+    const unknownOwners = edenAccs.filter(
+        (acc) =>
+            acc !== atomicAssets.marketContract &&
+            !members.find((member) => member.edenAccount === acc)
+    );
+
+    return { members, unknownOwners };
 };
 
 const convertAtomicTemplateToMember = (data: TemplateData): MemberData => ({
@@ -92,7 +103,6 @@ const convertAtomicAssetToMemberWithSalesData = (
     data: AuctionableTemplateData
 ): MemberData => {
     const member = convertAtomicTemplateToMember(data);
-    console.info(data);
     member.assetData = {
         assetId: data.assetId,
         templateMint: data.templateMint,
