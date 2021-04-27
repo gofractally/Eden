@@ -70,9 +70,9 @@ export const MemberCollections = ({ edenAccount, templateId }: Props) => {
 const externalOwnersCards = (owner: string): MemberData => {
     return {
         templateId: 0,
-        name: `(external) ${owner}`,
+        name: owner,
         image: "",
-        edenAccount: owner,
+        edenAccount: "",
         bio: "",
         socialHandles: {},
         inductionVideo: "",
