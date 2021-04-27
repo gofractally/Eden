@@ -1,5 +1,5 @@
+#include <accounts.hpp>
 #include <eden.hpp>
-#include <members.hpp>
 
 namespace eden
 {
@@ -16,6 +16,6 @@ namespace eden
       eosio::check(quantity.symbol == globals.default_token(),
                    "token must be a valid " + globals.default_token().to_string());
 
-      members{get_self()}.deposit(from, quantity);
+      accounts{get_self()}.add_balance(from, quantity);
    }
 }  // namespace eden

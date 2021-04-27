@@ -63,6 +63,7 @@ void eden_setup(test_chain& t)
 struct eden_tester
 {
    test_chain chain;
+   user_context eosio_token = chain.as("eosio.token"_n);
    user_context eden_gm = chain.as("eden.gm"_n);
    user_context alice = chain.as("alice"_n);
    user_context pip = chain.as("pip"_n);
@@ -109,4 +110,29 @@ TEST_CASE("genesis")
 
    eden::globals globals("eden.gm"_n);
    CHECK(globals.get().stage == eden::contract_stage::active);
+}
+
+TEST_CASE("deposit and spend")
+{
+   eden_tester t;
+   t.chain.as("eosio.token"_n)
+       .act<token::actions::transfer>("eosio.token"_n, "alice"_n, s2a("1000.0000 EOS"), "memo");
+   t.eden_gm.act<actions::genesis>("Eden", eosio::symbol("EOS", 4), s2a("10.0000 EOS"),
+                                   std::vector{"alice"_n, "pip"_n, "egeon"_n}, "IPFS video",
+                                   s2a("1.0000 EOS"), 7 * 24 * 60 * 60, "");
+   expect(
+       t.alice.trace<token::actions::transfer>("alice"_n, "eden.gm"_n, s2a("9.9999 EOS"), "memo"),
+       "Contract not active");
+
+   t.alice.act<actions::inductprofil>(
+       1, eden::new_member_profile{"Alice", "IPFS Image", "bio", "social"});
+   t.pip.act<actions::inductprofil>(
+       2, eden::new_member_profile{"Philip Pirrip", "IPFS image", "bio", "social"});
+   t.egeon.act<actions::inductprofil>(
+       3, eden::new_member_profile{"Egeon", "IPFS image", "bio", "social"});
+
+   expect(
+       t.alice.trace<token::actions::transfer>("alice"_n, "eden.gm"_n, s2a("9.9999 EOS"), "memo"),
+       "insufficient deposit to open an account");
+   t.alice.act<token::actions::transfer>("alice"_n, "eden.gm"_n, s2a("10.0000 EOS"), "memo");
 }

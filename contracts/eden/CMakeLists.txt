@@ -7,6 +7,7 @@ add_executable(eden
    src/actions/notify_assets.cpp
    src/actions/notify_transfer.cpp
    src/eden.cpp
+   src/accounts.cpp
    src/globals.cpp
    src/inductions.cpp
    src/members.cpp
