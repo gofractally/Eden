@@ -13,7 +13,6 @@ namespace eden
          return;
 
       globals globals{get_self()};
-      globals.check_active();
       eosio::check(quantity.symbol == globals.default_token(),
                    "token must be a valid " + globals.default_token().to_string());
 
@@ -25,7 +24,6 @@ namespace eden
       require_auth(owner);
 
       globals globals{get_self()};
-      globals.check_active();
       eosio::check(quantity.symbol == globals.default_token(),
                    "token must be a valid " + globals.default_token().to_string());
 

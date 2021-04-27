@@ -2,15 +2,6 @@
 
 namespace eden
 {
-   void members::deposit(eosio::name account, const eosio::asset& quantity)
-   {
-      eosio::check(quantity >= globals.get().minimum_donation, "insufficient minimum donation");
-      if (is_new_member(account))
-      {
-         create(account);
-      }
-   }
-
    void members::check_active_member(eosio::name account)
    {
       auto member = member_tb.get(account.value);

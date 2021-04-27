@@ -88,9 +88,15 @@ struct eden_tester
    {
       chain_setup(chain);
       eden_setup(chain);
-      chain.create_account("alice"_n);
-      chain.create_account("pip"_n);
-      chain.create_account("egeon"_n);
+      for (auto account : {"alice"_n, "pip"_n, "egeon"_n})
+      {
+         chain.create_account(account);
+         chain.as("eosio.token"_n)
+             .act<token::actions::transfer>("eosio.token"_n, account, s2a("1000.0000 EOS"), "memo");
+         chain.as("eosio.token"_n)
+             .act<token::actions::transfer>("eosio.token"_n, account, s2a("1000.0000 OTHER"),
+                                            "memo");
+      }
    }
 };
 
@@ -123,6 +129,14 @@ TEST_CASE("genesis")
               "voyages I often made\nTo Epidamnum, till my factor's death,",
               "{\"blog\":\"egeon.example.com\"}"});
 
+   t.alice.act<token::actions::transfer>("alice"_n, "eden.gm"_n, s2a("10.0000 EOS"), "memo");
+   t.pip.act<token::actions::transfer>("pip"_n, "eden.gm"_n, s2a("10.0000 EOS"), "memo");
+   t.egeon.act<token::actions::transfer>("egeon"_n, "eden.gm"_n, s2a("10.0000 EOS"), "memo");
+
+   t.alice.act<actions::inductpayfee>("alice"_n, 1, s2a("10.0000 EOS"));
+   t.pip.act<actions::inductpayfee>("pip"_n, 2, s2a("10.0000 EOS"));
+   t.egeon.act<actions::inductpayfee>("egeon"_n, 3, s2a("10.0000 EOS"));
+
    eden::globals globals("eden.gm"_n);
    CHECK(globals.get().stage == eden::contract_stage::active);
 }
@@ -130,24 +144,9 @@ TEST_CASE("genesis")
 TEST_CASE("deposit and spend")
 {
    eden_tester t;
-   t.chain.as("eosio.token"_n)
-       .act<token::actions::transfer>("eosio.token"_n, "alice"_n, s2a("1000.0000 EOS"), "memo");
-   t.chain.as("eosio.token"_n)
-       .act<token::actions::transfer>("eosio.token"_n, "alice"_n, s2a("1000.0000 OTHER"), "memo");
    t.eden_gm.act<actions::genesis>("Eden", eosio::symbol("EOS", 4), s2a("10.0000 EOS"),
                                    std::vector{"alice"_n, "pip"_n, "egeon"_n}, "IPFS video",
                                    s2a("1.0000 EOS"), 7 * 24 * 60 * 60, "");
-   expect(
-       t.alice.trace<token::actions::transfer>("alice"_n, "eden.gm"_n, s2a("9.9999 EOS"), "memo"),
-       "Contract not active");
-
-   t.alice.act<actions::inductprofil>(
-       1, eden::new_member_profile{"Alice", "IPFS Image", "bio", "social"});
-   t.pip.act<actions::inductprofil>(
-       2, eden::new_member_profile{"Philip Pirrip", "IPFS image", "bio", "social"});
-   t.egeon.act<actions::inductprofil>(
-       3, eden::new_member_profile{"Egeon", "IPFS image", "bio", "social"});
-
    expect(t.alice.trace<token::actions::transfer>("alice"_n, "eden.gm"_n, s2a("10.0000 OTHER"),
                                                   "memo"),
           "token must be a valid 4,EOS");
