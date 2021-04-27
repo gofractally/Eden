@@ -255,13 +255,13 @@ namespace eden
       {
          itr = endorsement_idx.erase(itr);
       }
-      induction_tb.erase(induction);
       endorsed_induction_table_type endorsed_induction_tb(contract, default_scope);
       if (auto itr = endorsed_induction_tb.find(induction.invitee().value);
           itr != endorsed_induction_tb.end())
       {
          endorsed_induction_tb.erase(itr);
       }
+      induction_tb.erase(induction);
    }
 
    void inductions::validate_profile(const new_member_profile& new_member_profile) const
