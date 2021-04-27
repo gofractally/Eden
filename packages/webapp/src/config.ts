@@ -38,7 +38,7 @@ EDEN_CONTRACT_ACCOUNT="${process.env.NEXT_PUBLIC_EDEN_CONTRACT_ACCOUNT}"
 APP_MINIMUM_DONATION_AMOUNT="${process.env.NEXT_PUBLIC_APP_MINIMUM_DONATION_AMOUNT}"
 `);
 
-export const ipfsBaseUrl = "https://ipfs.pink.gg/ipfs";
+export const ipfsBaseUrl = "https://ipfs.io/ipfs"; //"https://ipfs.pink.gg/ipfs";
 
 export const shortAppName = process.env.NEXT_PUBLIC_APP_SHORT_NAME;
 export const appName = process.env.NEXT_PUBLIC_APP_NAME;
