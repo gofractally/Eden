@@ -32,19 +32,24 @@ export const getInduction = async (
     console.info("retrieved induction", induction);
 
     if (induction) {
-        const endorsementsRows = await getTableIndexRows(
-            CONTRACT_ENDORSEMENT_TABLE,
-            INDEX_BY_INDUCTION,
-            "i64",
-            induction.id
-        );
-        const endorsements = endorsementsRows.filter(
-            (endorsement: Endorsement) =>
-                endorsement.induction_id === induction.id
-        );
-
+        const endorsements = await getEndorsementsByInductionId(inductionId);
         return { induction, endorsements };
     }
+};
+
+export const getEndorsementsByInductionId = async (
+    inductionId: string
+): Promise<Endorsement[]> => {
+    const endorsementsRows = await getTableIndexRows(
+        CONTRACT_ENDORSEMENT_TABLE,
+        INDEX_BY_INDUCTION,
+        "i64",
+        inductionId
+    );
+    const endorsements = endorsementsRows.filter(
+        (endorsement: Endorsement) => endorsement.induction_id === inductionId
+    );
+    return endorsements;
 };
 
 export const getCurrentInductions = async (
