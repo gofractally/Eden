@@ -26,7 +26,7 @@ export const MemberSquare = ({ member }: { member: MemberData }) => (
         <Link href={`/members/${member.edenAccount}`}>
             <a>
                 <img
-                    src={ipfsBaseUrl + member.image}
+                    src={`${ipfsBaseUrl}/${member.image}`}
                     className={styles.memberImg}
                 />
             </a>
