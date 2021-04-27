@@ -2,6 +2,14 @@
 
 namespace eden
 {
+   std::optional<account> accounts::get_account(eosio::name owner)
+   {
+      auto record = account_tb.find(owner.value);
+      if (record != account_tb.end())
+         return *record;
+      return std::nullopt;
+   }
+
    void accounts::add_balance(eosio::name owner, const eosio::asset& quantity)
    {
       auto record = account_tb.find(owner.value);
