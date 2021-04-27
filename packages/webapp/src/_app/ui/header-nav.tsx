@@ -53,8 +53,7 @@ const HeaderItems = ({ menuItems }: { menuItems: MenuItem[] }) => {
     );
 };
 
-const HEADER_LINK_BASE_CLASS =
-    "mr-5 last:mr-0 hover:text-gray-900 ";
+const HEADER_LINK_BASE_CLASS = "mr-5 last:mr-0 hover:text-gray-900 ";
 
 const HeaderItemLink = ({
     href,
@@ -64,7 +63,8 @@ const HeaderItemLink = ({
 }: any) => {
     const { pathname } = useRouter();
     const active = exactPath ? pathname === href : pathname.startsWith(href);
-    const linkClass = HEADER_LINK_BASE_CLASS + (active ? "text-gray-900 font-bold" : "");
+    const linkClass =
+        HEADER_LINK_BASE_CLASS + (active ? "text-gray-900 font-bold" : "");
     return (
         <Link href={href}>
             <a className={linkClass} onClick={handleNavigationClick}>
@@ -86,6 +86,8 @@ const AccountMenu = () => {
             </a>
         </div>
     ) : (
-        <Button onClick={ualShowModal} className="mt-4 md:mt-0">Login</Button>
+        <Button onClick={ualShowModal} className="mt-4 md:mt-0">
+            Login
+        </Button>
     );
 };
