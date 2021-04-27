@@ -1,7 +1,12 @@
+import dayjs from "dayjs";
+import * as relativeTime from "dayjs/plugin/relativeTime";
+
 import { getEndorsementsByInductionId } from "inductions/api";
-import { getInductionStatusLabel } from "inductions/utils";
-import { Link, useFetchedData } from "_app";
-import { Endorsement, Induction } from "../interfaces";
+import { getInductionStatus, getInductionStatusLabel } from "inductions/utils";
+import { Button, Heading, Link, useFetchedData } from "_app";
+import { Endorsement, Induction, InductionStatus } from "../interfaces";
+
+dayjs.extend(relativeTime.default);
 
 interface InductionsListProps {
     inductions: Induction[];
@@ -40,34 +45,38 @@ interface InvitationsForInviteeProps {
 
 const InvitationsForInvitee = ({ inductions }: InvitationsForInviteeProps) => {
     return (
-        <div className={TABLE_CLASS} role="table" aria-label="Invitations">
-            <div className={`${TABLE_HEADER_CLASS}`} role="rowgroup">
-                <div
-                    className={`${TABLE_CELL_CLASS} first`}
-                    role="columnheader"
-                >
-                    Inviter
+        <>
+            <Heading size={3} className="mb-3">
+                My invitations to join Eden
+            </Heading>
+            <div className={TABLE_CLASS} role="table" aria-label="Invitations">
+                <div className={TABLE_HEADER_CLASS} role="rowgroup">
+                    <div className="md:flex-1 first" role="columnheader">
+                        Inviter
+                    </div>
+                    <div className="md:flex-1" role="columnheader">
+                        Voters
+                    </div>
+                    <div
+                        className="md:flex-1 flex-shrink flex-grow-0"
+                        role="columnheader"
+                    >
+                        Time remaining
+                    </div>
+                    <div className="md:text-center w-64" role="columnheader">
+                        Action/Status
+                    </div>
                 </div>
-                <div className={`${TABLE_CELL_CLASS}`} role="columnheader">
-                    Voters
-                </div>
-                <div className={`${TABLE_CELL_CLASS}`} role="columnheader">
-                    Time remaining
-                </div>
-                <div
-                    className={`${TABLE_CELL_CLASS} md:text-center`}
-                    role="columnheader"
-                >
-                    Action/Status
+                <div className={TABLE_ROWS_CLASS}>
+                    {inductions.map((induction) => (
+                        <InvitationRowForInvitee
+                            induction={induction}
+                            key={induction.id}
+                        />
+                    ))}
                 </div>
             </div>
-            {inductions.map((induction) => (
-                <InvitationRowForInvitee
-                    induction={induction}
-                    key={induction.id}
-                />
-            ))}
-        </div>
+        </>
     );
 };
 
@@ -81,28 +90,64 @@ const InvitationRowForInvitee = ({ induction }: { induction: Induction }) => {
         ?.map((end: Endorsement): string => end.endorser)
         .filter((end: string) => end !== induction.inviter);
 
+    const remainingTime = dayjs().to(
+        dayjs(induction.created_at).add(7, "day"),
+        true
+    );
+
     return (
         <div className={`${TABLE_ROW_CLASS} px-4 py-3`} role="rowgroup">
-            <div className={`${TABLE_CELL_CLASS} first`} role="cell">
+            <div className="md:flex-1 first font-light" role="cell">
+                <span className="md:hidden font-semibold">Inviter: </span>
                 {induction.inviter}
             </div>
-            <div className={`${TABLE_CELL_CLASS}`} role="cell">
+            <div className="md:flex-1 font-light" role="cell">
+                <span className="md:hidden font-semibold">Voters: </span>
                 {endorsers?.join(", ")}
             </div>
-            <div className={`${TABLE_CELL_CLASS}`} role="cell">
-                {induction.created_at}
+            <div
+                className="md:flex-1 flex-shrink flex-grow-0 font-medium"
+                role="cell"
+            >
+                <span className="md:hidden font-semibold">
+                    Time remaining:{" "}
+                </span>
+                {remainingTime}
             </div>
-            <div className={`${TABLE_CELL_CLASS} md:text-center`} role="cell">
-                <Link href={`/induction/${induction.id}`}>
-                    {getInductionStatusLabel(induction)}
-                </Link>
+            <div className="md:text-center w-64 pt-4 pb-2 md:py-0" role="cell">
+                <InviteeInductionStatus induction={induction} />
             </div>
         </div>
     );
 };
 
-const TABLE_CLASS = "border border-gray-200 rounded";
-const TABLE_ROW_CLASS = "md:flex items-center md:h-16";
-const TABLE_CELL_CLASS = "md:flex-1";
+const InviteeInductionStatus = ({ induction }: { induction: Induction }) => {
+    const status = getInductionStatus(induction);
+    switch (status) {
+        case InductionStatus.waitingForProfile:
+            return (
+                <Button href={`/induction/${induction.id}`} color="blue">
+                    Create my community profile
+                </Button>
+            );
+        case InductionStatus.waitingForVideo:
+            return (
+                <Link href={`/induction/${induction.id}`}>
+                    Ready for induction ceremony
+                </Link>
+            );
+        case InductionStatus.waitingForEndorsement:
+            return <Link href={`/induction/${induction.id}`}>Voting</Link>;
+        default:
+            return <>Error</>;
+    }
+};
+
+const TABLE_CLASS =
+    "md:border md:shadow-sm border-gray-200 rounded text-gray-700";
+const TABLE_ROWS_CLASS =
+    "space-y-5 md:space-y-0 md:divide-y md:divide-gray-200";
+const TABLE_ROW_CLASS =
+    "md:flex items-center border border-gray-200 shadow-sm md:shadow-none md:border-0 space-y-1 md:space-y-0 rounded md:rounded-none md:h-16 hover:bg-gray-50";
 const TABLE_HEADER_CLASS =
-    "md:flex items-center px-4 py-3 title-font font-medium text-gray-900 text-sm bg-gray-200";
+    "hidden md:flex items-center px-4 py-3 title-font font-medium text-gray-900 text-sm bg-gray-200";
