@@ -4,6 +4,7 @@ import * as relativeTime from "dayjs/plugin/relativeTime";
 import { getEndorsementsByInductionId } from "inductions/api";
 import { getInductionStatus, getInductionStatusLabel } from "inductions/utils";
 import { Button, Heading, Link, useFetchedData } from "_app";
+import * as InductionTable from "inductions/components/induction-table";
 import { Endorsement, Induction, InductionStatus } from "../interfaces";
 
 dayjs.extend(relativeTime.default);
@@ -33,91 +34,65 @@ export const InductionsList = ({
                     ))}
                 </ul>
             ) : (
-                <InvitationsForInvitee inductions={inductions} />
+                <InductionsForInvitee inductions={inductions} />
             )}
         </div>
     );
 };
 
-interface InvitationsForInviteeProps {
+interface InductionsForInviteeProps {
     inductions: Induction[];
 }
 
-const InvitationsForInvitee = ({ inductions }: InvitationsForInviteeProps) => {
+const InductionsForInvitee = ({ inductions }: InductionsForInviteeProps) => {
+    const headers: InductionTable.Header[] = [
+        {
+            key: "inviter",
+            label: "Inviter",
+        },
+        {
+            key: "voters",
+            label: "Voters",
+        },
+        {
+            key: "time_remaining",
+            label: "Time remaining",
+        },
+        {
+            key: "status",
+            label: "Action/Status",
+            type: InductionTable.DataTypeEnum.Action,
+        },
+    ];
+    const data: InductionTable.Row[] = inductions.map((ind) => {
+        const [allEndorsements] = useFetchedData<any>(
+            getEndorsementsByInductionId,
+            ind.id
+        );
+        const endorsers = allEndorsements
+            ?.map((end: Endorsement): string => end.endorser)
+            .filter((end: string) => end !== ind.inviter)
+            ?.join(", ");
+        const remainingTime = dayjs().to(
+            dayjs(ind.created_at).add(7, "day"),
+            true
+        );
+        return {
+            key: ind.id,
+            inviter: ind.inviter,
+            voters: endorsers,
+            time_remaining: remainingTime,
+            status: <InviteeInductionStatus induction={ind} />,
+        };
+    });
+
     return (
         <>
             <Heading size={3} className="mb-3">
                 My invitations to join Eden
             </Heading>
-            <div className={TABLE_CLASS} role="table" aria-label="Invitations">
-                <div className={TABLE_HEADER_CLASS} role="rowgroup">
-                    <div className="md:flex-1 first" role="columnheader">
-                        Inviter
-                    </div>
-                    <div className="md:flex-1" role="columnheader">
-                        Voters
-                    </div>
-                    <div
-                        className="md:flex-1 flex-shrink flex-grow-0"
-                        role="columnheader"
-                    >
-                        Time remaining
-                    </div>
-                    <div className="md:text-center w-64" role="columnheader">
-                        Action/Status
-                    </div>
-                </div>
-                <div className={TABLE_ROWS_CLASS}>
-                    {inductions.map((induction) => (
-                        <InvitationRowForInvitee
-                            induction={induction}
-                            key={induction.id}
-                        />
-                    ))}
-                </div>
-            </div>
+            <InductionTable.Table headers={headers} data={data} />
         </>
-    );
-};
-
-const InvitationRowForInvitee = ({ induction }: { induction: Induction }) => {
-    const [allEndorsements] = useFetchedData<any>(
-        getEndorsementsByInductionId,
-        induction.id
-    );
-
-    const endorsers = allEndorsements
-        ?.map((end: Endorsement): string => end.endorser)
-        .filter((end: string) => end !== induction.inviter);
-
-    const remainingTime = dayjs().to(
-        dayjs(induction.created_at).add(7, "day"),
-        true
-    );
-
-    return (
-        <div className={`${TABLE_ROW_CLASS} px-4 py-3`} role="rowgroup">
-            <div className="md:flex-1 first font-light" role="cell">
-                <span className="md:hidden font-semibold">Inviter: </span>
-                {induction.inviter}
-            </div>
-            <div className="md:flex-1 font-light" role="cell">
-                <span className="md:hidden font-semibold">Voters: </span>
-                {endorsers?.join(", ")}
-            </div>
-            <div
-                className="md:flex-1 flex-shrink flex-grow-0 font-medium"
-                role="cell"
-            >
-                <span className="md:hidden font-semibold">
-                    Time remaining:{" "}
-                </span>
-                {remainingTime}
-            </div>
-            <div className="md:text-center w-64 pt-4 pb-2 md:py-0" role="cell">
-                <InviteeInductionStatus induction={induction} />
-            </div>
-        </div>
     );
 };
 
@@ -142,12 +117,3 @@ const InviteeInductionStatus = ({ induction }: { induction: Induction }) => {
             return <>Error</>;
     }
 };
-
-const TABLE_CLASS =
-    "md:border md:shadow-sm border-gray-200 rounded text-gray-700";
-const TABLE_ROWS_CLASS =
-    "space-y-5 md:space-y-0 md:divide-y md:divide-gray-200";
-const TABLE_ROW_CLASS =
-    "md:flex items-center border border-gray-200 shadow-sm md:shadow-none md:border-0 space-y-1 md:space-y-0 rounded md:rounded-none md:h-16 hover:bg-gray-50";
-const TABLE_HEADER_CLASS =
-    "hidden md:flex items-center px-4 py-3 title-font font-medium text-gray-900 text-sm bg-gray-200";
