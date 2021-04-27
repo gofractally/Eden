@@ -49,7 +49,7 @@ export const MemberSquare = ({ member }: { member: MemberData }) => (
         <div className={styles.memberNameBadge + " text-xs"}>
             {member.edenAccount ? (
                 <Link href={`/members/${member.edenAccount}`}>
-                    <a className="text-white">{member.name}</a>
+                    <a className="text-white hover:underline">{member.name}</a>
                 </Link>
             ) : (
                 member.name
@@ -60,6 +60,7 @@ export const MemberSquare = ({ member }: { member: MemberData }) => (
                 <a
                     href={`${atomicAssets.hubUrl}/explorer/asset/${member.assetData.assetId}`}
                     target="_blank"
+                    className="hover:underline"
                 >
                     #{member.assetData.templateMint}
                 </a>
@@ -69,7 +70,7 @@ export const MemberSquare = ({ member }: { member: MemberData }) => (
             <div className={styles.memberAuctionBadge}>
                 <a
                     href={`${atomicAssets.hubUrl}/market/auction/${member.auctionData.auctionId}`}
-                    className="text-white"
+                    className="text-white hover:underline"
                     target="_blank"
                 >
                     ⏳ {assetToString(member.auctionData.price, 2)}
@@ -80,7 +81,7 @@ export const MemberSquare = ({ member }: { member: MemberData }) => (
             <div className={styles.memberAuctionBadge}>
                 <a
                     href={`${atomicAssets.hubUrl}/market/sale/${member.saleId}`}
-                    className="text-white"
+                    className="text-white hover:underline"
                     target="_blank"
                 >
                     ON SALE
