@@ -25,24 +25,31 @@ export const PendingInductions = ({ isActive }: Props) => {
     return isLoading ? (
         <>Loading Inductions...</>
     ) : (
-        <>
-            <Heading size={2}>Your Inductions</Heading>
-            <div className="space-y-4">
-                {!isActive && !inductions.length && (
-                    <Text className="mb-4">
-                        Have you already reached out to your inviter? As soon as
-                        they invite you, the induction process will be displayed
-                        here.
+        <div className="space-y-4">
+            {!isActive && !inductions.length && (
+                <>
+                    <Heading size={2}>Join the Eden Community</Heading>
+                    <Text>
+                        It looks like you're not an Eden member yet. To get
+                        started, get an invitation from someone already in the
+                        community using your EOS account name. As soon as an
+                        active Eden community member invites you, their
+                        invitation will appear below and will guide you through
+                        the process.
                     </Text>
-                )}
-                <InductionsList inductions={inductions} isInviter={isActive} />
+                    <Text>
+                        [Graphic and/or link explaining the process in more
+                        detail.]
+                    </Text>
+                </>
+            )}
+            <InductionsList inductions={inductions} isInviter={isActive} />
 
-                {isActive && endorsements.length ? (
-                    <EndorsementsList endorsements={endorsements} />
-                ) : (
-                    ""
-                )}
-            </div>
-        </>
+            {isActive && endorsements.length ? (
+                <EndorsementsList endorsements={endorsements} />
+            ) : (
+                ""
+            )}
+        </div>
     );
 };
