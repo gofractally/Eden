@@ -1,5 +1,6 @@
 #pragma once
 #include <clio/from_bin.hpp>
+#include <clio/to_protobuf.hpp>
 #include <clio/tuple.hpp>
 
 namespace clio

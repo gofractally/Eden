@@ -15,6 +15,7 @@ file(WRITE ${CMAKE_BINARY_DIR}/CTestTestfile.cmake)
 option(BUILD_NATIVE "Build native code" ON)
 if(BUILD_NATIVE)
     add_subdirectory(native)
+    file(APPEND ${CMAKE_BINARY_DIR}/CTestTestfile.cmake "subdirs(\"native\")\n")
 endif()
 
 if(DEFINED WASI_SDK_PREFIX)

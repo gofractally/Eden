@@ -29,6 +29,11 @@ function(eden_tester_test N)
 endfunction()
 
 add_subdirectory(../contracts contracts)
+
+function(native_and_wasm_test N)
+    eden_tester_test(${N})
+endfunction()
+
 add_subdirectory(../libraries libraries)
 add_subdirectory(../external external)
 add_subdirectory(boost)

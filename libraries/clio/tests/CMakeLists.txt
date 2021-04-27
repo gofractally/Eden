@@ -1,23 +1,15 @@
-if(DEFINED IS_NATIVE)
-    find_package(Threads REQUIRED)
-    add_executable(clio-tests 
-        clio_tests.cpp
-        flat_views.cpp
-        benchmark.cpp
-        crypto.cpp
-    )
-    target_link_libraries(clio-tests clio clcrypto fc catch2-portable Threads::Threads)
-endif()
+enable_testing()
+
+add_executable(test-clio
+    clio_tests.cpp
+    flat_views.cpp
+    benchmark.cpp
+)
+target_link_libraries(test-clio clio catch2)
+set_target_properties(test-clio PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${ROOT_BINARY_DIR})
 
 if(DEFINED IS_WASM)
-    add_executable(clio-tests 
-        clio_tests.cpp
-        flat_views.cpp
-        benchmark.cpp
-    )
-    target_link_libraries(clio-tests clio catch2-portable boost)
+    target_link_libraries(test-clio basic-polyfill boost)
 endif()
 
-set_target_properties(clio-tests PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${ROOT_BINARY_DIR})
-
-native_and_wasm_test(clio-tests)
+native_and_wasm_test(test-clio)
