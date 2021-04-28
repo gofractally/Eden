@@ -1,8 +1,12 @@
 import { Text, useUALAccount, useFetchedData, Heading } from "_app";
 
 import { getCurrentInductions } from "../api";
-import { EndorsementsList } from "./endorsements-list";
-import { InviteeInductions, InviterInductions } from "./induction-lists";
+import { Endorsement } from "../interfaces";
+import {
+    EndorserInductions,
+    InviteeInductions,
+    InviterInductions,
+} from "./induction-lists";
 
 interface Props {
     isActive?: boolean;
@@ -22,6 +26,10 @@ export const PendingInductions = ({ isActive }: Props) => {
         ? currentInductions.endorsements
         : [];
 
+    const userEndorsements: Endorsement[] = endorsements.filter(
+        (end: Endorsement) => end.inviter !== end.endorser
+    );
+
     if (isLoading) {
         return (
             <div className="space-y-4">
@@ -30,8 +38,8 @@ export const PendingInductions = ({ isActive }: Props) => {
         );
     }
 
+    const thereAreEndorsements = !!userEndorsements.length;
     const thereAreInductions = !!inductions.length;
-    const thereAreEndorsements = !!endorsements.length;
 
     if (isActive) {
         return (
@@ -40,7 +48,7 @@ export const PendingInductions = ({ isActive }: Props) => {
                     <InviterInductions inductions={inductions} />
                 )}
                 {thereAreEndorsements && (
-                    <EndorsementsList endorsements={endorsements} />
+                    <EndorserInductions endorsements={userEndorsements} />
                 )}
             </div>
         );

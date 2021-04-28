@@ -16,7 +16,8 @@ const INDEX_BY_ENDORSER = 2;
 const INDEX_BY_INDUCTION = 3;
 
 export const getInduction = async (
-    inductionId: string
+    inductionId: string,
+    includeEndorsements = true
 ): Promise<
     | {
           induction: Induction;
@@ -31,9 +32,13 @@ export const getInduction = async (
     );
     console.info("retrieved induction", induction);
 
-    if (induction) {
+    if (induction && includeEndorsements) {
         const endorsements = await getEndorsementsByInductionId(inductionId);
         return { induction, endorsements };
+    }
+
+    if (induction) {
+        return { induction, endorsements: [] };
     }
 };
 
