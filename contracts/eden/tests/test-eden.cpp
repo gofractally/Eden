@@ -205,10 +205,10 @@ TEST_CASE("deposit and spend")
    CHECK(get_eden_account("alice"_n)->balance() == s2a("10.0000 EOS"));
    CHECK(get_token_balance("alice"_n) == s2a("990.0000 EOS"));
 
-   expect(t.pip.trace<actions::withdraw>("pip"_n, s2a("10.0000 EOS")), "insufficient deposit");
+   expect(t.pip.trace<actions::withdraw>("pip"_n, s2a("10.0000 EOS")), "insufficient balance");
    expect(t.pip.trace<actions::withdraw>("alice"_n, s2a("10.0000 EOS")),
           "missing authority of alice");
-   expect(t.alice.trace<actions::withdraw>("alice"_n, s2a("10.0001 EOS")), "insufficient deposit");
+   expect(t.alice.trace<actions::withdraw>("alice"_n, s2a("10.0001 EOS")), "insufficient balance");
    CHECK(get_eden_account("alice"_n)->balance() == s2a("10.0000 EOS"));
    CHECK(get_token_balance("alice"_n) == s2a("990.0000 EOS"));
    t.alice.act<actions::withdraw>("alice"_n, s2a("4.0000 EOS"));

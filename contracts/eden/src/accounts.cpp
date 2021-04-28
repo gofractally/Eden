@@ -31,7 +31,7 @@ namespace eden
    {
       auto record = account_tb.find(owner.value);
       eosio::check(record != account_tb.end() && record->balance() >= quantity,
-                   "insufficient deposit");
+                   "insufficient balance");
       if (record->balance() == quantity)
          account_tb.erase(record);
       else

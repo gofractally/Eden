@@ -22,7 +22,8 @@ namespace eden
       }
       if (members.is_new_member(invitee))
          members.create(invitee);
-      members.check_pending_member(invitee);
+      else
+         members.check_pending_member(invitee);
 
       inductions{get_self()}.initialize_induction(id, inviter, invitee, witnesses);
    }
