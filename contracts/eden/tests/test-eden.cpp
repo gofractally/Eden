@@ -75,9 +75,9 @@ TEST_CASE("genesis NFT pre-setup")
    t.eden_gm.act<atomicassets::actions::createcol>(
        "eden.gm"_n, "eden.gm"_n, true, std::vector{"eden.gm"_n}, std::vector{"eden.gm"_n},
        0.05, atomicassets::attribute_map{});
-   std::vector<atomicassets::format> schema{{"edenacc", "string"}, {"name", "string"},
+   std::vector<atomicassets::format> schema{{"account", "string"}, {"name", "string"},
                                             {"img", "string"},     {"bio", "string"},
-                                            {"social", "string"},  {"inductionvid", "string"}};
+                                            {"social", "string"},  {"video", "string"}};
    t.eden_gm.act<atomicassets::actions::createschema>("eden.gm"_n, "eden.gm"_n,
                                                       eden::schema_name, schema);
 
@@ -93,7 +93,7 @@ TEST_CASE("genesis NFT pre-setup with incorrect schema")
    t.eden_gm.act<atomicassets::actions::createcol>(
        "eden.gm"_n, "eden.gm"_n, true, std::vector{"eden.gm"_n}, std::vector{"eden.gm"_n},
        0.05, atomicassets::attribute_map{});
-   std::vector<atomicassets::format> schema{{"edenacc", "uint64"}, {"name", "string"}};
+   std::vector<atomicassets::format> schema{{"account", "uint64"}, {"name", "string"}};
    t.eden_gm.act<atomicassets::actions::createschema>("eden.gm"_n, "eden.gm"_n,
                                                       eden::schema_name, schema);
 
@@ -113,8 +113,8 @@ TEST_CASE("genesis NFT pre-setup with compatible schema")
        0.05, atomicassets::attribute_map{});
    std::vector<atomicassets::format> schema{{"social", "string"},
                                             {"pi", "float"},
-                                            {"inductionvid", "string"},
-                                            {"edenacc", "string"},
+                                            {"video", "string"},
+                                            {"account", "string"},
                                             {"name", "string"}};
    t.eden_gm.act<atomicassets::actions::createschema>("eden.gm"_n, "eden.gm"_n,
                                                       eden::schema_name, schema);

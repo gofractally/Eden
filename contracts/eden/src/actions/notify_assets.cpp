@@ -17,7 +17,7 @@ namespace eden
       eosio::check(collection_name == get_self(), "Wrong collection");
       eosio::check(schema_name == ::eden::schema_name, "Wrong schema");
       auto pos = std::find_if(immutable_data.begin(), immutable_data.end(),
-                              [](const auto& attr) { return attr.key == "edenacc"; });
+                              [](const auto& attr) { return attr.key == "account"; });
       eosio::check(pos != immutable_data.end(), "Missing account lognewtempl");
       eosio::name invitee(pos->value);
       inductions inductions{get_self()};
@@ -46,7 +46,7 @@ namespace eden
       auto immutable_data =
           atomicassets::read_immutable_data(atomic_assets_account, collection_name, template_id);
       auto pos = std::find_if(immutable_data.begin(), immutable_data.end(),
-                              [](const auto& attr) { return attr.key == "edenacc"; });
+                              [](const auto& attr) { return attr.key == "account"; });
       eosio::check(pos != immutable_data.end(), "Missing account logmint");
       eosio::name invitee(pos->value);
       inductions inductions{get_self()};

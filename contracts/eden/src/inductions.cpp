@@ -190,12 +190,12 @@ namespace eden
       });
 
       atomicassets::attribute_map immutable_data = {
-          {"edenacc", induction.invitee().to_string()},
+          {"account", induction.invitee().to_string()},
           {"name", induction.new_member_profile().name},
           {"img", induction.new_member_profile().img},
           {"bio", induction.new_member_profile().bio},
           {"social", induction.new_member_profile().social},
-          {"inductionvid", induction.video()}};
+          {"video", induction.video()}};
       const auto collection_name = contract;
       eosio::action{{contract, "active"_n},
                     atomic_assets_account,

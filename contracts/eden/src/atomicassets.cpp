@@ -88,9 +88,9 @@ namespace eden::atomicassets
                    atomicassets::attribute_map{});
       }
 
-      std::vector<format> schema{{"edenacc", "string"}, {"name", "string"},
+      std::vector<format> schema{{"account", "string"}, {"name", "string"},
                                  {"img", "string"},     {"bio", "string"},
-                                 {"social", "string"},  {"inductionvid", "string"}};
+                                 {"social", "string"},  {"video", "string"}};
       ::atomicassets::schemas_t schemas(contract, collection.value);
       if (auto pos = schemas.find(schema_name.value); pos != schemas.end())
       {
