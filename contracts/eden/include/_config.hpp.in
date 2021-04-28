@@ -7,7 +7,5 @@ namespace eden
 {
    inline constexpr eosio::name atomic_assets_account = "${EDEN_ATOMIC_ASSETS_ACCOUNT}"_n;
    inline constexpr eosio::name atomic_market_account = "${EDEN_ATOMIC_MARKET_ACCOUNT}"_n;
-   // TODO: These should be configured on init instead of being compiled into the contract
-   inline constexpr eosio::name collection_name = "${EDEN_COLLECTION_NAME}"_n;
    inline constexpr eosio::name schema_name = "${EDEN_SCHEMA_NAME}"_n;
 }  // namespace eden
