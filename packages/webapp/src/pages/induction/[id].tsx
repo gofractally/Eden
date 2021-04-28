@@ -62,7 +62,7 @@ export const InductionPage = () => {
                         endorsements={endorsements}
                     />
                 );
-            case InductionStatus.waitingForEndorsement:
+            case InductionStatus.waitingForOtherEndorsement:
                 return (
                     <InductionStepEndorsement
                         induction={induction}
