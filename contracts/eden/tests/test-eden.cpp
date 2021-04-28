@@ -175,14 +175,26 @@ TEST_CASE("genesis")
               "voyages I often made\nTo Epidamnum, till my factor's death,",
               "{\"blog\":\"egeon.example.com\"}"});
 
-   t.alice.act<token::actions::transfer>("alice"_n, "eden.gm"_n, s2a("10.0000 EOS"), "memo");
+   CHECK(get_eden_account("alice"_n) == std::nullopt);
+   CHECK(get_token_balance("alice"_n) == s2a("1000.0000 EOS"));
+
+   t.alice.act<token::actions::transfer>("alice"_n, "eden.gm"_n, s2a("100.0000 EOS"), "memo");
    t.pip.act<token::actions::transfer>("pip"_n, "eden.gm"_n, s2a("10.0000 EOS"), "memo");
    t.egeon.act<token::actions::transfer>("egeon"_n, "eden.gm"_n, s2a("10.0000 EOS"), "memo");
+
+   CHECK(get_eden_account("alice"_n) != std::nullopt);
+   CHECK(get_eden_account("alice"_n)->balance() == s2a("100.0000 EOS"));
+   CHECK(get_token_balance("alice"_n) == s2a("900.0000 EOS"));
 
    t.alice.act<actions::inductpayfee>("alice"_n, 1, s2a("10.0000 EOS"));
    t.pip.act<actions::inductpayfee>("pip"_n, 2, s2a("10.0000 EOS"));
    t.egeon.act<actions::inductpayfee>("egeon"_n, 3, s2a("10.0000 EOS"));
 
+   CHECK(get_eden_account("alice"_n) != std::nullopt);
+   CHECK(get_eden_account("alice"_n)->balance() == s2a("90.0000 EOS"));
+   CHECK(get_token_balance("alice"_n) == s2a("900.0000 EOS"));
+
+   eden::tester_clear_global_singleton();
    eden::globals globals("eden.gm"_n);
    CHECK(globals.get().stage == eden::contract_stage::active);
 }
