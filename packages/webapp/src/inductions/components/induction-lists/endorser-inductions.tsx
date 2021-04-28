@@ -103,7 +103,7 @@ const EndorserInductionStatus = ({
                     Complete ceremony
                 </InductionActionButton>
             );
-        case InductionStatus.waitingForOtherEndorsement:
+        case InductionStatus.waitingForEndorsement:
             if (endorsement.endorsed) {
                 return (
                     <InductionActionButton
