@@ -20,7 +20,7 @@ export enum InductionStatus {
     waitingForProfile,
     waitingForVideo,
     waitingForUserToEndorse,
-    waitingForOtherEndorsement,
+    waitingForEndorsement,
 }
 
 export interface Endorsement {

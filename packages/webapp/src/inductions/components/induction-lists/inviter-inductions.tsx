@@ -76,14 +76,14 @@ const getTableData = (inductions: Induction[]): InductionTable.Row[] => {
 
 interface InviterInductionStatusProps {
     induction: Induction;
-    endorsements: Endorsement[];
+    endorsements?: Endorsement[];
 }
 
 const InviterInductionStatus = ({
     induction,
     endorsements,
 }: InviterInductionStatusProps) => {
-    const status = getInductionStatus(induction, endorsements);
+    const status = getInductionStatus(induction);
     switch (status) {
         case InductionStatus.waitingForProfile:
             return (
@@ -104,7 +104,21 @@ const InviterInductionStatus = ({
                     Complete ceremony
                 </InductionActionButton>
             );
-        case InductionStatus.waitingForUserToEndorse:
+        case InductionStatus.waitingForEndorsement:
+            const inviterEndorsement = endorsements?.find(
+                (end) => end.inviter === induction.inviter
+            );
+            const inviterDidEndorse = !!inviterEndorsement?.endorsed;
+            if (inviterDidEndorse) {
+                return (
+                    <InductionActionButton
+                        href={`/induction/${induction.id}`}
+                        className="bg-gray-50"
+                    >
+                        Voting
+                    </InductionActionButton>
+                );
+            }
             return (
                 <InductionActionButton
                     href={`/induction/${induction.id}`}
@@ -112,15 +126,6 @@ const InviterInductionStatus = ({
                     lightText
                 >
                     Vote now
-                </InductionActionButton>
-            );
-        case InductionStatus.waitingForOtherEndorsement:
-            return (
-                <InductionActionButton
-                    href={`/induction/${induction.id}`}
-                    className="bg-gray-50"
-                >
-                    Voting
                 </InductionActionButton>
             );
         default:

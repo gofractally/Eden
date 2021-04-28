@@ -90,7 +90,7 @@ const InviteeInductionStatus = ({ induction }: { induction: Induction }) => {
                     Induction ceremony
                 </InductionActionButton>
             );
-        case InductionStatus.waitingForOtherEndorsement:
+        case InductionStatus.waitingForEndorsement:
             return (
                 <InductionActionButton
                     href={`/induction/${induction.id}`}
