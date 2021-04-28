@@ -864,7 +864,7 @@ struct callbacks
       auto* file = get_file(fd);
       if (!file)
          return wasi_errno_badf;
-      if (fwrite(content.data(), content.size(), 1, file->f) == 1)
+      if (!content.size() || fwrite(content.data(), content.size(), 1, file->f) == 1)
          return 0;
       return wasi_errno_io;
    }

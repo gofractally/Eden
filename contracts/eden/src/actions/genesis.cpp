@@ -1,4 +1,5 @@
 #include <accounts.hpp>
+#include <eden-atomicassets.hpp>
 #include <eden.hpp>
 #include <globals.hpp>
 #include <inductions.hpp>
@@ -62,6 +63,10 @@ namespace eden
 
          induction_id++;
       }
+
+      const auto collection_name = get_self();
+      atomicassets::init_collection(atomic_assets_account, get_self(), collection_name, schema_name,
+                                    initial_market_fee);
    }
 
 }  // namespace eden

@@ -53,16 +53,6 @@ void eden_setup(test_chain& t)
    atomicmarket_setup(t);
    t.create_code_account("eden.gm"_n);
    t.set_code("eden.gm"_n, "eden.wasm");
-   t.as("eden.gm"_n)
-       .act<atomicassets::actions::createcol>("eden.gm"_n, eden::collection_name, true,
-                                              std::vector{"eden.gm"_n}, std::vector{"eden.gm"_n},
-                                              0.05, atomicassets::attribute_map{});
-   std::vector<atomicassets::format> schema{{"edenacc", "string"}, {"name", "string"},
-                                            {"img", "string"},     {"bio", "string"},
-                                            {"social", "string"},  {"inductionvid", "string"}};
-   t.as("eden.gm"_n)
-       .act<atomicassets::actions::createschema>("eden.gm"_n, eden::collection_name,
-                                                 eden::schema_name, schema);
 }
 
 auto get_token_balance(eosio::name owner)
@@ -99,6 +89,62 @@ struct eden_tester
       }
    }
 };
+
+TEST_CASE("genesis NFT pre-setup")
+{
+   eden_tester t;
+
+   t.eden_gm.act<atomicassets::actions::createcol>(
+       "eden.gm"_n, "eden.gm"_n, true, std::vector{"eden.gm"_n}, std::vector{"eden.gm"_n},
+       0.05, atomicassets::attribute_map{});
+   std::vector<atomicassets::format> schema{{"account", "string"}, {"name", "string"},
+                                            {"img", "string"},     {"bio", "string"},
+                                            {"social", "string"},  {"video", "string"}};
+   t.eden_gm.act<atomicassets::actions::createschema>("eden.gm"_n, "eden.gm"_n,
+                                                      eden::schema_name, schema);
+
+   t.eden_gm.act<actions::genesis>("Eden", eosio::symbol("EOS", 4), s2a("10.0000 EOS"),
+                                   std::vector{"alice"_n, "pip"_n, "egeon"_n}, "IPFS video",
+                                   s2a("1.0000 EOS"), 7 * 24 * 60 * 60, "");
+}
+
+TEST_CASE("genesis NFT pre-setup with incorrect schema")
+{
+   eden_tester t;
+
+   t.eden_gm.act<atomicassets::actions::createcol>(
+       "eden.gm"_n, "eden.gm"_n, true, std::vector{"eden.gm"_n}, std::vector{"eden.gm"_n},
+       0.05, atomicassets::attribute_map{});
+   std::vector<atomicassets::format> schema{{"account", "uint64"}, {"name", "string"}};
+   t.eden_gm.act<atomicassets::actions::createschema>("eden.gm"_n, "eden.gm"_n,
+                                                      eden::schema_name, schema);
+
+   auto trace =
+       t.eden_gm.trace<actions::genesis>("Eden", eosio::symbol("EOS", 4), s2a("10.0000 EOS"),
+                                         std::vector{"alice"_n, "pip"_n, "egeon"_n}, "IPFS video",
+                                         s2a("1.0000 EOS"), 7 * 24 * 60 * 60, "");
+   expect(trace, "there already is an attribute with the same name");
+}
+
+TEST_CASE("genesis NFT pre-setup with compatible schema")
+{
+   eden_tester t;
+
+   t.eden_gm.act<atomicassets::actions::createcol>(
+       "eden.gm"_n, "eden.gm"_n, true, std::vector{"eden.gm"_n}, std::vector{"eden.gm"_n},
+       0.05, atomicassets::attribute_map{});
+   std::vector<atomicassets::format> schema{{"social", "string"},
+                                            {"pi", "float"},
+                                            {"video", "string"},
+                                            {"account", "string"},
+                                            {"name", "string"}};
+   t.eden_gm.act<atomicassets::actions::createschema>("eden.gm"_n, "eden.gm"_n,
+                                                      eden::schema_name, schema);
+
+   t.eden_gm.act<actions::genesis>("Eden", eosio::symbol("EOS", 4), s2a("10.0000 EOS"),
+                                   std::vector{"alice"_n, "pip"_n, "egeon"_n}, "IPFS video",
+                                   s2a("1.0000 EOS"), 7 * 24 * 60 * 60, "");
+}
 
 TEST_CASE("genesis")
 {

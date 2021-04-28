@@ -20,8 +20,7 @@ endif()
 if(DEFINED WASI_SDK_PREFIX)
     set(EDEN_ATOMIC_ASSETS_ACCOUNT atomicassets CACHE STRING "The account holding the atomicassets contract")
     set(EDEN_ATOMIC_MARKET_ACCOUNT atomicmarket CACHE STRING "The account holding the atomicmarket contract")
-    set(EDEN_COLLECTION_NAME eden.gm CACHE STRING "The atomicassets collection to use for NTFS")
-    set(EDEN_SCHEMA_NAME eden.gm CACHE STRING "The atomicassets schema to use for NFTS")
+    set(EDEN_SCHEMA_NAME members CACHE STRING "The atomicassets schema to use for NFTS")
 
     ExternalProject_Add(wasm
         SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/wasm
