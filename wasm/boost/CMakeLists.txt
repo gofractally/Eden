@@ -26,3 +26,6 @@ endif()
 
 add_library(boost INTERFACE)
 target_include_directories(boost INTERFACE ${BOOST_EXTRACTED})
+
+file(COPY ${BOOST_EXTRACTED}/boost DESTINATION ${ROOT_BINARY_DIR}/sdk/boost)
+configure_file(${BOOST_EXTRACTED}/LICENSE_1_0.txt ${ROOT_BINARY_DIR}/sdk/licenses/boost.license COPYONLY)

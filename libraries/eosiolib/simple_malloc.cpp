@@ -1,4 +1,3 @@
-#include <eosio/check.hpp>
 #include <memory>
 
 #ifdef EOSIO_NATIVE
@@ -41,6 +40,8 @@ namespace eosio
 
       char* operator()(size_t sz, uint8_t align_amt = 16)
       {
+         [[clang::import_name("eosio_assert"), noreturn]] void eosio_assert(  //
+             uint32_t, const char*);
          if (sz == 0)
             return NULL;
 
@@ -54,7 +55,8 @@ namespace eosio
             next_page++;
             pages_to_alloc++;
          }
-         eosio::check(GROW_MEMORY(pages_to_alloc) != -1, "failed to allocate pages");
+         if (GROW_MEMORY(pages_to_alloc) == -1)
+            eosio_assert(false, "failed to allocate pages");
          return ret;
       }
 

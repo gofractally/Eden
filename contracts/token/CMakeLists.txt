@@ -6,6 +6,6 @@ configure_file(token.abi ${ROOT_BINARY_DIR}/token.abi COPYONLY)
 
 add_executable(test-token tests/test-token.cpp)
 target_include_directories(test-token PUBLIC include)
-target_link_libraries(test-token catch2 testlib)
+target_link_libraries(test-token catch2 eden-testlib)
 set_target_properties(test-token PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${ROOT_BINARY_DIR})
 eden_tester_test(test-token)
