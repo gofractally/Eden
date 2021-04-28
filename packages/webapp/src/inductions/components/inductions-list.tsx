@@ -90,12 +90,11 @@ const InductionsForInvitee = ({ inductions }: InductionsForInviteeProps) => {
     });
 
     return (
-        <>
-            <Heading size={3} className="mb-2 md:mb-3">
-                My invitations to Eden
-            </Heading>
-            <InductionTable.Table columns={columns} data={data} />
-        </>
+        <InductionTable.Table
+            columns={columns}
+            data={data}
+            tableHeader="My invitations to Eden"
+        />
     );
 };
 
