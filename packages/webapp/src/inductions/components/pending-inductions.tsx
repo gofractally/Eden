@@ -22,38 +22,49 @@ export const PendingInductions = ({ isActive }: Props) => {
         ? currentInductions.endorsements
         : [];
 
-    return isLoading ? (
-        <>Loading Inductions...</>
-    ) : (
-        <div className="space-y-4">
-            {!isActive && !inductions.length && (
-                <>
-                    <Heading size={2}>Join the Eden Community</Heading>
-                    <Text>
-                        It looks like you're not an Eden member yet. To get
-                        started, get an invitation from someone already in the
-                        community using your EOS account name. As soon as an
-                        active Eden community member invites you, their
-                        invitation will appear below and will guide you through
-                        the process.
-                    </Text>
-                    <Text>
-                        [Graphic and/or link explaining the process in more
-                        detail.]
-                    </Text>
-                </>
-            )}
-            {isActive ? (
-                <InviterInductions inductions={inductions} />
-            ) : (
-                <InviteeInductions inductions={inductions} />
-            )}
+    if (isLoading) {
+        return (
+            <div className="space-y-4">
+                <>Loading inductions...</>
+            </div>
+        );
+    }
 
-            {isActive && endorsements.length ? (
-                <EndorsementsList endorsements={endorsements} />
-            ) : (
-                ""
-            )}
+    const thereAreInductions = !!inductions.length;
+    const thereAreEndorsements = !!endorsements.length;
+
+    if (isActive) {
+        return (
+            <div className="space-y-4">
+                {thereAreInductions && (
+                    <InviterInductions inductions={inductions} />
+                )}
+                {thereAreEndorsements && (
+                    <EndorsementsList endorsements={endorsements} />
+                )}
+            </div>
+        );
+    } else if (thereAreInductions) {
+        return (
+            <div className="space-y-4">
+                <InviteeInductions inductions={inductions} />
+            </div>
+        );
+    }
+
+    return (
+        <div className="space-y-4">
+            <Heading size={2}>Join the Eden Community</Heading>
+            <Text>
+                It looks like you're not an Eden member yet. To get started, get
+                an invitation from someone already in the community using your
+                EOS account name. As soon as an active Eden community member
+                invites you, their invitation will appear below and will guide
+                you through the process.
+            </Text>
+            <Text>
+                [Graphic and/or link explaining the process in more detail.]
+            </Text>
         </div>
     );
 };
