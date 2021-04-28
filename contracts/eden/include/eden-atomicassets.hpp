@@ -67,5 +67,6 @@ namespace eden::atomicassets
                         eosio::name self,
                         eosio::name collection,
                         eosio::name schema,
-                        double market_fee);
+                        double market_fee,
+                        const attribute_map& attrs);
 }  // namespace eden::atomicassets

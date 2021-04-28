@@ -11,6 +11,7 @@
 using namespace eosio;
 using namespace std::literals;
 namespace atomicassets = eden::atomicassets;
+using atomicassets::attribute_map;
 namespace actions = eden::actions;
 using user_context = test_chain::user_context;
 using eden::accounts;
@@ -95,17 +96,17 @@ TEST_CASE("genesis NFT pre-setup")
    eden_tester t;
 
    t.eden_gm.act<atomicassets::actions::createcol>(
-       "eden.gm"_n, "eden.gm"_n, true, std::vector{"eden.gm"_n}, std::vector{"eden.gm"_n},
-       0.05, atomicassets::attribute_map{});
+       "eden.gm"_n, "eden.gm"_n, true, std::vector{"eden.gm"_n}, std::vector{"eden.gm"_n}, 0.05,
+       atomicassets::attribute_map{});
    std::vector<atomicassets::format> schema{{"account", "string"}, {"name", "string"},
                                             {"img", "string"},     {"bio", "string"},
                                             {"social", "string"},  {"video", "string"}};
-   t.eden_gm.act<atomicassets::actions::createschema>("eden.gm"_n, "eden.gm"_n,
-                                                      eden::schema_name, schema);
+   t.eden_gm.act<atomicassets::actions::createschema>("eden.gm"_n, "eden.gm"_n, eden::schema_name,
+                                                      schema);
 
    t.eden_gm.act<actions::genesis>("Eden", eosio::symbol("EOS", 4), s2a("10.0000 EOS"),
                                    std::vector{"alice"_n, "pip"_n, "egeon"_n}, "IPFS video",
-                                   s2a("1.0000 EOS"), 7 * 24 * 60 * 60, "");
+                                   attribute_map{}, s2a("1.0000 EOS"), 7 * 24 * 60 * 60, "");
 }
 
 TEST_CASE("genesis NFT pre-setup with incorrect schema")
@@ -113,16 +114,16 @@ TEST_CASE("genesis NFT pre-setup with incorrect schema")
    eden_tester t;
 
    t.eden_gm.act<atomicassets::actions::createcol>(
-       "eden.gm"_n, "eden.gm"_n, true, std::vector{"eden.gm"_n}, std::vector{"eden.gm"_n},
-       0.05, atomicassets::attribute_map{});
+       "eden.gm"_n, "eden.gm"_n, true, std::vector{"eden.gm"_n}, std::vector{"eden.gm"_n}, 0.05,
+       atomicassets::attribute_map{});
    std::vector<atomicassets::format> schema{{"account", "uint64"}, {"name", "string"}};
-   t.eden_gm.act<atomicassets::actions::createschema>("eden.gm"_n, "eden.gm"_n,
-                                                      eden::schema_name, schema);
+   t.eden_gm.act<atomicassets::actions::createschema>("eden.gm"_n, "eden.gm"_n, eden::schema_name,
+                                                      schema);
 
    auto trace =
        t.eden_gm.trace<actions::genesis>("Eden", eosio::symbol("EOS", 4), s2a("10.0000 EOS"),
                                          std::vector{"alice"_n, "pip"_n, "egeon"_n}, "IPFS video",
-                                         s2a("1.0000 EOS"), 7 * 24 * 60 * 60, "");
+                                         attribute_map{}, s2a("1.0000 EOS"), 7 * 24 * 60 * 60, "");
    expect(trace, "there already is an attribute with the same name");
 }
 
@@ -131,19 +132,19 @@ TEST_CASE("genesis NFT pre-setup with compatible schema")
    eden_tester t;
 
    t.eden_gm.act<atomicassets::actions::createcol>(
-       "eden.gm"_n, "eden.gm"_n, true, std::vector{"eden.gm"_n}, std::vector{"eden.gm"_n},
-       0.05, atomicassets::attribute_map{});
+       "eden.gm"_n, "eden.gm"_n, true, std::vector{"eden.gm"_n}, std::vector{"eden.gm"_n}, 0.05,
+       atomicassets::attribute_map{});
    std::vector<atomicassets::format> schema{{"social", "string"},
                                             {"pi", "float"},
                                             {"video", "string"},
                                             {"account", "string"},
                                             {"name", "string"}};
-   t.eden_gm.act<atomicassets::actions::createschema>("eden.gm"_n, "eden.gm"_n,
-                                                      eden::schema_name, schema);
+   t.eden_gm.act<atomicassets::actions::createschema>("eden.gm"_n, "eden.gm"_n, eden::schema_name,
+                                                      schema);
 
    t.eden_gm.act<actions::genesis>("Eden", eosio::symbol("EOS", 4), s2a("10.0000 EOS"),
                                    std::vector{"alice"_n, "pip"_n, "egeon"_n}, "IPFS video",
-                                   s2a("1.0000 EOS"), 7 * 24 * 60 * 60, "");
+                                   attribute_map{}, s2a("1.0000 EOS"), 7 * 24 * 60 * 60, "");
 }
 
 TEST_CASE("genesis")
@@ -151,7 +152,7 @@ TEST_CASE("genesis")
    eden_tester t;
    t.eden_gm.act<actions::genesis>("Eden", eosio::symbol("EOS", 4), s2a("10.0000 EOS"),
                                    std::vector{"alice"_n, "pip"_n, "egeon"_n}, "IPFS video",
-                                   s2a("1.0000 EOS"), 7 * 24 * 60 * 60, "");
+                                   attribute_map{}, s2a("1.0000 EOS"), 7 * 24 * 60 * 60, "");
    t.alice.act<actions::inductprofil>(
        1, eden::new_member_profile{
               "Alice", "IPFS Image",
