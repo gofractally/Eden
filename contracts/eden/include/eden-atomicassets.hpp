@@ -72,5 +72,6 @@ namespace eden::atomicassets
    void init_collection(eosio::name contract,
                         eosio::name self,
                         eosio::name collection,
-                        eosio::name schema);
+                        eosio::name schema,
+                        double market_fee);
 }  // namespace eden::atomicassets

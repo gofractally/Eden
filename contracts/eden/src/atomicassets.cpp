@@ -62,7 +62,8 @@ namespace eden::atomicassets
    void init_collection(eosio::name contract,
                         eosio::name self,
                         eosio::name collection,
-                        eosio::name schema_name)
+                        eosio::name schema_name,
+                        double market_fee)
    {
       ::atomicassets::collections_t collections(contract, contract.value);
       if (auto pos = collections.find(collection.value); pos != collections.end())
@@ -83,7 +84,7 @@ namespace eden::atomicassets
       else
       {
          actions::createcol(contract, {self, "active"_n})
-             .send(self, collection, true, std::vector{self}, std::vector{self}, 0.05,
+             .send(self, collection, true, std::vector{self}, std::vector{self}, market_fee,
                    atomicassets::attribute_map{});
       }
 
