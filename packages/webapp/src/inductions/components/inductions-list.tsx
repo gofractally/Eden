@@ -91,8 +91,8 @@ const InductionsForInvitee = ({ inductions }: InductionsForInviteeProps) => {
 
     return (
         <>
-            <Heading size={3} className="mb-3">
-                My invitations to join Eden
+            <Heading size={3} className="mb-2 md:mb-3">
+                My invitations to Eden
             </Heading>
             <InductionTable.Table columns={columns} data={data} />
         </>

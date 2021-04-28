@@ -13,7 +13,7 @@ export const RawLayout = ({ children, title }: Props) => (
         <Head>
             <title>{title && `${title} | `} Eden</title>
         </Head>
-        <div className="md:container md:mx-auto pt-8 px-4">
+        <div className="md:container md:mx-auto pt-4 md:pt-8 px-4">
             {title && (
                 <>
                     <Heading>{title}</Heading>

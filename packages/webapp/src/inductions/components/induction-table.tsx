@@ -31,7 +31,7 @@ export const Table = ({
     headerClassName = "",
     rowClassName = "",
 }: InductionTableProps) => {
-    const tableClass = `bg-white border-t border-b md:border border-gray-200 md:rounded md:shadow-sm text-gray-700 ${className}`;
+    const tableClass = `-mx-4 md:m-0 bg-white border-t border-b md:border border-gray-200 md:rounded md:shadow-sm text-gray-700 ${className}`;
     return (
         <div className={tableClass} role="table" aria-label="Invitations">
             <IndTableHeader columns={columns} className={headerClassName} />
