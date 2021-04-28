@@ -1,4 +1,5 @@
 import React from "react";
+import { Heading } from "_app";
 
 export enum DataTypeEnum {
     Action = "action",
@@ -22,6 +23,7 @@ interface InductionTableProps {
     className?: string;
     headerClassName?: string;
     rowClassName?: string;
+    tableHeader?: string;
 }
 
 export const Table = ({
@@ -30,17 +32,25 @@ export const Table = ({
     className = "",
     headerClassName = "",
     rowClassName = "",
+    tableHeader,
 }: InductionTableProps) => {
-    const tableClass = `-mx-4 md:m-0 bg-white border-t border-b md:border border-gray-200 md:rounded md:shadow-sm text-gray-700 ${className}`;
+    const tableClass = `xs:m-0 sm:-mx-4 md:m-0 bg-white border-t border-b md:border border-gray-200 md:rounded md:shadow-sm text-gray-700 ${className}`;
     return (
-        <div className={tableClass} role="table" aria-label="Invitations">
-            <IndTableHeader columns={columns} className={headerClassName} />
-            <IndTableRows
-                columns={columns}
-                data={data}
-                className={rowClassName}
-            />
-        </div>
+        <>
+            {tableHeader && (
+                <Heading size={3} className="mb-2 md:mb-3 px-4 sm:p-0">
+                    {tableHeader}
+                </Heading>
+            )}
+            <div className={tableClass} role="table" aria-label="Invitations">
+                <IndTableHeader columns={columns} className={headerClassName} />
+                <IndTableRows
+                    columns={columns}
+                    data={data}
+                    className={rowClassName}
+                />
+            </div>
+        </>
     );
 };
 
