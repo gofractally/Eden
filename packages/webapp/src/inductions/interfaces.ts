@@ -19,7 +19,8 @@ export enum InductionStatus {
     invalid,
     waitingForProfile,
     waitingForVideo,
-    waitingForEndorsement,
+    waitingForUserToEndorse,
+    waitingForOtherEndorsement,
 }
 
 export interface Endorsement {

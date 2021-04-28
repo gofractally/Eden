@@ -2,7 +2,7 @@ import { Text, useUALAccount, useFetchedData, Heading } from "_app";
 
 import { getCurrentInductions } from "../api";
 import { EndorsementsList } from "./endorsements-list";
-import { InductionsList } from "./inductions-list";
+import { InviteeInductions, InviterInductions } from "./induction-lists";
 
 interface Props {
     isActive?: boolean;
@@ -43,7 +43,11 @@ export const PendingInductions = ({ isActive }: Props) => {
                     </Text>
                 </>
             )}
-            <InductionsList inductions={inductions} isInviter={isActive} />
+            {isActive ? (
+                <InviterInductions inductions={inductions} />
+            ) : (
+                <InviteeInductions inductions={inductions} />
+            )}
 
             {isActive && endorsements.length ? (
                 <EndorsementsList endorsements={endorsements} />

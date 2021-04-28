@@ -1,5 +1,5 @@
 import { MemberData } from "members";
-import { Induction, InductionStatus } from "./interfaces";
+import { Endorsement, Induction, InductionStatus } from "./interfaces";
 
 export const convertPendingProfileToMemberData = (
     induction: Induction
@@ -16,14 +16,31 @@ export const convertPendingProfileToMemberData = (
     };
 };
 
-export const getInductionStatus = (induction?: Induction) => {
+const didInviterEndorse = (
+    induction: Induction,
+    endorsements?: Endorsement[]
+) => {
+    if (!endorsements) return false;
+    const inviterEndorsement = endorsements.find(
+        (end) => end.inviter === induction.inviter
+    );
+    return !!inviterEndorsement?.endorsed;
+};
+
+// if we use this for the endorsers view too, we need to make an allowance for that
+export const getInductionStatus = (
+    induction?: Induction,
+    endorsements?: Endorsement[]
+) => {
     return !induction
         ? InductionStatus.invalid
         : !induction.new_member_profile.name
         ? InductionStatus.waitingForProfile
         : !induction.video
         ? InductionStatus.waitingForVideo
-        : InductionStatus.waitingForEndorsement;
+        : !!endorsements && !didInviterEndorse(induction, endorsements)
+        ? InductionStatus.waitingForUserToEndorse
+        : InductionStatus.waitingForOtherEndorsement;
 };
 
 export const getInductionStatusLabel = (induction?: Induction) => {
@@ -33,7 +50,7 @@ export const getInductionStatusLabel = (induction?: Induction) => {
             return "🟡 Pending Profile";
         case InductionStatus.waitingForVideo:
             return "🟡 Pending Induction Video";
-        case InductionStatus.waitingForEndorsement:
+        case InductionStatus.waitingForOtherEndorsement:
             return "🟡 Waiting for Endorsements";
         default:
             return "🛑 Invalid";

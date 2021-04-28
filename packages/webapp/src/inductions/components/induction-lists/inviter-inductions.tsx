@@ -14,22 +14,22 @@ interface Props {
     inductions: Induction[];
 }
 
-export const InviteeInductions = ({ inductions }: Props) => (
+export const InviterInductions = ({ inductions }: Props) => (
     <InductionTable.Table
-        columns={INVITEE_INDUCTION_COLUMNS}
+        columns={INVITER_INDUCTION_COLUMNS}
         data={getTableData(inductions)}
         tableHeader="My invitations to Eden"
     />
 );
 
-const INVITEE_INDUCTION_COLUMNS: InductionTable.Column[] = [
+const INVITER_INDUCTION_COLUMNS: InductionTable.Column[] = [
     {
-        key: "inviter",
-        label: "Inviter",
+        key: "invitee",
+        label: "Invitee",
     },
     {
-        key: "voters",
-        label: "Voters",
+        key: "inviter_voters",
+        label: "Inviter & Voters",
         className: "hidden md:flex",
     },
     {
@@ -58,36 +58,63 @@ const getTableData = (inductions: Induction[]): InductionTable.Row[] => {
             dayjs(ind.created_at).add(7, "day"),
             true
         );
+
+        console.log("ALL_ENDORSEMENTS");
+        console.log(allEndorsements);
+
         return {
             key: ind.id,
-            inviter: ind.inviter,
-            voters: endorsers,
+            invitee: ind.invitee,
+            inviter_voters: endorsers,
             time_remaining: remainingTime,
-            status: <InviteeInductionStatus induction={ind} />,
+            status: (
+                <InviterInductionStatus
+                    induction={ind}
+                    endorsements={allEndorsements}
+                />
+            ),
         };
     });
 };
 
-const InviteeInductionStatus = ({ induction }: { induction: Induction }) => {
-    const status = getInductionStatus(induction);
+interface InviterInductionStatusProps {
+    induction: Induction;
+    endorsements: Endorsement[];
+}
+
+const InviterInductionStatus = ({
+    induction,
+    endorsements,
+}: InviterInductionStatusProps) => {
+    const status = getInductionStatus(induction, endorsements);
     switch (status) {
         case InductionStatus.waitingForProfile:
             return (
                 <InductionActionButton
                     href={`/induction/${induction.id}`}
-                    className="bg-blue-400 border-blue-400"
-                    lightText
+                    className="bg-gray-50"
                 >
-                    Create my profile
+                    Waiting for profile
                 </InductionActionButton>
             );
         case InductionStatus.waitingForVideo:
             return (
                 <InductionActionButton
                     href={`/induction/${induction.id}`}
-                    className="bg-gray-50"
+                    className="bg-blue-500 border-blue-500"
+                    lightText
                 >
-                    Induction ceremony
+                    Complete ceremony
+                </InductionActionButton>
+            );
+        case InductionStatus.waitingForUserToEndorse:
+            return (
+                <InductionActionButton
+                    href={`/induction/${induction.id}`}
+                    className="bg-green-500"
+                    lightText
+                >
+                    Vote now
                 </InductionActionButton>
             );
         case InductionStatus.waitingForOtherEndorsement:
