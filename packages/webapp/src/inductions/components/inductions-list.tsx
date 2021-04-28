@@ -1,9 +1,10 @@
+import NextLink from "next/link";
 import dayjs from "dayjs";
 import * as relativeTime from "dayjs/plugin/relativeTime";
 
 import { getEndorsementsByInductionId } from "inductions/api";
 import { getInductionStatus, getInductionStatusLabel } from "inductions/utils";
-import { Button, Heading, Link, useFetchedData } from "_app";
+import { Heading, Link, useFetchedData } from "_app";
 import * as InductionTable from "inductions/components/induction-table";
 import { Endorsement, Induction, InductionStatus } from "../interfaces";
 
@@ -45,7 +46,7 @@ interface InductionsForInviteeProps {
 }
 
 const InductionsForInvitee = ({ inductions }: InductionsForInviteeProps) => {
-    const headers: InductionTable.Header[] = [
+    const columns: InductionTable.Column[] = [
         {
             key: "inviter",
             label: "Inviter",
@@ -53,10 +54,12 @@ const InductionsForInvitee = ({ inductions }: InductionsForInviteeProps) => {
         {
             key: "voters",
             label: "Voters",
+            className: "hidden md:flex",
         },
         {
             key: "time_remaining",
             label: "Time remaining",
+            className: "hidden md:flex",
         },
         {
             key: "status",
@@ -91,7 +94,7 @@ const InductionsForInvitee = ({ inductions }: InductionsForInviteeProps) => {
             <Heading size={3} className="mb-3">
                 My invitations to join Eden
             </Heading>
-            <InductionTable.Table headers={headers} data={data} />
+            <InductionTable.Table columns={columns} data={data} />
         </>
     );
 };
@@ -101,19 +104,57 @@ const InviteeInductionStatus = ({ induction }: { induction: Induction }) => {
     switch (status) {
         case InductionStatus.waitingForProfile:
             return (
-                <Button href={`/induction/${induction.id}`} color="blue">
-                    Create my community profile
-                </Button>
+                <InductionActionButton
+                    href={`/induction/${induction.id}`}
+                    className="bg-blue-400 border-blue-400"
+                    lightText
+                >
+                    Create my profile
+                </InductionActionButton>
             );
         case InductionStatus.waitingForVideo:
             return (
-                <Link href={`/induction/${induction.id}`}>
-                    Ready for induction ceremony
-                </Link>
+                <InductionActionButton
+                    href={`/induction/${induction.id}`}
+                    className="bg-gray-50"
+                >
+                    Induction ceremony
+                </InductionActionButton>
             );
         case InductionStatus.waitingForEndorsement:
-            return <Link href={`/induction/${induction.id}`}>Voting</Link>;
+            return (
+                <InductionActionButton
+                    href={`/induction/${induction.id}`}
+                    className="bg-gray-50"
+                >
+                    Voting
+                </InductionActionButton>
+            );
         default:
             return <>Error</>;
     }
 };
+
+const InductionActionButton = ({
+    href,
+    className = "",
+    lightText = false,
+    children,
+}: InductionActionButtonProps) => {
+    const baseClass =
+        "w-full items-center text-center py-1.5 border rounded text-sm focus:outline-none";
+    const labelColor = lightText ? "text-white" : "";
+    const buttonClass = `${baseClass} ${labelColor} ${className}`;
+    return (
+        <NextLink href={href}>
+            <a className={buttonClass}>{children}</a>
+        </NextLink>
+    );
+};
+
+interface InductionActionButtonProps {
+    href: string;
+    className?: string;
+    lightText?: boolean;
+    children: React.ReactNode;
+}
