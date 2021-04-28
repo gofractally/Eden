@@ -47,14 +47,31 @@ namespace eden::atomicassets
                      const std::vector<eosio::name>& notify_accounts,
                      double market_fee,
                      const attribute_map& data);
+      void extendschema(eosio::name authorized_creator,
+                        eosio::name collection_name,
+                        eosio::name schema_name,
+                        const std::vector<format>& schema_format);
       void createschema(eosio::name authorized_creator,
                         eosio::name collection_name,
                         eosio::name schema_name,
                         const std::vector<format>& schema_format);
+      void addnotifyacc(eosio::name collection_name, eosio::name account_to_add);
    };
-   EOSIO_ACTIONS(atomicassets_contract, "atomicassets"_n, init, createcol, createschema);
+   EOSIO_ACTIONS(atomicassets_contract,
+                 "atomicassets"_n,
+                 init,
+                 createcol,
+                 createschema,
+                 extendschema,
+                 addnotifyacc);
 
    attribute_map read_immutable_data(eosio::name contract,
                                      eosio::name collection,
                                      int32_t template_id);
+
+   void init_collection(eosio::name contract,
+                        eosio::name self,
+                        eosio::name collection,
+                        eosio::name schema,
+                        double market_fee);
 }  // namespace eden::atomicassets
