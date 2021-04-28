@@ -1,7 +1,7 @@
 #pragma once
 
-#include <atomicassets.hpp>
 #include <constants.hpp>
+#include <eden-atomicassets.hpp>
 #include <eosio/asset.hpp>
 #include <eosio/eosio.hpp>
 #include <inductions.hpp>
@@ -47,6 +47,8 @@ namespace eden
 
       void inductendorse(eosio::name account, uint64_t id, eosio::checksum256 induction_data_hash);
 
+      void inductcancel(eosio::name account, uint64_t id);
+
       void inducted(eosio::name inductee);
 
       void notify_lognewtempl(int32_t template_id,
@@ -64,13 +66,13 @@ namespace eden
                           eosio::name schema_name,
                           int32_t template_id,
                           eosio::name new_asset_owner,
-                          const atomicassets::attribute_map& immutable_data,
-                          const atomicassets::attribute_map& mutable_data,
-                          std::vector<eosio::asset> tokens_to_back);
+                          eosio::ignore<atomicassets::attribute_map>,
+                          eosio::ignore<atomicassets::attribute_map>,
+                          eosio::ignore<std::vector<eosio::asset>>);
    };
 
    EOSIO_ACTIONS(eden,
-                 "eden"_n,
+                 "eden.gm"_n,
                  clearall,
                  genesis,
                  inductinit,
@@ -78,7 +80,8 @@ namespace eden
                  inductvideo,
                  inductendorse,
                  inducted,
-                 notify transfer,
-                 notify lognewtempl,
-                 notify logmint)
+                 inductcancel,
+                 notify(token_contract, transfer),
+                 notify(atomic_assets_account, lognewtempl),
+                 notify(atomic_assets_account, logmint))
 }  // namespace eden

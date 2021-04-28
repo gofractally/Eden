@@ -1,5 +1,12 @@
 import { atomicAssets, edenContractAccount } from "config";
-import { AuctionableEdenTemplateData } from "../interfaces";
+import { AssetData, AuctionableTemplateData } from "../interfaces";
+
+export const getTemplate = async (templateId: string) => {
+    const templates = await getTemplates(1, 20, [templateId]);
+    return templates.length ? templates[0] : undefined;
+};
+
+const LAUNCH_TIMESTAMP = "&after=1619486647000";
 
 export const getTemplates = async (
     page = 1,
@@ -8,9 +15,7 @@ export const getTemplates = async (
     sortField = "created",
     order = "asc"
 ): Promise<any[]> => {
-    let url = `${atomicAssets.apiBaseUrl}/templates?collection_name=${atomicAssets.collection}&schema_name=${atomicAssets.schema}&page=${page}&limit=${limit}&order=${order}&sort=${sortField}`;
-
-    url += "&lower_bound=71855"; // TODO: remove when resetting collection
+    let url = `${atomicAssets.apiBaseUrl}/templates?collection_name=${atomicAssets.collection}&schema_name=${atomicAssets.schema}&page=${page}&limit=${limit}&order=${order}&sort=${sortField}${LAUNCH_TIMESTAMP}`;
 
     if (ids.length) {
         url += `&ids=${ids.join(",")}`;
@@ -21,9 +26,29 @@ export const getTemplates = async (
 };
 
 export const getAccountCollection = async (
-    edenAccount: string
+    edenAccount: string,
+    page = 1,
+    limit = 9999,
+    sortField = "transferred",
+    order = "asc"
+): Promise<AssetData[]> => {
+    const url = `${atomicAssets.apiMarketUrl}/assets?owner=${edenAccount}&collection_name=${atomicAssets.collection}&page=${page}&limit=${limit}&order=${order}&sort=${sortField}${LAUNCH_TIMESTAMP}`;
+    const { data } = await executeAtomicAssetRequest(url);
+    return data;
+};
+
+export const getSalesForTemplates = async (
+    ids: string[],
+    page = 1,
+    limit = 9999,
+    sortField = "created",
+    order = "asc"
 ): Promise<any> => {
-    const url = `${atomicAssets.apiBaseUrl}/accounts/${edenAccount}/${atomicAssets.collection}`;
+    const url = `${atomicAssets.apiMarketUrl}/sales?template_id=${ids.join(
+        ","
+    )}&collection_name=${
+        atomicAssets.collection
+    }&page=${page}&limit=${limit}&order=${order}&sort=${sortField}${LAUNCH_TIMESTAMP}`;
     const { data } = await executeAtomicAssetRequest(url);
     return data;
 };
@@ -35,31 +60,45 @@ export const getOwners = async (templateId: number): Promise<string[]> => {
     return owners;
 };
 
-export const getAuctions = async (): Promise<AuctionableEdenTemplateData[]> => {
-    const url = `${atomicAssets.apiMarketUrl}/auctions?state=1&collection_name=${atomicAssets.collection}&schema_name=${atomicAssets.schema}&page=1&limit=9999&order=desc&sort=created`;
+export const getAuctions = async (
+    seller?: string,
+    templateIds?: string[]
+): Promise<AuctionableTemplateData[]> => {
+    let url = `${atomicAssets.apiMarketUrl}/auctions?state=1&collection_name=${atomicAssets.collection}&schema_name=${atomicAssets.schema}&page=1&limit=9999&order=desc&sort=created${LAUNCH_TIMESTAMP}`;
+
+    if (seller) {
+        url += `&seller=${seller}`;
+    }
+
+    if (templateIds && templateIds.length) {
+        url += `&template_id=${templateIds.join(",")}`;
+    }
+
     const { data } = await executeAtomicAssetRequest(url);
 
     return data
-        .filter(
-            (item: any) =>
-                item.seller === edenContractAccount &&
-                item.assets.length === 1 &&
-                item.assets[0].collection.collection_name ===
-                    atomicAssets.collection &&
-                item.assets[0].schema.schema_name === atomicAssets.schema
-        )
+        .filter((item: any) => item.assets.length === 1)
         .map((item: any) => {
+            const seller = item.seller;
             const asset = item.assets[0];
+            const auctionId = item.auction_id;
+            const assetId = asset.asset_id;
+            const templateMint = parseInt(asset.template_mint);
+            const endTime = parseInt(item.end_time);
             const currentBid = {
                 quantity: parseInt(item.price.amount),
                 symbol: item.price.token_symbol,
                 precision: parseInt(item.price.token_precision),
             };
             return {
+                seller,
                 ...asset.template,
+                auctionId,
                 currentBid,
-                endTime: parseInt(item.end_time),
-            };
+                assetId,
+                templateMint,
+                endTime,
+            } as AuctionableTemplateData;
         });
 };
 

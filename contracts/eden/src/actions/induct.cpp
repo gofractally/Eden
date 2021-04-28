@@ -28,9 +28,9 @@ namespace eden
    {
       inductions inductions{get_self()};
       const auto& induction = inductions.get_induction(id);
-      require_auth(induction.invitee);
+      require_auth(induction.invitee());
 
-      members{get_self()}.check_pending_member(induction.invitee);
+      members{get_self()}.check_pending_member(induction.invitee());
 
       inductions.update_profile(induction, new_member_profile);
 
@@ -48,7 +48,7 @@ namespace eden
       const auto& induction = inductions.get_induction(id);
 
       globals{get_self()}.check_active();
-      members{get_self()}.check_pending_member(induction.invitee);
+      members{get_self()}.check_pending_member(induction.invitee());
 
       eosio::check(inductions.is_endorser(id, account),
                    "Video can only be set by inviter or a witness");
@@ -63,7 +63,7 @@ namespace eden
       inductions inductions{get_self()};
       const auto& induction = inductions.get_induction(id);
 
-      members{get_self()}.check_pending_member(induction.invitee);
+      members{get_self()}.check_pending_member(induction.invitee());
 
       eosio::check(inductions.is_endorser(id, account),
                    "Induction  can only be endorsed by inviter or a witness");
@@ -90,6 +90,19 @@ namespace eden
             globals.set_stage(contract_stage::active);
          }
       }
+   }
+
+   void eden::inductcancel(eosio::name account, uint64_t id)
+   {
+      eosio::require_auth(account);
+
+      globals{get_self()}.check_active();
+
+      inductions inductions{get_self()};
+      eosio::check(inductions.is_endorser(id, account),
+                   "Induction can only be canceled by inviter or a witness");
+
+      inductions.erase_induction(inductions.get_induction(id));
    }
 
 }  // namespace eden

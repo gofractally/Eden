@@ -5,6 +5,7 @@
 #include <eosio/eosio.hpp>
 #include <globals.hpp>
 #include <string>
+#include <utils.hpp>
 
 namespace eden
 {
@@ -15,7 +16,7 @@ namespace eden
       active_member = 1
    };
 
-   struct member
+   struct member_v0
    {
       eosio::name account;
       member_status_type status;
@@ -23,19 +24,27 @@ namespace eden
 
       uint64_t primary_key() const { return account.value; }
    };
-   EOSIO_REFLECT(member, account, status, nft_template_id)
+   EOSIO_REFLECT(member_v0, account, status, nft_template_id)
+
+   struct member
+   {
+      std::variant<member_v0> value;
+      EDEN_FORWARD_MEMBERS(value, account, status, nft_template_id);
+      EDEN_FORWARD_FUNCTIONS(value, primary_key)
+   };
+   EOSIO_REFLECT(member, value)
 
    using member_table_type = eosio::multi_index<"member"_n, member>;
 
-   struct member_stats
+   struct member_stats_v0
    {
       uint16_t active_members;
       uint16_t pending_members;
       uint16_t completed_waiting_inductions;
    };
-   EOSIO_REFLECT(member_stats, active_members, pending_members, completed_waiting_inductions);
+   EOSIO_REFLECT(member_stats_v0, active_members, pending_members, completed_waiting_inductions);
 
-   using member_stats_singleton = eosio::singleton<"memberstats"_n, member_stats>;
+   using member_stats_singleton = eosio::singleton<"memberstats"_n, std::variant<member_stats_v0>>;
 
    class members
    {
@@ -62,7 +71,7 @@ namespace eden
       void deposit(eosio::name account, const eosio::asset& quantity);
       void set_nft(eosio::name account, int32_t nft_template_id);
       void set_active(eosio::name account);
-      struct member_stats stats();
+      member_stats_v0 stats();
 
       // this method is used only for administrative purposes,
       // it should never be used outside genesis or test environments
