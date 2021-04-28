@@ -93,9 +93,9 @@ const convertAtomicTemplateToMember = (data: TemplateData): MemberData => ({
     createdAt: parseInt(data.created_at_time),
     name: data.immutable_data.name,
     image: data.immutable_data.img,
-    edenAccount: data.immutable_data.edenacc,
+    edenAccount: data.immutable_data.account,
     bio: data.immutable_data.bio,
-    inductionVideo: data.immutable_data.inductionvid,
+    inductionVideo: data.immutable_data.video,
     socialHandles: parseSocial(data.immutable_data.social || "{}"),
 });
 

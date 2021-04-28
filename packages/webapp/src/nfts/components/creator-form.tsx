@@ -69,7 +69,7 @@ const SubmissionForm = ({ ual }: WithUALProps) => {
                 createdTemplateId = await createNft(ual, nft, assetsToMint);
                 setTemplateId(createdTemplateId);
             }
-            await mintAssets(ual, createdTemplateId, nft.edenacc, inductors);
+            await mintAssets(ual, createdTemplateId, nft.account, inductors);
             setMinted(true);
         } catch (error) {
             console.error(error);
@@ -95,10 +95,10 @@ const SubmissionForm = ({ ual }: WithUALProps) => {
 
         const nft: EdenNftData = {
             name: fields.name,
-            edenacc: fields.edenAccount,
+            account: fields.edenAccount,
             img: fields.image,
             bio: fields.bio,
-            inductionvid: fields.inductionVideo,
+            video: fields.inductionVideo,
             social: JSON.stringify(socialHandles),
         };
 
