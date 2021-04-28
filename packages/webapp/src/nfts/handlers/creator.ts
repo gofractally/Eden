@@ -16,7 +16,7 @@ export const validateAndConfirmCreation = (
     }
 
     return confirm(
-        `By signing the following transaction, we are going to mint ${assetsToMint} NFTs. #1 goes to the eden community on account ${edenContractAccount}, #2 goes to the new member ${nft.edenacc}, #3 goes to inviter account ${inductors[0]} and the rest goes to the remaining inductors. Do you want to proceed with the transaction?`
+        `By signing the following transaction, we are going to mint ${assetsToMint} NFTs. #1 goes to the eden community on account ${edenContractAccount}, #2 goes to the new member ${nft.account}, #3 goes to inviter account ${inductors[0]} and the rest goes to the remaining inductors. Do you want to proceed with the transaction?`
     );
 };
 

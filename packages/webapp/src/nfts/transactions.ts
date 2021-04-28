@@ -17,16 +17,16 @@ export const edenNftCreationTransaction = (
             value: ["string", nft.img],
         },
         {
-            key: "edenacc",
-            value: ["string", nft.edenacc],
+            key: "account",
+            value: ["string", nft.account],
         },
         {
             key: "bio",
             value: ["string", nft.bio],
         },
         {
-            key: "inductionvid",
-            value: ["string", nft.inductionvid],
+            key: "video",
+            value: ["string", nft.video],
         },
     ];
     if (nft.social) {

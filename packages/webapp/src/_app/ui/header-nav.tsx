@@ -1,6 +1,5 @@
 import Link from "next/link";
 import { useRouter } from "next/router";
-import { useState } from "react";
 import { FaSignOutAlt } from "react-icons/fa";
 
 import { useUALAccount } from "../eos";
@@ -13,66 +12,48 @@ interface MenuItem {
 }
 
 const MENU_ITEMS: MenuItem[] = [
-    { href: "/members", label: "Members" },
     { href: "/about", label: "About" },
+    { href: "/members", label: "Community" },
+    { href: "/induction", label: "Membership" },
 ];
 
-export const HeaderNav = () => {
-    const [menuItems, setMenuItems] = useState(MENU_ITEMS);
-    return (
-        <nav className="bg-gray-800">
-            <div className="max-w-7xl mx-auto px-2 sm:px-6 lg:px-8">
-                <div className="relative flex items-center justify-between h-16">
-                    <div className="absolute inset-y-0 left-0 flex items-center sm:hidden">
-                        {/* <HeaderMobileButton
-                            open={mobileMenuOpen}
-                            handleMobileMenu={handleMobileMenu}
-                        /> */}
-                    </div>
-                    <div className="flex-1 flex items-center justify-center sm:items-stretch sm:justify-start">
-                        <HeaderLogo />
-                        <HeaderItems menuItems={menuItems} />
-                    </div>
-                    <AccountMenu />
-                </div>
-            </div>
-            {/* <HeaderMobileMenu
-                open={mobileMenuOpen}
-                menuItems={menuItems}
-                handleNavigationClick={() => setMobileMenuOpen(false)}
-            /> */}
-        </nav>
-    );
-};
+export const HeaderNav = () => (
+    <header className="text-gray-600 body-font border-b border-gray-200 bg-white">
+        <div className="container mx-auto flex flex-wrap p-5 flex-col md:flex-row items-center md:h-20">
+            <HeaderLogo />
+            <nav className="md:mr-auto md:ml-4 md:py-1 md:pl-4 md:border-l md:border-gray-400	flex flex-wrap items-center text-base justify-center">
+                <HeaderItems menuItems={MENU_ITEMS} />
+            </nav>
+            <AccountMenu />
+        </div>
+    </header>
+);
 
 const HeaderLogo = () => (
-    <div className="flex-shrink-0 flex items-center">
-        <Link href="/">
-            <a className="text-2xl text-yellow-500 font-bold">EdenOS</a>
-        </Link>
-    </div>
+    <Link href="/">
+        <a className="flex title-font items-center mb-4 md:mb-0">
+            <span className="text-2xl text-yellow-500 font-bold">EdenOS</span>
+        </a>
+    </Link>
 );
 
 const HeaderItems = ({ menuItems }: { menuItems: MenuItem[] }) => {
     return (
-        <div className="hidden sm:block sm:ml-6">
-            <div className="flex space-x-4">
-                {menuItems.map((item, index) => (
-                    <HeaderItemLink
-                        key={index}
-                        href={item.href}
-                        exactPath={item.exactPath}
-                    >
-                        {item.label}
-                    </HeaderItemLink>
-                ))}
-            </div>
-        </div>
+        <>
+            {menuItems.map((item, index) => (
+                <HeaderItemLink
+                    key={index}
+                    href={item.href}
+                    exactPath={item.exactPath}
+                >
+                    {item.label}
+                </HeaderItemLink>
+            ))}
+        </>
     );
 };
 
-const HEADER_LINK_BASE_CLASS =
-    "block px-3 py-2 rounded-md text-base font-medium hover:bg-gray-700 hover:text-white ";
+const HEADER_LINK_BASE_CLASS = "mr-5 last:mr-0 hover:text-gray-900 ";
 
 const HeaderItemLink = ({
     href,
@@ -82,11 +63,8 @@ const HeaderItemLink = ({
 }: any) => {
     const { pathname } = useRouter();
     const active = exactPath ? pathname === href : pathname.startsWith(href);
-
     const linkClass =
-        HEADER_LINK_BASE_CLASS +
-        (active ? "bg-gray-900 text-white" : "text-gray-300");
-
+        HEADER_LINK_BASE_CLASS + (active ? "text-gray-900 font-bold" : "");
     return (
         <Link href={href}>
             <a className={linkClass} onClick={handleNavigationClick}>
@@ -99,18 +77,17 @@ const HeaderItemLink = ({
 const AccountMenu = () => {
     const [ualAccount, ualLogout, ualShowModal] = useUALAccount();
     return ualAccount ? (
-        <div className="space-x-3">
-            <Button href="/induction">Induction</Button>
+        <div className="space-x-3 hover:text-gray-900">
             <Link href={`/members/${ualAccount.accountName}`}>
-                <a className="text-gray-200 hover:underline">
-                    {ualAccount.accountName || "(unknown)"}
-                </a>
+                <a>{ualAccount.accountName || "(unknown)"}</a>
             </Link>
-            <a href="#" onClick={ualLogout} className="text-gray-500">
-                <FaSignOutAlt className="inline-block" />
+            <a href="#" onClick={ualLogout}>
+                <FaSignOutAlt className="inline-block mb-1" />
             </a>
         </div>
     ) : (
-        <Button onClick={ualShowModal}>Login</Button>
+        <Button onClick={ualShowModal} className="mt-4 md:mt-0">
+            Login
+        </Button>
     );
 };

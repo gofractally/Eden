@@ -190,12 +190,13 @@ namespace eden
       });
 
       atomicassets::attribute_map immutable_data = {
-          {"edenacc", induction.invitee().to_string()},
+          {"account", induction.invitee().to_string()},
           {"name", induction.new_member_profile().name},
           {"img", induction.new_member_profile().img},
           {"bio", induction.new_member_profile().bio},
           {"social", induction.new_member_profile().social},
-          {"inductionvid", induction.video()}};
+          {"video", induction.video()}};
+      const auto collection_name = contract;
       eosio::action{{contract, "active"_n},
                     atomic_assets_account,
                     "createtempl"_n,
@@ -220,6 +221,7 @@ namespace eden
          itr++;
       }
 
+      const auto collection_name = contract;
       for (eosio::name new_asset_owner : new_owners)
       {
          eosio::action{{contract, "active"_n},
@@ -255,13 +257,13 @@ namespace eden
       {
          itr = endorsement_idx.erase(itr);
       }
-      induction_tb.erase(induction);
       endorsed_induction_table_type endorsed_induction_tb(contract, default_scope);
       if (auto itr = endorsed_induction_tb.find(induction.invitee().value);
           itr != endorsed_induction_tb.end())
       {
          endorsed_induction_tb.erase(itr);
       }
+      induction_tb.erase(induction);
    }
 
    void inductions::validate_profile(const new_member_profile& new_member_profile) const

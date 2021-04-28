@@ -2,6 +2,7 @@ import { FaVideo } from "react-icons/fa";
 
 import { Button } from "_app";
 import { MemberData, MemberSocialLinks } from "members";
+import { ipfsBaseUrl } from "config";
 
 interface Props {
     member: MemberData;
@@ -20,7 +21,7 @@ export const NewMemberCardPreview = ({ member }: Props) => {
                 <strong>Profile Image:</strong>
                 <div className="max-w-sm mr-4">
                     <img
-                        src={`https://ipfs.pink.gg/ipfs/${member.image}`}
+                        src={`${ipfsBaseUrl}/${member.image}`}
                         className="object-contain rounded-md"
                     />
                 </div>
@@ -40,7 +41,7 @@ export const NewMemberCardPreview = ({ member }: Props) => {
             {member.inductionVideo && (
                 <div className="w-max mx-auto mt-4">
                     <Button
-                        href={`https://ipfs.video/#/ipfs/${member.inductionVideo}`}
+                        href={`${ipfsBaseUrl}/${member.inductionVideo}`}
                         target="_blank"
                         className="inline-flex"
                         icon={FaVideo}

@@ -3,9 +3,9 @@ import { Asset } from "_app";
 export interface EdenNftData {
     name: string;
     img: string;
-    edenacc: string;
+    account: string;
     bio: string;
-    inductionvid: string;
+    video: string;
     social?: string;
 }
 
@@ -32,6 +32,7 @@ export interface AssetData {
 }
 
 export interface AuctionableTemplateData extends TemplateData {
+    seller: string;
     auctionId: string;
     currentBid: Asset;
     endTime: number;

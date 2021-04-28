@@ -51,7 +51,7 @@ export const getTableRows = async (
         throw new Error("Invalid table results");
     }
 
-    return data.rows;
+    return data.rows.map((row: any) => row[1]);
 };
 
 export const getTableIndexRows = async (
@@ -99,5 +99,5 @@ export const getTableIndexRows = async (
         throw new Error("Invalid table results");
     }
 
-    return data.rows;
+    return data.rows.map((row: any) => row[1]);
 };

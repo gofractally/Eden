@@ -3,6 +3,7 @@ import { FaVideo } from "react-icons/fa";
 import Link from "next/link";
 
 import { Button, Heading, SmallText, Text } from "_app";
+import { ipfsBaseUrl } from "config";
 
 import { MemberData } from "../interfaces";
 import { MemberSocialLinks } from "./member-social-links";
@@ -16,7 +17,7 @@ export const MemberCard = ({ member }: Props) => {
         <div className="px-5 py-8 mx-auto flex justify-around">
             <div className="max-w-sm mr-4">
                 <img
-                    src={`https://ipfs.pink.gg/ipfs/${member.image}`}
+                    src={`${ipfsBaseUrl}/${member.image}`}
                     className="object-contain rounded-md"
                 />
                 <div className="text-center mt-2">
@@ -38,7 +39,7 @@ export const MemberCard = ({ member }: Props) => {
                 <Text className="mt-4">{member.bio}</Text>
                 <div className="mx-auto">
                     <Button
-                        href={`https://ipfs.video/#/ipfs/${member.inductionVideo}`}
+                        href={`${ipfsBaseUrl}/${member.inductionVideo}`}
                         target="_blank"
                         className="mt-10 inline-flex"
                         icon={FaVideo}
