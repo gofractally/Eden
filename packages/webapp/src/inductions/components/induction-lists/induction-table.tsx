@@ -36,7 +36,7 @@ export const Table = ({
 }: InductionTableProps) => {
     const tableClass = `xs:m-0 sm:-mx-4 md:m-0 bg-white border-t border-b md:border border-gray-200 md:rounded md:shadow-sm text-gray-700 ${className}`;
     return (
-        <>
+        <div className="mb-8">
             {tableHeader && (
                 <Heading size={3} className="mb-2 md:mb-3 px-4 sm:p-0">
                     {tableHeader}
@@ -50,7 +50,7 @@ export const Table = ({
                     className={rowClassName}
                 />
             </div>
-        </>
+        </div>
     );
 };
 

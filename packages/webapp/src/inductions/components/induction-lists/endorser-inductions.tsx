@@ -1,8 +1,8 @@
 import dayjs from "dayjs";
 import * as relativeTime from "dayjs/plugin/relativeTime";
 
-import { getEndorsementsByInductionId } from "inductions/api";
 import { getInductionStatus } from "inductions/utils";
+import { getInduction } from "inductions/api";
 import { useFetchedData } from "_app";
 import * as InductionTable from "inductions/components/induction-lists/induction-table";
 import { Endorsement, Induction, InductionStatus } from "../../interfaces";
@@ -11,25 +11,25 @@ import { InductionActionButton } from "./action-button";
 dayjs.extend(relativeTime.default);
 
 interface Props {
-    inductions: Induction[];
+    endorsements: Endorsement[];
 }
 
-export const InviterInductions = ({ inductions }: Props) => (
+export const EndorserInductions = ({ endorsements }: Props) => (
     <InductionTable.Table
-        columns={INVITER_INDUCTION_COLUMNS}
-        data={getTableData(inductions)}
-        tableHeader="My outstanding invitations"
+        columns={ENDORSER_INDUCTION_COLUMNS}
+        data={getTableData(endorsements)}
+        tableHeader="Invitations awaiting my endorsement"
     />
 );
 
-const INVITER_INDUCTION_COLUMNS: InductionTable.Column[] = [
+const ENDORSER_INDUCTION_COLUMNS: InductionTable.Column[] = [
     {
         key: "invitee",
         label: "Invitee",
     },
     {
-        key: "inviter_voters",
-        label: "Inviter & Voters",
+        key: "inviter",
+        label: "Inviter",
         className: "hidden md:flex",
     },
     {
@@ -44,46 +44,45 @@ const INVITER_INDUCTION_COLUMNS: InductionTable.Column[] = [
     },
 ];
 
-const getTableData = (inductions: Induction[]): InductionTable.Row[] => {
-    return inductions.map((ind) => {
-        const [allEndorsements] = useFetchedData<any>(
-            getEndorsementsByInductionId,
-            ind.id
-        );
-        const endorsers = allEndorsements
-            ?.map((end: Endorsement): string => end.endorser)
-            .filter((end: string) => end !== ind.inviter)
-            ?.join(", ");
-        const remainingTime = dayjs().to(
-            dayjs(ind.created_at).add(7, "day"),
-            true
-        );
+const getTableData = (endorsements: Endorsement[]): InductionTable.Row[] => {
+    return endorsements.map((end) => {
+        const [ind, isLoading] = useFetchedData<{
+            induction: Induction;
+            endorsements: Endorsement[];
+        }>(getInduction, end.induction_id, false);
+        const induction = ind?.induction;
+
+        const remainingTime = induction
+            ? dayjs().to(dayjs(induction.created_at).add(7, "day"), true)
+            : "";
 
         return {
-            key: ind.id,
-            invitee: ind.invitee,
-            inviter_voters: endorsers,
+            key: `${end.induction_id}-${end.id}`,
+            invitee: end.invitee,
+            inviter: end.inviter,
             time_remaining: remainingTime,
-            status: (
-                <InviterInductionStatus
-                    induction={ind}
-                    endorsements={allEndorsements}
+            status: induction ? (
+                <EndorserInductionStatus
+                    induction={induction}
+                    endorsement={end}
                 />
+            ) : (
+                "Unknown"
             ),
         };
     });
 };
 
-interface InviterInductionStatusProps {
+interface EndorserInductionStatusProps {
     induction: Induction;
-    endorsements: Endorsement[];
+    endorsement: Endorsement;
 }
 
-const InviterInductionStatus = ({
+const EndorserInductionStatus = ({
     induction,
-    endorsements,
-}: InviterInductionStatusProps) => {
-    const status = getInductionStatus(induction, endorsements);
+    endorsement,
+}: EndorserInductionStatusProps) => {
+    const status = getInductionStatus(induction);
     switch (status) {
         case InductionStatus.waitingForProfile:
             return (
@@ -104,23 +103,24 @@ const InviterInductionStatus = ({
                     Complete ceremony
                 </InductionActionButton>
             );
-        case InductionStatus.waitingForUserToEndorse:
+        case InductionStatus.waitingForOtherEndorsement:
+            if (endorsement.endorsed) {
+                return (
+                    <InductionActionButton
+                        href={`/induction/${induction.id}`}
+                        className="bg-gray-50"
+                    >
+                        Voting
+                    </InductionActionButton>
+                );
+            }
             return (
                 <InductionActionButton
                     href={`/induction/${induction.id}`}
                     className="bg-green-500"
                     lightText
                 >
-                    Vote now
-                </InductionActionButton>
-            );
-        case InductionStatus.waitingForOtherEndorsement:
-            return (
-                <InductionActionButton
-                    href={`/induction/${induction.id}`}
-                    className="bg-gray-50"
-                >
-                    Voting
+                    Endorse
                 </InductionActionButton>
             );
         default:
