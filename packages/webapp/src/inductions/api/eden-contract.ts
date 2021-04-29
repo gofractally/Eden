@@ -15,9 +15,8 @@ const INDEX_BY_INVITER = 3;
 const INDEX_BY_ENDORSER = 2;
 const INDEX_BY_INDUCTION = 3;
 
-export const getInduction = async (
-    inductionId: string,
-    includeEndorsements = true
+export const getInductionWithEndorsements = async (
+    inductionId: string
 ): Promise<
     | {
           induction: Induction;
@@ -25,20 +24,24 @@ export const getInduction = async (
       }
     | undefined
 > => {
+    const induction = await getInduction(inductionId);
+    if (induction) {
+        const endorsements = await getEndorsementsByInductionId(inductionId);
+        return { induction, endorsements };
+    }
+};
+
+export const getInduction = async (
+    inductionId: string
+): Promise<Induction | undefined> => {
     const induction = await getRow<Induction>(
         CONTRACT_INDUCTION_TABLE,
         "id",
         inductionId
     );
-    console.info("retrieved induction", induction);
-
-    if (induction && includeEndorsements) {
-        const endorsements = await getEndorsementsByInductionId(inductionId);
-        return { induction, endorsements };
-    }
-
     if (induction) {
-        return { induction, endorsements: [] };
+        console.info("retrieved induction", induction);
+        return induction;
     }
 };
 
@@ -51,6 +54,7 @@ export const getEndorsementsByInductionId = async (
         "i64",
         inductionId
     );
+    console.info("retrieved endorsement", endorsementsRows);
     const endorsements = endorsementsRows.filter(
         (endorsement: Endorsement) => endorsement.induction_id === inductionId
     );

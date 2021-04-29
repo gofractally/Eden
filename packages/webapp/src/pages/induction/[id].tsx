@@ -3,7 +3,7 @@ import { useRouter } from "next/router";
 
 import { RawLayout, SingleColLayout, useFetchedData } from "_app";
 import {
-    getInduction,
+    getInductionWithEndorsements,
     Induction,
     InductionStepEndorsement,
     InductionStepProfile,
@@ -23,7 +23,7 @@ export const InductionPage = () => {
     const [inductionEndorsements, isLoading] = useFetchedData<{
         induction: Induction;
         endorsements: Endorsement[];
-    }>(getInduction, inductionId);
+    }>(getInductionWithEndorsements, inductionId);
 
     const induction = inductionEndorsements
         ? inductionEndorsements.induction

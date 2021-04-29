@@ -46,12 +46,10 @@ const ENDORSER_INDUCTION_COLUMNS: InductionTable.Column[] = [
 
 const getTableData = (endorsements: Endorsement[]): InductionTable.Row[] => {
     return endorsements.map((end) => {
-        const [ind, isLoading] = useFetchedData<{
-            induction: Induction;
-            endorsements: Endorsement[];
-        }>(getInduction, end.induction_id, false);
-        const induction = ind?.induction;
-
+        const [induction] = useFetchedData<Induction>(
+            getInduction,
+            end.induction_id
+        );
         const remainingTime = induction
             ? dayjs().to(dayjs(induction.created_at).add(7, "day"), true)
             : "";

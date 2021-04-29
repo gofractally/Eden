@@ -1,4 +1,4 @@
-import { Heading } from "../ui";
+import { Heading } from "_app/ui";
 
 interface Props {
     title?: string;
