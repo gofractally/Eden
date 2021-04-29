@@ -108,8 +108,7 @@ const InviterInductionStatus = ({
             const inviterEndorsement = endorsements?.find(
                 (end) => end.inviter === induction.inviter
             );
-            const inviterDidEndorse = !!inviterEndorsement?.endorsed;
-            if (inviterDidEndorse) {
+            if (inviterEndorsement?.endorsed) {
                 return (
                     <InductionActionButton
                         href={`/induction/${induction.id}`}
