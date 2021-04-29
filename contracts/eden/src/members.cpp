@@ -43,7 +43,7 @@ namespace eden
                        [&](auto& row) { row.nft_template_id() = nft_template_id; });
    }
 
-   void members::set_active(eosio::name account, std::string name)
+   void members::set_active(eosio::name account, const std::string& name)
    {
       auto stats = std::get<member_stats_v0>(member_stats.get());
       eosio::check(stats.pending_members > 0, "Invariant failure: no pending members");
