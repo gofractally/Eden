@@ -158,7 +158,7 @@ namespace eden
                             [&](auto& row) { row.endorsed() = true; });
    }
 
-   void inductions::endorse_all(const induction& induction)
+   void inductions::complete_genesis_induction(const induction& induction)
    {
       auto endorsement_idx = endorsement_tb.get_index<"byinduction"_n>();
       auto itr = endorsement_idx.lower_bound(induction.id());
@@ -167,6 +167,7 @@ namespace eden
          endorsement_idx.modify(itr, eosio::same_payer, [](auto& row) { row.endorsed() = true; });
          itr++;
       }
+      create_nft(induction);
    }
 
    void inductions::create_nft(const induction& induction)
@@ -175,7 +176,7 @@ namespace eden
       auto itr = endorsement_idx.lower_bound(induction.id());
       while (itr != endorsement_idx.end() && itr->induction_id() == induction.id())
       {
-         eosio::check(itr->endorsed(), "inductee may not pay fee until endorsements are complete");
+         eosio::check(itr->endorsed(), "induction not possible until endorsements are complete");
          itr++;
       }
 

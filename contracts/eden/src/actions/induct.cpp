@@ -41,7 +41,7 @@ namespace eden
       globals globals{get_self()};
       if (globals.get().stage == contract_stage::genesis)
       {
-         inductions.endorse_all(induction);
+         inductions.complete_genesis_induction(induction);
       }
    }
 
