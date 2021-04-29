@@ -3,11 +3,16 @@
 
 namespace eden
 {
+   static std::optional<global_singleton> global_singleton_inst;
+
    global_singleton& get_global_singleton(eosio::name contract)
    {
-      static global_singleton result(contract, default_scope);
-      return result;
+      if (!global_singleton_inst)
+         global_singleton_inst.emplace(contract, default_scope);
+      return *global_singleton_inst;
    }
+
+   void tester_clear_global_singleton() { global_singleton_inst = {}; }
 
    globals::globals(eosio::name contract, const global_data_v0& initial_value)
        : contract(contract), data(initial_value)

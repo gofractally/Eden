@@ -1,3 +1,4 @@
+#include <accounts.hpp>
 #include <eden.hpp>
 #include <inductions.hpp>
 #include <members.hpp>
@@ -19,7 +20,10 @@ namespace eden
       {
          members.check_active_member(witness);
       }
-      members.check_pending_member(invitee);
+      if (members.is_new_member(invitee))
+         members.create(invitee);
+      else
+         members.check_pending_member(invitee);
 
       inductions{get_self()}.initialize_induction(id, inviter, invitee, witnesses);
    }
@@ -68,6 +72,21 @@ namespace eden
       eosio::check(inductions.is_endorser(id, account),
                    "Induction  can only be endorsed by inviter or a witness");
       inductions.endorse(induction, account, induction_data_hash);
+   }
+
+   void eden::inductpayfee(eosio::name payer, uint64_t id, const eosio::asset& quantity)
+   {
+      eosio::require_auth(payer);
+
+      globals globals{get_self()};
+      inductions inductions{get_self()};
+      accounts accounts{get_self()};
+
+      const auto& induction = inductions.get_induction(id);
+      eosio::check(payer == induction.invitee(), "only inductee may pay fee");
+      eosio::check(quantity == globals.get().minimum_donation, "incorrect fee");
+      accounts.sub_balance(payer, quantity);
+      inductions.create_nft(induction);
    }
 
    void eden::inducted(eosio::name inductee)

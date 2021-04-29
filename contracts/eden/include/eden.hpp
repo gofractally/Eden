@@ -25,6 +25,8 @@ namespace eden
                            const eosio::asset& quantity,
                            std::string memo);
 
+      void withdraw(eosio::name owner, const eosio::asset& quantity);
+
       void genesis(std::string community,
                    eosio::symbol community_symbol,
                    eosio::asset minimum_donation,
@@ -46,6 +48,8 @@ namespace eden
       void inductvideo(eosio::name account, uint64_t id, std::string video);
 
       void inductendorse(eosio::name account, uint64_t id, eosio::checksum256 induction_data_hash);
+
+      void inductpayfee(eosio::name payer, uint64_t id, const eosio::asset& quantity);
 
       void inductcancel(eosio::name account, uint64_t id);
 
@@ -75,10 +79,12 @@ namespace eden
                  "eden.gm"_n,
                  clearall,
                  genesis,
+                 withdraw,
                  inductinit,
                  inductprofil,
                  inductvideo,
                  inductendorse,
+                 inductpayfee,
                  inducted,
                  inductcancel,
                  notify(token_contract, transfer),

@@ -156,8 +156,6 @@ namespace eden
       eosio::check(!endorsement.endorsed(), "Already endorsed");
       endorsement_tb.modify(endorsement, eosio::same_payer,
                             [&](auto& row) { row.endorsed() = true; });
-
-      maybe_create_nft(induction);
    }
 
    void inductions::endorse_all(const induction& induction)
@@ -169,17 +167,15 @@ namespace eden
          endorsement_idx.modify(itr, eosio::same_payer, [](auto& row) { row.endorsed() = true; });
          itr++;
       }
-      maybe_create_nft(induction);
    }
 
-   void inductions::maybe_create_nft(const induction& induction)
+   void inductions::create_nft(const induction& induction)
    {
       auto endorsement_idx = endorsement_tb.get_index<"byinduction"_n>();
       auto itr = endorsement_idx.lower_bound(induction.id());
       while (itr != endorsement_idx.end() && itr->induction_id() == induction.id())
       {
-         if (!itr->endorsed())
-            return;
+         eosio::check(itr->endorsed(), "inductee may not pay fee until endorsements are complete");
          itr++;
       }
 

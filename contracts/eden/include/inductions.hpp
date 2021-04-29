@@ -136,7 +136,6 @@ namespace eden
       void check_valid_endorsers(eosio::name inviter,
                                  const std::vector<eosio::name>& witnesses) const;
       void reset_endorsements(uint64_t induction_id);
-      void maybe_create_nft(const induction& induction_id);
 
      public:
       inductions(eosio::name contract)
@@ -162,6 +161,7 @@ namespace eden
       void endorse(const induction& induction,
                    eosio::name account,
                    eosio::checksum256 induction_data_hash);
+      void create_nft(const induction& induction_id);
 
       bool is_endorser(uint64_t id, eosio::name witness) const;
 

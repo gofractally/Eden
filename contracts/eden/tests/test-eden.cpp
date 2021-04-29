@@ -1,3 +1,4 @@
+#include <accounts.hpp>
 #include <boot/boot.hpp>
 #include <eden-atomicassets.hpp>
 #include <eden.hpp>
@@ -8,9 +9,11 @@
 #include <catch2/catch.hpp>
 
 using namespace eosio;
+using namespace std::literals;
 namespace atomicassets = eden::atomicassets;
 namespace actions = eden::actions;
 using user_context = test_chain::user_context;
+using eden::accounts;
 
 void chain_setup(test_chain& t)
 {
@@ -26,6 +29,8 @@ void token_setup(test_chain& t)
    t.set_code("eosio.token"_n, "token.wasm");
    t.as("eosio.token"_n).act<token::actions::create>("eosio.token"_n, s2a("1000000.0000 EOS"));
    t.as("eosio.token"_n).act<token::actions::issue>("eosio.token"_n, s2a("1000000.0000 EOS"), "");
+   t.as("eosio.token"_n).act<token::actions::create>("eosio.token"_n, s2a("1000000.0000 OTHER"));
+   t.as("eosio.token"_n).act<token::actions::issue>("eosio.token"_n, s2a("1000000.0000 OTHER"), "");
 }
 
 void atomicmarket_setup(test_chain& t)
@@ -50,9 +55,20 @@ void eden_setup(test_chain& t)
    t.set_code("eden.gm"_n, "eden.wasm");
 }
 
+auto get_token_balance(eosio::name owner)
+{
+   return token::contract::get_balance("eosio.token"_n, "alice"_n, symbol_code{"EOS"});
+}
+
+auto get_eden_account(eosio::name owner)
+{
+   return accounts{"eden.gm"_n}.get_account(owner);
+}
+
 struct eden_tester
 {
    test_chain chain;
+   user_context eosio_token = chain.as("eosio.token"_n);
    user_context eden_gm = chain.as("eden.gm"_n);
    user_context alice = chain.as("alice"_n);
    user_context pip = chain.as("pip"_n);
@@ -62,9 +78,15 @@ struct eden_tester
    {
       chain_setup(chain);
       eden_setup(chain);
-      chain.create_account("alice"_n);
-      chain.create_account("pip"_n);
-      chain.create_account("egeon"_n);
+      for (auto account : {"alice"_n, "pip"_n, "egeon"_n})
+      {
+         chain.create_account(account);
+         chain.as("eosio.token"_n)
+             .act<token::actions::transfer>("eosio.token"_n, account, s2a("1000.0000 EOS"), "memo");
+         chain.as("eosio.token"_n)
+             .act<token::actions::transfer>("eosio.token"_n, account, s2a("1000.0000 OTHER"),
+                                            "memo");
+      }
    }
 };
 
@@ -153,6 +175,58 @@ TEST_CASE("genesis")
               "voyages I often made\nTo Epidamnum, till my factor's death,",
               "{\"blog\":\"egeon.example.com\"}"});
 
+   CHECK(get_eden_account("alice"_n) == std::nullopt);
+   CHECK(get_token_balance("alice"_n) == s2a("1000.0000 EOS"));
+
+   t.alice.act<token::actions::transfer>("alice"_n, "eden.gm"_n, s2a("100.0000 EOS"), "memo");
+   t.pip.act<token::actions::transfer>("pip"_n, "eden.gm"_n, s2a("10.0000 EOS"), "memo");
+   t.egeon.act<token::actions::transfer>("egeon"_n, "eden.gm"_n, s2a("10.0000 EOS"), "memo");
+
+   CHECK(get_eden_account("alice"_n) != std::nullopt);
+   CHECK(get_eden_account("alice"_n)->balance() == s2a("100.0000 EOS"));
+   CHECK(get_token_balance("alice"_n) == s2a("900.0000 EOS"));
+
+   t.alice.act<actions::inductpayfee>("alice"_n, 1, s2a("10.0000 EOS"));
+   t.pip.act<actions::inductpayfee>("pip"_n, 2, s2a("10.0000 EOS"));
+   t.egeon.act<actions::inductpayfee>("egeon"_n, 3, s2a("10.0000 EOS"));
+
+   CHECK(get_eden_account("alice"_n) != std::nullopt);
+   CHECK(get_eden_account("alice"_n)->balance() == s2a("90.0000 EOS"));
+   CHECK(get_token_balance("alice"_n) == s2a("900.0000 EOS"));
+
+   eden::tester_clear_global_singleton();
    eden::globals globals("eden.gm"_n);
    CHECK(globals.get().stage == eden::contract_stage::active);
+}
+
+TEST_CASE("deposit and spend")
+{
+   eden_tester t;
+   t.eden_gm.act<actions::genesis>("Eden", eosio::symbol("EOS", 4), s2a("10.0000 EOS"),
+                                   std::vector{"alice"_n, "pip"_n, "egeon"_n}, "IPFS video",
+                                   s2a("1.0000 EOS"), 7 * 24 * 60 * 60, "");
+   expect(t.alice.trace<token::actions::transfer>("alice"_n, "eden.gm"_n, s2a("10.0000 OTHER"),
+                                                  "memo"),
+          "token must be a valid 4,EOS");
+   expect(
+       t.alice.trace<token::actions::transfer>("alice"_n, "eden.gm"_n, s2a("9.9999 EOS"), "memo"),
+       "insufficient deposit to open an account");
+   CHECK(get_eden_account("alice"_n) == std::nullopt);
+   t.alice.act<token::actions::transfer>("alice"_n, "eden.gm"_n, s2a("10.0000 EOS"), "memo");
+   CHECK(get_eden_account("alice"_n) != std::nullopt);
+   CHECK(get_eden_account("alice"_n)->balance() == s2a("10.0000 EOS"));
+   CHECK(get_token_balance("alice"_n) == s2a("990.0000 EOS"));
+
+   expect(t.pip.trace<actions::withdraw>("pip"_n, s2a("10.0000 EOS")), "insufficient balance");
+   expect(t.pip.trace<actions::withdraw>("alice"_n, s2a("10.0000 EOS")),
+          "missing authority of alice");
+   expect(t.alice.trace<actions::withdraw>("alice"_n, s2a("10.0001 EOS")), "insufficient balance");
+   CHECK(get_eden_account("alice"_n)->balance() == s2a("10.0000 EOS"));
+   CHECK(get_token_balance("alice"_n) == s2a("990.0000 EOS"));
+   t.alice.act<actions::withdraw>("alice"_n, s2a("4.0000 EOS"));
+   CHECK(get_eden_account("alice"_n)->balance() == s2a("6.0000 EOS"));
+   CHECK(get_token_balance("alice"_n) == s2a("994.0000 EOS"));
+   t.alice.act<actions::withdraw>("alice"_n, s2a("6.0000 EOS"));
+   CHECK(get_eden_account("alice"_n) == std::nullopt);
+   CHECK(get_token_balance("alice"_n) == s2a("1000.0000 EOS"));
 }

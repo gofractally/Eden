@@ -54,8 +54,6 @@ namespace eden
       globals globals;
       member_stats_singleton member_stats;
 
-      bool is_new_member(eosio::name account) const;
-
      public:
       members(eosio::name contract)
           : contract(contract),
@@ -66,6 +64,7 @@ namespace eden
       }
 
       void create(eosio::name account);
+      bool is_new_member(eosio::name account) const;
       void check_active_member(eosio::name account);
       void check_pending_member(eosio::name account);
       void deposit(eosio::name account, const eosio::asset& quantity);

@@ -17,6 +17,20 @@
             "fields": []
         },
         {
+            "name": "withdraw",
+            "base": "",
+            "fields": [
+                {
+                    "name": "owner",
+                    "type": "name"
+                },
+                {
+                    "name": "quantity",
+                    "type": "asset"
+                }
+            ]
+        },
+        {
             "name": "genesis",
             "base": "",
             "fields": [
@@ -275,6 +289,24 @@
             ]
         },
         {
+            "name": "inductpayfee",
+            "base": "",
+            "fields": [
+                {
+                    "name": "payer",
+                    "type": "name"
+                },
+                {
+                    "name": "id",
+                    "type": "uint64"
+                },
+                {
+                    "name": "quantity",
+                    "type": "asset"
+                }
+            ]
+        },
+        {
             "name": "inductcancel",
             "base": "",
             "fields": [
@@ -290,6 +322,11 @@
         }
     ],
     "actions": [
+        {
+            "name": "withdraw",
+            "type": "withdraw",
+            "ricardian_contract": ""
+        },
         {
             "name": "genesis",
             "type": "genesis",
@@ -318,6 +355,11 @@
         {
             "name": "inductendorse",
             "type": "inductendorse",
+            "ricardian_contract": ""
+        },
+        {
+            "name": "inductpayfee",
+            "type": "inductpayfee",
             "ricardian_contract": ""
         },
         {

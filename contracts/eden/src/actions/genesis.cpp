@@ -1,3 +1,4 @@
+#include <accounts.hpp>
 #include <eden-atomicassets.hpp>
 #include <eden.hpp>
 #include <globals.hpp>
@@ -9,6 +10,7 @@ namespace eden
    void eden::clearall()
    {
       require_auth(get_self());
+      accounts{get_self()}.clear_all();
       members{get_self()}.clear_all();
       inductions{get_self()}.clear_all();
       get_global_singleton(get_self()).remove();
