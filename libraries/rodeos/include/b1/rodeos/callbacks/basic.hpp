@@ -43,7 +43,6 @@ namespace b1::rodeos
       }
    };
 
-   template <typename Backend>
    struct data_state
    {
       eosio::input_stream input_data;

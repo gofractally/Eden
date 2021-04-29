@@ -56,7 +56,7 @@ namespace b1::rodeos::filter
    };
 #endif
 
-   struct filter_state : b1::rodeos::data_state<backend_t>,
+   struct filter_state : b1::rodeos::data_state,
                          b1::rodeos::console_state,
                          b1::rodeos::filter_callback_state
    {
