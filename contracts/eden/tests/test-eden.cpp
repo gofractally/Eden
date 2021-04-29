@@ -99,13 +99,14 @@ TEST_CASE("genesis NFT pre-setup")
        "eden.gm"_n, "eden.gm"_n, true, std::vector{"eden.gm"_n}, std::vector{"eden.gm"_n}, 0.05,
        atomicassets::attribute_map{});
    std::vector<atomicassets::format> schema{{"account", "string"}, {"name", "string"},
-                                            {"img", "string"},     {"bio", "string"},
-                                            {"social", "string"},  {"video", "string"}};
+                                            {"img", "ipfs"},       {"bio", "string"},
+                                            {"social", "string"},  {"video", "ipfs"}};
    t.eden_gm.act<atomicassets::actions::createschema>("eden.gm"_n, "eden.gm"_n, eden::schema_name,
                                                       schema);
 
    t.eden_gm.act<actions::genesis>("Eden", eosio::symbol("EOS", 4), s2a("10.0000 EOS"),
-                                   std::vector{"alice"_n, "pip"_n, "egeon"_n}, "IPFS video",
+                                   std::vector{"alice"_n, "pip"_n, "egeon"_n},
+                                   "QmTYqoPYf7DiVebTnvwwFdTgsYXg2RnuPrt8uddjfW2kHS",
                                    attribute_map{}, s2a("1.0000 EOS"), 7 * 24 * 60 * 60, "");
 }
 
@@ -120,10 +121,10 @@ TEST_CASE("genesis NFT pre-setup with incorrect schema")
    t.eden_gm.act<atomicassets::actions::createschema>("eden.gm"_n, "eden.gm"_n, eden::schema_name,
                                                       schema);
 
-   auto trace =
-       t.eden_gm.trace<actions::genesis>("Eden", eosio::symbol("EOS", 4), s2a("10.0000 EOS"),
-                                         std::vector{"alice"_n, "pip"_n, "egeon"_n}, "IPFS video",
-                                         attribute_map{}, s2a("1.0000 EOS"), 7 * 24 * 60 * 60, "");
+   auto trace = t.eden_gm.trace<actions::genesis>(
+       "Eden", eosio::symbol("EOS", 4), s2a("10.0000 EOS"),
+       std::vector{"alice"_n, "pip"_n, "egeon"_n}, "QmTYqoPYf7DiVebTnvwwFdTgsYXg2RnuPrt8uddjfW2kHS",
+       attribute_map{}, s2a("1.0000 EOS"), 7 * 24 * 60 * 60, "");
    expect(trace, "there already is an attribute with the same name");
 }
 
@@ -136,14 +137,15 @@ TEST_CASE("genesis NFT pre-setup with compatible schema")
        atomicassets::attribute_map{});
    std::vector<atomicassets::format> schema{{"social", "string"},
                                             {"pi", "float"},
-                                            {"video", "string"},
+                                            {"video", "ipfs"},
                                             {"account", "string"},
                                             {"name", "string"}};
    t.eden_gm.act<atomicassets::actions::createschema>("eden.gm"_n, "eden.gm"_n, eden::schema_name,
                                                       schema);
 
    t.eden_gm.act<actions::genesis>("Eden", eosio::symbol("EOS", 4), s2a("10.0000 EOS"),
-                                   std::vector{"alice"_n, "pip"_n, "egeon"_n}, "IPFS video",
+                                   std::vector{"alice"_n, "pip"_n, "egeon"_n},
+                                   "QmTYqoPYf7DiVebTnvwwFdTgsYXg2RnuPrt8uddjfW2kHS",
                                    attribute_map{}, s2a("1.0000 EOS"), 7 * 24 * 60 * 60, "");
 }
 
@@ -151,11 +153,12 @@ TEST_CASE("genesis")
 {
    eden_tester t;
    t.eden_gm.act<actions::genesis>("Eden", eosio::symbol("EOS", 4), s2a("10.0000 EOS"),
-                                   std::vector{"alice"_n, "pip"_n, "egeon"_n}, "IPFS video",
+                                   std::vector{"alice"_n, "pip"_n, "egeon"_n},
+                                   "QmTYqoPYf7DiVebTnvwwFdTgsYXg2RnuPrt8uddjfW2kHS",
                                    attribute_map{}, s2a("1.0000 EOS"), 7 * 24 * 60 * 60, "");
    t.alice.act<actions::inductprofil>(
        1, eden::new_member_profile{
-              "Alice", "IPFS Image",
+              "Alice", "Qmb7WmZiSDXss5HfuKfoSf6jxTDrHzr8AoAUDeDMLNDuws",
               "Alice was beginning to get very tired of sitting by her sister on the bank, and of "
               "having nothing to do: once or twice she had peeped into the book her sister was "
               "reading, but it had no pictures or conversations in it, \"and what is the use of a "
@@ -163,14 +166,14 @@ TEST_CASE("genesis")
               "{\"blog\":\"alice.example.com\"}"});
    t.pip.act<actions::inductprofil>(
        2, eden::new_member_profile{
-              "Philip Pirrip", "IPFS image",
+              "Philip Pirrip", "Qmb7WmZiSDXss5HfuKfoSf6jxTDrHzr8AoAUDeDMLNDuws",
               "My father's family name being Pirrip and my Christian name Phillip, my infant "
               "tongue could make of both names nothing longer or more explicit than Pip.  So, I "
               "called myself Pip and came to be called Pip.",
               "{\"blog\":\"pip.example.com\"}"});
    t.egeon.act<actions::inductprofil>(
        3, eden::new_member_profile{
-              "Egeon", "IPFS image",
+              "Egeon", "Qmb7WmZiSDXss5HfuKfoSf6jxTDrHzr8AoAUDeDMLNDuws",
               "In Syracusa was I born, and wed\nUnto a woman happy but for me,\nAnd by me, had not "
               "our hap been bad.\nWith her I liv'd in joy; our wealth increas'd\nBy prosperous "
               "voyages I often made\nTo Epidamnum, till my factor's death,",
@@ -204,7 +207,8 @@ TEST_CASE("deposit and spend")
 {
    eden_tester t;
    t.eden_gm.act<actions::genesis>("Eden", eosio::symbol("EOS", 4), s2a("10.0000 EOS"),
-                                   std::vector{"alice"_n, "pip"_n, "egeon"_n}, "IPFS video",
+                                   std::vector{"alice"_n, "pip"_n, "egeon"_n},
+                                   "QmTYqoPYf7DiVebTnvwwFdTgsYXg2RnuPrt8uddjfW2kHS",
                                    attribute_map{}, s2a("1.0000 EOS"), 7 * 24 * 60 * 60, "");
    expect(t.alice.trace<token::actions::transfer>("alice"_n, "eden.gm"_n, s2a("10.0000 OTHER"),
                                                   "memo"),
