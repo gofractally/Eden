@@ -94,10 +94,9 @@ namespace eden
       eosio::require_auth(get_self());
 
       members members{get_self()};
-      members.set_active(inductee);
-
       inductions inductions(get_self());
       const auto& induction = inductions.get_endorsed_induction(inductee);
+      members.set_active(inductee, induction.new_member_profile().name);
       inductions.erase_induction(induction);
 
       // If this is the last genesis member, activate the contract

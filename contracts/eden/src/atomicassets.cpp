@@ -63,7 +63,8 @@ namespace eden::atomicassets
                         eosio::name self,
                         eosio::name collection,
                         eosio::name schema_name,
-                        double market_fee)
+                        double market_fee,
+                        const attribute_map& attrs)
    {
       ::atomicassets::collections_t collections(contract, contract.value);
       if (auto pos = collections.find(collection.value); pos != collections.end())
@@ -80,17 +81,16 @@ namespace eden::atomicassets
             // that notifications are set up.
             actions::addnotifyacc(contract, {self, "active"_n}).send(collection, self);
          }
+         actions::setcoldata(contract, {self, "active"_n}).send(collection, attrs);
       }
       else
       {
          actions::createcol(contract, {self, "active"_n})
-             .send(self, collection, true, std::vector{self}, std::vector{self}, market_fee,
-                   atomicassets::attribute_map{});
+             .send(self, collection, true, std::vector{self}, std::vector{self}, market_fee, attrs);
       }
 
-      std::vector<format> schema{{"account", "string"}, {"name", "string"},
-                                 {"img", "string"},     {"bio", "string"},
-                                 {"social", "string"},  {"video", "string"}};
+      std::vector<format> schema{{"account", "string"}, {"name", "string"},   {"img", "ipfs"},
+                                 {"bio", "string"},     {"social", "string"}, {"video", "ipfs"}};
       ::atomicassets::schemas_t schemas(contract, collection.value);
       if (auto pos = schemas.find(schema_name.value); pos != schemas.end())
       {
@@ -122,5 +122,12 @@ namespace eden::atomicassets
          actions::createschema(contract, {self, "active"_n})
              .send(self, collection, schema_name, schema);
       }
+   }
+
+   void validate_ipfs(const std::string& cid)
+   {
+      eosio::check(!cid.empty(), "CID is empty");
+      std::vector<unsigned char> scratch;
+      eosio::check(DecodeBase58(cid, scratch), "Expected Base58 encoded CID");
    }
 }  // namespace eden::atomicassets
