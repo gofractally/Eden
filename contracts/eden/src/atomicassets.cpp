@@ -89,8 +89,9 @@ namespace eden::atomicassets
              .send(self, collection, true, std::vector{self}, std::vector{self}, market_fee, attrs);
       }
 
-      std::vector<format> schema{{"account", "string"}, {"name", "string"},   {"img", "ipfs"},
-                                 {"bio", "string"},     {"social", "string"}, {"video", "ipfs"}};
+      std::vector<format> schema{{"account", "string"}, {"name", "string"},
+                                 {"img", "string"},     {"bio", "string"},
+                                 {"social", "string"},  {"video", "string"}};
       ::atomicassets::schemas_t schemas(contract, collection.value);
       if (auto pos = schemas.find(schema_name.value); pos != schemas.end())
       {
