@@ -205,7 +205,7 @@ TEST_CASE("deposit and spend")
    eden_tester t;
    t.eden_gm.act<actions::genesis>("Eden", eosio::symbol("EOS", 4), s2a("10.0000 EOS"),
                                    std::vector{"alice"_n, "pip"_n, "egeon"_n}, "IPFS video",
-                                   s2a("1.0000 EOS"), 7 * 24 * 60 * 60, "");
+                                   attribute_map{}, s2a("1.0000 EOS"), 7 * 24 * 60 * 60, "");
    expect(t.alice.trace<token::actions::transfer>("alice"_n, "eden.gm"_n, s2a("10.0000 OTHER"),
                                                   "memo"),
           "token must be a valid 4,EOS");
