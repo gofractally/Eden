@@ -355,7 +355,7 @@
             ]
         },
         {
-            "name": "inductpayfee",
+            "name": "inductdonate",
             "base": "",
             "fields": [
                 {
@@ -424,8 +424,8 @@
             "ricardian_contract": ""
         },
         {
-            "name": "inductpayfee",
-            "type": "inductpayfee",
+            "name": "inductdonate",
+            "type": "inductdonate",
             "ricardian_contract": ""
         },
         {
