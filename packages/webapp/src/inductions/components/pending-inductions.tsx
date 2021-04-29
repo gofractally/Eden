@@ -1,7 +1,12 @@
-import { Text, useUALAccount, useFetchedData, Heading } from "_app";
+import {
+    ActionButton,
+    ActionButtonType,
+    ActionButtonSize,
+    Text,
+    Heading,
+} from "_app";
 
-import { getCurrentInductions } from "../api";
-import { Endorsement } from "../interfaces";
+import { Endorsement, Induction } from "../interfaces";
 import {
     EndorserInductions,
     InviteeInductions,
@@ -9,48 +14,34 @@ import {
 } from "./induction-lists";
 
 interface Props {
+    inductions: Induction[];
+    endorsements: Endorsement[];
     isActive?: boolean;
 }
 
-export const PendingInductions = ({ isActive }: Props) => {
-    const [ualAccount] = useUALAccount();
-
-    const [currentInductions, isLoading] = useFetchedData<any>(
-        getCurrentInductions,
-        ualAccount?.accountName,
-        isActive
-    );
-
-    const inductions = currentInductions ? currentInductions.inductions : [];
-    const endorsements = currentInductions
-        ? currentInductions.endorsements
-        : [];
-
-    const userEndorsements: Endorsement[] = endorsements.filter(
-        (end: Endorsement) => end.inviter !== end.endorser
-    );
-
-    if (isLoading) {
-        return (
-            <div className="space-y-4">
-                <>Loading inductions...</>
-            </div>
-        );
-    }
-
-    const thereAreEndorsements = userEndorsements.length > 0;
+export const PendingInductions = ({
+    inductions,
+    endorsements,
+    isActive,
+}: Props) => {
+    const thereAreEndorsements = endorsements.length > 0;
     const thereAreInductions = inductions.length > 0;
 
     if (isActive) {
         return (
-            <div className="space-y-4">
-                {thereAreInductions && (
-                    <InviterInductions inductions={inductions} />
+            <>
+                {(thereAreInductions || thereAreEndorsements) && (
+                    <InviteBanner />
                 )}
-                {thereAreEndorsements && (
-                    <EndorserInductions endorsements={userEndorsements} />
-                )}
-            </div>
+                <div className="space-y-4">
+                    {thereAreInductions && (
+                        <InviterInductions inductions={inductions} />
+                    )}
+                    {thereAreEndorsements && (
+                        <EndorserInductions endorsements={endorsements} />
+                    )}
+                </div>
+            </>
         );
     } else if (thereAreInductions) {
         return (
@@ -60,6 +51,7 @@ export const PendingInductions = ({ isActive }: Props) => {
         );
     }
 
+    // TODO: After changeover to donation-at-end, do we ever hit this? If not, remove. If so, move out of this component.
     return (
         <div className="space-y-4">
             <Heading size={2}>Join the Eden Community</Heading>
@@ -76,3 +68,21 @@ export const PendingInductions = ({ isActive }: Props) => {
         </div>
     );
 };
+
+const InviteBanner = () => (
+    <div className="flex items-center justify-center text-center flex-col md:flex-row-reverse md:justify-start mt-4 mb-6">
+        <div className="w-44 md:w-56 sm:mx-0 md:mx-4">
+            <ActionButton
+                href="/induction/init"
+                type={ActionButtonType.DEFAULT}
+                size={ActionButtonSize.S}
+                fullWidth
+            >
+                Invite to Eden
+            </ActionButton>
+        </div>
+        <div className="text-sm text-gray-700 w-3/4 md:w-auto mt-2 md:mt-0">
+            Invite your trusted contacts in the EOS community to Eden.
+        </div>
+    </div>
+);

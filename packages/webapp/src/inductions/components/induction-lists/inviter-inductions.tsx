@@ -3,10 +3,14 @@ import * as relativeTime from "dayjs/plugin/relativeTime";
 
 import { getEndorsementsByInductionId } from "inductions/api";
 import { getInductionStatus } from "inductions/utils";
-import { useFetchedData } from "_app";
+import {
+    ActionButton,
+    ActionButtonSize,
+    ActionButtonType,
+    useFetchedData,
+} from "_app";
 import * as InductionTable from "_app/ui/table";
 import { Endorsement, Induction, InductionStatus } from "../../interfaces";
-import { InductionActionButton } from "./action-button";
 
 dayjs.extend(relativeTime.default);
 
@@ -87,22 +91,25 @@ const InviterInductionStatus = ({
     switch (status) {
         case InductionStatus.waitingForProfile:
             return (
-                <InductionActionButton
+                <ActionButton
+                    type={ActionButtonType.INDUCTION_STATUS_WAITING}
+                    size={ActionButtonSize.S}
+                    fullWidth
                     href={`/induction/${induction.id}`}
-                    className="bg-gray-50"
                 >
                     Waiting for profile
-                </InductionActionButton>
+                </ActionButton>
             );
         case InductionStatus.waitingForVideo:
             return (
-                <InductionActionButton
+                <ActionButton
+                    type={ActionButtonType.INDUCTION_STATUS_CEREMONY}
+                    size={ActionButtonSize.S}
+                    fullWidth
                     href={`/induction/${induction.id}`}
-                    className="bg-blue-500 border-blue-500"
-                    lightText
                 >
                     Complete ceremony
-                </InductionActionButton>
+                </ActionButton>
             );
         case InductionStatus.waitingForEndorsement:
             const inviterEndorsement = endorsements?.find(
@@ -110,22 +117,25 @@ const InviterInductionStatus = ({
             );
             if (inviterEndorsement?.endorsed) {
                 return (
-                    <InductionActionButton
+                    <ActionButton
+                        type={ActionButtonType.INDUCTION_STATUS_WAITING}
+                        size={ActionButtonSize.S}
+                        fullWidth
                         href={`/induction/${induction.id}`}
-                        className="bg-gray-50"
                     >
-                        Voting or Waiting Donation
-                    </InductionActionButton>
+                        Pending completion
+                    </ActionButton>
                 );
             }
             return (
-                <InductionActionButton
+                <ActionButton
+                    type={ActionButtonType.INDUCTION_STATUS_ENDORSE}
+                    size={ActionButtonSize.S}
+                    fullWidth
                     href={`/induction/${induction.id}`}
-                    className="bg-green-500"
-                    lightText
                 >
-                    Vote now
-                </InductionActionButton>
+                    Endorse
+                </ActionButton>
             );
         default:
             return <>Error</>;
