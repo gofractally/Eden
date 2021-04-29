@@ -7,7 +7,7 @@ add_custom_command(
     COMMAND cp ${WASI_SDK_PREFIX}/share/wasi-sysroot/lib/wasm32-wasi/libc.a libc-no-malloc.a
     COMMAND ${WASI_SDK_PREFIX}/bin/llvm-ar d libc-no-malloc.a dlmalloc.o
 )
-set_target_properties(simple-malloc PROPERTIES ARCHIVE_OUTPUT_DIRECTORY ${ROOT_BINARY_DIR}/sdk/lib-wasm)
+set_target_properties(simple-malloc PROPERTIES ARCHIVE_OUTPUT_DIRECTORY ${ROOT_BINARY_DIR}/clsdk/lib-wasm)
 
 add_library(eosio-contracts-wasi-polyfill)
 target_sources(eosio-contracts-wasi-polyfill PRIVATE
@@ -16,14 +16,14 @@ target_sources(eosio-contracts-wasi-polyfill PRIVATE
     contracts/wasi-polyfill/__wasi_fd_seek.cpp
     contracts/wasi-polyfill/__wasi_fd_write.cpp
 )
-set_target_properties(eosio-contracts-wasi-polyfill PROPERTIES ARCHIVE_OUTPUT_DIRECTORY ${ROOT_BINARY_DIR}/sdk/lib-wasm)
+set_target_properties(eosio-contracts-wasi-polyfill PROPERTIES ARCHIVE_OUTPUT_DIRECTORY ${ROOT_BINARY_DIR}/clsdk/lib-wasm)
 
 add_library(eosio-core)
 target_link_libraries(eosio-core PUBLIC abieos boost)
 target_include_directories(eosio-core PUBLIC core)
 target_compile_options(eosio-core PUBLIC -fno-exceptions -D__eosio_cdt__)
 target_sources(eosio-core PRIVATE crypto.cpp)
-set_target_properties(eosio-core PROPERTIES ARCHIVE_OUTPUT_DIRECTORY ${ROOT_BINARY_DIR}/sdk/lib-wasm)
+set_target_properties(eosio-core PROPERTIES ARCHIVE_OUTPUT_DIRECTORY ${ROOT_BINARY_DIR}/clsdk/lib-wasm)
 
 add_library(eosio-contract-base)
 target_link_libraries(eosio-contract-base PUBLIC eosio-core)
@@ -35,7 +35,7 @@ target_link_options(eosio-contract-base PUBLIC
     -nostdlib
 )
 target_sources(eosio-contract-base PRIVATE eosiolib.cpp)
-set_target_properties(eosio-contract-base PROPERTIES ARCHIVE_OUTPUT_DIRECTORY ${ROOT_BINARY_DIR}/sdk/lib-wasm)
+set_target_properties(eosio-contract-base PROPERTIES ARCHIVE_OUTPUT_DIRECTORY ${ROOT_BINARY_DIR}/clsdk/lib-wasm)
 string(TOLOWER ${CMAKE_BUILD_TYPE} BUILD_TYPE_LOWER)
 if(BUILD_TYPE_LOWER STREQUAL release OR BUILD_TYPE_LOWER STREQUAL minsizerel)
     target_link_options(eosio-contract-base INTERFACE -Wl,--strip-all)
@@ -85,11 +85,10 @@ target_sources(eden-testlib PRIVATE
     tester/wasi_polyfill/__wasi_path_open.cpp
     tester/wasi_polyfill/__wasi_proc_exit.cpp
 )
-target_link_libraries(eden-testlib PUBLIC fmt boost eosio-core)
+target_link_libraries(eden-testlib PUBLIC boost eosio-core)
 target_include_directories(eden-testlib PUBLIC contracts tester)
 target_link_options(eden-testlib INTERFACE -Wl,--export-table)
-add_dependencies(eden-testlib fmt)
-set_target_properties(eden-testlib PROPERTIES ARCHIVE_OUTPUT_DIRECTORY ${ROOT_BINARY_DIR}/sdk/lib-wasm)
+set_target_properties(eden-testlib PROPERTIES ARCHIVE_OUTPUT_DIRECTORY ${ROOT_BINARY_DIR}/clsdk/lib-wasm)
 
 copy_headers(contracts/eosio eosiolib/contracts/include/eosio)
 copy_headers(core/eosio eosiolib/core/include/eosio)

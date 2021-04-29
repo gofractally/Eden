@@ -9,7 +9,6 @@
 #include <eosio/producer_schedule.hpp>
 #include <eosio/transaction.hpp>
 
-#include <fmt/format.h>
 #include <cwchar>
 
 namespace eosio

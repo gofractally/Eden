@@ -33,10 +33,10 @@ function(copy_headers from to)
         ${CMAKE_CURRENT_SOURCE_DIR}/${from}/*.h
         ${CMAKE_CURRENT_SOURCE_DIR}/${from}/*.hpp
     )
-    file(COPY ${foo} DESTINATION ${ROOT_BINARY_DIR}/sdk/${to})
+    file(COPY ${foo} DESTINATION ${ROOT_BINARY_DIR}/clsdk/${to})
 endfunction()
 
-file(COPY ${ROOT_SOURCE_DIR}/LICENSE DESTINATION ${ROOT_BINARY_DIR}/sdk/licenses)
+file(COPY ${ROOT_SOURCE_DIR}/LICENSE DESTINATION ${ROOT_BINARY_DIR}/clsdk/licenses)
 
 add_subdirectory(../contracts contracts)
 add_subdirectory(../libraries libraries)
