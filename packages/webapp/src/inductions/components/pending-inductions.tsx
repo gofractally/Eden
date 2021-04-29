@@ -38,8 +38,8 @@ export const PendingInductions = ({ isActive }: Props) => {
         );
     }
 
-    const thereAreEndorsements = !!userEndorsements.length;
-    const thereAreInductions = !!inductions.length;
+    const thereAreEndorsements = userEndorsements.length > 0;
+    const thereAreInductions = inductions.length > 0;
 
     if (isActive) {
         return (
