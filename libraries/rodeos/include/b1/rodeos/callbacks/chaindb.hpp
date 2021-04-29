@@ -1,3 +1,5 @@
+// TODO: Give 0x01 prefix (CDT calls it 'status', a bad name) a good name
+
 #pragma once
 
 #include <b1/rodeos/callbacks/kv.hpp>

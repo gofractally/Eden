@@ -185,11 +185,11 @@ void with_result(const char* data, uint64_t size, F f)
    eosio::input_stream bin{data, data + size};
    eosio::ship_protocol::result result;
    from_bin(result, bin);
-   auto* result_v0 = std::get_if<eosio::ship_protocol::get_blocks_result_v0>(&result);
+   const auto* result_v0 = std::get_if<eosio::ship_protocol::get_blocks_result_v0>(&result);
    if (result_v0)
       return f(*result_v0);
 
-   // auto* result_v1 = std::get_if<eosio::ship_protocol::get_blocks_result_v1>(&result);
+   // const auto* result_v1 = std::get_if<eosio::ship_protocol::get_blocks_result_v1>(&result);
    // if (result_v1)
    //    return f(*result_v1);
 
@@ -359,27 +359,18 @@ rodeos_bool rodeos_query_transaction(rodeos_error* error,
 
       eosio::size_stream ss;
       eosio::to_bin(tt, ss);
-      *result = (char*)malloc(ss.size);
-      if (!result)
-         throw std::bad_alloc();
-      auto free_on_except = fc::make_scoped_exit([&] {
-         free(*result);
-         *result = nullptr;
-      });
-      eosio::fixed_buf_stream fbs(*result, ss.size);
+      auto buffer = std::make_unique<char[]>(ss.size);
+      eosio::fixed_buf_stream fbs(buffer.get(), ss.size);
       to_bin(tt, fbs);
       if (fbs.pos != fbs.end)
-      {
          eosio::check(false, eosio::convert_stream_error(eosio::stream_error::underrun));
-      }
       *result_size = ss.size;
-      free_on_except.cancel();
+      *result = buffer.release();
       return true;
    });
 }
 
 void rodeos_free_result(char* result)
 {
-   if (result)
-      free(result);
+   std::unique_ptr<char[]>{result};
 }
