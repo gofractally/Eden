@@ -2,6 +2,14 @@
 
 namespace eden
 {
+   std::optional<member> members::get_member(eosio::name account)
+   {
+      auto record = member_tb.find(account.value);
+      if (record != member_tb.end())
+         return *record;
+      return std::nullopt;
+   }
+
    void members::check_active_member(eosio::name account)
    {
       auto member = member_tb.get(account.value);
