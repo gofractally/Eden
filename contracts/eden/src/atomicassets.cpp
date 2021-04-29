@@ -81,6 +81,7 @@ namespace eden::atomicassets
             // that notifications are set up.
             actions::addnotifyacc(contract, {self, "active"_n}).send(collection, self);
          }
+         actions::setcoldata(contract, {self, "active"_n}).send(collection, attrs);
       }
       else
       {

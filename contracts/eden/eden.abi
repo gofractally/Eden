@@ -83,11 +83,11 @@
             "base": "",
             "fields": [
                 {
-                    "name": "first",
+                    "name": "key",
                     "type": "string"
                 },
                 {
-                    "name": "second",
+                    "name": "value",
                     "type": "attribute"
                 }
             ]
