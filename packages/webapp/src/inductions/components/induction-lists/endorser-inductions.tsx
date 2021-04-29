@@ -4,7 +4,7 @@ import * as relativeTime from "dayjs/plugin/relativeTime";
 import { getInductionStatus } from "inductions/utils";
 import { getInduction } from "inductions/api";
 import { useFetchedData } from "_app";
-import * as InductionTable from "inductions/components/induction-lists/induction-table";
+import * as InductionTable from "_app/ui/table";
 import { Endorsement, Induction, InductionStatus } from "../../interfaces";
 import { InductionActionButton } from "./action-button";
 

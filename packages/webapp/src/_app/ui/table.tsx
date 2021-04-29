@@ -17,7 +17,7 @@ export type Row = {
     [key: string]: string | JSX.Element;
 };
 
-interface InductionTableProps {
+interface TableProps {
     columns: Column[];
     data: Row[];
     className?: string;
@@ -33,7 +33,7 @@ export const Table = ({
     headerClassName = "",
     rowClassName = "",
     tableHeader,
-}: InductionTableProps) => {
+}: TableProps) => {
     const tableClass = `xs:m-0 sm:-mx-4 md:m-0 bg-white border-t border-b md:border border-gray-200 md:rounded md:shadow-sm text-gray-700 ${className}`;
     return (
         <div className="mb-8">
@@ -42,9 +42,13 @@ export const Table = ({
                     {tableHeader}
                 </Heading>
             )}
-            <div className={tableClass} role="table" aria-label="Invitations">
-                <IndTableHeader columns={columns} className={headerClassName} />
-                <IndTableRows
+            <div
+                className={tableClass}
+                role="table"
+                aria-label={tableHeader || "table"}
+            >
+                <TableHeader columns={columns} className={headerClassName} />
+                <TableRows
                     columns={columns}
                     data={data}
                     className={rowClassName}
@@ -54,13 +58,13 @@ export const Table = ({
     );
 };
 
-interface IndTableRowsProps {
+interface TableRowsProps {
     columns: Column[];
     data: Row[];
     className?: string;
 }
 
-const IndTableRows = ({ columns, data, className = "" }: IndTableRowsProps) => {
+const TableRows = ({ columns, data, className = "" }: TableRowsProps) => {
     const tableRowsClass = `divide-y divide-gray-200 ${className}`;
     const tableRowClass =
         "flex items-center pr-2 pl-4 sm:px-4 py-3 space-y-1 md:space-y-0 md:h-16 hover:bg-gray-50";
@@ -77,7 +81,7 @@ const IndTableRows = ({ columns, data, className = "" }: IndTableRowsProps) => {
                             if (h.type === DataTypeEnum.Action) {
                                 return (
                                     <div
-                                        key={`invitation-row-${row.key}-col-${h.key}`}
+                                        key={`row-${row.key}-col-${h.key}`}
                                         className={`flex md:flex-grow-0 w-44 md:w-56 ${
                                             h.className || ""
                                         }`}
@@ -89,7 +93,7 @@ const IndTableRows = ({ columns, data, className = "" }: IndTableRowsProps) => {
                             }
                             return (
                                 <div
-                                    key={`invitation-row-${row.key}-col-${h.key}`}
+                                    key={`row-${row.key}-col-${h.key}`}
                                     className={`flex-1 font-light ${
                                         h.className || ""
                                     }`}
@@ -106,7 +110,7 @@ const IndTableRows = ({ columns, data, className = "" }: IndTableRowsProps) => {
     );
 };
 
-const IndTableHeader = ({ columns, className = "" }: IndTableHeaderProps) => {
+const TableHeader = ({ columns, className = "" }: TableHeaderProps) => {
     const tableHeaderClass = `hidden md:flex items-center px-4 py-3 title-font font-medium text-gray-900 text-sm bg-gray-200 ${className}`;
 
     return (
@@ -130,7 +134,7 @@ const IndTableHeader = ({ columns, className = "" }: IndTableHeaderProps) => {
     );
 };
 
-interface IndTableHeaderProps {
+interface TableHeaderProps {
     columns: Column[];
     className?: string;
 }
