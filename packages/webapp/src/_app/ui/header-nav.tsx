@@ -5,7 +5,7 @@ import { useEffect, useState } from "react";
 import { FaSignOutAlt } from "react-icons/fa";
 
 import { useUALAccount } from "../eos";
-import Button from "./button";
+import { ActionButton, ActionButtonType } from "./action-button";
 
 interface MenuItem {
     href: string;
@@ -106,8 +106,12 @@ const AccountMenu = () => {
             </a>
         </div>
     ) : (
-        <Button onClick={ualShowModal} className="mt-4 md:mt-0">
-            Login
-        </Button>
+        <ActionButton
+            type={ActionButtonType.LOGIN}
+            onClick={ualShowModal}
+            className="mt-4 md:mt-0"
+        >
+            Sign in
+        </ActionButton>
     );
 };
