@@ -6,3 +6,4 @@ export * from "./social-button";
 export * from "./text";
 export * from "./header-nav";
 export * from "./card";
+export * from "./table";
