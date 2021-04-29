@@ -265,14 +265,13 @@ namespace eden
    void inductions::validate_profile(const new_member_profile& new_member_profile) const
    {
       eosio::check(!new_member_profile.name.empty(), "new member profile name is empty");
-      eosio::check(!new_member_profile.img.empty(), "new member profile img is empty");
+      atomicassets::validate_ipfs(new_member_profile.img);
       eosio::check(!new_member_profile.bio.empty(), "new member profile bio is empty");
-      // TODO: add more checks (valid ipfs img)
    }
 
    void inductions::validate_video(const std::string& video) const
    {
-      // TODO: check that video is a valid IPFS CID.
+      atomicassets::validate_ipfs(video);
    }
 
    bool inductions::is_endorser(uint64_t id, eosio::name witness) const
