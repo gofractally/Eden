@@ -175,7 +175,8 @@ namespace eden
       auto itr = endorsement_idx.lower_bound(induction.id());
       while (itr != endorsement_idx.end() && itr->induction_id() == induction.id())
       {
-         eosio::check(itr->endorsed(), "inductee may not pay fee until endorsements are complete");
+         eosio::check(itr->endorsed(),
+                      "inductee may not donate using this action until endorsements are complete");
          itr++;
       }
 

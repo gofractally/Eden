@@ -190,9 +190,9 @@ TEST_CASE("genesis")
    CHECK(get_eden_account("alice"_n)->balance() == s2a("100.0000 EOS"));
    CHECK(get_token_balance("alice"_n) == s2a("900.0000 EOS"));
 
-   t.alice.act<actions::inductpayfee>("alice"_n, 1, s2a("10.0000 EOS"));
-   t.pip.act<actions::inductpayfee>("pip"_n, 2, s2a("10.0000 EOS"));
-   t.egeon.act<actions::inductpayfee>("egeon"_n, 3, s2a("10.0000 EOS"));
+   t.alice.act<actions::inductdonate>("alice"_n, 1, s2a("10.0000 EOS"));
+   t.pip.act<actions::inductdonate>("pip"_n, 2, s2a("10.0000 EOS"));
+   t.egeon.act<actions::inductdonate>("egeon"_n, 3, s2a("10.0000 EOS"));
 
    CHECK(get_eden_account("alice"_n) != std::nullopt);
    CHECK(get_eden_account("alice"_n)->balance() == s2a("90.0000 EOS"));
