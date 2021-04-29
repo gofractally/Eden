@@ -123,4 +123,11 @@ namespace eden::atomicassets
              .send(self, collection, schema_name, schema);
       }
    }
+
+   void validate_ipfs(const std::string& cid)
+   {
+      eosio::check(!cid.empty(), "CID is empty");
+      std::vector<unsigned char> scratch;
+      eosio::check(DecodeBase58(cid, scratch), "Expected Base58 encoded CID");
+   }
 }  // namespace eden::atomicassets

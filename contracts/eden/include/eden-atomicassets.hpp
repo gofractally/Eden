@@ -81,4 +81,6 @@ namespace eden::atomicassets
                         eosio::name schema,
                         double market_fee,
                         const attribute_map& attrs);
+
+   void validate_ipfs(const std::string& cid);
 }  // namespace eden::atomicassets
