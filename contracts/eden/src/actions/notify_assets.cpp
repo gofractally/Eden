@@ -19,7 +19,7 @@ namespace eden
       auto pos = std::find_if(immutable_data.begin(), immutable_data.end(),
                               [](const auto& attr) { return attr.key == "account"; });
       eosio::check(pos != immutable_data.end(), "Missing account lognewtempl");
-      eosio::name invitee(pos->value);
+      eosio::name invitee(std::get<std::string>(pos->value));
       inductions inductions{get_self()};
       const auto& induction = inductions.get_endorsed_induction(eosio::name(invitee));
       inductions.create_nfts(induction, template_id);
@@ -48,7 +48,7 @@ namespace eden
       auto pos = std::find_if(immutable_data.begin(), immutable_data.end(),
                               [](const auto& attr) { return attr.key == "account"; });
       eosio::check(pos != immutable_data.end(), "Missing account logmint");
-      eosio::name invitee(pos->value);
+      eosio::name invitee(std::get<std::string>(pos->value));
       inductions inductions{get_self()};
       const auto& induction = inductions.get_endorsed_induction(eosio::name(invitee));
       inductions.start_auction(induction, asset_id);

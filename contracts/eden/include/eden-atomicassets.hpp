@@ -10,22 +10,26 @@
 
 namespace eden::atomicassets
 {
+   template <typename... T>
+   using attribute_variant = std::variant<T..., std::vector<T>...>;
+   using attribute_value = attribute_variant<int8_t,
+                                             int16_t,
+                                             int32_t,
+                                             int64_t,
+                                             uint8_t,
+                                             uint16_t,
+                                             uint32_t,
+                                             uint64_t,
+                                             float,
+                                             double,
+                                             std::string>;
+
    struct attribute
    {
       std::string key;
-      std::string value;
-      uint8_t type = 10;  // The value is actually a variant, but we're only using string
+      attribute_value value;
    };
-   EOSIO_REFLECT(attribute, key, type, value);
-
-   template <typename S>
-   void from_bin(attribute& attr, S& stream)
-   {
-      from_bin(attr.key, stream);
-      from_bin(attr.type, stream);
-      eosio::check(attr.type == 10, "Unexpected attribute type");
-      from_bin(attr.value, stream);
-   }
+   EOSIO_REFLECT(attribute, key, value);
 
    using attribute_map = std::vector<attribute>;
 
@@ -47,6 +51,7 @@ namespace eden::atomicassets
                      const std::vector<eosio::name>& notify_accounts,
                      double market_fee,
                      const attribute_map& data);
+      void setcoldata(eosio::name collection_name, const attribute_map& data);
       void extendschema(eosio::name authorized_creator,
                         eosio::name collection_name,
                         eosio::name schema_name,
@@ -61,6 +66,7 @@ namespace eden::atomicassets
                  "atomicassets"_n,
                  init,
                  createcol,
+                 setcoldata,
                  createschema,
                  extendschema,
                  addnotifyacc);
@@ -73,5 +79,6 @@ namespace eden::atomicassets
                         eosio::name self,
                         eosio::name collection,
                         eosio::name schema,
-                        double market_fee);
+                        double market_fee,
+                        const attribute_map& attrs);
 }  // namespace eden::atomicassets

@@ -32,6 +32,7 @@ namespace eden
                    eosio::asset minimum_donation,
                    std::vector<eosio::name> initial_members,
                    std::string genesis_video,
+                   atomicassets::attribute_map collection_attributes,
                    eosio::asset auction_starting_bid,
                    uint32_t auction_duration,
                    eosio::ignore<std::string> memo);

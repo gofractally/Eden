@@ -4,6 +4,9 @@ set -e
 CLEOS="cleos -u https://wax-test.eosdac.io"
 CONTRACT="edenmembersd"
 COMMUNITY_NAME="Eden Test"
+COMMUNITY_DESCRIPTION="Eden is a community working to maximize the power and independence of its members and thereby securing life, liberty, property, and justice for all."
+COMMUNITY_LOGO="QmZQ11KWvfj2NkKUMJfsTfvfbyUNQpLYCu8uxSbFTQ2zbA"
+COMMUNITY_URL="https://eden.eoscommunity.org"
 GENESIS_VIDEO="QmTYqoPYf7DiVebTnvwwFdTgsYXg2RnuPrt8uddjfW2kHS"
 SYMBOL="8,WAX"
 MINIMUM_DONATION="10.00000000 WAX"
@@ -22,9 +25,38 @@ GENESIS_ACTION_DATA="{
     \"genesis_video\": \"$GENESIS_VIDEO\",
     \"auction_starting_bid\": \"$AUCTION_STARTING_BID\",
     \"auction_duration\": $AUCTION_DURATION,
-    \"memo\": \"$GENESIS_MEMO\"
+    \"memo\": \"$GENESIS_MEMO\",
+    \"collection_attributes\": [
+        {
+            \"key\": \"name\",
+            \"value\": [
+                \"string\",
+                \"$COMMUNITY_NAME\"
+            ]
+        },
+        {
+            \"key\": \"img\",
+            \"value\": [
+                \"string\",
+                \"$COMMUNITY_LOGO\"
+            ]
+        },
+        {
+            \"key\": \"description\",
+            \"value\": [
+                \"string\",
+                \"$COMMUNITY_DESCRIPTION\"
+        ]
+        },
+        {
+            \"key\": \"url\",
+            \"value\": [
+                \"string\",
+                \"$COMMUNITY_URL\"
+            ]
+        }
+    ]
 }"
-echo $GENESIS_ACTION_DATA
 
 # cleos set account permission edenmembersd active --add-code
 
