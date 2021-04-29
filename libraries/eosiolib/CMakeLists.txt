@@ -1,5 +1,5 @@
 add_library(simple-malloc)
-target_compile_options(simple-malloc PUBLIC -fno-exceptions -D__eosio_cdt__)
+target_compile_options(simple-malloc PRIVATE -fno-exceptions -D__eosio_cdt__)
 target_sources(simple-malloc PRIVATE simple_malloc.cpp)
 add_custom_command(
     TARGET simple-malloc
@@ -7,7 +7,6 @@ add_custom_command(
     COMMAND cp ${WASI_SDK_PREFIX}/share/wasi-sysroot/lib/wasm32-wasi/libc.a libc-no-malloc.a
     COMMAND ${WASI_SDK_PREFIX}/bin/llvm-ar d libc-no-malloc.a dlmalloc.o
 )
-set_target_properties(simple-malloc PROPERTIES ARCHIVE_OUTPUT_DIRECTORY ${ROOT_BINARY_DIR}/clsdk/lib-wasm)
 
 add_library(eosio-contracts-wasi-polyfill)
 target_sources(eosio-contracts-wasi-polyfill PRIVATE
@@ -92,3 +91,8 @@ set_target_properties(eden-testlib PROPERTIES ARCHIVE_OUTPUT_DIRECTORY ${ROOT_BI
 
 copy_headers(contracts/eosio eosiolib/contracts/include/eosio)
 copy_headers(core/eosio eosiolib/core/include/eosio)
+copy_headers(tester/eosio eosiolib/tester/include/eosio)
+configure_file(simple_malloc.cpp ${ROOT_BINARY_DIR}/clsdk/eosiolib/simple_malloc.cpp COPYONLY)
+configure_file(sdk/clsdk-cmake-args ${ROOT_BINARY_DIR}/clsdk/bin/clsdk-cmake-args COPYONLY)
+configure_file(sdk/toolchain.cmake ${ROOT_BINARY_DIR}/clsdk/toolchain.cmake COPYONLY)
+configure_file(sdk/CMakeLists.txt ${ROOT_BINARY_DIR}/clsdk/CMakeLists.txt COPYONLY)
