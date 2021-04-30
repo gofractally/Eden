@@ -56,6 +56,8 @@ namespace eden
 
       void inducted(eosio::name inductee);
 
+      void gc(uint32_t limit);
+
       void notify_lognewtempl(int32_t template_id,
                               eosio::name authorized_creator,
                               eosio::name collection_name,
@@ -88,6 +90,7 @@ namespace eden
                  inductdonate,
                  inducted,
                  inductcancel,
+                 gc,
                  notify(token_contract, transfer),
                  notify(atomic_assets_account, lognewtempl),
                  notify(atomic_assets_account, logmint))

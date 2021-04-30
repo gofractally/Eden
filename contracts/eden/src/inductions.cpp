@@ -118,12 +118,16 @@ namespace eden
       return get_induction(endorsed_induction_tb.get(invitee.value).induction_id);
    }
 
-   void inductions::check_valid_induction(const induction& induction) const
+   bool inductions::is_valid_induction(const induction& induction) const
    {
       auto induction_lifetime =
           eosio::current_time_point() - induction.created_at().to_time_point();
-      eosio::check(induction_lifetime.to_seconds() <= induction_expiration_secs,
-                   "induction has expired");
+      return induction_lifetime.to_seconds() <= induction_expiration_secs;
+   }
+
+   void inductions::check_valid_induction(const induction& induction) const
+   {
+      eosio::check(is_valid_induction(induction), "induction has expired");
    }
 
    void inductions::update_video(const induction& induction, const std::string& video)
@@ -265,6 +269,56 @@ namespace eden
          endorsed_induction_tb.erase(itr);
       }
       induction_tb.erase(induction);
+   }
+
+   uint32_t inductions::erase_by_inductee(eosio::name invitee, uint32_t limit)
+   {
+      auto invitee_idx = induction_tb.get_index<"byinvitee"_n>();
+      auto iter = invitee_idx.lower_bound(combine_names(invitee, eosio::name()));
+      auto end = invitee_idx.end();
+      while (iter != end && limit > 0 && iter->invitee() == invitee)
+      {
+         iter = invitee_idx.erase(iter);
+         --limit;
+      }
+      return limit;
+   }
+
+   uint32_t inductions::gc(uint32_t limit)
+   {
+      limit = erase_expired(limit);
+      induction_gc_table_type gc_tb(contract, default_scope);
+      auto iter = gc_tb.begin();
+      auto end = gc_tb.end();
+      while (iter != end && limit > 0)
+      {
+         limit = erase_by_inductee(iter->invitee, limit);
+         if (limit)
+         {
+            iter = gc_tb.erase(iter);
+            --limit;
+         }
+      }
+      return limit;
+   }
+
+   void inductions::queue_gc(eosio::name invitee)
+   {
+      induction_gc_table_type gc_tb(contract, default_scope);
+      gc_tb.emplace(contract, [=](auto& row) { row.invitee = invitee; });
+   }
+
+   uint32_t inductions::erase_expired(uint32_t limit)
+   {
+      auto created_idx = induction_tb.get_index<"bycreated"_n>();
+      auto iter = created_idx.begin();
+      auto end = created_idx.end();
+      while (iter != end && limit > 0 && !is_valid_induction(*iter))
+      {
+         iter = created_idx.erase(iter);
+         --limit;
+      }
+      return limit;
    }
 
    void inductions::validate_profile(const new_member_profile& new_member_profile) const
