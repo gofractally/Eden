@@ -135,6 +135,7 @@ namespace eden
       void validate_video(const std::string& video) const;
       void check_valid_endorsers(eosio::name inviter,
                                  const std::vector<eosio::name>& witnesses) const;
+      void check_is_fully_endorsed(uint64_t induction_id) const;
       void reset_endorsements(uint64_t induction_id);
 
      public:
@@ -180,7 +181,7 @@ namespace eden
                               uint64_t induction_id);
 
       // Should only be used during genesis
-      void complete_genesis_induction(const induction& induction);
+      void endorse_all(const induction& induction);
 
       // this method is used only for administrative purposes,
       // it should never be used outside genesis or test environments
