@@ -8,4 +8,5 @@ export * from "./text";
 export * from "./header-nav";
 export * from "./card";
 export * from "./table";
+export * from "./step";
 export * from "./call-to-action";
