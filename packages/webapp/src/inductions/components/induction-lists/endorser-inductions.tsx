@@ -17,13 +17,21 @@ dayjs.extend(relativeTime.default);
 
 interface Props {
     endorsements: Endorsement[];
+    isActiveCommunity?: boolean;
 }
 
-export const EndorserInductions = ({ endorsements }: Props) => (
+export const EndorserInductions = ({
+    endorsements,
+    isActiveCommunity,
+}: Props) => (
     <InductionTable.Table
         columns={ENDORSER_INDUCTION_COLUMNS}
         data={getTableData(endorsements)}
-        tableHeader="Invitations awaiting my endorsement"
+        tableHeader={
+            isActiveCommunity
+                ? "Invitations awaiting my endorsement"
+                : "Waiting on the following members"
+        }
     />
 );
 
