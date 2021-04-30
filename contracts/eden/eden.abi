@@ -179,12 +179,30 @@
             ]
         },
         {
+            "name": "account_v0",
+            "base": "",
+            "fields": [
+                {
+                    "name": "owner",
+                    "type": "name"
+                },
+                {
+                    "name": "balance",
+                    "type": "asset"
+                }
+            ]
+        },
+        {
             "name": "member_v0",
             "base": "",
             "fields": [
                 {
                     "name": "account",
                     "type": "name"
+                },
+                {
+                    "name": "name",
+                    "type": "string"
                 },
                 {
                     "name": "status",
@@ -436,6 +454,13 @@
     ],
     "tables": [
         {
+            "name": "account",
+            "type": "account",
+            "index_type": "i64",
+            "key_names": [],
+            "key_types": []
+        },
+        {
             "name": "member",
             "type": "member",
             "index_type": "i64",
@@ -486,6 +511,10 @@
         {
             "name": "memberstats",
             "types": ["memberstats_v0"]
+        },
+        {
+            "name": "account",
+            "types": ["account_v0"]
         },
         {
             "name": "member",

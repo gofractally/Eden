@@ -171,14 +171,7 @@ namespace eden
 
    void inductions::create_nft(const induction& induction)
    {
-      auto endorsement_idx = endorsement_tb.get_index<"byinduction"_n>();
-      auto itr = endorsement_idx.lower_bound(induction.id());
-      while (itr != endorsement_idx.end() && itr->induction_id() == induction.id())
-      {
-         eosio::check(itr->endorsed(),
-                      "inductee may not donate using this action until endorsements are complete");
-         itr++;
-      }
+      check_is_fully_endorsed(induction.id());
 
       endorsed_induction_table_type endorsed_induction_tb(contract, default_scope);
       endorsed_induction_tb.emplace(contract, [&](auto& row) {
@@ -228,6 +221,17 @@ namespace eden
                                   new_asset_owner, atomicassets::attribute_map{},
                                   atomicassets::attribute_map{}, std::vector<eosio::asset>{}}}
              .send();
+      }
+   }
+
+   void inductions::check_is_fully_endorsed(uint64_t induction_id) const
+   {
+      auto endorsement_idx = endorsement_tb.get_index<"byinduction"_n>();
+      auto itr = endorsement_idx.lower_bound(induction_id);
+      while (itr != endorsement_idx.end() && itr->induction_id() == induction_id)
+      {
+         eosio::check(itr->endorsed(), "induction is not fully endorsed");
+         itr++;
       }
    }
 

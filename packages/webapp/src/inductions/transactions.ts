@@ -149,3 +149,49 @@ export const submitEndorsementTransaction = async (
         ],
     };
 };
+
+export const donateAndCompleteInductionTransaction = (
+    authorizerAccount: string,
+    induction: Induction
+) => {
+    const quantity = assetToString(
+        minimumDonationAmount,
+        minimumDonationAmount.precision
+    );
+
+    return {
+        actions: [
+            {
+                account: "eosio.token",
+                name: "transfer",
+                authorization: [
+                    {
+                        actor: authorizerAccount,
+                        permission: "active",
+                    },
+                ],
+                data: {
+                    from: authorizerAccount,
+                    to: edenContractAccount,
+                    quantity,
+                    memo: "induction-donation",
+                },
+            },
+            {
+                account: edenContractAccount,
+                name: "inductdonate",
+                authorization: [
+                    {
+                        actor: authorizerAccount,
+                        permission: "active",
+                    },
+                ],
+                data: {
+                    payer: authorizerAccount,
+                    id: induction.id,
+                    quantity,
+                },
+            },
+        ],
+    };
+};

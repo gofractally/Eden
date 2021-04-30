@@ -1,7 +1,7 @@
 import dayjs from "dayjs";
 import * as relativeTime from "dayjs/plugin/relativeTime";
 
-import { getEndorsementsByInductionId } from "inductions/api";
+import { getEndorsementsByInductionId } from "../../api";
 import { getInductionStatus } from "inductions/utils";
 import { useFetchedData } from "_app";
 import * as InductionTable from "_app/ui/table";
@@ -46,29 +46,50 @@ const INVITEE_INDUCTION_COLUMNS: InductionTable.Column[] = [
 
 const getTableData = (inductions: Induction[]): InductionTable.Row[] => {
     return inductions.map((ind) => {
-        const [allEndorsements] = useFetchedData<any>(
+        const [allEndorsements] = useFetchedData<Endorsement[]>(
             getEndorsementsByInductionId,
             ind.id
         );
-        const endorsers = allEndorsements
-            ?.map((end: Endorsement): string => end.endorser)
-            .filter((end: string) => end !== ind.inviter)
-            ?.join(", ");
+
+        const endorsers =
+            allEndorsements
+                ?.map((end: Endorsement): string => end.endorser)
+                .filter((end: string) => end !== ind.inviter)
+                ?.join(", ") || "";
+
+        const isFullyEndorsed =
+            allEndorsements &&
+            allEndorsements.filter((endorsement) => endorsement.endorsed)
+                .length === allEndorsements.length;
+
         const remainingTime = dayjs().to(
             dayjs(ind.created_at).add(7, "day"),
             true
         );
+
         return {
             key: ind.id,
             inviter: ind.inviter,
             voters: endorsers,
             time_remaining: remainingTime,
-            status: <InviteeInductionStatus induction={ind} />,
+            status: (
+                <InviteeInductionStatus
+                    induction={ind}
+                    isFullyEndorsed={isFullyEndorsed}
+                />
+            ),
         };
     });
 };
 
-const InviteeInductionStatus = ({ induction }: { induction: Induction }) => {
+interface InviteeInductionStatusProps {
+    induction: Induction;
+    isFullyEndorsed?: boolean;
+}
+const InviteeInductionStatus = ({
+    induction,
+    isFullyEndorsed,
+}: InviteeInductionStatusProps) => {
     const status = getInductionStatus(induction);
     switch (status) {
         case InductionStatus.waitingForProfile:
@@ -91,7 +112,15 @@ const InviteeInductionStatus = ({ induction }: { induction: Induction }) => {
                 </InductionActionButton>
             );
         case InductionStatus.waitingForEndorsement:
-            return (
+            return isFullyEndorsed ? (
+                <InductionActionButton
+                    href={`/induction/${induction.id}`}
+                    className="bg-blue-400 border-blue-400"
+                    lightText
+                >
+                    Donate & Complete
+                </InductionActionButton>
+            ) : (
                 <InductionActionButton
                     href={`/induction/${induction.id}`}
                     className="bg-gray-50"
