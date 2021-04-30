@@ -41,9 +41,9 @@ export const InductionPage = () => {
             ) : (
                 <Text>
                     It seems that your account is not part of the Eden community
-                    yet. The first step is to reach get an invitation! Reach out
-                    to your potential inviter to get an invitation link to be
-                    able to complete your induction process.
+                    yet. The first step is to get an invitation! Reach out to
+                    your potential inviter to get an invitation link to be able
+                    to complete your induction process.
                 </Text>
             )}
         </SingleColLayout>

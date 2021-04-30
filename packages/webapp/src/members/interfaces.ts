@@ -34,6 +34,7 @@ export enum MemberStatus {
 
 export interface EdenMember {
     account: string;
+    name: string;
     status: MemberStatus;
     nft_template_id: number;
 }
