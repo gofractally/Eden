@@ -78,7 +78,7 @@ export const InductionPage = () => {
                 </>
             ) : (
                 <CallToAction buttonLabel="Get started" href="#">
-                    Looking to join Eden? The membership process begins with an
+                    Ready to join Eden? The membership process begins with an
                     invitation. Reach out to a current member to get yours!
                 </CallToAction>
             )}
