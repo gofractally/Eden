@@ -4,6 +4,9 @@ import {
     Card,
     useFetchedData,
     useUALAccount,
+    getIsCommunityActive,
+    ActionButton,
+    ActionButtonSize,
 } from "_app";
 import {
     Endorsement,
@@ -14,6 +17,13 @@ import { getEdenMember, MemberStatus, EdenMember } from "members";
 
 export const InductionPage = () => {
     const [ualAccount, _, ualShowModal] = useUALAccount();
+
+    const [
+        isActiveCommunity,
+        isLoadingCommunityState,
+    ] = useFetchedData<boolean>(getIsCommunityActive);
+    console.log("isActiveCommunity: ", isActiveCommunity);
+
     const [edenMember, isLoadingEdenMember] = useFetchedData<EdenMember>(
         getEdenMember,
         ualAccount?.accountName
@@ -28,7 +38,8 @@ export const InductionPage = () => {
         isActiveMember
     );
 
-    const isLoading = isLoadingEdenMember || isLoadingInductions;
+    const isLoading =
+        isLoadingEdenMember || isLoadingInductions || isLoadingCommunityState;
 
     const inductions = currentInductions ? currentInductions.inductions : [];
     const endorsements = currentInductions
@@ -53,19 +64,16 @@ export const InductionPage = () => {
                 <Card title="Loading...">...</Card>
             ) : edenMember ? (
                 <>
-                    {isActiveMember && !thereAreRecords && (
-                        <CallToAction
-                            buttonLabel="Invite to Eden"
-                            href="/induction/init"
-                        >
-                            Spread the love! Invite your trusted contacts in the
-                            EOS community to Eden.
-                        </CallToAction>
-                    )}
+                    <GenesisBanner />
+                    <InviteBanner
+                        canInvite={isActiveCommunity && isActiveMember}
+                        asCallToAction={!thereAreRecords}
+                    />
                     <PendingInductions
                         inductions={inductions}
                         endorsements={userEndorsements}
-                        isActive={isActiveMember}
+                        isActiveCommunity={isActiveCommunity}
+                        isActiveMember={isActiveMember}
                     />
                 </>
             ) : (
@@ -76,6 +84,48 @@ export const InductionPage = () => {
             )}
         </SingleColLayout>
     );
+};
+
+const GenesisBanner = () => (
+    <CallToAction>
+        The Genesis group is being inducted. As soon as everyone has completed
+        their profiles and donations, the community will be activated and you
+        will be able to invite others.
+    </CallToAction>
+);
+
+interface InviteBannerProps {
+    canInvite?: boolean;
+    asCallToAction: boolean;
+}
+
+const InviteBanner = ({ canInvite, asCallToAction }: InviteBannerProps) => {
+    if (canInvite && asCallToAction) {
+        return (
+            <CallToAction buttonLabel="Invite to Eden" href="/induction/init">
+                Spread the love! Invite your trusted contacts in the EOS
+                community to Eden.
+            </CallToAction>
+        );
+    } else if (canInvite) {
+        return (
+            <div className="flex items-center justify-center text-center flex-col md:flex-row-reverse md:justify-start mt-4 mb-6">
+                <div className="w-44 md:w-56 sm:mx-0 md:mx-4">
+                    <ActionButton
+                        href="/induction/init"
+                        size={ActionButtonSize.S}
+                        fullWidth
+                    >
+                        Invite to Eden
+                    </ActionButton>
+                </div>
+                <div className="text-sm text-gray-700 w-3/4 md:w-auto mt-2 md:mt-0">
+                    Invite your trusted contacts in the EOS community to Eden.
+                </div>
+            </div>
+        );
+    }
+    return <></>;
 };
 
 export default InductionPage;
