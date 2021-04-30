@@ -77,7 +77,7 @@ const HeaderItemLink = ({
 const AccountMenu = () => {
     const [ualAccount, ualLogout, ualShowModal] = useUALAccount();
     return ualAccount ? (
-        <div className="space-x-3 hover:text-gray-900">
+        <div className="mt-2 md:mt-0 space-x-3 hover:text-gray-900">
             <Link href={`/members/${ualAccount.accountName}`}>
                 <a>{ualAccount.accountName || "(unknown)"}</a>
             </Link>

@@ -1,8 +1,12 @@
 import { Text, useUALAccount, useFetchedData, Heading } from "_app";
 
 import { getCurrentInductions } from "../api";
-import { EndorsementsList } from "./endorsements-list";
-import { InductionsList } from "./inductions-list";
+import { Endorsement } from "../interfaces";
+import {
+    EndorserInductions,
+    InviteeInductions,
+    InviterInductions,
+} from "./induction-lists";
 
 interface Props {
     isActive?: boolean;
@@ -22,27 +26,53 @@ export const PendingInductions = ({ isActive }: Props) => {
         ? currentInductions.endorsements
         : [];
 
-    return isLoading ? (
-        <>Loading Inductions...</>
-    ) : (
-        <>
-            <Heading size={2}>Your Inductions</Heading>
-            <div className="space-y-4">
-                {!isActive && !inductions.length && (
-                    <Text className="mb-4">
-                        Have you already reached out to your inviter? As soon as
-                        they invite you, the induction process will be displayed
-                        here.
-                    </Text>
-                )}
-                <InductionsList inductions={inductions} isInviter={isActive} />
+    const userEndorsements: Endorsement[] = endorsements.filter(
+        (end: Endorsement) => end.inviter !== end.endorser
+    );
 
-                {isActive && endorsements.length ? (
-                    <EndorsementsList endorsements={endorsements} />
-                ) : (
-                    ""
+    if (isLoading) {
+        return (
+            <div className="space-y-4">
+                <>Loading inductions...</>
+            </div>
+        );
+    }
+
+    const thereAreEndorsements = userEndorsements.length > 0;
+    const thereAreInductions = inductions.length > 0;
+
+    if (isActive) {
+        return (
+            <div className="space-y-4">
+                {thereAreInductions && (
+                    <InviterInductions inductions={inductions} />
+                )}
+                {thereAreEndorsements && (
+                    <EndorserInductions endorsements={userEndorsements} />
                 )}
             </div>
-        </>
+        );
+    } else if (thereAreInductions) {
+        return (
+            <div className="space-y-4">
+                <InviteeInductions inductions={inductions} />
+            </div>
+        );
+    }
+
+    return (
+        <div className="space-y-4">
+            <Heading size={2}>Join the Eden Community</Heading>
+            <Text>
+                It looks like you're not an Eden member yet. To get started, get
+                an invitation from someone already in the community using your
+                EOS account name. As soon as an active Eden community member
+                invites you, their invitation will appear below and will guide
+                you through the process.
+            </Text>
+            <Text>
+                [Graphic and/or link explaining the process in more detail.]
+            </Text>
+        </div>
     );
 };

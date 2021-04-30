@@ -25,17 +25,3 @@ export const getInductionStatus = (induction?: Induction) => {
         ? InductionStatus.waitingForVideo
         : InductionStatus.waitingForEndorsement;
 };
-
-export const getInductionStatusLabel = (induction?: Induction) => {
-    const status = getInductionStatus(induction);
-    switch (status) {
-        case InductionStatus.waitingForProfile:
-            return "🟡 Pending Profile";
-        case InductionStatus.waitingForVideo:
-            return "🟡 Pending Induction Video";
-        case InductionStatus.waitingForEndorsement:
-            return "🟡 Waiting for Endorsements";
-        default:
-            return "🛑 Invalid";
-    }
-};

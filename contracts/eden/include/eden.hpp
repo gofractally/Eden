@@ -50,7 +50,7 @@ namespace eden
 
       void inductendorse(eosio::name account, uint64_t id, eosio::checksum256 induction_data_hash);
 
-      void inductpayfee(eosio::name payer, uint64_t id, const eosio::asset& quantity);
+      void inductdonate(eosio::name payer, uint64_t id, const eosio::asset& quantity);
 
       void inductcancel(eosio::name account, uint64_t id);
 
@@ -85,7 +85,7 @@ namespace eden
                  inductprofil,
                  inductvideo,
                  inductendorse,
-                 inductpayfee,
+                 inductdonate,
                  inducted,
                  inductcancel,
                  notify(token_contract, transfer),
