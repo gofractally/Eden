@@ -72,7 +72,7 @@ jobs:
             - name: 📃 Upload clsdk
               uses: actions/upload-artifact@v2
               with:
-                  name: Eden Smart Contract
+                  name: clsdk
                   path: |
                       build/clsdk.tar.gz
 
