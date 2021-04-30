@@ -52,6 +52,7 @@ export const getEndorsementsByInductionId = async (
         CONTRACT_ENDORSEMENT_TABLE,
         INDEX_BY_INDUCTION,
         "i64",
+        inductionId,
         inductionId
     );
     console.info("retrieved endorsement", endorsementsRows);
