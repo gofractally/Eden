@@ -23,7 +23,6 @@ export const CallToAction = ({
                     <ActionButton
                         href={href}
                         onClick={onClick}
-                        type={ActionButtonType.DEFAULT}
                         size={ActionButtonSize.L}
                         className="flex-shrink-0 mt-10 sm:mt-0"
                     >
