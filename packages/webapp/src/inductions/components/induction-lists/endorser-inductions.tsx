@@ -7,6 +7,7 @@ import { useFetchedData } from "_app";
 import * as InductionTable from "_app/ui/table";
 import { Endorsement, Induction, InductionStatus } from "../../interfaces";
 import { InductionActionButton } from "./action-button";
+import { EdenMember, getEdenMember } from "members";
 
 dayjs.extend(relativeTime.default);
 
@@ -50,14 +51,25 @@ const getTableData = (endorsements: Endorsement[]): InductionTable.Row[] => {
             getInduction,
             end.induction_id
         );
+
+        const [inviter] = useFetchedData<EdenMember>(
+            getEdenMember,
+            end.inviter
+        );
+
         const remainingTime = induction
             ? dayjs().to(dayjs(induction.created_at).add(7, "day"), true)
             : "";
 
+        const invitee =
+            induction && induction.new_member_profile.name
+                ? induction.new_member_profile.name
+                : end.invitee;
+
         return {
             key: `${end.induction_id}-${end.id}`,
-            invitee: end.invitee,
-            inviter: end.inviter,
+            invitee,
+            inviter: inviter ? inviter.name : end.inviter,
             time_remaining: remainingTime,
             status: induction ? (
                 <EndorserInductionStatus
@@ -108,7 +120,7 @@ const EndorserInductionStatus = ({
                         href={`/induction/${induction.id}`}
                         className="bg-gray-50"
                     >
-                        Voting
+                        Voting or Waiting Donation
                     </InductionActionButton>
                 );
             }

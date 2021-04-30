@@ -1,5 +1,7 @@
+import { getEdenMember } from "members";
 import Link from "next/link";
 import { useRouter } from "next/router";
+import { useEffect, useState } from "react";
 import { FaSignOutAlt } from "react-icons/fa";
 
 import { useUALAccount } from "../eos";
@@ -76,10 +78,28 @@ const HeaderItemLink = ({
 
 const AccountMenu = () => {
     const [ualAccount, ualLogout, ualShowModal] = useUALAccount();
+    const [memberName, setMemberName] = useState("");
+
+    const accountName = ualAccount ? ualAccount.accountName : undefined;
+
+    useEffect(() => {
+        const updateLoggedMemberName = async (account: string) => {
+            const member = await getEdenMember(account);
+            if (member) {
+                setMemberName(member.name);
+            }
+        };
+        if (ualAccount && ualAccount.accountName) {
+            updateLoggedMemberName(ualAccount.accountName);
+        } else {
+            setMemberName("");
+        }
+    }, [ualAccount, accountName]);
+
     return ualAccount ? (
         <div className="mt-2 md:mt-0 space-x-3 hover:text-gray-900">
-            <Link href={`/members/${ualAccount.accountName}`}>
-                <a>{ualAccount.accountName || "(unknown)"}</a>
+            <Link href={`/members/${accountName}`}>
+                <a>{memberName || accountName || "(unknown)"}</a>
             </Link>
             <a href="#" onClick={ualLogout}>
                 <FaSignOutAlt className="inline-block mb-1" />

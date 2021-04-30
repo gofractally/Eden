@@ -1,10 +1,12 @@
 import dayjs from "dayjs";
 import * as relativeTime from "dayjs/plugin/relativeTime";
 
-import { getEndorsementsByInductionId } from "../../api";
-import { getInductionStatus } from "inductions/utils";
 import { useFetchedData } from "_app";
 import * as InductionTable from "_app/ui/table";
+import { EdenMember, getEdenMember } from "members";
+
+import { getEndorsementsByInductionId } from "../../api";
+import { getInductionStatus } from "../../utils";
 import { Endorsement, Induction, InductionStatus } from "../../interfaces";
 import { InductionActionButton } from "./action-button";
 
@@ -51,6 +53,11 @@ const getTableData = (inductions: Induction[]): InductionTable.Row[] => {
             ind.id
         );
 
+        const [inviter] = useFetchedData<EdenMember>(
+            getEdenMember,
+            ind.inviter
+        );
+
         const endorsers =
             allEndorsements
                 ?.map((end: Endorsement): string => end.endorser)
@@ -69,7 +76,7 @@ const getTableData = (inductions: Induction[]): InductionTable.Row[] => {
 
         return {
             key: ind.id,
-            inviter: ind.inviter,
+            inviter: inviter ? inviter.name : ind.inviter,
             voters: endorsers,
             time_remaining: remainingTime,
             status: (

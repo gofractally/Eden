@@ -14,7 +14,7 @@ export const getRow = async <T>(
     keyValue: string
 ): Promise<T | undefined> => {
     const rows = await getTableRows(table, keyValue);
-    return rows.length > 0 && `${rows[0][keyName]}` === keyValue
+    return rows.length > 0 && `${rows[0][keyName]}` === `${keyValue}`
         ? rows[0]
         : undefined;
 };
