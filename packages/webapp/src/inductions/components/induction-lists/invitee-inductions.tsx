@@ -129,7 +129,7 @@ const InviteeInductionStatus = ({
             return isFullyEndorsed ? (
                 <ActionButton
                     href={`/induction/${induction.id}`}
-                    type={ActionButtonType.INDUCTION_STATUS_ENDORSE}
+                    type={ActionButtonType.INDUCTION_STATUS_ACTION}
                     size={ActionButtonSize.S}
                     fullWidth
                 >

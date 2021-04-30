@@ -129,7 +129,7 @@ const InviterInductionStatus = ({
             }
             return (
                 <ActionButton
-                    type={ActionButtonType.INDUCTION_STATUS_ENDORSE}
+                    type={ActionButtonType.INDUCTION_STATUS_ACTION}
                     size={ActionButtonSize.S}
                     fullWidth
                     href={`/induction/${induction.id}`}

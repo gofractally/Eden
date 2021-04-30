@@ -1,4 +1,4 @@
-import { ActionButton, ActionButtonSize, ActionButtonType, Card } from "_app";
+import { ActionButton, ActionButtonSize, Card } from "_app";
 
 interface Props {
     href?: string;

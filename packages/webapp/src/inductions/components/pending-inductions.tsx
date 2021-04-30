@@ -1,4 +1,4 @@
-import { CallToAction, Text, Heading } from "_app";
+import { CallToAction } from "_app";
 
 import { Endorsement, Induction } from "../interfaces";
 import {
@@ -50,21 +50,5 @@ export const PendingInductions = ({
             </div>
         );
     }
-
-    // TODO: After changeover to donation-at-end, do we ever hit this? If not, remove. If so, move out of this component.
-    return (
-        <div className="space-y-4">
-            <Heading size={2}>Join the Eden Community</Heading>
-            <Text>
-                It looks like you're not an Eden member yet. To get started, get
-                an invitation from someone already in the community using your
-                EOS account name. As soon as an active Eden community member
-                invites you, their invitation will appear below and will guide
-                you through the process.
-            </Text>
-            <Text>
-                [Graphic and/or link explaining the process in more detail.]
-            </Text>
-        </div>
-    );
+    return <></>;
 };
