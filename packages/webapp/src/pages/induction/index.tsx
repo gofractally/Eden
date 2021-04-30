@@ -64,7 +64,7 @@ export const InductionPage = () => {
                 <Card title="Loading...">...</Card>
             ) : edenMember ? (
                 <>
-                    <GenesisBanner />
+                    {!isActiveCommunity && <GenesisBanner />}
                     <InviteBanner
                         canInvite={isActiveCommunity && isActiveMember}
                         asCallToAction={!thereAreRecords}
