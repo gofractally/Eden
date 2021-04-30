@@ -3,6 +3,7 @@
 #include <eden-atomicassets.hpp>
 #include <eden.hpp>
 #include <eosio/tester.hpp>
+#include <members.hpp>
 #include <token/token.hpp>
 
 #define CATCH_CONFIG_MAIN
@@ -15,6 +16,7 @@ using atomicassets::attribute_map;
 namespace actions = eden::actions;
 using user_context = test_chain::user_context;
 using eden::accounts;
+using eden::members;
 
 void chain_setup(test_chain& t)
 {
@@ -64,6 +66,11 @@ auto get_token_balance(eosio::name owner)
 auto get_eden_account(eosio::name owner)
 {
    return accounts{"eden.gm"_n}.get_account(owner);
+}
+
+auto get_eden_membership(eosio::name account)
+{
+   return members{"eden.gm"_n}.get_member(account);
 }
 
 struct eden_tester
@@ -156,6 +163,11 @@ TEST_CASE("genesis")
                                    std::vector{"alice"_n, "pip"_n, "egeon"_n},
                                    "QmTYqoPYf7DiVebTnvwwFdTgsYXg2RnuPrt8uddjfW2kHS",
                                    attribute_map{}, s2a("1.0000 EOS"), 7 * 24 * 60 * 60, "");
+
+   CHECK(get_eden_membership("alice"_n)->status() == eden::member_status::pending_membership);
+   CHECK(get_eden_membership("pip"_n)->status() == eden::member_status::pending_membership);
+   CHECK(get_eden_membership("egeon"_n)->status() == eden::member_status::pending_membership);
+
    t.alice.act<actions::inductprofil>(
        1, eden::new_member_profile{
               "Alice", "Qmb7WmZiSDXss5HfuKfoSf6jxTDrHzr8AoAUDeDMLNDuws",
@@ -164,6 +176,7 @@ TEST_CASE("genesis")
               "reading, but it had no pictures or conversations in it, \"and what is the use of a "
               "book,\" thought Alice \"without pictures or conversations?\"",
               "{\"blog\":\"alice.example.com\"}"});
+
    t.pip.act<actions::inductprofil>(
        2, eden::new_member_profile{
               "Philip Pirrip", "Qmb7WmZiSDXss5HfuKfoSf6jxTDrHzr8AoAUDeDMLNDuws",
@@ -190,13 +203,17 @@ TEST_CASE("genesis")
    CHECK(get_eden_account("alice"_n)->balance() == s2a("100.0000 EOS"));
    CHECK(get_token_balance("alice"_n) == s2a("900.0000 EOS"));
 
-   t.alice.act<actions::inductpayfee>("alice"_n, 1, s2a("10.0000 EOS"));
-   t.pip.act<actions::inductpayfee>("pip"_n, 2, s2a("10.0000 EOS"));
-   t.egeon.act<actions::inductpayfee>("egeon"_n, 3, s2a("10.0000 EOS"));
+   t.alice.act<actions::inductdonate>("alice"_n, 1, s2a("10.0000 EOS"));
+   t.pip.act<actions::inductdonate>("pip"_n, 2, s2a("10.0000 EOS"));
+   t.egeon.act<actions::inductdonate>("egeon"_n, 3, s2a("10.0000 EOS"));
 
    CHECK(get_eden_account("alice"_n) != std::nullopt);
    CHECK(get_eden_account("alice"_n)->balance() == s2a("90.0000 EOS"));
    CHECK(get_token_balance("alice"_n) == s2a("900.0000 EOS"));
+
+   CHECK(get_eden_membership("alice"_n)->status() == eden::member_status::active_member);
+   CHECK(get_eden_membership("pip"_n)->status() == eden::member_status::active_member);
+   CHECK(get_eden_membership("egeon"_n)->status() == eden::member_status::active_member);
 
    eden::tester_clear_global_singleton();
    eden::globals globals("eden.gm"_n);

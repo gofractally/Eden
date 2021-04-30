@@ -179,12 +179,30 @@
             ]
         },
         {
+            "name": "account_v0",
+            "base": "",
+            "fields": [
+                {
+                    "name": "owner",
+                    "type": "name"
+                },
+                {
+                    "name": "balance",
+                    "type": "asset"
+                }
+            ]
+        },
+        {
             "name": "member_v0",
             "base": "",
             "fields": [
                 {
                     "name": "account",
                     "type": "name"
+                },
+                {
+                    "name": "name",
+                    "type": "string"
                 },
                 {
                     "name": "status",
@@ -355,7 +373,7 @@
             ]
         },
         {
-            "name": "inductpayfee",
+            "name": "inductdonate",
             "base": "",
             "fields": [
                 {
@@ -424,8 +442,8 @@
             "ricardian_contract": ""
         },
         {
-            "name": "inductpayfee",
-            "type": "inductpayfee",
+            "name": "inductdonate",
+            "type": "inductdonate",
             "ricardian_contract": ""
         },
         {
@@ -435,6 +453,13 @@
         }
     ],
     "tables": [
+        {
+            "name": "account",
+            "type": "account",
+            "index_type": "i64",
+            "key_names": [],
+            "key_types": []
+        },
         {
             "name": "member",
             "type": "member",
@@ -486,6 +511,10 @@
         {
             "name": "memberstats",
             "types": ["memberstats_v0"]
+        },
+        {
+            "name": "account",
+            "types": ["account_v0"]
         },
         {
             "name": "member",

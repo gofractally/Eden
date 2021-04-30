@@ -74,7 +74,7 @@ namespace eden
       inductions.endorse(induction, account, induction_data_hash);
    }
 
-   void eden::inductpayfee(eosio::name payer, uint64_t id, const eosio::asset& quantity)
+   void eden::inductdonate(eosio::name payer, uint64_t id, const eosio::asset& quantity)
    {
       eosio::require_auth(payer);
 
@@ -83,8 +83,8 @@ namespace eden
       accounts accounts{get_self()};
 
       const auto& induction = inductions.get_induction(id);
-      eosio::check(payer == induction.invitee(), "only inductee may pay fee");
-      eosio::check(quantity == globals.get().minimum_donation, "incorrect fee");
+      eosio::check(payer == induction.invitee(), "only inductee may donate using this action");
+      eosio::check(quantity == globals.get().minimum_donation, "incorrect donation");
       accounts.sub_balance(payer, quantity);
       inductions.create_nft(induction);
    }

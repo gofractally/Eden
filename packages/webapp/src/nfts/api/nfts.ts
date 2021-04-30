@@ -6,7 +6,7 @@ export const getTemplate = async (templateId: string) => {
     return templates.length ? templates[0] : undefined;
 };
 
-const LAUNCH_TIMESTAMP = "&after=1619486647000";
+const LAUNCH_TIMESTAMP = "&after=1619779033000";
 
 export const getTemplates = async (
     page = 1,
@@ -32,7 +32,7 @@ export const getAccountCollection = async (
     sortField = "transferred",
     order = "asc"
 ): Promise<AssetData[]> => {
-    const url = `${atomicAssets.apiMarketUrl}/assets?owner=${edenAccount}&collection_name=${atomicAssets.collection}&page=${page}&limit=${limit}&order=${order}&sort=${sortField}${LAUNCH_TIMESTAMP}`;
+    const url = `${atomicAssets.apiMarketUrl}/assets?owner=${edenAccount}&collection_name=${atomicAssets.collection}&schema_name=${atomicAssets.schema}&page=${page}&limit=${limit}&order=${order}&sort=${sortField}${LAUNCH_TIMESTAMP}`;
     const { data } = await executeAtomicAssetRequest(url);
     return data;
 };

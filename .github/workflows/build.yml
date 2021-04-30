@@ -65,7 +65,7 @@ jobs:
                   echo =====
 
             - name: 🧪 Run tests with CTest
-              run: cd build && ctest -j$(nproc)
+              run: cd build && ctest -j$(nproc) -V
 
             - name: 📃 Upload Eden Smart Contract
               uses: actions/upload-artifact@v2

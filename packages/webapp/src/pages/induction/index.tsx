@@ -1,6 +1,12 @@
-import { Link, SingleColLayout, useFetchedData, useUALAccount } from "_app";
+import {
+    Link,
+    SingleColLayout,
+    Text,
+    useFetchedData,
+    useUALAccount,
+} from "_app";
 
-import { Donation, PendingInductions } from "inductions";
+import { PendingInductions } from "inductions";
 import { getEdenMember, MemberStatus, EdenMember } from "members";
 
 export const InductionPage = () => {
@@ -14,9 +20,9 @@ export const InductionPage = () => {
         edenMember && edenMember.status === MemberStatus.ActiveMember;
 
     return (
-        <SingleColLayout title="Induction">
+        <SingleColLayout>
             {!ualAccount ? (
-                <div>Please login using yout wallet.</div>
+                <div>Please login using your wallet.</div>
             ) : isLoading ? (
                 <p>Loading...</p>
             ) : edenMember ? (
@@ -33,7 +39,12 @@ export const InductionPage = () => {
                     <PendingInductions isActive={isActiveMember} />
                 </>
             ) : (
-                <Donation />
+                <Text>
+                    It seems that your account is not part of the Eden community
+                    yet. The first step is to get an invitation! Reach out to
+                    your potential inviter to get an invitation link to be able
+                    to complete your induction process.
+                </Text>
             )}
         </SingleColLayout>
     );
