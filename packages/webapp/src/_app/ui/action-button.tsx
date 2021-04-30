@@ -20,13 +20,12 @@ export enum ActionButtonSize {
 }
 
 export enum ActionButtonType {
-    DEFAULT = "bg-blue-500 border-blue-500 text-white",
-    LOGIN = "bg-blue-500 border-blue-500 text-white",
+    PRIMARY = "bg-blue-500 border-blue-500 text-white",
+    DISABLED = "bg-gray-300 text-gray-800",
     INDUCTION_STATUS_WAITING = "bg-gray-50 text-gray-800",
     INDUCTION_STATUS_PROFILE = "bg-blue-500 border-blue-500 text-white",
     INDUCTION_STATUS_CEREMONY = "bg-blue-500 border-blue-500 text-white",
     INDUCTION_STATUS_ENDORSE = "bg-green-500 text-white",
-    DISABLED = "bg-gray-300 text-gray-800",
 }
 /**
  * ActionButton Best Practices:
@@ -45,7 +44,7 @@ export const ActionButton = ({
     onClick,
     isSubmit,
     disabled,
-    type = ActionButtonType.DEFAULT,
+    type = ActionButtonType.PRIMARY,
     size = ActionButtonSize.M,
     fullWidth,
     className = "",
