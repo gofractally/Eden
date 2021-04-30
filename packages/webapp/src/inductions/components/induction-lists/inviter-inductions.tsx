@@ -61,7 +61,7 @@ const getTableData = (inductions: Induction[]): InductionTable.Row[] => {
 
         return {
             key: ind.id,
-            invitee: ind.invitee,
+            invitee: ind.new_member_profile.name || ind.invitee,
             inviter_voters: endorsers,
             time_remaining: remainingTime,
             status: (
@@ -114,7 +114,7 @@ const InviterInductionStatus = ({
                         href={`/induction/${induction.id}`}
                         className="bg-gray-50"
                     >
-                        Voting
+                        Voting or Waiting Donation
                     </InductionActionButton>
                 );
             }

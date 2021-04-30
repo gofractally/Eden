@@ -61,9 +61,14 @@ const getTableData = (endorsements: Endorsement[]): InductionTable.Row[] => {
             ? dayjs().to(dayjs(induction.created_at).add(7, "day"), true)
             : "";
 
+        const invitee =
+            induction && induction.new_member_profile.name
+                ? induction.new_member_profile.name
+                : end.invitee;
+
         return {
             key: `${end.induction_id}-${end.id}`,
-            invitee: end.invitee,
+            invitee,
             inviter: inviter ? inviter.name : end.inviter,
             time_remaining: remainingTime,
             status: induction ? (
