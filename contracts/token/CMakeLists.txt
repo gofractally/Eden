@@ -3,7 +3,9 @@ target_include_directories(token PUBLIC include)
 target_link_libraries(token eosio-contract-simple-malloc)
 set_target_properties(token PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${ROOT_BINARY_DIR})
 configure_file(token.abi ${ROOT_BINARY_DIR}/token.abi COPYONLY)
+
 configure_file(token.abi ${ROOT_BINARY_DIR}/clsdk/contracts/token.abi COPYONLY)
+configure_file(include/token/token.hpp ${ROOT_BINARY_DIR}/clsdk/contracts/token/token.hpp COPYONLY)
 add_custom_command(TARGET token POST_BUILD
     COMMAND mkdir -p ${ROOT_BINARY_DIR}/clsdk/contracts
     COMMAND cp -a $<TARGET_FILE:token> ${ROOT_BINARY_DIR}/clsdk/contracts

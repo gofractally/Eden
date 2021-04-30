@@ -6,6 +6,13 @@ ProcessorCount(NUM_PROCS)
 add_library(rapidjson INTERFACE)
 target_include_directories(rapidjson INTERFACE rapidjson/include)
 
+if(IS_WASM)
+    copy_headers(rapidjson/include/rapidjson rapidjson/include/rapidjson)
+    copy_headers(rapidjson/include/rapidjson/error rapidjson/include/rapidjson/error)
+    copy_headers(rapidjson/include/rapidjson/internal rapidjson/include/rapidjson/internal)
+    configure_file(rapidjson/license.txt ${ROOT_BINARY_DIR}/clsdk/licenses/LICENSE.rapidjson COPYONLY)
+endif()
+
 if(IS_NATIVE)
     ExternalProject_Add(eos
         SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/eos

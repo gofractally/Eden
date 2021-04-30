@@ -1,3 +1,3 @@
 SDK=$(realpath -e `dirname "$0"`/..)
 
-echo -DCLSDK_PREFIX=$SDK -DCMAKE_TOOLCHAIN_FILE=$SDK/toolchain.cmake
+echo -DCLSDK_PREFIX=$SDK -DCMAKE_TOOLCHAIN_FILE=$SDK/toolchain.cmake -DCMAKE_SYSROOT=${WASI_SDK_PREFIX}/share/wasi-sysroot -DCMAKE_BUILD_TYPE=Release

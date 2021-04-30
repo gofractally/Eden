@@ -90,6 +90,7 @@ target_link_options(eden-testlib INTERFACE -Wl,--export-table)
 set_target_properties(eden-testlib PROPERTIES ARCHIVE_OUTPUT_DIRECTORY ${ROOT_BINARY_DIR}/clsdk/lib-wasm)
 
 copy_headers(contracts/eosio eosiolib/contracts/include/eosio)
+copy_headers(core eosiolib/core/include)
 copy_headers(core/eosio eosiolib/core/include/eosio)
 copy_headers(tester/eosio eosiolib/tester/include/eosio)
 configure_file(simple_malloc.cpp ${ROOT_BINARY_DIR}/clsdk/eosiolib/simple_malloc.cpp COPYONLY)
