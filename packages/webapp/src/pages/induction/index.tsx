@@ -1,6 +1,5 @@
 import {
     SingleColLayout,
-    Text,
     CallToAction,
     Card,
     useFetchedData,
@@ -70,12 +69,10 @@ export const InductionPage = () => {
                     />
                 </>
             ) : (
-                <Text>
-                    It seems that your account is not part of the Eden community
-                    yet. The first step is to get an invitation! Reach out to
-                    your potential inviter to get an invitation link to be able
-                    to complete your induction process.
-                </Text>
+                <CallToAction buttonLabel="Get started" href="#">
+                    Looking to join Eden? The membership process begins with an
+                    invitation. Reach out to a current member to get yours!
+                </CallToAction>
             )}
         </SingleColLayout>
     );

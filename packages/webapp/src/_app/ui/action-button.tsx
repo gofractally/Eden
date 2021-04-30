@@ -20,12 +20,12 @@ export enum ActionButtonSize {
 }
 
 export enum ActionButtonType {
-    PRIMARY = "bg-blue-500 border-blue-500 text-white",
+    PRIMARY = "bg-blue-500 border-blue-500 text-white hover:bg-blue-600",
     DISABLED = "bg-gray-300 text-gray-800",
-    INDUCTION_STATUS_WAITING = "bg-gray-50 text-gray-800",
-    INDUCTION_STATUS_PROFILE = "bg-blue-500 border-blue-500 text-white",
-    INDUCTION_STATUS_CEREMONY = "bg-blue-500 border-blue-500 text-white",
-    INDUCTION_STATUS_ENDORSE = "bg-green-500 text-white",
+    INDUCTION_STATUS_WAITING = "bg-gray-50 text-gray-800 hover:bg-gray-200",
+    INDUCTION_STATUS_PROFILE = "bg-blue-500 border-blue-500 text-white hover:bg-blue-600",
+    INDUCTION_STATUS_CEREMONY = "bg-blue-500 border-blue-500 text-white hover:bg-blue-600",
+    INDUCTION_STATUS_ACTION = "bg-green-500 text-white hover:bg-green-600",
 }
 /**
  * ActionButton Best Practices:
