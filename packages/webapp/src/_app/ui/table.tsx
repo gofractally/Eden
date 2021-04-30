@@ -67,7 +67,7 @@ interface TableRowsProps {
 const TableRows = ({ columns, data, className = "" }: TableRowsProps) => {
     const tableRowsClass = `divide-y divide-gray-200 ${className}`;
     const tableRowClass =
-        "flex items-center pr-2 pl-4 sm:px-4 py-3 space-y-1 md:space-y-0 md:h-16 hover:bg-gray-50";
+        "flex items-center pr-2 pl-4 sm:px-4 py-3 space-y-1 md:space-y-0 hover:bg-gray-50";
     return (
         <div className={tableRowsClass}>
             {data.map((row, i) => {
