@@ -64,8 +64,8 @@ target_link_libraries(eosio-contract INTERFACE
     ${WASI_SDK_PREFIX}/lib/clang/11.0.0/lib/wasi/libclang_rt.builtins-wasm32.a
 )
 
-add_library(eden-testlib)
-target_sources(eden-testlib PRIVATE
+add_library(cltestlib)
+target_sources(cltestlib PRIVATE
     tester/tester.cpp
     tester/tester_intrinsics.cpp
     tester/wasi_polyfill/__wasi_args_get.cpp
@@ -84,10 +84,10 @@ target_sources(eden-testlib PRIVATE
     tester/wasi_polyfill/__wasi_path_open.cpp
     tester/wasi_polyfill/__wasi_proc_exit.cpp
 )
-target_link_libraries(eden-testlib PUBLIC boost eosio-core)
-target_include_directories(eden-testlib PUBLIC contracts tester)
-target_link_options(eden-testlib INTERFACE -Wl,--export-table)
-set_target_properties(eden-testlib PROPERTIES ARCHIVE_OUTPUT_DIRECTORY ${ROOT_BINARY_DIR}/clsdk/lib-wasm)
+target_link_libraries(cltestlib PUBLIC boost eosio-core)
+target_include_directories(cltestlib PUBLIC contracts tester)
+target_link_options(cltestlib INTERFACE -Wl,--export-table)
+set_target_properties(cltestlib PROPERTIES ARCHIVE_OUTPUT_DIRECTORY ${ROOT_BINARY_DIR}/clsdk/lib-wasm)
 
 copy_headers(contracts/eosio eosiolib/contracts/include/eosio)
 copy_headers(core eosiolib/core/include)

@@ -8,6 +8,8 @@ target_include_directories(abieos PUBLIC include)
 
 if(IS_WASM)
     target_compile_options(abieos PUBLIC -fno-exceptions -D__eosio_cdt__)
+    set_target_properties(abieos PROPERTIES ARCHIVE_OUTPUT_DIRECTORY ${ROOT_BINARY_DIR}/clsdk/lib-wasm)
+
     copy_headers(include/eosio abieos/include/eosio)
     file(COPY include/eosio/fpconv.license DESTINATION ${ROOT_BINARY_DIR}/clsdk/licenses)
     file(RENAME
