@@ -201,6 +201,10 @@
                     "type": "name"
                 },
                 {
+                    "name": "name",
+                    "type": "string"
+                },
+                {
                     "name": "status",
                     "type": "member_status_type"
                 },

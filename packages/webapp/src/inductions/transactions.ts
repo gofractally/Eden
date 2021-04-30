@@ -179,7 +179,7 @@ export const donateAndCompleteInductionTransaction = (
             },
             {
                 account: edenContractAccount,
-                name: "inductpayfee",
+                name: "inductdonate",
                 authorization: [
                     {
                         actor: authorizerAccount,
