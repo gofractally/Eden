@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useRouter } from "next/router";
+import { useQueryClient } from "react-query";
 
 import {
     assetToString,
@@ -28,6 +29,7 @@ interface Props {
 
 export const InductionStepEndorsement = (props: Props) => {
     const router = useRouter();
+    const queryClient = useQueryClient();
     const [ualAccount] = useUALAccount();
     const [isLoading, setLoading] = useState(false);
     const [endorsements, setEndorsements] = useState([...props.endorsements]);
@@ -77,9 +79,13 @@ export const InductionStepEndorsement = (props: Props) => {
             });
             console.info("donation trx", signedTrx);
 
-            // router goes to the newly created member page after some tolerance
-            // time to make sure blockchain processed the transactions
+            // tolerance time to make sure blockchain processed the transactions
             await new Promise((resolve) => setTimeout(resolve, 4000));
+
+            // invalidate ["member", accountName] query so it will refetch with their full name
+            queryClient.invalidateQueries(["member", authorizerAccount]);
+
+            // router goes to the newly created member page
             router.push(`/members/${induction.invitee}`);
             return;
         } catch (error) {
