@@ -8,10 +8,10 @@ import {
     ActionButtonSize,
     ActionButtonType,
     useFetchedData,
+    useMemberByAccountName,
 } from "_app";
 import * as InductionTable from "_app/ui/table";
 import { Endorsement, Induction, InductionStatus } from "../../interfaces";
-import { EdenMember, getEdenMember } from "members";
 
 dayjs.extend(relativeTime.default);
 
@@ -64,10 +64,7 @@ const getTableData = (endorsements: Endorsement[]): InductionTable.Row[] => {
             end.induction_id
         );
 
-        const [inviter] = useFetchedData<EdenMember>(
-            getEdenMember,
-            end.inviter
-        );
+        const { data: inviter } = useMemberByAccountName(end.inviter);
 
         const remainingTime = induction
             ? dayjs().to(dayjs(induction.created_at).add(7, "day"), true)

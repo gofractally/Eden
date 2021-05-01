@@ -6,9 +6,9 @@ import {
     ActionButtonSize,
     ActionButtonType,
     useFetchedData,
+    useMemberByAccountName,
 } from "_app";
 import * as InductionTable from "_app/ui/table";
-import { EdenMember, getEdenMember } from "members";
 
 import { getEndorsementsByInductionId } from "../../api";
 import { getInductionStatus } from "../../utils";
@@ -57,10 +57,7 @@ const getTableData = (inductions: Induction[]): InductionTable.Row[] => {
             ind.id
         );
 
-        const [inviter] = useFetchedData<EdenMember>(
-            getEdenMember,
-            ind.inviter
-        );
+        const { data: inviter } = useMemberByAccountName(ind.inviter);
 
         const endorsers =
             allEndorsements

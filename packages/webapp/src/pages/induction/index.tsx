@@ -1,4 +1,3 @@
-import { useQuery } from "react-query";
 import {
     SingleColLayout,
     CallToAction,
@@ -8,13 +7,14 @@ import {
     getIsCommunityActive,
     ActionButton,
     ActionButtonSize,
+    useCurrentMember,
 } from "_app";
 import {
     Endorsement,
     PendingInductions,
     getCurrentInductions,
 } from "inductions";
-import { getEdenMember, MemberStatus } from "members";
+import { MemberStatus } from "members";
 
 export const InductionPage = () => {
     const [ualAccount, _, ualShowModal] = useUALAccount();
@@ -24,11 +24,10 @@ export const InductionPage = () => {
         isLoadingCommunityState,
     ] = useFetchedData<boolean>(getIsCommunityActive);
 
-    const { data: edenMember, isLoading: isLoadingEdenMember } = useQuery(
-        ["current-member", ualAccount?.accountName],
-        async () => await getEdenMember(ualAccount?.accountName),
-        { staleTime: Infinity, enabled: !!ualAccount }
-    );
+    const {
+        data: edenMember,
+        isLoading: isLoadingEdenMember,
+    } = useCurrentMember();
 
     const isActiveMember = edenMember?.status === MemberStatus.ActiveMember;
 

@@ -1,10 +1,10 @@
 import Link from "next/link";
 import { useRouter } from "next/router";
-import { useQuery, useQueryClient } from "react-query";
+import { useQueryClient } from "react-query";
 import { FaSignOutAlt } from "react-icons/fa";
 
-import { getEdenMember } from "members";
 import { useUALAccount } from "../eos";
+import { useCurrentMember } from "_app/hooks";
 import { ActionButton } from "./action-button";
 
 interface MenuItem {
@@ -77,15 +77,11 @@ const HeaderItemLink = ({
 };
 
 const AccountMenu = () => {
-    const queryClient = useQueryClient();
     const [ualAccount, ualLogout, ualShowModal] = useUALAccount();
-    const accountName = ualAccount ? ualAccount.accountName : undefined;
+    const accountName = ualAccount?.accountName;
 
-    const { data: member } = useQuery(
-        ["current-member", accountName],
-        async () => await getEdenMember(accountName),
-        { staleTime: Infinity, enabled: !!ualAccount }
-    );
+    const queryClient = useQueryClient();
+    const { data: member } = useCurrentMember();
 
     const onSignOut = () => {
         queryClient.clear();
