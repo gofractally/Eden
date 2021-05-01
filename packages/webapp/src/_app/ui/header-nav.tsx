@@ -1,9 +1,9 @@
-import { getEdenMember } from "members";
 import Link from "next/link";
 import { useRouter } from "next/router";
-import { useEffect, useState } from "react";
+import { useQuery, useQueryClient } from "react-query";
 import { FaSignOutAlt } from "react-icons/fa";
 
+import { getEdenMember } from "members";
 import { useUALAccount } from "../eos";
 import { ActionButton } from "./action-button";
 
@@ -77,31 +77,27 @@ const HeaderItemLink = ({
 };
 
 const AccountMenu = () => {
+    const queryClient = useQueryClient();
     const [ualAccount, ualLogout, ualShowModal] = useUALAccount();
-    const [memberName, setMemberName] = useState("");
-
     const accountName = ualAccount ? ualAccount.accountName : undefined;
 
-    useEffect(() => {
-        const updateLoggedMemberName = async (account: string) => {
-            const member = await getEdenMember(account);
-            if (member) {
-                setMemberName(member.name);
-            }
-        };
-        if (ualAccount && ualAccount.accountName) {
-            updateLoggedMemberName(ualAccount.accountName);
-        } else {
-            setMemberName("");
-        }
-    }, [ualAccount, accountName]);
+    const { data: member } = useQuery(
+        ["current-member", accountName],
+        async () => await getEdenMember(accountName),
+        { staleTime: Infinity, enabled: !!ualAccount }
+    );
+
+    const onSignOut = () => {
+        queryClient.clear();
+        ualLogout();
+    };
 
     return ualAccount ? (
         <div className="mt-2 md:mt-0 space-x-3 hover:text-gray-900">
             <Link href={`/members/${accountName}`}>
-                <a>{memberName || accountName || "(unknown)"}</a>
+                <a>{member?.name || accountName || "(unknown)"}</a>
             </Link>
-            <a href="#" onClick={ualLogout}>
+            <a href="#" onClick={onSignOut}>
                 <FaSignOutAlt className="inline-block mb-1" />
             </a>
         </div>
