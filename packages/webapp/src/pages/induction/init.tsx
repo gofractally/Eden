@@ -2,18 +2,15 @@ import {
     CallToAction,
     Card,
     SingleColLayout,
-    useFetchedData,
+    useCurrentMember,
     useUALAccount,
 } from "_app";
-import { EdenMember, getEdenMember, MemberStatus } from "members";
+import { MemberStatus } from "members";
 import { InitInduction } from "inductions";
 
 export const InitInductionPage = () => {
     const [ualAccount, _, ualShowModal] = useUALAccount();
-    const [edenMember, isLoading] = useFetchedData<EdenMember>(
-        getEdenMember,
-        ualAccount?.accountName
-    );
+    const { data: member, isLoading } = useCurrentMember();
 
     const renderContents = () => {
         if (!ualAccount) {
@@ -28,7 +25,7 @@ export const InitInductionPage = () => {
             return <Card title="Loading...">...</Card>;
         }
 
-        if (!edenMember || edenMember.status !== MemberStatus.ActiveMember) {
+        if (member?.status !== MemberStatus.ActiveMember) {
             return (
                 <CallToAction buttonLabel="Get started" href="#">
                     Ready to join Eden? The membership process begins with an
