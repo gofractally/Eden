@@ -1,6 +1,6 @@
 import { useState } from "react";
 
-import { Text, Link } from "_app";
+import { Text, Link, onError } from "_app";
 import { initializeInductionTransaction } from "../transactions";
 import { InitInductionForm } from "./init-induction-form";
 
@@ -29,10 +29,7 @@ export const InitInduction = ({ ualAccount }: Props) => {
             console.info("inductinit trx", signedTrx);
             setInitializedInductionId(id);
         } catch (error) {
-            alert(
-                "Error while initializing the induction process: " +
-                    JSON.stringify(error)
-            );
+            onError(error, "Unable to initialize the induction process");
         }
     };
 

@@ -10,6 +10,7 @@ import {
     Link,
     Text,
     useUALAccount,
+    onError,
 } from "_app";
 import { minimumDonationAmount } from "config";
 
@@ -54,11 +55,7 @@ export const InductionStepEndorsement = (props: Props) => {
 
             await updateEndorsements();
         } catch (error) {
-            console.error(error);
-            alert(
-                "Error while initializing the induction process: " +
-                    JSON.stringify(error)
-            );
+            onError(error, "Unable to submit endorsement");
         }
 
         setLoading(false);
@@ -89,10 +86,9 @@ export const InductionStepEndorsement = (props: Props) => {
             router.push(`/members/${induction.invitee}`);
             return;
         } catch (error) {
-            console.error(error);
-            alert(
-                "Error while donating and completing the induction process: " +
-                    JSON.stringify(error)
+            onError(
+                error,
+                "Unable to donate and complete the induction process"
             );
         }
 
