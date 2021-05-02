@@ -12,7 +12,8 @@ namespace eden
 
    void members::check_active_member(eosio::name account)
    {
-      auto member = member_tb.get(account.value);
+      auto member = member_tb.get(
+          account.value, std::string("member " + account.to_string() + " not found").c_str());
       eosio::check(member.status() == member_status::active_member,
                    "inactive member " + account.to_string());
    }
