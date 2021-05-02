@@ -2,16 +2,19 @@ import toast from "react-hot-toast";
 
 export const onError = (error: Error, title = "") => {
     console.error(title, error);
-    const message = error.toString();
-    toast.error((t) => (
+
+    let message = error.toString();
+    message = message.replace("Error: assertion failure with message:", "");
+
+    toast.error(
         <div>
             {title && (
                 <>
-                    {title}
+                    <strong>{title}</strong>
                     <br />
                 </>
             )}
             {message}
         </div>
-    ));
+    );
 };
