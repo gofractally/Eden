@@ -65,6 +65,7 @@ namespace eden
       }
 
       std::optional<member> get_member(eosio::name account);
+      member get_existing_member(eosio::name account);
       void create(eosio::name account);
       bool is_new_member(eosio::name account) const;
       void check_active_member(eosio::name account);
