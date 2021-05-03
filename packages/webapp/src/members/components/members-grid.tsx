@@ -14,7 +14,7 @@ interface Props {
 }
 
 export const MembersGrid = ({ members }: Props) => {
-    const containerClass = `grid grid-cols-1 max-w-xs sm:max-w-xl md:max-w-none sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6 mx-auto`;
+    const containerClass = `grid grid-cols-1 max-w-xs sm:max-w-xl md:max-w-none sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-5 mx-auto`;
     return (
         <div className={containerClass}>
             {(members.length &&
@@ -26,41 +26,51 @@ export const MembersGrid = ({ members }: Props) => {
     );
 };
 
-export const MemberSquare = ({ member }: { member: MemberData }) => (
-    <div className="text-gray-800">
-        <MemberImage member={member} />
-        <div className="flex items-center space-x-3 mt-1">
-            <MintDate createdAt={member.createdAt} />
-            <AssetBadge member={member} />
+export const MemberSquare = ({ member }: { member: MemberData }) => {
+    const cardClass =
+        "group border border-gray-300 rounded-md shadow-md overflow-hidden text-gray-800";
+    const memberCard = (
+        <div className={cardClass}>
+            <MemberImage member={member} />
+            <div className="p-3 pt-1">
+                <div className="flex items-center space-x-3 mt-1">
+                    <MintDate createdAt={member.createdAt} />
+                    <AssetBadge member={member} />
+                </div>
+                <MemberNames member={member} />
+                <AuctionBadge member={member} />
+                <SaleBadge member={member} />
+            </div>
         </div>
-        <MemberNames member={member} />
-        <AuctionBadge member={member} />
-        <SaleBadge member={member} />
-    </div>
-);
+    );
+
+    if (member.account) {
+        return (
+            <Link href={`/members/${member.account}`}>
+                <div className="cursor-pointer">{memberCard}</div>
+            </Link>
+        );
+    }
+    return memberCard;
+};
 
 const baseBadge = "rounded px-2 text-xs";
 
 const MemberImage = ({ member }: { member: MemberData }) => {
-    const imageClass =
-        "h-40 sm:h-32 w-full object-cover object-top rounded mx-auto border border-gray-300 shadow";
+    const imageClass = "h-40 sm:h-32 w-full object-cover object-top mx-auto";
     if (member.account) {
         return (
-            <Link href={member.account ? `/members/${member.account}` : "#"}>
-                <div className="relative">
-                    <a>
-                        <img
-                            src={
-                                member.image
-                                    ? `${ipfsBaseUrl}/${member.image}`
-                                    : "/images/unknown-member.png"
-                            }
-                            className={imageClass}
-                        />
-                    </a>
-                    <div className="absolute inset-0 bg-black rounded opacity-0 hover:opacity-20 transition cursor-pointer" />
-                </div>
-            </Link>
+            <div className="relative">
+                <img
+                    src={
+                        member.image
+                            ? `${ipfsBaseUrl}/${member.image}`
+                            : "/images/unknown-member.png"
+                    }
+                    className={imageClass}
+                />
+                <div className="absolute inset-0 bg-black opacity-0 group-hover:opacity-20 transition" />
+            </div>
         );
     }
     return <img src={"/images/unknown-member.png"} className={imageClass} />;
@@ -78,6 +88,7 @@ const AssetBadge = ({ member }: { member: MemberData }) => {
         return (
             <a
                 href={`${atomicAssets.hubUrl}/explorer/asset/${member.assetData.assetId}`}
+                onClick={(e) => e.stopPropagation()}
                 target="_blank"
             >
                 <div className={assetBadgeClass}>
@@ -93,9 +104,7 @@ const MemberNames = ({ member }: { member: MemberData }) => (
     <div className="tracking-tighter my-1 leading-none">
         {member.account ? (
             <>
-                <Link href={`/members/${member.account}`}>
-                    <a className="font-medium hover:underline">{member.name}</a>
-                </Link>
+                <p className="font-medium">{member.name}</p>
                 <p className="text-sm text-gray-600">@{member.account}</p>
             </>
         ) : (
@@ -104,13 +113,15 @@ const MemberNames = ({ member }: { member: MemberData }) => (
     </div>
 );
 
+const auctionBadgeClass = `${baseBadge} py-1 text-white font-semibold tracking-wide bg-blue-400 hover:bg-blue-500 transition`;
+
 const AuctionBadge = ({ member }: { member: MemberData }) => {
-    const auctionBadgeClass = `${baseBadge} py-1 text-white font-semibold tracking-wide bg-blue-400 hover:bg-blue-500 transition`;
     if (member.auctionData) {
         return (
-            <div className="flex align-start">
+            <div className="flex">
                 <a
                     href={`${atomicAssets.hubUrl}/market/auction/${member.auctionData.auctionId}`}
+                    onClick={(e) => e.stopPropagation()}
                     target="_blank"
                 >
                     <div className={auctionBadgeClass}>
@@ -130,7 +141,7 @@ const SaleBadge = ({ member }: { member: MemberData }) => {
                 href={`${atomicAssets.hubUrl}/market/sale/${member.saleId}`}
                 target="_blank"
             >
-                <div className={styles.memberAuctionBadge}>ON SALE</div>
+                <div className={auctionBadgeClass}>ON SALE</div>
             </a>
         );
     }
