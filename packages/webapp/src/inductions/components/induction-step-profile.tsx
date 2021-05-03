@@ -1,6 +1,6 @@
 import { useState } from "react";
 
-import { Link, Text, useUALAccount } from "_app";
+import { Link, onError, Text, useUALAccount } from "_app";
 import { Induction, NewMemberProfile } from "../interfaces";
 import { setInductionProfileTransaction } from "../transactions";
 import { InductionProfileForm } from "./induction-profile-form";
@@ -32,11 +32,7 @@ export const InductionStepProfile = ({ induction, isReviewing }: Props) => {
             console.info("inductprofil trx", signedTrx);
             setSubmittedProfile(true);
         } catch (error) {
-            console.error(error);
-            alert(
-                "Error while initializing the induction process: " +
-                    JSON.stringify(error)
-            );
+            onError(error, "Unable to set the profile");
         }
     };
 

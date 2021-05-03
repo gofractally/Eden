@@ -68,7 +68,7 @@ auto get_eden_account(eosio::name owner)
    return accounts{"eden.gm"_n}.get_account(owner);
 }
 
-auto get_eden_membership(eosio::name account)
+const eden::member& get_eden_membership(eosio::name account)
 {
    return members{"eden.gm"_n}.get_member(account);
 }
@@ -164,9 +164,9 @@ TEST_CASE("genesis")
                                    "QmTYqoPYf7DiVebTnvwwFdTgsYXg2RnuPrt8uddjfW2kHS",
                                    attribute_map{}, s2a("1.0000 EOS"), 7 * 24 * 60 * 60, "");
 
-   CHECK(get_eden_membership("alice"_n)->status() == eden::member_status::pending_membership);
-   CHECK(get_eden_membership("pip"_n)->status() == eden::member_status::pending_membership);
-   CHECK(get_eden_membership("egeon"_n)->status() == eden::member_status::pending_membership);
+   CHECK(get_eden_membership("alice"_n).status() == eden::member_status::pending_membership);
+   CHECK(get_eden_membership("pip"_n).status() == eden::member_status::pending_membership);
+   CHECK(get_eden_membership("egeon"_n).status() == eden::member_status::pending_membership);
 
    t.alice.act<actions::inductprofil>(
        1, eden::new_member_profile{
@@ -211,9 +211,9 @@ TEST_CASE("genesis")
    CHECK(get_eden_account("alice"_n)->balance() == s2a("90.0000 EOS"));
    CHECK(get_token_balance("alice"_n) == s2a("900.0000 EOS"));
 
-   CHECK(get_eden_membership("alice"_n)->status() == eden::member_status::active_member);
-   CHECK(get_eden_membership("pip"_n)->status() == eden::member_status::active_member);
-   CHECK(get_eden_membership("egeon"_n)->status() == eden::member_status::active_member);
+   CHECK(get_eden_membership("alice"_n).status() == eden::member_status::active_member);
+   CHECK(get_eden_membership("pip"_n).status() == eden::member_status::active_member);
+   CHECK(get_eden_membership("egeon"_n).status() == eden::member_status::active_member);
 
    eden::tester_clear_global_singleton();
    eden::globals globals("eden.gm"_n);

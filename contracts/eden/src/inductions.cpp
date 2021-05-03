@@ -115,7 +115,9 @@ namespace eden
    const induction& inductions::get_endorsed_induction(eosio::name invitee) const
    {
       endorsed_induction_table_type endorsed_induction_tb(contract, default_scope);
-      return get_induction(endorsed_induction_tb.get(invitee.value).induction_id);
+      const auto& endorsed_induction = endorsed_induction_tb.get(
+          invitee.value, ("unable to find endorsed induction for " + invitee.to_string()).c_str());
+      return get_induction(endorsed_induction.induction_id);
    }
 
    bool inductions::is_valid_induction(const induction& induction) const
@@ -155,8 +157,9 @@ namespace eden
       eosio::check(actual_hash == induction_data_hash, "Outdated endorsement");
 
       auto endorsement_idx = endorsement_tb.get_index<"byendorser"_n>();
-      const auto& endorsement =
-          endorsement_idx.get(uint128_t{account.value} << 64 | induction.id());
+      const auto& endorsement = endorsement_idx.get(
+          uint128_t{account.value} << 64 | induction.id(),
+          ("unable to find endorsement for endorser " + account.to_string()).c_str());
       eosio::check(!endorsement.endorsed(), "Already endorsed");
       endorsement_tb.modify(endorsement, eosio::same_payer,
                             [&](auto& row) { row.endorsed() = true; });

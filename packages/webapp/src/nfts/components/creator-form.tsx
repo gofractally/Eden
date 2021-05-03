@@ -9,6 +9,7 @@ import {
     useFormFields,
     Heading,
     Text,
+    onError,
 } from "_app";
 
 import { EdenNftData, EdenNftSocialHandles } from "../interfaces";
@@ -51,7 +52,7 @@ const SubmissionForm = ({ ual }: WithUALProps) => {
         e.preventDefault();
 
         if (isMinted) {
-            alert("asset already minted");
+            onError(new Error("asset already minted"));
             return;
         }
 
@@ -72,8 +73,7 @@ const SubmissionForm = ({ ual }: WithUALProps) => {
             await mintAssets(ual, createdTemplateId, nft.account, inductors);
             setMinted(true);
         } catch (error) {
-            console.error(error);
-            alert("An error has occurred. \n" + JSON.stringify(error));
+            onError(error);
         }
 
         setCreating(false);

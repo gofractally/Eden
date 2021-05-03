@@ -2,6 +2,7 @@ import dynamic from "next/dynamic";
 import { AppProps } from "next/app";
 import { QueryClient, QueryClientProvider } from "react-query";
 import { ReactQueryDevtools } from "react-query/devtools";
+import { Toaster } from "react-hot-toast";
 
 import "tailwindcss/tailwind.css";
 
@@ -14,6 +15,14 @@ const WebApp = ({ Component, pageProps }: AppProps) => {
                 <Component {...pageProps} />
             </EdenUALProviderWithNoSSR>
             <ReactQueryDevtools initialIsOpen={false} />
+            <Toaster
+                position="top-right"
+                toastOptions={{
+                    style: {
+                        marginTop: "60px",
+                    },
+                }}
+            />
         </QueryClientProvider>
     );
 };
