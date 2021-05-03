@@ -16,10 +16,10 @@ interface Props {
 export const MemberSocialLinks = ({ member }: Props) => (
     <nav className="space-y-2 flex flex-col">
         <SocialButton
-            handle={member.edenAccount}
+            handle={member.account}
             icon={FaBitcoin}
             color="black"
-            href={`https://bloks.io/account/${member.edenAccount}`}
+            href={`https://bloks.io/account/${member.account}`}
         />
         {member.socialHandles.telegram && (
             <SocialButton
