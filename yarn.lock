@@ -5629,6 +5629,11 @@ raw-body@2.4.1:
     iconv-lite "0.4.24"
     unpipe "1.0.0"
 
+react-cool-dimensions@^2.0.3:
+  version "2.0.3"
+  resolved "https://registry.yarnpkg.com/react-cool-dimensions/-/react-cool-dimensions-2.0.3.tgz#249cb64f2034db92cfeb657044366577bb0ccdc4"
+  integrity sha512-xbvdF2ETcdDzavnBVaJUoWRACQBUHeWpmvO5wQ4TgUmJZzmAesOuHDnvbZ1qkTfc8L+veehMS8ttCUZR83WL1w==
+
 react-dom@16.13.0:
   version "16.13.0"
   resolved "https://registry.yarnpkg.com/react-dom/-/react-dom-16.13.0.tgz#cdde54b48eb9e8a0ca1b3dc9943d9bb409b81866"
