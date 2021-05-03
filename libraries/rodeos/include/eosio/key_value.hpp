@@ -1,4 +1,5 @@
 // TODO: this file duplicates a CDT file
+// TODO: either replace this file, or scrap its poor memory handling
 
 // clang-format off
 #pragma once

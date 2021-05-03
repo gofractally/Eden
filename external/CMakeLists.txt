@@ -6,6 +6,10 @@ ProcessorCount(NUM_PROCS)
 add_library(rapidjson INTERFACE)
 target_include_directories(rapidjson INTERFACE rapidjson/include)
 
+if(CMAKE_BUILD_TYPE STREQUAL "Debug")
+    set(FC_SUFFIX _debug)
+endif()
+
 if(IS_NATIVE)
     ExternalProject_Add(eos
         SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/eos
@@ -19,8 +23,22 @@ if(IS_NATIVE)
             -DENABLE_OC=OFF
             -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
             -DCMAKE_INSTALL_PREFIX=${ROOT_BINARY_DIR}/eos
+            -DCMAKE_INSTALL_LIBDIR=lib
             -DCMAKE_C_COMPILER_LAUNCHER=${CMAKE_C_COMPILER_LAUNCHER}
             -DCMAKE_CXX_COMPILER_LAUNCHER=${CMAKE_CXX_COMPILER_LAUNCHER}
+        BUILD_BYPRODUCTS
+            ${CMAKE_BINARY_DIR}/eos/libappbase.a
+            ${CMAKE_BINARY_DIR}/eos/libbuiltins.a
+            ${CMAKE_BINARY_DIR}/eos/libchainbase.a
+            ${CMAKE_BINARY_DIR}/eos/libeosio_chain.a
+            ${CMAKE_BINARY_DIR}/eos/libfc${FC_SUFFIX}.a
+            ${CMAKE_BINARY_DIR}/eos/libIR.a
+            ${CMAKE_BINARY_DIR}/eos/libLogging.a
+            ${CMAKE_BINARY_DIR}/eos/libRuntime.a
+            ${CMAKE_BINARY_DIR}/eos/libsecp256k1${FC_SUFFIX}.a
+            ${CMAKE_BINARY_DIR}/eos/libsoftfloat.a
+            ${CMAKE_BINARY_DIR}/eos/libWASM.a
+            ${CMAKE_BINARY_DIR}/eos/libWAST.a
     )
 
     find_package(OpenSSL REQUIRED)
@@ -30,10 +48,6 @@ if(IS_NATIVE)
     set(Boost_USE_MULTITHREADED ON)
     set(Boost_USE_STATIC_LIBS   ON)
     find_package(Boost 1.67 REQUIRED COMPONENTS date_time filesystem chrono iostreams)
-
-    if(CMAKE_BUILD_TYPE STREQUAL "Debug")
-        set(FC_SUFFIX _debug)
-    endif()
 
     add_library(chain INTERFACE)
     target_include_directories(chain INTERFACE
@@ -98,14 +112,15 @@ if(IS_NATIVE)
             -DWITH_BENCHMARK_TOOLS=OFF
             -DFAIL_ON_WARNINGS=OFF
             -DCMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT=OFF
+            -DCMAKE_INSTALL_LIBDIR=lib
             -DCMAKE_C_COMPILER_LAUNCHER=${CMAKE_C_COMPILER_LAUNCHER}
             -DCMAKE_CXX_COMPILER_LAUNCHER=${CMAKE_CXX_COMPILER_LAUNCHER}
-        )
-
-        add_library(rocksdb INTERFACE)
-        target_include_directories(rocksdb INTERFACE ${CMAKE_BINARY_DIR}/rocksdb/include)
-        target_link_libraries(rocksdb INTERFACE ${CMAKE_BINARY_DIR}/rocksdb/lib/librocksdb.a)
-        add_dependencies(rocksdb rocksdb-ext)
+        BUILD_BYPRODUCTS ${CMAKE_BINARY_DIR}/rocksdb/lib/librocksdb.a
+    )
+    add_library(rocksdb INTERFACE)
+    target_include_directories(rocksdb INTERFACE ${CMAKE_BINARY_DIR}/rocksdb/include)
+    target_link_libraries(rocksdb INTERFACE ${CMAKE_BINARY_DIR}/rocksdb/lib/librocksdb.a)
+    add_dependencies(rocksdb rocksdb-ext)
 endif()
 
 ExternalProject_Add(fmt-ext

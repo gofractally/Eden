@@ -37,13 +37,13 @@ int end_i64(name code, name scope, name table)
 }
 
 template <typename T>
-int32_t find_primary_fix_cdt(name code, name scope, name table, T& secondary, uint64_t primary);
+int32_t find_primary_bypass_cdt(name code, name scope, name table, T& secondary, uint64_t primary);
 
-int32_t find_primary_fix_cdt(name code,
-                             name scope,
-                             name table,
-                             checksum256& secondary,
-                             uint64_t primary)
+int32_t find_primary_bypass_cdt(name code,
+                                name scope,
+                                name table,
+                                checksum256& secondary,
+                                uint64_t primary)
 {
    // The CDT version leaves arr uninitialized, which makes checking whether the intrinsic writes to
    // it impossible.
@@ -83,7 +83,7 @@ int32_t find_primary_fix_cdt(name code,
                                   uint64_t primary)                                                \
       {                                                                                            \
          if constexpr (std::is_same_v<TYPE, checksum256>)                                          \
-            return find_primary_fix_cdt(code, scope, table, secondary, primary);                   \
+            return find_primary_bypass_cdt(code, scope, table, secondary, primary);                \
          else                                                                                      \
             return cdt_wrapper::db_idx_find_primary(code.value, scope.value, table.value, primary, \
                                                     secondary);                                    \

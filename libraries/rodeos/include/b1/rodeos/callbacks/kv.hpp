@@ -173,6 +173,7 @@ namespace b1::rodeos
 
    struct kv_database_config
    {
+      // TODO: max_value_size isn't big enough to store the system contract
       std::uint32_t max_key_size = 1024;
       std::uint32_t max_value_size = 256 * 1024;  // Large enough to hold most contracts
       std::uint32_t max_iterators = 1024;

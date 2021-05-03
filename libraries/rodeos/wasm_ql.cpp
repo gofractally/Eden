@@ -406,6 +406,7 @@ namespace b1::rodeos::wasm_ql
       db_view_state db_view_state{state_account, *thread_state.shared->db, write_session,
                                   contract_kv_prefix};
 
+      // TODO: add string conversions to abieos so json parsing isn't needed for block_num_or_id
       std::string bn_json = "\"" + params.block_num_or_id + "\"";
       eosio::json_token_stream bn_stream{bn_json.data()};
 
