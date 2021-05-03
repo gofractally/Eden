@@ -3,23 +3,35 @@ import * as relativeTime from "dayjs/plugin/relativeTime";
 
 import { getInductionStatus } from "inductions/utils";
 import { getInduction } from "inductions/api";
-import { useFetchedData } from "_app";
+import {
+    ActionButton,
+    ActionButtonSize,
+    ActionButtonType,
+    useFetchedData,
+    useMemberByAccountName,
+} from "_app";
 import * as InductionTable from "_app/ui/table";
 import { Endorsement, Induction, InductionStatus } from "../../interfaces";
-import { InductionActionButton } from "./action-button";
-import { EdenMember, getEdenMember } from "members";
 
 dayjs.extend(relativeTime.default);
 
 interface Props {
     endorsements: Endorsement[];
+    isActiveCommunity?: boolean;
 }
 
-export const EndorserInductions = ({ endorsements }: Props) => (
+export const EndorserInductions = ({
+    endorsements,
+    isActiveCommunity,
+}: Props) => (
     <InductionTable.Table
         columns={ENDORSER_INDUCTION_COLUMNS}
         data={getTableData(endorsements)}
-        tableHeader="Invitations awaiting my endorsement"
+        tableHeader={
+            isActiveCommunity
+                ? "Invitations awaiting my endorsement"
+                : "Waiting on the following members"
+        }
     />
 );
 
@@ -52,10 +64,7 @@ const getTableData = (endorsements: Endorsement[]): InductionTable.Row[] => {
             end.induction_id
         );
 
-        const [inviter] = useFetchedData<EdenMember>(
-            getEdenMember,
-            end.inviter
-        );
+        const { data: inviter } = useMemberByAccountName(end.inviter);
 
         const remainingTime = induction
             ? dayjs().to(dayjs(induction.created_at).add(7, "day"), true)
@@ -96,42 +105,48 @@ const EndorserInductionStatus = ({
     switch (status) {
         case InductionStatus.waitingForProfile:
             return (
-                <InductionActionButton
+                <ActionButton
+                    type={ActionButtonType.INDUCTION_STATUS_WAITING}
+                    size={ActionButtonSize.S}
+                    fullWidth
                     href={`/induction/${induction.id}`}
-                    className="bg-gray-50"
                 >
                     Waiting for profile
-                </InductionActionButton>
+                </ActionButton>
             );
         case InductionStatus.waitingForVideo:
             return (
-                <InductionActionButton
+                <ActionButton
+                    type={ActionButtonType.INDUCTION_STATUS_CEREMONY}
+                    size={ActionButtonSize.S}
+                    fullWidth
                     href={`/induction/${induction.id}`}
-                    className="bg-blue-500 border-blue-500"
-                    lightText
                 >
                     Complete ceremony
-                </InductionActionButton>
+                </ActionButton>
             );
         case InductionStatus.waitingForEndorsement:
             if (endorsement.endorsed) {
                 return (
-                    <InductionActionButton
+                    <ActionButton
+                        type={ActionButtonType.INDUCTION_STATUS_WAITING}
+                        size={ActionButtonSize.S}
+                        fullWidth
                         href={`/induction/${induction.id}`}
-                        className="bg-gray-50"
                     >
-                        Voting or Waiting Donation
-                    </InductionActionButton>
+                        Pending completion
+                    </ActionButton>
                 );
             }
             return (
-                <InductionActionButton
+                <ActionButton
+                    type={ActionButtonType.INDUCTION_STATUS_ACTION}
+                    size={ActionButtonSize.S}
+                    fullWidth
                     href={`/induction/${induction.id}`}
-                    className="bg-green-500"
-                    lightText
                 >
                     Endorse
-                </InductionActionButton>
+                </ActionButton>
             );
         default:
             return <>Error</>;

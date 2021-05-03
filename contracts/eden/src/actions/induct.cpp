@@ -99,6 +99,13 @@ namespace eden
       members.set_active(inductee, induction.new_member_profile().name);
       inductions.erase_induction(induction);
 
+      // Attempt to clean up pending inductions for this member,
+      // but give up if there are too many records to process.
+      if (!inductions.erase_by_inductee(inductee, max_gc_on_induction))
+      {
+         inductions.queue_gc(inductee);
+      }
+
       // If this is the last genesis member, activate the contract
       globals globals{get_self()};
       if (globals.get().stage == contract_stage::genesis)
@@ -108,6 +115,12 @@ namespace eden
             globals.set_stage(contract_stage::active);
          }
       }
+   }
+
+   void eden::gc(uint32_t limit)
+   {
+      inductions inductions{get_self()};
+      eosio::check(inductions.gc(limit) != limit, "Nothing to do.");
    }
 
    void eden::inductcancel(eosio::name account, uint64_t id)

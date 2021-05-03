@@ -121,6 +121,16 @@ namespace eden
    EOSIO_REFLECT(endorsed_induction, invitee, induction_id);
    using endorsed_induction_table_type = eosio::multi_index<"endind"_n, endorsed_induction>;
 
+   // Tracks invitees who had a large number of pending invitations that
+   // need to be cleaned up.
+   struct induction_gc
+   {
+      eosio::name invitee;
+      uint64_t primary_key() const { return invitee.value; }
+   };
+   EOSIO_REFLECT(induction_gc, invitee);
+   using induction_gc_table_type = eosio::multi_index<"inductgc"_n, induction_gc>;
+
    class inductions
    {
      private:
@@ -130,6 +140,7 @@ namespace eden
       globals globals;
 
       void check_new_induction(eosio::name invitee, eosio::name inviter) const;
+      bool is_valid_induction(const induction& induction) const;
       void check_valid_induction(const induction& induction) const;
       void validate_profile(const new_member_profile& new_member_profile) const;
       void validate_video(const std::string& video) const;
@@ -169,6 +180,10 @@ namespace eden
       void create_nfts(const induction& induction, int32_t template_id);
       void start_auction(const induction& induction, uint64_t asset_id);
       void erase_induction(const induction& induction);
+      uint32_t erase_expired(uint32_t limit);
+      uint32_t erase_by_inductee(eosio::name inductee, uint32_t limit);
+      uint32_t gc(uint32_t limit);
+      void queue_gc(eosio::name inductee);
       void create_induction(uint64_t id,
                             eosio::name inviter,
                             eosio::name invitee,

@@ -1,11 +1,11 @@
-import { getEdenMember } from "members";
 import Link from "next/link";
 import { useRouter } from "next/router";
-import { useEffect, useState } from "react";
+import { useQueryClient } from "react-query";
 import { FaSignOutAlt } from "react-icons/fa";
 
 import { useUALAccount } from "../eos";
-import Button from "./button";
+import { useCurrentMember } from "_app/hooks";
+import { ActionButton } from "./action-button";
 
 interface MenuItem {
     href: string;
@@ -78,36 +78,28 @@ const HeaderItemLink = ({
 
 const AccountMenu = () => {
     const [ualAccount, ualLogout, ualShowModal] = useUALAccount();
-    const [memberName, setMemberName] = useState("");
+    const accountName = ualAccount?.accountName;
 
-    const accountName = ualAccount ? ualAccount.accountName : undefined;
+    const queryClient = useQueryClient();
+    const { data: member } = useCurrentMember();
 
-    useEffect(() => {
-        const updateLoggedMemberName = async (account: string) => {
-            const member = await getEdenMember(account);
-            if (member) {
-                setMemberName(member.name);
-            }
-        };
-        if (ualAccount && ualAccount.accountName) {
-            updateLoggedMemberName(ualAccount.accountName);
-        } else {
-            setMemberName("");
-        }
-    }, [ualAccount, accountName]);
+    const onSignOut = () => {
+        queryClient.clear();
+        ualLogout();
+    };
 
     return ualAccount ? (
         <div className="mt-2 md:mt-0 space-x-3 hover:text-gray-900">
             <Link href={`/members/${accountName}`}>
-                <a>{memberName || accountName || "(unknown)"}</a>
+                <a>{member?.name || accountName || "(unknown)"}</a>
             </Link>
-            <a href="#" onClick={ualLogout}>
+            <a href="#" onClick={onSignOut}>
                 <FaSignOutAlt className="inline-block mb-1" />
             </a>
         </div>
     ) : (
-        <Button onClick={ualShowModal} className="mt-4 md:mt-0">
-            Login
-        </Button>
+        <ActionButton onClick={ualShowModal} className="mt-4 md:mt-0">
+            Sign in
+        </ActionButton>
     );
 };
