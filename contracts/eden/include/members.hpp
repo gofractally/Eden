@@ -19,17 +19,20 @@ namespace eden
    struct member_v0
    {
       eosio::name account;
+      std::string name;
       member_status_type status;
       uint64_t nft_template_id;
 
       uint64_t primary_key() const { return account.value; }
    };
-   EOSIO_REFLECT(member_v0, account, status, nft_template_id)
+   EOSIO_REFLECT(member_v0, account, name, status, nft_template_id)
 
    struct member
    {
+      member() = default;
+      member(const member&) = delete;
       std::variant<member_v0> value;
-      EDEN_FORWARD_MEMBERS(value, account, status, nft_template_id);
+      EDEN_FORWARD_MEMBERS(value, account, name, status, nft_template_id);
       EDEN_FORWARD_FUNCTIONS(value, primary_key)
    };
    EOSIO_REFLECT(member, value)
@@ -54,8 +57,6 @@ namespace eden
       globals globals;
       member_stats_singleton member_stats;
 
-      bool is_new_member(eosio::name account) const;
-
      public:
       members(eosio::name contract)
           : contract(contract),
@@ -65,12 +66,14 @@ namespace eden
       {
       }
 
+      const member& get_member(eosio::name account);
       void create(eosio::name account);
+      bool is_new_member(eosio::name account) const;
       void check_active_member(eosio::name account);
       void check_pending_member(eosio::name account);
       void deposit(eosio::name account, const eosio::asset& quantity);
       void set_nft(eosio::name account, int32_t nft_template_id);
-      void set_active(eosio::name account);
+      void set_active(eosio::name account, const std::string& name);
       member_stats_v0 stats();
 
       // this method is used only for administrative purposes,

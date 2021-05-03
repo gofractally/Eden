@@ -1,9 +1,11 @@
 import Link from "next/link";
 import { useRouter } from "next/router";
+import { useQueryClient } from "react-query";
 import { FaSignOutAlt } from "react-icons/fa";
 
 import { useUALAccount } from "../eos";
-import Button from "./button";
+import { useCurrentMember } from "_app/hooks";
+import { ActionButton } from "./action-button";
 
 interface MenuItem {
     href: string;
@@ -76,18 +78,28 @@ const HeaderItemLink = ({
 
 const AccountMenu = () => {
     const [ualAccount, ualLogout, ualShowModal] = useUALAccount();
+    const accountName = ualAccount?.accountName;
+
+    const queryClient = useQueryClient();
+    const { data: member } = useCurrentMember();
+
+    const onSignOut = () => {
+        queryClient.clear();
+        ualLogout();
+    };
+
     return ualAccount ? (
-        <div className="space-x-3 hover:text-gray-900">
-            <Link href={`/members/${ualAccount.accountName}`}>
-                <a>{ualAccount.accountName || "(unknown)"}</a>
+        <div className="mt-2 md:mt-0 space-x-3 hover:text-gray-900">
+            <Link href={`/members/${accountName}`}>
+                <a>{member?.name || accountName || "(unknown)"}</a>
             </Link>
-            <a href="#" onClick={ualLogout}>
+            <a href="#" onClick={onSignOut}>
                 <FaSignOutAlt className="inline-block mb-1" />
             </a>
         </div>
     ) : (
-        <Button onClick={ualShowModal} className="mt-4 md:mt-0">
-            Login
-        </Button>
+        <ActionButton onClick={ualShowModal} className="mt-4 md:mt-0">
+            Sign in
+        </ActionButton>
     );
 };

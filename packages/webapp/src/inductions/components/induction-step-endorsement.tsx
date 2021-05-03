@@ -1,9 +1,24 @@
 import { useState } from "react";
 import { useRouter } from "next/router";
+import { useQueryClient } from "react-query";
 
-import { Button, Form, Heading, Link, Text, useUALAccount } from "_app";
+import {
+    assetToString,
+    Button,
+    Form,
+    Heading,
+    Link,
+    Text,
+    useUALAccount,
+    onError,
+} from "_app";
+import { minimumDonationAmount } from "config";
+
 import { Endorsement, Induction } from "../interfaces";
-import { submitEndorsementTransaction } from "../transactions";
+import {
+    submitEndorsementTransaction,
+    donateAndCompleteInductionTransaction,
+} from "../transactions";
 import { NewMemberCardPreview } from "./new-member-card-preview";
 import { convertPendingProfileToMemberData } from "../utils";
 
@@ -15,8 +30,8 @@ interface Props {
 
 export const InductionStepEndorsement = (props: Props) => {
     const router = useRouter();
+    const queryClient = useQueryClient();
     const [ualAccount] = useUALAccount();
-    const [isReviewed, setReviewed] = useState(false);
     const [isLoading, setLoading] = useState(false);
     const [endorsements, setEndorsements] = useState([...props.endorsements]);
 
@@ -40,10 +55,40 @@ export const InductionStepEndorsement = (props: Props) => {
 
             await updateEndorsements();
         } catch (error) {
-            console.error(error);
-            alert(
-                "Error while initializing the induction process: " +
-                    JSON.stringify(error)
+            onError(error, "Unable to submit endorsement");
+        }
+
+        setLoading(false);
+    };
+
+    const submitDonation = async () => {
+        try {
+            const authorizerAccount = ualAccount.accountName;
+            const transaction = donateAndCompleteInductionTransaction(
+                authorizerAccount,
+                induction
+            );
+            console.info(transaction);
+
+            setLoading(true);
+            const signedTrx = await ualAccount.signTransaction(transaction, {
+                broadcast: true,
+            });
+            console.info("donation trx", signedTrx);
+
+            // tolerance time to make sure blockchain processed the transactions
+            await new Promise((resolve) => setTimeout(resolve, 4000));
+
+            // invalidate ["member", accountName] query so it will refetch with their full name
+            queryClient.invalidateQueries(["member", authorizerAccount]);
+
+            // router goes to the newly created member page
+            router.push(`/members/${induction.invitee}`);
+            return;
+        } catch (error) {
+            onError(
+                error,
+                "Unable to donate and complete the induction process"
             );
         }
 
@@ -57,32 +102,25 @@ export const InductionStepEndorsement = (props: Props) => {
                 ? { ...endorsement, endorsed: 1 }
                 : endorsement
         );
-
-        // check if it's the final endorsement
-        const endorseds = updatedEndorsements.filter((item) => item.endorsed);
-        if (endorseds.length === endorsements.length) {
-            // router goes to the newly created member page after some tolerance
-            // time to make sure blockchain processed the transactions
-            await new Promise((resolve) => setTimeout(resolve, 4000));
-            router.push(`/members/${induction.invitee}`);
-            return;
-        }
-
         setEndorsements(updatedEndorsements);
     };
 
     const memberData = convertPendingProfileToMemberData(induction);
 
-    const isInvitee = () => ualAccount?.accountName === induction.invitee;
+    const isInvitee = ualAccount?.accountName === induction.invitee;
 
     const userEndorsement = endorsements.find(
         (endorsement) => endorsement.endorser === ualAccount?.accountName
     );
 
-    const isPendingEndorser = () =>
-        userEndorsement && !userEndorsement.endorsed;
+    const isFullyEndorsed =
+        endorsements.filter((endorsement) => endorsement.endorsed === 1)
+            .length === endorsements.length;
 
-    console.info(endorsements, userEndorsement, ualAccount?.accountName);
+    const isPendingEndorser = Boolean(
+        userEndorsement && !userEndorsement.endorsed
+    );
+
     const getEndorserStatus = (endorsement: Endorsement) =>
         endorsement.endorsed ? (
             <span title="Endorsement Submitted" className="mr-2">
@@ -97,7 +135,9 @@ export const InductionStepEndorsement = (props: Props) => {
     return (
         <>
             <div className="text-lg mb-4 text-gray-900">
-                Step 3/3: Waiting for Endorsements
+                {isFullyEndorsed
+                    ? "Step 4/4: Waiting for Donation"
+                    : "Step 3/4: Waiting for Endorsements"}
             </div>
             <div className="grid grid-cols-2 gap-6 max-w-full">
                 <div>
@@ -112,46 +152,21 @@ export const InductionStepEndorsement = (props: Props) => {
                             </li>
                         ))}
                     </ul>
-                    {isPendingEndorser() ? (
-                        <div className="space-y-3">
-                            <Text className="text-red-500">
-                                Please review carefully the new member card
-                                preview. Make sure that all the social handles
-                                links are working. Once all the endorsements are
-                                submitted the new Eden Member Induction will be
-                                completed and the NFT data will be immutable.
-                            </Text>
-                            <Text>
-                                If any of the new member data is incorrect, ask
-                                for the new member to fix his/her profile. If
-                                the induction video seems wrong, please reupload
-                                the induction video.
-                            </Text>
-                            <Form.Checkbox
-                                id="reviewed"
-                                label="I carefully reviewed the New Member data and confirm my endorsement"
-                                value={Number(isReviewed)}
-                                onChange={() => setReviewed(!isReviewed)}
-                            />
-                            <div className="w-max mx-auto">
-                                <Button
-                                    onClick={submitEndorsement}
-                                    disabled={isLoading || !isReviewed}
-                                >
-                                    {isLoading
-                                        ? "Submitting endorsement..."
-                                        : "Submit"}
-                                </Button>
-                            </div>
-                        </div>
+                    {isFullyEndorsed ? (
+                        <DonationForm
+                            isLoading={isLoading}
+                            submitDonation={submitDonation}
+                            isInvitee={isInvitee}
+                        />
                     ) : (
-                        <div>
-                            Waiting for all the endorsements to complete the
-                            induction process.
-                        </div>
+                        <EndorsingForm
+                            isLoading={isLoading}
+                            isPendingEndorser={isPendingEndorser}
+                            submitEndorsement={submitEndorsement}
+                        />
                     )}
 
-                    {isInvitee() && (
+                    {isInvitee && (
                         <div className="mt-4 text-center">
                             <Text>Your profile looks wrong?</Text>
                             <Link
@@ -181,5 +196,87 @@ export const InductionStepEndorsement = (props: Props) => {
                 </div>
             </div>
         </>
+    );
+};
+
+interface EndorsingFormProps {
+    isPendingEndorser: boolean;
+    isLoading: boolean;
+    submitEndorsement: () => void;
+}
+const EndorsingForm = ({
+    isPendingEndorser,
+    isLoading,
+    submitEndorsement,
+}: EndorsingFormProps) => {
+    const [isReviewed, setReviewed] = useState(false);
+    return isPendingEndorser ? (
+        <div className="space-y-3">
+            <Text className="text-red-500">
+                Please review carefully the new member card preview. Make sure
+                that all the social handles links are working. Once all the
+                endorsements are submitted the new Eden Member Induction will be
+                completed and the NFT data will be immutable.
+            </Text>
+            <Text>
+                If any of the new member data is incorrect, ask for the new
+                member to fix his/her profile. If the induction video seems
+                wrong, please reupload the induction video.
+            </Text>
+            <Form.Checkbox
+                id="reviewed"
+                label="I carefully reviewed the New Member data and confirm my endorsement"
+                value={Number(isReviewed)}
+                onChange={() => setReviewed(!isReviewed)}
+            />
+            <div className="w-max mx-auto">
+                <Button
+                    onClick={submitEndorsement}
+                    disabled={isLoading || !isReviewed}
+                >
+                    {isLoading ? "Submitting endorsement..." : "Submit"}
+                </Button>
+            </div>
+        </div>
+    ) : (
+        <div>
+            Waiting for all the endorsements to complete the induction process.
+        </div>
+    );
+};
+
+interface DonationFormProps {
+    isInvitee: boolean;
+    isLoading: boolean;
+    submitDonation: () => void;
+}
+const DonationForm = ({
+    isInvitee,
+    isLoading,
+    submitDonation,
+}: DonationFormProps) => {
+    return isInvitee ? (
+        <div className="space-y-3">
+            <Text>
+                This is your last chance to review your profile and make sure
+                everything is correct. If you want to proceed, click on the
+                below button to donate and complete your induction!
+            </Text>
+            <div className="w-max mx-auto">
+                <Button onClick={submitDonation} disabled={isLoading}>
+                    {isLoading
+                        ? "Submitting donation..."
+                        : `I want to Donate ${assetToString(
+                              minimumDonationAmount
+                          )}`}
+                </Button>
+            </div>
+        </div>
+    ) : (
+        <div>
+            Please reach out to the invitee and let him know that his induction
+            is endorsed and it's only waiting for his donation to complete the
+            induction!
+        </div>
     );
 };

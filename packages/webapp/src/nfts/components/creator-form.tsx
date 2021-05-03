@@ -9,6 +9,7 @@ import {
     useFormFields,
     Heading,
     Text,
+    onError,
 } from "_app";
 
 import { EdenNftData, EdenNftSocialHandles } from "../interfaces";
@@ -26,7 +27,7 @@ export const CreatorForm = ({ ual }: WithUALProps) => {
 
 const initialForm = {
     name: "",
-    edenAccount: "",
+    account: "",
     image: "",
     bio: "",
     inductionVideo: "",
@@ -51,7 +52,7 @@ const SubmissionForm = ({ ual }: WithUALProps) => {
         e.preventDefault();
 
         if (isMinted) {
-            alert("asset already minted");
+            onError(new Error("asset already minted"));
             return;
         }
 
@@ -72,8 +73,7 @@ const SubmissionForm = ({ ual }: WithUALProps) => {
             await mintAssets(ual, createdTemplateId, nft.account, inductors);
             setMinted(true);
         } catch (error) {
-            console.error(error);
-            alert("An error has occurred. \n" + JSON.stringify(error));
+            onError(error);
         }
 
         setCreating(false);
@@ -95,7 +95,7 @@ const SubmissionForm = ({ ual }: WithUALProps) => {
 
         const nft: EdenNftData = {
             name: fields.name,
-            account: fields.edenAccount,
+            account: fields.account,
             img: fields.image,
             bio: fields.bio,
             video: fields.inductionVideo,
@@ -161,17 +161,17 @@ const SubmissionForm = ({ ual }: WithUALProps) => {
                                     </Form.LabeledSet>
                                     <Form.LabeledSet
                                         label="Eden Account (EOS Mainnet Account)"
-                                        htmlFor="edenAccount"
+                                        htmlFor="account"
                                         className="col-span-6 sm:col-span-3"
                                     >
                                         <Form.Input
-                                            id="edenAccount"
+                                            id="account"
                                             type="text"
                                             disabled={
                                                 isCreating || templateId > 0
                                             }
                                             required
-                                            value={fields.edenAccount}
+                                            value={fields.account}
                                             onChange={onChangeFields}
                                         />
                                     </Form.LabeledSet>

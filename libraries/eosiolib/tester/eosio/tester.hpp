@@ -52,6 +52,14 @@ namespace eosio
       uint32_t code_sequence = {};
       uint32_t abi_sequence = {};
    };
+   EOSIO_REFLECT(action_receipt,
+                 receiver,
+                 act_digest,
+                 global_sequence,
+                 recv_sequence,
+                 auth_sequence,
+                 code_sequence,
+                 abi_sequence);
 
    auto conversion_kind(chain_types::action_receipt_v0, action_receipt) -> strict_conversion;
 
@@ -71,6 +79,20 @@ namespace eosio
       std::optional<uint64_t> error_code = {};
       std::vector<char> return_value = {};
    };
+   EOSIO_REFLECT(action_trace,
+                 action_ordinal,
+                 creator_action_ordinal,
+                 receipt,
+                 receiver,
+                 act,
+                 context_free,
+                 elapsed,
+                 console,
+                 account_ram_deltas,
+                 account_disk_deltas,
+                 except,
+                 error_code,
+                 return_value);
 
    auto conversion_kind(chain_types::action_trace_v0, action_trace) -> strict_conversion;
 
@@ -89,6 +111,19 @@ namespace eosio
       std::optional<uint64_t> error_code = {};
       std::vector<transaction_trace> failed_dtrx_trace = {};
    };
+   EOSIO_REFLECT(transaction_trace,
+                 id,
+                 status,
+                 cpu_usage_us,
+                 net_usage_words,
+                 elapsed,
+                 net_usage,
+                 scheduled,
+                 action_traces,
+                 account_ram_delta,
+                 except,
+                 error_code,
+                 failed_dtrx_trace);
 
    auto conversion_kind(chain_types::transaction_trace, transaction_trace) -> narrowing_conversion;
    auto serialize_as(const transaction_trace&) -> chain_types::transaction_trace;

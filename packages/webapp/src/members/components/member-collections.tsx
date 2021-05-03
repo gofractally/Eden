@@ -7,11 +7,11 @@ import { MemberData } from "../interfaces";
 import { MembersGrid } from "./members-grid";
 
 interface Props {
-    edenAccount: string;
+    account: string;
     templateId: number;
 }
 
-export const MemberCollections = ({ edenAccount, templateId }: Props) => {
+export const MemberCollections = ({ account, templateId }: Props) => {
     const [tab, setTab] = useState<"collection" | "collectedBy">("collection");
     const [isLoading, setLoading] = useState(false);
     const [members, setMembers] = useState<MemberData[] | undefined>(undefined);
@@ -19,7 +19,7 @@ export const MemberCollections = ({ edenAccount, templateId }: Props) => {
     useEffect(() => {
         const loadMember = async () => {
             if (tab === "collection") {
-                const members = await getCollection(edenAccount);
+                const members = await getCollection(account);
                 setMembers(members);
             } else {
                 const { members, unknownOwners } = await getCollectedBy(
@@ -34,7 +34,7 @@ export const MemberCollections = ({ edenAccount, templateId }: Props) => {
         };
         setLoading(true);
         loadMember();
-    }, [edenAccount, templateId, tab]);
+    }, [account, templateId, tab]);
 
     return (
         <div className="px-5 py-5 mx-auto flex justify-around">
@@ -72,7 +72,7 @@ const externalOwnersCards = (owner: string): MemberData => {
         templateId: 0,
         name: owner,
         image: "",
-        edenAccount: "",
+        account: "",
         bio: "",
         socialHandles: {},
         inductionVideo: "",

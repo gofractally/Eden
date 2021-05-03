@@ -8,7 +8,7 @@ export const convertPendingProfileToMemberData = (
         templateId: 0,
         name: induction.new_member_profile.name,
         image: induction.new_member_profile.img,
-        edenAccount: induction.invitee,
+        account: induction.invitee,
         bio: induction.new_member_profile.bio,
         socialHandles: JSON.parse(induction.new_member_profile.social || "{}"),
         inductionVideo: induction.video || "",
@@ -24,18 +24,4 @@ export const getInductionStatus = (induction?: Induction) => {
         : !induction.video
         ? InductionStatus.waitingForVideo
         : InductionStatus.waitingForEndorsement;
-};
-
-export const getInductionStatusLabel = (induction?: Induction) => {
-    const status = getInductionStatus(induction);
-    switch (status) {
-        case InductionStatus.waitingForProfile:
-            return "🟡 Pending Profile";
-        case InductionStatus.waitingForVideo:
-            return "🟡 Pending Induction Video";
-        case InductionStatus.waitingForEndorsement:
-            return "🟡 Waiting for Endorsements";
-        default:
-            return "🛑 Invalid";
-    }
 };

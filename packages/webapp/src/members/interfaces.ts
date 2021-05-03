@@ -5,7 +5,7 @@ export interface MemberData {
     templateId: number;
     name: string;
     image: string;
-    edenAccount: string;
+    account: string;
     bio: string;
     socialHandles: EdenNftSocialHandles;
     inductionVideo: string;
@@ -34,6 +34,7 @@ export enum MemberStatus {
 
 export interface EdenMember {
     account: string;
+    name: string;
     status: MemberStatus;
     nft_template_id: number;
 }

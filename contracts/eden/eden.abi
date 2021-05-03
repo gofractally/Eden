@@ -8,6 +8,54 @@
         {
             "new_type_name": "contract_stage_type",
             "type": "uint8"
+        },
+        {
+            "new_type_name": "attribute_map",
+            "type": "attribute_pair[]"
+        },
+        {
+            "new_type_name": "INT8_VEC",
+            "type": "int8[]"
+        },
+        {
+            "new_type_name": "INT16_VEC",
+            "type": "int16[]"
+        },
+        {
+            "new_type_name": "INT32_VEC",
+            "type": "int32[]"
+        },
+        {
+            "new_type_name": "INT64_VEC",
+            "type": "int64[]"
+        },
+        {
+            "new_type_name": "UINT8_VEC",
+            "type": "uint8[]"
+        },
+        {
+            "new_type_name": "UINT16_VEC",
+            "type": "uint16[]"
+        },
+        {
+            "new_type_name": "UINT32_VEC",
+            "type": "uint32[]"
+        },
+        {
+            "new_type_name": "UINT64_VEC",
+            "type": "uint64[]"
+        },
+        {
+            "new_type_name": "FLOAT_VEC",
+            "type": "float32[]"
+        },
+        {
+            "new_type_name": "DOUBLE_VEC",
+            "type": "float64[]"
+        },
+        {
+            "new_type_name": "STRING_VEC",
+            "type": "string[]"
         }
     ],
     "structs": [
@@ -15,6 +63,34 @@
             "name": "clearall",
             "base": "",
             "fields": []
+        },
+        {
+            "name": "withdraw",
+            "base": "",
+            "fields": [
+                {
+                    "name": "owner",
+                    "type": "name"
+                },
+                {
+                    "name": "quantity",
+                    "type": "asset"
+                }
+            ]
+        },
+        {
+            "name": "attribute_pair",
+            "base": "",
+            "fields": [
+                {
+                    "name": "key",
+                    "type": "string"
+                },
+                {
+                    "name": "value",
+                    "type": "attribute"
+                }
+            ]
         },
         {
             "name": "genesis",
@@ -39,6 +115,10 @@
                 {
                     "name": "genesis_video",
                     "type": "string"
+                },
+                {
+                    "name": "collection_attributes",
+                    "type": "attribute_map"
                 },
                 {
                     "name": "auction_starting_bid",
@@ -99,12 +179,30 @@
             ]
         },
         {
+            "name": "account_v0",
+            "base": "",
+            "fields": [
+                {
+                    "name": "owner",
+                    "type": "name"
+                },
+                {
+                    "name": "balance",
+                    "type": "asset"
+                }
+            ]
+        },
+        {
             "name": "member_v0",
             "base": "",
             "fields": [
                 {
                     "name": "account",
                     "type": "name"
+                },
+                {
+                    "name": "name",
+                    "type": "string"
                 },
                 {
                     "name": "status",
@@ -275,6 +373,24 @@
             ]
         },
         {
+            "name": "inductdonate",
+            "base": "",
+            "fields": [
+                {
+                    "name": "payer",
+                    "type": "name"
+                },
+                {
+                    "name": "id",
+                    "type": "uint64"
+                },
+                {
+                    "name": "quantity",
+                    "type": "asset"
+                }
+            ]
+        },
+        {
             "name": "inductcancel",
             "base": "",
             "fields": [
@@ -290,6 +406,11 @@
         }
     ],
     "actions": [
+        {
+            "name": "withdraw",
+            "type": "withdraw",
+            "ricardian_contract": ""
+        },
         {
             "name": "genesis",
             "type": "genesis",
@@ -321,12 +442,24 @@
             "ricardian_contract": ""
         },
         {
+            "name": "inductdonate",
+            "type": "inductdonate",
+            "ricardian_contract": ""
+        },
+        {
             "name": "inductcancel",
             "type": "inductcancel",
             "ricardian_contract": ""
         }
     ],
     "tables": [
+        {
+            "name": "account",
+            "type": "account",
+            "index_type": "i64",
+            "key_names": [],
+            "key_types": []
+        },
         {
             "name": "member",
             "type": "member",
@@ -368,12 +501,20 @@
     "abi_extensions": [],
     "variants": [
         {
+            "name": "attribute",
+            "types": ["int8", "int16", "int32", "int64", "uint8", "uint16", "uint32", "uint64", "float32", "float64", "string", "INT8_VEC", "INT16_VEC", "INT32_VEC", "INT64_VEC", "UINT8_VEC", "UINT16_VEC", "UINT32_VEC", "UINT64_VEC", "FLOAT_VEC", "DOUBLE_VEC", "STRING_VEC"]
+        },
+        {
             "name": "global",
             "types": ["global_v0"]
         },
         {
             "name": "memberstats",
             "types": ["memberstats_v0"]
+        },
+        {
+            "name": "account",
+            "types": ["account_v0"]
         },
         {
             "name": "member",

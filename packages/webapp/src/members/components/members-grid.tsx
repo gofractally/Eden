@@ -23,12 +23,8 @@ export const MembersGrid = ({ members }: Props) => {
 
 export const MemberSquare = ({ member }: { member: MemberData }) => (
     <div className="relative">
-        {member.edenAccount ? (
-            <Link
-                href={
-                    member.edenAccount ? `/members/${member.edenAccount}` : "#"
-                }
-            >
+        {member.account ? (
+            <Link href={member.account ? `/members/${member.account}` : "#"}>
                 <a>
                     <img
                         src={
@@ -47,8 +43,8 @@ export const MemberSquare = ({ member }: { member: MemberData }) => (
             />
         )}
         <div className={styles.memberNameBadge + " text-xs"}>
-            {member.edenAccount ? (
-                <Link href={`/members/${member.edenAccount}`}>
+            {member.account ? (
+                <Link href={`/members/${member.account}`}>
                     <a className="text-white hover:underline">{member.name}</a>
                 </Link>
             ) : (

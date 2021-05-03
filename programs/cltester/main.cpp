@@ -1464,7 +1464,7 @@ static void run(const char* wasm, const std::vector<std::string>& args)
 }
 
 const char usage[] =
-    "usage: eden-tester [-h or --help] [-v or --verbose] file.wasm [args for wasm]\n";
+    "usage: cltester [-h or --help] [-v or --verbose] file.wasm [args for wasm]\n";
 
 int main(int argc, char* argv[])
 {

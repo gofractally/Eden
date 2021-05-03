@@ -529,6 +529,12 @@ namespace eosio
       }
 
       template <typename Code>
+      constexpr action_wrapper(Code&& code, eosio::name user)
+          : code_name(std::forward<Code>(code)), permissions({1, {user, "active"_n}})
+      {
+      }
+
+      template <typename Code>
       constexpr action_wrapper(Code&& code, std::vector<eosio::permission_level>&& perms)
           : code_name(std::forward<Code>(code)), permissions(std::move(perms))
       {

@@ -32,6 +32,9 @@ namespace eden
 
    global_singleton& get_global_singleton(eosio::name contract);
 
+   // For use in tester only
+   void tester_clear_global_singleton();
+
    struct globals
    {
      private:

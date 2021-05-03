@@ -1,7 +1,7 @@
 import { GetServerSideProps } from "next";
 
 import { getMembers, MembersGrid, MemberData, getNewMembers } from "members";
-import { Heading, SingleColLayout, Text } from "_app";
+import { SingleColLayout, Card } from "_app";
 
 interface Props {
     members: MemberData[];
@@ -11,16 +11,15 @@ interface Props {
 
 export const Members = ({ members, newMembers, error }: Props) => {
     return (
-        <SingleColLayout title="Community Members">
+        <SingleColLayout>
             {error || (
                 <>
-                    <Heading size={2}>New Members</Heading>
-                    <MembersGrid members={newMembers} />
-                    <div className="p-8">
-                        <hr />
-                    </div>
-                    <Heading size={2}>Members List</Heading>
-                    <MembersGrid members={members} />
+                    <Card title="New Members" titleSize={2}>
+                        <MembersGrid members={newMembers} />
+                    </Card>
+                    <Card title="All Members" titleSize={2}>
+                        <MembersGrid members={members} />
+                    </Card>
                 </>
             )}
         </SingleColLayout>

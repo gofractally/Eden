@@ -62,14 +62,14 @@ export const createNft = async (
 export const mintAssets = async (
     ual: any,
     templateId: number,
-    edenAccount: string,
+    account: string,
     inductors: string[]
 ) => {
     const authorizerAccount = ual.activeUser.accountName;
     const mintingTransaction = edenNftMintTransaction(
         authorizerAccount,
         templateId,
-        [edenContractAccount, edenAccount, ...inductors]
+        [edenContractAccount, account, ...inductors]
     );
     const signedMintingTrx = await ual.activeUser.signTransaction(
         mintingTransaction,
