@@ -11,8 +11,5 @@ if(IS_WASM)
     set_target_properties(abieos PROPERTIES ARCHIVE_OUTPUT_DIRECTORY ${ROOT_BINARY_DIR}/clsdk/lib-wasm)
 
     copy_headers(include/eosio abieos/include/eosio)
-    file(COPY include/eosio/fpconv.license DESTINATION ${ROOT_BINARY_DIR}/clsdk/licenses)
-    file(RENAME
-        ${ROOT_BINARY_DIR}/clsdk/licenses/fpconv.license
-        ${ROOT_BINARY_DIR}/clsdk/licenses/LICENSE.fpconv)
+    configure_file(include/eosio/fpconv.license ${ROOT_BINARY_DIR}/clsdk/licenses/LICENSE.fpconv COPYONLY)
 endif()

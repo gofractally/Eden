@@ -70,7 +70,7 @@ namespace eosio
       constexpr asset(std::string_view s, no_check_t)
       {
          input_stream stream{s};
-         (void)eosio::string_to_asset(amount, symbol.value, stream.pos, stream.end, true);
+         (void)eosio::string_to_asset(amount, symbol.value, stream.pos, stream.end, false);
       }
 
       /**

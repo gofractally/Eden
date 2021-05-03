@@ -2,6 +2,9 @@ cmake_minimum_required(VERSION 3.16)
 project(clsdk)
 
 if(CMAKE_BUILD_TYPE STREQUAL "")
+    # Empty CMAKE_BUILD_TYPE causes contracts to exceed eosio wasm limits.
+    # Debug builds also exceed those limits, but in that case the user made
+    # an explicit request.
     message(FATAL_ERROR "CMAKE_BUILD_TYPE is not set. Try -DCMAKE_BUILD_TYPE=Release")
 endif()
 
@@ -12,6 +15,7 @@ add_library(abieos INTERFACE)
 target_include_directories(abieos INTERFACE abieos/include rapidjson/include)
 target_link_libraries(abieos INTERFACE
     -L${CMAKE_CURRENT_SOURCE_DIR}/lib-wasm
+    boost
     -labieos
 )
 
@@ -31,7 +35,6 @@ target_compile_options(eosio-core INTERFACE -fno-exceptions -D__eosio_cdt__)
 target_link_libraries(eosio-core INTERFACE
     -leosio-core
     abieos
-    boost
 )
 
 add_library(eosio-contract-base INTERFACE)
@@ -40,6 +43,7 @@ target_include_directories(eosio-contract-base INTERFACE
     contracts
     eosiolib/contracts/include
 )
+target_compile_options(eosio-contract-base INTERFACE -DCOMPILING_CONTRACT)
 target_link_options(eosio-contract-base INTERFACE
     -Wl,--stack-first
     -Wl,--entry,apply
@@ -54,7 +58,6 @@ endif()
 
 # Contract with simple malloc/free
 add_library(eosio-contract-simple-malloc INTERFACE)
-target_compile_options(eosio-contract-simple-malloc INTERFACE -DCOMPILING_CONTRACT)
 target_link_libraries(eosio-contract-simple-malloc INTERFACE 
     -L${CMAKE_CURRENT_BINARY_DIR}
     eosio-contract-base
@@ -68,7 +71,6 @@ target_link_libraries(eosio-contract-simple-malloc INTERFACE
 
 # Contract with full malloc/free
 add_library(eosio-contract-full-malloc INTERFACE)
-target_compile_options(eosio-contract-full-malloc INTERFACE -DCOMPILING_CONTRACT)
 target_link_libraries(eosio-contract-full-malloc INTERFACE 
     eosio-contract-base
     -lc++
@@ -80,7 +82,6 @@ target_link_libraries(eosio-contract-full-malloc INTERFACE
 
 add_library(cltestlib INTERFACE)
 target_link_libraries(cltestlib INTERFACE
-    boost
     eosio-core
     -lcltestlib
 )
