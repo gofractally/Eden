@@ -42,13 +42,11 @@ namespace eden::atomicassets
    {
       ::atomicassets::templates_t templates(contract, collection.value);
       const auto& templ = templates.get(
-          template_id,
-          std::string("fail to read template id " + std::to_string(template_id)).c_str());
+          template_id, ("fail to read template id " + std::to_string(template_id)).c_str());
 
       ::atomicassets::schemas_t schemas(contract, collection.value);
-      const auto& schema =
-          schemas.get(templ.schema_name.value,
-                      std::string("fail to read schema " + schema_name.to_string()).c_str());
+      const auto& schema = schemas.get(templ.schema_name.value,
+                                       ("fail to read schema " + schema_name.to_string()).c_str());
 
       // Why does atomicassets-interface.hpp use a different FORMAT from atomicdata.hpp?
       std::vector<atomicdata::FORMAT> format;

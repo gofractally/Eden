@@ -116,8 +116,7 @@ namespace eden
    {
       endorsed_induction_table_type endorsed_induction_tb(contract, default_scope);
       const auto& endorsed_induction = endorsed_induction_tb.get(
-          invitee.value,
-          std::string("unable to find endorsed induction for " + invitee.to_string()).c_str());
+          invitee.value, ("unable to find endorsed induction for " + invitee.to_string()).c_str());
       return get_induction(endorsed_induction.induction_id);
    }
 
@@ -156,7 +155,7 @@ namespace eden
       auto endorsement_idx = endorsement_tb.get_index<"byendorser"_n>();
       const auto& endorsement = endorsement_idx.get(
           uint128_t{account.value} << 64 | induction.id(),
-          std::string("unable to find endorsement for endorser " + account.to_string()).c_str());
+          ("unable to find endorsement for endorser " + account.to_string()).c_str());
       eosio::check(!endorsement.endorsed(), "Already endorsed");
       endorsement_tb.modify(endorsement, eosio::same_payer,
                             [&](auto& row) { row.endorsed() = true; });

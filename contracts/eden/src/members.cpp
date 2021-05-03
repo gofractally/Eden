@@ -4,8 +4,7 @@ namespace eden
 {
    const member& members::get_member(eosio::name account)
    {
-      return member_tb.get(account.value,
-                           std::string("member " + account.to_string() + " not found").c_str());
+      return member_tb.get(account.value, ("member " + account.to_string() + " not found").c_str());
    }
 
    void members::check_active_member(eosio::name account)
