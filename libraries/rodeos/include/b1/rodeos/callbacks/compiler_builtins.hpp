@@ -2,6 +2,7 @@
 
 #include <b1/rodeos/callbacks/vm_types.hpp>
 #include <compiler_builtins.hpp>
+#include <fc/uint128.hpp>
 #include <softfloat.hpp>
 
 namespace b1::rodeos
@@ -13,18 +14,9 @@ namespace b1::rodeos
 
       void __ashlti3(legacy_ptr<__int128> ret, uint64_t low, uint64_t high, uint32_t shift)
       {
-         if (shift >= 128)
-         {
-            *ret = 0;
-         }
-         else
-         {
-            unsigned __int128 i = high;
-            i <<= 64;
-            i |= low;
-            i <<= shift;
-            *ret = (__int128)i;
-         }
+         fc::uint128_t i(high, low);
+         i <<= shift;
+         *ret = (unsigned __int128)i;
       }
 
       void __ashrti3(legacy_ptr<__int128> ret, uint64_t low, uint64_t high, uint32_t shift)
@@ -33,30 +25,22 @@ namespace b1::rodeos
          *ret = high;
          *ret <<= 64;
          *ret |= low;
+         // TODO: UB. This is identical to the version in eosio 2.0,
+         // so needs to be analyzed and fixed there also (potential
+         // consensus break there)
          *ret >>= shift;
       }
 
       void __lshlti3(legacy_ptr<__int128> ret, uint64_t low, uint64_t high, uint32_t shift)
       {
-         if (shift >= 128)
-         {
-            *ret = 0;
-         }
-         else
-         {
-            unsigned __int128 i = high;
-            i <<= 64;
-            i |= low;
-            i <<= shift;
-            *ret = (__int128)i;
-         }
+         fc::uint128_t i(high, low);
+         i <<= shift;
+         *ret = (unsigned __int128)i;
       }
 
       void __lshrti3(legacy_ptr<__int128> ret, uint64_t low, uint64_t high, uint32_t shift)
       {
-         unsigned __int128 i = high;
-         i <<= 64;
-         i |= low;
+         fc::uint128_t i(high, low);
          i >>= shift;
          *ret = (unsigned __int128)i;
       }
@@ -257,18 +241,15 @@ namespace b1::rodeos
 
       double __floattidf(uint64_t l, uint64_t h)
       {
-         unsigned __int128 val = h;
-         val <<= 64;
-         val |= l;
+         fc::uint128_t v(h, l);
+         unsigned __int128 val = (unsigned __int128)v;
          return ___floattidf(*(__int128*)&val);
       }
 
       double __floatuntidf(uint64_t l, uint64_t h)
       {
-         unsigned __int128 val = h;
-         val <<= 64;
-         val |= l;
-         return ___floatuntidf((unsigned __int128)val);
+         fc::uint128_t v(h, l);
+         return ___floatuntidf((unsigned __int128)v);
       }
 
       double __floatsidf(int32_t i) { return from_softfloat64(i32_to_f64(i)); }
