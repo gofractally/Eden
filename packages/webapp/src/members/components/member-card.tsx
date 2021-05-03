@@ -22,7 +22,7 @@ export const MemberCard = ({ member }: Props) => {
                 />
                 <div className="text-center mt-2">
                     <Text>
-                        <Link href={`/members/${member.edenAccount}`}>
+                        <Link href={`/members/${member.account}`}>
                             {member.name}
                         </Link>
                     </Text>

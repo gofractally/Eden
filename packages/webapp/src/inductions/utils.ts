@@ -8,7 +8,7 @@ export const convertPendingProfileToMemberData = (
         templateId: 0,
         name: induction.new_member_profile.name,
         image: induction.new_member_profile.img,
-        edenAccount: induction.invitee,
+        account: induction.invitee,
         bio: induction.new_member_profile.bio,
         socialHandles: JSON.parse(induction.new_member_profile.social || "{}"),
         inductionVideo: induction.video || "",

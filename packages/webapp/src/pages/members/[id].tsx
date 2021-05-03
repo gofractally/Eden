@@ -12,7 +12,7 @@ export const MemberPage = ({ member }: Props) => {
         <RawLayout title={`${member.name}'s Profile`}>
             <MemberCard member={member} />
             <MemberCollections
-                edenAccount={member.edenAccount}
+                account={member.account}
                 templateId={member.templateId}
             />
         </RawLayout>
@@ -29,8 +29,8 @@ export default MemberPage;
 
 export const getServerSideProps: GetServerSideProps = async ({ params }) => {
     try {
-        const edenAccount = params!.id as string;
-        const member = await getMember(edenAccount);
+        const account = params!.id as string;
+        const member = await getMember(account);
         return { props: { member: member || null } };
     } catch (error) {
         console.error(">>> Fail to list eden members:" + error);
