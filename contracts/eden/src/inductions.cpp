@@ -278,7 +278,10 @@ namespace eden
       auto end = invitee_idx.end();
       while (iter != end && limit > 0 && iter->invitee() == invitee)
       {
-         iter = invitee_idx.erase(iter);
+         auto next = iter;
+         ++next;
+         erase_induction(*iter);
+         iter = next;
          --limit;
       }
       return limit;
@@ -315,7 +318,10 @@ namespace eden
       auto end = created_idx.end();
       while (iter != end && limit > 0 && !is_valid_induction(*iter))
       {
-         iter = created_idx.erase(iter);
+         auto next = iter;
+         ++next;
+         erase_induction(*iter);
+         iter = next;
          --limit;
       }
       return limit;
