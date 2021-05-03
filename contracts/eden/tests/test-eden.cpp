@@ -175,7 +175,7 @@ TEST_CASE("genesis")
               "having nothing to do: once or twice she had peeped into the book her sister was "
               "reading, but it had no pictures or conversations in it, \"and what is the use of a "
               "book,\" thought Alice \"without pictures or conversations?\"",
-              "{\"blog\":\"alice.example.com\"}"});
+              "{\"blog\":\"alice.example.com\"}", "Lewis Carroll"});
 
    t.pip.act<actions::inductprofil>(
        2, eden::new_member_profile{
@@ -183,14 +183,14 @@ TEST_CASE("genesis")
               "My father's family name being Pirrip and my Christian name Phillip, my infant "
               "tongue could make of both names nothing longer or more explicit than Pip.  So, I "
               "called myself Pip and came to be called Pip.",
-              "{\"blog\":\"pip.example.com\"}"});
+              "{\"blog\":\"pip.example.com\"}", "Charles Dickens"});
    t.egeon.act<actions::inductprofil>(
        3, eden::new_member_profile{
               "Egeon", "Qmb7WmZiSDXss5HfuKfoSf6jxTDrHzr8AoAUDeDMLNDuws",
               "In Syracusa was I born, and wed\nUnto a woman happy but for me,\nAnd by me, had not "
               "our hap been bad.\nWith her I liv'd in joy; our wealth increas'd\nBy prosperous "
               "voyages I often made\nTo Epidamnum, till my factor's death,",
-              "{\"blog\":\"egeon.example.com\"}"});
+              "{\"blog\":\"egeon.example.com\"}", "William Shakespeare"});
 
    CHECK(get_eden_account("alice"_n) == std::nullopt);
    CHECK(get_token_balance("alice"_n) == s2a("1000.0000 EOS"));
