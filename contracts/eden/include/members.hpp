@@ -29,6 +29,8 @@ namespace eden
 
    struct member
    {
+      member() = default;
+      member(const member&) = delete;
       std::variant<member_v0> value;
       EDEN_FORWARD_MEMBERS(value, account, name, status, nft_template_id);
       EDEN_FORWARD_FUNCTIONS(value, primary_key)
@@ -64,8 +66,7 @@ namespace eden
       {
       }
 
-      std::optional<member> get_member(eosio::name account);
-      member get_existing_member(eosio::name account);
+      const member& get_member(eosio::name account);
       void create(eosio::name account);
       bool is_new_member(eosio::name account) const;
       void check_active_member(eosio::name account);
