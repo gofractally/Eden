@@ -15,7 +15,7 @@ interface Props {
 
 export const MemberPage = ({ member }: Props) => {
     return member ? (
-        <RawLayout>
+        <RawLayout title={`${member.name}'s Profile`}>
             <Card>
                 <div className="flex justify-center items-center space-y-10 xl:space-y-0 xl:space-x-10 flex-col xl:flex-row">
                     <div className="max-w-xl">
@@ -30,7 +30,7 @@ export const MemberPage = ({ member }: Props) => {
             />
         </RawLayout>
     ) : (
-        <SingleColLayout>
+        <SingleColLayout title="Member not found">
             <CallToAction href="/members" buttonLabel="Browse members">
                 This account is not an active Eden member.
             </CallToAction>
