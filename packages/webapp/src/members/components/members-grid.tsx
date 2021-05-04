@@ -134,12 +134,15 @@ const AuctionBadge = ({ member }: { member: MemberData }) => {
 const SaleBadge = ({ member }: { member: MemberData }) => {
     if (member.saleId) {
         return (
-            <a
-                href={`${atomicAssets.hubUrl}/market/sale/${member.saleId}`}
-                target="_blank"
-            >
-                <div className={auctionBadgeClass}>ON SALE</div>
-            </a>
+            <div className="flex">
+                <a
+                    href={`${atomicAssets.hubUrl}/market/sale/${member.saleId}`}
+                    onClick={(e) => e.stopPropagation()}
+                    target="_blank"
+                >
+                    <div className={auctionBadgeClass}>ON SALE</div>
+                </a>
+            </div>
         );
     }
     return <></>;
