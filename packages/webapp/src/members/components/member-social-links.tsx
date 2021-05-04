@@ -1,4 +1,4 @@
-import { blockExplorerBaseUrl } from "config";
+import { blockExplorerAccountBaseUrl } from "config";
 import {
     FaBlogger,
     FaFacebook,
@@ -34,7 +34,7 @@ export const MemberSocialLinks = ({ member }: Props) => (
                 handle={member.account}
                 icon={EosCommunityIcon}
                 color="black"
-                href={`${blockExplorerBaseUrl}/account/${member.account}`}
+                href={`${blockExplorerAccountBaseUrl}/${member.account}`}
             />
             {member.socialHandles.eosCommunity && (
                 <SocialButton

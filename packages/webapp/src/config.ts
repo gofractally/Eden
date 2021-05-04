@@ -5,7 +5,7 @@ if (
     !process.env.NEXT_PUBLIC_EOS_RPC_HOST ||
     !process.env.NEXT_PUBLIC_EOS_RPC_PORT ||
     !process.env.NEXT_PUBLIC_EOS_CHAIN_ID ||
-    !process.env.NEXT_PUBLIC_BLOCKEXPLORER_BASE_URL ||
+    !process.env.NEXT_PUBLIC_BLOCKEXPLORER_ACCOUNT_BASE_URL ||
     !process.env.NEXT_PUBLIC_AA_BASE_URL ||
     !process.env.NEXT_PUBLIC_AA_MARKET_URL ||
     !process.env.NEXT_PUBLIC_AA_HUB_URL ||
@@ -26,7 +26,7 @@ EOS_RPC_PROTOCOL="${process.env.NEXT_PUBLIC_EOS_RPC_PROTOCOL}"
 EOS_RPC_HOST="${process.env.NEXT_PUBLIC_EOS_RPC_HOST}"
 EOS_RPC_PORT="${process.env.NEXT_PUBLIC_EOS_RPC_PORT}"
 EOS_CHAIN_ID="${process.env.NEXT_PUBLIC_EOS_CHAIN_ID}"
-BLOCKEXPLORER_BASE_URL="${process.env.NEXT_PUBLIC_BLOCKEXPLORER_BASE_URL}"
+BLOCKEXPLORER_ACCOUNT_BASE_URL="${process.env.NEXT_PUBLIC_BLOCKEXPLORER_ACCOUNT_BASE_URL}"
 AA_BASE_URL="${process.env.NEXT_PUBLIC_AA_BASE_URL}"
 AA_MARKET_URL="${process.env.NEXT_PUBLIC_AA_MARKET_URL}"
 AA_HUB_URL="${process.env.NEXT_PUBLIC_AA_HUB_URL}"
@@ -41,8 +41,8 @@ APP_MINIMUM_DONATION_AMOUNT="${process.env.NEXT_PUBLIC_APP_MINIMUM_DONATION_AMOU
 `);
 
 export const ipfsBaseUrl = "https://ipfs.io/ipfs"; //"https://ipfs.pink.gg/ipfs";
-export const blockExplorerBaseUrl =
-    process.env.NEXT_PUBLIC_BLOCKEXPLORER_BASE_URL;
+export const blockExplorerAccountBaseUrl =
+    process.env.NEXT_PUBLIC_BLOCKEXPLORER_ACCOUNT_BASE_URL;
 
 export const shortAppName = process.env.NEXT_PUBLIC_APP_SHORT_NAME;
 export const appName = process.env.NEXT_PUBLIC_APP_NAME;
