@@ -31,14 +31,11 @@ target_link_options(eosio-contract-base PUBLIC
     -Wl,--stack-first
     -Wl,--entry,apply
     -Wl,-z,stack-size=8192
+    $<$<OR:$<CONFIG:Release>,$<CONFIG:MinSizeRel>>:-Wl,--strip-all>
     -nostdlib
 )
 target_sources(eosio-contract-base PRIVATE eosiolib.cpp)
 set_target_properties(eosio-contract-base PROPERTIES ARCHIVE_OUTPUT_DIRECTORY ${ROOT_BINARY_DIR}/clsdk/lib-wasm)
-string(TOLOWER ${CMAKE_BUILD_TYPE} BUILD_TYPE_LOWER)
-if(BUILD_TYPE_LOWER STREQUAL release OR BUILD_TYPE_LOWER STREQUAL minsizerel)
-    target_link_options(eosio-contract-base INTERFACE -Wl,--strip-all)
-endif()
 
 # Contract with simple malloc/free
 add_library(eosio-contract-simple-malloc INTERFACE)
