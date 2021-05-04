@@ -212,7 +212,7 @@ namespace b1::rodeos
          from_bin(delta, bin);
          auto& delta_v0 = std::get<0>(delta);
          size_t num_processed = 0;
-         store_delta({view_state}, delta_v0, head == 0, [&]() {
+         store_delta({view_state}, delta_v0, [&]() {
             if (delta_v0.rows.size() > 10000 && !(num_processed % 10000))
             {
                if (shutdown())

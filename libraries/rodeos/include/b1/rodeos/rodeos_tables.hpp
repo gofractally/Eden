@@ -333,10 +333,7 @@ namespace b1::rodeos
    };
 
    template <typename Table, typename F>
-   void store_delta_typed(eosio::kv_environment environment,
-                          table_delta_v0& delta,
-                          bool bypass_preexist_check,
-                          F f)
+   void store_delta_typed(eosio::kv_environment environment, table_delta_v0& delta, F f)
    {
       Table table{environment};
       for (auto& row : delta.rows)
@@ -370,41 +367,36 @@ namespace b1::rodeos
 #endif
 
    template <typename F>
-   inline void store_delta(eosio::kv_environment environment,
-                           table_delta_v0& delta,
-                           bool bypass_preexist_check,
-                           F f)
+   inline void store_delta(eosio::kv_environment environment, table_delta_v0& delta, F f)
    {
       if (delta.name == "global_property")
-         store_delta_typed<global_property_kv>(environment, delta, bypass_preexist_check, f);
+         store_delta_typed<global_property_kv>(environment, delta, f);
       else if (delta.name == "account")
-         store_delta_typed<account_kv>(environment, delta, bypass_preexist_check, f);
+         store_delta_typed<account_kv>(environment, delta, f);
       else if (delta.name == "account_metadata")
-         store_delta_typed<account_metadata_kv>(environment, delta, bypass_preexist_check, f);
+         store_delta_typed<account_metadata_kv>(environment, delta, f);
       else if (delta.name == "code")
-         store_delta_typed<code_kv>(environment, delta, bypass_preexist_check, f);
+         store_delta_typed<code_kv>(environment, delta, f);
       else if (delta.name == "contract_table")
-         store_delta_typed<contract_table_kv>(environment, delta, bypass_preexist_check, f);
+         store_delta_typed<contract_table_kv>(environment, delta, f);
       else if (delta.name == "contract_row")
-         store_delta_typed<contract_row_kv>(environment, delta, bypass_preexist_check, f);
+         store_delta_typed<contract_row_kv>(environment, delta, f);
       else if (delta.name == "contract_index64")
-         store_delta_typed<contract_index64_kv>(environment, delta, bypass_preexist_check, f);
+         store_delta_typed<contract_index64_kv>(environment, delta, f);
       else if (delta.name == "contract_index128")
-         store_delta_typed<contract_index128_kv>(environment, delta, bypass_preexist_check, f);
+         store_delta_typed<contract_index128_kv>(environment, delta, f);
       else if (delta.name == "contract_index_double")
-         store_delta_typed<contract_index_double_kv>(environment, delta, bypass_preexist_check, f);
+         store_delta_typed<contract_index_double_kv>(environment, delta, f);
       else if (delta.name == "contract_index256")
-         store_delta_typed<contract_index256_kv>(environment, delta, bypass_preexist_check, f);
+         store_delta_typed<contract_index256_kv>(environment, delta, f);
       // else if (delta.name == "key_value")
       //    store_delta_kv(environment, delta, f);
    }
 
-   inline void store_deltas(eosio::kv_environment environment,
-                            std::vector<table_delta>& deltas,
-                            bool bypass_preexist_check)
+   inline void store_deltas(eosio::kv_environment environment, std::vector<table_delta>& deltas)
    {
       for (auto& delta : deltas)
-         store_delta(environment, std::get<table_delta_v0>(delta), bypass_preexist_check, [] {});
+         store_delta(environment, std::get<table_delta_v0>(delta), [] {});
    }
 
 }  // namespace b1::rodeos
