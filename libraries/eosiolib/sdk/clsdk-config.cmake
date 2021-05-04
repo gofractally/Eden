@@ -9,19 +9,21 @@ if(CMAKE_BUILD_TYPE STREQUAL "")
 endif()
 
 add_library(boost INTERFACE)
-target_include_directories(boost INTERFACE boost)
+target_include_directories(boost INTERFACE ${clsdk_DIR}/boost)
 
 add_library(abieos INTERFACE)
-target_include_directories(abieos INTERFACE abieos/include rapidjson/include)
+target_include_directories(abieos INTERFACE
+    ${clsdk_DIR}/abieos/include
+    ${clsdk_DIR}/rapidjson/include)
 target_link_libraries(abieos INTERFACE
-    -L${CMAKE_CURRENT_SOURCE_DIR}/lib-wasm
+    -L${clsdk_DIR}/lib-wasm
     boost
     -labieos
 )
 
 add_library(simple-malloc EXCLUDE_FROM_ALL)
 target_compile_options(simple-malloc PRIVATE -fno-exceptions -D__eosio_cdt__)
-target_sources(simple-malloc PRIVATE eosiolib/simple_malloc.cpp)
+target_sources(simple-malloc PRIVATE ${clsdk_DIR}/eosiolib/simple_malloc.cpp)
 add_custom_command(
     TARGET simple-malloc
     PRE_LINK
@@ -30,7 +32,7 @@ add_custom_command(
 )
 
 add_library(eosio-core INTERFACE)
-target_include_directories(eosio-core INTERFACE eosiolib/core/include)
+target_include_directories(eosio-core INTERFACE ${clsdk_DIR}/eosiolib/core/include)
 target_compile_options(eosio-core INTERFACE -fno-exceptions -D__eosio_cdt__)
 target_link_libraries(eosio-core INTERFACE
     -leosio-core
@@ -40,8 +42,8 @@ target_link_libraries(eosio-core INTERFACE
 add_library(eosio-contract-base INTERFACE)
 target_link_libraries(eosio-contract-base INTERFACE eosio-core)
 target_include_directories(eosio-contract-base INTERFACE
-    contracts
-    eosiolib/contracts/include
+    ${clsdk_DIR}/contracts
+    ${clsdk_DIR}/eosiolib/contracts/include
 )
 target_compile_options(eosio-contract-base INTERFACE -DCOMPILING_CONTRACT)
 target_link_options(eosio-contract-base INTERFACE
@@ -86,13 +88,13 @@ target_link_libraries(cltestlib INTERFACE
     -lcltestlib
 )
 target_include_directories(cltestlib INTERFACE
-    catch2/include
-    contracts
-    eosiolib/contracts/include
-    eosiolib/tester/include
+    ${clsdk_DIR}/catch2/include
+    ${clsdk_DIR}/contracts
+    ${clsdk_DIR}/eosiolib/contracts/include
+    ${clsdk_DIR}/eosiolib/tester/include
 )
 target_compile_options(cltestlib INTERFACE
-    -DCLSDK_CONTRACTS_DIR=\"${CMAKE_CURRENT_SOURCE_DIR}/contracts/\"
+    -DCLSDK_CONTRACTS_DIR=\"${clsdk_DIR}/contracts/\"
     -DCATCH_CONFIG_NO_POSIX_SIGNALS
     -DCATCH_CONFIG_DISABLE_EXCEPTIONS
 )
