@@ -16,8 +16,9 @@ namespace eden
       std::string img;
       std::string bio;
       std::string social;
+      std::string attributions; // may be empty
    };
-   EOSIO_REFLECT(new_member_profile, name, img, bio, social)
+   EOSIO_REFLECT(new_member_profile, name, img, bio, social, attributions)
 
    struct induction_v0
    {
