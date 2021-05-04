@@ -10,6 +10,11 @@ interface Props {
     members: MemberData[];
 }
 
+const openInNewTab = (url: string) => {
+    const newWindow = window.open(url, "_blank", "noopener,noreferrer");
+    if (newWindow) newWindow.opener = null;
+};
+
 export const MembersGrid = ({ members }: Props) => {
     const containerClass = `grid grid-cols-1 max-w-xs sm:max-w-xl md:max-w-none sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-5 mx-auto`;
     return (
@@ -44,7 +49,7 @@ export const MemberSquare = ({ member }: { member: MemberData }) => {
     if (member.account) {
         return (
             <Link href={`/members/${member.account}`}>
-                <div className="cursor-pointer">{memberCard}</div>
+                <a>{memberCard}</a>
             </Link>
         );
     }
@@ -83,15 +88,17 @@ const AssetBadge = ({ member }: { member: MemberData }) => {
     const assetBadgeClass = `${baseBadge} py-0.5 text-white tracking-wider font-medium bg-gray-500 hover:bg-gray-600 transition`;
     if (member.assetData) {
         return (
-            <a
-                href={`${atomicAssets.hubUrl}/explorer/asset/${member.assetData.assetId}`}
-                onClick={(e) => e.stopPropagation()}
-                target="_blank"
+            <div
+                className={assetBadgeClass}
+                onClick={(e) => {
+                    e.preventDefault();
+                    openInNewTab(
+                        `${atomicAssets.hubUrl}/explorer/asset/${member?.assetData?.assetId}`
+                    );
+                }}
             >
-                <div className={assetBadgeClass}>
-                    NFT #{member.assetData.templateMint}
-                </div>
-            </a>
+                NFT #{member.assetData.templateMint}
+            </div>
         );
     }
     return <></>;
@@ -101,20 +108,8 @@ const MemberNames = ({ member }: { member: MemberData }) => (
     <div className="tracking-tighter my-1 leading-none">
         {member.account ? (
             <>
-                <a
-                    href={`/members/${member.account}`}
-                    onClick={(e) => e.stopPropagation()}
-                    className="block font-medium hover:underline"
-                >
-                    {member.name}
-                </a>
-                <a
-                    href={`/members/${member.account}`}
-                    onClick={(e) => e.stopPropagation()}
-                    className="block text-sm text-gray-600"
-                >
-                    @{member.account}
-                </a>
+                <p className="font-medium">{member.name}</p>
+                <p className="text-sm text-gray-600">@{member.account}</p>
             </>
         ) : (
             member.name
@@ -128,15 +123,17 @@ const AuctionBadge = ({ member }: { member: MemberData }) => {
     if (member.auctionData) {
         return (
             <div className="flex">
-                <a
-                    href={`${atomicAssets.hubUrl}/market/auction/${member.auctionData.auctionId}`}
-                    onClick={(e) => e.stopPropagation()}
-                    target="_blank"
+                <div
+                    className={auctionBadgeClass}
+                    onClick={(e) => {
+                        e.preventDefault();
+                        openInNewTab(
+                            `${atomicAssets.hubUrl}/market/auction/${member?.auctionData?.auctionId}`
+                        );
+                    }}
                 >
-                    <div className={auctionBadgeClass}>
-                        🧑‍⚖️ {assetToString(member.auctionData.price, 2)}
-                    </div>
-                </a>
+                    🧑‍⚖️ {assetToString(member.auctionData.price, 2)}
+                </div>
             </div>
         );
     }
@@ -147,13 +144,17 @@ const SaleBadge = ({ member }: { member: MemberData }) => {
     if (member.saleId) {
         return (
             <div className="flex">
-                <a
-                    href={`${atomicAssets.hubUrl}/market/sale/${member.saleId}`}
-                    onClick={(e) => e.stopPropagation()}
-                    target="_blank"
+                <div
+                    className={auctionBadgeClass}
+                    onClick={(e) => {
+                        e.preventDefault();
+                        openInNewTab(
+                            `${atomicAssets.hubUrl}/market/sale/${member.saleId}`
+                        );
+                    }}
                 >
-                    <div className={auctionBadgeClass}>ON SALE</div>
-                </a>
+                    ON SALE
+                </div>
             </div>
         );
     }
