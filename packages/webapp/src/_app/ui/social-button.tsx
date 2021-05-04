@@ -6,6 +6,7 @@ interface Props {
     href: string;
     icon: IconType;
     color?: string;
+    size?: number;
     className?: string;
 }
 
@@ -14,6 +15,7 @@ const BASE_CLASS = "hover:underline items-center flex space-x-2";
 export const SocialButton = ({
     handle,
     color,
+    size = 6,
     icon,
     href,
     className,
@@ -22,7 +24,7 @@ export const SocialButton = ({
     const buttonClass = `${className || ""} ${buttonColor} ` + BASE_CLASS;
 
     const formattedIcon = React.createElement(icon, {
-        className: "w-6 h-6 inline-flex",
+        className: `w-${size} h-${size} inline-flex`,
     });
 
     return (
