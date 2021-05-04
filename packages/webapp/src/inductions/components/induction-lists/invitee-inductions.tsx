@@ -1,5 +1,4 @@
 import dayjs from "dayjs";
-import * as relativeTime from "dayjs/plugin/relativeTime";
 
 import {
     ActionButton,
@@ -13,8 +12,6 @@ import * as InductionTable from "_app/ui/table";
 import { getEndorsementsByInductionId } from "../../api";
 import { getInductionStatus } from "../../utils";
 import { Endorsement, Induction, InductionStatus } from "../../interfaces";
-
-dayjs.extend(relativeTime.default);
 
 interface Props {
     inductions: Induction[];

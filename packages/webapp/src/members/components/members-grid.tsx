@@ -1,13 +1,10 @@
 import React from "react";
 import Link from "next/link";
 import dayjs from "dayjs";
-import * as localizedFormat from "dayjs/plugin/localizedFormat";
 
 import { atomicAssets, ipfsBaseUrl } from "config";
 import { MemberData } from "../interfaces";
 import { assetToString } from "_app";
-
-dayjs.extend(localizedFormat.default);
 
 interface Props {
     members: MemberData[];

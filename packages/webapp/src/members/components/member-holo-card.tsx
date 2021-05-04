@@ -1,11 +1,8 @@
 import dayjs from "dayjs";
-import * as localizedFormat from "dayjs/plugin/localizedFormat";
 import useDimensions from "react-cool-dimensions";
 
 import { ipfsBaseUrl } from "config";
 import { MemberData } from "members";
-
-dayjs.extend(localizedFormat.default);
 
 // TODO: 2x, 1x images for sharper images
 export const MemberHoloCard = ({ member }: { member: MemberData }) => {
