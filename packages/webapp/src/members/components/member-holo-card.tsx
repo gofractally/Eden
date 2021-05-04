@@ -10,6 +10,12 @@ dayjs.extend(localizedFormat.default);
 // TODO: 2x, 1x images for sharper images
 export const MemberHoloCard = ({ member }: { member: MemberData }) => {
     const { observe, width } = useDimensions<HTMLDivElement | null>();
+
+    const attributions = member.attributions
+        ? ` Attribution: ${member.attributions}`
+        : "";
+    const memberImageTitle = `Member image for ${member.name}.${attributions}`;
+
     return (
         <div
             className="relative rounded-xl overflow-hidden text-white"
@@ -24,7 +30,7 @@ export const MemberHoloCard = ({ member }: { member: MemberData }) => {
                 <img
                     src={`${ipfsBaseUrl}/${member.image}`}
                     className="rounded-full object-cover bg-white"
-                    title={member.attributions || undefined}
+                    title={memberImageTitle}
                     style={{
                         boxShadow: "0px 3px 6px rgba(0, 0, 0, 0.68)",
                         width: width / 4,
