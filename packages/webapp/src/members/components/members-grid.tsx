@@ -44,7 +44,7 @@ export const MemberSquare = ({ member }: { member: MemberData }) => {
     if (member.account) {
         return (
             <Link href={`/members/${member.account}`}>
-                <a>{memberCard}</a>
+                <div className="cursor-pointer">{memberCard}</div>
             </Link>
         );
     }
@@ -101,8 +101,20 @@ const MemberNames = ({ member }: { member: MemberData }) => (
     <div className="tracking-tighter my-1 leading-none">
         {member.account ? (
             <>
-                <p className="font-medium">{member.name}</p>
-                <p className="text-sm text-gray-600">@{member.account}</p>
+                <a
+                    href={`/members/${member.account}`}
+                    onClick={(e) => e.stopPropagation()}
+                    className="block font-medium hover:underline"
+                >
+                    {member.name}
+                </a>
+                <a
+                    href={`/members/${member.account}`}
+                    onClick={(e) => e.stopPropagation()}
+                    className="block text-sm text-gray-600"
+                >
+                    @{member.account}
+                </a>
             </>
         ) : (
             member.name
