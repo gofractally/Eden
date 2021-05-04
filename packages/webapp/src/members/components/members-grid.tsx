@@ -44,7 +44,7 @@ export const MemberSquare = ({ member }: { member: MemberData }) => {
     if (member.account) {
         return (
             <Link href={`/members/${member.account}`}>
-                <div className="cursor-pointer">{memberCard}</div>
+                <a>{memberCard}</a>
             </Link>
         );
     }
