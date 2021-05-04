@@ -100,6 +100,7 @@ const SubmissionForm = ({ ual }: WithUALProps) => {
             bio: fields.bio,
             video: fields.inductionVideo,
             social: JSON.stringify(socialHandles),
+            attributions: "",
         };
 
         const inductors = fields.inductors
