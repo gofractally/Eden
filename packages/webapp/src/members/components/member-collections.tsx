@@ -76,6 +76,7 @@ const externalOwnersCards = (owner: string): MemberData => {
         bio: "",
         socialHandles: {},
         inductionVideo: "",
+        attributions: "",
         createdAt: 0,
     };
 };

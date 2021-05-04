@@ -3,6 +3,7 @@ export interface NewMemberProfile {
     img: string;
     bio: string;
     social: string;
+    attributions: string;
 }
 
 export interface Induction {

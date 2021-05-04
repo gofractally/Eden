@@ -6,6 +6,7 @@ export interface EdenNftData {
     account: string;
     bio: string;
     video: string;
+    attributions: string;
     social?: string;
 }
 

@@ -12,6 +12,7 @@ export const convertPendingProfileToMemberData = (
         bio: induction.new_member_profile.bio,
         socialHandles: JSON.parse(induction.new_member_profile.social || "{}"),
         inductionVideo: induction.video || "",
+        attributions: induction.new_member_profile.attributions || "",
         createdAt: 0,
     };
 };
