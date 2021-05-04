@@ -78,6 +78,21 @@ export const InductionProfileForm = ({
             </Form.LabeledSet>
 
             <Form.LabeledSet
+                label="Attributions"
+                htmlFor="attributions"
+                className="col-span-6"
+            >
+                <Form.Input
+                    id="attributions"
+                    type="text"
+                    disabled={isLoading || disabled}
+                    value={fields.attributions}
+                    placeholder="Profile Image Copyrights Attributions (optional)"
+                    onChange={onChangeFields}
+                />
+            </Form.LabeledSet>
+
+            <Form.LabeledSet
                 label="Biography"
                 htmlFor="bio"
                 className="col-span-6"

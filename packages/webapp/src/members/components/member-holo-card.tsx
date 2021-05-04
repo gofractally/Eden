@@ -24,6 +24,7 @@ export const MemberHoloCard = ({ member }: { member: MemberData }) => {
                 <img
                     src={`${ipfsBaseUrl}/${member.image}`}
                     className="rounded-full object-cover bg-white"
+                    title={member.attributions || undefined}
                     style={{
                         boxShadow: "0px 3px 6px rgba(0, 0, 0, 0.68)",
                         width: width / 4,
