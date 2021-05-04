@@ -70,7 +70,7 @@ namespace eden
       members{get_self()}.check_pending_member(induction.invitee());
 
       eosio::check(inductions.is_endorser(id, account),
-                   "Induction  can only be endorsed by inviter or a witness");
+                   "Induction can only be endorsed by inviter or a witness");
       inductions.endorse(induction, account, induction_data_hash);
    }
 
