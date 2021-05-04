@@ -1,6 +1,5 @@
 import React from "react";
 import { FaVideo } from "react-icons/fa";
-import Link from "next/link";
 
 import { Button, Heading, SmallText, Text } from "_app";
 import { ipfsBaseUrl } from "config";
