@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 
-import { Button } from "_app";
+import { Button, Card } from "_app";
 
 import { getCollection, getCollectedBy } from "../api";
 import { MemberData } from "../interfaces";
@@ -37,33 +37,27 @@ export const MemberCollections = ({ account, templateId }: Props) => {
     }, [account, templateId, tab]);
 
     return (
-        <div className="px-5 py-5 mx-auto flex justify-around">
-            <div className="bg-white rounded-lg p-8 w-full mt-0 md:mt-0 shadow-md">
-                <Button
-                    color="gray"
-                    outline={tab !== "collection"}
-                    disabled={tab === "collection"}
-                    onClick={() => setTab("collection")}
-                >
-                    Collection
-                </Button>
-                <Button
-                    color="gray"
-                    outline={tab !== "collectedBy"}
-                    disabled={tab === "collectedBy"}
-                    onClick={() => setTab("collectedBy")}
-                    className="ml-4"
-                >
-                    Collected By
-                </Button>
-                <hr className="m-2" />
-                {isLoading ? (
-                    "loading..."
-                ) : (
-                    <MembersGrid members={members || []} />
-                )}
-            </div>
-        </div>
+        <Card>
+            <Button
+                color="gray"
+                outline={tab !== "collection"}
+                disabled={tab === "collection"}
+                onClick={() => setTab("collection")}
+            >
+                Collection
+            </Button>
+            <Button
+                color="gray"
+                outline={tab !== "collectedBy"}
+                disabled={tab === "collectedBy"}
+                onClick={() => setTab("collectedBy")}
+                className="ml-4"
+            >
+                Collected By
+            </Button>
+            <hr className="m-2" />
+            {isLoading ? "loading..." : <MembersGrid members={members || []} />}
+        </Card>
     );
 };
 

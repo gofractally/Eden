@@ -28,65 +28,68 @@ const urlify = (address: string) => {
 };
 
 export const MemberSocialLinks = ({ member }: Props) => (
-    <div className="flex flex-col sm:flex-row">
-        <div className="space-y-2">
+    <div className="flex flex-col flex-wrap max-h-24 text-sm">
+        <SocialButton
+            handle={member.account}
+            icon={EosCommunityIcon}
+            color="black"
+            size={4}
+            href={`${blockExplorerAccountBaseUrl}/${member.account}`}
+        />
+        {member.socialHandles.eosCommunity && (
             <SocialButton
-                handle={member.account}
-                icon={EosCommunityIcon}
+                handle={member.socialHandles.eosCommunity}
+                icon={IoChatbubblesOutline}
                 color="black"
-                href={`${blockExplorerAccountBaseUrl}/${member.account}`}
+                size={4}
+                href={`https://eoscommunity.org/u/${member.socialHandles.eosCommunity}`}
             />
-            {member.socialHandles.eosCommunity && (
-                <SocialButton
-                    handle={member.socialHandles.eosCommunity}
-                    icon={IoChatbubblesOutline}
-                    color="gray"
-                    href={`https://eoscommunity.org/u/${member.socialHandles.eosCommunity}`}
-                />
-            )}
-            {member.socialHandles.blog && (
-                <SocialButton
-                    handle="Blog"
-                    icon={FaBlogger}
-                    color="yellow"
-                    href={urlify(member.socialHandles.blog)}
-                />
-            )}
-        </div>
-        <div className="mt-2 sm:mt-0 sm:ml-4 space-y-2">
-            {member.socialHandles.twitter && (
-                <SocialButton
-                    handle={member.socialHandles.twitter}
-                    icon={FaTwitter}
-                    color="blue"
-                    href={`https://twitter.com/${member.socialHandles.twitter}`}
-                />
-            )}
-            {member.socialHandles.telegram && (
-                <SocialButton
-                    handle={member.socialHandles.telegram}
-                    icon={FaTelegram}
-                    color="blue"
-                    href={`https://t.me/${member.socialHandles.telegram}`}
-                />
-            )}
-            {member.socialHandles.linkedin && (
-                <SocialButton
-                    handle={member.socialHandles.linkedin}
-                    icon={FaLinkedin}
-                    color="blue"
-                    href={`https://www.linkedin.com/in/${member.socialHandles.linkedin}`}
-                />
-            )}
-            {member.socialHandles.facebook && (
-                <SocialButton
-                    handle={member.socialHandles.facebook}
-                    icon={FaFacebook}
-                    color="indigo"
-                    href={`https://facebook.com/${member.socialHandles.facebook}`}
-                />
-            )}
-        </div>
+        )}
+        {member.socialHandles.blog && (
+            <SocialButton
+                handle="Blog"
+                icon={FaBlogger}
+                color="black"
+                size={4}
+                href={urlify(member.socialHandles.blog)}
+            />
+        )}
+        {member.socialHandles.twitter && (
+            <SocialButton
+                handle={member.socialHandles.twitter}
+                icon={FaTwitter}
+                color="black"
+                size={4}
+                href={`https://twitter.com/${member.socialHandles.twitter}`}
+            />
+        )}
+        {member.socialHandles.telegram && (
+            <SocialButton
+                handle={member.socialHandles.telegram}
+                icon={FaTelegram}
+                color="black"
+                size={4}
+                href={`https://t.me/${member.socialHandles.telegram}`}
+            />
+        )}
+        {member.socialHandles.linkedin && (
+            <SocialButton
+                handle={member.socialHandles.linkedin}
+                icon={FaLinkedin}
+                color="black"
+                size={4}
+                href={`https://www.linkedin.com/in/${member.socialHandles.linkedin}`}
+            />
+        )}
+        {member.socialHandles.facebook && (
+            <SocialButton
+                handle={member.socialHandles.facebook}
+                icon={FaFacebook}
+                color="black"
+                size={4}
+                href={`https://facebook.com/${member.socialHandles.facebook}`}
+            />
+        )}
     </div>
 );
 
