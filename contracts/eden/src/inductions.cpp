@@ -193,6 +193,10 @@ namespace eden
           {"bio", induction.new_member_profile().bio},
           {"social", induction.new_member_profile().social},
           {"video", induction.video()}};
+      if (!induction.new_member_profile().attributions.empty())
+      {
+         immutable_data.push_back({"attributions", induction.new_member_profile().attributions});
+      }
       const auto collection_name = contract;
       eosio::action{{contract, "active"_n},
                     atomic_assets_account,

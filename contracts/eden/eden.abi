@@ -297,6 +297,10 @@
                 {
                     "name": "social",
                     "type": "string"
+                },
+                {
+                    "name": "attributions",
+                    "type": "string"
                 }
             ]
         },

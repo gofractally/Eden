@@ -79,21 +79,21 @@ static const eden::new_member_profile alice_profile{
     "having nothing to do: once or twice she had peeped into the book her sister was "
     "reading, but it had no pictures or conversations in it, \"and what is the use of a "
     "book,\" thought Alice \"without pictures or conversations?\"",
-    "{\"blog\":\"alice.example.com\"}"};
+    "{\"blog\":\"alice.example.com\"}", "Lewis Carroll"};
 
 static const eden::new_member_profile pip_profile{
     "Philip Pirrip", "Qmb7WmZiSDXss5HfuKfoSf6jxTDrHzr8AoAUDeDMLNDuws",
     "My father's family name being Pirrip and my Christian name Phillip, my infant "
     "tongue could make of both names nothing longer or more explicit than Pip.  So, I "
     "called myself Pip and came to be called Pip.",
-    "{\"blog\":\"pip.example.com\"}"};
+    "{\"blog\":\"pip.example.com\"}", "Charles Dickens"};
 
 static const eden::new_member_profile egeon_profile{
     "Egeon", "Qmb7WmZiSDXss5HfuKfoSf6jxTDrHzr8AoAUDeDMLNDuws",
     "In Syracusa was I born, and wed\nUnto a woman happy but for me,\nAnd by me, had not "
     "our hap been bad.\nWith her I liv'd in joy; our wealth increas'd\nBy prosperous "
     "voyages I often made\nTo Epidamnum, till my factor's death,",
-    "{\"blog\":\"egeon.example.com\"}"};
+    "{\"blog\":\"egeon.example.com\"}", "William Shakespeare"};
 
 static const eden::new_member_profile bertie_profile{
     "Bertie Wooster", "Qmb7WmZiSDXss5HfuKfoSf6jxTDrHzr8AoAUDeDMLNDuws",

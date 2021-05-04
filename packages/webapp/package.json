@@ -15,6 +15,7 @@
         "hash.js": "^1.1.7",
         "next": "~10",
         "react": "~17",
+        "react-cool-dimensions": "^2.0.3",
         "react-dom": "~17",
         "react-hot-toast": "^1.0.2",
         "react-icons": "^4.2.0",
