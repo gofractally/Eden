@@ -8,7 +8,6 @@ import { MemberData } from "members";
 dayjs.extend(localizedFormat.default);
 
 // TODO: 2x, 1x images for sharper images
-// TODO: Do not depend on breakpoints to set sizes :/
 export const MemberHoloCard = ({ member }: { member: MemberData }) => {
     const { observe, width } = useDimensions<HTMLDivElement | null>();
     return (
@@ -18,7 +17,10 @@ export const MemberHoloCard = ({ member }: { member: MemberData }) => {
             ref={observe}
         >
             <img src="/images/eden-profile-bg@3x.png" />
-            <div className="absolute inset-0 flex flex-col justify-between p-4 sm:p-8 lg:p-12">
+            <div
+                className="absolute inset-0 flex flex-col justify-between"
+                style={{ padding: width * 0.047 }}
+            >
                 <img
                     src={`${ipfsBaseUrl}/${member.image}`}
                     className="rounded-full object-cover bg-white"
@@ -29,13 +31,22 @@ export const MemberHoloCard = ({ member }: { member: MemberData }) => {
                     }}
                 />
                 <div>
-                    <p className="text-xs sm:text-base md:text-lg lg:text-xl py-3 lg:py-4 sm:tracking-wider leading-none sm:leading-normal">
+                    <p
+                        className="py-3 lg:py-4 sm:tracking-wider leading-none sm:leading-normal"
+                        style={{ fontSize: Math.max(width * 0.02, 10) }}
+                    >
                         {dayjs(member.createdAt).format("L")}
                     </p>
-                    <p className="text-xl sm:text-4xl lg:text-6xl font-medium leading-none lg:leading-tight">
+                    <p
+                        className="font-medium leading-none"
+                        style={{ fontSize: width * 0.058 }}
+                    >
                         {member.name}
                     </p>
-                    <p className="text-sm sm:text-2xl lg:text-4xl font-light sm:tracking-wide">
+                    <p
+                        className="font-light sm:tracking-wide"
+                        style={{ fontSize: width * 0.035 }}
+                    >
                         Eden: @{member.account}
                     </p>
                 </div>
