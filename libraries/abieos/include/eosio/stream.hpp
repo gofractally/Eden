@@ -213,12 +213,12 @@ namespace eosio
       const char* pos;
       const char* end;
 
-      input_stream() : pos{nullptr}, end{nullptr} {}
-      input_stream(const char* pos, size_t size) : pos{pos}, end{pos + size} {}
-      input_stream(const char* pos, const char* end) : pos{pos}, end{end} {}
+      constexpr input_stream() : pos{nullptr}, end{nullptr} {}
+      constexpr input_stream(const char* pos, size_t size) : pos{pos}, end{pos + size} {}
+      constexpr input_stream(const char* pos, const char* end) : pos{pos}, end{end} {}
       input_stream(const std::vector<char>& v) : pos{v.data()}, end{v.data() + v.size()} {}
-      input_stream(std::string_view v) : pos{v.data()}, end{v.data() + v.size()} {}
-      input_stream(const input_stream&) = default;
+      constexpr input_stream(std::string_view v) : pos{v.data()}, end{v.data() + v.size()} {}
+      constexpr input_stream(const input_stream&) = default;
 
       input_stream& operator=(const input_stream&) = default;
 

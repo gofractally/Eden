@@ -16,8 +16,9 @@ namespace eden
       std::string img;
       std::string bio;
       std::string social;
+      std::string attributions;  // may be empty
    };
-   EOSIO_REFLECT(new_member_profile, name, img, bio, social)
+   EOSIO_REFLECT(new_member_profile, name, img, bio, social, attributions)
 
    struct induction_v0
    {
@@ -160,6 +161,7 @@ namespace eden
 
       const induction& get_induction(uint64_t id) const;
       const induction& get_endorsed_induction(eosio::name invitee) const;
+      bool has_induction(eosio::name invitee) const;
 
       void initialize_induction(uint64_t id,
                                 eosio::name inviter,
@@ -180,9 +182,9 @@ namespace eden
       void create_nfts(const induction& induction, int32_t template_id);
       void start_auction(const induction& induction, uint64_t asset_id);
       void erase_induction(const induction& induction);
-      uint32_t erase_expired(uint32_t limit);
+      uint32_t erase_expired(uint32_t limit, std::vector<eosio::name>& removed_members);
       uint32_t erase_by_inductee(eosio::name inductee, uint32_t limit);
-      uint32_t gc(uint32_t limit);
+      uint32_t gc(uint32_t limit, std::vector<eosio::name>& removed_members);
       void queue_gc(eosio::name inductee);
       void create_induction(uint64_t id,
                             eosio::name inviter,

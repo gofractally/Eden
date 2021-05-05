@@ -5,28 +5,6 @@ export type Step = {
     text: string;
 };
 
-const theSteps: Step[] = [
-    {
-        title: "GET INVITED",
-        text: "Make sure you have an EOS address",
-    },
-    {
-        title: "GET ENDORSED",
-        text: "Induction ceremony",
-    },
-    {
-        title: "DONATE",
-        text: "Donate 10 EOS to the Eden community",
-    },
-    {
-        title: "YOU'RE IN",
-        text: "You're a member! And your Eden member NFTs are minted",
-    },
-];
-
-const theCurrentStep = 2;
-const completed = false;
-
 interface SingleStepProps {
     step: Step;
     last: boolean;
@@ -70,9 +48,9 @@ const CompleteStepPath = ({ last }: StepPath) => (
             <svg
                 fill="none"
                 stroke="currentColor"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                stroke-width="4"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth="4"
                 className="w-8 h-8"
                 viewBox="0 0 52 52"
             >
@@ -91,9 +69,9 @@ const CurrentStepPath = ({ last }: StepPath) => (
         )}
         <div className="flex-shrink-0 w-10 h-10 rounded-full border-4 border-blue-500 bg-white inline-flex items-center justify-center text-white relative z-10">
             <svg
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                stroke-width="4"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth="4"
                 className="w-9 h-9 fill-current stroke-current text-blue-500"
                 viewBox="0 0 36 120"
             >
@@ -121,16 +99,17 @@ export const Steps = ({
 }: {
     steps: Step[];
     currentStep: number;
-    isComplete: boolean;
+    isComplete?: boolean;
 }) => {
     return (
         <section className="text-gray-600 body-font">
-            <div className="container px-5 py-24 mx-auto flex flex-wrap">
+            <div className="container p-5 mx-auto flex flex-wrap">
                 <div className="flex flex-wrap">
                     <div className="md:pr-10 md:py-6">
                         {steps.map((s, i) => {
                             return (
                                 <SingleStep
+                                    key={`step-1-${s.title}`}
                                     step={s}
                                     last={i === steps.length - 1}
                                     current={i === currentStep - 1}

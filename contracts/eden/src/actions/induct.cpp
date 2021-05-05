@@ -70,7 +70,7 @@ namespace eden
       members{get_self()}.check_pending_member(induction.invitee());
 
       eosio::check(inductions.is_endorser(id, account),
-                   "Induction  can only be endorsed by inviter or a witness");
+                   "Induction can only be endorsed by inviter or a witness");
       inductions.endorse(induction, account, induction_data_hash);
    }
 
@@ -120,7 +120,16 @@ namespace eden
    void eden::gc(uint32_t limit)
    {
       inductions inductions{get_self()};
-      eosio::check(inductions.gc(limit) != limit, "Nothing to do.");
+      std::vector<eosio::name> removed_members;
+      eosio::check(inductions.gc(limit, removed_members) != limit, "Nothing to do.");
+      if (!removed_members.empty())
+      {
+         members members(get_self());
+         for (auto member : removed_members)
+         {
+            members.remove_if_pending(member);
+         }
+      }
    }
 
    void eden::inductcancel(eosio::name account, uint64_t id)
@@ -133,7 +142,14 @@ namespace eden
       eosio::check(inductions.is_endorser(id, account),
                    "Induction can only be canceled by inviter or a witness");
 
-      inductions.erase_induction(inductions.get_induction(id));
+      const auto& induction = inductions.get_induction(id);
+      auto invitee = induction.invitee();
+      inductions.erase_induction(induction);
+      if (!inductions.has_induction(invitee))
+      {
+         members members(get_self());
+         members.remove_if_pending(invitee);
+      }
    }
 
 }  // namespace eden

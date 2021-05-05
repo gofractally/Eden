@@ -6,6 +6,13 @@ ProcessorCount(NUM_PROCS)
 add_library(rapidjson INTERFACE)
 target_include_directories(rapidjson INTERFACE rapidjson/include)
 
+if(IS_WASM)
+    copy_headers(rapidjson/include/rapidjson rapidjson/include/rapidjson)
+    copy_headers(rapidjson/include/rapidjson/error rapidjson/include/rapidjson/error)
+    copy_headers(rapidjson/include/rapidjson/internal rapidjson/include/rapidjson/internal)
+    configure_file(rapidjson/license.txt ${ROOT_BINARY_DIR}/clsdk/licenses/LICENSE.rapidjson COPYONLY)
+endif()
+
 if(CMAKE_BUILD_TYPE STREQUAL "Debug")
     set(FC_SUFFIX _debug)
 endif()
@@ -18,7 +25,13 @@ if(IS_NATIVE)
         TEST_EXCLUDE_FROM_MAIN 1
         EXCLUDE_FROM_ALL 1
         BUILD_COMMAND cmake --build . -t eosio_chain -t appbase -j ${NUM_PROCS}
-        INSTALL_COMMAND sh -c "mkdir -p ${ROOT_BINARY_DIR}/eos && cp -p `find . -name '*.a'` ${ROOT_BINARY_DIR}/eos"
+        INSTALL_COMMAND sh -c "                                             \
+            mkdir -p ${ROOT_BINARY_DIR}/eos &&                              \
+            mkdir -p ${ROOT_BINARY_DIR}/clsdk/licenses &&                   \
+            cp -p `find . -name '*.a'` ${ROOT_BINARY_DIR}/eos &&            \
+            cp -a                                                           \
+                ${CMAKE_CURRENT_BINARY_DIR}/eos/licenses/eosio/LICENSE.*    \
+                ${ROOT_BINARY_DIR}/clsdk/licenses"
         CMAKE_ARGS
             -DENABLE_OC=OFF
             -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
@@ -142,11 +155,26 @@ target_include_directories(fmt INTERFACE ${CMAKE_BINARY_DIR}/fmt/include)
 target_link_libraries(fmt INTERFACE ${CMAKE_BINARY_DIR}/fmt/lib/libfmt.a)
 add_dependencies(fmt fmt-ext)
 
+if(IS_WASM)
+    set(CATCH2_INSTALL_COMMAND
+        INSTALL_COMMAND sh -c "                                     \
+            cmake --install . &&                                    \
+            mkdir -p ${ROOT_BINARY_DIR}/clsdk/catch2 &&             \
+            cp -a                                                   \
+                ${CMAKE_BINARY_DIR}/catch2/include                  \
+                ${ROOT_BINARY_DIR}/clsdk/catch2 &&                  \
+            cp                                                      \
+                ${CMAKE_CURRENT_SOURCE_DIR}/Catch2/LICENSE.txt      \
+                ${ROOT_BINARY_DIR}/clsdk/licenses/LICENSE.catch2"
+    )
+endif()
+
 ExternalProject_Add(catch2-ext
     SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/Catch2
     BINARY_DIR catch2
     TEST_EXCLUDE_FROM_MAIN 1
     EXCLUDE_FROM_ALL 1
+    ${CATCH2_INSTALL_COMMAND}
     CMAKE_ARGS
         -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
         -DCMAKE_INSTALL_PREFIX=${CMAKE_BINARY_DIR}/catch2

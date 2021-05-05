@@ -7,6 +7,7 @@ export interface MemberData {
     image: string;
     account: string;
     bio: string;
+    attributions: string;
     socialHandles: EdenNftSocialHandles;
     inductionVideo: string;
     createdAt: number;

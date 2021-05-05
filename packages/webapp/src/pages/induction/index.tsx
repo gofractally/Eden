@@ -13,6 +13,7 @@ import {
     Endorsement,
     PendingInductions,
     getCurrentInductions,
+    GetAnInviteCTA,
 } from "inductions";
 import { MemberStatus } from "members";
 
@@ -53,15 +54,21 @@ export const InductionPage = () => {
     const thereAreInductions = inductions.length > 0;
     const thereAreRecords = thereAreInductions || thereAreEndorsements;
 
-    return (
-        <SingleColLayout>
-            {!ualAccount ? (
+    const renderContents = () => {
+        if (!ualAccount) {
+            return (
                 <CallToAction buttonLabel="Sign in" onClick={ualShowModal}>
                     Welcome to Eden. Sign in using your wallet.
                 </CallToAction>
-            ) : isLoading ? (
-                <Card title="Loading...">...</Card>
-            ) : edenMember ? (
+            );
+        }
+
+        if (isLoading) {
+            return <Card title="Loading...">...</Card>;
+        }
+
+        if (edenMember) {
+            return (
                 <>
                     {!isActiveCommunity && <GenesisBanner />}
                     <InviteBanner
@@ -75,13 +82,14 @@ export const InductionPage = () => {
                         isActiveMember={isActiveMember}
                     />
                 </>
-            ) : (
-                <CallToAction buttonLabel="Get started" href="#">
-                    Ready to join Eden? The membership process begins with an
-                    invitation. Reach out to a current member to get yours!
-                </CallToAction>
-            )}
-        </SingleColLayout>
+            );
+        }
+
+        return <GetAnInviteCTA />;
+    };
+
+    return (
+        <SingleColLayout title="Membership">{renderContents()}</SingleColLayout>
     );
 };
 

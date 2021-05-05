@@ -37,13 +37,6 @@ namespace token
          return ac.balance;
       }
 
-      using create_action = eosio::action_wrapper<"create"_n, &contract::create>;
-      using issue_action = eosio::action_wrapper<"issue"_n, &contract::issue>;
-      using retire_action = eosio::action_wrapper<"retire"_n, &contract::retire>;
-      using transfer_action = eosio::action_wrapper<"transfer"_n, &contract::transfer>;
-      using open_action = eosio::action_wrapper<"open"_n, &contract::open>;
-      using close_action = eosio::action_wrapper<"close"_n, &contract::close>;
-
       struct account
       {
          eosio::asset balance;

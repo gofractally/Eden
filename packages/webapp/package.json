@@ -14,16 +14,21 @@
         "eosjs": "^21.0.3",
         "hash.js": "^1.1.7",
         "next": "~10",
+        "nprogress": "^0.2.0",
         "react": "~17",
+        "react-cool-dimensions": "^2.0.3",
         "react-dom": "~17",
         "react-hot-toast": "^1.0.2",
         "react-icons": "^4.2.0",
         "react-query": "^3.15.2",
         "ual-anchor": "^1.0.5",
-        "ual-reactjs-renderer": "^0.3.1"
+        "ual-ledger": "^0.3.0",
+        "ual-reactjs-renderer": "^0.3.1",
+        "ual-scatter": "^0.3.0"
     },
     "devDependencies": {
         "@types/node": "~14.0.23",
+        "@types/nprogress": "^0.2.0",
         "@types/react": "~17.0.0",
         "@types/react-dom": "~17.0.0",
         "autoprefixer": "^10.2.5",
