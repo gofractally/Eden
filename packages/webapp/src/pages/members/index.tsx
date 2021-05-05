@@ -16,11 +16,11 @@ export const getServerSideProps: GetServerSideProps = async () => {
         queryClient.prefetchQuery(QUERY_NEW_MEMBERS, getNewMembers),
     ]);
 
-    return { props: { dehydrateState: dehydrate(queryClient) } };
+    return { props: { dehydratedState: dehydrate(queryClient) } };
 };
 
 export const MembersPage = () => {
-    const members = useQuery([QUERY_MEMBERS], () => getMembers());
+    const members = useQuery(QUERY_MEMBERS, () => getMembers());
     const newMembers = useQuery(QUERY_NEW_MEMBERS, getNewMembers);
 
     return (
