@@ -5,6 +5,9 @@ import { QueryClient, QueryClientProvider } from "react-query";
 import { ReactQueryDevtools } from "react-query/devtools";
 import { Toaster } from "react-hot-toast";
 import NProgress from "nprogress";
+import dayjs from "dayjs";
+import * as localizedFormat from "dayjs/plugin/localizedFormat";
+import * as relativeTime from "dayjs/plugin/relativeTime";
 
 import "tailwindcss/tailwind.css";
 import "_app/styles/nprogress.tailwind.css";
@@ -15,6 +18,9 @@ Router.events.on("routeChangeStart", (url) => {
 });
 Router.events.on("routeChangeComplete", () => NProgress.done());
 Router.events.on("routeChangeError", () => NProgress.done());
+
+dayjs.extend(localizedFormat.default);
+dayjs.extend(relativeTime.default);
 
 const queryClient = new QueryClient();
 
