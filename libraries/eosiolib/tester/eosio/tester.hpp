@@ -9,7 +9,6 @@
 #include <eosio/producer_schedule.hpp>
 #include <eosio/transaction.hpp>
 
-#include <fmt/format.h>
 #include <cwchar>
 
 namespace eosio
@@ -279,12 +278,13 @@ namespace eosio
       }
 
       template <typename Action, typename... Args>
-      auto act(std::optional<std::vector<std::vector<char>>> cfd,
+      auto act(const std::optional<std::vector<std::vector<char>>>& cfd,
                const Action& action,
                Args&&... args)
       {
          using Ret = decltype(internal_use_do_not_use::get_return_type(Action::get_mem_ptr()));
-         auto trace = transact({action.to_action(std::forward<Args>(args)...)});
+         auto trace = this->trace(cfd, action, std::forward<Args>(args)...);
+         expect(trace);
          if constexpr (!std::is_same_v<Ret, void>)
          {
             return convert_from_bin<Ret>(trace.action_traces[0].return_value);
@@ -296,7 +296,7 @@ namespace eosio
       }
 
       template <typename Action, typename... Args>
-      auto trace(std::optional<std::vector<std::vector<char>>> cfd,
+      auto trace(const std::optional<std::vector<std::vector<char>>>& cfd,
                  const Action& action,
                  Args&&... args)
       {
@@ -319,19 +319,28 @@ namespace eosio
          test_chain& t;
          std::vector<eosio::permission_level> level;
          std::optional<std::vector<std::vector<char>>> context_free_data;
+         std::optional<name> code;
 
          user_context with_cfd(std::vector<std::vector<char>> d)
          {
             user_context uc = *this;
             uc.context_free_data = std::move(d);
+            uc.level = {};
+            return uc;
+         }
+
+         user_context with_code(name code)
+         {
+            user_context uc = *this;
+            uc.code = code;
             return uc;
          }
 
          template <typename Action, typename... Args>
          auto act(Args&&... args)
          {
-            if (context_free_data)
-               return t.act(context_free_data, Action(), std::forward<Args>(args)...);
+            if (code)
+               return t.act(context_free_data, Action(*code, level), std::forward<Args>(args)...);
             else
                return t.act(context_free_data, Action(level), std::forward<Args>(args)...);
          }
@@ -339,8 +348,8 @@ namespace eosio
          template <typename Action, typename... Args>
          auto trace(Args&&... args)
          {
-            if (context_free_data)
-               return t.trace(context_free_data, Action(), std::forward<Args>(args)...);
+            if (code)
+               return t.trace(context_free_data, Action(*code, level), std::forward<Args>(args)...);
             else
                return t.trace(context_free_data, Action(level), std::forward<Args>(args)...);
          }
@@ -497,12 +506,13 @@ namespace eosio
                                  const char* expected_except = nullptr);
 
       template <typename Action, typename... Args>
-      auto act(std::optional<std::vector<std::vector<char>>> cfd,
+      auto act(const std::optional<std::vector<std::vector<char>>>& cfd,
                const Action& action,
                Args&&... args)
       {
          using Ret = decltype(internal_use_do_not_use::get_return_type(Action::get_mem_ptr()));
-         auto trace = transact({action.to_action(std::forward<Args>(args)...)});
+         auto trace = this->trace(cfd, action, std::forward<Args>(args)...);
+         expect(trace);
          if constexpr (!std::is_same_v<Ret, void>)
          {
             return convert_from_bin<Ret>(trace.action_traces[0].return_value);
@@ -514,7 +524,7 @@ namespace eosio
       }
 
       template <typename Action, typename... Args>
-      auto trace(std::optional<std::vector<std::vector<char>>> cfd,
+      auto trace(const std::optional<std::vector<std::vector<char>>>& cfd,
                  const Action& action,
                  Args&&... args)
       {

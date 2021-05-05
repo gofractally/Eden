@@ -28,6 +28,16 @@ function(eden_tester_test N)
     set_tests_properties(t-${N} PROPERTIES ENVIRONMENT NODE_PATH=dist)
 endfunction()
 
+function(copy_headers from to)
+    file(GLOB foo
+        ${CMAKE_CURRENT_SOURCE_DIR}/${from}/*.h
+        ${CMAKE_CURRENT_SOURCE_DIR}/${from}/*.hpp
+    )
+    file(COPY ${foo} DESTINATION ${ROOT_BINARY_DIR}/clsdk/${to})
+endfunction()
+
+file(COPY ${ROOT_SOURCE_DIR}/LICENSE DESTINATION ${ROOT_BINARY_DIR}/clsdk/licenses)
+
 add_subdirectory(../contracts contracts)
 add_subdirectory(../libraries libraries)
 add_subdirectory(../external external)

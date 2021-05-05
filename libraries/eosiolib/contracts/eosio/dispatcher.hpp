@@ -3,9 +3,13 @@
 #include <boost/fusion/include/std_tuple.hpp>
 #include <boost/mp11/tuple.hpp>
 #include <boost/preprocessor/cat.hpp>
+#include <boost/preprocessor/control/iif.hpp>
 #include <boost/preprocessor/facilities/check_empty.hpp>
 #include <boost/preprocessor/logical/bitand.hpp>
 #include <boost/preprocessor/logical/compl.hpp>
+#include <boost/preprocessor/seq/for_each.hpp>
+#include <boost/preprocessor/stringize.hpp>
+#include <boost/preprocessor/variadic/to_seq.hpp>
 #include <eosio/action.hpp>
 
 extern "C"
