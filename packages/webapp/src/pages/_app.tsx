@@ -1,4 +1,4 @@
-import { useRef } from "react";
+import React, { useRef } from "react";
 import dynamic from "next/dynamic";
 import { AppProps } from "next/app";
 import Router from "next/router";
@@ -52,7 +52,7 @@ const WebApp = ({ Component, pageProps }: AppProps) => {
 
 const EdenUALProviderWithNoSSR = ({ children }: any) => {
     if (typeof window === "undefined") {
-        return <>{children}</>;
+        return <React.Fragment key="ssr-fragment">{children}</React.Fragment>;
     } else {
         const ClientProvider = dynamic(
             () => import("../_app/eos/ual/EdenUALProvider"),
