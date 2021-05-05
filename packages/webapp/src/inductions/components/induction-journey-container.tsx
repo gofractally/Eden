@@ -67,8 +67,10 @@ export const InductionJourneyContainer = ({ role, step, children }: Props) => {
     switch (role) {
         case InductionRole.INVITEE:
             steps = INVITEE_INDUCTION_STEPS;
+            break;
         case InductionRole.INVITER:
             steps = INVITER_INDUCTION_STEPS;
+            break;
     }
 
     return (

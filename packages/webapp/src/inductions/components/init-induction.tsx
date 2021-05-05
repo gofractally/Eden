@@ -47,40 +47,7 @@ export const InitInduction = ({ ualAccount }: Props) => {
             step={initializedInductionId ? 2 : 1}
         >
             {initializedInductionId ? (
-                <>
-                    <Heading size={1} className="mb-5">
-                        Success!
-                    </Heading>
-                    <div className="space-y-3 mb-8">
-                        <Text className="leading-normal">
-                            Now it's your invitee's turn to create their Eden
-                            profile.
-                        </Text>
-                        <Text className="leading-normal">
-                            Your invitee and witnesses will now see this pending
-                            invitation in the Membership dashboard if they log
-                            in with their blockchain account. Or you can share
-                            this direct link with them:
-                        </Text>
-                        <Text className="leading-normal break-all">
-                            <Link href={`/induction/${initializedInductionId}`}>
-                                {window.location.hostname}/induction/
-                                {initializedInductionId}
-                            </Link>
-                        </Text>
-                        <Text className="leading-normal">
-                            This induction process must be completed{" "}
-                            <span className="underline font-medium">
-                                within 7 days
-                            </span>
-                            . If this invitation expires, you will be able to
-                            issue another.
-                        </Text>
-                    </div>
-                    <ActionButton href="/induction" size={ActionButtonSize.L}>
-                        See your invitations
-                    </ActionButton>
-                </>
+                <InviteConfirmation inductionId={initializedInductionId} />
             ) : (
                 <>
                     <Heading size={1} className="mb-8">
@@ -92,3 +59,35 @@ export const InitInduction = ({ ualAccount }: Props) => {
         </InductionJourneyContainer>
     );
 };
+
+const InviteConfirmation = ({ inductionId }: { inductionId: string }) => (
+    <>
+        <Heading size={1} className="mb-5">
+            Success!
+        </Heading>
+        <div className="space-y-3 mb-8">
+            <Text className="leading-normal">
+                Now it's your invitee's turn to create their Eden profile.
+            </Text>
+            <Text className="leading-normal">
+                Your invitee and witnesses will now see this pending invitation
+                in the Membership dashboard if they sign in with their
+                blockchain account. Or you can share this direct link with them:
+            </Text>
+            <Text className="leading-normal break-all">
+                <Link href={`/induction/${inductionId}`}>
+                    {window.location.hostname}/induction/
+                    {inductionId}
+                </Link>
+            </Text>
+            <Text className="leading-normal">
+                This induction process must be completed{" "}
+                <span className="underline font-medium">within 7 days</span>. If
+                this invitation expires, you will be able to issue another.
+            </Text>
+        </div>
+        <ActionButton href="/induction" size={ActionButtonSize.L}>
+            See your invitations
+        </ActionButton>
+    </>
+);

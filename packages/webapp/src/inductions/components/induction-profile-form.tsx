@@ -1,7 +1,7 @@
-import { FormEvent, useState } from "react";
+import React, { FormEvent, useState } from "react";
 
 import { EdenNftSocialHandles } from "nfts";
-import { Button, useFormFields, Form, Heading } from "_app";
+import { useFormFields, Form, Heading, ActionButton } from "_app";
 import { NewMemberProfile } from "../interfaces";
 
 interface Props {
@@ -50,8 +50,12 @@ export const InductionProfileForm = ({
     };
 
     return (
-        <form onSubmit={submitTransaction} className="grid grid-cols-6 gap-6">
-            <Form.LabeledSet label="Name" htmlFor="name" className="col-span-6">
+        <form onSubmit={submitTransaction} className="grid grid-cols-6 gap-4">
+            <Form.LabeledSet
+                label="Your name"
+                htmlFor="name"
+                className="col-span-6"
+            >
                 <Form.Input
                     id="name"
                     type="text"
@@ -63,7 +67,7 @@ export const InductionProfileForm = ({
             </Form.LabeledSet>
 
             <Form.LabeledSet
-                label="Image (IPFS Hash)"
+                label="Profile image (IPFS hash)"
                 htmlFor="img"
                 className="col-span-6"
             >
@@ -78,7 +82,7 @@ export const InductionProfileForm = ({
             </Form.LabeledSet>
 
             <Form.LabeledSet
-                label="Attributions"
+                label="Profile image attribution (optional)"
                 htmlFor="attributions"
                 className="col-span-6"
             >
@@ -87,7 +91,6 @@ export const InductionProfileForm = ({
                     type="text"
                     disabled={isLoading || disabled}
                     value={fields.attributions}
-                    placeholder="Profile Image Copyrights Attributions (optional)"
                     onChange={onChangeFields}
                 />
             </Form.LabeledSet>
@@ -109,12 +112,12 @@ export const InductionProfileForm = ({
             </Form.LabeledSet>
 
             <Heading size={3} className="col-span-6">
-                Social Handles
+                Social handles and links
             </Heading>
             <Form.LabeledSet
-                label="EOSCommunity User"
+                label="EOSCommunity username"
                 htmlFor="eosCommunity"
-                className="col-span-6 sm:col-span-2"
+                className="col-span-6 md:col-span-3 lg:col-span-6 xl:col-span-3"
             >
                 <Form.Input
                     id="eosCommunity"
@@ -125,9 +128,9 @@ export const InductionProfileForm = ({
                 />
             </Form.LabeledSet>
             <Form.LabeledSet
-                label="Twitter Handle"
+                label="Twitter handle"
                 htmlFor="twitter"
-                className="col-span-6 sm:col-span-2"
+                className="col-span-6 md:col-span-3 lg:col-span-6 xl:col-span-3"
             >
                 <Form.Input
                     id="twitter"
@@ -138,9 +141,9 @@ export const InductionProfileForm = ({
                 />
             </Form.LabeledSet>
             <Form.LabeledSet
-                label="Telegram Handle"
+                label="Telegram handle"
                 htmlFor="telegram"
-                className="col-span-6 sm:col-span-2"
+                className="col-span-6 md:col-span-3 lg:col-span-6 xl:col-span-3"
             >
                 <Form.Input
                     id="telegram"
@@ -151,9 +154,9 @@ export const InductionProfileForm = ({
                 />
             </Form.LabeledSet>
             <Form.LabeledSet
-                label="Personal Blog Address"
+                label="Personal blog URL"
                 htmlFor="blog"
-                className="col-span-6 sm:col-span-2"
+                className="col-span-6 md:col-span-3 lg:col-span-6 xl:col-span-3"
             >
                 <Form.Input
                     id="blog"
@@ -164,9 +167,9 @@ export const InductionProfileForm = ({
                 />
             </Form.LabeledSet>
             <Form.LabeledSet
-                label="Linkedin Public Handle"
+                label="LinkedIn handle"
                 htmlFor="linkedin"
-                className="col-span-6 sm:col-span-2"
+                className="col-span-6 md:col-span-3 lg:col-span-6 xl:col-span-3"
             >
                 <Form.Input
                     id="linkedin"
@@ -177,9 +180,9 @@ export const InductionProfileForm = ({
                 />
             </Form.LabeledSet>
             <Form.LabeledSet
-                label="Facebook Handle"
+                label="Facebook username"
                 htmlFor="facebook"
-                className="col-span-6 sm:col-span-2"
+                className="col-span-6 md:col-span-3 lg:col-span-6 xl:col-span-3"
             >
                 <Form.Input
                     id="facebook"
@@ -191,10 +194,10 @@ export const InductionProfileForm = ({
             </Form.LabeledSet>
 
             {onSubmit && (
-                <div className="w-max mx-auto">
-                    <Button isSubmit disabled={isLoading}>
+                <div className="pt-4">
+                    <ActionButton isSubmit disabled={isLoading}>
                         {isLoading ? "Submitting..." : "Submit"}
-                    </Button>
+                    </ActionButton>
                 </div>
             )}
         </form>
