@@ -4,8 +4,13 @@ import useDimensions from "react-cool-dimensions";
 import { ipfsBaseUrl } from "config";
 import { MemberData } from "members";
 
+interface Props {
+    member: MemberData;
+    inducted?: boolean;
+}
+
 // TODO: 2x, 1x images for sharper images
-export const MemberHoloCard = ({ member }: { member: MemberData }) => {
+export const MemberHoloCard = ({ member, inducted = true }: Props) => {
     const { observe, width } = useDimensions<HTMLDivElement | null>();
 
     const attributions = member.attributions
@@ -35,12 +40,14 @@ export const MemberHoloCard = ({ member }: { member: MemberData }) => {
                     }}
                 />
                 <div>
-                    <p
-                        className="py-3 lg:py-4 sm:tracking-wider leading-none sm:leading-normal"
-                        style={{ fontSize: Math.max(width * 0.02, 10) }}
-                    >
-                        {dayjs(member.createdAt).format("L")}
-                    </p>
+                    {inducted && (
+                        <p
+                            className="py-3 lg:py-4 sm:tracking-wider leading-none sm:leading-normal"
+                            style={{ fontSize: Math.max(width * 0.02, 10) }}
+                        >
+                            {dayjs(member.createdAt).format("L")}
+                        </p>
+                    )}
                     <p
                         className="font-medium leading-none"
                         style={{ fontSize: width * 0.058 }}

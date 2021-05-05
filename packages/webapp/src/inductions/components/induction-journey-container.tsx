@@ -29,7 +29,7 @@ export const INVITEE_INDUCTION_STEPS: Step[] = [
 export const INVITER_INDUCTION_STEPS: Step[] = [
     {
         title: "CREATE INVITE",
-        text: "Add invitee and witness by EOS account.",
+        text: "Add invitee and witnesses by EOS account.",
     },
     {
         title: "INVITEE PROFILE",
@@ -38,7 +38,7 @@ export const INVITER_INDUCTION_STEPS: Step[] = [
     {
         title: "INDUCT & ENDORSE",
         text:
-            "Record & attach induction ceremony. Inviter & witnesses endorse invitee.",
+            "Record and attach induction ceremony. Inviter and witnesses endorse invitee.",
     },
     {
         title: "INVITEE DONATION",
