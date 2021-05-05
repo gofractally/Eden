@@ -33,9 +33,9 @@ const WebApp = ({ Component, pageProps }: AppProps) => {
     return (
         <QueryClientProvider client={queryClientRef.current}>
             <Hydrate state={pageProps.dehydratedState}>
-                <EdenUALProviderWithNoSSR>
-                    <Component {...pageProps} />
-                </EdenUALProviderWithNoSSR>
+                {/* <EdenUALProviderWithNoSSR> */}
+                <Component {...pageProps} />
+                {/* </EdenUALProviderWithNoSSR> */}
             </Hydrate>
             <ReactQueryDevtools initialIsOpen={false} />
             <Toaster
