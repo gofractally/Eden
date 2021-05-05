@@ -5,28 +5,6 @@ export type Step = {
     text: string;
 };
 
-const theSteps: Step[] = [
-    {
-        title: "GET INVITED",
-        text: "Make sure you have an EOS address",
-    },
-    {
-        title: "GET ENDORSED",
-        text: "Induction ceremony",
-    },
-    {
-        title: "DONATE",
-        text: "Donate 10 EOS to the Eden community",
-    },
-    {
-        title: "YOU'RE IN",
-        text: "You're a member! And your Eden member NFTs are minted",
-    },
-];
-
-const theCurrentStep = 2;
-const completed = false;
-
 interface SingleStepProps {
     step: Step;
     last: boolean;
@@ -121,11 +99,11 @@ export const Steps = ({
 }: {
     steps: Step[];
     currentStep: number;
-    isComplete: boolean;
+    isComplete?: boolean;
 }) => {
     return (
         <section className="text-gray-600 body-font">
-            <div className="container px-5 py-24 mx-auto flex flex-wrap">
+            <div className="container p-5 mx-auto flex flex-wrap">
                 <div className="flex flex-wrap">
                     <div className="md:pr-10 md:py-6">
                         {steps.map((s, i) => {
