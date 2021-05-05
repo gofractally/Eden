@@ -1,7 +1,13 @@
 import { GetServerSideProps } from "next";
 
-import { RawLayout } from "_app";
-import { getMember, MemberCard, MemberCollections, MemberData } from "members";
+import { CallToAction, Card, RawLayout, SingleColLayout } from "_app";
+import {
+    getMember,
+    MemberCard,
+    MemberCollections,
+    MemberData,
+    MemberHoloCard,
+} from "members";
 
 interface Props {
     member?: MemberData;
@@ -10,18 +16,25 @@ interface Props {
 export const MemberPage = ({ member }: Props) => {
     return member ? (
         <RawLayout title={`${member.name}'s Profile`}>
-            <MemberCard member={member} />
+            <Card>
+                <div className="flex justify-center items-center space-y-10 xl:space-y-0 xl:space-x-10 flex-col xl:flex-row">
+                    <div className="max-w-xl">
+                        <MemberHoloCard member={member} />
+                    </div>
+                    <MemberCard member={member} />
+                </div>
+            </Card>
             <MemberCollections
-                edenAccount={member.edenAccount}
+                account={member.account}
                 templateId={member.templateId}
             />
         </RawLayout>
     ) : (
-        <RawLayout title="Member not found">
-            <div className="text-center max-w mt-4">
-                This account is not an <strong>active eden member</strong>.
-            </div>
-        </RawLayout>
+        <SingleColLayout title="Member not found">
+            <CallToAction href="/members" buttonLabel="Browse members">
+                This account is not an active Eden member.
+            </CallToAction>
+        </SingleColLayout>
     );
 };
 
@@ -29,8 +42,8 @@ export default MemberPage;
 
 export const getServerSideProps: GetServerSideProps = async ({ params }) => {
     try {
-        const edenAccount = params!.id as string;
-        const member = await getMember(edenAccount);
+        const account = params!.id as string;
+        const member = await getMember(account);
         return { props: { member: member || null } };
     } catch (error) {
         console.error(">>> Fail to list eden members:" + error);

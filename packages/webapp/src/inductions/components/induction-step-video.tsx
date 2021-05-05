@@ -1,6 +1,6 @@
 import { useState } from "react";
 
-import { Heading, Link, Text, useUALAccount } from "_app";
+import { Heading, Link, onError, Text, useUALAccount } from "_app";
 import { convertPendingProfileToMemberData } from "../utils";
 import { Endorsement, Induction } from "../interfaces";
 import { setInductionVideoTransaction } from "../transactions";
@@ -37,11 +37,7 @@ export const InductionStepVideo = ({
             console.info("inductvideo trx", signedTrx);
             setSubmittedVideo(true);
         } catch (error) {
-            console.error(error);
-            alert(
-                "Error while initializing the induction process: " +
-                    JSON.stringify(error)
-            );
+            onError(error, "Unable to set the induction video");
         }
     };
 

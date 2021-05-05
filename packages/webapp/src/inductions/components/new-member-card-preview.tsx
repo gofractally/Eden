@@ -25,6 +25,7 @@ export const NewMemberCardPreview = ({ member }: Props) => {
                         className="object-contain rounded-md"
                     />
                 </div>
+                <em>Image Attributions: {member.attributions || "none"}</em>
             </div>
 
             <div className="mt-4">

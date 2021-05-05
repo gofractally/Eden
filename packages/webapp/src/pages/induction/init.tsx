@@ -6,11 +6,17 @@ import {
     useUALAccount,
 } from "_app";
 import { MemberStatus } from "members";
-import { InitInduction } from "inductions";
+import { GetAnInviteCTA, InitInduction } from "inductions";
 
 export const InitInductionPage = () => {
     const [ualAccount, _, ualShowModal] = useUALAccount();
     const { data: member, isLoading } = useCurrentMember();
+
+    const getPageTitle = () => {
+        if (!ualAccount) return "Sign in";
+        if (member?.status !== MemberStatus.ActiveMember) return "Membership";
+        return "Invite";
+    };
 
     const renderContents = () => {
         if (!ualAccount) {
@@ -26,22 +32,21 @@ export const InitInductionPage = () => {
         }
 
         if (member?.status !== MemberStatus.ActiveMember) {
-            return (
-                <CallToAction buttonLabel="Get started" href="#">
-                    Ready to join Eden? The membership process begins with an
-                    invitation. Reach out to a current member to get yours!
-                </CallToAction>
-            );
+            return <GetAnInviteCTA />;
         }
 
         return (
-            <Card title="Induction">
+            <Card title="Invite a new member to Eden">
                 <InitInduction ualAccount={ualAccount} />
             </Card>
         );
     };
 
-    return <SingleColLayout>{renderContents()}</SingleColLayout>;
+    return (
+        <SingleColLayout title={getPageTitle()}>
+            {renderContents()}
+        </SingleColLayout>
+    );
 };
 
 export default InitInductionPage;

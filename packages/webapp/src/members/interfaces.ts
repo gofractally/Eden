@@ -5,8 +5,9 @@ export interface MemberData {
     templateId: number;
     name: string;
     image: string;
-    edenAccount: string;
+    account: string;
     bio: string;
+    attributions: string;
     socialHandles: EdenNftSocialHandles;
     inductionVideo: string;
     createdAt: number;
