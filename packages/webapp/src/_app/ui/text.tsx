@@ -6,9 +6,7 @@ interface Props {
 }
 
 export const Text = ({ children, className }: Props) => {
-    const textClass = `leading-relaxed text-base text-gray-600 ${
-        className || ""
-    }`;
+    const textClass = `text-base text-gray-600 ${className || ""}`;
 
     return <p className={textClass}>{children}</p>;
 };

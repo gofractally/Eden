@@ -35,11 +35,7 @@ export const InitInductionPage = () => {
             return <GetAnInviteCTA />;
         }
 
-        return (
-            <Card title="Invite a new member to Eden">
-                <InitInduction ualAccount={ualAccount} />
-            </Card>
-        );
+        return <InitInduction ualAccount={ualAccount} />;
     };
 
     return (

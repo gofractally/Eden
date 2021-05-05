@@ -26,6 +26,30 @@ export const INVITEE_INDUCTION_STEPS: Step[] = [
     },
 ];
 
+export const INVITER_INDUCTION_STEPS: Step[] = [
+    {
+        title: "CREATE INVITE",
+        text: "Add invitee and witness by EOS account.",
+    },
+    {
+        title: "INVITEE PROFILE",
+        text: "Invitee must log in and set up their profile.",
+    },
+    {
+        title: "INDUCT & ENDORSE",
+        text:
+            "Record & attach induction ceremony. Inviter & witnesses endorse invitee.",
+    },
+    {
+        title: "INVITEE DONATION",
+        text: `Invitee donates ${minimumDonation} to the Eden community.`,
+    },
+    {
+        title: "ALL DONE",
+        text: "NFTs are minted. We have new member!",
+    },
+];
+
 export enum InductionRole {
     INVITEE = "invitee",
     INVITER = "inviter",
@@ -39,14 +63,12 @@ interface Props {
 
 export const InductionJourneyContainer = ({ role, step, children }: Props) => {
     let steps: Step[];
+
     switch (role) {
         case InductionRole.INVITEE:
             steps = INVITEE_INDUCTION_STEPS;
-            break;
         case InductionRole.INVITER:
-            steps = INVITEE_INDUCTION_STEPS;
-        default:
-            break;
+            steps = INVITER_INDUCTION_STEPS;
     }
 
     return (
@@ -56,7 +78,7 @@ export const InductionJourneyContainer = ({ role, step, children }: Props) => {
                     {children}
                 </div>
                 <div className="lg:w-1/2 xl:w-2/5 mt-8 sm:px-8 md:px-12 lg:px-0">
-                    <Steps steps={INVITEE_INDUCTION_STEPS} currentStep={step} />
+                    <Steps steps={steps} currentStep={step} />
                 </div>
             </div>
         </Card>
