@@ -82,7 +82,8 @@ namespace b1::rodeos
          if (tables.size() != table_to_index.size() || tables.size() != end_iterators.size())
             throw std::runtime_error("internal error: tables.size() mismatch");
          auto result = tables.size();
-         if (result > std::numeric_limits<int32_t>::max())
+         // See precondition for index_to_end_iterator()
+         if (result >= std::numeric_limits<int32_t>::max() - 1)
             throw std::runtime_error("too many open tables");
          tables.push_back(key);
          table_to_index[key] = result;
@@ -230,8 +231,11 @@ namespace b1::rodeos
          if (itr == -1)
             throw std::runtime_error("decrement invalid iterator");
          iterator* it = nullptr;
-         if (std::numeric_limits<int32_t>::min() < itr && itr < -1)
+         if (itr < -1)
          {
+            // See precondition for end_iterator_to_index
+            if (itr <= std::numeric_limits<int32_t>::min())
+               throw std::runtime_error("decrement non-existing iterator");
             size_t table_index = end_iterator_to_index(itr);
             if (table_index >= end_iterators.size())
                throw std::runtime_error("decrement non-existing iterator");
@@ -283,7 +287,10 @@ namespace b1::rodeos
       // Iterator of -1 is reserved for invalid iterators (i.e. when the appropriate table has not
       // yet been created).
       size_t end_iterator_to_index(int32_t ei) const { return (-ei - 2); }
-      // Precondition: indx < tables.size() <= std::numeric_limits<int32_t>::max()
+      // Precondition: indx < tables.size() <= std::numeric_limits<int32_t>::max() - 1
+      // Note: precondition in apply_context.hpp doesn't have the -1, which may cause
+      //       index_to_end_iterator() to return 0x8000'0000, which violates the precondition
+      //       to end_iterator_to_index().
       int32_t index_to_end_iterator(size_t indx) const { return -(indx + 2); }
 
      public:
