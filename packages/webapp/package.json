@@ -22,7 +22,9 @@
         "react-icons": "^4.2.0",
         "react-query": "^3.15.2",
         "ual-anchor": "^1.0.5",
-        "ual-reactjs-renderer": "^0.3.1"
+        "ual-ledger": "^0.3.0",
+        "ual-reactjs-renderer": "^0.3.1",
+        "ual-scatter": "^0.3.0"
     },
     "devDependencies": {
         "@types/node": "~14.0.23",
