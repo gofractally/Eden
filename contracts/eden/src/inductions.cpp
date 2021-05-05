@@ -1,5 +1,6 @@
 #include <algorithm>
 #include <eden-atomicassets.hpp>
+#include <eosio/action.hpp>
 #include <eosio/crypto.hpp>
 #include <inductions.hpp>
 #include <set>
@@ -15,6 +16,8 @@ namespace eden
    {
       check_new_induction(invitee, inviter);
       check_valid_endorsers(inviter, witnesses);
+      eosio::check(eosio::is_account(invitee),
+                   "Account " + invitee.to_string() + " does not exist");
 
       uint32_t total_endorsements = witnesses.size() + 1;
       create_induction(id, inviter, invitee, total_endorsements);
