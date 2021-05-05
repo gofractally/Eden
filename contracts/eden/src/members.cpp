@@ -38,6 +38,19 @@ namespace eden
       });
    }
 
+   void members::remove_if_pending(eosio::name account)
+   {
+      const auto& member = member_tb.get(account.value);
+      if (member.status() == member_status::pending_membership)
+      {
+         member_tb.erase(member);
+         auto stats = std::get<member_stats_v0>(member_stats.get_or_default());
+         eosio::check(stats.pending_members != 0, "Integer overflow");
+         --stats.pending_members;
+         member_stats.set(stats, contract);
+      }
+   }
+
    void members::set_nft(eosio::name account, int32_t nft_template_id)
    {
       check_pending_member(account);

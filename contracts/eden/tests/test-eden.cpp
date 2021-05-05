@@ -459,6 +459,9 @@ TEST_CASE("induction gc")
    CHECK(get_table_size<eden::endorsement_table_type>() == 0);
    CHECK(get_table_size<eden::endorsed_induction_table_type>() == 0);
    CHECK(get_table_size<eden::induction_gc_table_type>() == 0);
+
+   CHECK(members("eden.gm"_n).stats().active_members == 40);
+   CHECK(members("eden.gm"_n).stats().pending_members == 0);
 }
 
 TEST_CASE("deposit and spend")

@@ -68,6 +68,7 @@ namespace eden
 
       const member& get_member(eosio::name account);
       void create(eosio::name account);
+      void remove_if_pending(eosio::name account);
       bool is_new_member(eosio::name account) const;
       void check_active_member(eosio::name account);
       void check_pending_member(eosio::name account);
