@@ -11,7 +11,7 @@ import {
 import * as InductionTable from "_app/ui/table";
 
 import { getEndorsementsByInductionId } from "../../api";
-import { getInductionStatus } from "../../utils";
+import { getInductionRemainingTimeDays, getInductionStatus } from "../../utils";
 import { Endorsement, Induction, InductionStatus } from "../../interfaces";
 
 dayjs.extend(relativeTime.default);
@@ -70,10 +70,7 @@ const getTableData = (inductions: Induction[]): InductionTable.Row[] => {
             allEndorsements.filter((endorsement) => endorsement.endorsed)
                 .length === allEndorsements.length;
 
-        const remainingTime = dayjs().to(
-            dayjs(ind.created_at).add(7, "day"),
-            true
-        );
+        const remainingTime = getInductionRemainingTimeDays(ind);
 
         return {
             key: ind.id,
@@ -100,6 +97,17 @@ const InviteeInductionStatus = ({
 }: InviteeInductionStatusProps) => {
     const status = getInductionStatus(induction);
     switch (status) {
+        case InductionStatus.expired:
+            return (
+                <ActionButton
+                    type={ActionButtonType.DISABLED}
+                    size={ActionButtonSize.S}
+                    fullWidth
+                    disabled
+                >
+                    Expired
+                </ActionButton>
+            );
         case InductionStatus.waitingForProfile:
             return (
                 <ActionButton
