@@ -278,6 +278,7 @@ namespace eden
       {
          endorsed_induction_tb.erase(itr);
       }
+      auto invitee = induction.invitee();
       induction_tb.erase(induction);
    }
 
@@ -297,9 +298,9 @@ namespace eden
       return limit;
    }
 
-   uint32_t inductions::gc(uint32_t limit)
+   uint32_t inductions::gc(uint32_t limit, std::vector<eosio::name>& removed_members)
    {
-      limit = erase_expired(limit);
+      limit = erase_expired(limit, removed_members);
       induction_gc_table_type gc_tb(contract, default_scope);
       auto iter = gc_tb.begin();
       auto end = gc_tb.end();
@@ -321,7 +322,7 @@ namespace eden
       gc_tb.emplace(contract, [=](auto& row) { row.invitee = invitee; });
    }
 
-   uint32_t inductions::erase_expired(uint32_t limit)
+   uint32_t inductions::erase_expired(uint32_t limit, std::vector<eosio::name>& removed_members)
    {
       auto created_idx = induction_tb.get_index<"bycreated"_n>();
       auto iter = created_idx.begin();
@@ -330,7 +331,12 @@ namespace eden
       {
          auto next = iter;
          ++next;
+         auto invitee = iter->invitee();
          erase_induction(*iter);
+         if (!has_induction(invitee))
+         {
+            removed_members.push_back(invitee);
+         }
          iter = next;
          --limit;
       }
@@ -353,6 +359,13 @@ namespace eden
    {
       auto endorser_idx = endorsement_tb.get_index<"byendorser"_n>();
       return endorser_idx.find(uint128_t{witness.value} << 64 | id) != endorser_idx.end();
+   }
+
+   bool inductions::has_induction(eosio::name invitee) const
+   {
+      auto invitee_idx = induction_tb.get_index<"byinvitee"_n>();
+      auto pos = invitee_idx.lower_bound(combine_names(invitee, {}));
+      return pos != invitee_idx.end() && pos->invitee() == invitee;
    }
 
    void inductions::clear_all()
