@@ -278,12 +278,13 @@ namespace eosio
       }
 
       template <typename Action, typename... Args>
-      auto act(std::optional<std::vector<std::vector<char>>> cfd,
+      auto act(const std::optional<std::vector<std::vector<char>>>& cfd,
                const Action& action,
                Args&&... args)
       {
          using Ret = decltype(internal_use_do_not_use::get_return_type(Action::get_mem_ptr()));
-         auto trace = transact({action.to_action(std::forward<Args>(args)...)});
+         auto trace = this->trace(cfd, action, std::forward<Args>(args)...);
+         expect(trace);
          if constexpr (!std::is_same_v<Ret, void>)
          {
             return convert_from_bin<Ret>(trace.action_traces[0].return_value);
@@ -295,7 +296,7 @@ namespace eosio
       }
 
       template <typename Action, typename... Args>
-      auto trace(std::optional<std::vector<std::vector<char>>> cfd,
+      auto trace(const std::optional<std::vector<std::vector<char>>>& cfd,
                  const Action& action,
                  Args&&... args)
       {
@@ -505,12 +506,13 @@ namespace eosio
                                  const char* expected_except = nullptr);
 
       template <typename Action, typename... Args>
-      auto act(std::optional<std::vector<std::vector<char>>> cfd,
+      auto act(const std::optional<std::vector<std::vector<char>>>& cfd,
                const Action& action,
                Args&&... args)
       {
          using Ret = decltype(internal_use_do_not_use::get_return_type(Action::get_mem_ptr()));
-         auto trace = transact({action.to_action(std::forward<Args>(args)...)});
+         auto trace = this->trace(cfd, action, std::forward<Args>(args)...);
+         expect(trace);
          if constexpr (!std::is_same_v<Ret, void>)
          {
             return convert_from_bin<Ret>(trace.action_traces[0].return_value);
@@ -522,7 +524,7 @@ namespace eosio
       }
 
       template <typename Action, typename... Args>
-      auto trace(std::optional<std::vector<std::vector<char>>> cfd,
+      auto trace(const std::optional<std::vector<std::vector<char>>>& cfd,
                  const Action& action,
                  Args&&... args)
       {
