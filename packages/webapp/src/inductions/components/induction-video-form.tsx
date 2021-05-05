@@ -1,6 +1,6 @@
-import { FormEvent, useState } from "react";
+import React, { FormEvent, useState } from "react";
 
-import { Button, Form } from "_app";
+import { ActionButton, Form } from "_app";
 
 interface Props {
     video: string;
@@ -22,9 +22,9 @@ export const InductionVideoForm = ({ video, onSubmit }: Props) => {
     return (
         <form onSubmit={submitTransaction} className="space-y-3">
             <Form.LabeledSet
-                label="Induction Video (IPFS Hash)"
+                label="Induction video (IPFS CID hash)"
                 htmlFor="name"
-                description="As an official endorser, you need to upload the video of the induction ceremony to an IPFS node and paste the IPFS Hash here."
+                description="As an official witness and endorser, you need to upload the video of the induction ceremony to IPFS and paste the IPFS CID hash here."
             >
                 <Form.Input
                     id="name"
@@ -37,10 +37,10 @@ export const InductionVideoForm = ({ video, onSubmit }: Props) => {
             </Form.LabeledSet>
 
             {onSubmit && (
-                <div className="w-max mx-auto">
-                    <Button isSubmit disabled={isLoading}>
+                <div className="pt-4">
+                    <ActionButton isSubmit disabled={isLoading}>
                         {isLoading ? "Submitting..." : "Submit"}
-                    </Button>
+                    </ActionButton>
                 </div>
             )}
         </form>
