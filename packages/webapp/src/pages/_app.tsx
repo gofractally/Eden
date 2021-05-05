@@ -33,9 +33,9 @@ const WebApp = ({ Component, pageProps }: AppProps) => {
     return (
         <QueryClientProvider client={queryClientRef.current}>
             <Hydrate state={pageProps.dehydratedState}>
-                {/* <EdenUALProviderWithNoSSR> */}
-                <Component {...pageProps} />
-                {/* </EdenUALProviderWithNoSSR> */}
+                <EdenUALProviderWithNoSSR>
+                    <Component {...pageProps} />
+                </EdenUALProviderWithNoSSR>
             </Hydrate>
             <ReactQueryDevtools initialIsOpen={false} />
             <Toaster
@@ -50,9 +50,16 @@ const WebApp = ({ Component, pageProps }: AppProps) => {
     );
 };
 
-const EdenUALProviderWithNoSSR = dynamic(
-    () => import("../_app/eos/ual/EdenUALProvider"),
-    { ssr: false }
-);
+const EdenUALProviderWithNoSSR = ({ children }: any) => {
+    if (typeof window === "undefined") {
+        return <>{children}</>;
+    } else {
+        const ClientProvider = dynamic(
+            () => import("../_app/eos/ual/EdenUALProvider"),
+            { ssr: false }
+        );
+        return <ClientProvider>{children}</ClientProvider>;
+    }
+};
 
 export default WebApp;

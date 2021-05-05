@@ -2,12 +2,11 @@ import { useContext } from "react";
 import { UALContext } from "ual-reactjs-renderer";
 
 export const useUALAccount = () => {
-    // const ualContext = useContext<any>(UALContext);
+    const ualContext = useContext<any>(UALContext);
 
-    // return [
-    //     ualContext.activeUser,
-    //     ualContext.activeUser ? ualContext.logout : null,
-    //     ualContext.showModal,
-    // ];
-    return [null as any, null as any, null as any];
+    return [
+        ualContext?.activeUser,
+        ualContext?.activeUser ? ualContext.logout : null,
+        ualContext?.showModal,
+    ];
 };
