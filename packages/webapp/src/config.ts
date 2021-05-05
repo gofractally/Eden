@@ -1,11 +1,3 @@
-// dayjs setup
-import dayjs from "dayjs";
-import * as localizedFormat from "dayjs/plugin/localizedFormat";
-import * as relativeTime from "dayjs/plugin/relativeTime";
-dayjs.extend(localizedFormat.default);
-dayjs.extend(relativeTime.default);
-// end dayjs setup
-
 import { assetFromString } from "./_app/utils/asset";
 
 if (
