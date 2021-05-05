@@ -1,7 +1,7 @@
 import React from "react";
-import { ActionButton, ActionButtonSize, Card, Steps, Step } from "_app";
+import { assetToString, Card, Steps, Step } from "_app";
 
-const minimumDonation = process.env.NEXT_PUBLIC_APP_MINIMUM_DONATION_AMOUNT;
+import { minimumDonationAmount } from "config";
 
 export const INVITEE_INDUCTION_STEPS: Step[] = [
     {
@@ -18,7 +18,9 @@ export const INVITEE_INDUCTION_STEPS: Step[] = [
     },
     {
         title: "DONATE",
-        text: `${minimumDonation} to the Eden community.`,
+        text: `Give ${assetToString(
+            minimumDonationAmount
+        )} to the Eden community.`,
     },
     {
         title: "YOU'RE IN",
@@ -42,7 +44,9 @@ export const INVITER_INDUCTION_STEPS: Step[] = [
     },
     {
         title: "INVITEE DONATION",
-        text: `Invitee donates ${minimumDonation} to the Eden community.`,
+        text: `Invitee donates ${assetToString(
+            minimumDonationAmount
+        )} to the Eden community.`,
     },
     {
         title: "ALL DONE",

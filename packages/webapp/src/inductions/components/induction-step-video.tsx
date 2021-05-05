@@ -3,9 +3,7 @@ import React, { useState } from "react";
 import {
     ActionButton,
     ActionButtonSize,
-    Card,
     Heading,
-    Link,
     onError,
     Text,
     useUALAccount,
@@ -17,8 +15,11 @@ import {
 import { Endorsement, Induction } from "../interfaces";
 import { setInductionVideoTransaction } from "../transactions";
 import { InductionVideoForm } from "./induction-video-form";
-import { InductionJourneyContainer, InductionRole } from "inductions";
-import { MemberCard, MemberData, MemberHoloCard } from "members";
+import {
+    InductionJourneyContainer,
+    InductionRole,
+    MemberCardPreview,
+} from "inductions";
 
 interface Props {
     induction: Induction;
@@ -182,15 +183,4 @@ const WaitingForInductionCeremony = ({
             </Text>
         </div>
     </InductionJourneyContainer>
-);
-
-const MemberCardPreview = ({ memberData }: { memberData: MemberData }) => (
-    <Card title="Invitee information" titleSize={2}>
-        <div className="flex justify-center items-center space-y-10 xl:space-y-0 xl:space-x-10 flex-col xl:flex-row">
-            <div className="max-w-xl">
-                <MemberHoloCard member={memberData} inducted={false} />
-            </div>
-            <MemberCard member={memberData} inducted={false} />
-        </div>
-    </Card>
 );
