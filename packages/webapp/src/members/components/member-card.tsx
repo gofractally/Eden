@@ -9,17 +9,16 @@ import { MemberSocialLinks } from "./member-social-links";
 
 interface Props {
     member: MemberData;
-    inducted?: boolean;
 }
 
-export const MemberCard = ({ member, inducted = true }: Props) => {
+export const MemberCard = ({ member }: Props) => {
     return (
         <div className="px-2 sm:px-8 flex flex-col max-w-xl">
             <MemberSocialLinks member={member} />
             <section className="py-4">
                 <MemberBio bio={member.bio} />
             </section>
-            {inducted && (
+            {member.inductionVideo && (
                 <div className="mx-auto">
                     <SocialButton
                         handle="View induction ceremony"

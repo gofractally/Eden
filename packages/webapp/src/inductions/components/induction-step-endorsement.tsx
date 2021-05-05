@@ -1,16 +1,16 @@
-import { useState } from "react";
+import React, { useState } from "react";
 import { useRouter } from "next/router";
 import { useQueryClient } from "react-query";
 
 import {
     assetToString,
-    Button,
     Form,
     Heading,
     Link,
     Text,
     useUALAccount,
     onError,
+    ActionButton,
 } from "_app";
 import { minimumDonationAmount } from "config";
 
@@ -19,8 +19,15 @@ import {
     submitEndorsementTransaction,
     donateAndCompleteInductionTransaction,
 } from "../transactions";
-import { NewMemberCardPreview } from "./new-member-card-preview";
-import { convertPendingProfileToMemberData } from "../utils";
+import {
+    convertPendingProfileToMemberData,
+    getInductionRemainingTimeDays,
+} from "../utils";
+import {
+    InductionJourneyContainer,
+    InductionRole,
+    MemberCardPreview,
+} from "inductions";
 
 interface Props {
     induction: Induction;
@@ -134,17 +141,26 @@ export const InductionStepEndorsement = (props: Props) => {
 
     return (
         <>
-            <div className="text-lg mb-4 text-gray-900">
-                {isFullyEndorsed
-                    ? "Step 4/4: Waiting for Donation"
-                    : "Step 3/4: Waiting for Endorsements"}
-            </div>
-            <div className="grid grid-cols-2 gap-6 max-w-full">
+            <InductionJourneyContainer
+                role={
+                    !ualAccount || isInvitee
+                        ? InductionRole.INVITEE
+                        : InductionRole.INVITER
+                }
+                step={isFullyEndorsed ? 4 : 3}
+            >
+                <Heading size={1} className="mb-2">
+                    {isFullyEndorsed ? "Pending donation" : "Endorsements"}
+                </Heading>
+                <Text className="mb-6">
+                    This invitation expires in{" "}
+                    {getInductionRemainingTimeDays(induction)}.
+                </Text>
                 <div>
                     <Heading size={3} className="mb-2">
-                        Endorsers
+                        Endorsement status:
                     </Heading>
-                    <ul className="mb-4">
+                    <ul className="mb-4 ml-2">
                         {endorsements.map((endorser) => (
                             <li key={endorser.id}>
                                 {getEndorserStatus(endorser)}{" "}
@@ -155,92 +171,111 @@ export const InductionStepEndorsement = (props: Props) => {
                     {isFullyEndorsed ? (
                         <DonationForm
                             isLoading={isLoading}
+                            setReviewStep={props.setReviewStep}
                             submitDonation={submitDonation}
                             isInvitee={isInvitee}
                         />
-                    ) : (
+                    ) : isPendingEndorser ? (
                         <EndorsingForm
                             isLoading={isLoading}
-                            isPendingEndorser={isPendingEndorser}
+                            setReviewStep={props.setReviewStep}
                             submitEndorsement={submitEndorsement}
                         />
-                    )}
-
-                    {isInvitee && (
-                        <div className="mt-4 text-center">
-                            <Text>Your profile looks wrong?</Text>
-                            <Link
-                                onClick={() => props.setReviewStep("profile")}
-                            >
-                                Click Here to adjust Profile
-                            </Link>
-                        </div>
-                    )}
-
-                    {userEndorsement ? (
-                        <div className="mt-4 text-center">
+                    ) : isInvitee ? (
+                        <div className="space-y-3">
                             <Text>
-                                The Induction Ceremony Video is Incorrect?
+                                To continue, all witnesses must endorse.
                             </Text>
-                            <Link onClick={() => props.setReviewStep("video")}>
-                                Click Here to adjust Induction Ceremony Video
-                            </Link>
+                            <Text>
+                                Now is a good time to review your profile
+                                information below. If anything needs to be
+                                corrected,{" "}
+                                <Link
+                                    onClick={() =>
+                                        props.setReviewStep("profile")
+                                    }
+                                >
+                                    click here to make those adjustments.
+                                </Link>{" "}
+                                Keep in mind that any modifications to your
+                                profile will reset any endorsements.
+                            </Text>
+                        </div>
+                    ) : (
+                        <Text>Waiting for all witnesses to endorse.</Text>
+                    )}
+
+                    {userEndorsement && !isPendingEndorser ? (
+                        <div className="mt-4 space-y-3">
+                            <Text>
+                                In the meantime, we recommend reviewing the
+                                prospective member profile information below for
+                                accuracy. If anything needs to be corrected, ask
+                                the invitee to sign in and make the corrections.
+                            </Text>
+                            <Text>
+                                If the induction video needs to be corrected,{" "}
+                                <Link
+                                    onClick={() => props.setReviewStep("video")}
+                                >
+                                    click here
+                                </Link>
+                                . Keep in mind that modifying the induction
+                                video will reset any endorsements.
+                            </Text>
                         </div>
                     ) : (
                         ""
                     )}
                 </div>
-                <div>
-                    <Heading size={3}>New Member Card Preview</Heading>
-                    <NewMemberCardPreview member={memberData} />
-                </div>
-            </div>
+            </InductionJourneyContainer>
+            <MemberCardPreview memberData={memberData} />
         </>
     );
 };
 
 interface EndorsingFormProps {
-    isPendingEndorser: boolean;
     isLoading: boolean;
+    setReviewStep: (step: "profile" | "video") => void;
     submitEndorsement: () => void;
 }
 const EndorsingForm = ({
-    isPendingEndorser,
     isLoading,
+    setReviewStep,
     submitEndorsement,
 }: EndorsingFormProps) => {
     const [isReviewed, setReviewed] = useState(false);
-    return isPendingEndorser ? (
+    return (
         <div className="space-y-3">
-            <Text className="text-red-500">
-                Please review carefully the new member card preview. Make sure
-                that all the social handles links are working. Once all the
-                endorsements are submitted the new Eden Member Induction will be
-                completed and the NFT data will be immutable.
+            <Text>
+                <span className="underline font-medium">Carefully review</span>{" "}
+                the prospective member profile information below. Make sure that
+                all social handles and links are accurate and working. If
+                anything needs to be corrected, ask the invitee to sign in and
+                make the corrections.
             </Text>
             <Text>
-                If any of the new member data is incorrect, ask for the new
-                member to fix his/her profile. If the induction video seems
-                wrong, please reupload the induction video.
+                If the induction video needs to be corrected,{" "}
+                <Link onClick={() => setReviewStep("video")}>click here</Link>.
+                Keep in mind that modifying the induction video will reset any
+                endorsements.
             </Text>
-            <Form.Checkbox
-                id="reviewed"
-                label="I carefully reviewed the New Member data and confirm my endorsement"
-                value={Number(isReviewed)}
-                onChange={() => setReviewed(!isReviewed)}
-            />
-            <div className="w-max mx-auto">
-                <Button
-                    onClick={submitEndorsement}
-                    disabled={isLoading || !isReviewed}
-                >
-                    {isLoading ? "Submitting endorsement..." : "Submit"}
-                </Button>
+            <div className="flex items-end xl:items-center flex-col xl:flex-row p-3 border rounded-md">
+                <Form.Checkbox
+                    id="reviewed"
+                    label="I have carefully reviewed the prospective member's profile information below and affirm my endorsement"
+                    value={Number(isReviewed)}
+                    onChange={() => setReviewed(!isReviewed)}
+                />
+                <div className="pt-1 justify-end">
+                    <ActionButton
+                        disabled={isLoading || !isReviewed}
+                        onClick={submitEndorsement}
+                    >
+                        {isLoading ? "Submitting endorsement..." : "Submit"}
+                    </ActionButton>
+                </div>
             </div>
-        </div>
-    ) : (
-        <div>
-            Waiting for all the endorsements to complete the induction process.
         </div>
     );
 };
@@ -248,35 +283,44 @@ const EndorsingForm = ({
 interface DonationFormProps {
     isInvitee: boolean;
     isLoading: boolean;
+    setReviewStep: (step: "profile" | "video") => void;
     submitDonation: () => void;
 }
 const DonationForm = ({
     isInvitee,
     isLoading,
+    setReviewStep,
     submitDonation,
 }: DonationFormProps) => {
     return isInvitee ? (
         <div className="space-y-3">
             <Text>
-                This is your last chance to review your profile and make sure
-                everything is correct. If you want to proceed, click on the
-                below button to donate and complete your induction!
+                This is your last chance to review your profile for completeness
+                and accuracy. If anything needs to be corrected,{" "}
+                <Link onClick={() => setReviewStep("profile")}>click here</Link>
+                . Keep in mind that modifying your profile will require your
+                endorsers to submit their endorsements again.
             </Text>
-            <div className="w-max mx-auto">
-                <Button onClick={submitDonation} disabled={isLoading}>
+            <Text>
+                If everything looks good, click on the button below to make your
+                donation to the Eden community. Once completed, your membership
+                will be activated and your Eden NFTs will be minted and
+                distributed.
+            </Text>
+            <div className="pt-1">
+                <ActionButton disabled={isLoading} onClick={submitDonation}>
                     {isLoading
                         ? "Submitting donation..."
-                        : `I want to Donate ${assetToString(
-                              minimumDonationAmount
-                          )}`}
-                </Button>
+                        : `Donate ${assetToString(minimumDonationAmount)}`}
+                </ActionButton>
             </div>
         </div>
     ) : (
-        <div>
-            Please reach out to the invitee and let him know that his induction
-            is endorsed and it's only waiting for his donation to complete the
-            induction!
-        </div>
+        <Text>
+            This induction is fully endorsed! As soon as the prospective member
+            completes their donation to the Eden community, their membership
+            will be activated and their Eden NFTs will be minted and
+            distributed.
+        </Text>
     );
 };
