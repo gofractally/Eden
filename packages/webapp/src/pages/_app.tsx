@@ -1,10 +1,20 @@
 import dynamic from "next/dynamic";
 import { AppProps } from "next/app";
+import Router from "next/router";
 import { QueryClient, QueryClientProvider } from "react-query";
 import { ReactQueryDevtools } from "react-query/devtools";
 import { Toaster } from "react-hot-toast";
+import NProgress from "nprogress";
 
 import "tailwindcss/tailwind.css";
+import "_app/styles/nprogress.tailwind.css";
+
+Router.events.on("routeChangeStart", (url) => {
+    console.log(`Loading: ${url}`);
+    NProgress.start();
+});
+Router.events.on("routeChangeComplete", () => NProgress.done());
+Router.events.on("routeChangeError", () => NProgress.done());
 
 const queryClient = new QueryClient();
 
