@@ -18,6 +18,7 @@ export interface Induction {
 
 export enum InductionStatus {
     invalid,
+    expired,
     waitingForProfile,
     waitingForVideo,
     waitingForEndorsement,

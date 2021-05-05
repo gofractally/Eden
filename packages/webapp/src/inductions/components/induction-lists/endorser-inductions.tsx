@@ -1,6 +1,9 @@
 import dayjs from "dayjs";
 
-import { getInductionStatus } from "inductions/utils";
+import {
+    getInductionRemainingTimeDays,
+    getInductionStatus,
+} from "inductions/utils";
 import { getInduction } from "inductions/api";
 import {
     ActionButton,
@@ -63,9 +66,7 @@ const getTableData = (endorsements: Endorsement[]): InductionTable.Row[] => {
 
         const { data: inviter } = useMemberByAccountName(end.inviter);
 
-        const remainingTime = induction
-            ? dayjs().to(dayjs(induction.created_at).add(7, "day"), true)
-            : "";
+        const remainingTime = getInductionRemainingTimeDays(induction);
 
         const invitee =
             induction && induction.new_member_profile.name
@@ -100,6 +101,17 @@ const EndorserInductionStatus = ({
 }: EndorserInductionStatusProps) => {
     const status = getInductionStatus(induction);
     switch (status) {
+        case InductionStatus.expired:
+            return (
+                <ActionButton
+                    type={ActionButtonType.DISABLED}
+                    size={ActionButtonSize.S}
+                    fullWidth
+                    disabled
+                >
+                    Expired
+                </ActionButton>
+            );
         case InductionStatus.waitingForProfile:
             return (
                 <ActionButton
