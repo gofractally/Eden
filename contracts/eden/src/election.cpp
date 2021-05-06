@@ -6,6 +6,47 @@ namespace eden
    void elections::startelect(const eosio::checksum256& seed)
    {
       std::vector<eosio::name> all_members;
+      // load all members
+      // create rng with seed: choose algorithm - does it need to be crypto or is a regular PRNG good enough?
+      // With a statistical PRNG, a sophisticated attacker could likely rig things so that the
+      // group division is biased in his favor, by exploiting patterns in the PRNG output, even without
+      // knowledge or control of the seed.
+      // sha256 over {seed,counter}?
+      std::shuffle(all_members.begin(), all_members.end(), rng);
+      auto config = make_election_config(all_members.size());
+      uint64_t group_id = 0;
+      uint16_t remaining_short_groups = config[0].num_short_groups;
+      uint16_t remaining_in_group = 0;
+      if(remaining_short_groups) { --remaining_short_groups; --remaining_in_group; }
+      for(auto member : all_members)
+      {
+         if(remaining_in_group == 0)
+         {
+            ++group_id;
+            remaining_in_group = config[0].group_max_size();
+            if(remaining_short_groups) { --remaining_short_groups; --remaining_in_group; }
+         }
+         // assign member current group_id
+      }
+
+      // The above will sort of work, but is hard to divide into chunks
+
+      // What about this:
+      uint16_t count = 0;
+      for(auto member : all_members)
+      {
+         ++count;
+         uniform_int_distribution<uin16_t> dist(0, count);
+         auto pos = dist(rng);
+         swap(all_members[pos], all_members[count]);
+         // The group can be derived from the index.
+         // Store this data structure in the votes table?
+      }
+      // Randomize the first layer completely.
+      // Organize later layers to minimize the difference in
+      // overall voting power due to differences in group size.
+      // i.e. we don't want one member to be in a smallest group
+      // of every level.
    }
    
    void elections::vote(uint64_t group_id, eosio::name voter, eosio::name candidate)

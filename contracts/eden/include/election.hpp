@@ -120,7 +120,7 @@ namespace eden
 
    // How much CPU does it take to process the entire members table in a single
    // transaction to prepare the election?
-   // Alternatively, is there an incremental algorithm from selecting
+   // Alternatively, is there an incremental algorithm for selecting
    // groups randomly that only reads a part of the members table at a
    // time?
    
