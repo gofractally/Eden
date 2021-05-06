@@ -1,5 +1,3 @@
-import dayjs from "dayjs";
-
 import {
     getInductionRemainingTimeDays,
     getInductionStatus,
