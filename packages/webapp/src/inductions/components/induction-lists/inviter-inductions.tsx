@@ -1,5 +1,3 @@
-import dayjs from "dayjs";
-
 import { getEndorsementsByInductionId } from "inductions/api";
 import {
     getInductionRemainingTimeDays,

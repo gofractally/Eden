@@ -176,7 +176,11 @@ export const InductionStepEndorsement = (props: Props) => {
                         {endorsements.map((endorser) => (
                             <li key={endorser.id}>
                                 {getEndorserStatus(endorser)}{" "}
-                                {getEndorserName(endorser)}
+                                <Link href={`/members/${endorser.endorser}`}>
+                                    <span className="text-gray-800 hover:underline">
+                                        {getEndorserName(endorser)}
+                                    </span>
+                                </Link>
                             </li>
                         ))}
                     </ul>
