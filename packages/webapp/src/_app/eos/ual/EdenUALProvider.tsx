@@ -1,5 +1,6 @@
-import { appName, chainConfig } from "config";
 import { useEffect, useState } from "react";
+
+import { appName, chainConfig } from "config";
 import { anchor, scatter, ledger } from "./config";
 
 export const EdenUALProvider: React.FC = ({ children }) => {
