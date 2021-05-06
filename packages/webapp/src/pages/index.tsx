@@ -7,7 +7,7 @@ export const Index = () => (
                 <div className="space-y-3 text-gray-800">
                     <Text>
                         Eden is a community working to maximize the power and
-                        independence of its members and thereby securing life,
+                        independence of its members, thereby securing life,
                         liberty, property, and justice for all.
                     </Text>
                     <Text>
@@ -22,37 +22,6 @@ export const Index = () => (
                         community, you gain access to a group of people working
                         together to empower you and your family to make a bigger
                         impact in the world.
-                    </Text>
-                    <Text>
-                        Eden is a revolutionary new experiment in governance
-                        that could transform the world. We are inviting you to
-                        be among the founding members of Eden - to be in the
-                        "genesis block" of the most revolutionary
-                        consensus-building algorithm since Bitcoin. As a
-                        founding member, you will have the opportunity to define
-                        the culture by inviting those closest to you into the
-                        community.
-                    </Text>
-                    <Text>
-                        As a leader, I'm sure you realize how critical the
-                        initial members of any group are to its eventual
-                        success. This is especially true for something as
-                        revolutionary as EdenOS. Building a great culture that
-                        embodies the core values of the Eden community requires
-                        early leaders who share an authentic desire to see EOS
-                        succeed in its mission.
-                    </Text>
-                    <Text>
-                        If this is something you believe you'd like to be a part
-                        of, or sincerely want to learn more about, please go
-                        ahead and fill out this form(link) and we'll get back to
-                        you to schedule a day and time for us to talk more about
-                        becoming a founding member of the Eden community.
-                    </Text>
-                    <Text className="pt-4">
-                        For all mankind,
-                        <br />
-                        Daniel Larimer
                     </Text>
                 </div>
             </Card>
