@@ -116,6 +116,17 @@ namespace eden
    //
    // TODO: is it guaranteed that this results in every layer having the same max group size?
    // If not can I adjust the rounding mode so that this is guaranteed?
+   // Ans. Not guaranteed unless we also allow num_short_groups to be equal to num_groups.
+   // Ex. 132 = 12*11
+   //
+   // Can we prove this instead:
+   // floor(M^{1/N}) <= ceil(M^{(i+1)/N})/ceil(M^{i/N}) <= ceil(M^{1/N})
+   // Nope.  Also not true.
+   //
+   // What if we instead fix the max group size as ceil(num_active_members^{1/config.size()})?
+   // every layer except the first has a fixed group size.
+   // let S = ceil(M^{1/N})
+   // Choose 0 < K < N so that S^(K) (S-1)^(N-K) <= M <= S^(K+1) (S-1)^(N-K-1)
 
    // Is the full election schedule determined up front, or can the schedule for
    // later rounds depend on whether groups from earlier rounds failed to
