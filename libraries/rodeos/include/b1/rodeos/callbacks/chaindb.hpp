@@ -146,8 +146,6 @@ namespace b1::rodeos
             }
             else
             {
-               if (iterators.size() > std::numeric_limits<int32_t>::max())
-                  throw std::runtime_error("too many iterators");
                std::tie(result, it) = derived().create_iterator(table_index, record);
             }
          }
@@ -159,6 +157,8 @@ namespace b1::rodeos
       template <typename T>
       std::pair<size_t, iterator*> create_iterator(int32_t table_index, T& record)
       {
+         if (iterators.size() > std::numeric_limits<int32_t>::max())
+            throw std::runtime_error("too many iterators");
          auto pos = iterators.size();
          iterators.emplace_back();
          auto* it = &iterators.back();
@@ -302,7 +302,7 @@ namespace b1::rodeos
       {
          return index_to_end_iterator(get_table_index({code, table, scope}));
       }
-   };
+   };  // iterator_cache_base
 
    struct chaindb_primary_iterator : chaindb_iterator_base
    {
@@ -472,13 +472,12 @@ namespace b1::rodeos
 
       int32_t get_primary_iterator(int32_t table_index,
                                    uint64_t key,
-                                   chain_kv::view::iterator&& view_it,
-                                   bool require_match_primary = false)
+                                   chain_kv::view::iterator&& view_it)
       {
          return base::template get_iterator_impl<Ship_index_type>(
              table_index, std::optional{key}, std::move(view_it),
              base::primary_key_to_iterator_index, false,
-             [&](auto& record) { return !require_match_primary || record.primary_key == key; },
+             [&](auto& record) { return record.primary_key == key; },
              [&](auto& record) { return record.primary_key; });
       }
 
@@ -564,8 +563,8 @@ namespace b1::rodeos
 #if 0
          // This optimization relies on an invariant in secondary_to_iterator_index that
          // lower_bound(), upper_bound(), and next() maintain. Unfortunately, prev() and
-         // get_primary_iterator() don't maintain it, leading to a bug. My current guess
-         // is that if we update prev() and get_primary_iterator() to maintain the
+         // find_primary() don't maintain it, leading to a bug. My current guess
+         // is that if we update prev() and find_primary() to maintain the
          // invariant, the overhead in them will exceed the gain here.
          auto map_it = secondary_to_iterator_index.lower_bound({table_index, {secondary, 0}});
          if (map_it != secondary_to_iterator_index.end() &&
@@ -628,9 +627,9 @@ namespace b1::rodeos
                  (uint8_t)0x01, table_name, eosio::name{"primary"}, code, table, scope)))};
          it.lower_bound(eosio::convert_to_key(std::make_tuple(
              (uint8_t)0x01, table_name, eosio::name{"primary"}, code, table, scope, primary)));
-         return get_primary_iterator(table_index, primary, std::move(it), true);
+         return get_primary_iterator(table_index, primary, std::move(it));
       }
-   };
+   };  // secondary_iterator_cache
 
    struct chaindb_state
    {
