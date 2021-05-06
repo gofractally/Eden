@@ -80,7 +80,11 @@ const MemberImage = ({ member }: { member: MemberData }) => {
 
 const MintDate = ({ createdAt }: { createdAt: number }) => (
     <div>
-        <p className="text-sm text-gray-500">{dayjs(createdAt).format("l")}</p>
+        <p className="text-sm text-gray-500">
+            {createdAt === 0
+                ? "not an eden member"
+                : dayjs(createdAt).format("l")}
+        </p>
     </div>
 );
 
