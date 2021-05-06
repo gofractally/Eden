@@ -5,9 +5,6 @@ export const Index = () => (
         <Card title="Eden on EOS">
             <ul>
                 <li>
-                    <Link href="/about">About Eden</Link>
-                </li>
-                <li>
                     <Link href="/members">The Community</Link>
                 </li>
                 <li>
