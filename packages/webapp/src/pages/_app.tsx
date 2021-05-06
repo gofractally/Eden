@@ -1,5 +1,4 @@
 import React, { useRef } from "react";
-import dynamic from "next/dynamic";
 import { AppProps } from "next/app";
 import Router from "next/router";
 import { QueryClient, QueryClientProvider } from "react-query";
@@ -10,6 +9,8 @@ import NProgress from "nprogress";
 import dayjs from "dayjs";
 import * as localizedFormat from "dayjs/plugin/localizedFormat";
 import * as relativeTime from "dayjs/plugin/relativeTime";
+
+import { EdenUALProvider } from "_app";
 
 import "tailwindcss/tailwind.css";
 import "_app/styles/nprogress.tailwind.css";
@@ -33,9 +34,9 @@ const WebApp = ({ Component, pageProps }: AppProps) => {
     return (
         <QueryClientProvider client={queryClientRef.current}>
             <Hydrate state={pageProps.dehydratedState}>
-                <EdenUALProviderWithNoSSR>
+                <EdenUALProvider>
                     <Component {...pageProps} />
-                </EdenUALProviderWithNoSSR>
+                </EdenUALProvider>
             </Hydrate>
             <ReactQueryDevtools initialIsOpen={false} />
             <Toaster
@@ -48,18 +49,6 @@ const WebApp = ({ Component, pageProps }: AppProps) => {
             />
         </QueryClientProvider>
     );
-};
-
-const EdenUALProviderWithNoSSR = ({ children }: any) => {
-    if (typeof window === "undefined") {
-        return <React.Fragment key="ssr-fragment">{children}</React.Fragment>;
-    } else {
-        const ClientProvider = dynamic(
-            () => import("../_app/eos/ual/EdenUALProvider"),
-            { ssr: false }
-        );
-        return <ClientProvider>{children}</ClientProvider>;
-    }
 };
 
 export default WebApp;
