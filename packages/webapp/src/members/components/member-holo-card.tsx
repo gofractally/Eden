@@ -24,7 +24,7 @@ export const MemberHoloCard = ({ member, inducted = true }: Props) => {
             style={{ maxWidth: 1024 }}
             ref={observe}
         >
-            <img src="/images/eden-profile-bg@3x.png" />
+            <img src="/images/eden-profile-bg.png" />
             <div
                 className="absolute inset-0 flex flex-col justify-between"
                 style={{ padding: width * 0.047 }}
