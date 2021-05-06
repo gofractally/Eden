@@ -549,6 +549,11 @@ void test_db_contract::write()
    store_multiple("scope3"_n, "table4"_n, get_self(), 92,                    data_2, 0x3232,                0x3232'3232,               -0.0,                   "000000000000000000000000000000ff00000000000000000000000000000000");
    store_multiple("scope3"_n, "table4"_n, get_self(), 91,                    data_1, 0x3333,                0x3333'3333,                1.0,                   "00000000000000ff000000000000000000000000000000000000000000000000");
    store_multiple("scope3"_n, "table4"_n, get_self(), 90,                    data_3, 0x3434,                0x3434'3434,                2.0,                   "000000ff00000000000000000000000000000000000000000000000000000000");
+
+   store_multiple("scope3"_n, "table5"_n, get_self(), 100,                   data_0, 0x3030,                0x3030'3030,               -2.0,                   "00000000000000000000000000000000000000000000000000000000000000ff");
+   store_multiple("scope3"_n, "table5"_n, get_self(), 101,                   data_1, 0x3030,                0x3030'3030,               -2.0,                   "00000000000000000000000000000000000000000000000000000000000000ff");
+   store_multiple("scope3"_n, "table5"_n, get_self(), 102,                   data_2, 0x3030,                0x3030'3030,               -2.0,                   "00000000000000000000000000000000000000000000000000000000000000ff");
+   store_multiple("scope3"_n, "table5"_n, get_self(), 103,                   data_0, 0x3131,                0x3131'3131,               -1.0,                   "0000000000000000000000000000000000000000000000ff0000000000000000");
    // clang-format on
 
    idx64::store("nope"_n, "just.2nd"_n, get_self(), 42, 42);
@@ -1187,6 +1192,18 @@ void test_db_contract::read()
    check_find_secondary_multiple(get_self(), "scope3"_n, "table4"_n,  46, 94,         0x3030, 0x3030'3030, -2.0, "00000000000000000000000000000000000000000000000000000000000000ff");
    check_find_secondary_multiple(get_self(), "scope3"_n, "table4"_n, -13, 0xfeedbeef, 0x0000, 0x0000'0000, -3.0, "0000000000000000000000000000000000000000000000000000000000000000");
    check_find_secondary_multiple(get_self(), "scope3"_n, "table4"_n, -13, 0xfeedbeef, 0x3535, 0x3535'3535,  7.5, "ff00000000000000000000000000000000000000000000000000000000000000");
+   // clang-format on
+
+   /////////////////////////////////
+   // There was a bug in rodeos's secondary_iterator_cache::lower_bound.
+   // Verify the bug is no longer present.
+   // creates iterators 47 - 49
+   /////////////////////////////////
+
+   // clang-format off
+   check_upperbound_multiple(get_self(), "scope3"_n, "table5"_n, 47, 103, 0x3030, 0x3131, 0x3030'3030, 0x3131'3131, -2.0, -1.0, "00000000000000000000000000000000000000000000000000000000000000ff", "0000000000000000000000000000000000000000000000ff0000000000000000");
+   check_prev_multiple(47, 48, 102);
+   check_lowerbound_multiple(get_self(), "scope3"_n, "table5"_n, 49, 100, 0x3030, 0x3030, 0x3030'3030, 0x3030'3030, -2.0, -2.0, "00000000000000000000000000000000000000000000000000000000000000ff", "00000000000000000000000000000000000000000000000000000000000000ff");
    // clang-format on
 
    print("read passed\n");

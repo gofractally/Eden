@@ -560,6 +560,13 @@ namespace b1::rodeos
          int32_t table_index = base::get_table_index({code, table, scope});
          if (table_index < 0)
             return -1;
+
+#if 0
+         // This optimization relies on an invariant in secondary_to_iterator_index that
+         // lower_bound(), upper_bound(), and next() maintain. Unfortunately, prev() and
+         // get_primary_iterator() don't maintain it, leading to a bug. My current guess
+         // is that if we update prev() and get_primary_iterator() to maintain the
+         // invariant, the overhead in them will exceed the gain here.
          auto map_it = secondary_to_iterator_index.lower_bound({table_index, {secondary, 0}});
          if (map_it != secondary_to_iterator_index.end() &&
              map_it->first.key.secondary == secondary)
@@ -567,6 +574,8 @@ namespace b1::rodeos
             primary = map_it->first.key.primary;
             return map_it->second;
          }
+#endif
+
          chain_kv::view::iterator it{
              base::view, state_account.value,
              chain_kv::to_slice(eosio::convert_to_key(std::make_tuple(
