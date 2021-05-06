@@ -369,14 +369,13 @@ namespace eosio
        */
       [[nodiscard]] std::optional<transaction_trace> exec_deferred();
 
-#ifdef XXX
       struct get_history_result
       {
          /** The other members refer to memory owned here */
          std::vector<char> memory;
 
-         ship_protocol::get_blocks_result_base result;
-         std::optional<ship_protocol::signed_block_variant> block;
+         ship_protocol::get_blocks_result_v0 result;
+         std::optional<ship_protocol::signed_block> block;
          std::vector<ship_protocol::transaction_trace> traces;
          std::vector<ship_protocol::table_delta> deltas;
       };
@@ -387,7 +386,6 @@ namespace eosio
        * available.
        */
       std::optional<get_history_result> get_history(uint32_t block_num);
-#endif
 
       transaction_trace create_account(name ac,
                                        const public_key& pub_key,
@@ -452,7 +450,6 @@ namespace eosio
                                            const char* expected_except = nullptr);
    };  // test_chain
 
-#ifdef XXX
    /**
     * Manages a rodeos instance
     */
@@ -580,7 +577,6 @@ namespace eosio
       auto as() { return user_context{*this}; }
 
    };  // test_rodeos
-#endif
 }  // namespace eosio
 
 namespace eosio
