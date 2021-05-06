@@ -216,8 +216,9 @@ namespace b1::rodeos
             }
             auto record = std::get<0>(eosio::from_bin<Ship_index_type>(stream));
             primary = record.primary_key;
-            it.next = get_iterator(it.table_index, std::move(record), std::move(*view_it));
-            return it.next;
+            iterators[itr].next =
+                get_iterator(it.table_index, std::move(record), std::move(*view_it));
+            return iterators[itr].next;
          }
       }  // next_impl
 
@@ -278,7 +279,10 @@ namespace b1::rodeos
             }
             auto record = std::get<0>(eosio::from_bin<Ship_index_type>(stream));
             primary = record.primary_key;
-            it->prev = get_iterator(it->table_index, record, std::move(*view_it));
+            auto prev = get_iterator(it->table_index, record, std::move(*view_it));
+            if (itr >= 0)
+               it = &iterators[itr];
+            it->prev = prev;
             return *it->prev;
          }
       }  // prev_impl
