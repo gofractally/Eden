@@ -20,18 +20,23 @@ export const Link = ({
 }: Props) => {
     const linkClass = `${className || ""} text-yellow-500 hover:underline`;
 
+    let targetProps = {
+        target,
+        rel: isExternal ? "noopener noreferrer" : undefined,
+    };
+
     return isExternal || onClick ? (
         <a
             className={linkClass}
             href={href || "#"}
             onClick={onClick}
-            target={target}
+            {...targetProps}
         >
             {children}
         </a>
     ) : (
         <NextLink href={href!}>
-            <a className={linkClass} target={target}>
+            <a className={linkClass} {...targetProps}>
                 {children}
             </a>
         </NextLink>
