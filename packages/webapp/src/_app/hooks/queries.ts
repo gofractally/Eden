@@ -1,6 +1,8 @@
-import { useQuery } from "react-query";
+import { useQueries, useQuery, UseQueryResult } from "react-query";
+
+import { EdenMember, getEdenMember } from "members";
+
 import { useUALAccount } from "../eos";
-import { getEdenMember } from "members";
 
 export const useMemberByAccountName = (accountName: string) =>
     useQuery(
@@ -8,9 +10,19 @@ export const useMemberByAccountName = (accountName: string) =>
         async () => await getEdenMember(accountName),
         {
             staleTime: Infinity,
-            enabled: !!accountName,
+            enabled: Boolean(accountName),
         }
     );
+
+export const useMemberListByAccountNames = (accountNames: string[]) =>
+    useQueries(
+        accountNames.map((accountName) => ({
+            queryKey: ["member", accountName],
+            queryFn: async () => await getEdenMember(accountName),
+            staleTime: Infinity,
+            enabled: Boolean(accountName),
+        }))
+    ) as UseQueryResult<EdenMember | undefined>[];
 
 export const useCurrentMember = () => {
     const [ualAccount] = useUALAccount();

@@ -10,6 +10,7 @@ import {
     ActionButtonSize,
     ActionButtonType,
     useFetchedData,
+    useMemberListByAccountNames,
 } from "_app";
 import * as InductionTable from "_app/ui/table";
 import { Endorsement, Induction, InductionStatus } from "../../interfaces";
@@ -54,10 +55,21 @@ const getTableData = (inductions: Induction[]): InductionTable.Row[] => {
             getEndorsementsByInductionId,
             ind.id
         );
-        const endorsers = allEndorsements
-            ?.map((end: Endorsement): string => end.endorser)
-            .filter((end: string) => end !== ind.inviter)
-            ?.join(", ");
+
+        const endorsersAccounts =
+            allEndorsements
+                ?.map((end: Endorsement): string => end.endorser)
+                .filter((end: string) => end !== ind.inviter) || [];
+
+        const endorsersMembers = useMemberListByAccountNames(endorsersAccounts);
+
+        const endorsers =
+            endorsersMembers
+                .map(
+                    (member, index) =>
+                        member.data?.name || endorsersAccounts[index]
+                )
+                .join(", ") || "";
 
         const remainingTime = getInductionRemainingTimeDays(ind);
 

@@ -11,6 +11,7 @@ import {
     useUALAccount,
     onError,
     ActionButton,
+    useMemberListByAccountNames,
 } from "_app";
 import { minimumDonationAmount } from "config";
 
@@ -41,6 +42,10 @@ export const InductionStepEndorsement = (props: Props) => {
     const [ualAccount] = useUALAccount();
     const [isLoading, setLoading] = useState(false);
     const [endorsements, setEndorsements] = useState([...props.endorsements]);
+
+    const endorsersMembers = useMemberListByAccountNames(
+        props.endorsements.map((endorsement) => endorsement.endorser)
+    );
 
     const induction = props.induction;
 
@@ -128,6 +133,13 @@ export const InductionStepEndorsement = (props: Props) => {
         userEndorsement && !userEndorsement.endorsed
     );
 
+    const getEndorserName = (endorsement: Endorsement) => {
+        const endorserMember = endorsersMembers.find(
+            (query) => query.data?.account === endorsement.endorser
+        );
+        return endorserMember?.data?.name || endorsement.endorser;
+    };
+
     const getEndorserStatus = (endorsement: Endorsement) =>
         endorsement.endorsed ? (
             <span title="Endorsement Submitted" className="mr-2">
@@ -164,7 +176,7 @@ export const InductionStepEndorsement = (props: Props) => {
                         {endorsements.map((endorser) => (
                             <li key={endorser.id}>
                                 {getEndorserStatus(endorser)}{" "}
-                                {endorser.endorser}
+                                {getEndorserName(endorser)}
                             </li>
                         ))}
                     </ul>
