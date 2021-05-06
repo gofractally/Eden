@@ -6,6 +6,7 @@ import {
     ActionButtonType,
     useFetchedData,
     useMemberByAccountName,
+    useMemberListByAccountNames,
 } from "_app";
 import * as InductionTable from "_app/ui/table";
 
@@ -56,11 +57,20 @@ const getTableData = (inductions: Induction[]): InductionTable.Row[] => {
 
         const { data: inviter } = useMemberByAccountName(ind.inviter);
 
-        const endorsers =
+        const endorsersAccounts =
             allEndorsements
                 ?.map((end: Endorsement): string => end.endorser)
-                .filter((end: string) => end !== ind.inviter)
-                ?.join(", ") || "";
+                .filter((end: string) => end !== ind.inviter) || [];
+
+        const endorsersMembers = useMemberListByAccountNames(endorsersAccounts);
+
+        const endorsers =
+            endorsersMembers
+                .map(
+                    (member, index) =>
+                        member.data?.name || endorsersAccounts[index]
+                )
+                .join(", ") || "";
 
         const isFullyEndorsed =
             allEndorsements &&
