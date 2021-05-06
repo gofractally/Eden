@@ -113,10 +113,15 @@ namespace eden
    //
    // config.size() == ceil(log_12(num_active_members))
    // config[i].num_groups = ceil(num_active_members^{(config.size()-i-1)/config.size()})
+   //
+   // TODO: is it guaranteed that this results in every layer having the same max group size?
+   // If not can I adjust the rounding mode so that this is guaranteed?
 
    // Is the full election schedule determined up front, or can the schedule for
    // later rounds depend on whether groups from earlier rounds failed to
    // reach consensus?
+   // If it isn't determined up front, does that introduce the possibility of
+   // intentional consensus failure to manipulate the overall results?
 
    // How much CPU does it take to process the entire members table in a single
    // transaction to prepare the election?
@@ -138,6 +143,9 @@ namespace eden
       // \pre voter has not yet reported his vote in this group
       // Don't report your vote until your group has reached consensus.
       // You won't be able to change it.
+      // TODO: will this lead to insta-locking votes?  If we allow it
+      // to change, is it a problem that finishgroup cannot know that
+      // a user doesn't intend to change his vote?
       void vote(uint64_t group_id, eosio::name voter, eosio::name candidate);
       // \pre more than 2/3 of the group members vote for the same candidate
       // OR the remaining votes + the votes for the candidate with the most votes <= 2/3 of the group.

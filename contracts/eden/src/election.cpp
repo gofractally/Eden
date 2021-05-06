@@ -104,7 +104,7 @@ namespace eden
          // TODO: is it correct to reduce the group size of the next layer?
          // Doing so means that non-reporting vs. reporting consensus failure
          // can affect the results of the next layer.
-         // Not doing so, means that it's possible for
+         // Not doing so, means that it's harder and maybe impossible for later layers to reach consensus.
          group_tb.modify(group, eosio::same_payer, [](auto& row){ --row.group_size; });
       }
       else
