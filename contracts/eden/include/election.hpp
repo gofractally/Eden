@@ -22,18 +22,23 @@ namespace eden
    };
    EOSIO_REFLECT(group, group_id, next_group, group_size);
    using group_table_type = eosio::multi_index<"group"_n, group>;
-   
+
+   // In this phase, every voter is assigned a unique random integer id in [0,N)
    struct election_state_init_voters
    {
       uint16_t next_member_idx;
       election_rng rng;
    };
 
+   // In this phase, the voters ids from the init phase are used to assign them to
+   // a first layer group.
    struct election_state_group_voters
    {
-      uint16_t first_level_group_count;
+      election_config config;
    };
 
+   // Organize groups into a tree.  The tree structure is deterministically
+   // computed based on each node's level and index within the level.
    struct election_state_build_groups
    {
       election_config config;

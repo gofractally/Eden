@@ -24,15 +24,15 @@ namespace eden
       ++state.next_member_idx;
    }
 
+   uint64_t get_group_id(uint64_t level, uint64_t offset) {
+      return (level << 16) + offset + 1;
+   }
+
    void elections::assign_voter_to_group(election_state_group_voters& state, const vote& v)
    {
       vote_tb.modify(v, eosio::same_payer, [](auto& row){
-         row.group_id = row.group_id % state.first_level_group_count + 1;
+         row.group_id = get_group_id(0, row.group_id % state.config[0].num_groups);
       });
-   }
-
-   uint64_t get_group_id(uint64_t level, uint64_t offset) {
-      return (level << 16) + offset + 1;
    }
 
    void elections::build_group(election_state_build_groups& state, uint8_t level, uint16_t offset)
