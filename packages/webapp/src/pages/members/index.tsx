@@ -2,7 +2,7 @@ import { GetServerSideProps } from "next";
 import { QueryClient, useQuery } from "react-query";
 import { dehydrate } from "react-query/hydration";
 
-import { getMembers, MembersGrid, MemberData, getNewMembers } from "members";
+import { getMembers, MembersGrid, getNewMembers } from "members";
 import { SingleColLayout, Card } from "_app";
 
 const QUERY_MEMBERS = "query_members";
@@ -30,13 +30,21 @@ export const MembersPage = () => {
                     {newMembers.isLoading && "Loading new members..."}
                     {newMembers.error && "Fail to load new members"}
                     {newMembers.data && (
-                        <MembersGrid members={newMembers.data} />
+                        <MembersGrid
+                            members={newMembers.data}
+                            dataTestId="new-members-grid"
+                        />
                     )}
                 </Card>
                 <Card title="All Members" titleSize={2}>
                     {members.isLoading && "Loading members..."}
                     {members.error && "Fail to load members"}
-                    {members.data && <MembersGrid members={members.data} />}
+                    {members.data && (
+                        <MembersGrid
+                            members={members.data}
+                            dataTestId="members-grid"
+                        />
+                    )}
                 </Card>
             </>
         </SingleColLayout>
