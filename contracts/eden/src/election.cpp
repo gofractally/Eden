@@ -2,53 +2,59 @@
 
 namespace eden
 {
-
-   void elections::startelect(const eosio::checksum256& seed)
+   // Incremental implementation of shuffle
+   // After adding all voters, each voter will have unique integer in [0, N) as
+   // a group_id.
+   void elections::add_voter(election_state_init_voters& state, eosio::name member)
    {
-      std::vector<eosio::name> all_members;
-      // load all members
-      // create rng with seed: choose algorithm - does it need to be crypto or is a regular PRNG good enough?
-      // With a statistical PRNG, a sophisticated attacker could likely rig things so that the
-      // group division is biased in his favor, by exploiting patterns in the PRNG output, even without
-      // knowledge or control of the seed.
-      // sha256 over {seed,counter}?
-      std::shuffle(all_members.begin(), all_members.end(), rng);
-      auto config = make_election_config(all_members.size());
-      uint64_t group_id = 0;
-      uint16_t remaining_short_groups = config[0].num_short_groups;
-      uint16_t remaining_in_group = 0;
-      if(remaining_short_groups) { --remaining_short_groups; --remaining_in_group; }
-      for(auto member : all_members)
+      std::uniform_int_distribution<uint16_t> dist(0, state.next_member_idx);
+      auto pos = dist(state.rng);
+      if(pos != state.next_member_idx)
       {
-         if(remaining_in_group == 0)
-         {
-            ++group_id;
-            remaining_in_group = config[0].group_max_size();
-            if(remaining_short_groups) { --remaining_short_groups; --remaining_in_group; }
-         }
-         // assign member current group_id
+         auto group_idx = vote_tb.get_index<"bygroup"_n>();
+         const auto& old = group_idx.get(pos);
+         group_idx.modify(old, eosio::same_payer, [&](auto& row){
+            row.group = state.next_member_idx;
+         });
       }
-
-      // The above will sort of work, but is hard to divide into chunks
-
-      // What about this:
-      uint16_t count = 0;
-      for(auto member : all_members)
-      {
-         ++count;
-         uniform_int_distribution<uin16_t> dist(0, count);
-         auto pos = dist(rng);
-         swap(all_members[pos], all_members[count]);
-         // The group can be derived from the index.
-         // Store this data structure in the votes table?
-      }
-      // Randomize the first layer completely.
-      // Organize later layers to minimize the difference in
-      // overall voting power due to differences in group size.
-      // i.e. we don't want one member to be in a smallest group
-      // of every level.
+      vote_tb.emplace(contract, contract, [&](auto& row){
+         row.member = member;
+         row.group_id = pos;
+      });
+      ++state.next_member_idx;
    }
-   
+
+   void elections::assign_voter_to_group(election_state_group_voters& state, const vote& v)
+   {
+      vote_tb.modify(v, eosio::same_payer, [](auto& row){
+         row.group_id = row.group_id % state.first_level_group_count + 1;
+      });
+   }
+
+   uint64_t get_group_id(uint64_t level, uint64_t offset) {
+      return (level << 16) + offset + 1;
+   }
+
+   void elections::build_group(election_state_build_groups& state, uint8_t level, uint16_t offset)
+   {
+      group_tb.emplace(contract, contract, [&](auto& row){
+         row.group_id = get_group_id(level, offset);
+         if(level + 1 < state.config.size())
+         {
+            row.next_group = get_group_id(level + 1, offset % state.config[level + 1].num_groups);
+         }
+         else
+         {
+            row.next_group = 0;
+         }
+         row.group_size = state.config[level].group_max_size();
+         if(offset > state.config[level].num_groups - state.config[level].num_short_groups())
+         {
+            --row.group_size;
+         }
+      });
+   }
+
    void elections::vote(uint64_t group_id, eosio::name voter, eosio::name candidate)
    {
       eosio::require_auth(voter);

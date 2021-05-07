@@ -22,6 +22,22 @@ namespace eden
    };
    EOSIO_REFLECT(group, group_id, next_group, group_size);
    using group_table_type = eosio::multi_index<"group"_n, group>;
+   
+   struct election_state_init_voters
+   {
+      uint16_t next_member_idx;
+      election_rng rng;
+   };
+
+   struct election_state_group_voters
+   {
+      uint16_t first_level_group_count;
+   };
+
+   struct election_state_build_groups
+   {
+      election_config config;
+   };
 
    // Invariants:
    // a member can only have a vote record in one group at a time
@@ -107,15 +123,13 @@ namespace eden
    //
    // Determines the group sizes of each round as follows:
    // Select a group size, S, such that
-   // - S <= 12
-   // - The numer of rounds is minimal
    // - The first round contains groups of size S or (S-1)
    // - Zero or more subsequent rounds contain groups of uniform size (S-1)
    // - Zero or more subsequent rounds contain groups of uniform size S
    //
-   // R = log_12(N)
+   // R = \ceil{log_12(N)}
    // S = \ceil{N^{1/R}}
-   // Choose 0 <= K < R so that S^(K) (S-1)^(R-K) <= N <= S^(K+1) (S-1)^(R-K-1)
+   // Choose 0 <= K < R so that S^K (S-1)^{R-K} <= N <= S^{K+1} (S-1)^{R-K-1}
    //
    // \post config.back().num_groups == 1 (unless num_participants <= 1)
    // \post config.front().num_participants() == num_participants (unless num_participants <= 1)
