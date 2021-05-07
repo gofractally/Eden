@@ -86,47 +86,81 @@ namespace eden
       return static_cast<uint16_t>(std::ceil(std::pow(static_cast<double>(x), static_cast<double>(y.num)/(y.den))));
    }
 
-   using election_config = std::vector<election_round_config>;
-   election_config make_election_config(uint16_t num_participants)
+   uint32_t int_pow(uint32_t base, uint32_t exponent)
    {
-      std::size_t num_rounds = ceil_log12(num_participants);
-      election_config result(num_rounds);
-      if(num_rounds > 0)
+      uint32_t result = 1;
+      for(uint32_t i = 0; i < exponent; ++i)
       {
-         uint16_t prev_participants = num_participants;
-         for(std::size_t i = 0; i < num_rounds; ++i)
-         {
-            result[i].num_participants = prev_participants;
-            prev_participants = result[i].num_groups = ceil_pow(num_participants, {static_cast<uint8_t>(num_rounds - i - 1), static_cast<uint8_t>(num_rounds)});
-         }
+         result *= base;
       }
       return result;
    }
-   // invariants:
-   // config.back().num_groups == 1
-   // config.front().num_participants() == num_active_members
-   // config[i].num_groups == config[i+1].num_participants
+   
+   using election_config = std::vector<election_round_config>;
+
+   // Requirements:
+   // - The maximum group size is 12
+   // - The number of rounds is minimal given the maximum group size
+   // - The group size shall be as uniform as possible.
+   // - Equalizing group sizes within a round is more important than
+   //   equalizing them across rounds
    //
-   // The number of rounds shall be minimal
-   // The group sizes shall be chosen to minimize the variance of max group size
-   // Should we use larger groups in earlier rounds or in later rounds?
+   // Determines the group sizes of each round as follows:
+   // Select a group size, S, such that
+   // - S <= 12
+   // - The numer of rounds is minimal
+   // - The first round contains groups of size S or (S-1)
+   // - Zero or more subsequent rounds contain groups of uniform size (S-1)
+   // - Zero or more subsequent rounds contain groups of uniform size S
    //
-   // config.size() == ceil(log_12(num_active_members))
-   // config[i].num_groups = ceil(num_active_members^{(config.size()-i-1)/config.size()})
+   // R = log_12(N)
+   // S = \ceil{N^{1/R}}
+   // Choose 0 <= K < R so that S^(K) (S-1)^(R-K) <= N <= S^(K+1) (S-1)^(R-K-1)
    //
-   // TODO: is it guaranteed that this results in every layer having the same max group size?
-   // If not can I adjust the rounding mode so that this is guaranteed?
-   // Ans. Not guaranteed unless we also allow num_short_groups to be equal to num_groups.
-   // Ex. 132 = 12*11
-   //
-   // Can we prove this instead:
-   // floor(M^{1/N}) <= ceil(M^{(i+1)/N})/ceil(M^{i/N}) <= ceil(M^{1/N})
-   // Nope.  Also not true.
-   //
-   // What if we instead fix the max group size as ceil(num_active_members^{1/config.size()})?
-   // every layer except the first has a fixed group size.
-   // let S = ceil(M^{1/N})
-   // Choose 0 < K < N so that S^(K) (S-1)^(N-K) <= M <= S^(K+1) (S-1)^(N-K-1)
+   // \post config.back().num_groups == 1 (unless num_participants <= 1)
+   // \post config.front().num_participants() == num_participants (unless num_participants <= 1)
+   // \post config[i].num_groups == config[i+1].num_participants
+   election_config make_election_config(uint16_t num_participants)
+   {
+      std::size_t num_rounds = ceil_log12(num_participants);
+      uint16_t max_group_size = ceil_pow(num_participants, {1, static_cast<uint8_t>(num_rounds)});
+      uint32_t high_total = int_pow(max_group_size, num_rounds);
+      uint32_t num_low_rounds = 0;
+      uint32_t num_mixed_rounds = 0;
+      for(; num_low_rounds < num_rounds && high_total > num_participants; ++num_low_rounds)
+      {
+         high_total = high_total / max_group_size * (max_group_size - 1);
+         if(high_total < num_participants)
+         {
+            num_mixed_rounds = 1;
+            break;
+         }
+      }
+
+      uint32_t num_high_rounds = num_rounds - num_mixed_rounds - num_low_rounds;
+      election_config result(num_rounds);
+
+      uint32_t next_group = 1;
+      for(uint32_t i = 0; i < num_high_rounds; ++i)
+      {
+         auto& round = result[result.size() - i - 1];
+         round.num_groups = next_group;
+         round.num_pariticpants = next_group = next_group * max_group_size;
+      }
+      for(uint32_t i = 0; i < num_low_rounds; ++i)
+      {
+         auto& round = result[result.size() - i - 1];
+         round.num_groups = next_group;
+         round.num_pariticpants = next_group = next_group * (max_group_size - 1);
+      }
+      if(num_mixed_rounds == 1)
+      {
+         auto& round = result.front();
+         round.num_groups = next_group;
+         round.num_pariticpants = num_participants;
+      }
+      return result;
+   }
 
    // Is the full election schedule determined up front, or can the schedule for
    // later rounds depend on whether groups from earlier rounds failed to
