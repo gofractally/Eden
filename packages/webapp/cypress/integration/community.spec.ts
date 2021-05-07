@@ -19,7 +19,7 @@ describe("Community", () => {
             .first();
         firstMember.click();
 
-        const memberCard = cy.get(`[data-testid^="member-caaard-"]`);
+        const memberCard = cy.get(`[data-testid^="member-card-"]`);
         expect(memberCard).to.exist;
 
         cy.get("head title").should("contain", `'s Profile`);
