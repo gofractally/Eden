@@ -91,8 +91,9 @@ namespace eden
    struct election_state_group_voters
    {
       election_config config;
+      eosio::name last_processed = {};
    };
-   EOSIO_REFLECT(election_state_group_voters, config)
+   EOSIO_REFLECT(election_state_group_voters, config, last_processed)
 
    // Organize groups into a tree.  The tree structure is deterministically
    // computed based on each node's level and index within the level.
@@ -186,7 +187,7 @@ namespace eden
       void vote(uint64_t group_id, eosio::name voter, eosio::name candidate);
       // \pre more than 2/3 of the group members vote for the same candidate
       // OR the remaining votes + the votes for the candidate with the most votes <= 2/3 of the group.
-      void finishgroup(uint64_t group_id);
+      void finish_group(uint64_t group_id);
    };
 
 }  // namespace eden

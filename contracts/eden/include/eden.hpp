@@ -56,6 +56,14 @@ namespace eden
 
       void inducted(eosio::name inductee);
 
+      void electinit(const eosio::checksum256& seed);
+
+      void electprepare(uint32_t max_steps);
+
+      void electvote(uint64_t group_id, eosio::name voter, eosio::name candidate);
+
+      void electadvance(uint64_t group);
+
       void gc(uint32_t limit);
 
       void notify_lognewtempl(int32_t template_id,
@@ -90,6 +98,10 @@ namespace eden
                  inductdonate,
                  inducted,
                  inductcancel,
+                 electinit,
+                 electprepare,
+                 electvote,
+                 electadvance,
                  gc,
                  notify(token_contract, transfer),
                  notify(atomic_assets_account, lognewtempl),

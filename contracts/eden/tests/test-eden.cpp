@@ -536,3 +536,30 @@ TEST_CASE("election config")
       verify_cfg(eden::make_election_config(i), i);
    }
 }
+
+TEST_CASE("election")
+{
+   eden_tester t;
+   t.genesis();
+   t.eden_gm.act<actions::electinit>(eosio::checksum256());
+   while (true)
+   {
+      t.chain.start_block();
+      auto trace = t.alice.trace<actions::electprepare>(1);
+      if (trace.except)
+      {
+         expect(trace, "Nothing to do");
+         break;
+      }
+   }
+   t.alice.act<actions::electvote>(1, "alice"_n, "alice"_n);
+   t.pip.act<actions::electvote>(1, "pip"_n, "alice"_n);
+   t.egeon.act<actions::electvote>(1, "egeon"_n, "alice"_n);
+   t.alice.act<actions::electadvance>(1);
+
+   CHECK(get_table_size<eden::vote_table_type>() == 1);
+   eden::vote_table_type vote_tb("eden.gm"_n, eden::default_scope);
+   auto vote = *vote_tb.begin();
+   CHECK(vote.member == "alice"_n);
+   CHECK(vote.group_id == 0);
+}

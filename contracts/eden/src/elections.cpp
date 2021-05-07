@@ -166,11 +166,12 @@ namespace eden
 
    uint32_t elections::group_voters(election_state_group_voters& state, uint32_t max_steps)
    {
-      auto iter = vote_tb.begin();
+      auto iter = vote_tb.upper_bound(state.last_processed.value);
       auto end = vote_tb.end();
       for (; iter != end && max_steps > 0; --max_steps, ++iter)
       {
          assign_voter_to_group(state, *iter);
+         state.last_processed = iter->member;
       }
       return max_steps;
    }
@@ -218,6 +219,7 @@ namespace eden
          if (max_steps > 0)
          {
             state_variant = election_state_active{};
+            --max_steps;
          }
       }
       state_sing.set(state_variant, contract);
@@ -250,7 +252,8 @@ namespace eden
       eosio::check(vote.candidate == eosio::name{}, voter.to_string() + " has already voted");
       vote_tb.modify(vote, contract, [&](auto& row) { row.candidate = candidate; });
    }
-   void elections::finishgroup(uint64_t group_id)
+
+   void elections::finish_group(uint64_t group_id)
    {
       check_active();
       // count votes

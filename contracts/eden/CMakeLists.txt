@@ -5,6 +5,7 @@ add_executable(eden
    src/actions/accounts.cpp
    src/actions/genesis.cpp
    src/actions/induct.cpp
+   src/actions/elect.cpp
    src/actions/notify_assets.cpp
    src/eden.cpp
    src/accounts.cpp
