@@ -30,13 +30,21 @@ export const MembersPage = () => {
                     {newMembers.isLoading && "Loading new members..."}
                     {newMembers.error && "Fail to load new members"}
                     {newMembers.data && (
-                        <MembersGrid members={newMembers.data} />
+                        <MembersGrid
+                            members={newMembers.data}
+                            dataTestId="new-members-grid"
+                        />
                     )}
                 </Card>
                 <Card title="All Members" titleSize={2}>
                     {members.isLoading && "Loading members..."}
                     {members.error && "Fail to load members"}
-                    {members.data && <MembersGrid members={members.data} />}
+                    {members.data && (
+                        <MembersGrid
+                            members={members.data}
+                            dataTestId="members-grid"
+                        />
+                    )}
                 </Card>
             </>
         </SingleColLayout>
