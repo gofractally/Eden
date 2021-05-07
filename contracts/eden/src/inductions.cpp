@@ -1,5 +1,6 @@
 #include <algorithm>
 #include <eden-atomicassets.hpp>
+#include <eosio/action.hpp>
 #include <eosio/crypto.hpp>
 #include <inductions.hpp>
 #include <set>
@@ -15,6 +16,8 @@ namespace eden
    {
       check_new_induction(invitee, inviter);
       check_valid_endorsers(inviter, witnesses);
+      eosio::check(eosio::is_account(invitee),
+                   "Account " + invitee.to_string() + " does not exist");
 
       uint32_t total_endorsements = witnesses.size() + 1;
       create_induction(id, inviter, invitee, total_endorsements);
@@ -115,15 +118,21 @@ namespace eden
    const induction& inductions::get_endorsed_induction(eosio::name invitee) const
    {
       endorsed_induction_table_type endorsed_induction_tb(contract, default_scope);
-      return get_induction(endorsed_induction_tb.get(invitee.value).induction_id);
+      const auto& endorsed_induction = endorsed_induction_tb.get(
+          invitee.value, ("unable to find endorsed induction for " + invitee.to_string()).c_str());
+      return get_induction(endorsed_induction.induction_id);
+   }
+
+   bool inductions::is_valid_induction(const induction& induction) const
+   {
+      auto induction_lifetime =
+          eosio::current_time_point() - induction.created_at().to_time_point();
+      return induction_lifetime.to_seconds() <= induction_expiration_secs;
    }
 
    void inductions::check_valid_induction(const induction& induction) const
    {
-      auto induction_lifetime =
-          eosio::current_time_point() - induction.created_at().to_time_point();
-      eosio::check(induction_lifetime.to_seconds() <= induction_expiration_secs,
-                   "induction has expired");
+      eosio::check(is_valid_induction(induction), "induction has expired");
    }
 
    void inductions::update_video(const induction& induction, const std::string& video)
@@ -151,13 +160,12 @@ namespace eden
       eosio::check(actual_hash == induction_data_hash, "Outdated endorsement");
 
       auto endorsement_idx = endorsement_tb.get_index<"byendorser"_n>();
-      const auto& endorsement =
-          endorsement_idx.get(uint128_t{account.value} << 64 | induction.id());
+      const auto& endorsement = endorsement_idx.get(
+          uint128_t{account.value} << 64 | induction.id(),
+          ("unable to find endorsement for endorser " + account.to_string()).c_str());
       eosio::check(!endorsement.endorsed(), "Already endorsed");
       endorsement_tb.modify(endorsement, eosio::same_payer,
                             [&](auto& row) { row.endorsed() = true; });
-
-      maybe_create_nft(induction);
    }
 
    void inductions::endorse_all(const induction& induction)
@@ -169,19 +177,11 @@ namespace eden
          endorsement_idx.modify(itr, eosio::same_payer, [](auto& row) { row.endorsed() = true; });
          itr++;
       }
-      maybe_create_nft(induction);
    }
 
-   void inductions::maybe_create_nft(const induction& induction)
+   void inductions::create_nft(const induction& induction)
    {
-      auto endorsement_idx = endorsement_tb.get_index<"byinduction"_n>();
-      auto itr = endorsement_idx.lower_bound(induction.id());
-      while (itr != endorsement_idx.end() && itr->induction_id() == induction.id())
-      {
-         if (!itr->endorsed())
-            return;
-         itr++;
-      }
+      check_is_fully_endorsed(induction.id());
 
       endorsed_induction_table_type endorsed_induction_tb(contract, default_scope);
       endorsed_induction_tb.emplace(contract, [&](auto& row) {
@@ -190,12 +190,17 @@ namespace eden
       });
 
       atomicassets::attribute_map immutable_data = {
-          {"edenacc", induction.invitee().to_string()},
+          {"account", induction.invitee().to_string()},
           {"name", induction.new_member_profile().name},
           {"img", induction.new_member_profile().img},
           {"bio", induction.new_member_profile().bio},
           {"social", induction.new_member_profile().social},
-          {"inductionvid", induction.video()}};
+          {"video", induction.video()}};
+      if (!induction.new_member_profile().attributions.empty())
+      {
+         immutable_data.push_back({"attributions", induction.new_member_profile().attributions});
+      }
+      const auto collection_name = contract;
       eosio::action{{contract, "active"_n},
                     atomic_assets_account,
                     "createtempl"_n,
@@ -220,6 +225,7 @@ namespace eden
          itr++;
       }
 
+      const auto collection_name = contract;
       for (eosio::name new_asset_owner : new_owners)
       {
          eosio::action{{contract, "active"_n},
@@ -229,6 +235,17 @@ namespace eden
                                   new_asset_owner, atomicassets::attribute_map{},
                                   atomicassets::attribute_map{}, std::vector<eosio::asset>{}}}
              .send();
+      }
+   }
+
+   void inductions::check_is_fully_endorsed(uint64_t induction_id) const
+   {
+      auto endorsement_idx = endorsement_tb.get_index<"byinduction"_n>();
+      auto itr = endorsement_idx.lower_bound(induction_id);
+      while (itr != endorsement_idx.end() && itr->induction_id() == induction_id)
+      {
+         eosio::check(itr->endorsed(), "induction is not fully endorsed");
+         itr++;
       }
    }
 
@@ -261,26 +278,94 @@ namespace eden
       {
          endorsed_induction_tb.erase(itr);
       }
+      auto invitee = induction.invitee();
       induction_tb.erase(induction);
+   }
+
+   uint32_t inductions::erase_by_inductee(eosio::name invitee, uint32_t limit)
+   {
+      auto invitee_idx = induction_tb.get_index<"byinvitee"_n>();
+      auto iter = invitee_idx.lower_bound(combine_names(invitee, eosio::name()));
+      auto end = invitee_idx.end();
+      while (iter != end && limit > 0 && iter->invitee() == invitee)
+      {
+         auto next = iter;
+         ++next;
+         erase_induction(*iter);
+         iter = next;
+         --limit;
+      }
+      return limit;
+   }
+
+   uint32_t inductions::gc(uint32_t limit, std::vector<eosio::name>& removed_members)
+   {
+      limit = erase_expired(limit, removed_members);
+      induction_gc_table_type gc_tb(contract, default_scope);
+      auto iter = gc_tb.begin();
+      auto end = gc_tb.end();
+      while (iter != end && limit > 0)
+      {
+         limit = erase_by_inductee(iter->invitee, limit);
+         if (limit)
+         {
+            iter = gc_tb.erase(iter);
+            --limit;
+         }
+      }
+      return limit;
+   }
+
+   void inductions::queue_gc(eosio::name invitee)
+   {
+      induction_gc_table_type gc_tb(contract, default_scope);
+      gc_tb.emplace(contract, [=](auto& row) { row.invitee = invitee; });
+   }
+
+   uint32_t inductions::erase_expired(uint32_t limit, std::vector<eosio::name>& removed_members)
+   {
+      auto created_idx = induction_tb.get_index<"bycreated"_n>();
+      auto iter = created_idx.begin();
+      auto end = created_idx.end();
+      while (iter != end && limit > 0 && !is_valid_induction(*iter))
+      {
+         auto next = iter;
+         ++next;
+         auto invitee = iter->invitee();
+         erase_induction(*iter);
+         if (!has_induction(invitee))
+         {
+            removed_members.push_back(invitee);
+         }
+         iter = next;
+         --limit;
+      }
+      return limit;
    }
 
    void inductions::validate_profile(const new_member_profile& new_member_profile) const
    {
       eosio::check(!new_member_profile.name.empty(), "new member profile name is empty");
-      eosio::check(!new_member_profile.img.empty(), "new member profile img is empty");
+      atomicassets::validate_ipfs(new_member_profile.img);
       eosio::check(!new_member_profile.bio.empty(), "new member profile bio is empty");
-      // TODO: add more checks (valid ipfs img)
    }
 
    void inductions::validate_video(const std::string& video) const
    {
-      // TODO: check that video is a valid IPFS CID.
+      atomicassets::validate_ipfs(video);
    }
 
    bool inductions::is_endorser(uint64_t id, eosio::name witness) const
    {
       auto endorser_idx = endorsement_tb.get_index<"byendorser"_n>();
       return endorser_idx.find(uint128_t{witness.value} << 64 | id) != endorser_idx.end();
+   }
+
+   bool inductions::has_induction(eosio::name invitee) const
+   {
+      auto invitee_idx = induction_tb.get_index<"byinvitee"_n>();
+      auto pos = invitee_idx.lower_bound(combine_names(invitee, {}));
+      return pos != invitee_idx.end() && pos->invitee() == invitee;
    }
 
    void inductions::clear_all()

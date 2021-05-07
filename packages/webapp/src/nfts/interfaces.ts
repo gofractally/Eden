@@ -3,9 +3,10 @@ import { Asset } from "_app";
 export interface EdenNftData {
     name: string;
     img: string;
-    edenacc: string;
+    account: string;
     bio: string;
-    inductionvid: string;
+    video: string;
+    attributions: string;
     social?: string;
 }
 

@@ -1,3 +1,4 @@
+#include <accounts.hpp>
 #include <eden.hpp>
 #include <inductions.hpp>
 #include <members.hpp>
@@ -19,7 +20,10 @@ namespace eden
       {
          members.check_active_member(witness);
       }
-      members.check_pending_member(invitee);
+      if (members.is_new_member(invitee))
+         members.create(invitee);
+      else
+         members.check_pending_member(invitee);
 
       inductions{get_self()}.initialize_induction(id, inviter, invitee, witnesses);
    }
@@ -66,8 +70,23 @@ namespace eden
       members{get_self()}.check_pending_member(induction.invitee());
 
       eosio::check(inductions.is_endorser(id, account),
-                   "Induction  can only be endorsed by inviter or a witness");
+                   "Induction can only be endorsed by inviter or a witness");
       inductions.endorse(induction, account, induction_data_hash);
+   }
+
+   void eden::inductdonate(eosio::name payer, uint64_t id, const eosio::asset& quantity)
+   {
+      eosio::require_auth(payer);
+
+      globals globals{get_self()};
+      inductions inductions{get_self()};
+      accounts accounts{get_self()};
+
+      const auto& induction = inductions.get_induction(id);
+      eosio::check(payer == induction.invitee(), "only inductee may donate using this action");
+      eosio::check(quantity == globals.get().minimum_donation, "incorrect donation");
+      accounts.sub_balance(payer, quantity);
+      inductions.create_nft(induction);
    }
 
    void eden::inducted(eosio::name inductee)
@@ -75,11 +94,17 @@ namespace eden
       eosio::require_auth(get_self());
 
       members members{get_self()};
-      members.set_active(inductee);
-
       inductions inductions(get_self());
       const auto& induction = inductions.get_endorsed_induction(inductee);
+      members.set_active(inductee, induction.new_member_profile().name);
       inductions.erase_induction(induction);
+
+      // Attempt to clean up pending inductions for this member,
+      // but give up if there are too many records to process.
+      if (!inductions.erase_by_inductee(inductee, max_gc_on_induction))
+      {
+         inductions.queue_gc(inductee);
+      }
 
       // If this is the last genesis member, activate the contract
       globals globals{get_self()};
@@ -88,6 +113,21 @@ namespace eden
          if (members.stats().pending_members == 0)
          {
             globals.set_stage(contract_stage::active);
+         }
+      }
+   }
+
+   void eden::gc(uint32_t limit)
+   {
+      inductions inductions{get_self()};
+      std::vector<eosio::name> removed_members;
+      eosio::check(inductions.gc(limit, removed_members) != limit, "Nothing to do.");
+      if (!removed_members.empty())
+      {
+         members members(get_self());
+         for (auto member : removed_members)
+         {
+            members.remove_if_pending(member);
          }
       }
    }
@@ -102,7 +142,14 @@ namespace eden
       eosio::check(inductions.is_endorser(id, account),
                    "Induction can only be canceled by inviter or a witness");
 
-      inductions.erase_induction(inductions.get_induction(id));
+      const auto& induction = inductions.get_induction(id);
+      auto invitee = induction.invitee();
+      inductions.erase_induction(induction);
+      if (!inductions.has_induction(invitee))
+      {
+         members members(get_self());
+         members.remove_if_pending(invitee);
+      }
    }
 
 }  // namespace eden

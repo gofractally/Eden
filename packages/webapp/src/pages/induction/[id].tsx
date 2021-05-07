@@ -3,7 +3,7 @@ import { useRouter } from "next/router";
 
 import { RawLayout, SingleColLayout, useFetchedData } from "_app";
 import {
-    getInduction,
+    getInductionWithEndorsements,
     Induction,
     InductionStepEndorsement,
     InductionStepProfile,
@@ -13,7 +13,7 @@ import {
     Endorsement,
 } from "inductions";
 
-export const InductionPage = () => {
+export const InductionDetailsPage = () => {
     const router = useRouter();
     const inductionId = router.query.id;
     const [reviewStep, setReviewStep] = useState<
@@ -23,7 +23,7 @@ export const InductionPage = () => {
     const [inductionEndorsements, isLoading] = useFetchedData<{
         induction: Induction;
         endorsements: Endorsement[];
-    }>(getInduction, inductionId);
+    }>(getInductionWithEndorsements, inductionId);
 
     const induction = inductionEndorsements
         ? inductionEndorsements.induction
@@ -93,4 +93,4 @@ export const InductionPage = () => {
     );
 };
 
-export default InductionPage;
+export default InductionDetailsPage;

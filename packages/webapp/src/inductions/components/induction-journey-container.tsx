@@ -1,0 +1,92 @@
+import React from "react";
+import { assetToString, Card, Steps, Step } from "_app";
+
+import { minimumDonationAmount } from "config";
+
+export const INVITEE_INDUCTION_STEPS: Step[] = [
+    {
+        title: "GET INVITED",
+        text: "Make sure you have an EOS address.",
+    },
+    {
+        title: "SET UP YOUR PROFILE",
+        text: "Let the community know who you are.",
+    },
+    {
+        title: "GET ENDORSED",
+        text: "Complete the induction ceremony.",
+    },
+    {
+        title: "DONATE",
+        text: `Give ${assetToString(
+            minimumDonationAmount
+        )} to the Eden community.`,
+    },
+    {
+        title: "YOU'RE IN",
+        text: "NFTs are minted. Welcome to Eden.",
+    },
+];
+
+export const INVITER_INDUCTION_STEPS: Step[] = [
+    {
+        title: "CREATE INVITE",
+        text: "Add invitee and witnesses by EOS account.",
+    },
+    {
+        title: "INVITEE PROFILE",
+        text: "Invitee must log in and set up their profile.",
+    },
+    {
+        title: "INDUCT & ENDORSE",
+        text:
+            "Record and attach induction ceremony. Inviter and witnesses endorse invitee.",
+    },
+    {
+        title: "INVITEE DONATION",
+        text: `Invitee donates ${assetToString(
+            minimumDonationAmount
+        )} to the Eden community.`,
+    },
+    {
+        title: "ALL DONE",
+        text: "NFTs are minted. We have new member!",
+    },
+];
+
+export enum InductionRole {
+    INVITEE = "invitee",
+    INVITER = "inviter",
+}
+
+interface Props {
+    role: InductionRole;
+    step: 1 | 2 | 3 | 4 | 5;
+    children: React.ReactNode;
+}
+
+export const InductionJourneyContainer = ({ role, step, children }: Props) => {
+    let steps: Step[];
+
+    switch (role) {
+        case InductionRole.INVITEE:
+            steps = INVITEE_INDUCTION_STEPS;
+            break;
+        case InductionRole.INVITER:
+            steps = INVITER_INDUCTION_STEPS;
+            break;
+    }
+
+    return (
+        <Card>
+            <div className="flex lg:items-center flex-col lg:flex-row">
+                <div className="lg:w-1/2 xl:w-3/5 px-4 sm:px-12 md:px-16 xl:px-24 pt-8 pb-4">
+                    {children}
+                </div>
+                <div className="lg:w-1/2 xl:w-2/5 mt-8 sm:px-8 md:px-12 lg:px-0">
+                    <Steps steps={steps} currentStep={step} />
+                </div>
+            </div>
+        </Card>
+    );
+};

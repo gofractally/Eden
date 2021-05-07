@@ -3,6 +3,7 @@ export interface NewMemberProfile {
     img: string;
     bio: string;
     social: string;
+    attributions: string;
 }
 
 export interface Induction {
@@ -17,6 +18,7 @@ export interface Induction {
 
 export enum InductionStatus {
     invalid,
+    expired,
     waitingForProfile,
     waitingForVideo,
     waitingForEndorsement,

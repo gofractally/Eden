@@ -1,0 +1,26 @@
+{
+    "version": "eosio::abi/1.1",
+    "types": [],
+    "structs": [
+        {
+            "name": "empty",
+            "base": "",
+            "fields": []
+        }
+    ],
+    "actions": [
+        {
+            "name": "read",
+            "type": "empty"
+        },
+        {
+            "name": "write",
+            "type": "empty"
+        }
+    ],
+    "tables": [],
+    "ricardian_clauses": [],
+    "error_messages": [],
+    "abi_extensions": [],
+    "variants": []
+}

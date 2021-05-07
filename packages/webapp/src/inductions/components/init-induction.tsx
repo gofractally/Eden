@@ -1,7 +1,15 @@
-import { useState } from "react";
+import React, { useState } from "react";
 
-import { Text, Link } from "_app";
+import {
+    Text,
+    Link,
+    onError,
+    Heading,
+    ActionButton,
+    ActionButtonSize,
+} from "_app";
 import { initializeInductionTransaction } from "../transactions";
+import { InductionJourneyContainer, InductionRole } from "inductions";
 import { InitInductionForm } from "./init-induction-form";
 
 interface Props {
@@ -29,40 +37,57 @@ export const InitInduction = ({ ualAccount }: Props) => {
             console.info("inductinit trx", signedTrx);
             setInitializedInductionId(id);
         } catch (error) {
-            alert(
-                "Error while initializing the induction process: " +
-                    JSON.stringify(error)
-            );
+            onError(error, "Unable to initialize the induction process");
         }
     };
 
     return (
-        <>
+        <InductionJourneyContainer
+            role={InductionRole.INVITER}
+            step={initializedInductionId ? 2 : 1}
+        >
             {initializedInductionId ? (
-                <>
-                    <Text className="text-green-600 font-bold mb-4">
-                        The following induction process was created
-                        successfully:
-                    </Text>
-                    <div className="m-8 p-8 max-w rounded-xl border border-gray-300 shadow-md bg-gray-50 text-5xl text-center">
-                        {initializedInductionId}
-                    </div>
-                    <Text className="mb-4">
-                        Please copy and share this link with your invitee and
-                        witnesses:{" "}
-                        <Link href={`/induction/${initializedInductionId}`}>
-                            {window.location.hostname}/induction/
-                            {initializedInductionId}
-                        </Link>
-                    </Text>
-                    <Text className="mb-4 text-red-500 italic">
-                        You have 7 days to complete this induction otherwise it
-                        will expire.
-                    </Text>
-                </>
+                <InviteConfirmation inductionId={initializedInductionId} />
             ) : (
-                <InitInductionForm onSubmit={submitTransaction} />
+                <>
+                    <Heading size={1} className="mb-8">
+                        Invite to Eden
+                    </Heading>
+                    <InitInductionForm onSubmit={submitTransaction} />
+                </>
             )}
-        </>
+        </InductionJourneyContainer>
     );
 };
+
+const InviteConfirmation = ({ inductionId }: { inductionId: string }) => (
+    <>
+        <Heading size={1} className="mb-5">
+            Success!
+        </Heading>
+        <div className="space-y-3 mb-8">
+            <Text className="leading-normal">
+                Now it's your invitee's turn to create their Eden profile.
+            </Text>
+            <Text className="leading-normal">
+                Your invitee and witnesses will now see this pending invitation
+                in the Membership dashboard if they sign in with their
+                blockchain account. Or you can share this direct link with them:
+            </Text>
+            <Text className="leading-normal break-all">
+                <Link href={`/induction/${inductionId}`}>
+                    {window.location.hostname}/induction/
+                    {inductionId}
+                </Link>
+            </Text>
+            <Text className="leading-normal">
+                This induction process must be completed{" "}
+                <span className="underline font-medium">within 7 days</span>. If
+                this invitation expires, you will be able to issue another.
+            </Text>
+        </div>
+        <ActionButton href="/induction" size={ActionButtonSize.L}>
+            See your invitations
+        </ActionButton>
+    </>
+);

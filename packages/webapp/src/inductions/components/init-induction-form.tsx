@@ -1,6 +1,6 @@
 import { FormEvent, useState } from "react";
 
-import { Button, useFormFields, Form } from "_app";
+import { useFormFields, Form, ActionButton } from "_app";
 
 interface Props {
     onSubmit: (data: InitInductionFormData) => Promise<void>;
@@ -76,10 +76,10 @@ export const InitInductionForm = ({ onSubmit }: Props) => {
                     onChange={onChangeFields}
                 />
             </Form.LabeledSet>
-            <div className="w-max mx-auto">
-                <Button isSubmit disabled={isLoading}>
+            <div className="pt-4">
+                <ActionButton isSubmit disabled={isLoading}>
                     {isLoading ? "Submitting..." : "Submit"}
-                </Button>
+                </ActionButton>
             </div>
         </form>
     );

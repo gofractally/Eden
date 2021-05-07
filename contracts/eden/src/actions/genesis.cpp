@@ -1,3 +1,5 @@
+#include <accounts.hpp>
+#include <eden-atomicassets.hpp>
 #include <eden.hpp>
 #include <globals.hpp>
 #include <inductions.hpp>
@@ -8,6 +10,7 @@ namespace eden
    void eden::clearall()
    {
       require_auth(get_self());
+      accounts{get_self()}.clear_all();
       members{get_self()}.clear_all();
       inductions{get_self()}.clear_all();
       get_global_singleton(get_self()).remove();
@@ -18,6 +21,7 @@ namespace eden
                       eosio::asset minimum_donation,
                       std::vector<eosio::name> initial_members,
                       std::string genesis_video,
+                      atomicassets::attribute_map collection_attributes,
                       eosio::asset auction_starting_bid,
                       uint32_t auction_duration,
                       eosio::ignore<std::string> memo)
@@ -60,6 +64,10 @@ namespace eden
 
          induction_id++;
       }
+
+      const auto collection_name = get_self();
+      atomicassets::init_collection(atomic_assets_account, get_self(), collection_name, schema_name,
+                                    initial_market_fee, collection_attributes);
    }
 
 }  // namespace eden

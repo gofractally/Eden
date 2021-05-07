@@ -17,9 +17,9 @@ import { MemberData } from "../interfaces";
 import { getEdenMember } from "./eden-contract";
 
 export const getMember = async (
-    edenAccount: string
+    account: string
 ): Promise<MemberData | undefined> => {
-    const member = await getEdenMember(edenAccount);
+    const member = await getEdenMember(account);
     if (member && member.nft_template_id > 0) {
         const template = await getTemplate(`${member.nft_template_id}`);
         return template ? convertAtomicTemplateToMember(template) : undefined;
@@ -42,12 +42,10 @@ export const getNewMembers = async (): Promise<MemberData[]> => {
     return data.map(convertAtomicAssetToMemberWithSalesData);
 };
 
-export const getCollection = async (
-    edenAccount: string
-): Promise<MemberData[]> => {
-    const assets = await getAccountCollection(edenAccount);
+export const getCollection = async (account: string): Promise<MemberData[]> => {
+    const assets = await getAccountCollection(account);
     const members: MemberData[] = assets.map(convertAtomicAssetToMember);
-    const assetsOnAuction = await getAuctions(edenAccount);
+    const assetsOnAuction = await getAuctions(account);
     assetsOnAuction
         .map(convertAtomicAssetToMemberWithSalesData)
         .forEach((asset) => members.push(asset));
@@ -82,7 +80,7 @@ export const getCollectedBy = async (
     const unknownOwners = edenAccs.filter(
         (acc) =>
             acc !== atomicAssets.marketContract &&
-            !members.find((member) => member.edenAccount === acc)
+            !members.find((member) => member.account === acc)
     );
 
     return { members, unknownOwners };
@@ -93,9 +91,10 @@ const convertAtomicTemplateToMember = (data: TemplateData): MemberData => ({
     createdAt: parseInt(data.created_at_time),
     name: data.immutable_data.name,
     image: data.immutable_data.img,
-    edenAccount: data.immutable_data.edenacc,
+    account: data.immutable_data.account,
     bio: data.immutable_data.bio,
-    inductionVideo: data.immutable_data.inductionvid,
+    attributions: data.immutable_data.attributions || "",
+    inductionVideo: data.immutable_data.video,
     socialHandles: parseSocial(data.immutable_data.social || "{}"),
 });
 

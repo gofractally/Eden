@@ -78,6 +78,16 @@ namespace eosio
       return from_json(obj.value, stream);
    }
 
+   [[nodiscard]] inline bool check_abi_version(const std::string& s, std::string& error)
+   {
+      if (s.substr(0, 13) != "eosio::abi/1.")
+      {
+         error = "unsupported abi version";
+         return false;
+      }
+      return true;
+   }
+
    using abi_extensions_type = std::vector<std::pair<uint16_t, std::vector<char>>>;
 
    struct type_def

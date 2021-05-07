@@ -9,7 +9,6 @@
 #include <eosio/producer_schedule.hpp>
 #include <eosio/transaction.hpp>
 
-#include <fmt/format.h>
 #include <cwchar>
 
 namespace eosio
@@ -52,6 +51,14 @@ namespace eosio
       uint32_t code_sequence = {};
       uint32_t abi_sequence = {};
    };
+   EOSIO_REFLECT(action_receipt,
+                 receiver,
+                 act_digest,
+                 global_sequence,
+                 recv_sequence,
+                 auth_sequence,
+                 code_sequence,
+                 abi_sequence);
 
    auto conversion_kind(chain_types::action_receipt_v0, action_receipt) -> strict_conversion;
 
@@ -71,6 +78,20 @@ namespace eosio
       std::optional<uint64_t> error_code = {};
       std::vector<char> return_value = {};
    };
+   EOSIO_REFLECT(action_trace,
+                 action_ordinal,
+                 creator_action_ordinal,
+                 receipt,
+                 receiver,
+                 act,
+                 context_free,
+                 elapsed,
+                 console,
+                 account_ram_deltas,
+                 account_disk_deltas,
+                 except,
+                 error_code,
+                 return_value);
 
    auto conversion_kind(chain_types::action_trace_v0, action_trace) -> strict_conversion;
 
@@ -89,6 +110,19 @@ namespace eosio
       std::optional<uint64_t> error_code = {};
       std::vector<transaction_trace> failed_dtrx_trace = {};
    };
+   EOSIO_REFLECT(transaction_trace,
+                 id,
+                 status,
+                 cpu_usage_us,
+                 net_usage_words,
+                 elapsed,
+                 net_usage,
+                 scheduled,
+                 action_traces,
+                 account_ram_delta,
+                 except,
+                 error_code,
+                 failed_dtrx_trace);
 
    auto conversion_kind(chain_types::transaction_trace, transaction_trace) -> narrowing_conversion;
    auto serialize_as(const transaction_trace&) -> chain_types::transaction_trace;
@@ -244,12 +278,13 @@ namespace eosio
       }
 
       template <typename Action, typename... Args>
-      auto act(std::optional<std::vector<std::vector<char>>> cfd,
+      auto act(const std::optional<std::vector<std::vector<char>>>& cfd,
                const Action& action,
                Args&&... args)
       {
          using Ret = decltype(internal_use_do_not_use::get_return_type(Action::get_mem_ptr()));
-         auto trace = transact({action.to_action(std::forward<Args>(args)...)});
+         auto trace = this->trace(cfd, action, std::forward<Args>(args)...);
+         expect(trace);
          if constexpr (!std::is_same_v<Ret, void>)
          {
             return convert_from_bin<Ret>(trace.action_traces[0].return_value);
@@ -261,7 +296,7 @@ namespace eosio
       }
 
       template <typename Action, typename... Args>
-      auto trace(std::optional<std::vector<std::vector<char>>> cfd,
+      auto trace(const std::optional<std::vector<std::vector<char>>>& cfd,
                  const Action& action,
                  Args&&... args)
       {
@@ -284,19 +319,28 @@ namespace eosio
          test_chain& t;
          std::vector<eosio::permission_level> level;
          std::optional<std::vector<std::vector<char>>> context_free_data;
+         std::optional<name> code;
 
          user_context with_cfd(std::vector<std::vector<char>> d)
          {
             user_context uc = *this;
             uc.context_free_data = std::move(d);
+            uc.level = {};
+            return uc;
+         }
+
+         user_context with_code(name code)
+         {
+            user_context uc = *this;
+            uc.code = code;
             return uc;
          }
 
          template <typename Action, typename... Args>
          auto act(Args&&... args)
          {
-            if (context_free_data)
-               return t.act(context_free_data, Action(), std::forward<Args>(args)...);
+            if (code)
+               return t.act(context_free_data, Action(*code, level), std::forward<Args>(args)...);
             else
                return t.act(context_free_data, Action(level), std::forward<Args>(args)...);
          }
@@ -304,8 +348,8 @@ namespace eosio
          template <typename Action, typename... Args>
          auto trace(Args&&... args)
          {
-            if (context_free_data)
-               return t.trace(context_free_data, Action(), std::forward<Args>(args)...);
+            if (code)
+               return t.trace(context_free_data, Action(*code, level), std::forward<Args>(args)...);
             else
                return t.trace(context_free_data, Action(level), std::forward<Args>(args)...);
          }
@@ -325,14 +369,13 @@ namespace eosio
        */
       [[nodiscard]] std::optional<transaction_trace> exec_deferred();
 
-#ifdef XXX
       struct get_history_result
       {
          /** The other members refer to memory owned here */
          std::vector<char> memory;
 
-         ship_protocol::get_blocks_result_base result;
-         std::optional<ship_protocol::signed_block_variant> block;
+         ship_protocol::get_blocks_result_v0 result;
+         std::optional<ship_protocol::signed_block> block;
          std::vector<ship_protocol::transaction_trace> traces;
          std::vector<ship_protocol::table_delta> deltas;
       };
@@ -343,7 +386,6 @@ namespace eosio
        * available.
        */
       std::optional<get_history_result> get_history(uint32_t block_num);
-#endif
 
       transaction_trace create_account(name ac,
                                        const public_key& pub_key,
@@ -408,7 +450,6 @@ namespace eosio
                                            const char* expected_except = nullptr);
    };  // test_chain
 
-#ifdef XXX
    /**
     * Manages a rodeos instance
     */
@@ -462,12 +503,13 @@ namespace eosio
                                  const char* expected_except = nullptr);
 
       template <typename Action, typename... Args>
-      auto act(std::optional<std::vector<std::vector<char>>> cfd,
+      auto act(const std::optional<std::vector<std::vector<char>>>& cfd,
                const Action& action,
                Args&&... args)
       {
          using Ret = decltype(internal_use_do_not_use::get_return_type(Action::get_mem_ptr()));
-         auto trace = transact({action.to_action(std::forward<Args>(args)...)});
+         auto trace = this->trace(cfd, action, std::forward<Args>(args)...);
+         expect(trace);
          if constexpr (!std::is_same_v<Ret, void>)
          {
             return convert_from_bin<Ret>(trace.action_traces[0].return_value);
@@ -479,7 +521,7 @@ namespace eosio
       }
 
       template <typename Action, typename... Args>
-      auto trace(std::optional<std::vector<std::vector<char>>> cfd,
+      auto trace(const std::optional<std::vector<std::vector<char>>>& cfd,
                  const Action& action,
                  Args&&... args)
       {
@@ -535,7 +577,6 @@ namespace eosio
       auto as() { return user_context{*this}; }
 
    };  // test_rodeos
-#endif
 }  // namespace eosio
 
 namespace eosio

@@ -15,13 +15,13 @@ file(WRITE ${CMAKE_BINARY_DIR}/CTestTestfile.cmake)
 option(BUILD_NATIVE "Build native code" ON)
 if(BUILD_NATIVE)
     add_subdirectory(native)
+    file(APPEND ${CMAKE_BINARY_DIR}/CTestTestfile.cmake "subdirs(\"native\")\n")
 endif()
 
 if(DEFINED WASI_SDK_PREFIX)
     set(EDEN_ATOMIC_ASSETS_ACCOUNT atomicassets CACHE STRING "The account holding the atomicassets contract")
     set(EDEN_ATOMIC_MARKET_ACCOUNT atomicmarket CACHE STRING "The account holding the atomicmarket contract")
-    set(EDEN_COLLECTION_NAME eden.gm CACHE STRING "The atomicassets collection to use for NTFS")
-    set(EDEN_SCHEMA_NAME eden.gm CACHE STRING "The atomicassets schema to use for NFTS")
+    set(EDEN_SCHEMA_NAME members CACHE STRING "The atomicassets schema to use for NFTS")
 
     ExternalProject_Add(wasm
         SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/wasm
@@ -35,7 +35,6 @@ if(DEFINED WASI_SDK_PREFIX)
             -DWASI_SDK_PREFIX=${WASI_SDK_PREFIX}
             -DEDEN_ATOMIC_ASSETS_ACCOUNT=${EDEN_ATOMIC_ASSETS_ACCOUNT}
             -DEDEN_ATOMIC_MARKET_ACCOUNT=${EDEN_ATOMIC_MARKET_ACCOUNT}
-            -DEDEN_COLLECTION_NAME=${EDEN_COLLECTION_NAME}
             -DEDEN_SCHEMA_NAME=${EDEN_SCHEMA_NAME}
             -DCMAKE_SYSROOT=${WASI_SDK_PREFIX}/share/wasi-sysroot
             -DFORCE_COLORED_OUTPUT=${FORCE_COLORED_OUTPUT}

@@ -1,8 +1,7 @@
-import React from "react";
+import React, { useState } from "react";
 import { FaVideo } from "react-icons/fa";
-import Link from "next/link";
 
-import { Button, Heading, SmallText, Text } from "_app";
+import { SocialButton } from "_app";
 import { ipfsBaseUrl } from "config";
 
 import { MemberData } from "../interfaces";
@@ -14,40 +13,78 @@ interface Props {
 
 export const MemberCard = ({ member }: Props) => {
     return (
-        <div className="px-5 py-8 mx-auto flex justify-around">
-            <div className="max-w-sm mr-4">
-                <img
-                    src={`${ipfsBaseUrl}/${member.image}`}
-                    className="object-contain rounded-md"
-                />
-                <div className="text-center mt-2">
-                    <Text>
-                        <Link href={`/members/${member.edenAccount}`}>
-                            {member.name}
-                        </Link>
-                    </Text>
-                    <SmallText>
-                        {new Date(member.createdAt).toLocaleString()}
-                    </SmallText>
-                </div>
-            </div>
-            <div className="max-w-md bg-white rounded-lg p-8 flex flex-col w-full mt-10 md:mt-0 shadow-md">
-                <Heading size={2} className="mb-4">
-                    {member.name}
-                </Heading>
-                <MemberSocialLinks member={member} />
-                <Text className="mt-4">{member.bio}</Text>
+        <div
+            data-testid={`member-card-${member.account}`}
+            className="px-2 sm:px-8 flex flex-col max-w-xl"
+        >
+            <MemberSocialLinks member={member} />
+            <section className="py-4">
+                <MemberBio bio={member.bio} />
+            </section>
+            {member.inductionVideo && (
                 <div className="mx-auto">
-                    <Button
-                        href={`${ipfsBaseUrl}/${member.inductionVideo}`}
-                        target="_blank"
-                        className="mt-10 inline-flex"
+                    <SocialButton
+                        handle="View induction ceremony"
                         icon={FaVideo}
-                    >
-                        Induction Ceremony
-                    </Button>
+                        color="black"
+                        size={5}
+                        href={`${ipfsBaseUrl}/${member.inductionVideo}`}
+                    />
                 </div>
-            </div>
+            )}
         </div>
+    );
+};
+
+const MemberBio = ({ bio }: { bio: string }) => {
+    const [expanded, setExpanded] = useState(false);
+    const TRUNCATION_THRESHOLD_IN_CHARS = 235;
+    const shouldTruncate = bio.length > TRUNCATION_THRESHOLD_IN_CHARS;
+
+    const toggleExpanded = (e: React.MouseEvent) => {
+        e.preventDefault();
+        setExpanded((prevState) => !prevState);
+    };
+
+    const truncatedBio =
+        bio
+            .substr(0, TRUNCATION_THRESHOLD_IN_CHARS)
+            .split(" ")
+            .slice(0, -1) // don't leave a partial word dangling
+            .join(" ") + "... ";
+
+    const renderContent = () => {
+        if (!shouldTruncate) return bio;
+        return (
+            <>
+                <span>
+                    {expanded || !shouldTruncate ? bio + " " : truncatedBio}
+                </span>
+                {expanded ? (
+                    <a
+                        href="#"
+                        onClick={toggleExpanded}
+                        className="text-sm underline hover:text-gray-500 transition"
+                    >
+                        show less
+                    </a>
+                ) : (
+                    <a
+                        href="#"
+                        onClick={toggleExpanded}
+                        className="text-sm underline hover:text-gray-500 transition"
+                    >
+                        read more
+                    </a>
+                )}
+            </>
+        );
+    };
+
+    return (
+        <>
+            <p className="font-semibold">Member profile statement:</p>
+            <p className="text-gray-900 leading-snug">{renderContent()}</p>
+        </>
     );
 };

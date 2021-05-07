@@ -1,0 +1,64 @@
+#!/usr/bin/env sh
+set -xe
+
+function faucet {
+    curl https://faucet.waxsweden.org/get_token?$1
+    sleep .9
+    curl https://faucet.waxsweden.org/get_token?$1
+}
+
+faucet edev
+faucet edenmembersd
+faucet alice.edev
+faucet egeon.edev
+faucet pip.edev
+faucet test111.edev
+faucet test112.edev
+faucet test113.edev
+faucet test114.edev
+faucet test115.edev
+faucet test121.edev
+faucet test122.edev
+faucet test123.edev
+faucet test124.edev
+faucet test125.edev
+faucet test131.edev
+faucet test132.edev
+faucet test133.edev
+faucet test134.edev
+faucet test135.edev
+faucet test141.edev
+faucet test142.edev
+faucet test143.edev
+faucet test144.edev
+faucet test145.edev
+faucet test151.edev
+faucet test152.edev
+faucet test153.edev
+faucet test154.edev
+faucet test155.edev
+faucet test211.edev
+faucet test212.edev
+faucet test213.edev
+faucet test214.edev
+faucet test215.edev
+faucet test221.edev
+faucet test222.edev
+faucet test223.edev
+faucet test224.edev
+faucet test225.edev
+faucet test231.edev
+faucet test232.edev
+faucet test233.edev
+faucet test234.edev
+faucet test235.edev
+faucet test241.edev
+faucet test242.edev
+faucet test243.edev
+faucet test244.edev
+faucet test245.edev
+faucet test251.edev
+faucet test252.edev
+faucet test253.edev
+faucet test254.edev
+faucet test255.edev

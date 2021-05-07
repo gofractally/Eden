@@ -124,8 +124,7 @@ namespace eosio
                     trace_begin_block,
                     trace_end_block,
                     chain_state_begin_block,
-                    chain_state_end_block,
-                    chain_id)
+                    chain_state_end_block)
 
       struct get_blocks_request_v0
       {
