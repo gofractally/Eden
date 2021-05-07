@@ -69,13 +69,16 @@ namespace eden
    struct election_rng
    {
       election_rng() = default;
-      explicit election_rng(const eosio::checksum256& seed) {}
+      explicit election_rng(const eosio::checksum256& seed);
       using result_type = uint32_t;
       static constexpr result_type min() { return 0; }
       static constexpr result_type max() { return 0xFFFFFFFFu; }
-      result_type operator()() { return 0; }
+      result_type operator()();
+      char inbuf[40];  // seed + 8 byte counter
+      char outbuf[32];
+      uint8_t index;
    };
-   EOSIO_REFLECT(election_rng)
+   EOSIO_REFLECT(election_rng, inbuf, outbuf, index)
 
    // In this phase, every voter is assigned a unique random integer id in [0,N)
    struct election_state_init_voters

@@ -1,8 +1,34 @@
 #include <elections.hpp>
+#include <eosio/crypto.hpp>
 #include <members.hpp>
 
 namespace eden
 {
+   election_rng::election_rng(const eosio::checksum256& seed)
+   {
+      auto a = seed.extract_as_byte_array();
+      memcpy(inbuf, a.data(), a.size());
+      memset(inbuf + 32, 0, 8);
+      index = 32;
+   }
+
+   election_rng::result_type election_rng::operator()()
+   {
+      if (index >= 32)
+      {
+         auto a = eosio::sha256(inbuf, sizeof(inbuf)).extract_as_byte_array();
+         memcpy(outbuf, a.data(), a.size());
+         uint64_t counter;
+         memcpy(&counter, inbuf + 32, sizeof(counter));
+         ++counter;
+         memcpy(inbuf + 32, &counter, sizeof(counter));
+      }
+      result_type result;
+      memcpy(&result, outbuf + index, sizeof(result_type));
+      index += sizeof(result_type);
+      return result;
+   }
+
    static constexpr std::size_t ceil_log12(uint16_t x)
    {
       std::size_t result = 0;
