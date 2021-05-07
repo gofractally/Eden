@@ -2,6 +2,7 @@
 #include <boot/boot.hpp>
 #include <eden-atomicassets.hpp>
 #include <eden.hpp>
+#include <elections.hpp>
 #include <eosio/tester.hpp>
 #include <members.hpp>
 #include <token/token.hpp>
@@ -495,4 +496,43 @@ TEST_CASE("deposit and spend")
    t.alice.act<actions::withdraw>("alice"_n, s2a("6.0000 EOS"));
    CHECK(get_eden_account("alice"_n) == std::nullopt);
    CHECK(get_token_balance("alice"_n) == s2a("1000.0000 EOS"));
+}
+
+TEST_CASE("election config")
+{
+   auto verify_cfg = [](const auto& config, uint16_t num_participants) {
+      INFO("participants: " << num_participants)
+      if (num_participants <= 1)
+      {
+         CHECK(config.empty());
+      }
+      else
+      {
+         CHECK(config.back().num_groups == 1);
+         CHECK(config.front().num_participants == num_participants);
+         for (std::size_t i = 0; i < config.size() - 1; ++i)
+         {
+            CHECK(config[i].num_groups == config[i + 1].num_participants);
+         }
+         // There are at most two group sizes
+         std::set<uint16_t> group_sizes;
+         for (const auto& round_config : config)
+         {
+            group_sizes.insert(round_config.group_max_size());
+            if (round_config.num_short_groups())
+            {
+               group_sizes.insert(round_config.group_max_size() - 1);
+            }
+         }
+         CHECK(group_sizes.size() <= 2);
+         if (group_sizes.size() == 2)
+         {
+            CHECK(*group_sizes.begin() + 1 == *(--group_sizes.end()));
+         }
+      }
+   };
+   for (uint16_t i = 0; i <= 10000; ++i)
+   {
+      verify_cfg(eden::make_election_config(i), i);
+   }
 }

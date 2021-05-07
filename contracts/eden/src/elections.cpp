@@ -75,7 +75,7 @@ namespace eden
       }
       for (uint32_t i = 0; i < num_low_rounds; ++i)
       {
-         auto& round = result[result.size() - i - 1];
+         auto& round = result[result.size() - num_high_rounds - i - 1];
          round.num_groups = next_group;
          round.num_participants = next_group = next_group * (max_group_size - 1);
       }

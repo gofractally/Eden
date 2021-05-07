@@ -19,7 +19,7 @@ target_link_libraries(eden eosio-contract)
 set_target_properties(eden PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${ROOT_BINARY_DIR})
 configure_file(eden.abi ${ROOT_BINARY_DIR}/eden.abi COPYONLY)
 
-add_executable(test-eden tests/test-eden.cpp src/globals.cpp src/accounts.cpp src/members.cpp)
+add_executable(test-eden tests/test-eden.cpp src/globals.cpp src/accounts.cpp src/members.cpp src/elections.cpp)
 target_include_directories(test-eden PUBLIC include)
 target_include_directories(test-eden PUBLIC ../token/include ../boot/include)
 target_link_libraries(test-eden catch2 cltestlib)
