@@ -8,6 +8,7 @@ import { assetToString } from "_app";
 
 interface Props {
     members: MemberData[];
+    dataTestId?: string;
 }
 
 const openInNewTab = (url: string) => {
@@ -15,10 +16,10 @@ const openInNewTab = (url: string) => {
     if (newWindow) newWindow.opener = null;
 };
 
-export const MembersGrid = ({ members }: Props) => {
+export const MembersGrid = ({ members, dataTestId }: Props) => {
     const containerClass = `grid grid-cols-1 max-w-xs sm:max-w-xl md:max-w-none sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-5 mx-auto`;
     return (
-        <div className={containerClass}>
+        <div className={containerClass} data-testid={dataTestId}>
             {(members.length &&
                 members.map((member, index) => (
                     <MemberSquare key={index} member={member} />

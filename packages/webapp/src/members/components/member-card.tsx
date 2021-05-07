@@ -13,7 +13,10 @@ interface Props {
 
 export const MemberCard = ({ member }: Props) => {
     return (
-        <div className="px-2 sm:px-8 flex flex-col max-w-xl">
+        <div
+            data-testid={`member-card-${member.account}`}
+            className="px-2 sm:px-8 flex flex-col max-w-xl"
+        >
             <MemberSocialLinks member={member} />
             <section className="py-4">
                 <MemberBio bio={member.bio} />

@@ -7,7 +7,8 @@
         "dev": "next dev",
         "build": "next build",
         "start": "next start",
-        "test": "yarn run build"
+        "test": "cypress run",
+        "test-dev": "cypress open"
     },
     "dependencies": {
         "dayjs": "^1.10.4",
@@ -32,6 +33,7 @@
         "@types/react": "~17.0.0",
         "@types/react-dom": "~17.0.0",
         "autoprefixer": "^10.2.5",
+        "cypress": "^7.2.0",
         "next-transpile-modules": "~3.3.0",
         "postcss": "^8.2.9",
         "tailwindcss": "^2.0.4",
