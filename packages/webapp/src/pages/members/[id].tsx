@@ -59,7 +59,7 @@ export const MemberPage = ({ account }: Props) => {
     return (
         <SingleColLayout title="Member not found">
             <CallToAction href="/members" buttonLabel="Browse members">
-                This accouaaaant is not an active Eden member.
+                This account is not an active Eden member.
             </CallToAction>
         </SingleColLayout>
     );
