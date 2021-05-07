@@ -7,30 +7,20 @@ import {
     getMember,
     MemberCard,
     MemberCollections,
-    MemberData,
     MemberHoloCard,
 } from "members";
 
 const QUERY_MEMBER_DATA = "query_member_data";
 
 export const getServerSideProps: GetServerSideProps = async ({ params }) => {
-    try {
-        if (!params || !params.id || Array.isArray(params.id)) {
-            throw new Error("member id is a required string parameter");
-        }
+    const account = params!.id as string;
 
-        const account = params.id;
+    const queryClient = new QueryClient();
+    await queryClient.prefetchQuery([QUERY_MEMBER_DATA, account], () =>
+        getMember(account)
+    );
 
-        const queryClient = new QueryClient();
-        queryClient.prefetchQuery([QUERY_MEMBER_DATA, account], () =>
-            getMember(account)
-        );
-
-        return { props: { account, dehydratedState: dehydrate(queryClient) } };
-    } catch (error) {
-        console.error(">>> Fail to list eden members:" + error);
-        return { props: { error: "Fail to list eden members" } };
-    }
+    return { props: { account, dehydratedState: dehydrate(queryClient) } };
 };
 
 interface Props {
@@ -69,7 +59,7 @@ export const MemberPage = ({ account }: Props) => {
     return (
         <SingleColLayout title="Member not found">
             <CallToAction href="/members" buttonLabel="Browse members">
-                This account is not an active Eden member.
+                This accouaaaant is not an active Eden member.
             </CallToAction>
         </SingleColLayout>
     );
