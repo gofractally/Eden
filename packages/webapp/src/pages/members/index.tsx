@@ -2,7 +2,7 @@ import { GetServerSideProps } from "next";
 import { QueryClient, useQuery } from "react-query";
 import { dehydrate } from "react-query/hydration";
 
-import { getMembers, MembersGrid, MemberData, getNewMembers } from "members";
+import { getMembers, MembersGrid, getNewMembers } from "members";
 import { SingleColLayout, Card } from "_app";
 
 const QUERY_MEMBERS = "query_members";

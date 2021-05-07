@@ -13,7 +13,7 @@ import {
     Endorsement,
 } from "inductions";
 
-export const InductionPage = () => {
+export const InductionDetailsPage = () => {
     const router = useRouter();
     const inductionId = router.query.id;
     const [reviewStep, setReviewStep] = useState<
@@ -93,4 +93,4 @@ export const InductionPage = () => {
     );
 };
 
-export default InductionPage;
+export default InductionDetailsPage;
