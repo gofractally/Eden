@@ -146,4 +146,4 @@ namespace token
 }  // namespace token
 
 EOSIO_ACTION_DISPATCHER(token::actions)
-EOSIO_ABIGEN()
+EOSIO_ABIGEN(actions(token::actions))

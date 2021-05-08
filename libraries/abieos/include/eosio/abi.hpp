@@ -78,6 +78,12 @@ namespace eosio
       return from_json(obj.value, stream);
    }
 
+   template <typename T, typename S>
+   void to_json(const might_not_exist<T>& val, S& stream)
+   {
+      return to_json(val.value, stream);
+   }
+
    [[nodiscard]] inline bool check_abi_version(const std::string& s, std::string& error)
    {
       if (s.substr(0, 13) != "eosio::abi/1.")
@@ -88,14 +94,20 @@ namespace eosio
       return true;
    }
 
-   using abi_extensions_type = std::vector<std::pair<uint16_t, std::vector<char>>>;
+   struct abi_extension
+   {
+      uint16_t id;
+      std::vector<uint8_t> data;
+   };
+   EOSIO_REFLECT(abi_extension, id, data);
+
+   using abi_extensions_type = std::vector<abi_extension>;
 
    struct type_def
    {
       std::string new_type_name{};
       std::string type{};
    };
-
    EOSIO_REFLECT(type_def, new_type_name, type);
 
    struct field_def
@@ -103,7 +115,6 @@ namespace eosio
       std::string name{};
       std::string type{};
    };
-
    EOSIO_REFLECT(field_def, name, type);
 
    struct struct_def
@@ -112,7 +123,6 @@ namespace eosio
       std::string base{};
       std::vector<field_def> fields{};
    };
-
    EOSIO_REFLECT(struct_def, name, base, fields);
 
    struct action_def
@@ -121,7 +131,6 @@ namespace eosio
       std::string type{};
       std::string ricardian_contract{};
    };
-
    EOSIO_REFLECT(action_def, name, type, ricardian_contract);
 
    struct table_def
@@ -132,7 +141,6 @@ namespace eosio
       std::vector<std::string> key_types{};
       std::string type{};
    };
-
    EOSIO_REFLECT(table_def, name, index_type, key_names, key_types, type);
 
    struct clause_pair
@@ -140,7 +148,6 @@ namespace eosio
       std::string id{};
       std::string body{};
    };
-
    EOSIO_REFLECT(clause_pair, id, body);
 
    struct error_message
@@ -148,7 +155,6 @@ namespace eosio
       uint64_t error_code{};
       std::string error_msg{};
    };
-
    EOSIO_REFLECT(error_message, error_code, error_msg);
 
    struct variant_def
@@ -156,7 +162,6 @@ namespace eosio
       std::string name{};
       std::vector<std::string> types{};
    };
-
    EOSIO_REFLECT(variant_def, name, types);
 
    struct abi_def
@@ -171,7 +176,6 @@ namespace eosio
       abi_extensions_type abi_extensions{};
       might_not_exist<std::vector<variant_def>> variants{};
    };
-
    EOSIO_REFLECT(abi_def,
                  version,
                  types,

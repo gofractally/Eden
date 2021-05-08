@@ -82,6 +82,12 @@ namespace eosio
       return true;
    }
 
+   template <auto Action>
+   struct action_type_wrapper
+   {
+      using args = detail::deduced<Action>;
+   };
+
 #define EOSIO_EMPTY(...)
 
 #define EOSIO_MATCH_CHECK_N(x, n, r, ...) \
@@ -152,14 +158,14 @@ namespace eosio
    BOOST_PP_CAT(EOSIO_ACTION_WRAPPER_DECL_, BOOST_PP_COMPL(EOSIO_MATCH_NOTIFY(action))) \
    (r, data, action)
 
-#define EOSIO_EACH_REFLECT_ACTION_1(r, data, action)                          \
-   f(BOOST_PP_CAT(BOOST_PP_STRINGIZE(EOSIO_EXTRACT_ACTION_NAME(action)), _h), \
-                  &contract_class::EOSIO_EXTRACT_ACTION_NAME(action)          \
-                      EOSIO_ACTION_ARG_NAME_STRINGS(action));
-#define EOSIO_EACH_REFLECT_ACTION_0(r, data, action)
-#define EOSIO_EACH_REFLECT_ACTION(r, data, action)                                      \
-   BOOST_PP_CAT(EOSIO_EACH_REFLECT_ACTION_, BOOST_PP_COMPL(EOSIO_MATCH_NOTIFY(action))) \
-   (r, data, action)
+#define EOSIO_REFLECT_ACTION_1(r, data, action)                                             \
+   f(                                                                                       \
+       BOOST_PP_CAT(                                                                        \
+           BOOST_PP_STRINGIZE(EOSIO_EXTRACT_ACTION_NAME(action)), _h),                      \
+           eosio::action_type_wrapper<&contract_class::EOSIO_EXTRACT_ACTION_NAME(action)> { \
+           } EOSIO_ACTION_ARG_NAME_STRINGS(action));
+#define EOSIO_REFLECT_ACTION(r, data, action) \
+   BOOST_PP_IIF(EOSIO_MATCH_NOTIFY(action), EOSIO_EMPTY, EOSIO_REFLECT_ACTION_1)(r, data, action)
 
 #define EOSIO_ACTIONS(CONTRACT_CLASS, CONTRACT_ACCOUNT, ...)                                     \
    namespace actions                                                                             \
@@ -171,8 +177,7 @@ namespace eosio
       template <typename F>                                                                      \
       void for_each_action(F&& f)                                                                \
       {                                                                                          \
-         BOOST_PP_SEQ_FOR_EACH(EOSIO_EACH_REFLECT_ACTION, _,                                     \
-                               BOOST_PP_VARIADIC_TO_SEQ(__VA_ARGS__))                            \
+         BOOST_PP_SEQ_FOR_EACH(EOSIO_REFLECT_ACTION, _, BOOST_PP_VARIADIC_TO_SEQ(__VA_ARGS__))   \
       }                                                                                          \
                                                                                                  \
       inline void eosio_apply(uint64_t receiver, uint64_t code, uint64_t action)                 \

@@ -63,7 +63,10 @@ target_link_libraries(eosio-contract INTERFACE
 )
 
 add_library(eosio-contract-abigen)
-target_sources(eosio-contract-abigen PRIVATE tester/tester_intrinsics.cpp)
+target_sources(eosio-contract-abigen PRIVATE
+    tester/tester_intrinsics.cpp
+    tester/wasi_polyfill/__wasi_proc_exit.cpp
+)
 target_compile_options(eosio-contract-abigen PUBLIC -DCOMPILING_ABIGEN)
 target_include_directories(eosio-contract-abigen PUBLIC contracts)
 target_link_libraries(eosio-contract-abigen PUBLIC
