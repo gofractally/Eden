@@ -68,5 +68,12 @@ namespace token
 
    EOSIO_REFLECT(contract::currency_stats, supply, max_supply, issuer)
 
-   EOSIO_ACTIONS(contract, "eosio.token"_n, create, issue, retire, transfer, open, close)
+   EOSIO_ACTIONS(contract,
+                 "eosio.token"_n,
+                 action(create, issuer, maximum_supply),
+                 action(issue, to, quantity, memo),
+                 action(retire, quantity, memo),
+                 action(transfer, from, to, quantity, memo),
+                 action(open, owner, symbol, ram_payer),
+                 action(close, owner, symbol))
 }  // namespace token
