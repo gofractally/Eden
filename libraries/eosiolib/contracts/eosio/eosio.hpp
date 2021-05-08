@@ -3,9 +3,8 @@
  *  @copyright defined in eos/LICENSE
  */
 #pragma once
-#include <eosio/action.hpp>
+#include <eosio/abi_generator.hpp>
 #include <eosio/contract.hpp>
-#include <eosio/dispatcher.hpp>
 #include <eosio/multi_index.hpp>
 #include <eosio/print.hpp>
 

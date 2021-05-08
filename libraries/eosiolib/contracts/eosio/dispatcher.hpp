@@ -196,6 +196,7 @@ namespace eosio
       }                                                                                          \
    }
 
+#ifdef COMPILING_CONTRACT
 #define EOSIO_ACTION_DISPATCHER(NAMESPACE)                          \
    extern "C"                                                       \
    {                                                                \
@@ -206,5 +207,8 @@ namespace eosio
          NAMESPACE ::eosio_apply(receiver, code, action);           \
       }                                                             \
    }
+#else
+#define EOSIO_ACTION_DISPATCHER(NAMESPACE)
+#endif
 
 }  // namespace eosio

@@ -27,6 +27,7 @@ set_target_properties(eosio-core PROPERTIES ARCHIVE_OUTPUT_DIRECTORY ${ROOT_BINA
 add_library(eosio-contract-base)
 target_link_libraries(eosio-contract-base PUBLIC eosio-core)
 target_include_directories(eosio-contract-base PUBLIC contracts)
+target_compile_options(eosio-contract-base INTERFACE -DCOMPILING_CONTRACT)
 target_link_options(eosio-contract-base PUBLIC
     -Wl,--stack-first
     -Wl,--entry,apply
@@ -60,6 +61,17 @@ target_link_libraries(eosio-contract INTERFACE
     eosio-contracts-wasi-polyfill
     ${WASI_SDK_PREFIX}/lib/clang/11.0.0/lib/wasi/libclang_rt.builtins-wasm32.a
 )
+
+add_library(eosio-contract-abigen)
+target_sources(eosio-contract-abigen PRIVATE tester/tester_intrinsics.cpp)
+target_compile_options(eosio-contract-abigen PUBLIC -DCOMPILING_ABIGEN)
+target_include_directories(eosio-contract-abigen PUBLIC contracts)
+target_link_libraries(eosio-contract-abigen PUBLIC
+    boost
+    eosio-core
+    eosio-contracts-wasi-polyfill
+)
+set_target_properties(eosio-contract-abigen PROPERTIES ARCHIVE_OUTPUT_DIRECTORY ${ROOT_BINARY_DIR}/clsdk/lib-wasm)
 
 add_library(cltestlib)
 target_sources(cltestlib PRIVATE
