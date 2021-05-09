@@ -33,6 +33,25 @@ namespace eosio
    };
 
    template <typename T>
+   struct is_binary_extension : std::false_type
+   {
+   };
+
+   template <typename T>
+   struct is_binary_extension<might_not_exist<T>> : std::true_type
+   {
+      using type = T;
+   };
+
+   /* TODO: enable after fixing binary_extension
+   template <typename T>
+   struct is_binary_extension<binary_extension<T>> : std::true_type
+   {
+      using type = T;
+   };
+   */
+
+   template <typename T>
    struct is_variant : std::false_type
    {
    };
@@ -73,7 +92,7 @@ namespace eosio
          if constexpr (is_vector<T>())
          {
             using inner = std::decay_t<typename is_vector<T>::type>;
-            if (force_alias || is_vector<inner>() || is_optional<inner>())
+            if (force_alias)
             {
                std::type_index type = typeid(T);
                auto it = type_to_name.find(type);
@@ -82,15 +101,15 @@ namespace eosio
                auto inner_name = get_type<inner>(true);
                const auto& name = reserve_name("vector<" + inner_name + ">");
                type_to_name[typeid(T)] = name;
-               def.types.push_back({name, inner_name});
+               def.types.push_back({name, inner_name + "[]"});
                return name;
             }
-            return get_type<inner>() + "[]";
+            return get_type<inner>(is_vector<inner>() || is_optional<inner>()) + "[]";
          }
          else if constexpr (is_optional<T>())
          {
             using inner = std::decay_t<typename is_optional<T>::type>;
-            if (force_alias || is_vector<inner>() || is_optional<inner>())
+            if (force_alias)
             {
                std::type_index type = typeid(T);
                auto it = type_to_name.find(type);
@@ -99,10 +118,14 @@ namespace eosio
                auto inner_name = get_type<inner>(true);
                const auto& name = reserve_name("optional<" + inner_name + ">");
                type_to_name[typeid(T)] = name;
-               def.types.push_back({name, inner_name});
+               def.types.push_back({name, inner_name + "?"});
                return name;
             }
-            return get_type<inner>() + "?";
+            return get_type<inner>(is_vector<inner>() || is_optional<inner>()) + "?";
+         }
+         else if constexpr (is_binary_extension<T>())
+         {
+            return get_type<typename is_binary_extension<T>::type>() + "$";
          }
          else
          {
