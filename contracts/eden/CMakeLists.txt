@@ -16,7 +16,13 @@ add_executable(eden
 target_include_directories(eden PUBLIC include ../token/include PRIVATE ../../external/atomicassets-contract/include)
 target_link_libraries(eden eosio-contract)
 set_target_properties(eden PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${ROOT_BINARY_DIR})
-configure_file(eden.abi ${ROOT_BINARY_DIR}/eden.abi COPYONLY)
+
+add_executable(eden-abigen src/eden.cpp)
+target_include_directories(eden-abigen PRIVATE include ../token/include ../../external/atomicassets-contract/include)
+target_link_libraries(eden-abigen eosio-contract-abigen)
+add_custom_command(TARGET eden-abigen POST_BUILD
+    COMMAND ${ROOT_BINARY_DIR}/cltester eden-abigen.wasm >${ROOT_BINARY_DIR}/eden.abi
+)
 
 add_executable(test-eden tests/test-eden.cpp src/globals.cpp src/accounts.cpp src/members.cpp)
 target_include_directories(test-eden PUBLIC include)

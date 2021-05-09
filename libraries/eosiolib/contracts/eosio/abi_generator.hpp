@@ -45,30 +45,9 @@ namespace eosio
 
    struct abi_generator
    {
+      eosio::abi_def def{"eosio::abi/1.1"};
       std::map<std::type_index, std::string> type_to_name;
       std::set<std::string> used_type_names;
-      std::map<std::string, type_def> type_defs{};
-      std::map<std::string, struct_def> structs{};
-      std::map<name, action_def> actions{};
-      std::map<std::string, table_def> tables{};
-      std::map<std::string, variant_def> variants{};
-
-      eosio::abi_def get_def() &&
-      {
-         eosio::abi_def result;
-         result.version = "eosio::abi/1.1";
-         for (auto& t : type_defs)
-            result.types.push_back(std::move(t.second));
-         for (auto& t : structs)
-            result.structs.push_back(std::move(t.second));
-         for (auto& t : actions)
-            result.actions.push_back(std::move(t.second));
-         for (auto& t : tables)
-            result.tables.push_back(std::move(t.second));
-         for (auto& t : variants)
-            result.variants.value.push_back(std::move(t.second));
-         return result;
-      }
 
       void add_builtin_types()
       {
@@ -101,7 +80,7 @@ namespace eosio
                if (it != type_to_name.end())
                   return it->second;
                const auto& name = reserve_name("vector<" + get_type<inner>() + ">");
-               type_defs[name] = {name, get_type<inner>(true)};
+               def.types.push_back({name, get_type<inner>(true)});
                return name;
             }
             return get_type<inner>() + "[]";
@@ -116,7 +95,7 @@ namespace eosio
                if (it != type_to_name.end())
                   return it->second;
                const auto& name = reserve_name("optional<" + get_type<inner>() + ">");
-               type_defs[name] = {name, get_type<inner>(true)};
+               def.types.push_back({name, get_type<inner>(true)});
                return name;
             }
             return get_type<inner>() + "?";
@@ -128,20 +107,19 @@ namespace eosio
             if (it != type_to_name.end())
                return it->second;
 
-            internal_use_do_not_use::eosio_assert(
-                false,
-                ("don't know how to generate abi for " + std::string{typeid(T).name()}).c_str());
+            return std::string(std::string("***") + type.name());
+            // internal_use_do_not_use::eosio_assert(
+            //     false,
+            //     ("don't know how to generate abi for " + std::string{typeid(T).name()}).c_str());
          }
       }  // get_type
 
       void add_action(auto name, auto wrapper, auto... member_names)
       {
          const auto& struct_name = reserve_name(name.to_string());
-         auto& act = actions[name];
-         act.name = name;
-         act.type = struct_name;
-         auto& def = structs[struct_name];
-         def.name = struct_name;
+         def.actions.push_back({name, struct_name});
+         def.structs.push_back({struct_name});
+         auto& def = this->def.structs.back();
          add_action_args<0>(def, (typename decltype(wrapper)::args*)nullptr, member_names...);
       }
 
@@ -185,5 +163,5 @@ namespace eosio
       eosio::abi_generator gen;                                                            \
       gen.add_builtin_types();                                                             \
       BOOST_PP_SEQ_FOR_EACH(EOSIO_ABIGEN_ACTION, _, BOOST_PP_VARIADIC_TO_SEQ(__VA_ARGS__)) \
-      eosio::print(eosio::format_json(std::move(gen).get_def()), "\n");                    \
+      eosio::print(eosio::format_json(gen.def), "\n");                                     \
    }
