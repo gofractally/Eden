@@ -79,8 +79,10 @@ namespace eosio
                auto it = type_to_name.find(type);
                if (it != type_to_name.end())
                   return it->second;
-               const auto& name = reserve_name("vector<" + get_type<inner>() + ">");
-               def.types.push_back({name, get_type<inner>(true)});
+               auto inner_name = get_type<inner>(true);
+               const auto& name = reserve_name("vector<" + inner_name + ">");
+               type_to_name[typeid(T)] = name;
+               def.types.push_back({name, inner_name});
                return name;
             }
             return get_type<inner>() + "[]";
@@ -94,8 +96,10 @@ namespace eosio
                auto it = type_to_name.find(type);
                if (it != type_to_name.end())
                   return it->second;
-               const auto& name = reserve_name("optional<" + get_type<inner>() + ">");
-               def.types.push_back({name, get_type<inner>(true)});
+               auto inner_name = get_type<inner>(true);
+               const auto& name = reserve_name("optional<" + inner_name + ">");
+               type_to_name[typeid(T)] = name;
+               def.types.push_back({name, inner_name});
                return name;
             }
             return get_type<inner>() + "?";
@@ -107,10 +111,24 @@ namespace eosio
             if (it != type_to_name.end())
                return it->second;
 
-            return std::string(std::string("***") + type.name());
-            // internal_use_do_not_use::eosio_assert(
-            //     false,
-            //     ("don't know how to generate abi for " + std::string{typeid(T).name()}).c_str());
+            if constexpr (reflection::has_for_each_field_v<T>)
+            {
+               const auto& name = reserve_name(get_type_name((T*)nullptr));
+               type_to_name[typeid(T)] = name;
+               struct_def d{name};
+               for_each_field<T>([&](const char* n, auto&& member) {
+                  d.fields.push_back({n, get_type<decltype(member((T*)nullptr))>()});
+               });
+               def.structs.push_back(std::move(d));
+               return name;
+            }
+            else
+            {
+               return std::string(std::string("***") + type.name());
+               // internal_use_do_not_use::eosio_assert(
+               //     false,
+               //     ("don't know how to generate abi for " + std::string{typeid(T).name()}).c_str());
+            }
          }
       }  // get_type
 
@@ -118,9 +136,9 @@ namespace eosio
       {
          const auto& struct_name = reserve_name(name.to_string());
          def.actions.push_back({name, struct_name});
-         def.structs.push_back({struct_name});
-         auto& def = this->def.structs.back();
-         add_action_args<0>(def, (typename decltype(wrapper)::args*)nullptr, member_names...);
+         struct_def d{struct_name};
+         add_action_args<0>(d, (typename decltype(wrapper)::args*)nullptr, member_names...);
+         def.structs.push_back(std::move(d));
       }
 
       template <uint32_t i, typename T, typename... Ts, typename N, typename... Ns>
