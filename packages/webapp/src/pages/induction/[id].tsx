@@ -1,7 +1,13 @@
 import { useState } from "react";
 import { useRouter } from "next/router";
 
-import { CallToAction, RawLayout, SingleColLayout, useFetchedData } from "_app";
+import {
+    CallToAction,
+    RawLayout,
+    SingleColLayout,
+    useFetchedData,
+    useIsCommunityActive,
+} from "_app";
 import {
     getInductionWithEndorsements,
     Induction,
@@ -20,7 +26,12 @@ export const InductionDetailsPage = () => {
         "profile" | "video" | undefined
     >();
 
-    const [inductionEndorsements, isLoading] = useFetchedData<{
+    const {
+        data: isCommunityActive,
+        isLoading: isLoadingCommunityState,
+    } = useIsCommunityActive();
+
+    const [inductionEndorsements, isLoadingEndorsements] = useFetchedData<{
         induction: Induction;
         endorsements: Endorsement[];
     }>(getInductionWithEndorsements, inductionId);
@@ -39,7 +50,13 @@ export const InductionDetailsPage = () => {
         if (!induction) return "";
 
         if (reviewStep === "profile") {
-            return <InductionStepProfile induction={induction} isReviewing />;
+            return (
+                <InductionStepProfile
+                    induction={induction}
+                    isCommunityActive={isCommunityActive}
+                    isReviewing
+                />
+            );
         }
 
         if (reviewStep === "video") {
@@ -54,7 +71,12 @@ export const InductionDetailsPage = () => {
 
         switch (status) {
             case InductionStatus.waitingForProfile:
-                return <InductionStepProfile induction={induction} />;
+                return (
+                    <InductionStepProfile
+                        induction={induction}
+                        isCommunityActive={isCommunityActive}
+                    />
+                );
             case InductionStatus.waitingForVideo:
                 return (
                     <InductionStepVideo
@@ -67,6 +89,7 @@ export const InductionDetailsPage = () => {
                     <InductionStepEndorsement
                         induction={induction}
                         endorsements={endorsements}
+                        isCommunityActive={isCommunityActive}
                         setReviewStep={setReviewStep}
                     />
                 );
@@ -75,7 +98,7 @@ export const InductionDetailsPage = () => {
         }
     };
 
-    return isLoading ? (
+    return isLoadingEndorsements || isLoadingCommunityState ? (
         <p>Loading Induction...</p>
     ) : status === InductionStatus.invalid ? (
         <RawLayout title="Invite not found">
