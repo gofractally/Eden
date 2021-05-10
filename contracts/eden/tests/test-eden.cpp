@@ -31,8 +31,8 @@ void token_setup(test_chain& t)
 {
    t.create_code_account("eosio.token"_n);
    t.set_code("eosio.token"_n, "token.wasm");
-   t.as("eosio.token"_n).act<token::actions::create>("eosio.token"_n, s2a("1000000.0000 EOS"));
-   t.as("eosio.token"_n).act<token::actions::issue>("eosio.token"_n, s2a("1000000.0000 EOS"), "");
+   t.as("eosio.token"_n).act<token::actions::create>("eosio.token"_n, s2a("100000000.0000 EOS"));
+   t.as("eosio.token"_n).act<token::actions::issue>("eosio.token"_n, s2a("100000000.0000 EOS"), "");
    t.as("eosio.token"_n).act<token::actions::create>("eosio.token"_n, s2a("1000000.0000 OTHER"));
    t.as("eosio.token"_n).act<token::actions::issue>("eosio.token"_n, s2a("1000000.0000 OTHER"), "");
 }
@@ -79,6 +79,34 @@ auto get_table_size()
 {
    T tb("eden.gm"_n, eden::default_scope);
    return std::distance(tb.begin(), tb.end());
+}
+
+std::vector<eosio::name> make_names(std::size_t count)
+{
+   std::vector<eosio::name> result;
+   if (count <= 31 * 31)
+   {
+      auto test_account_base = "edenmember"_n;
+      for (std::size_t i = 32; i < 1024 && result.size() != count; ++i)
+      {
+         if (i % 32)
+         {
+            result.push_back(eosio::name(test_account_base.value + (i << 4)));
+         }
+      }
+   }
+   else
+   {
+      auto test_account_base = "edenmembr"_n;
+      for (int i = 1024; i < 32768 && result.size() != count; ++i)
+      {
+         if (i % 32 && (i / 32) % 32)
+         {
+            result.push_back(eosio::name(test_account_base.value + (i << 4)));
+         }
+      }
+   }
+   return result;
 }
 
 static const eden::new_member_profile alice_profile{
@@ -161,6 +189,45 @@ struct eden_tester
       pip.act<actions::inductdonate>("pip"_n, 2, s2a("10.0000 EOS"));
       egeon.act<actions::inductdonate>("egeon"_n, 3, s2a("10.0000 EOS"));
    }
+
+   void create_accounts(const std::vector<eosio::name>& test_accounts)
+   {
+      for (auto account : test_accounts)
+      {
+         chain.start_block();
+         chain.create_account(account);
+         chain.as("eosio.token"_n)
+             .act<token::actions::transfer>("eosio.token"_n, account, s2a("1000.0000 EOS"), "memo");
+      }
+   }
+
+   void finish_induction(uint64_t induction_id,
+                         eosio::name inviter,
+                         eosio::name invitee,
+                         const std::vector<eosio::name>& witnesses)
+   {
+      chain.as(invitee).act<token::actions::transfer>(invitee, "eden.gm"_n, s2a("10.0000 EOS"),
+                                                      "memo");
+
+      std::string video = "QmTYqoPYf7DiVebTnvwwFdTgsYXg2RnuPrt8uddjfW2kHS";
+      eden::new_member_profile profile{invitee.to_string(),
+                                       "Qmb7WmZiSDXss5HfuKfoSf6jxTDrHzr8AoAUDeDMLNDuws",
+                                       "Hi, I'm the coolest " + invitee.to_string() + " ever!",
+                                       "{\"blog\":\"" + invitee.to_string() + ".example.com\"}"};
+      chain.as(invitee).act<actions::inductprofil>(induction_id, profile);
+      chain.as(inviter).act<actions::inductvideo>(inviter, induction_id, video);
+
+      auto hash_data = eosio::convert_to_bin(std::tuple(video, profile));
+      auto induction_hash = eosio::sha256(hash_data.data(), hash_data.size());
+
+      chain.as(inviter).act<actions::inductendorse>(inviter, induction_id, induction_hash);
+      for (auto witness : witnesses)
+      {
+         chain.as(witness).act<actions::inductendorse>(witness, induction_id, induction_hash);
+      }
+      chain.as(invitee).act<actions::inductdonate>(invitee, induction_id, s2a("10.0000 EOS"));
+      CHECK(get_eden_membership(invitee).status() == eden::member_status::active_member);
+   };
 };
 
 TEST_CASE("genesis NFT pre-setup")
@@ -349,48 +416,8 @@ TEST_CASE("induction gc")
    eden_tester t;
    t.genesis();
 
-   std::vector<eosio::name> test_accounts;
-   auto test_account_base = "edenmember"_n;
-   for (int i = 32; i < 100; ++i)
-   {
-      if (i % 32)
-      {
-         test_accounts.push_back(eosio::name(test_account_base.value + (i << 4)));
-      }
-   }
-   // Initialize accounts
-   for (auto account : test_accounts)
-   {
-      t.chain.start_block();
-      t.chain.create_account(account);
-      t.chain.as("eosio.token"_n)
-          .act<token::actions::transfer>("eosio.token"_n, account, s2a("1000.0000 EOS"), "memo");
-   }
-
-   auto finish_induction = [&](uint64_t induction_id, eosio::name inviter, eosio::name invitee,
-                               const std::vector<eosio::name>& witnesses) {
-      t.chain.as(invitee).act<token::actions::transfer>(invitee, "eden.gm"_n, s2a("10.0000 EOS"),
-                                                        "memo");
-
-      std::string video = "QmTYqoPYf7DiVebTnvwwFdTgsYXg2RnuPrt8uddjfW2kHS";
-      eden::new_member_profile profile{invitee.to_string(),
-                                       "Qmb7WmZiSDXss5HfuKfoSf6jxTDrHzr8AoAUDeDMLNDuws",
-                                       "Hi, I'm the coolest " + invitee.to_string() + " ever!",
-                                       "{\"blog\":\"" + invitee.to_string() + "example.com\"}"};
-      t.chain.as(invitee).act<actions::inductprofil>(induction_id, profile);
-      t.chain.as(inviter).act<actions::inductvideo>(inviter, induction_id, video);
-
-      auto hash_data = eosio::convert_to_bin(std::tuple(video, profile));
-      auto induction_hash = eosio::sha256(hash_data.data(), hash_data.size());
-
-      t.chain.as(inviter).act<actions::inductendorse>(inviter, induction_id, induction_hash);
-      for (auto witness : witnesses)
-      {
-         t.chain.as(witness).act<actions::inductendorse>(witness, induction_id, induction_hash);
-      }
-      t.chain.as(invitee).act<actions::inductdonate>(invitee, induction_id, s2a("10.0000 EOS"));
-      CHECK(get_eden_membership(invitee).status() == eden::member_status::active_member);
-   };
+   auto test_accounts = make_names(38);
+   t.create_accounts(test_accounts);
 
    // induct some members
    for (std::size_t i = 0; i < 34; ++i)
@@ -400,7 +427,7 @@ TEST_CASE("induction gc")
       auto induction_id = i + 4;
       t.alice.act<actions::inductinit>(induction_id, "alice"_n, account,
                                        std::vector{"pip"_n, "egeon"_n});
-      finish_induction(induction_id, "alice"_n, account, {"pip"_n, "egeon"_n});
+      t.finish_induction(induction_id, "alice"_n, account, {"pip"_n, "egeon"_n});
    }
    CHECK(members("eden.gm"_n).stats().active_members == 37);
    CHECK(members("eden.gm"_n).stats().pending_members == 0);
@@ -431,7 +458,7 @@ TEST_CASE("induction gc")
       auto member_idx = i + 34;
       auto invitee = test_accounts.at(34 + i);
       uint64_t base_induction_id = 34 + 4 + i * 64;
-      finish_induction(base_induction_id, test_accounts.at(0), invitee, {"pip"_n, "egeon"_n});
+      t.finish_induction(base_induction_id, test_accounts.at(0), invitee, {"pip"_n, "egeon"_n});
       CHECK(members("eden.gm"_n).stats().active_members == 37 + i + 1);
       CHECK(members("eden.gm"_n).stats().pending_members == 2 - i);
    }
@@ -560,6 +587,72 @@ TEST_CASE("election")
    CHECK(get_table_size<eden::vote_table_type>() == 1);
    eden::vote_table_type vote_tb("eden.gm"_n, eden::default_scope);
    auto vote = *vote_tb.begin();
+   CHECK(vote.member == "alice"_n);
+   CHECK(vote.group_id == 0);
+}
+
+TEST_CASE("election with multiple rounds")
+{
+   constexpr std::size_t num_accounts = 200;  // 10000 takes too long
+   eden_tester t;
+   t.genesis();
+   auto test_accounts = make_names(num_accounts - 3);
+   t.create_accounts(test_accounts);
+
+   for (auto account : test_accounts)
+   {
+      t.chain.start_block();
+      t.alice.act<actions::inductinit>(42, "alice"_n, account, std::vector{"pip"_n, "egeon"_n});
+      t.finish_induction(42, "alice"_n, account, {"pip"_n, "egeon"_n});
+   }
+
+   // set up the election
+   t.eden_gm.act<actions::electinit>(eosio::checksum256());
+   while (true)
+   {
+      t.chain.start_block();
+      auto trace = t.alice.trace<actions::electprepare>(10000);
+      if (trace.except)
+      {
+         expect(trace, "Nothing to do");
+         break;
+      }
+   }
+
+   auto get_current_groups = []() {
+      std::map<uint64_t, std::vector<eosio::name>> groups;
+      eden::vote_table_type vote_tb("eden.gm"_n, eden::default_scope);
+      for (auto row : vote_tb.get_index<"bygroup"_n>())
+      {
+         groups[row.group_id].push_back(row.member);
+      }
+      return groups;
+   };
+
+   auto generic_group_vote = [&](const auto& groups) {
+      for (const auto& [group_id, members] : groups)
+      {
+         t.chain.start_block();
+         for (eosio::name member : members)
+         {
+            t.chain.as(member).act<actions::electvote>(group_id, member, members[0]);
+         }
+         t.chain.as(members[0]).template act<actions::electadvance>(group_id);
+      }
+   };
+
+   // With 200 members, there should be three rounds
+   CHECK(get_table_size<eden::vote_table_type>() == 200);
+   generic_group_vote(get_current_groups());
+   CHECK(get_table_size<eden::vote_table_type>() == 36);
+   generic_group_vote(get_current_groups());
+   CHECK(get_table_size<eden::vote_table_type>() == 6);
+   generic_group_vote(get_current_groups());
+   CHECK(get_table_size<eden::vote_table_type>() == 1);
+
+   eden::vote_table_type vote_tb("eden.gm"_n, eden::default_scope);
+   auto vote = *vote_tb.begin();
+   // alice always wins at every level, because everyone votes for the member with the lowest name
    CHECK(vote.member == "alice"_n);
    CHECK(vote.group_id == 0);
 }

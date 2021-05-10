@@ -65,7 +65,13 @@ namespace eden
 
    using election_config = std::vector<election_round_config>;
 
-   // TODO: Implement a suitable PRNG
+   // Implements a PRNG using sha256 over a counter.
+   //
+   // Algorithms using the engine must ensure that the data that
+   // they operate on is fully determined before the seed is
+   // generated.
+   // TODO: The existing iteration over the members table does
+   // not guarantee this.
    struct election_rng
    {
       election_rng() = default;
@@ -146,12 +152,6 @@ namespace eden
    // reach consensus?
    // If it isn't determined up front, does that introduce the possibility of
    // intentional consensus failure to manipulate the overall results?
-
-   // How much CPU does it take to process the entire members table in a single
-   // transaction to prepare the election?
-   // Alternatively, is there an incremental algorithm for selecting
-   // groups randomly that only reads a part of the members table at a
-   // time?
 
    class elections
    {

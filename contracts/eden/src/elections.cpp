@@ -22,6 +22,7 @@ namespace eden
          memcpy(&counter, inbuf + 32, sizeof(counter));
          ++counter;
          memcpy(inbuf + 32, &counter, sizeof(counter));
+         index = 0;
       }
       result_type result;
       memcpy(&result, outbuf + index, sizeof(result_type));
