@@ -2,7 +2,7 @@
 set -e
 
 CLEOS="cleos -u https://wax-test.eosdac.io"
-CONTRACT="edenmembersd"
+CONTRACT="test.edev"
 COMMUNITY_NAME="Eden Test"
 COMMUNITY_DESCRIPTION="Eden is a community working to maximize the power and independence of its members and thereby securing life, liberty, property, and justice for all."
 COMMUNITY_LOGO="QmZQ11KWvfj2NkKUMJfsTfvfbyUNQpLYCu8uxSbFTQ2zbA"
