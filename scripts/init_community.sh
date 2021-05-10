@@ -13,7 +13,7 @@ MINIMUM_DONATION="0.0001 EOS"
 AUCTION_STARTING_BID="0.0001 EOS"
 AUCTION_DURATION=604800
 GENESIS_MEMO="A community is put through the test"
-GENESIS_MEMBERS='"doingitright","mikemanfredi","toddbfleming","thomhallgren","domenic.gm"'
+GENESIS_MEMBERS='"doingitright","mikemanfredi","toddbfleming","thomhallgren","domenic.gm","energy.gm"'
 
 GENESIS_ACTION_DATA="{
     \"community\": \"$COMMUNITY_NAME\",
