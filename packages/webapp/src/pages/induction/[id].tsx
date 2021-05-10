@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useRouter } from "next/router";
 
-import { RawLayout, SingleColLayout, useFetchedData } from "_app";
+import { CallToAction, RawLayout, SingleColLayout, useFetchedData } from "_app";
 import {
     getInductionWithEndorsements,
     Induction,
@@ -78,13 +78,11 @@ export const InductionDetailsPage = () => {
     return isLoading ? (
         <p>Loading Induction...</p>
     ) : status === InductionStatus.invalid ? (
-        <RawLayout title="Induction not found">
-            <div className="text-center max-w p-8">
-                <p>
-                    Perhaps this induction was completed successfully or, in the
-                    worst case scenario, it was expired after 7 days.
-                </p>
-            </div>
+        <RawLayout title="Invite not found">
+            <CallToAction href="/induction" buttonLabel="Membership Dashboard">
+                Hmmm... this invitation couldn't be found. The invitee may have
+                already been inducted, or their invitation could have expired.
+            </CallToAction>
         </RawLayout>
     ) : (
         <SingleColLayout title={`Induction #${inductionId}`}>
