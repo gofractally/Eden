@@ -1,7 +1,6 @@
 #pragma once
 
 #error TODO: has compilation bugs and undefined behavior; use might_not_exist unless you need has_value detection
-// TODO: if this file gets fixed, enable support in abi_generator.hpp
 
 #include <eosio/check.hpp>
 

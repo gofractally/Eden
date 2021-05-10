@@ -1,67 +1,13 @@
 #pragma once
 #include <eosio/abi.hpp>
 #include <eosio/dispatcher.hpp>
+#include <eosio/types.hpp>
 #include <map>
-#include <optional>
 #include <type_traits>
 #include <typeindex>
-#include <variant>
-#include <vector>
 
 namespace eosio
 {
-   template <typename T>
-   struct is_vector : std::false_type
-   {
-   };
-
-   template <typename T>
-   struct is_vector<std::vector<T>> : std::true_type
-   {
-      using type = T;
-   };
-
-   template <typename T>
-   struct is_optional : std::false_type
-   {
-   };
-
-   template <typename T>
-   struct is_optional<std::optional<T>> : std::true_type
-   {
-      using type = T;
-   };
-
-   template <typename T>
-   struct is_binary_extension : std::false_type
-   {
-   };
-
-   template <typename T>
-   struct is_binary_extension<might_not_exist<T>> : std::true_type
-   {
-      using type = T;
-   };
-
-   /* TODO: enable after fixing binary_extension
-   template <typename T>
-   struct is_binary_extension<binary_extension<T>> : std::true_type
-   {
-      using type = T;
-   };
-   */
-
-   template <typename T>
-   struct is_variant : std::false_type
-   {
-   };
-
-   template <typename T>
-   struct is_variant<std::variant<T>> : std::true_type
-   {
-      using type = T;
-   };
-
    struct abi_generator
    {
       eosio::abi_def def{"eosio::abi/1.1"};
@@ -89,9 +35,9 @@ namespace eosio
       std::string get_type(bool force_alias = false)
       {
          using T = std::decay_t<Raw>;
-         if constexpr (is_vector<T>())
+         if constexpr (is_std_vector<T>())
          {
-            using inner = std::decay_t<typename is_vector<T>::type>;
+            using inner = std::decay_t<typename is_std_vector<T>::value_type>;
             if (force_alias)
             {
                std::type_index type = typeid(T);
@@ -104,11 +50,11 @@ namespace eosio
                def.types.push_back({name, inner_name + "[]"});
                return name;
             }
-            return get_type<inner>(is_vector<inner>() || is_optional<inner>()) + "[]";
+            return get_type<inner>(is_std_vector<inner>() || is_std_optional<inner>()) + "[]";
          }
-         else if constexpr (is_optional<T>())
+         else if constexpr (is_std_optional<T>())
          {
-            using inner = std::decay_t<typename is_optional<T>::type>;
+            using inner = std::decay_t<typename is_std_optional<T>::value_type>;
             if (force_alias)
             {
                std::type_index type = typeid(T);
@@ -121,11 +67,24 @@ namespace eosio
                def.types.push_back({name, inner_name + "?"});
                return name;
             }
-            return get_type<inner>(is_vector<inner>() || is_optional<inner>()) + "?";
+            return get_type<inner>(is_std_vector<inner>() || is_std_optional<inner>()) + "?";
          }
          else if constexpr (is_binary_extension<T>())
          {
-            return get_type<typename is_binary_extension<T>::type>() + "$";
+            return get_type<typename is_binary_extension<T>::value_type>() + "$";
+         }
+         else if constexpr (is_std_variant<T>())
+         {
+            std::type_index type = typeid(T);
+            auto it = type_to_name.find(type);
+            if (it != type_to_name.end())
+               return it->second;
+            auto name = generate_variant_name((T*)nullptr);
+            type_to_name[typeid(T)] = name;
+            variant_def d{name};
+            add_variant_types(d, (typename is_std_variant<T>::types*)nullptr);
+            def.variants.value.push_back(std::move(d));
+            return name;
          }
          else
          {
@@ -147,13 +106,30 @@ namespace eosio
             }
             else
             {
-               return std::string(std::string("***") + type.name());
-               // internal_use_do_not_use::eosio_assert(
-               //     false,
-               //     ("don't know how to generate abi for " + std::string{typeid(T).name()}).c_str());
+               internal_use_do_not_use::eosio_assert(
+                   false, ("Don't know how to generate abi for " + std::string{typeid(T).name()} +
+                           ". Try EOSIO_REFLECT")
+                              .c_str());
             }
          }
       }  // get_type
+
+      template <typename T, typename... Ts>
+      std::string generate_variant_name(std::variant<T, Ts...>* p)
+      {
+         return std::string{"variant<"} + (get_type<T>() + ... + ("," + get_type<Ts>())) + ">";
+      }
+
+      std::string generate_variant_name(std::variant<>*) { return "variant<>"; }
+
+      template <typename T, typename... Ts>
+      void add_variant_types(variant_def& d, type_list<T, Ts...>*)
+      {
+         d.types.push_back(get_type<T>());
+         add_variant_types(d, (type_list<Ts...>*)nullptr);
+      }
+
+      void add_variant_types(variant_def& d, type_list<>*) {}
 
       void add_action(auto name, auto wrapper, auto... member_names)
       {
@@ -182,6 +158,18 @@ namespace eosio
       void add_action_args(struct_def& def, std::tuple<>*, Ns... names)
       {
       }
+
+      template <typename T>
+      void add_table(const auto& name)
+      {
+         def.tables.push_back({
+             .name{name},
+             .index_type{"i64"},
+             .key_names{},
+             .key_types{},
+             .type{get_type<T>()},
+         });
+      }
    };  // abi_generator
 }  // namespace eosio
 
@@ -190,19 +178,31 @@ namespace eosio
 #define EOSIO_ABIGEN_EXTRACT_ACTIONS_NS(x) BOOST_PP_CAT(EOSIO_ABIGEN_EXTRACT_ACTIONS_NS, x)
 #define EOSIO_ABIGEN_EXTRACT_ACTIONS_NSactions(ns) ns
 
-#define EOSIO_ABIGEN_ACTION1(actions)                         \
+#define EOSIO_ABIGEN_MATCH_TABLE(x) EOSIO_MATCH(EOSIO_ABIGEN_MATCH_TABLE, x)
+#define EOSIO_ABIGEN_MATCH_TABLEtable EOSIO_MATCH_YES
+#define EOSIO_ABIGEN_EXTRACT_TABLE_NAME(x) BOOST_PP_CAT(EOSIO_ABIGEN_EXTRACT_TABLE_NAME, x)
+#define EOSIO_ABIGEN_EXTRACT_TABLE_NAMEtable(name, type) name
+#define EOSIO_ABIGEN_EXTRACT_TABLE_TYPE(x) BOOST_PP_CAT(EOSIO_ABIGEN_EXTRACT_TABLE_TYPE, x)
+#define EOSIO_ABIGEN_EXTRACT_TABLE_TYPEtable(name, type) type
+
+#define EOSIO_ABIGEN_ACTION(actions)                          \
    EOSIO_ABIGEN_EXTRACT_ACTIONS_NS(actions)::for_each_action( \
        [&](auto name, auto fn, auto... member_names) {        \
           gen.add_action(name, fn, member_names...);          \
        });
-#define EOSIO_ABIGEN_ACTION(r, data, actions) \
-   BOOST_PP_IIF(EOSIO_ABIGEN_MATCH_ACTIONS(actions), EOSIO_ABIGEN_ACTION1, EOSIO_EMPTY)(actions)
 
-#define EOSIO_ABIGEN(...)                                                                  \
-   int main()                                                                              \
-   {                                                                                       \
-      eosio::abi_generator gen;                                                            \
-      gen.add_builtin_types();                                                             \
-      BOOST_PP_SEQ_FOR_EACH(EOSIO_ABIGEN_ACTION, _, BOOST_PP_VARIADIC_TO_SEQ(__VA_ARGS__)) \
-      eosio::print(eosio::format_json(gen.def), "\n");                                     \
+#define EOSIO_ABIGEN_TABLE(table) \
+   gen.add_table<EOSIO_ABIGEN_EXTRACT_TABLE_TYPE(table)>(EOSIO_ABIGEN_EXTRACT_TABLE_NAME(table));
+
+#define EOSIO_ABIGEN_ITEM(r, data, item)                                                   \
+   BOOST_PP_IIF(EOSIO_ABIGEN_MATCH_ACTIONS(item), EOSIO_ABIGEN_ACTION, EOSIO_EMPTY)(item); \
+   BOOST_PP_IIF(EOSIO_ABIGEN_MATCH_TABLE(item), EOSIO_ABIGEN_TABLE, EOSIO_EMPTY)(item);
+
+#define EOSIO_ABIGEN(...)                                                                \
+   int main()                                                                            \
+   {                                                                                     \
+      eosio::abi_generator gen;                                                          \
+      gen.add_builtin_types();                                                           \
+      BOOST_PP_SEQ_FOR_EACH(EOSIO_ABIGEN_ITEM, _, BOOST_PP_VARIADIC_TO_SEQ(__VA_ARGS__)) \
+      eosio::print(eosio::format_json(gen.def), "\n");                                   \
    }

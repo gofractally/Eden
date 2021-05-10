@@ -9,6 +9,67 @@
 
 namespace eosio
 {
+   template <typename... Ts>
+   struct type_list
+   {
+   };
+
+   template <typename T>
+   struct is_std_vector : std::false_type
+   {
+   };
+
+   template <typename T>
+   struct is_std_vector<std::vector<T>> : std::true_type
+   {
+      using value_type = T;
+   };
+
+   template <typename T>
+   struct is_std_optional : std::false_type
+   {
+   };
+
+   template <typename T>
+   struct is_std_optional<std::optional<T>> : std::true_type
+   {
+      using value_type = T;
+   };
+
+   template <typename T>
+   struct is_binary_extension : std::false_type
+   {
+   };
+
+   template <typename T>
+   struct might_not_exist;
+
+   template <typename T>
+   struct is_binary_extension<might_not_exist<T>> : std::true_type
+   {
+      using value_type = T;
+   };
+
+   template <typename T>
+   struct binary_extension;
+
+   template <typename T>
+   struct is_binary_extension<binary_extension<T>> : std::true_type
+   {
+      using value_type = T;
+   };
+
+   template <typename T>
+   struct is_std_variant : std::false_type
+   {
+   };
+
+   template <typename... Ts>
+   struct is_std_variant<std::variant<Ts...>> : std::true_type
+   {
+      using types = type_list<Ts...>;
+   };
+
    constexpr const char* get_type_name(bool*) { return "bool"; }
    constexpr const char* get_type_name(std::int8_t*) { return "int8"; }
    constexpr const char* get_type_name(std::uint8_t*) { return "uint8"; }

@@ -17,9 +17,11 @@ namespace eden
    };
    EOSIO_REFLECT(account_v0, owner, balance)
 
+   using account_variant = std::variant<account_v0>;
+
    struct account
    {
-      std::variant<account_v0> value;
+      account_variant value;
       EDEN_FORWARD_MEMBERS(value, owner, balance);
       EDEN_FORWARD_FUNCTIONS(value, primary_key)
    };
