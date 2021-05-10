@@ -1,19 +1,19 @@
 #!/usr/bin/env sh
 set -e
 
-CLEOS="cleos -u https://wax-test.eosdac.io"
-CONTRACT="edenmembersd"
-COMMUNITY_NAME="Eden Test"
+CLEOS="cleos -u https://api.eosn.io"
+CONTRACT="test.eden"
+COMMUNITY_NAME="Eden (test)"
 COMMUNITY_DESCRIPTION="Eden is a community working to maximize the power and independence of its members and thereby securing life, liberty, property, and justice for all."
-COMMUNITY_LOGO="QmZQ11KWvfj2NkKUMJfsTfvfbyUNQpLYCu8uxSbFTQ2zbA"
+COMMUNITY_LOGO="QmTdqD57JmfZyNjW8HatpgjbhTh4UjtTPXtievRqCnwMF4"
 COMMUNITY_URL="https://eden.eoscommunity.org"
 GENESIS_VIDEO="QmTYqoPYf7DiVebTnvwwFdTgsYXg2RnuPrt8uddjfW2kHS"
-SYMBOL="8,WAX"
-MINIMUM_DONATION="10.00000000 WAX"
-AUCTION_STARTING_BID="1.00000000 WAX"
+SYMBOL="4,EOS"
+MINIMUM_DONATION="0.0001 EOS"
+AUCTION_STARTING_BID="0.0001 EOS"
 AUCTION_DURATION=604800
-GENESIS_MEMO="A community is born."
-GENESIS_MEMBERS='"alice.edev", "pip.edev", "egeon.edev","edenmember11", "edenmember12", "edenmember13", "edenmember14", "edenmember15","edenmember21", "edenmember22", "edenmember23", "edenmember24", "edenmember25","edenmember31", "edenmember32", "edenmember33", "edenmember34", "edenmember35","edenmember41", "edenmember42"'
+GENESIS_MEMO="A community is put through the test"
+GENESIS_MEMBERS='"doingitright","mikemanfredi","toddbfleming","thomhallgren"'
 
 GENESIS_ACTION_DATA="{
     \"community\": \"$COMMUNITY_NAME\",
