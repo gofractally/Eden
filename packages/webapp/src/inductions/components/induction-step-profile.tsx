@@ -17,10 +17,15 @@ import { getInductionRemainingTimeDays } from "inductions/utils";
 
 interface Props {
     induction: Induction;
+    isCommunityActive?: boolean;
     isReviewing?: boolean;
 }
 
-export const InductionStepProfile = ({ induction, isReviewing }: Props) => {
+export const InductionStepProfile = ({
+    induction,
+    isCommunityActive,
+    isReviewing,
+}: Props) => {
     const [ualAccount] = useUALAccount();
 
     const [submittedProfile, setSubmittedProfile] = useState(false);
@@ -47,7 +52,10 @@ export const InductionStepProfile = ({ induction, isReviewing }: Props) => {
     };
 
     // Invitee profile submission confirmation
-    if (submittedProfile) return <ProfileSubmitConfirmation />;
+    if (submittedProfile)
+        return (
+            <ProfileSubmitConfirmation isCommunityActive={isCommunityActive} />
+        );
 
     // Invitee profile create/update form
     if (ualAccount?.accountName === induction.invitee) {
@@ -55,6 +63,7 @@ export const InductionStepProfile = ({ induction, isReviewing }: Props) => {
             <CreateModifyProfile
                 induction={induction}
                 onSubmit={submitInductionProfileTransaction}
+                isCommunityActive={isCommunityActive}
                 isReviewing={isReviewing}
             />
         );
@@ -64,42 +73,60 @@ export const InductionStepProfile = ({ induction, isReviewing }: Props) => {
     return <WaitingForInviteeProfile induction={induction} />;
 };
 
-const ProfileSubmitConfirmation = () => (
-    <InductionJourneyContainer role={InductionRole.INVITEE} step={3}>
-        <Heading size={1} className="mb-5">
-            Success!
-        </Heading>
-        <div className="space-y-3 mb-8">
-            <Text className="leading-normal">
-                Thanks for submitting your profile.
-            </Text>
-            <Text className="leading-normal">
-                Your inviter and witnesses will be in touch to schedule the
-                short video induction ceremony. Now's a good time to reach out
-                to them to let them know you're ready.
-            </Text>
-        </div>
-        <ActionButton
-            onClick={() => window.location.reload()}
-            size={ActionButtonSize.L}
+const ProfileSubmitConfirmation = ({
+    isCommunityActive,
+}: {
+    isCommunityActive?: boolean;
+}) => {
+    return (
+        <InductionJourneyContainer
+            role={
+                isCommunityActive
+                    ? InductionRole.INVITEE
+                    : InductionRole.GENESIS
+            }
+            step={isCommunityActive ? 3 : 2}
         >
-            See induction status
-        </ActionButton>
-    </InductionJourneyContainer>
-);
+            <Heading size={1} className="mb-5">
+                Success!
+            </Heading>
+            <div className="space-y-3 mb-8">
+                <Text className="leading-normal">
+                    Thanks for submitting your profile.
+                </Text>
+                <Text className="leading-normal">
+                    {isCommunityActive
+                        ? "Your inviter and witnesses will be in touch to schedule the short video induction ceremony. Now's a good time to reach out to them to let them know you're ready."
+                        : "The next step in the induction process is to submit your donation. Once all Genesis members have completed their profiles and donations, the community will be activated."}
+                </Text>
+            </div>
+            <ActionButton
+                onClick={() => window.location.reload()}
+                size={ActionButtonSize.L}
+            >
+                {isCommunityActive ? "See induction status" : "Onward!"}
+            </ActionButton>
+        </InductionJourneyContainer>
+    );
+};
 
 interface CreateModifyProfileProps {
     induction: Induction;
     onSubmit?: (newMemberProfile: NewMemberProfile) => Promise<void>;
+    isCommunityActive?: boolean;
     isReviewing?: boolean;
 }
 
 const CreateModifyProfile = ({
     induction,
     onSubmit,
+    isCommunityActive,
     isReviewing,
 }: CreateModifyProfileProps) => (
-    <InductionJourneyContainer role={InductionRole.INVITEE} step={2}>
+    <InductionJourneyContainer
+        role={isCommunityActive ? InductionRole.INVITEE : InductionRole.GENESIS}
+        step={isCommunityActive ? 2 : 1}
+    >
         <Heading size={1} className="mb-2">
             {isReviewing
                 ? "Review your Eden profile"

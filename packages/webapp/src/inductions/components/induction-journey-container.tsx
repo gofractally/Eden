@@ -54,9 +54,32 @@ export const INVITER_INDUCTION_STEPS: Step[] = [
     },
 ];
 
+export const GENESIS_INDUCTION_STEPS: Step[] = [
+    {
+        title: "SET UP YOUR PROFILE",
+        text: "Let the community know who you are.",
+    },
+    {
+        title: "DONATE",
+        text: `Give ${assetToString(
+            minimumDonationAmount
+        )} to the Eden community.`,
+    },
+    {
+        title: "STAND BY",
+        text:
+            "All Genesis members must complete the process for the community to go live.",
+    },
+    {
+        title: "YOU'RE IN",
+        text: "NFTs are minted. Welcome to Eden.",
+    },
+];
+
 export enum InductionRole {
     INVITEE = "invitee",
     INVITER = "inviter",
+    GENESIS = "genesis",
 }
 
 interface Props {
@@ -69,6 +92,9 @@ export const InductionJourneyContainer = ({ role, step, children }: Props) => {
     let steps: Step[];
 
     switch (role) {
+        case InductionRole.GENESIS:
+            steps = GENESIS_INDUCTION_STEPS;
+            break;
         case InductionRole.INVITEE:
             steps = INVITEE_INDUCTION_STEPS;
             break;

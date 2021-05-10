@@ -1,6 +1,7 @@
 import { useQueries, useQuery, UseQueryResult } from "react-query";
 
 import { EdenMember, getEdenMember } from "members";
+import { getIsCommunityActive } from "_app/api";
 
 import { useUALAccount } from "../eos";
 
@@ -28,3 +29,6 @@ export const useCurrentMember = () => {
     const [ualAccount] = useUALAccount();
     return useMemberByAccountName(ualAccount?.accountName);
 };
+
+export const useIsCommunityActive = () =>
+    useQuery("isCommunityActive", getIsCommunityActive);
