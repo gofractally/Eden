@@ -89,6 +89,8 @@ namespace eosio
    };
 
 #define EOSIO_EMPTY(...)
+#define EOSIO_COMMA_STRINGIZE(arg) , BOOST_PP_STRINGIZE(arg)
+#define EOSIO_DEFAULT_IF_EMPTY(x, def) BOOST_PP_IIF(BOOST_PP_CHECK_EMPTY(x), def, x)
 
 #define EOSIO_MATCH_CHECK_N(x, n, r, ...) \
    BOOST_PP_BITAND(n, BOOST_PP_COMPL(BOOST_PP_CHECK_EMPTY(r)))
@@ -108,12 +110,27 @@ namespace eosio
 #define EOSIO_EXTRACT_ACTION_ARGS(x) BOOST_PP_CAT(EOSIO_EXTRACT_ACTION_ARGS, x)
 #define EOSIO_EXTRACT_ACTION_ARGSaction(name, ...) __VA_ARGS__
 
-#define EOSIO_ACTION_ARG_NAME_STRINGS_1(r, _, i, arg) , BOOST_PP_STRINGIZE(arg)
+#define EOSIO_ACTION_ARG_NAME_STRINGS_1(r, _, i, arg) \
+   BOOST_PP_IIF(EOSIO_MATCH_RICARDIAN(arg), EOSIO_EMPTY, EOSIO_COMMA_STRINGIZE)(arg)
 #define EOSIO_ACTION_ARG_NAME_STRINGS_2(action)                \
    BOOST_PP_SEQ_FOR_EACH_I(EOSIO_ACTION_ARG_NAME_STRINGS_1, _, \
                            BOOST_PP_VARIADIC_TO_SEQ(EOSIO_EXTRACT_ACTION_ARGS(action)))
 #define EOSIO_ACTION_ARG_NAME_STRINGS(action) \
    BOOST_PP_IIF(EOSIO_HAS_ACTION_ARGS(action), EOSIO_ACTION_ARG_NAME_STRINGS_2, EOSIO_EMPTY)(action)
+
+#define EOSIO_MATCH_RICARDIAN(action_arg) EOSIO_MATCH(EOSIO_MATCH_RICARDIAN, action_arg)
+#define EOSIO_MATCH_RICARDIANricardian_contract EOSIO_MATCH_YES
+#define EOSIO_EXTRACT_RICARDIAN(action_arg) BOOST_PP_CAT(EOSIO_EXTRACT_RICARDIAN, action_arg)
+#define EOSIO_EXTRACT_RICARDIANricardian_contract(value) value
+
+#define EOSIO_GET_RICARDIAN_3(r, _, i, arg) \
+   BOOST_PP_IIF(EOSIO_MATCH_RICARDIAN(arg), EOSIO_EXTRACT_RICARDIAN, EOSIO_EMPTY)(arg)
+#define EOSIO_GET_RICARDIAN_2(action)                \
+   BOOST_PP_SEQ_FOR_EACH_I(EOSIO_GET_RICARDIAN_3, _, \
+                           BOOST_PP_VARIADIC_TO_SEQ(EOSIO_EXTRACT_ACTION_ARGS(action)))
+#define EOSIO_GET_RICARDIAN_1(action) \
+   BOOST_PP_IIF(EOSIO_HAS_ACTION_ARGS(action), EOSIO_GET_RICARDIAN_2, EOSIO_EMPTY)(action)
+#define EOSIO_GET_RICARDIAN(action) EOSIO_DEFAULT_IF_EMPTY(EOSIO_GET_RICARDIAN_1(action), "")
 
 #define EOSIO_MATCH_NOTIFY(x) EOSIO_MATCH(EOSIO_MATCH_NOTIFY, x)
 #define EOSIO_MATCH_NOTIFYnotify EOSIO_MATCH_YES
@@ -158,12 +175,11 @@ namespace eosio
    BOOST_PP_CAT(EOSIO_ACTION_WRAPPER_DECL_, BOOST_PP_COMPL(EOSIO_MATCH_NOTIFY(action))) \
    (r, data, action)
 
-#define EOSIO_REFLECT_ACTION_1(r, data, action)                                             \
-   f(                                                                                       \
-       BOOST_PP_CAT(                                                                        \
-           BOOST_PP_STRINGIZE(EOSIO_EXTRACT_ACTION_NAME(action)), _h),                      \
-           eosio::action_type_wrapper<&contract_class::EOSIO_EXTRACT_ACTION_NAME(action)> { \
-           } EOSIO_ACTION_ARG_NAME_STRINGS(action));
+#define EOSIO_REFLECT_ACTION_1(r, data, action)                                          \
+   f(BOOST_PP_CAT(                                                                       \
+       BOOST_PP_STRINGIZE(EOSIO_EXTRACT_ACTION_NAME(action)), _h),                       \
+       eosio::action_type_wrapper<&contract_class::EOSIO_EXTRACT_ACTION_NAME(action)>{}, \
+       EOSIO_GET_RICARDIAN(action) EOSIO_ACTION_ARG_NAME_STRINGS(action));
 #define EOSIO_REFLECT_ACTION(r, data, action) \
    BOOST_PP_IIF(EOSIO_MATCH_NOTIFY(action), EOSIO_EMPTY, EOSIO_REFLECT_ACTION_1)(r, data, action)
 

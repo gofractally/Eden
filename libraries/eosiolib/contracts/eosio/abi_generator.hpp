@@ -159,10 +159,10 @@ namespace eosio
       {
       }
 
-      void add_action(auto name, auto wrapper, auto... member_names)
+      void add_action(auto name, auto wrapper, const auto& ricardian_contract, auto... member_names)
       {
          const auto& struct_name = reserve_name(name.to_string(), typeid(nullptr));
-         def.actions.push_back({name, struct_name});
+         def.actions.push_back({name, struct_name, ricardian_contract});
          struct_def d{struct_name};
          add_action_args<0>(d, (typename decltype(wrapper)::args*)nullptr, member_names...);
          def.structs.push_back(std::move(d));
@@ -253,10 +253,10 @@ namespace eosio
 #define EOSIO_ABIGEN_EXTRACT_VARIANT_ARGS(x) BOOST_PP_CAT(EOSIO_ABIGEN_EXTRACT_VARIANT_ARGS, x)
 #define EOSIO_ABIGEN_EXTRACT_VARIANT_ARGSvariant(name, type, ...) __VA_ARGS__
 
-#define EOSIO_ABIGEN_ACTION(actions)                          \
-   EOSIO_ABIGEN_EXTRACT_ACTIONS_NS(actions)::for_each_action( \
-       [&](auto name, auto fn, auto... member_names) {        \
-          gen.add_action(name, fn, member_names...);          \
+#define EOSIO_ABIGEN_ACTION(actions)                                                        \
+   EOSIO_ABIGEN_EXTRACT_ACTIONS_NS(actions)::for_each_action(                               \
+       [&](auto name, auto wrapper, const auto& ricardian_contract, auto... member_names) { \
+          gen.add_action(name, wrapper, ricardian_contract, member_names...);               \
        });
 
 #define EOSIO_ABIGEN_TABLE(table) \

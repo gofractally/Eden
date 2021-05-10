@@ -13,6 +13,7 @@ add_custom_command(TARGET token-abigen POST_BUILD
 )
 
 configure_file(include/token/token.hpp ${ROOT_BINARY_DIR}/clsdk/contracts/token/token.hpp COPYONLY)
+configure_file(include/token/token_ricardian.hpp ${ROOT_BINARY_DIR}/clsdk/contracts/token/token_ricardian.hpp COPYONLY)
 add_custom_command(TARGET token POST_BUILD
     COMMAND mkdir -p ${ROOT_BINARY_DIR}/clsdk/contracts
     COMMAND cp -a $<TARGET_FILE:token> ${ROOT_BINARY_DIR}/clsdk/contracts
