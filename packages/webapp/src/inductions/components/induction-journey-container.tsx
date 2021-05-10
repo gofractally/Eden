@@ -50,7 +50,7 @@ export const INVITER_INDUCTION_STEPS: Step[] = [
     },
     {
         title: "ALL DONE",
-        text: "NFTs are minted. We have new member!",
+        text: "NFTs are minted. We have a new member!",
     },
 ];
 
