@@ -655,4 +655,6 @@ TEST_CASE("election with multiple rounds")
    // alice always wins at every level, because everyone votes for the member with the lowest name
    CHECK(vote.member == "alice"_n);
    CHECK(vote.group_id == 0);
+
+   CHECK(get_table_size<eden::group_table_type>() == 0);
 }

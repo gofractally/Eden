@@ -313,6 +313,11 @@ namespace eden
             row.member = best->first;
             row.group_id = group.next_group;
          });
+         if (group.next_group == 0)
+         {
+            state_sing.remove();
+            // Finalize the election
+         }
       }
       else if (3 * (best->second + missing_votes) <= 2 * group.group_size)
       {
@@ -323,11 +328,12 @@ namespace eden
          // Doing so means that non-reporting vs. reporting consensus failure
          // can affect the results of the next layer.
          // Not doing so, means that it's harder and maybe impossible for later layers to reach consensus.
-         group_tb.modify(group, eosio::same_payer, [](auto& row) { --row.group_size; });
+         group_tb.modify(next_group, eosio::same_payer, [](auto& row) { --row.group_size; });
       }
       else
       {
          eosio::check(false, "Consensus is possible but has not been reached.  Need more votes.");
       }
+      group_tb.erase(group);
    }
 }  // namespace eden

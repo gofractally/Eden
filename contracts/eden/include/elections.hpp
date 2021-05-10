@@ -179,7 +179,6 @@ namespace eden
       }
       void start_election(const eosio::checksum256& seed);
       uint32_t prepare_election(uint32_t max_steps);
-      void endelect();
       // \pre voter is a member of the group
       // \pre voter has not yet reported his vote in this group
       // Don't report your vote until your group has reached consensus.
