@@ -1,4 +1,4 @@
-import { Card, Link, RawLayout, Text } from "_app";
+import { Card, Link, RawLayout, Text, Footer } from "_app";
 
 export const Index = () => (
     <RawLayout>
@@ -26,35 +26,9 @@ export const Index = () => (
                 </div>
             </Card>
             <Card
-                title="Links and resources"
+                title=""
                 className="col-span-3 xl:col-span-1"
             >
-                <ul className="space-y-1 list-disc list-inside">
-                    <li>
-                        <Link href="/members">The Community</Link>
-                    </li>
-                    <li>
-                        <Link href="/induction">Membership Dashboard</Link>
-                    </li>
-                    <li>
-                        <Link
-                            href="https://www.notion.so/edenos/Eden-d1446453c66c4919b110dfdce20dc56f"
-                            target="_blank"
-                            isExternal
-                        >
-                            Eden Public Wiki
-                        </Link>
-                    </li>
-                    <li>
-                        <Link
-                            href="https://github.com/eoscommunity/Eden"
-                            target="_blank"
-                            isExternal
-                        >
-                            EdenOS Github Repo
-                        </Link>
-                    </li>
-                </ul>
             </Card>
         </div>
     </RawLayout>
