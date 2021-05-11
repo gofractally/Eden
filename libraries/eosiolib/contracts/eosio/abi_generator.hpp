@@ -248,6 +248,13 @@ namespace eosio
 #define EOSIO_ABIGEN_EXTRACT_VARIANT_TYPE(x) BOOST_PP_CAT(EOSIO_ABIGEN_EXTRACT_VARIANT_TYPE, x)
 #define EOSIO_ABIGEN_EXTRACT_VARIANT_TYPEvariant(name, type, ...) type
 
+#define EOSIO_ABIGEN_MATCH_CLAUSE(x) EOSIO_MATCH(EOSIO_ABIGEN_MATCH_CLAUSE, x)
+#define EOSIO_ABIGEN_MATCH_CLAUSEricardian_clause EOSIO_MATCH_YES
+#define EOSIO_ABIGEN_EXTRACT_CLAUSE_ID(x) BOOST_PP_CAT(EOSIO_ABIGEN_EXTRACT_CLAUSE_ID, x)
+#define EOSIO_ABIGEN_EXTRACT_CLAUSE_IDricardian_clause(id, body) id
+#define EOSIO_ABIGEN_EXTRACT_CLAUSE_BODY(x) BOOST_PP_CAT(EOSIO_ABIGEN_EXTRACT_CLAUSE_BODY, x)
+#define EOSIO_ABIGEN_EXTRACT_CLAUSE_BODYricardian_clause(id, body) body
+
 #define EOSIO_ABIGEN_HAS_VARIANT_ARGS(x) \
    BOOST_PP_COMPL(BOOST_PP_CHECK_EMPTY(EOSIO_ABIGEN_EXTRACT_VARIANT_ARGS(x)))
 #define EOSIO_ABIGEN_EXTRACT_VARIANT_ARGS(x) BOOST_PP_CAT(EOSIO_ABIGEN_EXTRACT_VARIANT_ARGS, x)
@@ -268,10 +275,17 @@ namespace eosio
            BOOST_PP_COMMA_IF(EOSIO_ABIGEN_HAS_VARIANT_ARGS(variant)) \
                EOSIO_ABIGEN_EXTRACT_VARIANT_ARGS(variant));
 
-#define EOSIO_ABIGEN_ITEM(r, data, item)                                                   \
-   BOOST_PP_IIF(EOSIO_ABIGEN_MATCH_ACTIONS(item), EOSIO_ABIGEN_ACTION, EOSIO_EMPTY)(item); \
-   BOOST_PP_IIF(EOSIO_ABIGEN_MATCH_TABLE(item), EOSIO_ABIGEN_TABLE, EOSIO_EMPTY)(item);    \
-   BOOST_PP_IIF(EOSIO_ABIGEN_MATCH_VARIANT(item), EOSIO_ABIGEN_VARIANT, EOSIO_EMPTY)(item);
+#define EOSIO_ABIGEN_CLAUSE(clause)              \
+   gen.def.ricardian_clauses.push_back({         \
+       EOSIO_ABIGEN_EXTRACT_CLAUSE_ID(clause),   \
+       EOSIO_ABIGEN_EXTRACT_CLAUSE_BODY(clause), \
+   });
+
+#define EOSIO_ABIGEN_ITEM(r, data, item)                                                    \
+   BOOST_PP_IIF(EOSIO_ABIGEN_MATCH_ACTIONS(item), EOSIO_ABIGEN_ACTION, EOSIO_EMPTY)(item);  \
+   BOOST_PP_IIF(EOSIO_ABIGEN_MATCH_TABLE(item), EOSIO_ABIGEN_TABLE, EOSIO_EMPTY)(item);     \
+   BOOST_PP_IIF(EOSIO_ABIGEN_MATCH_VARIANT(item), EOSIO_ABIGEN_VARIANT, EOSIO_EMPTY)(item); \
+   BOOST_PP_IIF(EOSIO_ABIGEN_MATCH_CLAUSE(item), EOSIO_ABIGEN_CLAUSE, EOSIO_EMPTY)(item);
 
 #define EOSIO_ABIGEN(...)                                                                \
    int main()                                                                            \
