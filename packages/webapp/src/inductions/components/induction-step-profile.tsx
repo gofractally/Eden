@@ -132,6 +132,7 @@ const CreateModifyProfile = ({
     <InductionJourneyContainer
         role={isCommunityActive ? InductionRole.INVITEE : InductionRole.GENESIS}
         step={isCommunityActive ? 2 : 1}
+        vAlign="top"
     >
         <Heading size={1} className="mb-2">
             {isReviewing
