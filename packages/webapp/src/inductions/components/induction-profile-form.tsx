@@ -69,7 +69,7 @@ export const InductionProfileForm = ({
             </Form.LabeledSet>
 
             <Form.LabeledSet
-                label="Profile image (IPFS hash)"
+                label="Profile image (IPFS CID)"
                 htmlFor="img"
                 className="col-span-6"
             >
