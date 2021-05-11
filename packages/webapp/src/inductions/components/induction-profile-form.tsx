@@ -1,7 +1,7 @@
 import React, { FormEvent, useState } from "react";
 
 import { EdenNftSocialHandles } from "nfts";
-import { useFormFields, Form, Heading, ActionButton } from "_app";
+import { useFormFields, Form, Heading, ActionButton, Link } from "_app";
 import { NewMemberProfile } from "../interfaces";
 import CID from "cids";
 
@@ -69,11 +69,24 @@ export const InductionProfileForm = ({
                 />
             </Form.LabeledSet>
 
-            <Form.LabeledSet
-                label="Profile image (IPFS CID)"
-                htmlFor="img"
-                className="col-span-6"
-            >
+            <Form.LabeledSet label="" htmlFor="img" className="col-span-6">
+                <div className="flex items-center mb-1 space-x-1">
+                    <p className="text-sm font-medium text-gray-700">
+                        Profile image (IPFS CID)
+                    </p>
+                    <Link
+                        isExternal
+                        href="https://www.notion.so/edenos/Upload-Profile-Photo-c15a7a050d3c411faca21a3cd3d2f0a3"
+                        target="_blank"
+                        className="hover:no-underline"
+                    >
+                        <div className="flex justify-center items-center h-5 w-5 rounded-full bg-gray-300 hover:bg-gray-200 border border-gray-400">
+                            <span className="text-gray-800 hover:text-gray-700 font-semibold text-sm">
+                                ?
+                            </span>
+                        </div>
+                    </Link>
+                </div>
                 <Form.Input
                     id="img"
                     type="text"
@@ -98,7 +111,7 @@ export const InductionProfileForm = ({
                         This is not a valid IPFS CID.
                     </p>
                 )}
-                {fields.img && isValidCID ? (
+                {isValidCID ? (
                     <img
                         src={`https://ipfs.io/ipfs/${fields.img}`}
                         alt="profile pic"
