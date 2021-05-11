@@ -1,6 +1,9 @@
 import React from "react";
 import { ActionButton, ActionButtonSize } from "_app";
-import { InductionJourneyContainer, InductionRole } from "./induction-journey-container";
+import {
+    InductionJourneyContainer,
+    InductionRole,
+} from "./induction-journey-container";
 
 export const GetAnInviteCTA = () => {
     return (
@@ -11,7 +14,10 @@ export const GetAnInviteCTA = () => {
                     invitation. Reach out to a current member to get yours!
                     We'll guide you through the rest.
                 </p>
-                <ActionButton href="#" size={ActionButtonSize.L}>
+                <ActionButton
+                    href="https://www.notion.so/edenos/Getting-an-Invite-2d38947d5be94dcb84dfa1ae48894802"
+                    size={ActionButtonSize.L}
+                >
                     Learn more
                 </ActionButton>
             </>
