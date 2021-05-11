@@ -6,6 +6,13 @@
 
 namespace eden
 {
+   struct election_state
+   {
+      uint64_t election_sequence = 0;  // incremented when an election starts
+   };
+   EOSIO_REFLECT(election_state, election_sequence);
+   using election_state_singleton = eosio::singleton<"elect.state"_n, election_state>;
+
    // Invariants:
    // to initiate an election, all election tables must be empty.
    // when an election is finished they must be cleared
@@ -87,43 +94,44 @@ namespace eden
    EOSIO_REFLECT(election_rng, inbuf, outbuf, index)
 
    // In this phase, every voter is assigned a unique random integer id in [0,N)
-   struct election_state_init_voters
+   struct current_election_state_init_voters
    {
       uint16_t next_member_idx;
       election_rng rng;
       eosio::name last_processed = {};
    };
-   EOSIO_REFLECT(election_state_init_voters, next_member_idx, rng, last_processed)
+   EOSIO_REFLECT(current_election_state_init_voters, next_member_idx, rng, last_processed)
 
    // In this phase, the voters ids from the init phase are used to assign them to
    // a first layer group.
-   struct election_state_group_voters
+   struct current_election_state_group_voters
    {
       election_config config;
       eosio::name last_processed = {};
    };
-   EOSIO_REFLECT(election_state_group_voters, config, last_processed)
+   EOSIO_REFLECT(current_election_state_group_voters, config, last_processed)
 
    // Organize groups into a tree.  The tree structure is deterministically
    // computed based on each node's level and index within the level.
-   struct election_state_build_groups
+   struct current_election_state_build_groups
    {
       election_config config;
       uint8_t level = 0;
       uint16_t offset = 0;
    };
-   EOSIO_REFLECT(election_state_build_groups, config, level, offset)
+   EOSIO_REFLECT(current_election_state_build_groups, config, level, offset)
 
-   struct election_state_active
+   struct current_election_state_active
    {
    };
-   EOSIO_REFLECT(election_state_active)
+   EOSIO_REFLECT(current_election_state_active)
 
-   using election_state = std::variant<election_state_init_voters,
-                                       election_state_group_voters,
-                                       election_state_build_groups,
-                                       election_state_active>;
-   using election_state_singleton = eosio::singleton<"elect.state"_n, election_state>;
+   using current_election_state = std::variant<current_election_state_init_voters,
+                                               current_election_state_group_voters,
+                                               current_election_state_build_groups,
+                                               current_election_state_active>;
+   using current_election_state_singleton =
+       eosio::singleton<"elect.curr"_n, current_election_state>;
 
    // Requirements:
    // - The maximum group size is 12
@@ -159,15 +167,15 @@ namespace eden
       eosio::name contract;
       group_table_type group_tb;
       vote_table_type vote_tb;
-      election_state_singleton state_sing;
+      current_election_state_singleton state_sing;
       void check_active();
 
-      void add_voter(election_state_init_voters& state, eosio::name member);
-      void assign_voter_to_group(election_state_group_voters& state, const vote& v);
-      void build_group(election_state_build_groups& state, uint8_t level, uint16_t offset);
-      uint32_t randomize_voters(election_state_init_voters& state, uint32_t max_steps);
-      uint32_t group_voters(election_state_group_voters& state, uint32_t max_steps);
-      uint32_t build_groups(election_state_build_groups& state, uint32_t max_steps);
+      void add_voter(current_election_state_init_voters& state, eosio::name member);
+      void assign_voter_to_group(current_election_state_group_voters& state, const vote& v);
+      void build_group(current_election_state_build_groups& state, uint8_t level, uint16_t offset);
+      uint32_t randomize_voters(current_election_state_init_voters& state, uint32_t max_steps);
+      uint32_t group_voters(current_election_state_group_voters& state, uint32_t max_steps);
+      uint32_t build_groups(current_election_state_build_groups& state, uint32_t max_steps);
 
      public:
       explicit elections(eosio::name contract)

@@ -118,7 +118,7 @@ namespace eden
    // Incremental implementation of shuffle
    // After adding all voters, each voter will have unique integer in [0, N) as
    // a group_id.
-   void elections::add_voter(election_state_init_voters& state, eosio::name member)
+   void elections::add_voter(current_election_state_init_voters& state, eosio::name member)
    {
       std::uniform_int_distribution<uint16_t> dist(0, state.next_member_idx);
       auto pos = dist(state.rng);
@@ -141,14 +141,17 @@ namespace eden
       return (level << 16) + offset + 1;
    }
 
-   void elections::assign_voter_to_group(election_state_group_voters& state, const struct vote& v)
+   void elections::assign_voter_to_group(current_election_state_group_voters& state,
+                                         const struct vote& v)
    {
       vote_tb.modify(v, eosio::same_payer, [&](auto& row) {
          row.group_id = get_group_id(0, row.group_id % state.config[0].num_groups);
       });
    }
 
-   void elections::build_group(election_state_build_groups& state, uint8_t level, uint16_t offset)
+   void elections::build_group(current_election_state_build_groups& state,
+                               uint8_t level,
+                               uint16_t offset)
    {
       group_tb.emplace(contract, [&](auto& row) {
          row.group_id = get_group_id(level, offset);
@@ -171,18 +174,26 @@ namespace eden
    void elections::start_election(const eosio::checksum256& seed)
    {
       eosio::check(!state_sing.exists(), "An election is already in progress");
-      state_sing.set(election_state_init_voters{0, election_rng{seed}}, contract);
+      state_sing.set(current_election_state_init_voters{0, election_rng{seed}}, contract);
+
+      election_state_singleton state(contract, default_scope);
+      auto state_value = state.get_or_default(election_state{});
+      ++state_value.election_sequence;
+      state.set(state_value, contract);
    }
 
-   uint32_t elections::randomize_voters(election_state_init_voters& state, uint32_t max_steps)
+   uint32_t elections::randomize_voters(current_election_state_init_voters& state,
+                                        uint32_t max_steps)
    {
+      election_state_singleton sequence_state(contract, default_scope);
+      auto expected_sequence = sequence_state.get().election_sequence - 1;
       member_table_type member_tb(contract, default_scope);
       auto iter = member_tb.upper_bound(state.last_processed.value);
       auto end = member_tb.end();
       for (; max_steps > 0 && iter != end; --max_steps, ++iter)
       {
-         // TODO: Check that the member was active when the election was triggered.
-         if (iter->status() == member_status::active_member)
+         if (iter->status() == member_status::active_member &&
+             iter->election_sequence() == expected_sequence)
          {
             add_voter(state, iter->account());
          }
@@ -191,7 +202,7 @@ namespace eden
       return max_steps;
    }
 
-   uint32_t elections::group_voters(election_state_group_voters& state, uint32_t max_steps)
+   uint32_t elections::group_voters(current_election_state_group_voters& state, uint32_t max_steps)
    {
       auto iter = vote_tb.upper_bound(state.last_processed.value);
       auto end = vote_tb.end();
@@ -203,7 +214,7 @@ namespace eden
       return max_steps;
    }
 
-   uint32_t elections::build_groups(election_state_build_groups& state, uint32_t max_steps)
+   uint32_t elections::build_groups(current_election_state_build_groups& state, uint32_t max_steps)
    {
       for (; max_steps > 0 && state.level < state.config.size(); ++state.level)
       {
@@ -223,29 +234,29 @@ namespace eden
    uint32_t elections::prepare_election(uint32_t max_steps)
    {
       auto state_variant = state_sing.get();
-      if (auto* state = std::get_if<election_state_init_voters>(&state_variant))
+      if (auto* state = std::get_if<current_election_state_init_voters>(&state_variant))
       {
          max_steps = randomize_voters(*state, max_steps);
          if (max_steps > 0)
          {
             state_variant =
-                election_state_group_voters{make_election_config(state->next_member_idx)};
+                current_election_state_group_voters{make_election_config(state->next_member_idx)};
          }
       }
-      if (auto* state = std::get_if<election_state_group_voters>(&state_variant))
+      if (auto* state = std::get_if<current_election_state_group_voters>(&state_variant))
       {
          max_steps = group_voters(*state, max_steps);
          if (max_steps > 0)
          {
-            state_variant = election_state_build_groups{std::move(state->config)};
+            state_variant = current_election_state_build_groups{std::move(state->config)};
          }
       }
-      if (auto* state = std::get_if<election_state_build_groups>(&state_variant))
+      if (auto* state = std::get_if<current_election_state_build_groups>(&state_variant))
       {
          max_steps = build_groups(*state, max_steps);
          if (max_steps > 0)
          {
-            state_variant = election_state_active{};
+            state_variant = current_election_state_active{};
             --max_steps;
          }
       }
@@ -256,7 +267,7 @@ namespace eden
    void elections::check_active()
    {
       eosio::check(state_sing.exists(), "No election is running");
-      eosio::check(std::holds_alternative<election_state_active>(state_sing.get()),
+      eosio::check(std::holds_alternative<current_election_state_active>(state_sing.get()),
                    "The election is not ready for voting");
    }
 

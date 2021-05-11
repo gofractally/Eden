@@ -22,17 +22,46 @@ namespace eden
       std::string name;
       member_status_type status;
       uint64_t nft_template_id;
+      uint64_t election_sequence = 0;  // Only reflected in v1
 
       uint64_t primary_key() const { return account.value; }
    };
    EOSIO_REFLECT(member_v0, account, name, status, nft_template_id)
 
+   // What do we need to know?
+   // - Whether a member has donated (before or after the election?  must be before minting NFTs).
+   // - A donation is required for regularly scheduled elections.
+   // - Are donations and NFTs relevent for special elections?
+   // - Whether a member was active at the start of the election.
+   //
+   // A user can donate at any time between regularly scheduled elections.
+   // Such a donation makes him eligible to vote in the next election.
+   // Members who did not donate will be deactivated
+   //
+   // A member is active iff election_sequence >=
+   // If a member donates while an election is in progress?
+   // When a member is activated, election_sequence is set to what the election_sequence will be at the end of the current election.
+   //
+   // Need to distinguish the following:
+   // - induct, start election: in current election
+   // - donate, election, donate, election: normal flow
+   // - start election, induct new: eligible for the next election, not the current election
+   // - failed to donate, start election: deactivated
+   // - donate, start election, donate, finish election: should be eligible for the next election.  Not allowed.  Donation becomes available for active members after the election finishes.
+   //
+   // A member is part of the election iff election_sequence == election_info.election_sequence - 1
+   // A an active member can donate if election_sequence == election_info.election_sequence - 1 and there is not a current election.
+   struct member_v1 : member_v0
+   {
+   };
+   EOSIO_REFLECT(member_v1, base member_v0, election_sequence);
+
    struct member
    {
       member() = default;
       member(const member&) = delete;
-      std::variant<member_v0> value;
-      EDEN_FORWARD_MEMBERS(value, account, name, status, nft_template_id);
+      std::variant<member_v0, member_v1> value;
+      EDEN_FORWARD_MEMBERS(value, account, name, status, nft_template_id, election_sequence);
       EDEN_FORWARD_FUNCTIONS(value, primary_key)
    };
    EOSIO_REFLECT(member, value)
@@ -75,6 +104,7 @@ namespace eden
       void deposit(eosio::name account, const eosio::asset& quantity);
       void set_nft(eosio::name account, int32_t nft_template_id);
       void set_active(eosio::name account, const std::string& name);
+      void renew(eosio::name account);
       member_stats_v0 stats();
 
       // this method is used only for administrative purposes,

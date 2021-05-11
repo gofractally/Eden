@@ -1,3 +1,4 @@
+#include <elections.hpp>
 #include <members.hpp>
 
 namespace eden
@@ -69,10 +70,41 @@ namespace eden
       ++stats.active_members;
       member_stats.set(stats, eosio::same_payer);
       check_pending_member(account);
+      election_state_singleton election_state(contract, default_scope);
+      auto election_sequence = election_state.get_or_default().election_sequence;
       const auto& member = get_member(account);
       member_tb.modify(member, eosio::same_payer, [&](auto& row) {
-         row.status() = member_status::active_member;
-         row.name() = name;
+         row.value = member_v1{{.account = row.account(),
+                                .name = name,
+                                .status = member_status::active_member,
+                                .nft_template_id = row.nft_template_id(),
+                                .election_sequence = election_sequence}};
+      });
+   }
+
+   void members::renew(eosio::name account)
+   {
+      election_state_singleton election_state(contract, default_scope);
+      auto election_sequence = election_state.get_or_default().election_sequence;
+      const auto& member = get_member(account);
+      if (member.election_sequence() + 1 < election_sequence)
+      {
+         // TODO: Do we allow members to renew after their membership lapses
+         // or do they need to go through a new induction?
+         // If we do allow it, how long do we retain the old records?
+         eosio::check(false, "Membership has expired");
+      }
+      else if (member.election_sequence() + 1 > election_sequence ||
+               current_election_state_singleton(contract, default_scope).exists())
+      {
+         eosio::check(false, "Cannot donate at this time");
+      }
+      member_tb.modify(member, eosio::same_payer, [&](auto& row) {
+         row.value = member_v1{{.account = row.account(),
+                                .name = row.name(),
+                                .status = member_status::active_member,
+                                .nft_template_id = row.nft_template_id(),
+                                .election_sequence = row.election_sequence() + 1}};
       });
    }
 
