@@ -70,7 +70,13 @@ export const InductionStepProfile = ({
     }
 
     // Inviter/endorsers profile pending screen
-    return <WaitingForInviteeProfile induction={induction} />;
+    return (
+        <WaitingForInviteeProfile
+            induction={induction}
+            isCommunityActive={isCommunityActive}
+            isInviter={ualAccount?.accountName === induction.inviter}
+        />
+    );
 };
 
 const ProfileSubmitConfirmation = ({
@@ -143,32 +149,56 @@ const CreateModifyProfile = ({
     </InductionJourneyContainer>
 );
 
-const WaitingForInviteeProfile = ({ induction }: { induction: Induction }) => (
-    <InductionJourneyContainer role={InductionRole.INVITER} step={2}>
-        <Heading size={1} className="mb-5">
-            Waiting for invitee
-        </Heading>
-        <div className="space-y-3 mb-8">
-            <Text className="leading-normal">
-                We're waiting on{" "}
-                <span className="font-semibold">{induction.invitee}</span> to
-                set up their Eden profile.
-            </Text>
-            <Text className="leading-normal">
-                Encourage the invitee to sign into the Membership dashboard with
-                their blockchain account to complete their profile. Or you can
-                share this direct link with them:
-            </Text>
-            <Text className="leading-normal break-all">
-                <Link href={window.location.href}>{window.location.href}</Link>
-            </Text>
-            <Text className="leading-normal font-medium">
-                This invitation expires in{" "}
-                {getInductionRemainingTimeDays(induction)}.
-            </Text>
-        </div>
-        <ActionButton href="/induction" size={ActionButtonSize.L}>
-            Membership dashboard
-        </ActionButton>
-    </InductionJourneyContainer>
-);
+const WaitingForInviteeProfile = ({
+    induction,
+    isCommunityActive,
+    isInviter,
+}: {
+    induction: Induction;
+    isCommunityActive?: boolean;
+    isInviter: boolean;
+}) => {
+    const getInductionJourneyRole = () => {
+        if (!isCommunityActive) {
+            return InductionRole.GENESIS;
+        } else if (isInviter) {
+            return InductionRole.INVITER;
+        }
+        return InductionRole.INVITEE; // not logged in, active community
+    };
+
+    return (
+        <InductionJourneyContainer
+            role={getInductionJourneyRole()}
+            step={!isCommunityActive ? 1 : 2}
+        >
+            <Heading size={1} className="mb-5">
+                Waiting for invitee
+            </Heading>
+            <div className="space-y-3 mb-8">
+                <Text className="leading-normal">
+                    We're waiting on{" "}
+                    <span className="font-semibold">{induction.invitee}</span>{" "}
+                    to set up their Eden profile.
+                </Text>
+                <Text className="leading-normal">
+                    Encourage the invitee to sign into the Membership dashboard
+                    with their blockchain account to complete their profile. Or
+                    you can share this direct link with them:
+                </Text>
+                <Text className="leading-normal break-all">
+                    <Link href={window.location.href}>
+                        {window.location.href}
+                    </Link>
+                </Text>
+                <Text className="leading-normal font-medium">
+                    This invitation expires in{" "}
+                    {getInductionRemainingTimeDays(induction)}.
+                </Text>
+            </div>
+            <ActionButton href="/induction" size={ActionButtonSize.L}>
+                Membership dashboard
+            </ActionButton>
+        </InductionJourneyContainer>
+    );
+};

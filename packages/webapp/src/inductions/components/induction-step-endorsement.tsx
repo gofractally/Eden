@@ -184,21 +184,27 @@ export const InductionStepEndorsement = (props: Props) => {
                     {getInductionRemainingTimeDays(induction)}.
                 </Text>
                 <div>
-                    <Heading size={3} className="mb-2">
-                        Endorsement status:
-                    </Heading>
-                    <ul className="mb-4 ml-2">
-                        {endorsements.map((endorser) => (
-                            <li key={endorser.id}>
-                                {getEndorserStatus(endorser)}{" "}
-                                <Link href={`/members/${endorser.endorser}`}>
-                                    <span className="text-gray-800 hover:underline">
-                                        {getEndorserName(endorser)}
-                                    </span>
-                                </Link>
-                            </li>
-                        ))}
-                    </ul>
+                    {endorsements.length > 0 && (
+                        <>
+                            <Heading size={3} className="mb-2">
+                                Endorsement status:
+                            </Heading>
+                            <ul className="mb-4 ml-2">
+                                {endorsements.map((endorser) => (
+                                    <li key={endorser.id}>
+                                        {getEndorserStatus(endorser)}{" "}
+                                        <Link
+                                            href={`/members/${endorser.endorser}`}
+                                        >
+                                            <span className="text-gray-800 hover:underline">
+                                                {getEndorserName(endorser)}
+                                            </span>
+                                        </Link>
+                                    </li>
+                                ))}
+                            </ul>
+                        </>
+                    )}
                     {isFullyEndorsed ? (
                         <DonationForm
                             isLoading={isLoading}
@@ -350,12 +356,19 @@ const DonationForm = ({
                 </ActionButton>
             </div>
         </div>
-    ) : (
+    ) : isCommunityActive ? (
         <Text>
             This induction is fully endorsed! As soon as the prospective member
             completes their donation to the Eden community, their membership
             will be activated and their Eden NFTs will be minted and
             distributed.
+        </Text>
+    ) : (
+        <Text>
+            As soon as this prospective member completes their donation to the
+            Eden community, their membership is ready for activation. Once all
+            Genesis members are fully inducted, memberships will be activated
+            and Eden NFTs will be distributed.
         </Text>
     );
 };

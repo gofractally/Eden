@@ -72,7 +72,7 @@ export const GENESIS_INDUCTION_STEPS: Step[] = [
     },
     {
         title: "YOU'RE IN",
-        text: "NFTs are minted. Welcome to Eden.",
+        text: "The community is activated. Welcome to Eden.",
     },
 ];
 
