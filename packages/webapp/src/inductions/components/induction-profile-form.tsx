@@ -23,6 +23,7 @@ export const InductionProfileForm = ({
     onSubmit,
 }: Props) => {
     const [isLoading, setIsLoading] = useState(false);
+    const [consentsToPublish, setConsentsToPublish] = useState(false);
 
     const [fields, setFields] = useFormFields({ ...newMemberProfile });
     const [socialFields, setSocialFields] = useFormFields(
@@ -224,9 +225,21 @@ export const InductionProfileForm = ({
                 />
             </Form.LabeledSet>
 
+            <div className="col-span-6 p-3 border rounded-md">
+                <Form.Checkbox
+                    id="reviewed"
+                    label="I understand that the profile information I have provided above will be published permanently to an immutable, public blockchain and will no longer be under the control of EdenOS and/or this community. By submitting this form, I give my consent to that effect."
+                    value={Number(consentsToPublish)}
+                    onChange={() => setConsentsToPublish(!consentsToPublish)}
+                />
+            </div>
+
             {onSubmit && (
                 <div className="pt-4">
-                    <ActionButton isSubmit disabled={isLoading}>
+                    <ActionButton
+                        isSubmit
+                        disabled={isLoading || !consentsToPublish}
+                    >
                         {isLoading ? "Submitting..." : "Submit"}
                     </ActionButton>
                 </div>
