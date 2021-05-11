@@ -1,4 +1,4 @@
-import React, { FormEvent, useEffect, useState } from "react";
+import React, { FormEvent, useMemo, useState } from "react";
 
 import { EdenNftSocialHandles } from "nfts";
 import {
@@ -37,11 +37,9 @@ export const InductionProfileForm = ({
         convertNewMemberProfileSocial(newMemberProfile.social)
     );
 
-    const [isValidCID, setIsValidCID] = useState(false);
-
-    useEffect(() => {
-        setIsValidCID(validateCID(fields.img));
-    }, []);
+    const isPhotoValidCID = useMemo(() => validateCID(fields.img), [
+        fields.img,
+    ]);
 
     const onChangeFields = (e: React.ChangeEvent<HTMLInputElement>) =>
         setFields(e);
@@ -105,20 +103,14 @@ export const InductionProfileForm = ({
                     required
                     disabled={isLoading || disabled}
                     value={fields.img}
-                    onChange={(e) => {
-                        const isValid = validateCID(e.currentTarget.value);
-                        setIsValidCID(isValid);
-                        onChangeFields(
-                            e as React.ChangeEvent<HTMLInputElement>
-                        );
-                    }}
+                    onChange={onChangeFields}
                 />
-                {fields.img && !isValidCID && (
+                {fields.img && !isPhotoValidCID && (
                     <p className={"text-red-500 text-sm mt-1"}>
                         This is not a valid IPFS CID.
                     </p>
                 )}
-                {isValidCID ? (
+                {isPhotoValidCID ? (
                     <img
                         src={`https://ipfs.io/ipfs/${fields.img}`}
                         alt="profile pic"
