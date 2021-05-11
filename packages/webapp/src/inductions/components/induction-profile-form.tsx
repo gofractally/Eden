@@ -3,6 +3,7 @@ import React, { FormEvent, useState } from "react";
 import { EdenNftSocialHandles } from "nfts";
 import { useFormFields, Form, Heading, ActionButton } from "_app";
 import { NewMemberProfile } from "../interfaces";
+import CID from "cids";
 
 interface Props {
     newMemberProfile: NewMemberProfile;
@@ -27,6 +28,7 @@ export const InductionProfileForm = ({
     const [socialFields, setSocialFields] = useFormFields(
         convertNewMemberProfileSocial(newMemberProfile.social)
     );
+    const [isValidCID, setIsValidCID] = useState(false);
 
     const onChangeFields = (e: React.ChangeEvent<HTMLInputElement>) =>
         setFields(e);
@@ -77,8 +79,22 @@ export const InductionProfileForm = ({
                     required
                     disabled={isLoading || disabled}
                     value={fields.img}
-                    onChange={onChangeFields}
+                    onChange={(e) => {
+                        try {
+                            const cid = new CID(e.currentTarget.value);
+                            setIsValidCID(true);
+                        } catch {
+                            setIsValidCID(false);
+                        } finally {
+                            onChangeFields(e as React.ChangeEvent<HTMLInputElement>);
+                        }
+                    }}
                 />
+                { fields.img && !isValidCID && <p className={'text-red-500 text-sm mt-1'}>This is not a valid IPFS CID.</p> }
+                {(fields.img && isValidCID) ?
+                    <img src={`https://ipfs.io/ipfs/${fields.img}`} alt="profile pic" className="object-cover rounded-full h-24 w-24 mt-4 mx-auto" /> :
+                    <img src="/images/blank-profile-picture.svg" alt="blank profile pic" className="rounded-full h-24 w-24 my-2 mx-auto" />
+                }
             </Form.LabeledSet>
 
             <Form.LabeledSet
