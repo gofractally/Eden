@@ -20,6 +20,33 @@ on:
             - "yarn.lock"
 
 jobs:
+    webapp-e2e:
+        name: WebApp E2E Tests
+        runs-on: ubuntu-latest
+
+        steps:
+            - name: ✅ Checkout code
+              uses: actions/checkout@v2
+
+            - name: 🛠 Build and Start WebApp
+              run: |
+                  yarn
+                  yarn build --stream
+                  yarn start --stream &
+
+            - name: 🧪 Run E2E
+              run: |
+                  yarn test --stream
+
+            - name: 🎥 Upload Cypress Results
+              uses: actions/upload-artifact@v2
+              if: always()
+              with:
+                  name: Cypress E2E Videos and Screenshots
+                  path: |
+                      packages/webapp/cypress/videos
+                      packages/webapp/cypress/videos
+
     webapp-build:
         name: Build Eden Community WebApp
         runs-on: ubuntu-latest
