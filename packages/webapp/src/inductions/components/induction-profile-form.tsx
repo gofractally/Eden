@@ -1,9 +1,15 @@
-import React, { FormEvent, useState } from "react";
+import React, { FormEvent, useEffect, useState } from "react";
 
 import { EdenNftSocialHandles } from "nfts";
-import { useFormFields, Form, Heading, ActionButton, Link } from "_app";
+import {
+    useFormFields,
+    Form,
+    Heading,
+    ActionButton,
+    Link,
+    validateCID,
+} from "_app";
 import { NewMemberProfile } from "../interfaces";
-import CID from "cids";
 
 interface Props {
     newMemberProfile: NewMemberProfile;
@@ -26,10 +32,16 @@ export const InductionProfileForm = ({
     const [consentsToPublish, setConsentsToPublish] = useState(false);
 
     const [fields, setFields] = useFormFields({ ...newMemberProfile });
+
     const [socialFields, setSocialFields] = useFormFields(
         convertNewMemberProfileSocial(newMemberProfile.social)
     );
+
     const [isValidCID, setIsValidCID] = useState(false);
+
+    useEffect(() => {
+        setIsValidCID(validateCID(fields.img));
+    }, []);
 
     const onChangeFields = (e: React.ChangeEvent<HTMLInputElement>) =>
         setFields(e);
@@ -94,16 +106,11 @@ export const InductionProfileForm = ({
                     disabled={isLoading || disabled}
                     value={fields.img}
                     onChange={(e) => {
-                        try {
-                            const cid = new CID(e.currentTarget.value);
-                            setIsValidCID(true);
-                        } catch {
-                            setIsValidCID(false);
-                        } finally {
-                            onChangeFields(
-                                e as React.ChangeEvent<HTMLInputElement>
-                            );
-                        }
+                        const isValid = validateCID(e.currentTarget.value);
+                        setIsValidCID(isValid);
+                        onChangeFields(
+                            e as React.ChangeEvent<HTMLInputElement>
+                        );
                     }}
                 />
                 {fields.img && !isValidCID && (
