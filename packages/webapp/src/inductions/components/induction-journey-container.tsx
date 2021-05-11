@@ -85,10 +85,16 @@ export enum InductionRole {
 interface Props {
     role: InductionRole;
     step: 1 | 2 | 3 | 4 | 5;
+    vAlign?: "top" | "center";
     children: React.ReactNode;
 }
 
-export const InductionJourneyContainer = ({ role, step, children }: Props) => {
+export const InductionJourneyContainer = ({
+    role,
+    step,
+    vAlign = "center",
+    children,
+}: Props) => {
     let steps: Step[];
 
     switch (role) {
@@ -103,9 +109,11 @@ export const InductionJourneyContainer = ({ role, step, children }: Props) => {
             break;
     }
 
+    const vAlignClass = vAlign === "center" ? "lg:items-center" : "";
+
     return (
         <Card>
-            <div className="flex lg:items-center flex-col lg:flex-row">
+            <div className={`flex flex-col lg:flex-row ${vAlignClass}`}>
                 <div className="lg:w-1/2 xl:w-3/5 px-4 sm:px-12 md:px-16 xl:px-24 pt-8 pb-4">
                     {children}
                 </div>
