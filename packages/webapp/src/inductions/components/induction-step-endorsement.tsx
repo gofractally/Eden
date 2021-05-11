@@ -332,6 +332,7 @@ const DonationForm = ({
     setReviewStep,
     submitDonation,
 }: DonationFormProps) => {
+    const [isProfileReviewed, setReviewedProfile] = useState(false);
     return isInvitee ? (
         <div className="space-y-3">
             <Text>
@@ -343,13 +344,23 @@ const DonationForm = ({
                     " Keep in mind that modifying your profile will require your endorsers to submit their endorsements again."}
             </Text>
             <Text>
-                If everything looks good, click on the button below to make your
-                donation to the Eden community.
+                If everything looks good, submit your donation to proceed.
                 {isCommunityActive &&
                     " Once completed, your membership will be activated and your Eden NFTs will be minted and distributed."}
             </Text>
+            <div className="p-3 border rounded-md">
+                <Form.Checkbox
+                    id="reviewed"
+                    label="I have carefully reviewed my profile image, links and information below and confirm their accuracy. I understand that by submitting my donation, my Eden NFTs will be minted and changes to my profile or this NFT series will not be possible."
+                    value={Number(isProfileReviewed)}
+                    onChange={() => setReviewedProfile(!isProfileReviewed)}
+                />
+            </div>
             <div className="pt-1">
-                <ActionButton disabled={isLoading} onClick={submitDonation}>
+                <ActionButton
+                    disabled={isLoading || !isProfileReviewed}
+                    onClick={submitDonation}
+                >
                     {isLoading
                         ? "Submitting donation..."
                         : `Donate ${assetToString(minimumDonationAmount)}`}
