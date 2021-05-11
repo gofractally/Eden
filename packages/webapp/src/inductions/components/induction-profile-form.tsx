@@ -134,7 +134,7 @@ export const InductionProfileForm = ({
             </Form.LabeledSet>
 
             <Form.LabeledSet
-                label="Profile image attribution (optional)"
+                label="Credit for profile image goes to (optional)"
                 htmlFor="attributions"
                 className="col-span-6"
             >
@@ -248,7 +248,7 @@ export const InductionProfileForm = ({
             <div className="col-span-6 p-3 border rounded-md">
                 <Form.Checkbox
                     id="reviewed"
-                    label="I understand that the profile information I have provided above will be published permanently to an immutable, public blockchain and will no longer be under the control of EdenOS and/or this community. By submitting this form, I give my consent to that effect."
+                    label="I understand and acknowledge that I am publishing the profile information above permanently and irrevocably to an immutable, public blockchain. When I submit this form, it cannot be undone."
                     value={Number(consentsToPublish)}
                     onChange={() => setConsentsToPublish(!consentsToPublish)}
                 />
