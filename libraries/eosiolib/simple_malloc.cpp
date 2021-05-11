@@ -1,3 +1,4 @@
+#include <errno.h>
 #include <memory>
 
 #ifdef EOSIO_NATIVE
@@ -13,6 +14,8 @@ extern "C"
 #define GROW_MEMORY(X) __builtin_wasm_memory_grow(0, X)
 #endif
 
+extern "C" char __heap_base;
+
 namespace eosio
 {
    struct dsmalloc
@@ -26,8 +29,8 @@ namespace eosio
 
       dsmalloc()
       {
-         // TODO: consider adding a linker script so the heap may start earlier in memory
-         next_addr = next_page = CURRENT_MEMORY;
+         next_addr = (size_t)&__heap_base;
+         next_page = CURRENT_MEMORY;
       }
 
       void* operator()(size_t sz, size_t align_amt = 16)
@@ -66,9 +69,10 @@ extern "C"
       return ret;
    }
 
-   // pre: posix requires alignment be a power of 2
    int posix_memalign(void** memptr, size_t alignment, size_t size)
    {
+      if (alignment < sizeof(void*) || (alignment & (alignment - size_t(1))) != 0)
+         return EINVAL;
       *memptr = eosio::_dsmalloc(size, alignment > 16 ? alignment : 16);
       return 0;
    }
