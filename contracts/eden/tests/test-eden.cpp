@@ -264,6 +264,60 @@ TEST_CASE("genesis")
    CHECK(globals.get().stage == eden::contract_stage::active);
 }
 
+TEST_CASE("genesis expiration")
+{
+   eden_tester t;
+   t.eden_gm.act<actions::genesis>("Eden", eosio::symbol("EOS", 4), s2a("10.0000 EOS"),
+                                   std::vector{"alice"_n, "pip"_n, "egeon"_n, "bertie"_n},
+                                   "QmTYqoPYf7DiVebTnvwwFdTgsYXg2RnuPrt8uddjfW2kHS",
+                                   attribute_map{}, s2a("1.0000 EOS"), 7 * 24 * 60 * 60, "");
+
+   CHECK(get_eden_membership("alice"_n).status() == eden::member_status::pending_membership);
+   CHECK(get_eden_membership("pip"_n).status() == eden::member_status::pending_membership);
+   CHECK(get_eden_membership("egeon"_n).status() == eden::member_status::pending_membership);
+   CHECK(get_eden_membership("bertie"_n).status() == eden::member_status::pending_membership);
+
+   t.alice.act<actions::inductprofil>(1, alice_profile);
+   t.pip.act<actions::inductprofil>(2, pip_profile);
+   t.egeon.act<actions::inductprofil>(3, egeon_profile);
+
+   t.alice.act<token::actions::transfer>("alice"_n, "eden.gm"_n, s2a("100.0000 EOS"), "memo");
+   t.pip.act<token::actions::transfer>("pip"_n, "eden.gm"_n, s2a("10.0000 EOS"), "memo");
+   t.egeon.act<token::actions::transfer>("egeon"_n, "eden.gm"_n, s2a("10.0000 EOS"), "memo");
+
+   t.alice.act<actions::inductdonate>("alice"_n, 1, s2a("10.0000 EOS"));
+   t.pip.act<actions::inductdonate>("pip"_n, 2, s2a("10.0000 EOS"));
+   t.egeon.act<actions::inductdonate>("egeon"_n, 3, s2a("10.0000 EOS"));
+
+   CHECK(get_eden_membership("alice"_n).status() == eden::member_status::active_member);
+   CHECK(get_eden_membership("pip"_n).status() == eden::member_status::active_member);
+   CHECK(get_eden_membership("egeon"_n).status() == eden::member_status::active_member);
+
+   {
+      eden::tester_clear_global_singleton();
+      eden::globals globals("eden.gm"_n);
+      CHECK(globals.get().stage == eden::contract_stage::genesis);
+   }
+
+   // Wait for Bertie's genesis invitation to expire
+   t.chain.start_block(7 * 24 * 60 * 60 * 1000);
+   expect(t.alice.trace<actions::gc>(42), "Nothing to do");
+   t.chain.start_block();
+   t.alice.act<actions::gc>(42);
+
+   {
+      eden::tester_clear_global_singleton();
+      eden::globals globals("eden.gm"_n);
+      CHECK(globals.get().stage == eden::contract_stage::active);
+   }
+
+   CHECK(members("eden.gm"_n).stats().active_members == 3);
+   CHECK(members("eden.gm"_n).stats().pending_members == 0);
+   CHECK(get_table_size<eden::induction_table_type>() == 0);
+   CHECK(get_table_size<eden::endorsement_table_type>() == 0);
+   CHECK(get_table_size<eden::member_table_type>() == 3);
+}
+
 TEST_CASE("induction")
 {
    eden_tester t;

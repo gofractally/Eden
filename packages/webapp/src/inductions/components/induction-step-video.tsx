@@ -12,7 +12,7 @@ import {
     convertPendingProfileToMemberData,
     getInductionRemainingTimeDays,
 } from "../utils";
-import { Endorsement, Induction } from "../interfaces";
+import { Induction } from "../interfaces";
 import { setInductionVideoTransaction } from "../transactions";
 import { InductionVideoForm } from "./induction-video-form";
 import {
@@ -23,13 +23,13 @@ import {
 
 interface Props {
     induction: Induction;
-    endorsements: Endorsement[];
+    isEndorser: boolean;
     isReviewing?: boolean;
 }
 
 export const InductionStepVideo = ({
     induction,
-    endorsements,
+    isEndorser,
     isReviewing,
 }: Props) => {
     const [ualAccount] = useUALAccount();
@@ -56,11 +56,6 @@ export const InductionStepVideo = ({
 
     const memberData = convertPendingProfileToMemberData(induction);
 
-    const isEndorser = () =>
-        endorsements.find(
-            (endorsement) => endorsement.endorser === ualAccount?.accountName
-        );
-
     // Invitee/Endorser: Induction ceremony completion confirmation
     if (submittedVideo) {
         return (
@@ -72,7 +67,7 @@ export const InductionStepVideo = ({
     }
 
     // Invitee/Endorser: Waiting for induction ceremony
-    if (isEndorser()) {
+    if (isEndorser) {
         return (
             <>
                 <AddUpdateVideoHash

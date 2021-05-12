@@ -152,7 +152,7 @@ const EndorserInductionStatus = ({
                     fullWidth
                     href={`/induction/${induction.id}`}
                 >
-                    Endorse
+                    Review &amp; Endorse
                 </ActionButton>
             );
         default:
