@@ -18,17 +18,22 @@ import { getInductionRemainingTimeDays } from "inductions/utils";
 interface Props {
     induction: Induction;
     isCommunityActive?: boolean;
+    isEndorser: boolean;
     isReviewing?: boolean;
 }
 
 export const InductionStepProfile = ({
     induction,
     isCommunityActive,
+    isEndorser,
     isReviewing,
 }: Props) => {
     const [ualAccount] = useUALAccount();
 
     const [submittedProfile, setSubmittedProfile] = useState(false);
+
+    const isInvitee = ualAccount?.accountName === induction.invitee;
+    const isInviter = ualAccount?.accountName === induction.inviter;
 
     const submitInductionProfileTransaction = async (
         newMemberProfile: NewMemberProfile
@@ -58,7 +63,7 @@ export const InductionStepProfile = ({
         );
 
     // Invitee profile create/update form
-    if (ualAccount?.accountName === induction.invitee) {
+    if (isInvitee) {
         return (
             <CreateModifyProfile
                 induction={induction}
@@ -69,12 +74,12 @@ export const InductionStepProfile = ({
         );
     }
 
-    // Inviter/endorsers profile pending screen
+    // Not logged in OR inviter/endorsers profile pending screen
     return (
         <WaitingForInviteeProfile
             induction={induction}
             isCommunityActive={isCommunityActive}
-            isInviter={ualAccount?.accountName === induction.inviter}
+            isInviterOrEndorser={isInviter || isEndorser}
         />
     );
 };
@@ -153,19 +158,19 @@ const CreateModifyProfile = ({
 const WaitingForInviteeProfile = ({
     induction,
     isCommunityActive,
-    isInviter,
+    isInviterOrEndorser,
 }: {
     induction: Induction;
     isCommunityActive?: boolean;
-    isInviter: boolean;
+    isInviterOrEndorser: boolean;
 }) => {
     const getInductionJourneyRole = () => {
         if (!isCommunityActive) {
             return InductionRole.GENESIS;
-        } else if (isInviter) {
+        } else if (isInviterOrEndorser) {
             return InductionRole.INVITER;
         }
-        return InductionRole.INVITEE; // not logged in, active community
+        return InductionRole.INVITEE;
     };
 
     return (
