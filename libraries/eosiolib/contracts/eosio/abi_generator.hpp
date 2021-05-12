@@ -36,10 +36,10 @@ namespace eosio
       template <typename Raw>
       std::string get_type(bool force_alias = false)
       {
-         using T = std::decay_t<Raw>;
+         using T = std::remove_cvref_t<Raw>;
          if constexpr (is_std_vector<T>())
          {
-            using inner = std::decay_t<typename is_std_vector<T>::value_type>;
+            using inner = std::remove_cvref_t<typename is_std_vector<T>::value_type>;
             if (force_alias)
             {
                std::type_index type = typeid(T);
@@ -52,11 +52,11 @@ namespace eosio
                def.types.push_back({name, inner_name + "[]"});
                return name;
             }
-            return get_type<inner>(is_std_vector<inner>() || is_std_optional<inner>()) + "[]";
+            return get_type<inner>(true) + "[]";
          }
          else if constexpr (is_std_optional<T>())
          {
-            using inner = std::decay_t<typename is_std_optional<T>::value_type>;
+            using inner = std::remove_cvref_t<typename is_std_optional<T>::value_type>;
             if (force_alias)
             {
                std::type_index type = typeid(T);
@@ -69,7 +69,7 @@ namespace eosio
                def.types.push_back({name, inner_name + "?"});
                return name;
             }
-            return get_type<inner>(is_std_vector<inner>() || is_std_optional<inner>()) + "?";
+            return get_type<inner>(true) + "?";
          }
          else if constexpr (is_binary_extension<T>())
          {
@@ -119,7 +119,7 @@ namespace eosio
       template <typename T, typename... Ts>
       std::string generate_variant_name(std::variant<T, Ts...>* p)
       {
-         return std::string{"variant<"} + (get_type<T>() + ... + ("," + get_type<Ts>())) + ">";
+         return std::string{"variant<"} + (get_type<T>() + ... + ("," + get_type<Ts>(true))) + ">";
       }
 
       std::string generate_variant_name(std::variant<>*) { return "variant<>"; }
@@ -127,7 +127,7 @@ namespace eosio
       template <typename Raw, typename... Ts, typename N, typename... Ns>
       void add_variant_types(variant_def& d, type_list<Raw, Ts...>*, N name, Ns... names)
       {
-         using T = std::decay_t<Raw>;
+         using T = std::remove_cvref_t<Raw>;
          std::type_index type = typeid(T);
          auto it = name_to_type.find(name);
          if (it != name_to_type.end())
@@ -151,7 +151,7 @@ namespace eosio
       void add_variant_types(variant_def& d, type_list<T, Ts...>*)
       {
          d.types.push_back(get_type<T>());
-         add_variant_types(d, (type_list<Ts...>*)nullptr);
+         (d.types.push_back(get_type<Ts>()), ...);
       }
 
       template <typename... Ns>
