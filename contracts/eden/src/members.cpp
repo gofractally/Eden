@@ -78,6 +78,17 @@ namespace eden
 
    struct member_stats_v0 members::stats() { return std::get<member_stats_v0>(member_stats.get()); }
 
+   void members::maybe_activate_contract()
+   {
+      if (globals.get().stage == contract_stage::genesis)
+      {
+         if (stats().pending_members == 0)
+         {
+            globals.set_stage(contract_stage::active);
+         }
+      }
+   }
+
    void members::clear_all()
    {
       auto members_itr = member_tb.lower_bound(0);

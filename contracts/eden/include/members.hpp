@@ -75,6 +75,8 @@ namespace eden
       void deposit(eosio::name account, const eosio::asset& quantity);
       void set_nft(eosio::name account, int32_t nft_template_id);
       void set_active(eosio::name account, const std::string& name);
+      // Activates the contract if all genesis members are active
+      void maybe_activate_contract();
       member_stats_v0 stats();
 
       // this method is used only for administrative purposes,
