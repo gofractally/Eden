@@ -159,12 +159,19 @@ namespace eosio
       {
       }
 
-      void add_action(auto name, auto wrapper, const auto& ricardian_contract, auto... member_names)
+      void add_action(auto name, auto wrapper, const auto& ricardian_contract, auto... arg_names)
       {
+         auto check_name = [&](const char* arg) {
+            if (auto p = strchr(arg, '('))
+               eosio::check(false, "unrecognized directive within action \"" + std::string{name} +
+                                       "\": " + arg);
+         };
+         (check_name(arg_names), ...);
+
          const auto& struct_name = reserve_name(name.to_string(), typeid(nullptr));
          def.actions.push_back({name, struct_name, ricardian_contract});
          struct_def d{struct_name};
-         add_action_args<0>(d, (typename decltype(wrapper)::args*)nullptr, member_names...);
+         add_action_args<0>(d, (typename decltype(wrapper)::args*)nullptr, arg_names...);
          def.structs.push_back(std::move(d));
       }
 
@@ -182,8 +189,15 @@ namespace eosio
          add_action_args<i + 1>(def, (std::tuple<Ts...>*)nullptr);
       }
 
-      template <uint32_t i, typename... Ns>
-      void add_action_args(struct_def& def, std::tuple<>*, Ns... names)
+      template <uint32_t i, typename N, typename... Ns>
+      void add_action_args(struct_def& def, std::tuple<>*, N name, Ns... names)
+      {
+         eosio::check(false, "unused argument name \"" + std::string{name} + "\" in action \"" +
+                                 def.name + "\"");
+      }
+
+      template <uint32_t i>
+      void add_action_args(struct_def& def, std::tuple<>*)
       {
       }
 
@@ -260,10 +274,10 @@ namespace eosio
 #define EOSIO_ABIGEN_EXTRACT_VARIANT_ARGS(x) BOOST_PP_CAT(EOSIO_ABIGEN_EXTRACT_VARIANT_ARGS, x)
 #define EOSIO_ABIGEN_EXTRACT_VARIANT_ARGSvariant(name, type, ...) __VA_ARGS__
 
-#define EOSIO_ABIGEN_ACTION(actions)                                                        \
-   EOSIO_ABIGEN_EXTRACT_ACTIONS_NS(actions)::for_each_action(                               \
-       [&](auto name, auto wrapper, const auto& ricardian_contract, auto... member_names) { \
-          gen.add_action(name, wrapper, ricardian_contract, member_names...);               \
+#define EOSIO_ABIGEN_ACTION(actions)                                                     \
+   EOSIO_ABIGEN_EXTRACT_ACTIONS_NS(actions)::for_each_action(                            \
+       [&](auto name, auto wrapper, const auto& ricardian_contract, auto... arg_names) { \
+          gen.add_action(name, wrapper, ricardian_contract, arg_names...);               \
        });
 
 #define EOSIO_ABIGEN_TABLE(table) \
