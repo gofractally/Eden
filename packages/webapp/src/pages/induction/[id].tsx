@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { useRouter } from "next/router";
 
 import {
@@ -7,6 +7,7 @@ import {
     SingleColLayout,
     useFetchedData,
     useIsCommunityActive,
+    useUALAccount,
 } from "_app";
 import {
     getInductionWithEndorsements,
@@ -22,6 +23,8 @@ import {
 export const InductionDetailsPage = () => {
     const router = useRouter();
     const inductionId = router.query.id;
+    const [ualAccount] = useUALAccount();
+
     const [reviewStep, setReviewStep] = useState<
         "profile" | "video" | undefined
     >();
@@ -44,6 +47,15 @@ export const InductionDetailsPage = () => {
         ? inductionEndorsements.endorsements
         : [];
 
+    // TODO: Consider deriving the user's role here and return an enum of roles: INVITER, ENDORSER, INVITEE, MEMBER, EOS_USER, UNAUTHENTICATED.
+    // Almost every child component of this page cares about the role of the user in relation to the invite/induction. We can pass role down.
+    const isEndorser = useMemo(() => {
+        const result = endorsements.find(
+            (endorsement) => endorsement.endorser === ualAccount?.accountName
+        );
+        return Boolean(result);
+    }, [ualAccount, endorsements]);
+
     const status = getInductionStatus(induction);
 
     const renderInductionStep = () => {
@@ -54,6 +66,7 @@ export const InductionDetailsPage = () => {
                 <InductionStepProfile
                     induction={induction}
                     isCommunityActive={isCommunityActive}
+                    isEndorser={isEndorser}
                     isReviewing
                 />
             );
@@ -63,7 +76,7 @@ export const InductionDetailsPage = () => {
             return (
                 <InductionStepVideo
                     induction={induction}
-                    endorsements={endorsements}
+                    isEndorser={isEndorser}
                     isReviewing
                 />
             );
@@ -74,6 +87,7 @@ export const InductionDetailsPage = () => {
                 return (
                     <InductionStepProfile
                         induction={induction}
+                        isEndorser={isEndorser}
                         isCommunityActive={isCommunityActive}
                     />
                 );
@@ -81,7 +95,7 @@ export const InductionDetailsPage = () => {
                 return (
                     <InductionStepVideo
                         induction={induction}
-                        endorsements={endorsements}
+                        isEndorser={isEndorser}
                     />
                 );
             case InductionStatus.waitingForEndorsement:
