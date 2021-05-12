@@ -15,7 +15,7 @@ export const MemberCard = ({ member }: Props) => {
     return (
         <div
             data-testid={`member-card-${member.account}`}
-            className="px-2 sm:px-8 flex flex-col max-w-xl"
+            className="px-2 sm:px-8 flex flex-col max-w-xl flex-grow"
         >
             <MemberSocialLinks member={member} />
             <section className="py-4">
