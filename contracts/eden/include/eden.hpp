@@ -20,6 +20,7 @@ namespace eden
    extern const char* inductendorse_ricardian;
    extern const char* inductdonate_ricardian;
    extern const char* inductcancel_ricardian;
+   extern const char* gc_ricardian;
    extern const char* peacetreaty_clause;
    extern const char* bylaws_clause;
 
@@ -123,7 +124,7 @@ namespace eden
        action(inductdonate, payer, id, quantity, ricardian_contract(inductdonate_ricardian)),
        action(inductcancel, account, id, ricardian_contract(inductcancel_ricardian)),
        action(inducted, inductee),
-       action(gc, limit),
+       action(gc, limit, ricardian_contract(gc_ricardian)),
        notify(token_contract, transfer),
        notify(atomic_assets_account, lognewtempl),
        notify(atomic_assets_account, logmint))

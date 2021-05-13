@@ -105,6 +105,15 @@ icon: https://ipfs.io/ipfs/QmToeuuNcTXgZPhGLShi9E18qFyQfr92b8fmjWS3roJwq5#aae9c3
 
 Cancel induction (pending invitation) #{{id}}. Only the inviter or a witness can cancel the pending induction. This action will delete the induction record and any related witness endorsement records stored in chain state. This information will, however, remain in the blockchain history.)";
 
+const char* eden::gc_ricardian = R"(---
+spec_version: "0.2.0"
+title: Garbage Collect
+summary: Clean up expired or moot invitations and endorsements
+icon: https://ipfs.io/ipfs/QmToeuuNcTXgZPhGLShi9E18qFyQfr92b8fmjWS3roJwq5#aae9c37e262c08f73151a6d415df37d4317de36d76aabfaa1a6249cfdeaffeb2
+---
+
+Remove expired induction records, moot duplicate induction records, and related endorsement records. This is a safe-to-call, housekeeping action.)";
+
 const char* eden::peacetreaty_clause =
     R"(I. The size of an independent Eden community shall not exceed 10,000 members.
 II. Leaders shall be elected by the following process:
