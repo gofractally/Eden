@@ -23,11 +23,15 @@ export const uploadIpfsFileWithTransaction = async (
         },
     };
 
-    await fetch("/api/ipfs", {
+    const response = await fetch("/api/ipfs", {
         method: "POST",
         headers: new Headers({
             "Content-Type": "application/json",
         }),
         body: JSON.stringify(request),
     });
+
+    if (!response.ok) {
+        throw new Error(await response.text());
+    }
 };
