@@ -79,6 +79,17 @@ target_link_libraries(eosio-contract-full-malloc INTERFACE
     ${WASI_SDK_PREFIX}/lib/clang/11.0.0/lib/wasi/libclang_rt.builtins-wasm32.a
 )
 
+add_library(eosio-contract-abigen INTERFACE)
+target_compile_options(eosio-contract-abigen INTERFACE -DCOMPILING_ABIGEN)
+target_include_directories(eosio-contract-abigen INTERFACE
+    ${clsdk_DIR}/contracts
+    ${clsdk_DIR}/eosiolib/contracts/include
+)
+target_link_libraries(eosio-contract-abigen INTERFACE
+    eosio-core
+    -lcltestlib
+)
+
 add_library(cltestlib INTERFACE)
 target_link_libraries(cltestlib INTERFACE
     eosio-core

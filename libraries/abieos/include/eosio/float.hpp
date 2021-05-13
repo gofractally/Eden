@@ -8,6 +8,7 @@ namespace eosio
    using float64 = double;
    using float128 = long double;
 
+   static_assert(sizeof(float128) == 16);
 }  // namespace eosio
 
 #else

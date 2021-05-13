@@ -3,8 +3,6 @@
 #include <rapidjson/encodings.h>
 #include <cmath>
 #include <limits>
-#include <optional>
-#include <variant>
 #include "for_each_field.hpp"
 #include "fpconv.h"
 #include "stream.hpp"
@@ -233,17 +231,6 @@ template <typename S> void to_json(__int128 value, S& stream) { return int_to_js
       write_newline(stream);
       stream.write(']');
    }
-
-   template <typename>
-   struct is_std_optional : std::false_type
-   {
-   };
-
-   template <typename T>
-   struct is_std_optional<std::optional<T>> : std::true_type
-   {
-      using value_type = T;
-   };
 
    template <typename T, typename S>
    void to_json(const T& t, S& stream)

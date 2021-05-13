@@ -27,11 +27,13 @@ namespace eden
    };
    EOSIO_REFLECT(member_v0, account, name, status, nft_template_id)
 
+   using member_variant = std::variant<member_v0>;
+
    struct member
    {
       member() = default;
       member(const member&) = delete;
-      std::variant<member_v0> value;
+      member_variant value;
       EDEN_FORWARD_MEMBERS(value, account, name, status, nft_template_id);
       EDEN_FORWARD_FUNCTIONS(value, primary_key)
    };
@@ -47,7 +49,8 @@ namespace eden
    };
    EOSIO_REFLECT(member_stats_v0, active_members, pending_members, completed_waiting_inductions);
 
-   using member_stats_singleton = eosio::singleton<"memberstats"_n, std::variant<member_stats_v0>>;
+   using member_stats_variant = std::variant<member_stats_v0>;
+   using member_stats_singleton = eosio::singleton<"memberstats"_n, member_stats_variant>;
 
    class members
    {

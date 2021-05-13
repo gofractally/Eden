@@ -35,24 +35,6 @@ using eosio::ship_protocol::action_receipt_v0;
 using eosio::ship_protocol::action_trace_v0;
 using eosio::ship_protocol::transaction_trace_v0;
 
-namespace eosio
-{
-   // todo: move to abieos
-   template <typename T, typename S>
-   void to_json(const might_not_exist<T>& val, S& stream)
-   {
-      return to_json(val.value, stream);
-   }
-
-   // todo: abieos support for pair. Used by extensions_type.
-   template <typename S>
-   void to_json(const std::pair<uint16_t, std::vector<char>>&, S& stream)
-   {
-      eosio::check(false, eosio::convert_stream_error(stream_error::bad_variant_index));
-   }
-
-}  // namespace eosio
-
 namespace b1::rodeos::wasm_ql
 {
    struct wasm_ql_backend_options

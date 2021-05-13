@@ -25,6 +25,7 @@ if(DEFINED WASI_SDK_PREFIX)
 
     ExternalProject_Add(wasm
         SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/wasm
+        DEPENDS cltester # for abi generation
         BINARY_DIR wasm
         INSTALL_COMMAND ""
         BUILD_ALWAYS 1
