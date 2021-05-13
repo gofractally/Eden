@@ -249,63 +249,36 @@ namespace eosio
    };  // abi_generator
 }  // namespace eosio
 
-#define EOSIO_ABIGEN_MATCH_ACTIONS(x) EOSIO_MATCH(EOSIO_ABIGEN_MATCH_ACTIONS, x)
-#define EOSIO_ABIGEN_MATCH_ACTIONSactions EOSIO_MATCH_YES
-#define EOSIO_ABIGEN_EXTRACT_ACTIONS_NS(x) BOOST_PP_CAT(EOSIO_ABIGEN_EXTRACT_ACTIONS_NS, x)
-#define EOSIO_ABIGEN_EXTRACT_ACTIONS_NSactions(ns) ns
+#define EOSIO_ABIGEN_KNOWN_ITEM1(item) BOOST_PP_TUPLE_ELEM(0, BOOST_PP_VARIADIC_TO_TUPLE(item))
+#define EOSIO_ABIGEN_KNOWN_ITEM(item) \
+   EOSIO_ABIGEN_KNOWN_ITEM1(BOOST_PP_CAT(EOSIO_ABIGEN_ITEM, item))
+#define EOSIO_ABIGEN_UNKNOWN_ITEM(item) \
+   eosio::check(false,                  \
+                "unrecognized item in EOSIO_ABIGEN(): " + std::string(BOOST_PP_STRINGIZE(item)));
+#define EOSIO_ABIGEN_ITEM(r, data, item)                                       \
+   BOOST_PP_IIF(EOSIO_MATCH(EOSIO_ABIGEN_ITEM, item), EOSIO_ABIGEN_KNOWN_ITEM, \
+                EOSIO_ABIGEN_UNKNOWN_ITEM)                                     \
+   (item)
 
-#define EOSIO_ABIGEN_MATCH_TABLE(x) EOSIO_MATCH(EOSIO_ABIGEN_MATCH_TABLE, x)
-#define EOSIO_ABIGEN_MATCH_TABLEtable EOSIO_MATCH_YES
-#define EOSIO_ABIGEN_EXTRACT_TABLE_NAME(x) BOOST_PP_CAT(EOSIO_ABIGEN_EXTRACT_TABLE_NAME, x)
-#define EOSIO_ABIGEN_EXTRACT_TABLE_NAMEtable(name, type) name
-#define EOSIO_ABIGEN_EXTRACT_TABLE_TYPE(x) BOOST_PP_CAT(EOSIO_ABIGEN_EXTRACT_TABLE_TYPE, x)
-#define EOSIO_ABIGEN_EXTRACT_TABLE_TYPEtable(name, type) type
-
-#define EOSIO_ABIGEN_MATCH_VARIANT(x) EOSIO_MATCH(EOSIO_ABIGEN_MATCH_VARIANT, x)
-#define EOSIO_ABIGEN_MATCH_VARIANTvariant EOSIO_MATCH_YES
-#define EOSIO_ABIGEN_EXTRACT_VARIANT_NAME(x) BOOST_PP_CAT(EOSIO_ABIGEN_EXTRACT_VARIANT_NAME, x)
-#define EOSIO_ABIGEN_EXTRACT_VARIANT_NAMEvariant(name, type, ...) name
-#define EOSIO_ABIGEN_EXTRACT_VARIANT_TYPE(x) BOOST_PP_CAT(EOSIO_ABIGEN_EXTRACT_VARIANT_TYPE, x)
-#define EOSIO_ABIGEN_EXTRACT_VARIANT_TYPEvariant(name, type, ...) type
-
-#define EOSIO_ABIGEN_MATCH_CLAUSE(x) EOSIO_MATCH(EOSIO_ABIGEN_MATCH_CLAUSE, x)
-#define EOSIO_ABIGEN_MATCH_CLAUSEricardian_clause EOSIO_MATCH_YES
-#define EOSIO_ABIGEN_EXTRACT_CLAUSE_ID(x) BOOST_PP_CAT(EOSIO_ABIGEN_EXTRACT_CLAUSE_ID, x)
-#define EOSIO_ABIGEN_EXTRACT_CLAUSE_IDricardian_clause(id, body) id
-#define EOSIO_ABIGEN_EXTRACT_CLAUSE_BODY(x) BOOST_PP_CAT(EOSIO_ABIGEN_EXTRACT_CLAUSE_BODY, x)
-#define EOSIO_ABIGEN_EXTRACT_CLAUSE_BODYricardian_clause(id, body) body
-
-#define EOSIO_ABIGEN_HAS_VARIANT_ARGS(x) \
-   BOOST_PP_COMPL(BOOST_PP_CHECK_EMPTY(EOSIO_ABIGEN_EXTRACT_VARIANT_ARGS(x)))
-#define EOSIO_ABIGEN_EXTRACT_VARIANT_ARGS(x) BOOST_PP_CAT(EOSIO_ABIGEN_EXTRACT_VARIANT_ARGS, x)
-#define EOSIO_ABIGEN_EXTRACT_VARIANT_ARGSvariant(name, type, ...) __VA_ARGS__
-
-#define EOSIO_ABIGEN_ACTION(actions)                                                     \
-   EOSIO_ABIGEN_EXTRACT_ACTIONS_NS(actions)::for_each_action(                            \
+#define EOSIO_ABIGEN_ITEMactions(ns)                                                     \
+   ns::for_each_action(                                                                  \
        [&](auto name, auto wrapper, const auto& ricardian_contract, auto... arg_names) { \
           gen.add_action(name, wrapper, ricardian_contract, arg_names...);               \
-       });
+       });                                                                               \
+   , 1
 
-#define EOSIO_ABIGEN_TABLE(table) \
-   gen.add_table<EOSIO_ABIGEN_EXTRACT_TABLE_TYPE(table)>(EOSIO_ABIGEN_EXTRACT_TABLE_NAME(table));
+#define EOSIO_ABIGEN_ITEMtable(name, type) \
+   gen.add_table<type>(name);              \
+   , 1
 
-#define EOSIO_ABIGEN_VARIANT(variant)                                \
-   gen.add_variant<EOSIO_ABIGEN_EXTRACT_VARIANT_TYPE(variant)>(      \
-       EOSIO_ABIGEN_EXTRACT_VARIANT_NAME(variant)                    \
-           BOOST_PP_COMMA_IF(EOSIO_ABIGEN_HAS_VARIANT_ARGS(variant)) \
-               EOSIO_ABIGEN_EXTRACT_VARIANT_ARGS(variant));
+#define EOSIO_ABIGEN_ITEMvariant(name, type, ...)                                                  \
+   gen.add_variant<type>(name BOOST_PP_COMMA_IF(BOOST_PP_COMPL(BOOST_PP_CHECK_EMPTY(__VA_ARGS__))) \
+                             __VA_ARGS__);                                                         \
+   , 1
 
-#define EOSIO_ABIGEN_CLAUSE(clause)              \
-   gen.def.ricardian_clauses.push_back({         \
-       EOSIO_ABIGEN_EXTRACT_CLAUSE_ID(clause),   \
-       EOSIO_ABIGEN_EXTRACT_CLAUSE_BODY(clause), \
-   });
-
-#define EOSIO_ABIGEN_ITEM(r, data, item)                                                    \
-   BOOST_PP_IIF(EOSIO_ABIGEN_MATCH_ACTIONS(item), EOSIO_ABIGEN_ACTION, EOSIO_EMPTY)(item);  \
-   BOOST_PP_IIF(EOSIO_ABIGEN_MATCH_TABLE(item), EOSIO_ABIGEN_TABLE, EOSIO_EMPTY)(item);     \
-   BOOST_PP_IIF(EOSIO_ABIGEN_MATCH_VARIANT(item), EOSIO_ABIGEN_VARIANT, EOSIO_EMPTY)(item); \
-   BOOST_PP_IIF(EOSIO_ABIGEN_MATCH_CLAUSE(item), EOSIO_ABIGEN_CLAUSE, EOSIO_EMPTY)(item);
+#define EOSIO_ABIGEN_ITEMricardian_clause(id, body) \
+   gen.def.ricardian_clauses.push_back({id, body}); \
+   , 1
 
 #define EOSIO_ABIGEN(...)                                                                \
    int main()                                                                            \
