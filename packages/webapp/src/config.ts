@@ -72,3 +72,9 @@ export const chainConfig = {
     chainId: process.env.NEXT_PUBLIC_EOS_CHAIN_ID,
     rpcEndpoints: [rpcEndpoint],
 };
+
+// SECRETS CONFIG
+export const ipfsConfig = {
+    pinataJwt: process.env.IPFS_PINATA_JWT || "",
+    uploadEndpointUrl: process.env.IPFS_UPLOAD_ENDPOINT_URL || "",
+};

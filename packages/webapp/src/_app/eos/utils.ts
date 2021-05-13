@@ -2,6 +2,7 @@ import hash from "hash.js";
 import * as eosjsSerialize from "eosjs/dist/eosjs-serialize";
 import * as eosjsNumeric from "eosjs/dist/eosjs-numeric";
 import * as eosjsJsonRpc from "eosjs/dist/eosjs-jsonrpc";
+import * as eosjsApi from "eosjs/dist/eosjs-api";
 import { rpcEndpoint } from "config";
 
 export const accountTo32BitHash = (account: string): number[] =>
@@ -34,6 +35,17 @@ export const accountsToI128 = (account1: string, account2: string): string => {
 
 const rpcEndpointUrl = `${rpcEndpoint.protocol}://${rpcEndpoint.host}:${rpcEndpoint.port}`;
 export const eosJsonRpc = new eosjsJsonRpc.JsonRpc(rpcEndpointUrl);
+
+export const eosDefaultApi = new eosjsApi.Api({
+    rpc: eosJsonRpc,
+    signatureProvider: {
+        getAvailableKeys: async () => [],
+        sign: async (args: any) => {
+            throw new Error("implement");
+        },
+    },
+});
+
 const initialTypes = eosjsSerialize.createInitialTypes();
 
 export const getContractAbi = async (account: string) => {

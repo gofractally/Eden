@@ -14,7 +14,10 @@ import { NewMemberProfile } from "../interfaces";
 interface Props {
     newMemberProfile: NewMemberProfile;
     disabled?: boolean;
-    onSubmit?: (newMemberProfile: NewMemberProfile) => Promise<void>;
+    onSubmit?: (
+        newMemberProfile: NewMemberProfile,
+        uploadedImage?: File
+    ) => Promise<void>;
 }
 
 export interface InitInductionFormData {
@@ -41,11 +44,37 @@ export const InductionProfileForm = ({
         fields.img,
     ]);
 
+    const [uploadedImage, setUploadedImage] = useState<File | undefined>(
+        undefined
+    );
+
     const onChangeFields = (e: React.ChangeEvent<HTMLInputElement>) =>
         setFields(e);
 
     const onChangeSocialFields = (e: React.ChangeEvent<HTMLInputElement>) =>
         setSocialFields(e);
+
+    const handleProfileImageUpload = async (
+        e: React.ChangeEvent<HTMLInputElement>
+    ) => {
+        e.preventDefault();
+
+        if (!e.target.files || !e.target.files.length) {
+            return;
+        }
+
+        var file = e.target.files[0];
+
+        // Clear the selection in the file picker input.
+        // todo: reset input? (it does not work if the user wants to switch the file)
+
+        // Check if the file is an image.
+        if (!file.type.match("image.*")) {
+            return alert("You can only select images");
+        }
+
+        setUploadedImage(file);
+    };
 
     const submitTransaction = async (e: FormEvent) => {
         e.preventDefault();
@@ -58,7 +87,10 @@ export const InductionProfileForm = ({
         });
 
         setIsLoading(true);
-        await onSubmit({ ...fields, social: JSON.stringify(socialHandles) });
+        await onSubmit(
+            { ...fields, social: JSON.stringify(socialHandles) },
+            uploadedImage
+        );
         setIsLoading(false);
     };
 
@@ -97,14 +129,21 @@ export const InductionProfileForm = ({
                         </div>
                     </Link>
                 </div>
-                <Form.Input
+                {/* <Form.Input
                     id="img"
                     type="text"
                     required
                     disabled={isLoading || disabled}
                     value={fields.img}
                     onChange={onChangeFields}
+                /> */}
+                <Form.FileInput
+                    id="imgFile"
+                    accept="image/*"
+                    label="select an image file"
+                    onChange={handleProfileImageUpload}
                 />
+
                 {fields.img && !isPhotoValidCID && (
                     <p className={"text-red-500 text-sm mt-1"}>
                         This is not a valid IPFS CID.

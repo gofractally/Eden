@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import IpfsHash from "ipfs-only-hash";
 
 import {
     ActionButton,
@@ -7,8 +8,11 @@ import {
     Link,
     onError,
     Text,
+    uploadIpfsFileWithTransaction,
     useUALAccount,
 } from "_app";
+import { IpfsPostRequest } from "_api/schemas";
+
 import { Induction, NewMemberProfile } from "../interfaces";
 import { setInductionProfileTransaction } from "../transactions";
 import { InductionJourneyContainer, InductionRole } from "inductions";
@@ -36,9 +40,17 @@ export const InductionStepProfile = ({
     const isInviter = ualAccount?.accountName === induction.inviter;
 
     const submitInductionProfileTransaction = async (
-        newMemberProfile: NewMemberProfile
+        newMemberProfile: NewMemberProfile,
+        uploadedImage?: File
     ) => {
         try {
+            const uploadedImageContent = uploadedImage
+                ? new Uint8Array(await uploadedImage.arrayBuffer())
+                : undefined;
+            if (uploadedImageContent) {
+                newMemberProfile.img = await IpfsHash.of(uploadedImageContent);
+            }
+
             const authorizerAccount = ualAccount.accountName;
             const transaction = setInductionProfileTransaction(
                 authorizerAccount,
@@ -47,9 +59,17 @@ export const InductionStepProfile = ({
             );
             console.info(transaction);
             const signedTrx = await ualAccount.signTransaction(transaction, {
-                broadcast: true,
+                broadcast: !uploadedImage,
             });
             console.info("inductprofil trx", signedTrx);
+
+            if (uploadedImageContent) {
+                await uploadIpfsFileWithTransaction(
+                    signedTrx,
+                    uploadedImageContent
+                );
+            }
+
             setSubmittedProfile(true);
         } catch (error) {
             onError(error, "Unable to set the profile");
