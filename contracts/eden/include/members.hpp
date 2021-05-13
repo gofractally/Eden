@@ -33,21 +33,18 @@ namespace eden
    // - A donation is required for regularly scheduled elections.
    // - Are donations and NFTs relevent for special elections?
    // - Whether a member was active at the start of the election.
+   // - When do we mint new NFTs?
+   //   - On donation (like for induction)
+   //   - At the end of the election (bulk processing or triggered by the member?)
+   //   - During the election, as soon as his rank is determined.
+   // - What if a member is kicked during an election?  Should we just ban this?
    //
-   // A user can donate at any time between regularly scheduled elections.
-   // Such a donation makes him eligible to vote in the next election.
-   // Members who did not donate will be deactivated
-   //
-   // A member is active iff election_sequence >=
-   // If a member donates while an election is in progress?
-   // When a member is activated, election_sequence is set to what the election_sequence will be at the end of the current election.
-   //
-   // Need to distinguish the following:
-   // - induct, start election: in current election
-   // - donate, election, donate, election: normal flow
-   // - start election, induct new: eligible for the next election, not the current election
-   // - failed to donate, start election: deactivated
-   // - donate, start election, donate, finish election: should be eligible for the next election.  Not allowed.  Donation becomes available for active members after the election finishes.
+   // - A member can donate at any time after the end of a scheduled election and before
+   //   the start of the next scheduled election.
+   // - A member who is inducted is eligible to vote in the first election that starts
+   //   after his induction.
+   // - A member who does not make a donation before the election starts (induction
+   //   donations do count) will be deactivated.
    //
    // A member is part of the election iff election_sequence == election_info.election_sequence - 1
    // A an active member can donate if election_sequence == election_info.election_sequence - 1 and there is not a current election.
@@ -95,8 +92,10 @@ namespace eden
       {
       }
 
+      const member_table_type& get_table() const { return member_tb; }
       const member& get_member(eosio::name account);
       void create(eosio::name account);
+      member_table_type::const_iterator erase(member_table_type::const_iterator iter);
       void remove_if_pending(eosio::name account);
       bool is_new_member(eosio::name account) const;
       void check_active_member(eosio::name account);

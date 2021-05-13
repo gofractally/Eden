@@ -187,17 +187,26 @@ namespace eden
    {
       election_state_singleton sequence_state(contract, default_scope);
       auto expected_sequence = sequence_state.get().election_sequence - 1;
-      member_table_type member_tb(contract, default_scope);
+      members members(contract);
+      const auto& member_tb = members.get_table();
       auto iter = member_tb.upper_bound(state.last_processed.value);
       auto end = member_tb.end();
-      for (; max_steps > 0 && iter != end; --max_steps, ++iter)
+      for (; max_steps > 0 && iter != end; --max_steps)
       {
-         if (iter->status() == member_status::active_member &&
-             iter->election_sequence() == expected_sequence)
+         if (iter->status() == member_status::active_member)
          {
-            add_voter(state, iter->account());
+            if (iter->election_sequence() < expected_sequence)
+            {
+               iter = members.erase(iter);
+               continue;
+            }
+            else if (iter->election_sequence() == expected_sequence)
+            {
+               add_voter(state, iter->account());
+            }
          }
          state.last_processed = iter->account();
+         ++iter;
       }
       return max_steps;
    }

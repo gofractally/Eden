@@ -77,8 +77,6 @@ namespace eden
    // Algorithms using the engine must ensure that the data that
    // they operate on is fully determined before the seed is
    // generated.
-   // TODO: The existing iteration over the members table does
-   // not guarantee this.
    struct election_rng
    {
       election_rng() = default;
