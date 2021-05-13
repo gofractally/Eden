@@ -126,8 +126,8 @@ Remove expired induction records, moot duplicate induction records, and related 
 const char* eden::peacetreaty_clause =
     R"(I. The size of an independent Eden community shall not exceed 10,000 members.
 II. Leaders shall be elected by the following process:
-II.a. Members are randomly organized into groups of 12 or fewer, where total number of groups = population / average group size + 1.
-II.b. Each group must select a representative from their group with ⅔+1 approval.
+II.a. Members are randomly organized into roughly equally-sized groups of 12 or fewer, where total number of groups = population / average group size.
+II.b. Each group must select a representative from their group with greater than ⅔ approval.
 II.c. The process shall then repeat, fractally, by randomly grouping the representatives approved in the previous round of elections, until a single lead representative is chosen.
 III. Elections shall occur at least annually or may be triggered by a petition of 10% of the membership or according to the bylaws.
 IV. The community may adopt bylaws, which contain all rules, processes, regulations that are binding on anyone who wishes to remain a member.
