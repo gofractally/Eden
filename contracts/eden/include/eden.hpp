@@ -10,6 +10,19 @@
 
 namespace eden
 {
+   // Ricardian contracts live in eden-ricardian.cpp
+   extern const char* withdraw_ricardian;
+   extern const char* genesis_ricardian;
+   extern const char* clearall_ricardian;
+   extern const char* inductinit_ricardian;
+   extern const char* inductprofil_ricardian;
+   extern const char* inductvideo_ricardian;
+   extern const char* inductendorse_ricardian;
+   extern const char* inductdonate_ricardian;
+   extern const char* inductcancel_ricardian;
+   extern const char* peacetreaty_clause;
+   extern const char* bylaws_clause;
+
    class eden : public eosio::contract
    {
      public:
@@ -78,29 +91,40 @@ namespace eden
                           eosio::ignore<std::vector<eosio::asset>>);
    };
 
-   EOSIO_ACTIONS(eden,
-                 "eden.gm"_n,
-                 action(withdraw, owner, quantity),
-                 action(genesis,
-                        community,
-                        community_symbol,
-                        minimum_donation,
-                        initial_members,
-                        genesis_video,
-                        collection_attributes,
-                        auction_starting_bid,
-                        auction_duration,
-                        memo),
-                 action(clearall),
-                 action(inductinit, id, inviter, invitee, witnesses),
-                 action(inductprofil, id, new_member_profile),
-                 action(inductvideo, account, id, video),
-                 action(inductendorse, account, id, induction_data_hash),
-                 action(inductdonate, payer, id, quantity),
-                 action(inductcancel, account, id),
-                 action(inducted, inductee),
-                 action(gc, limit),
-                 notify(token_contract, transfer),
-                 notify(atomic_assets_account, lognewtempl),
-                 notify(atomic_assets_account, logmint))
+   EOSIO_ACTIONS(
+       eden,
+       "eden.gm"_n,
+       action(withdraw, owner, quantity, ricardian_contract(withdraw_ricardian)),
+       action(genesis,
+              community,
+              community_symbol,
+              minimum_donation,
+              initial_members,
+              genesis_video,
+              collection_attributes,
+              auction_starting_bid,
+              auction_duration,
+              memo,
+              ricardian_contract(genesis_ricardian)),
+       action(clearall, ricardian_contract(clearall_ricardian)),
+       action(inductinit,
+              id,
+              inviter,
+              invitee,
+              witnesses,
+              ricardian_contract(inductinit_ricardian)),
+       action(inductprofil, id, new_member_profile, ricardian_contract(inductprofil_ricardian)),
+       action(inductvideo, account, id, video, ricardian_contract(inductvideo_ricardian)),
+       action(inductendorse,
+              account,
+              id,
+              induction_data_hash,
+              ricardian_contract(inductendorse_ricardian)),
+       action(inductdonate, payer, id, quantity, ricardian_contract(inductdonate_ricardian)),
+       action(inductcancel, account, id, ricardian_contract(inductcancel_ricardian)),
+       action(inducted, inductee),
+       action(gc, limit),
+       notify(token_contract, transfer),
+       notify(atomic_assets_account, lognewtempl),
+       notify(atomic_assets_account, logmint))
 }  // namespace eden
