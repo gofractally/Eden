@@ -1,19 +1,16 @@
 #include <eden.hpp>
 
-const char* eden::withdraw_ricardian = R"(
----
-spec_version: \"0.2.0\"
+const char* eden::withdraw_ricardian = R"(---
+spec_version: "0.2.0"
 title: Withdraw my unspent balance
 summary: Withdraw {{nowrap quantity}} from unspent balance
 icon: https://ipfs.io/ipfs/QmToeuuNcTXgZPhGLShi9E18qFyQfr92b8fmjWS3roJwq5#aae9c37e262c08f73151a6d415df37d4317de36d76aabfaa1a6249cfdeaffeb2
 ---
 
-I am withdrawing {{quantity}} from my remaining available balance. (This action should rarely need to be used, and currently only if a transfer is made to the contract but that balance isn't followed-up by a donation action spending it to the recipient account.)
-)";
+I am withdrawing {{quantity}} from my remaining available balance. (This action should rarely need to be used, and currently only if a transfer is made to the contract but that balance isn't followed-up by a donation action spending it to the recipient account.))";
 
-const char* eden::genesis_ricardian = R"(
----
-spec_version: \"0.2.0\"
+const char* eden::genesis_ricardian = R"(---
+spec_version: "0.2.0"
 title: Start an Eden Community
 summary: Found a new community with Genesis members
 icon: https://ipfs.io/ipfs/QmToeuuNcTXgZPhGLShi9E18qFyQfr92b8fmjWS3roJwq5#aae9c37e262c08f73151a6d415df37d4317de36d76aabfaa1a6249cfdeaffeb2
@@ -25,34 +22,28 @@ I hereby start a new Eden community named {{community}} with the following found
 {{$clauses.peacetreaty}}
 
 ## Bylaws
-{{$clauses.bylaws}}
-)";
+{{$clauses.bylaws}})";
 
-const char* eden::clearall_ricardian = R"(
----
-spec_version: \"0.2.0\"
+const char* eden::clearall_ricardian = R"(---
+spec_version: "0.2.0"
 title: Clear Eden Community
 summary: WARNING - DELETING COMMUNITY RECORDS
 icon: https://ipfs.io/ipfs/QmToeuuNcTXgZPhGLShi9E18qFyQfr92b8fmjWS3roJwq5#aae9c37e262c08f73151a6d415df37d4317de36d76aabfaa1a6249cfdeaffeb2
 ---
 
-I hereby clear and remove all tables relating to this Eden community. I affirm that I am authorized to do so by the aforementioned community. I understand that this will remove all community members, and destroy community information stored in chain state. Member information will, however, remain in the blockchain history.
-)";
+I hereby clear and remove all tables relating to this Eden community. I affirm that I am authorized to do so by the aforementioned community. I understand that this will remove all community members, and destroy community information stored in chain state. Member information will, however, remain in the blockchain history.)";
 
-const char* eden::inductinit_ricardian = R"(
----
-spec_version: \"0.2.0\"
+const char* eden::inductinit_ricardian = R"(---
+spec_version: "0.2.0"
 title: Extend Eden Invitation
 summary: Invite someone into the community
 icon: https://ipfs.io/ipfs/QmToeuuNcTXgZPhGLShi9E18qFyQfr92b8fmjWS3roJwq5#aae9c37e262c08f73151a6d415df37d4317de36d76aabfaa1a6249cfdeaffeb2
 ---
 
-As an active member of this Eden community, I extend an invitation to {{invitee}} to join the Eden community, pending {{invitee}}'s completion of the induction process as witnessed by the following other currently-active community members: {{witnesses.[0]}} and {{witnesses.[1]}}.
-)";
+As an active member of this Eden community, I extend an invitation to {{invitee}} to join the Eden community, pending {{invitee}}'s completion of the induction process as witnessed by the following other currently-active community members: {{witnesses.[0]}} and {{witnesses.[1]}}.)";
 
-const char* eden::inductprofil_ricardian = R"(
----
-spec_version: \"0.2.0\"
+const char* eden::inductprofil_ricardian = R"(---
+spec_version: "0.2.0"
 title: Create My Eden Profile
 summary: Affirm profile, Peace Treaty and Bylaws
 icon: https://ipfs.io/ipfs/QmToeuuNcTXgZPhGLShi9E18qFyQfr92b8fmjWS3roJwq5#aae9c37e262c08f73151a6d415df37d4317de36d76aabfaa1a6249cfdeaffeb2
@@ -64,23 +55,19 @@ I, {{new_member_profile.name}}, certify that, to the best of my knowledge, the p
 {{$clauses.peacetreaty}}
 
 ## Bylaws
-{{$clauses.bylaws}}
-)";
+{{$clauses.bylaws}})";
 
-const char* eden::inductvideo_ricardian = R"(
----
-spec_version: \"0.2.0\"
+const char* eden::inductvideo_ricardian = R"(---
+spec_version: "0.2.0"
 title: Add Induction Ceremony to the Record
 summary: Add video recording of invitee's induction ceremony to the record
 icon: https://ipfs.io/ipfs/QmToeuuNcTXgZPhGLShi9E18qFyQfr92b8fmjWS3roJwq5#aae9c37e262c08f73151a6d415df37d4317de36d76aabfaa1a6249cfdeaffeb2
 ---
 
-I witnessed the Eden induction ceremony for the individual represented by account {{account}} and hereby attach the IPFS CID of said video recording hereto.
-)";
+I witnessed the Eden induction ceremony for the individual represented by account {{account}} and hereby attach the IPFS CID of said video recording hereto.)";
 
-const char* eden::inductendorse_ricardian = R"(
----
-spec_version: \"0.2.0\"
+const char* eden::inductendorse_ricardian = R"(---
+spec_version: "0.2.0"
 title: Endorse Prospective Eden Member
 summary: Endorsement of {{nowrap account}} for induction into Eden community
 icon: https://ipfs.io/ipfs/QmToeuuNcTXgZPhGLShi9E18qFyQfr92b8fmjWS3roJwq5#aae9c37e262c08f73151a6d415df37d4317de36d76aabfaa1a6249cfdeaffeb2
@@ -92,12 +79,10 @@ I witnessed the Eden induction ceremony for the individual represented by accoun
 {{$clauses.peacetreaty}}
 
 ## Bylaws
-{{$clauses.bylaws}}
-)";
+{{$clauses.bylaws}})";
 
-const char* eden::inductdonate_ricardian = R"(
----
-spec_version: \"0.2.0\"
+const char* eden::inductdonate_ricardian = R"(---
+spec_version: "0.2.0"
 title: Donate to the Eden Community
 summary: Submit {{nowrap quantity}} donation and activate your membership
 icon: https://ipfs.io/ipfs/QmToeuuNcTXgZPhGLShi9E18qFyQfr92b8fmjWS3roJwq5#aae9c37e262c08f73151a6d415df37d4317de36d76aabfaa1a6249cfdeaffeb2
@@ -109,22 +94,19 @@ I have carefully reviewed the profile information I submitted, including my name
 {{$clauses.peacetreaty}}
 
 ## Bylaws
-{{$clauses.bylaws}}
-)";
+{{$clauses.bylaws}})";
 
-const char* eden::inductcancel_ricardian = R"(
----
-spec_version: \"0.2.0\"
+const char* eden::inductcancel_ricardian = R"(---
+spec_version: "0.2.0"
 title: Cancel Induction
 summary: Cancel Induction {{nowrap id}}
 icon: https://ipfs.io/ipfs/QmToeuuNcTXgZPhGLShi9E18qFyQfr92b8fmjWS3roJwq5#aae9c37e262c08f73151a6d415df37d4317de36d76aabfaa1a6249cfdeaffeb2
 ---
 
-Cancel induction (pending invitation) #{{id}}. Only the inviter or a witness can cancel the pending induction. This action will delete the induction record and any related witness endorsement records stored in chain state. This information will, however, remain in the blockchain history.
-)";
+Cancel induction (pending invitation) #{{id}}. Only the inviter or a witness can cancel the pending induction. This action will delete the induction record and any related witness endorsement records stored in chain state. This information will, however, remain in the blockchain history.)";
 
-const char* eden::peacetreaty_clause = R"(
-I. The size of an independent Eden community shall not exceed 10,000 members.
+const char* eden::peacetreaty_clause =
+    R"(I. The size of an independent Eden community shall not exceed 10,000 members.
 II. Leaders shall be elected by the following process:
 II.a. Members are randomly organized into groups of 12 or fewer, where total number of groups = population / average group size + 1.
 II.b. Each group must select a representative from their group with ⅔+1 approval.
@@ -139,10 +121,8 @@ IV.e. The board can propose a new set of bylaws. The vote to approve a proposal 
 V. Bylaws may not override, change, eliminate, or extend the Peace Treaty.
 VI. Members must be invited according to community bylaws and can be removed according to community bylaws.
 VII. Membership is voluntary. Members may leave at any time by giving notice.
-VIII. The Peace Treaty may be amended by a ⅔+1 vote of all members.
-)";
+VIII. The Peace Treaty may be amended by a ⅔+1 vote of all members.)";
 
-const char* eden::bylaws_clause = R"(
-I. The initial Board shall consist of the people on the Genesis Call and shall have the power to propose and ratify bylaws until such time as the first election occurs.
-II. Genesis members are to only participate in up to 15 induction meetings until membership reaches 100 members.
-)";
+const char* eden::bylaws_clause =
+    R"(I. The initial Board shall consist of the people on the Genesis Call and shall have the power to propose and ratify bylaws until such time as the first election occurs.
+II. Genesis members are to only participate in up to 15 induction meetings until membership reaches 100 members.)";
