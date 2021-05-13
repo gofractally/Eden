@@ -38,5 +38,5 @@ EOSIO_ABIGEN(
     table("induction"_n, eden::induction_variant),
     table("member"_n, eden::member_variant),
     table("memberstats"_n, eden::member_stats_variant),
-    ricardian_clause("Peace Treaty", eden::peacetreaty_clause),
-    ricardian_clause("Bylaws", eden::bylaws_clause))
+    ricardian_clause("peacetreaty", eden::peacetreaty_clause),
+    ricardian_clause("bylaws", eden::bylaws_clause))
