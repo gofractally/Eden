@@ -105,6 +105,15 @@ icon: https://ipfs.io/ipfs/QmToeuuNcTXgZPhGLShi9E18qFyQfr92b8fmjWS3roJwq5#aae9c3
 
 Cancel induction (pending invitation) #{{id}}. Only the inviter or a witness can cancel the pending induction. This action will delete the induction record and any related witness endorsement records stored in chain state. This information will, however, remain in the blockchain history.)";
 
+const char* eden::inducted_ricardian = R"(---
+spec_version: "0.2.0"
+title: Inducted (Inline Action)
+summary: Internal inline action
+icon: https://ipfs.io/ipfs/QmToeuuNcTXgZPhGLShi9E18qFyQfr92b8fmjWS3roJwq5#aae9c37e262c08f73151a6d415df37d4317de36d76aabfaa1a6249cfdeaffeb2
+---
+
+This action is not intended to be called directly. It is an inline action called at the end of eden::inductdonate that activates the member and cleans up induction tables.)";
+
 const char* eden::gc_ricardian = R"(---
 spec_version: "0.2.0"
 title: Garbage Collect
