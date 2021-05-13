@@ -30,6 +30,4 @@ export const uploadIpfsFileWithTransaction = async (
         }),
         body: JSON.stringify(request),
     });
-
-    throw new Error("pls wait");
 };
