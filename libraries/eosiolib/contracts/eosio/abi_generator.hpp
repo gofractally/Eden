@@ -33,13 +33,14 @@ namespace eosio
                return it->first;
       }
 
+      // TODO: std::pair (needed by map), std::tuple
       template <typename Raw>
-      std::string get_type(bool force_alias = false)
+      std::string get_type(bool force_alias = false, bool fake_alias = false)
       {
          using T = std::remove_cvref_t<Raw>;
-         if constexpr (is_std_vector<T>())
+         if constexpr (is_serializable_container<T>())
          {
-            using inner = std::remove_cvref_t<typename is_std_vector<T>::value_type>;
+            using inner = std::remove_cvref_t<typename is_serializable_container<T>::value_type>;
             if (force_alias)
             {
                std::type_index type = typeid(T);
@@ -52,6 +53,8 @@ namespace eosio
                def.types.push_back({name, inner_name + "[]"});
                return name;
             }
+            if (fake_alias)
+               return "vector<" + get_type<inner>(true) + ">";
             return get_type<inner>(true) + "[]";
          }
          else if constexpr (is_std_optional<T>())
@@ -69,6 +72,8 @@ namespace eosio
                def.types.push_back({name, inner_name + "?"});
                return name;
             }
+            if (fake_alias)
+               return "optional<" + get_type<inner>(true) + ">";
             return get_type<inner>(true) + "?";
          }
          else if constexpr (is_binary_extension<T>())
@@ -119,7 +124,8 @@ namespace eosio
       template <typename T, typename... Ts>
       std::string generate_variant_name(std::variant<T, Ts...>* p)
       {
-         return std::string{"variant<"} + (get_type<T>() + ... + ("," + get_type<Ts>(true))) + ">";
+         return std::string{"variant<"} +
+                (get_type<T>(false, true) + ... + ("," + get_type<Ts>(false, true))) + ">";
       }
 
       std::string generate_variant_name(std::variant<>*) { return "variant<>"; }

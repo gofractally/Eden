@@ -2,7 +2,11 @@
 
 #include <array>
 #include <cstdint>
+#include <deque>
+#include <list>
+#include <map>
 #include <optional>
+#include <set>
 #include <string>
 #include <variant>
 #include <vector>
@@ -15,14 +19,38 @@ namespace eosio
    };
 
    template <typename T>
-   struct is_std_vector : std::false_type
+   struct is_serializable_container : std::false_type
    {
    };
 
    template <typename T>
-   struct is_std_vector<std::vector<T>> : std::true_type
+   struct is_serializable_container<std::vector<T>> : std::true_type
    {
       using value_type = T;
+   };
+
+   template <typename T>
+   struct is_serializable_container<std::list<T>> : std::true_type
+   {
+      using value_type = T;
+   };
+
+   template <typename T>
+   struct is_serializable_container<std::deque<T>> : std::true_type
+   {
+      using value_type = T;
+   };
+
+   template <typename T>
+   struct is_serializable_container<std::set<T>> : std::true_type
+   {
+      using value_type = T;
+   };
+
+   template <typename K, typename V>
+   struct is_serializable_container<std::map<K, V>> : std::true_type
+   {
+      using value_type = typename std::map<K, V>::value_type;
    };
 
    template <typename T>
