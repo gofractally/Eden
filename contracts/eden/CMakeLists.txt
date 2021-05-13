@@ -17,7 +17,7 @@ target_include_directories(eden PUBLIC include ../token/include PRIVATE ../../ex
 target_link_libraries(eden eosio-contract)
 set_target_properties(eden PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${ROOT_BINARY_DIR})
 
-add_executable(eden-abigen src/eden.cpp)
+add_executable(eden-abigen src/eden.cpp src/eden-ricardian.cpp)
 target_include_directories(eden-abigen PRIVATE include ../token/include ../../external/atomicassets-contract/include)
 target_link_libraries(eden-abigen eosio-contract-abigen)
 add_custom_command(TARGET eden-abigen POST_BUILD
