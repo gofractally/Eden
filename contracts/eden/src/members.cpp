@@ -92,7 +92,8 @@ namespace eden
       member_stats.set(stats, eosio::same_payer);
       check_pending_member(account);
       election_state_singleton election_state(contract, default_scope);
-      auto election_sequence = election_state.get_or_default().election_sequence;
+      auto election_sequence =
+          std::get<election_state_v0>(election_state.get_or_default()).election_sequence;
       const auto& member = get_member(account);
       member_tb.modify(member, eosio::same_payer, [&](auto& row) {
          row.value = member_v1{{.account = row.account(),
@@ -106,7 +107,8 @@ namespace eden
    void members::renew(eosio::name account)
    {
       election_state_singleton election_state(contract, default_scope);
-      auto election_sequence = election_state.get_or_default().election_sequence;
+      auto election_sequence =
+          std::get<election_state_v0>(election_state.get_or_default()).election_sequence;
       const auto& member = get_member(account);
       if (member.election_sequence() + 1 < election_sequence)
       {

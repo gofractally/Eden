@@ -6,12 +6,30 @@
 
 namespace eden
 {
-   struct election_state
+   struct election_state_v0
    {
       uint64_t election_sequence = 0;  // incremented when an election starts
+      eosio::name lead_representative;
+      std::vector<eosio::name> board;
+      // The time at which the last election was started
+      // Do we schedule the next election based on when the previous
+      // election was scheduled to start or when it actually started?
+      // Does the contract manage the election schedule including dates,
+      // or is the date set from outside?
+      // Having the contract manage it is inconvenient if we want so
+      // allow the community to define their own schedule.  It's easy
+      // for a contract to enforce a fixed interval between elections,
+      // but most convenient schedules for humans require
+      // a full calendar tracking weeks, months, and leap years.
+      eosio::block_timestamp last_election_time;
    };
-   EOSIO_REFLECT(election_state, election_sequence);
-   using election_state_singleton = eosio::singleton<"elect.state"_n, election_state>;
+   EOSIO_REFLECT(election_state_v0,
+                 election_sequence,
+                 lead_representative,
+                 board,
+                 last_election_time);
+   using election_state_singleton =
+       eosio::singleton<"elect.state"_n, std::variant<election_state_v0>>;
 
    // Invariants:
    // to initiate an election, all election tables must be empty.

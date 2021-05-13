@@ -584,11 +584,12 @@ TEST_CASE("election")
    t.egeon.act<actions::electvote>(1, "egeon"_n, "alice"_n);
    t.alice.act<actions::electadvance>(1);
 
-   CHECK(get_table_size<eden::vote_table_type>() == 1);
-   eden::vote_table_type vote_tb("eden.gm"_n, eden::default_scope);
-   auto vote = *vote_tb.begin();
-   CHECK(vote.member == "alice"_n);
-   CHECK(vote.group_id == 0);
+   CHECK(get_table_size<eden::vote_table_type>() == 0);
+   eden::election_state_singleton results("eden.gm"_n, eden::default_scope);
+   auto result = std::get<eden::election_state_v0>(results.get());
+   CHECK(result.lead_representative == "alice"_n);
+   std::sort(result.board.begin(), result.board.end());
+   CHECK(result.board == std::vector{"alice"_n, "egeon"_n, "pip"_n});
 }
 
 TEST_CASE("election with multiple rounds")
@@ -648,13 +649,12 @@ TEST_CASE("election with multiple rounds")
    generic_group_vote(get_current_groups());
    CHECK(get_table_size<eden::vote_table_type>() == 6);
    generic_group_vote(get_current_groups());
-   CHECK(get_table_size<eden::vote_table_type>() == 1);
+   CHECK(get_table_size<eden::vote_table_type>() == 0);
 
-   eden::vote_table_type vote_tb("eden.gm"_n, eden::default_scope);
-   auto vote = *vote_tb.begin();
+   eden::election_state_singleton results("eden.gm"_n, eden::default_scope);
+   auto result = std::get<eden::election_state_v0>(results.get());
    // alice always wins at every level, because everyone votes for the member with the lowest name
-   CHECK(vote.member == "alice"_n);
-   CHECK(vote.group_id == 0);
+   CHECK(result.lead_representative == "alice"_n);
 
    CHECK(get_table_size<eden::group_table_type>() == 0);
 }

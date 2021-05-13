@@ -177,7 +177,7 @@ namespace eden
       state_sing.set(current_election_state_init_voters{0, election_rng{seed}}, contract);
 
       election_state_singleton state(contract, default_scope);
-      auto state_value = state.get_or_default(election_state{});
+      auto state_value = std::get<election_state_v0>(state.get_or_default());
       ++state_value.election_sequence;
       state.set(state_value, contract);
    }
@@ -186,7 +186,8 @@ namespace eden
                                         uint32_t max_steps)
    {
       election_state_singleton sequence_state(contract, default_scope);
-      auto expected_sequence = sequence_state.get().election_sequence - 1;
+      auto expected_sequence =
+          std::get<election_state_v0>(sequence_state.get()).election_sequence - 1;
       members members(contract);
       const auto& member_tb = members.get_table();
       auto iter = member_tb.upper_bound(state.last_processed.value);
@@ -308,6 +309,7 @@ namespace eden
       auto iter = group_idx.lower_bound(group_id);
       auto end = group_idx.end();
       std::map<eosio::name, uint8_t> votes_by_candidate;
+      std::vector<eosio::name> group_members;
       uint8_t total_votes = 0;
       while (iter != end && iter->group_id == group_id)
       {
@@ -316,6 +318,7 @@ namespace eden
             ++votes_by_candidate[iter->candidate];
             ++total_votes;
          }
+         group_members.push_back(iter->member);
          iter = group_idx.erase(iter);
       }
       const auto& group = group_tb.get(group_id, ("No group " + std::to_string(group_id)).c_str());
@@ -328,15 +331,22 @@ namespace eden
           [](const auto& lhs, const auto& rhs) { return lhs.second < rhs.second; });
       if (3 * best->second > 2 * group.group_size)
       {
-         // best
-         vote_tb.emplace(contract, [&](auto& row) {
-            row.member = best->first;
-            row.group_id = group.next_group;
-         });
+         // Either finalize the election or move to the next round
          if (group.next_group == 0)
          {
             state_sing.remove();
-            // Finalize the election
+            election_state_singleton results(contract, default_scope);
+            auto result = std::get<election_state_v0>(results.get());
+            result.lead_representative = best->first;
+            result.board = std::move(group_members);
+            results.set(result, contract);
+         }
+         else
+         {
+            vote_tb.emplace(contract, [&](auto& row) {
+               row.member = best->first;
+               row.group_id = group.next_group;
+            });
          }
       }
       else if (3 * (best->second + missing_votes) <= 2 * group.group_size)
