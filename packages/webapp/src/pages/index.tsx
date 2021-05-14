@@ -23,18 +23,30 @@ export const Index = () => (
                         together to empower you and your family to make a bigger
                         impact in the world.
                     </Text>
+                    <Text>
+                        To learn more about Eden and how you can get involved,
+                        visit{" "}
+                        <Link
+                            href="https://edeneos.org"
+                            target="_blank"
+                            isExternal
+                        >
+                            EdenEOS.org
+                        </Link>
+                        .
+                    </Text>
                 </div>
             </Card>
-            <Card
-                title="Links and resources"
-                className="col-span-3 xl:col-span-1"
-            >
+            <Card title="Resources" className="col-span-3 xl:col-span-1">
                 <ul className="space-y-1 list-disc list-inside">
                     <li>
-                        <Link href="/members">The Community</Link>
-                    </li>
-                    <li>
-                        <Link href="/induction">Membership Dashboard</Link>
+                        <Link
+                            href="https://edeneos.org"
+                            target="_blank"
+                            isExternal
+                        >
+                            EdenEOS.org
+                        </Link>
                     </li>
                     <li>
                         <Link
@@ -51,7 +63,7 @@ export const Index = () => (
                             target="_blank"
                             isExternal
                         >
-                            EdenOS Github Repo
+                            EdenOS Github
                         </Link>
                     </li>
                 </ul>
