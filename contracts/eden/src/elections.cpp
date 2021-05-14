@@ -1,5 +1,7 @@
+#include <bylaws.hpp>
 #include <elections.hpp>
 #include <eosio/crypto.hpp>
+#include <eosio/system.hpp>
 #include <members.hpp>
 
 namespace eden
@@ -179,7 +181,11 @@ namespace eden
       election_state_singleton state(contract, default_scope);
       auto state_value = std::get<election_state_v0>(state.get_or_default());
       ++state_value.election_sequence;
+      state_value.last_election_time = eosio::current_block_time();
       state.set(state_value, contract);
+
+      bylaws bylaws(contract);
+      bylaws.new_board();
    }
 
    uint32_t elections::randomize_voters(current_election_state_init_voters& state,

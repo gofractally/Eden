@@ -62,6 +62,10 @@ namespace eden
 
       void electvote(uint64_t group_id, eosio::name voter, eosio::name candidate);
 
+      void bylawspropose(eosio::name proposer, const std::string& bylaws);
+      void bylawsapprove(eosio::name approver, const eosio::checksum256& bylaws_hash);
+      void bylawsratify(eosio::name approver, const eosio::checksum256& bylaws_hash);
+
       void electadvance(uint64_t group);
 
       void gc(uint32_t limit);

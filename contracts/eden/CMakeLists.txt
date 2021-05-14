@@ -7,6 +7,7 @@ add_executable(eden
    src/actions/induct.cpp
    src/actions/elect.cpp
    src/actions/notify_assets.cpp
+   src/actions/bylaws.cpp
    src/eden.cpp
    src/accounts.cpp
    src/globals.cpp
@@ -14,6 +15,7 @@ add_executable(eden
    src/members.cpp
    src/atomicassets.cpp
    src/elections.cpp
+   src/bylaws.cpp
 )
 target_include_directories(eden PUBLIC include ../token/include PRIVATE ../../external/atomicassets-contract/include)
 target_link_libraries(eden eosio-contract)
