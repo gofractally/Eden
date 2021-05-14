@@ -16,6 +16,46 @@ namespace eden
       get_global_singleton(get_self()).remove();
    }
 
+   void eden::addtogenesis(eosio::name newmember)
+   {
+      require_auth(get_self());
+      members members(get_self());
+
+      eosio::check(globals(get_self()).get().stage == contract_stage::genesis, "Not in genesis");
+
+      std::vector<eosio::name> initial_members;
+      member_table_type member_tb(get_self(), default_scope);
+      for(const auto& member : member_tb)
+      {
+         initial_members.push_back(member.account());
+      }
+
+      members.create(newmember);
+
+      // for each current induction, add newmember as a witness
+      inductions inductions(get_self());
+
+      induction_table_type inductions_tb(get_self(), default_scope);
+      eosio::check(inductions_tb.begin() != inductions_tb.end(), "No inductions");
+      auto genesis_video = inductions_tb.begin()->video();
+
+      uint64_t induction_id = members.stats().active_members + members.stats().pending_members;
+      auto inviter = get_self();
+      auto invitee = newmember;
+
+      auto total_endorsements = initial_members.size();
+      inductions.create_induction(induction_id, inviter, invitee, total_endorsements,
+                                  genesis_video);
+
+      for (const auto& endorser : initial_members)
+      {
+         if (endorser != invitee)
+         {
+            inductions.create_endorsement(inviter, invitee, endorser, induction_id);
+         }
+      }
+   }
+   
    void eden::genesis(std::string community,
                       eosio::symbol community_symbol,
                       eosio::asset minimum_donation,
