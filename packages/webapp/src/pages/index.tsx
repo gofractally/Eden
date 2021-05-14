@@ -27,11 +27,11 @@ export const Index = () => (
                         To learn more about Eden and how you can get involved,
                         visit{" "}
                         <Link
-                            href="https://edeneos.org"
+                            href="http://eden.eoscommunity.org"
                             target="_blank"
                             isExternal
                         >
-                            EdenEOS.org
+                            eden.eoscommunity.org
                         </Link>
                         .
                     </Text>
@@ -41,11 +41,11 @@ export const Index = () => (
                 <ul className="space-y-1 list-disc list-inside">
                     <li>
                         <Link
-                            href="https://edeneos.org"
+                            href="http://eden.eoscommunity.org"
                             target="_blank"
                             isExternal
                         >
-                            EdenEOS.org
+                            Eden on EOS
                         </Link>
                     </li>
                     <li>
@@ -55,6 +55,15 @@ export const Index = () => (
                             isExternal
                         >
                             Eden Public Wiki
+                        </Link>
+                    </li>
+                    <li>
+                        <Link
+                            href="https://www.notion.so/edenos/EdenOS-Roadmap-7d75dbcf386c436c9c1738b7a3eea8f2"
+                            target="_blank"
+                            isExternal
+                        >
+                            EdenOS Roadmap
                         </Link>
                     </li>
                     <li>
