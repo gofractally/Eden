@@ -199,7 +199,8 @@ namespace eden
       void create_endorsement(eosio::name inviter,
                               eosio::name invitee,
                               eosio::name endorser,
-                              uint64_t induction_id);
+                              uint64_t induction_id,
+                              bool endorsed = false);
 
       // Should only be used during genesis
       void endorse_all(const induction& induction);

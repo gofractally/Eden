@@ -50,7 +50,8 @@ namespace eden
    void inductions::create_endorsement(eosio::name inviter,
                                        eosio::name invitee,
                                        eosio::name endorser,
-                                       uint64_t induction_id)
+                                       uint64_t induction_id,
+                                       bool endorsed)
    {
       endorsement_tb.emplace(contract, [&](auto& row) {
          row.id() = endorsement_tb.available_primary_key();
@@ -58,7 +59,7 @@ namespace eden
          row.invitee() = invitee;
          row.endorser() = endorser;
          row.induction_id() = induction_id;
-         row.endorsed() = false;
+         row.endorsed() = endorsed;
       });
    }
 

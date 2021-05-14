@@ -254,6 +254,12 @@ TEST_CASE("genesis")
    
    t.egeon.act<actions::inductdonate>("egeon"_n, 3, s2a("10.0000 EOS"));
 
+   {
+   eden::tester_clear_global_singleton();
+   eden::globals globals("eden.gm"_n);
+   CHECK(globals.get().stage == eden::contract_stage::genesis);
+   }
+
    t.bertie.act<actions::inductprofil>(4, bertie_profile);
    t.bertie.act<token::actions::transfer>("bertie"_n, "eden.gm"_n, s2a("100.0000 EOS"), "memo");
    t.bertie.act<actions::inductdonate>("bertie"_n, 4, s2a("10.0000 EOS"));
@@ -267,9 +273,11 @@ TEST_CASE("genesis")
    CHECK(get_eden_membership("egeon"_n).status() == eden::member_status::active_member);
    CHECK(get_eden_membership("bertie"_n).status() == eden::member_status::active_member);
 
+   {
    eden::tester_clear_global_singleton();
    eden::globals globals("eden.gm"_n);
    CHECK(globals.get().stage == eden::contract_stage::active);
+   }
    
    CHECK(get_table_size<eden::induction_table_type>() == 0);
    CHECK(get_table_size<eden::endorsement_table_type>() == 0);

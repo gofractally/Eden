@@ -39,6 +39,12 @@ namespace eden
       eosio::check(inductions_tb.begin() != inductions_tb.end(), "No inductions");
       auto genesis_video = inductions_tb.begin()->video();
 
+      for(const auto& induction: inductions_tb)
+      {
+         inductions_tb.modify(induction, get_self(), [&](auto& row){ ++row.endorsements(); });
+         inductions.create_endorsement(induction.inviter(), induction.invitee(), newmember, induction.id(), true);
+      }
+      
       uint64_t induction_id = members.stats().active_members + members.stats().pending_members;
       auto inviter = get_self();
       auto invitee = newmember;
