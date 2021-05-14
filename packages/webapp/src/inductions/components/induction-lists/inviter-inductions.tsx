@@ -21,7 +21,7 @@ export const InviterInductions = ({ inductions }: Props) => (
     <InductionTable.Table
         columns={INVITER_INDUCTION_COLUMNS}
         data={getTableData(inductions)}
-        tableHeader="My outstanding invitations"
+        tableHeader="People I'm inviting"
     />
 );
 
@@ -31,8 +31,8 @@ const INVITER_INDUCTION_COLUMNS: InductionTable.Column[] = [
         label: "Invitee",
     },
     {
-        key: "inviter_voters",
-        label: "Inviter & Voters",
+        key: "inviter_witnesses",
+        label: "Inviter & Witnesses",
         className: "hidden md:flex",
     },
     {
@@ -74,7 +74,7 @@ const getTableData = (inductions: Induction[]): InductionTable.Row[] => {
         return {
             key: ind.id,
             invitee: ind.new_member_profile.name || ind.invitee,
-            inviter_voters: endorsers,
+            inviter_witnesses: endorsers,
             time_remaining: remainingTime,
             status: (
                 <InviterInductionStatus
@@ -153,7 +153,7 @@ const InviterInductionStatus = ({
                     fullWidth
                     href={`/induction/${induction.id}`}
                 >
-                    Endorse
+                    Review &amp; Endorse
                 </ActionButton>
             );
         default:

@@ -50,25 +50,57 @@ export const INVITER_INDUCTION_STEPS: Step[] = [
     },
     {
         title: "ALL DONE",
-        text: "NFTs are minted. We have new member!",
+        text: "NFTs are minted. We have a new member!",
+    },
+];
+
+export const GENESIS_INDUCTION_STEPS: Step[] = [
+    {
+        title: "SET UP YOUR PROFILE",
+        text: "Let the community know who you are.",
+    },
+    {
+        title: "DONATE",
+        text: `Give ${assetToString(
+            minimumDonationAmount
+        )} to the Eden community.`,
+    },
+    {
+        title: "STAND BY",
+        text:
+            "All Genesis members must complete the process for the community to go live.",
+    },
+    {
+        title: "YOU'RE IN",
+        text: "The community is activated. Welcome to Eden.",
     },
 ];
 
 export enum InductionRole {
     INVITEE = "invitee",
     INVITER = "inviter",
+    GENESIS = "genesis",
 }
 
 interface Props {
     role: InductionRole;
     step: 1 | 2 | 3 | 4 | 5;
+    vAlign?: "top" | "center";
     children: React.ReactNode;
 }
 
-export const InductionJourneyContainer = ({ role, step, children }: Props) => {
+export const InductionJourneyContainer = ({
+    role,
+    step,
+    vAlign = "center",
+    children,
+}: Props) => {
     let steps: Step[];
 
     switch (role) {
+        case InductionRole.GENESIS:
+            steps = GENESIS_INDUCTION_STEPS;
+            break;
         case InductionRole.INVITEE:
             steps = INVITEE_INDUCTION_STEPS;
             break;
@@ -77,9 +109,11 @@ export const InductionJourneyContainer = ({ role, step, children }: Props) => {
             break;
     }
 
+    const vAlignClass = vAlign === "center" ? "lg:items-center" : "";
+
     return (
         <Card>
-            <div className="flex lg:items-center flex-col lg:flex-row">
+            <div className={`flex flex-col lg:flex-row ${vAlignClass}`}>
                 <div className="lg:w-1/2 xl:w-3/5 px-4 sm:px-12 md:px-16 xl:px-24 pt-8 pb-4">
                     {children}
                 </div>

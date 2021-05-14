@@ -23,6 +23,18 @@ export const Index = () => (
                         together to empower you and your family to make a bigger
                         impact in the world.
                     </Text>
+                    <Text>
+                        To learn more about Eden and how you can get involved,
+                        visit{" "}
+                        <Link
+                            href="https://edeneos.org"
+                            target="_blank"
+                            isExternal
+                        >
+                            EdenEOS.org
+                        </Link>
+                        .
+                    </Text>
                 </div>
             </Card>
             <Card

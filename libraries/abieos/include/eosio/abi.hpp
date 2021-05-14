@@ -5,8 +5,15 @@
 #include <string>
 #include <variant>
 #include <vector>
+#include "asset.hpp"
+#include "bytes.hpp"
+#include "crypto.hpp"
+#include "fixed_bytes.hpp"
+#include "float.hpp"
 #include "name.hpp"
+#include "time.hpp"
 #include "types.hpp"
+#include "varint.hpp"
 
 namespace eosio
 {
@@ -78,6 +85,12 @@ namespace eosio
       return from_json(obj.value, stream);
    }
 
+   template <typename T, typename S>
+   void to_json(const might_not_exist<T>& val, S& stream)
+   {
+      return to_json(val.value, stream);
+   }
+
    [[nodiscard]] inline bool check_abi_version(const std::string& s, std::string& error)
    {
       if (s.substr(0, 13) != "eosio::abi/1.")
@@ -88,14 +101,20 @@ namespace eosio
       return true;
    }
 
-   using abi_extensions_type = std::vector<std::pair<uint16_t, std::vector<char>>>;
+   struct abi_extension
+   {
+      uint16_t id;
+      std::vector<uint8_t> data;
+   };
+   EOSIO_REFLECT(abi_extension, id, data);
+
+   using abi_extensions_type = std::vector<abi_extension>;
 
    struct type_def
    {
       std::string new_type_name{};
       std::string type{};
    };
-
    EOSIO_REFLECT(type_def, new_type_name, type);
 
    struct field_def
@@ -103,7 +122,6 @@ namespace eosio
       std::string name{};
       std::string type{};
    };
-
    EOSIO_REFLECT(field_def, name, type);
 
    struct struct_def
@@ -112,7 +130,6 @@ namespace eosio
       std::string base{};
       std::vector<field_def> fields{};
    };
-
    EOSIO_REFLECT(struct_def, name, base, fields);
 
    struct action_def
@@ -121,7 +138,6 @@ namespace eosio
       std::string type{};
       std::string ricardian_contract{};
    };
-
    EOSIO_REFLECT(action_def, name, type, ricardian_contract);
 
    struct table_def
@@ -132,7 +148,6 @@ namespace eosio
       std::vector<std::string> key_types{};
       std::string type{};
    };
-
    EOSIO_REFLECT(table_def, name, index_type, key_names, key_types, type);
 
    struct clause_pair
@@ -140,7 +155,6 @@ namespace eosio
       std::string id{};
       std::string body{};
    };
-
    EOSIO_REFLECT(clause_pair, id, body);
 
    struct error_message
@@ -148,7 +162,6 @@ namespace eosio
       uint64_t error_code{};
       std::string error_msg{};
    };
-
    EOSIO_REFLECT(error_message, error_code, error_msg);
 
    struct variant_def
@@ -156,7 +169,6 @@ namespace eosio
       std::string name{};
       std::vector<std::string> types{};
    };
-
    EOSIO_REFLECT(variant_def, name, types);
 
    struct abi_def
@@ -171,7 +183,6 @@ namespace eosio
       abi_extensions_type abi_extensions{};
       might_not_exist<std::vector<variant_def>> variants{};
    };
-
    EOSIO_REFLECT(abi_def,
                  version,
                  types,
@@ -387,4 +398,42 @@ namespace eosio
       return add_type(*this, (T*)nullptr);
    }
 
+   template <typename F>
+   constexpr void for_each_abi_type(F f)
+   {
+      static_assert(sizeof(float) == 4);
+      static_assert(sizeof(double) == 8);
+
+      f((bool*)nullptr);
+      f((int8_t*)nullptr);
+      f((uint8_t*)nullptr);
+      f((int16_t*)nullptr);
+      f((uint16_t*)nullptr);
+      f((int32_t*)nullptr);
+      f((uint32_t*)nullptr);
+      f((int64_t*)nullptr);
+      f((uint64_t*)nullptr);
+      f((__int128_t*)nullptr);
+      f((__uint128_t*)nullptr);
+      f((varuint32*)nullptr);
+      f((varint32*)nullptr);
+      f((float*)nullptr);
+      f((double*)nullptr);
+      f((float128*)nullptr);
+      f((time_point*)nullptr);
+      f((time_point_sec*)nullptr);
+      f((block_timestamp*)nullptr);
+      f((name*)nullptr);
+      f((bytes*)nullptr);
+      f((std::string*)nullptr);
+      f((checksum160*)nullptr);
+      f((checksum256*)nullptr);
+      f((checksum512*)nullptr);
+      f((public_key*)nullptr);
+      f((private_key*)nullptr);
+      f((signature*)nullptr);
+      f((symbol*)nullptr);
+      f((symbol_code*)nullptr);
+      f((asset*)nullptr);
+   }
 }  // namespace eosio

@@ -50,46 +50,6 @@ namespace
       return (... || std::holds_alternative<T>(v));
    }
 
-   template <typename F>
-   constexpr void for_each_abi_type(F f)
-   {
-      static_assert(sizeof(float) == 4);
-      static_assert(sizeof(double) == 8);
-
-      using namespace ::abieos;
-      f((bool*)nullptr);
-      f((int8_t*)nullptr);
-      f((uint8_t*)nullptr);
-      f((int16_t*)nullptr);
-      f((uint16_t*)nullptr);
-      f((int32_t*)nullptr);
-      f((uint32_t*)nullptr);
-      f((int64_t*)nullptr);
-      f((uint64_t*)nullptr);
-      f((int128*)nullptr);
-      f((uint128*)nullptr);
-      f((varuint32*)nullptr);
-      f((varint32*)nullptr);
-      f((float*)nullptr);
-      f((double*)nullptr);
-      f((float128*)nullptr);
-      f((time_point*)nullptr);
-      f((time_point_sec*)nullptr);
-      f((block_timestamp*)nullptr);
-      f((name*)nullptr);
-      f((bytes*)nullptr);
-      f((std::string*)nullptr);
-      f((checksum160*)nullptr);
-      f((checksum256*)nullptr);
-      f((checksum512*)nullptr);
-      f((public_key*)nullptr);
-      f((private_key*)nullptr);
-      f((signature*)nullptr);
-      f((symbol*)nullptr);
-      f((symbol_code*)nullptr);
-      f((asset*)nullptr);
-   }
-
    abi_type* get_type(std::map<std::string, abi_type>& abi_types,
                       const std::string& name,
                       int depth)

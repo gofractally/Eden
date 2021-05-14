@@ -37,8 +37,8 @@ export const MemberPage = ({ account }: Props) => {
         return (
             <RawLayout title={`${member.name}'s Profile`}>
                 <Card>
-                    <div className="flex justify-center items-center space-y-10 xl:space-y-0 xl:space-x-10 flex-col xl:flex-row">
-                        <div className="max-w-xl">
+                    <div className="flex justify-center items-center space-y-10 xl:space-y-0 xl:space-x-20 flex-col xl:flex-row">
+                        <div className="max-w-2xl">
                             <MemberHoloCard member={member} />
                         </div>
                         <MemberCard member={member} />

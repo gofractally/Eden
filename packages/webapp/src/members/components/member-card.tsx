@@ -15,7 +15,7 @@ export const MemberCard = ({ member }: Props) => {
     return (
         <div
             data-testid={`member-card-${member.account}`}
-            className="px-2 sm:px-8 flex flex-col max-w-xl"
+            className="px-2 flex flex-col max-w-2xl"
         >
             <MemberSocialLinks member={member} />
             <section className="py-4">
@@ -38,7 +38,7 @@ export const MemberCard = ({ member }: Props) => {
 
 const MemberBio = ({ bio }: { bio: string }) => {
     const [expanded, setExpanded] = useState(false);
-    const TRUNCATION_THRESHOLD_IN_CHARS = 235;
+    const TRUNCATION_THRESHOLD_IN_CHARS = 310;
     const shouldTruncate = bio.length > TRUNCATION_THRESHOLD_IN_CHARS;
 
     const toggleExpanded = (e: React.MouseEvent) => {

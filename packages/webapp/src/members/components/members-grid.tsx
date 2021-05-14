@@ -60,7 +60,7 @@ export const MemberSquare = ({ member }: { member: MemberData }) => {
 const baseBadge = "rounded px-2 text-xs";
 
 const MemberImage = ({ member }: { member: MemberData }) => {
-    const imageClass = "h-40 sm:h-32 w-full object-cover object-top mx-auto";
+    const imageClass = "h-60 md:h-44 w-full object-cover object-center mx-auto";
     if (member.account) {
         return (
             <div className="relative">

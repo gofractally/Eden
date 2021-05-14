@@ -106,15 +106,7 @@ namespace eden
          inductions.queue_gc(inductee);
       }
 
-      // If this is the last genesis member, activate the contract
-      globals globals{get_self()};
-      if (globals.get().stage == contract_stage::genesis)
-      {
-         if (members.stats().pending_members == 0)
-         {
-            globals.set_stage(contract_stage::active);
-         }
-      }
+      members.maybe_activate_contract();
    }
 
    void eden::gc(uint32_t limit)
@@ -129,6 +121,7 @@ namespace eden
          {
             members.remove_if_pending(member);
          }
+         members.maybe_activate_contract();
       }
    }
 

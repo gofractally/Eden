@@ -1,6 +1,8 @@
 import { blockExplorerAccountBaseUrl } from "config";
 import {
-    FaBlogger,
+  HiOutlineLink
+} from "react-icons/hi"
+import {
     FaFacebook,
     FaLinkedin,
     FaTelegram,
@@ -48,7 +50,7 @@ export const MemberSocialLinks = ({ member }: Props) => (
         {member.socialHandles.blog && (
             <SocialButton
                 handle="Blog"
-                icon={FaBlogger}
+                icon={HiOutlineLink}
                 color="black"
                 size={4}
                 href={urlify(member.socialHandles.blog)}

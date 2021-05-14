@@ -4,10 +4,10 @@ import {
     Card,
     useFetchedData,
     useUALAccount,
-    getIsCommunityActive,
     ActionButton,
     ActionButtonSize,
     useCurrentMember,
+    useIsCommunityActive,
 } from "_app";
 import {
     Endorsement,
@@ -20,10 +20,10 @@ import { MemberStatus } from "members";
 export const InductionPage = () => {
     const [ualAccount, _, ualShowModal] = useUALAccount();
 
-    const [
-        isActiveCommunity,
-        isLoadingCommunityState,
-    ] = useFetchedData<boolean>(getIsCommunityActive);
+    const {
+        data: isActiveCommunity,
+        isLoading: isLoadingCommunityState,
+    } = useIsCommunityActive();
 
     const {
         data: edenMember,

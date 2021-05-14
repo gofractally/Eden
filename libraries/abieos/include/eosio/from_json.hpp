@@ -9,6 +9,7 @@
 #include <vector>
 #include "check.hpp"
 #include "for_each_field.hpp"
+#include "types.hpp"
 
 namespace eosio
 {

@@ -44,11 +44,13 @@ namespace eden
                  video,
                  new_member_profile)
 
+   using induction_variant = std::variant<induction_v0>;
+
    struct induction
    {
       induction() = default;
       induction(const induction&) = delete;
-      std::variant<induction_v0> value;
+      induction_variant value;
       EDEN_FORWARD_MEMBERS(value,
                            id,
                            inviter,
@@ -92,9 +94,11 @@ namespace eden
    };
    EOSIO_REFLECT(endorsement_v0, id, inviter, invitee, endorser, induction_id, endorsed)
 
+   using endorsement_variant = std::variant<endorsement_v0>;
+
    struct endorsement
    {
-      std::variant<endorsement_v0> value;
+      endorsement_variant value;
       EDEN_FORWARD_MEMBERS(value, id, inviter, invitee, endorser, induction_id, endorsed)
       EDEN_FORWARD_FUNCTIONS(value, primary_key, get_endorser_key, induction_id_key)
    };

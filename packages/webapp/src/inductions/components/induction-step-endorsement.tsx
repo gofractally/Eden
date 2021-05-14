@@ -33,6 +33,7 @@ import {
 interface Props {
     induction: Induction;
     endorsements: Endorsement[];
+    isCommunityActive?: boolean;
     setReviewStep: (step: "profile" | "video") => void;
 }
 
@@ -151,15 +152,29 @@ export const InductionStepEndorsement = (props: Props) => {
             </span>
         );
 
+    const getInductionJourneyRole = () => {
+        if (!props.isCommunityActive) {
+            return InductionRole.GENESIS;
+        } else if (!ualAccount || isInvitee) {
+            return InductionRole.INVITEE;
+        }
+        return InductionRole.INVITER;
+    };
+
+    const getInductionJourneyStep = () => {
+        if (!props.isCommunityActive) {
+            return 2;
+        } else if (isFullyEndorsed) {
+            return 4;
+        }
+        return 3;
+    };
+
     return (
         <>
             <InductionJourneyContainer
-                role={
-                    !ualAccount || isInvitee
-                        ? InductionRole.INVITEE
-                        : InductionRole.INVITER
-                }
-                step={isFullyEndorsed ? 4 : 3}
+                role={getInductionJourneyRole()}
+                step={getInductionJourneyStep()}
             >
                 <Heading size={1} className="mb-2">
                     {isFullyEndorsed ? "Pending donation" : "Endorsements"}
@@ -169,24 +184,31 @@ export const InductionStepEndorsement = (props: Props) => {
                     {getInductionRemainingTimeDays(induction)}.
                 </Text>
                 <div>
-                    <Heading size={3} className="mb-2">
-                        Endorsement status:
-                    </Heading>
-                    <ul className="mb-4 ml-2">
-                        {endorsements.map((endorser) => (
-                            <li key={endorser.id}>
-                                {getEndorserStatus(endorser)}{" "}
-                                <Link href={`/members/${endorser.endorser}`}>
-                                    <span className="text-gray-800 hover:underline">
-                                        {getEndorserName(endorser)}
-                                    </span>
-                                </Link>
-                            </li>
-                        ))}
-                    </ul>
+                    {endorsements.length > 0 && (
+                        <>
+                            <Heading size={3} className="mb-2">
+                                Endorsement status:
+                            </Heading>
+                            <ul className="mb-4 ml-2">
+                                {endorsements.map((endorser) => (
+                                    <li key={endorser.id}>
+                                        {getEndorserStatus(endorser)}{" "}
+                                        <Link
+                                            href={`/members/${endorser.endorser}`}
+                                        >
+                                            <span className="text-gray-800 hover:underline">
+                                                {getEndorserName(endorser)}
+                                            </span>
+                                        </Link>
+                                    </li>
+                                ))}
+                            </ul>
+                        </>
+                    )}
                     {isFullyEndorsed ? (
                         <DonationForm
                             isLoading={isLoading}
+                            isCommunityActive={props.isCommunityActive}
                             setReviewStep={props.setReviewStep}
                             submitDonation={submitDonation}
                             isInvitee={isInvitee}
@@ -297,46 +319,67 @@ const EndorsingForm = ({
 };
 
 interface DonationFormProps {
+    isCommunityActive?: boolean;
     isInvitee: boolean;
     isLoading: boolean;
     setReviewStep: (step: "profile" | "video") => void;
     submitDonation: () => void;
 }
 const DonationForm = ({
+    isCommunityActive,
     isInvitee,
     isLoading,
     setReviewStep,
     submitDonation,
 }: DonationFormProps) => {
+    const [isProfileReviewed, setReviewedProfile] = useState(false);
     return isInvitee ? (
         <div className="space-y-3">
             <Text>
-                This is your last chance to review your profile for completeness
-                and accuracy. If anything needs to be corrected,{" "}
+                This is your last chance to review your profile below for
+                completeness and accuracy. If anything needs to be corrected,{" "}
                 <Link onClick={() => setReviewStep("profile")}>click here</Link>
-                . Keep in mind that modifying your profile will require your
-                endorsers to submit their endorsements again.
+                .
+                {isCommunityActive &&
+                    " Keep in mind that modifying your profile will require your endorsers to submit their endorsements again."}
             </Text>
             <Text>
-                If everything looks good, click on the button below to make your
-                donation to the Eden community. Once completed, your membership
-                will be activated and your Eden NFTs will be minted and
-                distributed.
+                If everything looks good, submit your donation to proceed.
+                {isCommunityActive &&
+                    " Once completed, your membership will be activated and your Eden NFTs will be minted and distributed."}
             </Text>
+            <div className="p-3 border rounded-md">
+                <Form.Checkbox
+                    id="reviewed"
+                    label="I have carefully reviewed my profile image, links and information below and confirm their accuracy. I understand that by submitting my donation, my Eden NFTs will be minted and changes to my profile or this NFT series will not be possible."
+                    value={Number(isProfileReviewed)}
+                    onChange={() => setReviewedProfile(!isProfileReviewed)}
+                />
+            </div>
             <div className="pt-1">
-                <ActionButton disabled={isLoading} onClick={submitDonation}>
+                <ActionButton
+                    disabled={isLoading || !isProfileReviewed}
+                    onClick={submitDonation}
+                >
                     {isLoading
                         ? "Submitting donation..."
                         : `Donate ${assetToString(minimumDonationAmount)}`}
                 </ActionButton>
             </div>
         </div>
-    ) : (
+    ) : isCommunityActive ? (
         <Text>
             This induction is fully endorsed! As soon as the prospective member
             completes their donation to the Eden community, their membership
             will be activated and their Eden NFTs will be minted and
             distributed.
+        </Text>
+    ) : (
+        <Text>
+            As soon as this prospective member completes their donation to the
+            Eden community, their membership is ready for activation. Once all
+            Genesis members are fully inducted, memberships will be activated
+            and Eden NFTs will be distributed.
         </Text>
     );
 };
