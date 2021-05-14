@@ -27,11 +27,11 @@ export const Index = () => (
                         To learn more about Eden and how you can get involved,
                         visit{" "}
                         <Link
-                            href="https://edeneos.org"
+                            href="http://eden.eoscommunity.org"
                             target="_blank"
                             isExternal
                         >
-                            EdenEOS.org
+                            eden.eoscommunity.org
                         </Link>
                         .
                     </Text>
