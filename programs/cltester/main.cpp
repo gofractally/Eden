@@ -752,7 +752,7 @@ struct callbacks
          throw ::assert_exception(span_str(msg));
    }
 
-   void prints_l(span<const char> str) { std::cerr.write(str.data(), str.size()); }
+   void prints_l(span<const char> str) { std::cout.write(str.data(), str.size()); }
 
    void tester_get_arg_counts(wasm_ptr<uint32_t> argc, wasm_ptr<uint32_t> argv_buf_size)
    {

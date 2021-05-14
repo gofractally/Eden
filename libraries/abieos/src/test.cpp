@@ -626,8 +626,8 @@ void check_types()
    check(abieos_bin_to_json(context, 0, "string", "\x11invalid utf8: \xff\xfe\xfd", 18) ==
              std::string(R"("invalid utf8: ???")"),
          "invalid utf8");
-   check(abieos_bin_to_json(context, 0, "string", "\4\xe8\xbf\x99\n", 5) ==
-             std::string("\"\xe8\xbf\x99\\u000A\""),
+   check(abieos_bin_to_json(context, 0, "string", "\x08\xe8\xbf\x99\b\f\n\r\t", 9) ==
+             std::string("\"\xe8\xbf\x99\\b\\f\\n\\r\\t\""),
          "escaping");
    check_error(context, "Stream overrun",
                [&] { return abieos_hex_to_json(context, 0, "string", "01"); });
