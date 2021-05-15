@@ -22,12 +22,12 @@ const urlify = (address: string) => {
 };
 
 export const MemberSocialLinks = ({ member }: Props) => (
-    <div className="flex flex-col flex-wrap max-h-24 text-sm">
+    <div className="flex flex-col flex-wrap max-h-24 mt-5 text-sm w-full">
         <SocialButton
             handle={member.account}
             icon={EosCommunityIcon}
             color="black"
-            size={4}
+            size={5}
             href={explorerAccountUrl(member.account)}
         />
         {member.socialHandles.eosCommunity && (
@@ -35,7 +35,7 @@ export const MemberSocialLinks = ({ member }: Props) => (
                 handle={member.socialHandles.eosCommunity}
                 icon={IoChatbubblesOutline}
                 color="black"
-                size={4}
+                size={5}
                 href={`https://eoscommunity.org/u/${member.socialHandles.eosCommunity}`}
             />
         )}
@@ -44,7 +44,7 @@ export const MemberSocialLinks = ({ member }: Props) => (
                 handle="Blog"
                 icon={HiOutlineLink}
                 color="black"
-                size={4}
+                size={5}
                 href={urlify(member.socialHandles.blog)}
             />
         )}
@@ -53,7 +53,7 @@ export const MemberSocialLinks = ({ member }: Props) => (
                 handle={member.socialHandles.twitter}
                 icon={FaTwitter}
                 color="black"
-                size={4}
+                size={5}
                 href={`https://twitter.com/${member.socialHandles.twitter}`}
             />
         )}
@@ -62,7 +62,7 @@ export const MemberSocialLinks = ({ member }: Props) => (
                 handle={member.socialHandles.telegram}
                 icon={FaTelegram}
                 color="black"
-                size={4}
+                size={5}
                 href={`https://t.me/${member.socialHandles.telegram}`}
             />
         )}
@@ -71,7 +71,7 @@ export const MemberSocialLinks = ({ member }: Props) => (
                 handle={member.socialHandles.linkedin}
                 icon={FaLinkedin}
                 color="black"
-                size={4}
+                size={5}
                 href={`https://www.linkedin.com/in/${member.socialHandles.linkedin}`}
             />
         )}
@@ -80,7 +80,7 @@ export const MemberSocialLinks = ({ member }: Props) => (
                 handle={member.socialHandles.facebook}
                 icon={FaFacebook}
                 color="black"
-                size={4}
+                size={5}
                 href={`https://facebook.com/${member.socialHandles.facebook}`}
             />
         )}

@@ -14,16 +14,15 @@ export const MemberCard = ({ member }: Props) => {
     return (
         <div
             data-testid={`member-card-${member.account}`}
-            className="px-2 flex flex-col max-w-2xl"
+            className="px-2 flex flex-col max-w-2xl w-full"
         >
-            <MemberSocialLinks member={member} />
-            <section className="py-4">
+            <section className="py-5">
                 <MemberBio bio={member.bio} />
             </section>
             {member.inductionVideo && (
-                <div className="mx-auto">
+                <div className="mb-5">
                     <SocialButton
-                        handle="View induction ceremony"
+                        handle="View Induction Ceremony"
                         icon={FaVideo}
                         color="black"
                         size={5}
@@ -31,6 +30,8 @@ export const MemberCard = ({ member }: Props) => {
                     />
                 </div>
             )}
+            <hr />
+            <MemberSocialLinks member={member} />
         </div>
     );
 };
@@ -82,8 +83,8 @@ const MemberBio = ({ bio }: { bio: string }) => {
 
     return (
         <>
-            <p className="font-semibold">Member profile statement:</p>
-            <p className="text-gray-900 leading-snug">{renderContent()}</p>
+            <h4 className="font-semibold text-xl">Member Profile Statement</h4>
+            <p className="text-gray-900 pt-2 pl-2">{renderContent()}</p>
         </>
     );
 };
