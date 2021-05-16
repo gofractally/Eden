@@ -1,13 +1,6 @@
-import { blockExplorerAccountBaseUrl } from "config";
-import {
-  HiOutlineLink
-} from "react-icons/hi"
-import {
-    FaFacebook,
-    FaLinkedin,
-    FaTelegram,
-    FaTwitter,
-} from "react-icons/fa";
+import { explorerAccountUrl } from "config";
+import { HiOutlineLink } from "react-icons/hi";
+import { FaFacebook, FaLinkedin, FaTelegram, FaTwitter } from "react-icons/fa";
 import { IoChatbubblesOutline } from "react-icons/io5";
 import { GenIcon } from "react-icons/lib";
 
@@ -36,7 +29,7 @@ export const MemberSocialLinks = ({ member }: Props) => (
             icon={EosCommunityIcon}
             color="black"
             size={4}
-            href={`${blockExplorerAccountBaseUrl}/${member.account}`}
+            href={explorerAccountUrl(member.account)}
         />
         {member.socialHandles.eosCommunity && (
             <SocialButton

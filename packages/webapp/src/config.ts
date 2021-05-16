@@ -74,3 +74,5 @@ export const chainConfig = {
 };
 
 export const ipfsUrl = (ipfsHash: string) => `${ipfsBaseUrl}/${ipfsHash}`;
+export const explorerAccountUrl = (accountName: string) =>
+    `${blockExplorerAccountBaseUrl}/${accountName}`;
