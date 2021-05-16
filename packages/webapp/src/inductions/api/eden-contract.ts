@@ -69,23 +69,24 @@ export const getCurrentInductions = async (
     const indexPosition = isActive ? INDEX_BY_INVITER : INDEX_BY_INVITEE;
     const { lower, upper } = i128BoundsForAccount(account);
 
-    const inductions: Induction[] = await getTableIndexRows(
-        CONTRACT_INDUCTION_TABLE,
-        indexPosition,
-        "i128",
-        lower,
-        upper,
-        9999
-    );
-
-    const endorsements: Endorsement[] = await getTableIndexRows(
-        CONTRACT_ENDORSEMENT_TABLE,
-        INDEX_BY_ENDORSER,
-        "i128",
-        lower,
-        upper,
-        99999
-    );
+    const [inductions, endorsements] = (await Promise.all([
+        getTableIndexRows(
+            CONTRACT_INDUCTION_TABLE,
+            indexPosition,
+            "i128",
+            lower,
+            upper,
+            9999
+        ),
+        getTableIndexRows(
+            CONTRACT_ENDORSEMENT_TABLE,
+            INDEX_BY_ENDORSER,
+            "i128",
+            lower,
+            upper,
+            99999
+        ),
+    ])) as [Induction[], Endorsement[]];
 
     return { inductions, endorsements };
 };
