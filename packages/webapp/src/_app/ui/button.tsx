@@ -33,9 +33,9 @@ export const Button = ({
     const buttonColor = disabled ? "gray" : color || "yellow";
 
     const buttonColorBg = outline
-        ? "bg-white"
+        ? "bg-white dark:bg-gray-800"
         : disabled
-        ? `bg-gray-300`
+        ? `bg-gray-300 dark:bg-gray-800`
         : `bg-${buttonColor}-500`;
 
     const buttonColorBgHover = disabled

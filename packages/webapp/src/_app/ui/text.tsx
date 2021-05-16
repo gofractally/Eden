@@ -6,7 +6,9 @@ interface Props {
 }
 
 export const Text = ({ children, className }: Props) => {
-    const textClass = `text-base text-gray-600 ${className || ""}`;
+    const textClass = `text-base text-gray-600 dark:text-gray-300 ${
+        className || ""
+    }`;
 
     return <p className={textClass}>{children}</p>;
 };

@@ -8,7 +8,7 @@ interface Props {
 }
 
 export const RawLayout = ({ children, title }: Props) => (
-    <div className="bg-gray-50 min-h-screen">
+    <div className="bg-gray-50 dark:bg-gray-800 min-h-screen">
         <HeaderNav />
         <Head>
             <title>{title && `${title} | `} Eden</title>

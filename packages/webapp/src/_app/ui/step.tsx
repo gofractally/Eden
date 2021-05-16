@@ -24,7 +24,7 @@ const SingleStep = ({ step, last, current, complete }: SingleStepProps) => {
             )}
 
             <div className="flex-grow pl-4">
-                <h2 className="font-medium title-font text-sm text-gray-900 mb-1 tracking-wider">
+                <h2 className="font-medium title-font text-sm text-gray-900 dark:text-gray-300 mb-1 tracking-wider">
                     {step.title}
                 </h2>
                 <p className="leading-relaxed">{step.text}</p>

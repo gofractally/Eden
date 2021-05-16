@@ -35,7 +35,7 @@ const DarkModeSetting = () => {
 };
 
 export const HeaderNav = () => (
-    <header className="text-gray-600 body-font border-b border-gray-200 bg-white">
+    <header className="text-gray-600 body-font border-b border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700">
         <div className="container mx-auto flex flex-wrap py-3 flex-col md:flex-row items-center">
             <HeaderLogo />
             <nav className="md:mr-auto md:ml-4 md:py-1 md:pl-4 md:border-l md:border-gray-400	flex flex-wrap items-center text-base justify-center">
@@ -49,7 +49,7 @@ export const HeaderNav = () => (
 
 const HeaderLogo = () => (
     <Link href="/">
-        <a className="flex title-font items-center mb-4 md:mb-0">
+        <a className="flex title-font items-center mb-4 md:mb-0 dark:bg-gray-400 dark:border rounded dark:rounded-2xl">
             <img
                 src="/images/eden-logo.svg"
                 alt="Eden logo"
@@ -75,7 +75,8 @@ const HeaderItems = ({ menuItems }: { menuItems: MenuItem[] }) => {
     );
 };
 
-const HEADER_LINK_BASE_CLASS = "mr-5 last:mr-0 hover:text-gray-900 ";
+const HEADER_LINK_BASE_CLASS =
+    "mr-5 last:mr-0 hover:text-gray-900 dark:text-gray-400";
 
 const HeaderItemLink = ({
     href,
@@ -86,7 +87,8 @@ const HeaderItemLink = ({
     const { pathname } = useRouter();
     const active = exactPath ? pathname === href : pathname.startsWith(href);
     const linkClass =
-        HEADER_LINK_BASE_CLASS + (active ? "text-gray-900 font-bold" : "");
+        HEADER_LINK_BASE_CLASS +
+        (active ? "text-gray-900 font-bold dark:text-gray-200" : "");
     return (
         <Link href={href}>
             <a className={linkClass} onClick={handleNavigationClick}>
@@ -109,7 +111,7 @@ const AccountMenu = () => {
     };
 
     return ualAccount ? (
-        <div className="mt-2 md:mt-0 space-x-3 hover:text-gray-900">
+        <div className="mt-2 md:mt-0 space-x-3 hover:text-gray-900 dark:text-gray-300">
             <Link href={`/members/${accountName}`}>
                 <a>{member?.name || accountName || "(unknown)"}</a>
             </Link>

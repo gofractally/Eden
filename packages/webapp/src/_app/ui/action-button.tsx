@@ -50,7 +50,7 @@ export const ActionButton = ({
     className = "",
 }: Props) => {
     const baseClass =
-        "inline-block items-center text-center border focus:outline-none";
+        "inline-block items-center text-center border focus:outline-none dark:bg-blue-700 dark:bg-border-blue-700";
     const widthClass = fullWidth ? "w-full" : "";
     let colorClass = disabled ? ActionButtonType.DISABLED : type;
     const cursorClass = disabled ? "cursor-not-allowed" : "cursor-pointer";
