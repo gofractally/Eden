@@ -1,14 +1,16 @@
 import type { NextApiRequest, NextApiResponse } from "next";
-import IpfsHash from "ipfs-only-hash";
-import FormData from "form-data";
-import axios from "axios";
 
 import { eosDefaultApi, eosJsonRpc } from "_app";
 import { handleErrors } from "_api/error-handlers";
 import { IpfsPostRequest, ipfsPostSchema } from "_api/schemas";
 import { edenContractAccount, ipfsConfig } from "config";
 
-export default (req: NextApiRequest, res: NextApiResponse) => {
+const VALID_UPLOAD_ACTIONS = [
+    `${edenContractAccount}::inductprofil`,
+    `${edenContractAccount}::inductvideo`,
+];
+
+export default async (req: NextApiRequest, res: NextApiResponse) => {
     switch (req.method) {
         case "POST":
             return ipfsUploadHandler(req, res);
@@ -16,11 +18,6 @@ export default (req: NextApiRequest, res: NextApiResponse) => {
             return handleErrors(res, ["request not supported"]);
     }
 };
-
-const VALID_UPLOAD_ACTIONS = [
-    `${edenContractAccount}::inductprofil`,
-    `${edenContractAccount}::inductvideo`,
-];
 
 const ipfsUploadHandler = async (req: NextApiRequest, res: NextApiResponse) => {
     const result = ipfsPostSchema.safeParse(req.body);
@@ -52,11 +49,7 @@ const ipfsUploadHandler = async (req: NextApiRequest, res: NextApiResponse) => {
         return handleErrors(res, ["unable to parse action data ipfs cid"]);
     }
 
-    console.info(actionIpfsCid);
-
-    const fileBytes = Uint8Array.from(request.file);
-    const uploadedFileHash = await IpfsHash.of(fileBytes);
-    if (uploadedFileHash !== actionIpfsCid) {
+    if (request.cid !== actionIpfsCid) {
         return handleErrors(res, [
             "uploaded file is different than stated in signed transaction",
         ]);
@@ -66,9 +59,10 @@ const ipfsUploadHandler = async (req: NextApiRequest, res: NextApiResponse) => {
         signatures,
         serializedTransaction,
     });
-    const uploadedFile = await uploadToIpfs(uploadedFileHash, fileBytes);
 
-    res.status(200).json({ broadcastedTrx, uploadedFile });
+    const pinResults = await pinIpfsCid(request.cid);
+
+    res.status(200).json({ broadcastedTrx, pinResults });
 };
 
 const parseActionIpfsCid = async (action: any): Promise<string | undefined> => {
@@ -81,18 +75,18 @@ const parseActionIpfsCid = async (action: any): Promise<string | undefined> => {
     }
 };
 
-const uploadToIpfs = async (filename: string, file: Uint8Array) => {
-    const formData = new FormData();
-    formData.append("file", Buffer.from(file), { filename });
-
-    const response = await axios.post(ipfsConfig.uploadEndpointUrl, formData, {
-        maxBodyLength: Number.POSITIVE_INFINITY,
+const pinIpfsCid = async (cid: string) => {
+    console.info(`pinning ${cid}...`);
+    const body = { cid, name: cid };
+    const pinResponse = await fetch(`${ipfsConfig.pinataApi}/pins`, {
+        method: "POST",
         headers: {
-            "Content-Type": `multipart/form-data; boundary=${formData.getBoundary()}`,
             Authorization: `Bearer ${ipfsConfig.pinataJwt}`,
+            "Content-Type": "application/json",
         },
+        body: JSON.stringify(body),
     });
-
-    const responseData = response.data;
-    return responseData;
+    const pinResults = await pinResponse.json();
+    console.info(`pin file requested successfully!`, pinResults);
+    return pinResults;
 };

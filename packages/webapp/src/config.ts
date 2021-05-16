@@ -75,6 +75,7 @@ export const chainConfig = {
 
 // SECRETS CONFIG
 export const ipfsConfig = {
+    pinataApi: process.env.IPFS_PINATA_API || "",
     pinataJwt: process.env.IPFS_PINATA_JWT || "",
     uploadEndpointUrl: process.env.IPFS_UPLOAD_ENDPOINT_URL || "",
 };

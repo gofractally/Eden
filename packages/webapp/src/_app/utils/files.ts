@@ -11,10 +11,10 @@ export const getFileBase64 = (file: File): Promise<string> => {
 
 export const uploadIpfsFileWithTransaction = async (
     signedTrx: any,
-    fileContent: Uint8Array
+    cid: string
 ) => {
     const request: IpfsPostRequest = {
-        file: Array.from(fileContent),
+        cid,
         eosTransaction: {
             signatures: signedTrx.transaction.signatures,
             serializedTransaction: Array.from(

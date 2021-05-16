@@ -11,12 +11,11 @@
         "test-dev": "cypress open"
     },
     "dependencies": {
-        "axios": "^0.21.1",
         "cids": "^1.1.6",
         "dayjs": "^1.10.4",
         "eosjs": "^21.0.3",
-        "form-data": "^4.0.0",
         "hash.js": "^1.1.7",
+        "ipfs-http-client": "^50.0.0",
         "ipfs-only-hash": "^4.0.0",
         "next": "~10",
         "nprogress": "^0.2.0",

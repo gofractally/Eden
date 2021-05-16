@@ -1,5 +1,6 @@
-import React, { useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import IpfsHash from "ipfs-only-hash";
+const { create: ipfsHttpClient } = require("ipfs-http-client");
 
 import {
     ActionButton,
@@ -11,7 +12,6 @@ import {
     uploadIpfsFileWithTransaction,
     useUALAccount,
 } from "_app";
-import { IpfsPostRequest } from "_api/schemas";
 
 import { Induction, NewMemberProfile } from "../interfaces";
 import { setInductionProfileTransaction } from "../transactions";
@@ -26,6 +26,8 @@ interface Props {
     isReviewing?: boolean;
 }
 
+const IPFS_CLIENT = ipfsHttpClient("https://ipfs.infura.io:5001/api/v0");
+
 export const InductionStepProfile = ({
     induction,
     isCommunityActive,
@@ -39,6 +41,14 @@ export const InductionStepProfile = ({
     const isInvitee = ualAccount?.accountName === induction.invitee;
     const isInviter = ualAccount?.accountName === induction.inviter;
 
+    const saveToIpfs = async (file: File) => {
+        const uploadResponse = await IPFS_CLIENT.add(file, {
+            progress: (prog: any) => console.log(`received: ${prog}`),
+        });
+        console.log(uploadResponse);
+        return uploadResponse;
+    };
+
     const submitInductionProfileTransaction = async (
         newMemberProfile: NewMemberProfile,
         uploadedImage?: File
@@ -48,7 +58,11 @@ export const InductionStepProfile = ({
                 ? new Uint8Array(await uploadedImage.arrayBuffer())
                 : undefined;
             if (uploadedImageContent) {
+                const uploadedCid = await saveToIpfs(uploadedImage!);
                 newMemberProfile.img = await IpfsHash.of(uploadedImageContent);
+                if (uploadedCid.path !== newMemberProfile.img) {
+                    throw new Error("uploaded cid does not match...");
+                }
             }
 
             const authorizerAccount = ualAccount.accountName;
@@ -66,7 +80,7 @@ export const InductionStepProfile = ({
             if (uploadedImageContent) {
                 await uploadIpfsFileWithTransaction(
                     signedTrx,
-                    uploadedImageContent
+                    newMemberProfile.img
                 );
             }
 

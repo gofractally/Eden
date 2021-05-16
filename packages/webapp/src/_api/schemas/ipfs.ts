@@ -1,7 +1,7 @@
 import * as z from "zod";
 
 export const ipfsPostSchema = z.object({
-    file: z.array(z.number()),
+    cid: z.string(),
     eosTransaction: z.object({
         signatures: z.array(z.string()),
         serializedTransaction: z.array(z.number()),
