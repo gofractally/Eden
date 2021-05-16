@@ -2,7 +2,7 @@ import React from "react";
 import Link from "next/link";
 import dayjs from "dayjs";
 
-import { atomicAssets, ipfsBaseUrl } from "config";
+import { atomicAssets, ipfsUrl } from "config";
 import { MemberData } from "../interfaces";
 import { assetToString } from "_app";
 
@@ -21,7 +21,7 @@ export const MembersGrid = ({ members, dataTestId }: Props) => {
     return (
         <div className={containerClass} data-testid={dataTestId}>
             {(members.length &&
-                members.map(member => (
+                members.map((member) => (
                     <MemberSquare key={member.account} member={member} />
                 ))) ||
                 "No members to list."}
@@ -67,7 +67,7 @@ const MemberImage = ({ member }: { member: MemberData }) => {
                 <img
                     src={
                         member.image
-                            ? `${ipfsBaseUrl}/${member.image}`
+                            ? ipfsUrl(member.image)
                             : "/images/unknown-member.png"
                     }
                     className={imageClass}

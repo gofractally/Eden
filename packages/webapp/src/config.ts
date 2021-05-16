@@ -72,3 +72,5 @@ export const chainConfig = {
     chainId: process.env.NEXT_PUBLIC_EOS_CHAIN_ID,
     rpcEndpoints: [rpcEndpoint],
 };
+
+export const ipfsUrl = (ipfsHash: string) => `${ipfsBaseUrl}/${ipfsHash}`;

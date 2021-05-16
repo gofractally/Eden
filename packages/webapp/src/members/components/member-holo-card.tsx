@@ -1,7 +1,7 @@
 import dayjs from "dayjs";
 import useDimensions from "react-cool-dimensions";
 
-import { ipfsBaseUrl } from "config";
+import { ipfsUrl } from "config";
 import { MemberData } from "members";
 
 interface Props {
@@ -30,7 +30,7 @@ export const MemberHoloCard = ({ member, inducted = true }: Props) => {
                 style={{ padding: width * 0.047 }}
             >
                 <img
-                    src={`${ipfsBaseUrl}/${member.image}`}
+                    src={ipfsUrl(member.image)}
                     className="rounded-full object-cover bg-white"
                     title={memberImageTitle}
                     style={{
