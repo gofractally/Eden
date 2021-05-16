@@ -1,9 +1,14 @@
+import { useMemo } from "react";
 import dayjs from "dayjs";
 
-import { eosBlockTimestampISO } from "_app";
+import { eosBlockTimestampISO, useUALAccount } from "_app";
 import { MemberData } from "members";
-
-import { Induction, InductionStatus } from "./interfaces";
+import {
+    Endorsement,
+    Induction,
+    InductionRole,
+    InductionStatus,
+} from "./interfaces";
 
 const INDUCTION_EXPIRATION_DAYS = 7;
 
@@ -49,4 +54,39 @@ export const getInductionRemainingTimeDays = (induction?: Induction) => {
     const isExpired = induction && remainingTimeObj.isBefore(dayjs());
 
     return isExpired ? "0 days" : dayjs().to(remainingTimeObj, true);
+};
+
+export const getInductionUserRole = (
+    endorsements: Endorsement[],
+    ualAccount?: any,
+    induction?: Induction
+): InductionRole => {
+    if (!ualAccount) return InductionRole.Unauthenticated;
+    if (!induction) return InductionRole.Unknown;
+    const accountName = ualAccount.accountName;
+    if (accountName === induction.invitee) return InductionRole.Invitee;
+    if (accountName === induction.inviter) return InductionRole.Inviter;
+    if (endorsements.find((e) => e.endorser === accountName)) {
+        return InductionRole.Endorser;
+    }
+    return InductionRole.Unknown;
+};
+
+export const useInductionUserRole = (
+    endorsements: Endorsement[],
+    induction?: Induction
+): InductionRole => {
+    const [ualAccount] = useUALAccount();
+    const userRole: InductionRole = useMemo(() => {
+        if (!ualAccount) return InductionRole.Unauthenticated;
+        if (!induction) return InductionRole.Unknown;
+        const accountName = ualAccount.accountName;
+        if (accountName === induction.invitee) return InductionRole.Invitee;
+        if (accountName === induction.inviter) return InductionRole.Inviter;
+        if (endorsements.find((e) => e.endorser === accountName)) {
+            return InductionRole.Endorser;
+        }
+        return InductionRole.Unknown;
+    }, [ualAccount, induction, endorsements]);
+    return userRole;
 };

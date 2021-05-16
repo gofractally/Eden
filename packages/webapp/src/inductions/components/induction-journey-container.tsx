@@ -76,14 +76,14 @@ export const GENESIS_INDUCTION_STEPS: Step[] = [
     },
 ];
 
-export enum InductionRole {
+export enum InductionJourney {
     INVITEE = "invitee",
     INVITER = "inviter",
     GENESIS = "genesis",
 }
 
 interface Props {
-    role: InductionRole;
+    role: InductionJourney;
     step: 1 | 2 | 3 | 4 | 5;
     vAlign?: "top" | "center";
     children: React.ReactNode;
@@ -98,13 +98,13 @@ export const InductionJourneyContainer = ({
     let steps: Step[];
 
     switch (role) {
-        case InductionRole.GENESIS:
+        case InductionJourney.GENESIS:
             steps = GENESIS_INDUCTION_STEPS;
             break;
-        case InductionRole.INVITEE:
+        case InductionJourney.INVITEE:
             steps = INVITEE_INDUCTION_STEPS;
             break;
-        case InductionRole.INVITER:
+        case InductionJourney.INVITER:
             steps = INVITER_INDUCTION_STEPS;
             break;
     }

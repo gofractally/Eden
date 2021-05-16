@@ -14,7 +14,7 @@ import {
     convertPendingProfileToMemberData,
     getInductionRemainingTimeDays,
 } from "../utils";
-import { Induction } from "../interfaces";
+import { Induction, InductionRole } from "../interfaces";
 import { setInductionVideoTransaction } from "../transactions";
 import {
     InductionVideoForm,
@@ -22,21 +22,17 @@ import {
 } from "./induction-video-form";
 import {
     InductionJourneyContainer,
-    InductionRole,
+    InductionJourney,
     MemberCardPreview,
 } from "inductions";
 
 interface Props {
     induction: Induction;
-    isEndorser: boolean;
     isReviewing?: boolean;
+    role: InductionRole;
 }
 
-export const InductionStepVideo = ({
-    induction,
-    isEndorser,
-    isReviewing,
-}: Props) => {
+export const InductionStepVideo = ({ induction, isReviewing, role }: Props) => {
     const [ualAccount] = useUALAccount();
     const [submittedVideo, setSubmittedVideo] = useState(false);
     const [videoSubmissionPhase, setVideoSubmissionPhase] = useState<
@@ -73,7 +69,7 @@ export const InductionStepVideo = ({
 
     const memberData = convertPendingProfileToMemberData(induction);
 
-    // Invitee/Endorser: Induction ceremony completion confirmation
+    // Inviter/Endorser: Induction ceremony completion confirmation
     if (submittedVideo) {
         return (
             <>
@@ -83,8 +79,8 @@ export const InductionStepVideo = ({
         );
     }
 
-    // Invitee/Endorser: Waiting for induction ceremony
-    if (isEndorser) {
+    // Inviter/Endorser: Waiting for induction ceremony
+    if (role === InductionRole.Inviter || role === InductionRole.Endorser) {
         return (
             <>
                 <AddUpdateVideoHash
@@ -108,7 +104,7 @@ export const InductionStepVideo = ({
 };
 
 const VideoSubmitConfirmation = () => (
-    <InductionJourneyContainer role={InductionRole.INVITER} step={3}>
+    <InductionJourneyContainer role={InductionJourney.INVITER} step={3}>
         <Heading size={1} className="mb-5">
             Received!
         </Heading>
@@ -145,7 +141,7 @@ const AddUpdateVideoHash = ({
     isReviewing,
     submissionPhase,
 }: AddUpdateVideoHashProps) => (
-    <InductionJourneyContainer role={InductionRole.INVITER} step={3}>
+    <InductionJourneyContainer role={InductionJourney.INVITER} step={3}>
         <Heading size={1} className="mb-2">
             {isReviewing ? "Review induction video" : "Induction ceremony"}
         </Heading>
@@ -173,7 +169,7 @@ const WaitingForInductionCeremony = ({
 }: {
     induction: Induction;
 }) => (
-    <InductionJourneyContainer role={InductionRole.INVITEE} step={3}>
+    <InductionJourneyContainer role={InductionJourney.INVITEE} step={3}>
         <Heading size={1} className="mb-5">
             Pending induction ceremony
         </Heading>

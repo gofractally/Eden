@@ -9,7 +9,7 @@ import {
     ActionButtonSize,
 } from "_app";
 import { initializeInductionTransaction } from "../transactions";
-import { InductionJourneyContainer, InductionRole } from "inductions";
+import { InductionJourneyContainer, InductionJourney } from "inductions";
 import { InitInductionForm } from "./init-induction-form";
 
 interface Props {
@@ -43,7 +43,7 @@ export const InitInduction = ({ ualAccount }: Props) => {
 
     return (
         <InductionJourneyContainer
-            role={InductionRole.INVITER}
+            role={InductionJourney.INVITER}
             step={initializedInductionId ? 2 : 1}
         >
             {initializedInductionId ? (

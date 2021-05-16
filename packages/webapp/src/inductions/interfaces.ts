@@ -16,6 +16,16 @@ export interface Induction {
     new_member_profile: NewMemberProfile;
 }
 
+export enum InductionRole {
+    Inviter = "inviter",
+    Endorser = "endorser",
+    Invitee = "invitee",
+    Member = "member", // use?
+    NonMember = "non-member", // use?
+    Unauthenticated = "unauthenticated",
+    Unknown = "unknown",
+}
+
 export enum InductionStatus {
     invalid,
     expired,

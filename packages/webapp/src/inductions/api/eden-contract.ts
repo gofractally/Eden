@@ -15,15 +15,16 @@ const INDEX_BY_INVITER = 3;
 const INDEX_BY_ENDORSER = 2;
 const INDEX_BY_INDUCTION = 3;
 
-export const getInductionWithEndorsements = async (
-    inductionId: string
-): Promise<
+export const getInductionWithEndorsements = async ({
+    queryKey,
+}: any): Promise<
     | {
           induction: Induction;
           endorsements: Endorsement[];
       }
     | undefined
 > => {
+    const [_key, inductionId] = queryKey;
     const induction = await getInduction(inductionId);
     if (induction) {
         const endorsements = await getEndorsementsByInductionId(inductionId);

@@ -5,25 +5,21 @@ import {
     CallToAction,
     RawLayout,
     SingleColLayout,
-    useFetchedData,
+    useGetInductionWithEndorsements,
     useIsCommunityActive,
-    useUALAccount,
 } from "_app";
 import {
-    getInductionWithEndorsements,
-    Induction,
     InductionStepEndorsement,
     InductionStepProfile,
     InductionStepVideo,
     InductionStatus,
     getInductionStatus,
-    Endorsement,
+    useInductionUserRole,
 } from "inductions";
 
 export const InductionDetailsPage = () => {
     const router = useRouter();
     const inductionId = router.query.id;
-    const [ualAccount] = useUALAccount();
 
     const [reviewStep, setReviewStep] = useState<
         "profile" | "video" | undefined
@@ -34,27 +30,14 @@ export const InductionDetailsPage = () => {
         isLoading: isLoadingCommunityState,
     } = useIsCommunityActive();
 
-    const [inductionEndorsements, isLoadingEndorsements] = useFetchedData<{
-        induction: Induction;
-        endorsements: Endorsement[];
-    }>(getInductionWithEndorsements, inductionId);
+    const {
+        data,
+        isLoading: isLoadingEndorsements,
+    } = useGetInductionWithEndorsements(inductionId as string);
+    const induction = data?.induction;
+    const endorsements = data?.endorsements ?? [];
 
-    const induction = inductionEndorsements
-        ? inductionEndorsements.induction
-        : undefined;
-
-    const endorsements = inductionEndorsements
-        ? inductionEndorsements.endorsements
-        : [];
-
-    // TODO: Consider deriving the user's role here and return an enum of roles: INVITER, ENDORSER, INVITEE, MEMBER, EOS_USER, UNAUTHENTICATED.
-    // Almost every child component of this page cares about the role of the user in relation to the invite/induction. We can pass role down.
-    const isEndorser = useMemo(() => 
-         endorsements.some(
-            (endorsement) => endorsement.endorser === ualAccount?.accountName
-        )
-    , [ualAccount, endorsements]);
-
+    const userRole = useInductionUserRole(endorsements, induction);
     const status = getInductionStatus(induction);
 
     const renderInductionStep = useMemo(() => {
@@ -65,7 +48,7 @@ export const InductionDetailsPage = () => {
                 <InductionStepProfile
                     induction={induction}
                     isCommunityActive={isCommunityActive}
-                    isEndorser={isEndorser}
+                    role={userRole}
                     isReviewing
                 />
             );
@@ -75,8 +58,8 @@ export const InductionDetailsPage = () => {
             return (
                 <InductionStepVideo
                     induction={induction}
-                    isEndorser={isEndorser}
                     isReviewing
+                    role={userRole}
                 />
             );
         }
@@ -86,16 +69,13 @@ export const InductionDetailsPage = () => {
                 return (
                     <InductionStepProfile
                         induction={induction}
-                        isEndorser={isEndorser}
+                        role={userRole}
                         isCommunityActive={isCommunityActive}
                     />
                 );
             case InductionStatus.waitingForVideo:
                 return (
-                    <InductionStepVideo
-                        induction={induction}
-                        isEndorser={isEndorser}
-                    />
+                    <InductionStepVideo induction={induction} role={userRole} />
                 );
             case InductionStatus.waitingForEndorsement:
                 return (
@@ -109,7 +89,7 @@ export const InductionDetailsPage = () => {
             default:
                 return "";
         }
-    }, [induction, isCommunityActive, isEndorser, endorsements, reviewStep]);
+    }, [induction, isCommunityActive, endorsements, reviewStep]);
 
     return isLoadingEndorsements || isLoadingCommunityState ? (
         <p>Loading Induction...</p>

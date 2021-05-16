@@ -4,6 +4,7 @@ import { EdenMember, getEdenMember } from "members";
 import { getIsCommunityActive } from "_app/api";
 
 import { useUALAccount } from "../eos";
+import { getInductionWithEndorsements } from "inductions";
 
 export const useMemberByAccountName = (accountName: string) =>
     useQuery(
@@ -32,3 +33,6 @@ export const useCurrentMember = () => {
 
 export const useIsCommunityActive = () =>
     useQuery("isCommunityActive", getIsCommunityActive);
+
+export const useGetInductionWithEndorsements = (inductionId: string) =>
+    useQuery(["induction", inductionId], getInductionWithEndorsements);

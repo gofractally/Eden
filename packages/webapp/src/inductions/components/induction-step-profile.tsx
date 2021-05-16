@@ -11,31 +11,27 @@ import {
     uploadToIpfs,
     useUALAccount,
 } from "_app";
-import { Induction, NewMemberProfile } from "../interfaces";
+import { Induction, InductionRole, NewMemberProfile } from "../interfaces";
 import { setInductionProfileTransaction } from "../transactions";
-import { InductionJourneyContainer, InductionRole } from "inductions";
+import { InductionJourneyContainer, InductionJourney } from "inductions";
 import { InductionProfileForm } from "./induction-profile-form";
 import { getInductionRemainingTimeDays } from "inductions/utils";
 
 interface Props {
     induction: Induction;
     isCommunityActive?: boolean;
-    isEndorser: boolean;
     isReviewing?: boolean;
+    role: InductionRole;
 }
 
 export const InductionStepProfile = ({
     induction,
     isCommunityActive,
-    isEndorser,
     isReviewing,
+    role,
 }: Props) => {
     const [ualAccount] = useUALAccount();
-
     const [submittedProfile, setSubmittedProfile] = useState(false);
-
-    const isInvitee = ualAccount?.accountName === induction.invitee;
-    const isInviter = ualAccount?.accountName === induction.inviter;
 
     const submitInductionProfileTransaction = async (
         newMemberProfile: NewMemberProfile,
@@ -76,7 +72,7 @@ export const InductionStepProfile = ({
         );
 
     // Invitee profile create/update form
-    if (isInvitee) {
+    if (role === InductionRole.Invitee) {
         return (
             <CreateModifyProfile
                 induction={induction}
@@ -92,7 +88,7 @@ export const InductionStepProfile = ({
         <WaitingForInviteeProfile
             induction={induction}
             isCommunityActive={isCommunityActive}
-            isInviterOrEndorser={isInviter || isEndorser}
+            role={role}
         />
     );
 };
@@ -106,8 +102,8 @@ const ProfileSubmitConfirmation = ({
         <InductionJourneyContainer
             role={
                 isCommunityActive
-                    ? InductionRole.INVITEE
-                    : InductionRole.GENESIS
+                    ? InductionJourney.INVITEE
+                    : InductionJourney.GENESIS
             }
             step={isCommunityActive ? 3 : 2}
         >
@@ -148,7 +144,11 @@ const CreateModifyProfile = ({
     isReviewing,
 }: CreateModifyProfileProps) => (
     <InductionJourneyContainer
-        role={isCommunityActive ? InductionRole.INVITEE : InductionRole.GENESIS}
+        role={
+            isCommunityActive
+                ? InductionJourney.INVITEE
+                : InductionJourney.GENESIS
+        }
         step={isCommunityActive ? 2 : 1}
         vAlign="top"
     >
@@ -171,24 +171,27 @@ const CreateModifyProfile = ({
 const WaitingForInviteeProfile = ({
     induction,
     isCommunityActive,
-    isInviterOrEndorser,
+    role,
 }: {
     induction: Induction;
     isCommunityActive?: boolean;
-    isInviterOrEndorser: boolean;
+    role: InductionRole;
 }) => {
-    const getInductionJourneyRole = () => {
+    const getInductionJourney = () => {
         if (!isCommunityActive) {
-            return InductionRole.GENESIS;
-        } else if (isInviterOrEndorser) {
-            return InductionRole.INVITER;
+            return InductionJourney.GENESIS;
+        } else if (
+            role === InductionRole.Inviter ||
+            role === InductionRole.Endorser
+        ) {
+            return InductionJourney.INVITER;
         }
-        return InductionRole.INVITEE;
+        return InductionJourney.INVITEE;
     };
 
     return (
         <InductionJourneyContainer
-            role={getInductionJourneyRole()}
+            role={getInductionJourney()}
             step={!isCommunityActive ? 1 : 2}
         >
             <Heading size={1} className="mb-5">

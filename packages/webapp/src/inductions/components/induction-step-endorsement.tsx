@@ -26,7 +26,7 @@ import {
 } from "../utils";
 import {
     InductionJourneyContainer,
-    InductionRole,
+    InductionJourney,
     MemberCardPreview,
 } from "inductions";
 
@@ -154,11 +154,11 @@ export const InductionStepEndorsement = (props: Props) => {
 
     const getInductionJourneyRole = () => {
         if (!props.isCommunityActive) {
-            return InductionRole.GENESIS;
+            return InductionJourney.GENESIS;
         } else if (!ualAccount || isInvitee) {
-            return InductionRole.INVITEE;
+            return InductionJourney.INVITEE;
         }
-        return InductionRole.INVITER;
+        return InductionJourney.INVITER;
     };
 
     const getInductionJourneyStep = () => {
