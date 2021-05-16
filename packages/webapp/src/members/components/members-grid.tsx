@@ -21,8 +21,8 @@ export const MembersGrid = ({ members, dataTestId }: Props) => {
     return (
         <div className={containerClass} data-testid={dataTestId}>
             {(members.length &&
-                members.map((member, index) => (
-                    <MemberSquare key={index} member={member} />
+                members.map(member => (
+                    <MemberSquare key={member.account} member={member} />
                 ))) ||
                 "No members to list."}
         </div>
