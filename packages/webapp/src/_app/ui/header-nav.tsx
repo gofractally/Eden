@@ -1,11 +1,13 @@
 import Link from "next/link";
 import { useRouter } from "next/router";
 import { useQueryClient } from "react-query";
-import { FaSignOutAlt } from "react-icons/fa";
+import { FaSun, FaSignOutAlt } from "react-icons/fa";
 
 import { useUALAccount } from "../eos";
 import { useCurrentMember } from "_app/hooks";
 import { ActionButton } from "./action-button";
+import useDarkMode from "_app/hooks/useDarkMode";
+import React from "react";
 
 interface MenuItem {
     href: string;
@@ -19,6 +21,19 @@ const MENU_ITEMS: MenuItem[] = [
     { href: "/induction", label: "Membership" },
 ];
 
+const DarkModeSetting = () => {
+    const [isDark, toggleDark] = useDarkMode();
+    const FormattedIcon = React.createElement(FaSun, {
+        className: ` inline-flex ${isDark ? "text-gray-300" : "text-gray-800"}`,
+    });
+
+    return (
+        <div className="p-3" onClick={() => toggleDark()}>
+            {FormattedIcon}
+        </div>
+    );
+};
+
 export const HeaderNav = () => (
     <header className="text-gray-600 body-font border-b border-gray-200 bg-white">
         <div className="container mx-auto flex flex-wrap py-3 flex-col md:flex-row items-center">
@@ -26,6 +41,7 @@ export const HeaderNav = () => (
             <nav className="md:mr-auto md:ml-4 md:py-1 md:pl-4 md:border-l md:border-gray-400	flex flex-wrap items-center text-base justify-center">
                 <HeaderItems menuItems={MENU_ITEMS} />
             </nav>
+            <DarkModeSetting />
             <AccountMenu />
         </div>
     </header>
