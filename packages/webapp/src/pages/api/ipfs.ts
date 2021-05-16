@@ -55,14 +55,19 @@ const ipfsUploadHandler = async (req: NextApiRequest, res: NextApiResponse) => {
         ]);
     }
 
-    const broadcastedTrx = await eosJsonRpc.send_transaction({
-        signatures,
-        serializedTransaction,
-    });
+    try {
+        const broadcastedTrx = await eosJsonRpc.send_transaction({
+            signatures,
+            serializedTransaction,
+        });
 
-    const pinResults = await pinIpfsCid(request.cid);
+        const pinResults = await pinIpfsCid(request.cid);
 
-    res.status(200).json({ broadcastedTrx, pinResults });
+        res.status(200).json({ broadcastedTrx, pinResults });
+    } catch (error) {
+        console.error("Fail to broadcast or pin file:", error);
+        return handleErrors(res, [error.message]);
+    }
 };
 
 const parseActionIpfsCid = async (action: any): Promise<string | undefined> => {
@@ -88,5 +93,40 @@ const pinIpfsCid = async (cid: string) => {
     });
     const pinResults = await pinResponse.json();
     console.info(`pin file requested successfully!`, pinResults);
+
+    if (pinResults.error && pinResults.error.reason === "DUPLICATE_OBJECT") {
+        return "DUPLICATE_OBJECT";
+    }
+
+    if (!pinResults.requestid) {
+        throw new Error("File was not able to proper request a pin");
+    }
+
+    for (let retries = 0; retries <= 5; retries++) {
+        await new Promise((resolve) =>
+            setTimeout(resolve, (1 + retries) * 1000)
+        );
+
+        const pinStatusResponse = await fetch(
+            `${ipfsConfig.pinataApi}/pins/${pinResults.requestid}`,
+            {
+                method: "GET",
+                headers: {
+                    Authorization: `Bearer ${ipfsConfig.pinataJwt}`,
+                },
+            }
+        );
+        const pinStatus = await pinStatusResponse.json();
+        console.info(`pin status >>> ${pinStatus.status}...`);
+
+        if (pinStatus.status === "pinned") {
+            break;
+        }
+
+        if (pinStatus.status === "failed" || retries === 5) {
+            throw new Error("Fail to pin");
+        }
+    }
+
     return pinResults;
 };
