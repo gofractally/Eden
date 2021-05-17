@@ -129,6 +129,25 @@ namespace eden::atomicassets
       }
    }
 
+   bool is_locked(eosio::name contract, eosio::name collection, int32_t template_id)
+   {
+      ::atomicassets::templates_t templates(contract, collection.value);
+      const auto& templ = templates.get(
+          template_id, ("fail to read template id " + std::to_string(template_id)).c_str());
+      return templ.max_supply != 0;
+   }
+
+   std::vector<int32_t> assets_by_owner(eosio::name contract, eosio::name owner)
+   {
+      ::atomicassets::assets_t assets(contract, owner.value);
+      std::vector<int32_t> result;
+      for (const auto& asset : assets)
+      {
+         result.push_back(asset.template_id);
+      }
+      return result;
+   }
+
    void validate_ipfs(const std::string& cid)
    {
       eosio::check(!cid.empty(), "CID is empty");
