@@ -4,7 +4,6 @@ import { FaSpinner } from "react-icons/fa";
 
 interface Props {
     children: React.ReactNode;
-    href?: string;
     onClick?: (e: React.MouseEvent<HTMLButtonElement, MouseEvent>) => void;
     type?: ActionButtonType;
     isSubmit?: boolean;
@@ -13,6 +12,9 @@ interface Props {
     size?: ActionButtonSize;
     fullWidth?: boolean;
     className?: string;
+    href?: string;
+    target?: string;
+    isExternal?: boolean;
 }
 
 export enum ActionButtonSize {
@@ -42,7 +44,6 @@ export enum ActionButtonType {
  */
 export const ActionButton = ({
     children,
-    href,
     onClick,
     isSubmit,
     disabled,
@@ -51,6 +52,9 @@ export const ActionButton = ({
     fullWidth,
     isLoading,
     className = "",
+    href = "#",
+    target,
+    isExternal,
 }: Props) => {
     const baseClass =
         "inline-block items-center text-center border focus:outline-none";
@@ -59,30 +63,46 @@ export const ActionButton = ({
     const cursorClass = disabled ? "cursor-not-allowed" : "cursor-pointer";
     const buttonClass = `${baseClass} ${size} ${widthClass} ${colorClass} ${cursorClass} ${className}`;
 
-    if (href) {
+    let targetProps = {
+        target,
+        rel: isExternal ? "noopener noreferrer" : undefined,
+    };
+
+    if (onClick) {
         return (
-            <NextLink href={href}>
-                <a className={buttonClass}>
-                    {isLoading && (
-                        <FaSpinner className="inline-flex animate-spin mr-2" />
-                    )}
-                    {children}
-                </a>
-            </NextLink>
+            <button
+                onClick={onClick}
+                type={isSubmit ? "submit" : "button"}
+                className={buttonClass}
+                disabled={disabled}
+            >
+                {isLoading && (
+                    <FaSpinner className="inline-flex animate-spin mr-1 mb-1 align-middle" />
+                )}
+                {children}
+            </button>
+        );
+    }
+
+    if (isExternal) {
+        return (
+            <a className={buttonClass} href={href} {...targetProps}>
+                {isLoading && (
+                    <FaSpinner className="inline-flex animate-spin mr-2" />
+                )}
+                {children}
+            </a>
         );
     }
 
     return (
-        <button
-            onClick={onClick}
-            type={isSubmit ? "submit" : "button"}
-            className={buttonClass}
-            disabled={disabled}
-        >
-            {isLoading && (
-                <FaSpinner className="inline-flex animate-spin mr-1 mb-1 align-middle" />
-            )}
-            {children}
-        </button>
+        <NextLink href={href}>
+            <a className={buttonClass} {...targetProps}>
+                {isLoading && (
+                    <FaSpinner className="inline-flex animate-spin mr-2" />
+                )}
+                {children}
+            </a>
+        </NextLink>
     );
 };
