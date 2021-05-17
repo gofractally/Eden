@@ -1,15 +1,7 @@
-import React, { FormEvent, useMemo, useState } from "react";
+import React, { FormEvent, useState } from "react";
 
 import { EdenNftSocialHandles } from "nfts";
-import {
-    useFormFields,
-    Form,
-    Heading,
-    ActionButton,
-    Link,
-    validateCID,
-    onError,
-} from "_app";
+import { useFormFields, Form, Heading, ActionButton, onError } from "_app";
 import { NewMemberProfile } from "../interfaces";
 
 interface Props {
@@ -45,10 +37,6 @@ export const InductionProfileForm = ({
         convertNewMemberProfileSocial(newMemberProfile.social)
     );
 
-    const isPhotoValidCID = useMemo(() => validateCID(fields.img), [
-        fields.img,
-    ]);
-
     const onChangeFields = (e: React.ChangeEvent<HTMLInputElement>) =>
         setFields(e);
 
@@ -65,9 +53,6 @@ export const InductionProfileForm = ({
         }
 
         var file = e.target.files[0];
-
-        // Clear the selection in the file picker input.
-        // todo: reset input? (it does not work if the user wants to switch the file)
 
         if (!file.type.match("image.*")) {
             return onError(new Error("You can only select image files"));
@@ -122,12 +107,7 @@ export const InductionProfileForm = ({
                     label="select an image file"
                     onChange={handleProfileImageUpload}
                 />
-                {fields.img && !isPhotoValidCID && (
-                    <p className={"text-red-500 text-sm mt-1"}>
-                        This is not a valid IPFS CID.
-                    </p>
-                )}
-                {uploadedImage || isPhotoValidCID ? (
+                {uploadedImage || fields.img ? (
                     <img
                         src={
                             uploadedImage

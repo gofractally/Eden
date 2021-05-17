@@ -1,6 +1,9 @@
 import CID from "cids";
+const { create: ipfsHttpClient } = require("ipfs-http-client");
+import IpfsHash from "ipfs-only-hash";
 
 import { IpfsPostRequest } from "_api/schemas";
+import { ipfsApiBaseUrl } from "config";
 
 export const validateCID = (str: string) => {
     try {
@@ -9,6 +12,21 @@ export const validateCID = (str: string) => {
     } catch {
         return false;
     }
+};
+
+const IPFS_CLIENT = ipfsHttpClient(ipfsApiBaseUrl);
+export const uploadToIpfs = async (file: File) => {
+    const uploadResponse = await IPFS_CLIENT.add(file, {
+        progress: (p: any) => console.log(`uploading to ipfs progress: ${p}`),
+    });
+    console.log(uploadResponse);
+
+    const fileBytes = new Uint8Array(await file.arrayBuffer());
+    const fileHash = await IpfsHash.of(fileBytes);
+    if (uploadResponse.path !== fileHash) {
+        throw new Error("uploaded cid does not match the local hash");
+    }
+    return fileHash;
 };
 
 export const uploadIpfsFileWithTransaction = async (

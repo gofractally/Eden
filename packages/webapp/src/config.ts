@@ -41,6 +41,8 @@ APP_MINIMUM_DONATION_AMOUNT="${process.env.NEXT_PUBLIC_APP_MINIMUM_DONATION_AMOU
 `);
 
 export const ipfsBaseUrl = "https://ipfs.io/ipfs"; //"https://ipfs.pink.gg/ipfs";
+export const ipfsApiBaseUrl = "https://ipfs.infura.io:5001/api/v0";
+
 export const blockExplorerAccountBaseUrl =
     process.env.NEXT_PUBLIC_BLOCKEXPLORER_ACCOUNT_BASE_URL;
 
