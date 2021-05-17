@@ -1,28 +1,30 @@
 import { NextApiResponse } from "next";
 
 export class ServerError extends Error {
-    constructor(public status: number, public errors: string[]) {
-        super(`Server Error: ${status} ${errors[0]}`);
+    constructor(public status: number, public error: any) {
+        super(`Server Error: ${status} ${JSON.stringify(error)}`);
         this.name = "ServerError";
     }
 }
 export class BadRequestError extends ServerError {
-    constructor(errors: string[]) {
-        super(400, errors);
+    constructor(error: any) {
+        super(400, error);
         this.name = "BadRequestError";
     }
 }
 
 export class InternalServerError extends ServerError {
-    constructor(errors: string[]) {
-        super(500, errors);
+    constructor(error: any) {
+        super(500, error);
         this.name = "InternalServerError";
     }
 }
 
 export const handleErrors = (res: NextApiResponse, error: Error) => {
     if (error instanceof ServerError) {
-        return res.status(error.status).json({ errors: error.errors });
+        return res
+            .status(error.status)
+            .json({ type: error.name, error: error.error });
     } else {
         return res
             .status(500)

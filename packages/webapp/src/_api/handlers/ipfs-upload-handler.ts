@@ -4,10 +4,6 @@ import { edenContractAccount, ipfsConfig } from "config";
 import { BadRequestError, InternalServerError } from "../error-handlers";
 import { IpfsPostRequest } from "../schemas";
 
-const VALID_UPLOAD_ACTIONS = {
-    [edenContractAccount]: ["inductprofil", "inductvideo"],
-};
-
 export const ipfsUploadHandler = async (request: IpfsPostRequest) => {
     const signatures = request.eosTransaction.signatures;
     const serializedTransaction = Uint8Array.from(
@@ -17,9 +13,9 @@ export const ipfsUploadHandler = async (request: IpfsPostRequest) => {
     const actionIpfsCid = await parseActionIpfsCid(serializedTransaction);
 
     if (request.cid !== actionIpfsCid) {
-        throw new BadRequestError([
-            "uploaded file is different than stated in signed transaction",
-        ]);
+        throw new BadRequestError(
+            "uploaded file is different than stated in signed transaction"
+        );
     }
 
     try {
@@ -33,12 +29,15 @@ export const ipfsUploadHandler = async (request: IpfsPostRequest) => {
         return { broadcastedTrx, pinResults };
     } catch (error) {
         console.error(error);
-        throw new InternalServerError([
-            `Fail to broadcast or pin file: ${error.message}`,
-        ]);
+        throw new InternalServerError(
+            `Fail to broadcast or pin file: ${error.message}`
+        );
     }
 };
 
+const VALID_UPLOAD_ACTIONS = {
+    [edenContractAccount]: ["inductprofil", "inductvideo"],
+};
 const parseActionIpfsCid = async (
     serializedTransaction: Uint8Array
 ): Promise<string> => {
@@ -72,7 +71,7 @@ const parseActionIpfsCid = async (
     ) {
         return actionData.data.video as string;
     } else {
-        throw new InternalServerError(["Unknown how to parse action"]);
+        throw new InternalServerError("Unknown how to parse action");
     }
 };
 
@@ -95,9 +94,9 @@ const pinIpfsCid = async (cid: string) => {
     }
 
     if (!pinResults.requestid) {
-        throw new InternalServerError([
-            "File was not able to proper request a pin",
-        ]);
+        throw new InternalServerError(
+            "File was not able to proper request a pin"
+        );
     }
 
     await confirmIpfsPin(pinResults.requestid);
@@ -131,9 +130,7 @@ const confirmIpfsPin = async (requestId: string) => {
             pinStatus.status === "failed" ||
             retries === IPFS_CONFIRMATION_RETRIES
         ) {
-            throw new InternalServerError([
-                "Fail to pin uploaded file to IPFS",
-            ]);
+            throw new InternalServerError("Fail to pin uploaded file to IPFS");
         }
     }
 };
