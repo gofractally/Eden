@@ -91,14 +91,14 @@ namespace
    }
 }  // namespace
 
-std::vector<char> eosio::read_whole_file(std::string_view filename)
+std::vector<char> eosio::read_whole_file(const call_stack* stack, std::string_view filename)
 {
    std::vector<char> result;
    if (!::read_whole_file(filename.data(), filename.size(), [&](size_t size) {
           result.resize(size);
           return result.data();
        }))
-      check(false, "read " + std::string(filename) + " failed");
+      check(stack, false, "read " + std::string(filename) + " failed");
    return result;
 }
 
@@ -150,20 +150,24 @@ namespace
  * transaction should succeed.  Otherwise it represents a string which should be
  * part of the error message.
  */
-void eosio::expect(const transaction_trace& tt, const char* expected_except)
+void eosio::expect(const call_stack* stack,
+                   const transaction_trace& tt,
+                   const char* expected_except)
 {
    if (expected_except)
    {
       if (tt.status == transaction_status::executed)
-         eosio::check(false, "transaction succeeded, but was expected to fail with: " +
-                                 std::string(expected_except));
+         eosio::check(EOSIO_HERE(stack), false,
+                      "transaction succeeded, but was expected to fail with: " +
+                          std::string(expected_except));
       if (!tt.except)
-         eosio::check(false, "transaction has no failure message. expected: " +
-                                 std::string(expected_except));
+         eosio::check(
+             EOSIO_HERE(stack), false,
+             "transaction has no failure message. expected: " + std::string(expected_except));
       if (tt.except->find(expected_except) == std::string::npos)
-         eosio::check(false, "transaction failed with <<<" + *tt.except +
-                                 ">>>, but was expected to fail with: <<<" + expected_except +
-                                 ">>>");
+         eosio::check(EOSIO_HERE(stack), false,
+                      "transaction failed with <<<" + *tt.except +
+                          ">>>, but was expected to fail with: <<<" + expected_except + ">>>");
    }
    else
    {
@@ -171,24 +175,29 @@ void eosio::expect(const transaction_trace& tt, const char* expected_except)
          return;
       if (tt.except)
          eosio::print("transaction has exception: ", *tt.except, "\n");
-      eosio::check(false, "transaction failed with status " + to_string(tt.status));
+      eosio::check(EOSIO_HERE(stack), false,
+                   "transaction failed with status " + to_string(tt.status));
    }
 }
 
-void eosio::expect_rodeos(const transaction_trace& tt, const char* expected_except)
+void eosio::expect_rodeos(const call_stack* stack,
+                          const transaction_trace& tt,
+                          const char* expected_except)
 {
    if (expected_except)
    {
       if (tt.status == transaction_status::executed)
-         eosio::check(false, "rodeos transaction succeeded, but was expected to fail with: " +
-                                 std::string(expected_except));
+         eosio::check(EOSIO_HERE(stack), false,
+                      "rodeos transaction succeeded, but was expected to fail with: " +
+                          std::string(expected_except));
       if (!tt.except)
-         eosio::check(false, "rodeos transaction has no failure message. expected: " +
-                                 std::string(expected_except));
+         eosio::check(EOSIO_HERE(stack), false,
+                      "rodeos transaction has no failure message. expected: " +
+                          std::string(expected_except));
       if (tt.except->find(expected_except) == std::string::npos)
-         eosio::check(false, "rodeos transaction failed with <<<" + *tt.except +
-                                 ">>>, but was expected to fail with: <<<" + expected_except +
-                                 ">>>");
+         eosio::check(EOSIO_HERE(stack), false,
+                      "rodeos transaction failed with <<<" + *tt.except +
+                          ">>>, but was expected to fail with: <<<" + expected_except + ">>>");
    }
    else
    {
@@ -196,7 +205,8 @@ void eosio::expect_rodeos(const transaction_trace& tt, const char* expected_exce
          return;
       if (tt.except)
          eosio::print("rodeos transaction has exception: ", *tt.except, "\n");
-      eosio::check(false, "rodeos transaction failed with status " + to_string(tt.status));
+      eosio::check(EOSIO_HERE(stack), false,
+                   "rodeos transaction failed with status " + to_string(tt.status));
    }
 }
 
@@ -374,19 +384,34 @@ eosio::transaction eosio::test_chain::make_transaction(std::vector<action>&& act
    return convert_from_bin<transaction_trace>(bin);
 }
 
-eosio::transaction_trace eosio::test_chain::transact(std::vector<action>&& actions,
+eosio::transaction_trace eosio::test_chain::transact(const call_stack* stack,
+                                                     std::vector<action>&& actions,
                                                      const std::vector<private_key>& keys,
                                                      const char* expected_except)
 {
    auto trace = push_transaction(make_transaction(std::move(actions)), keys);
-   expect(trace, expected_except);
+   expect(EOSIO_HERE(stack), trace, expected_except);
    return trace;
+}
+
+eosio::transaction_trace eosio::test_chain::transact(const call_stack* stack,
+                                                     std::vector<action>&& actions,
+                                                     const char* expected_except)
+{
+   return transact(stack, std::move(actions), {default_priv_key}, expected_except);
+}
+
+eosio::transaction_trace eosio::test_chain::transact(std::vector<action>&& actions,
+                                                     const std::vector<private_key>& keys,
+                                                     const char* expected_except)
+{
+   return transact(nullptr, std::move(actions), keys, expected_except);
 }
 
 eosio::transaction_trace eosio::test_chain::transact(std::vector<action>&& actions,
                                                      const char* expected_except)
 {
-   return transact(std::move(actions), {default_priv_key}, expected_except);
+   return transact(nullptr, std::move(actions), {default_priv_key}, expected_except);
 }
 
 [[nodiscard]] std::optional<eosio::transaction_trace> eosio::test_chain::exec_deferred()
@@ -462,7 +487,8 @@ std::optional<eosio::test_chain::get_history_result> eosio::test_chain::get_hist
    return ret;
 }
 
-eosio::transaction_trace eosio::test_chain::create_account(name ac,
+eosio::transaction_trace eosio::test_chain::create_account(const call_stack* stack,
+                                                           name ac,
                                                            const public_key& pub_key,
                                                            const char* expected_except)
 {
@@ -470,19 +496,35 @@ eosio::transaction_trace eosio::test_chain::create_account(name ac,
        .threshold = 1,
        .keys = {{pub_key, 1}},
    };
-   return transact({action{{{"eosio"_n, "active"_n}},
+   return transact(EOSIO_HERE(stack),
+                   {action{{{"eosio"_n, "active"_n}},
                            "eosio"_n,
                            "newaccount"_n,
                            std::make_tuple("eosio"_n, ac, simple_auth, simple_auth)}},
                    expected_except);
 }
 
-eosio::transaction_trace eosio::test_chain::create_account(name ac, const char* expected_except)
+eosio::transaction_trace eosio::test_chain::create_account(const call_stack* stack,
+                                                           name ac,
+                                                           const char* expected_except)
 {
-   return create_account(ac, default_pub_key, expected_except);
+   return create_account(stack, ac, default_pub_key, expected_except);
 }
 
-eosio::transaction_trace eosio::test_chain::create_code_account(name account,
+eosio::transaction_trace eosio::test_chain::create_account(name ac,
+                                                           const public_key& pub_key,
+                                                           const char* expected_except)
+{
+   return create_account(nullptr, ac, pub_key, expected_except);
+}
+
+eosio::transaction_trace eosio::test_chain::create_account(name ac, const char* expected_except)
+{
+   return create_account(nullptr, ac, default_pub_key, expected_except);
+}
+
+eosio::transaction_trace eosio::test_chain::create_code_account(const call_stack* stack,
+                                                                name account,
                                                                 const public_key& pub_key,
                                                                 bool is_priv,
                                                                 const char* expected_except)
@@ -496,7 +538,8 @@ eosio::transaction_trace eosio::test_chain::create_code_account(name account,
        .keys = {{pub_key, 1}},
        .accounts = {{{account, "eosio.code"_n}, 1}},
    };
-   return transact(
+   return transact(  //
+       EOSIO_HERE(stack),
        {
            action{{{"eosio"_n, "active"_n}},
                   "eosio"_n,
@@ -510,61 +553,100 @@ eosio::transaction_trace eosio::test_chain::create_code_account(name account,
        expected_except);
 }
 
-eosio::transaction_trace eosio::test_chain::create_code_account(name ac,
+eosio::transaction_trace eosio::test_chain::create_code_account(const call_stack* stack,
+                                                                name account,
                                                                 const public_key& pub_key,
                                                                 const char* expected_except)
 {
-   return create_code_account(ac, pub_key, false, expected_except);
+   return create_code_account(stack, account, pub_key, false, expected_except);
 }
 
-eosio::transaction_trace eosio::test_chain::create_code_account(name ac,
+eosio::transaction_trace eosio::test_chain::create_code_account(const call_stack* stack,
+                                                                name account,
                                                                 bool is_priv,
                                                                 const char* expected_except)
 {
-   return create_code_account(ac, default_pub_key, is_priv, expected_except);
+   return create_code_account(stack, account, default_pub_key, is_priv, expected_except);
 }
 
-eosio::transaction_trace eosio::test_chain::create_code_account(name ac,
+eosio::transaction_trace eosio::test_chain::create_code_account(const call_stack* stack,
+                                                                name account,
                                                                 const char* expected_except)
 {
-   return create_code_account(ac, default_pub_key, false, expected_except);
+   return create_code_account(stack, account, default_pub_key, false, expected_except);
 }
 
-eosio::transaction_trace eosio::test_chain::set_code(name ac,
+eosio::transaction_trace eosio::test_chain::create_code_account(name account,
+                                                                const public_key& pub_key,
+                                                                bool is_priv,
+                                                                const char* expected_except)
+{
+   return create_code_account(nullptr, account, pub_key, is_priv, expected_except);
+}
+
+eosio::transaction_trace eosio::test_chain::create_code_account(name account,
+                                                                const public_key& pub_key,
+                                                                const char* expected_except)
+{
+   return create_code_account(nullptr, account, pub_key, false, expected_except);
+}
+
+eosio::transaction_trace eosio::test_chain::create_code_account(name account,
+                                                                bool is_priv,
+                                                                const char* expected_except)
+{
+   return create_code_account(nullptr, account, default_pub_key, is_priv, expected_except);
+}
+
+eosio::transaction_trace eosio::test_chain::create_code_account(name account,
+                                                                const char* expected_except)
+{
+   return create_code_account(nullptr, account, default_pub_key, false, expected_except);
+}
+
+eosio::transaction_trace eosio::test_chain::set_code(const call_stack* stack,
+                                                     name ac,
                                                      const char* filename,
                                                      const char* expected_except)
 {
-   return transact({action{{{ac, "active"_n}},
+   return transact(EOSIO_HERE(stack),
+                   {action{{{ac, "active"_n}},
                            "eosio"_n,
                            "setcode"_n,
-                           std::make_tuple(ac, uint8_t{0}, uint8_t{0}, read_whole_file(filename))}},
+                           std::make_tuple(ac, uint8_t{0}, uint8_t{0},
+                                           read_whole_file(EOSIO_HERE(stack), filename))}},
                    expected_except);
 }
 
-eosio::transaction_trace eosio::test_chain::create_token(name contract,
+eosio::transaction_trace eosio::test_chain::create_token(const call_stack* stack,
+                                                         name contract,
                                                          name signer,
                                                          name issuer,
                                                          asset maxsupply,
                                                          const char* expected_except)
 {
    return transact(
+       EOSIO_HERE(stack),
        {action{{{signer, "active"_n}}, contract, "create"_n, std::make_tuple(issuer, maxsupply)}},
        expected_except);
 }
 
-eosio::transaction_trace eosio::test_chain::issue(const name& contract,
+eosio::transaction_trace eosio::test_chain::issue(const call_stack* stack,
+                                                  const name& contract,
                                                   const name& issuer,
                                                   const asset& amount,
                                                   const char* expected_except)
 {
-   return transact({action{{{issuer, "active"_n}},
+   return transact(EOSIO_HERE(stack),
+                   {action{{{issuer, "active"_n}},
                            contract,
                            "issue"_n,
                            std::make_tuple(issuer, amount, std::string{"issuing"})}},
                    expected_except);
 }
 
-eosio::transaction_trace eosio::test_chain::transfer(const name& contract,
+eosio::transaction_trace eosio::test_chain::transfer(const call_stack* stack,
+                                                     const name& contract,
                                                      const name& from,
                                                      const name& to,
                                                      const asset& amount,
@@ -572,19 +654,22 @@ eosio::transaction_trace eosio::test_chain::transfer(const name& contract,
                                                      const char* expected_except)
 {
    return transact(
+       EOSIO_HERE(stack),
        {action{
            {{from, "active"_n}}, contract, "transfer"_n, std::make_tuple(from, to, amount, memo)}},
        expected_except);
 }
 
-eosio::transaction_trace eosio::test_chain::issue_and_transfer(const name& contract,
+eosio::transaction_trace eosio::test_chain::issue_and_transfer(const call_stack* stack,
+                                                               const name& contract,
                                                                const name& issuer,
                                                                const name& to,
                                                                const asset& amount,
                                                                const std::string& memo,
                                                                const char* expected_except)
 {
-   return transact(
+   return transact(  //
+       EOSIO_HERE(stack),
        {
            action{{{issuer, "active"_n}},
                   contract,
@@ -659,19 +744,34 @@ uint32_t eosio::test_rodeos::sync_blocks()
    return convert_from_bin<transaction_trace>(bin);
 }
 
-eosio::transaction_trace eosio::test_rodeos::transact(std::vector<action>&& actions,
+eosio::transaction_trace eosio::test_rodeos::transact(const call_stack* stack,
+                                                      std::vector<action>&& actions,
                                                       const std::vector<private_key>& keys,
                                                       const char* expected_except)
 {
    auto trace = push_transaction(connected->make_transaction(std::move(actions)), keys);
-   expect_rodeos(trace, expected_except);
+   expect_rodeos(EOSIO_HERE(stack), trace, expected_except);
    return trace;
+}
+
+eosio::transaction_trace eosio::test_rodeos::transact(const call_stack* stack,
+                                                      std::vector<action>&& actions,
+                                                      const char* expected_except)
+{
+   return transact(stack, std::move(actions), {}, expected_except);
+}
+
+eosio::transaction_trace eosio::test_rodeos::transact(std::vector<action>&& actions,
+                                                      const std::vector<private_key>& keys,
+                                                      const char* expected_except)
+{
+   return transact(nullptr, std::move(actions), keys, expected_except);
 }
 
 eosio::transaction_trace eosio::test_rodeos::transact(std::vector<action>&& actions,
                                                       const char* expected_except)
 {
-   return transact(std::move(actions), {}, expected_except);
+   return transact(nullptr, std::move(actions), {}, expected_except);
 }
 
 uint32_t eosio::test_rodeos::get_num_pushed_data()

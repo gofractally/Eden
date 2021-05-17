@@ -9,7 +9,12 @@
 #include <eosio/producer_schedule.hpp>
 #include <eosio/transaction.hpp>
 
+#include <stdio.h>
 #include <cwchar>
+
+#include <boost/preprocessor/facilities/check_empty.hpp>
+#include <boost/preprocessor/logical/compl.hpp>
+#include <boost/preprocessor/punctuation/comma_if.hpp>
 
 namespace eosio
 {
@@ -25,7 +30,65 @@ namespace eosio
 
    }  // namespace internal_use_do_not_use
 
-   std::vector<char> read_whole_file(std::string_view filename);
+   struct call_stack
+   {
+      const call_stack* prev = nullptr;
+      const char* function = "";
+      const char* file = "";
+      int line = 0;
+
+      call_stack(const call_stack* prev, const char* function, const char* file, int line)
+          : prev{prev}, function{function}, file{file}, line{line}
+      {
+      }
+
+      call_stack(const char* function, const char* file, int line)
+          : function{function}, file{file}, line{line}
+      {
+      }
+
+      call_stack(const call_stack&) = delete;
+      call_stack& operator=(const call_stack&) = delete;
+
+      operator const call_stack*() const { return this; }
+   };
+
+   template <typename F>
+   void visit(const call_stack* stack, const F& f)
+   {
+      bool first = true;
+      while (stack)
+      {
+         f(first, stack->function, stack->file, stack->line);
+         stack = stack->prev;
+         first = false;
+      }
+   }
+
+#define EOSIO_HERE(__VA_ARGS__)                                                                  \
+   call_stack                                                                                    \
+   {                                                                                             \
+      __VA_ARGS__ BOOST_PP_COMMA_IF(BOOST_PP_COMPL(BOOST_PP_CHECK_EMPTY(__VA_ARGS__))) __func__, \
+          __FILE__, __LINE__                                                                     \
+   }
+
+   template <typename T>
+   void check(const call_stack* stack, bool pred, T&& msg)
+   {
+      if (pred)
+         return;
+      visit(stack, [](bool first, const char* function, const char* file, int line) {
+         fprintf(stderr, "%s %s (%s:%d)\n", first ? "in         " : "called from", function, file,
+                 line);
+      });
+      check(false, std::forward<T>(msg));
+   }
+
+   std::vector<char> read_whole_file(const call_stack*, std::string_view filename);
+   inline std::vector<char> read_whole_file(std::string_view filename)
+   {
+      return read_whole_file(nullptr, filename);
+   }
 
    int32_t execute(std::string_view command);
 
@@ -142,12 +205,24 @@ namespace eosio
     * transaction should succeed.  Otherwise it represents a string which should be
     * part of the error message.
     */
-   void expect(const transaction_trace& tt, const char* expected_except = nullptr);
+   void expect(const call_stack* stack,
+               const transaction_trace& tt,
+               const char* expected_except = nullptr);
+   inline void expect(const transaction_trace& tt, const char* expected_except = nullptr)
+   {
+      expect(nullptr, tt, expected_except);
+   }
 
    /**
     * Same as expect(), but errors indicate transaction was executed from rodeos
     */
-   void expect_rodeos(const transaction_trace& tt, const char* expected_except = nullptr);
+   void expect_rodeos(const call_stack* stack,
+                      const transaction_trace& tt,
+                      const char* expected_except = nullptr);
+   inline void expect_rodeos(const transaction_trace& tt, const char* expected_except = nullptr)
+   {
+      expect_rodeos(nullptr, tt, expected_except);
+   }
 
    template <std::size_t Size>
    std::ostream& operator<<(std::ostream& os, const fixed_bytes<Size>& d)
@@ -259,6 +334,13 @@ namespace eosio
        *
        * Validates the transaction status according to @ref eosio::expect.
        */
+      transaction_trace transact(const call_stack* stack,
+                                 std::vector<action>&& actions,
+                                 const std::vector<private_key>& keys,
+                                 const char* expected_except = nullptr);
+      transaction_trace transact(const call_stack* stack,
+                                 std::vector<action>&& actions,
+                                 const char* expected_except = nullptr);
       transaction_trace transact(std::vector<action>&& actions,
                                  const std::vector<private_key>& keys,
                                  const char* expected_except = nullptr);
@@ -278,13 +360,14 @@ namespace eosio
       }
 
       template <typename Action, typename... Args>
-      auto act(const std::optional<std::vector<std::vector<char>>>& cfd,
+      auto act(const call_stack* stack,
+               const std::optional<std::vector<std::vector<char>>>& cfd,
                const Action& action,
                Args&&... args)
       {
          using Ret = decltype(internal_use_do_not_use::get_return_type(Action::get_mem_ptr()));
          auto trace = this->trace(cfd, action, std::forward<Args>(args)...);
-         expect(trace);
+         expect(EOSIO_HERE(stack), trace);
          if constexpr (!std::is_same_v<Ret, void>)
          {
             return convert_from_bin<Ret>(trace.action_traces[0].return_value);
@@ -293,6 +376,23 @@ namespace eosio
          {
             return trace;
          }
+      }
+
+      template <typename Action, typename... Args>
+      auto act(const std::optional<std::vector<std::vector<char>>>& cfd,
+               const Action& action,
+               Args&&... args)
+      {
+         return act(nullptr, cfd, action, std::forward<Args>(args)...);
+      }
+
+      template <typename Action, typename Stack, typename... Args>
+      auto act(const std::optional<std::vector<std::vector<char>>>& cfd,
+               const Action& action,
+               Stack&& stack,
+               Args&&... args) -> decltype(act(stack, cfd, action, std::forward<Args>(args)...))
+      {
+         return act(stack, cfd, action, std::forward<Args>(args)...);
       }
 
       template <typename Action, typename... Args>
@@ -387,6 +487,13 @@ namespace eosio
        */
       std::optional<get_history_result> get_history(uint32_t block_num);
 
+      transaction_trace create_account(const call_stack* stack,
+                                       name ac,
+                                       const public_key& pub_key,
+                                       const char* expected_except = nullptr);
+      transaction_trace create_account(const call_stack* stack,
+                                       name ac,
+                                       const char* expected_except = nullptr);
       transaction_trace create_account(name ac,
                                        const public_key& pub_key,
                                        const char* expected_except = nullptr);
@@ -400,54 +507,114 @@ namespace eosio
        * @param expected_except Used to validate the transaction status according to @ref
        * eosio::expect.
        */
+      transaction_trace create_code_account(const call_stack* stack,
+                                            name account,
+                                            const public_key& pub_key,
+                                            bool is_priv = false,
+                                            const char* expected_except = nullptr);
+      transaction_trace create_code_account(const call_stack* stack,
+                                            name account,
+                                            const public_key& pub_key,
+                                            const char* expected_except);
+      transaction_trace create_code_account(const call_stack* stack,
+                                            name account,
+                                            bool is_priv = false,
+                                            const char* expected_except = nullptr);
+      transaction_trace create_code_account(const call_stack* stack,
+                                            name account,
+                                            const char* expected_except);
       transaction_trace create_code_account(name account,
                                             const public_key& pub_key,
                                             bool is_priv = false,
                                             const char* expected_except = nullptr);
-      transaction_trace create_code_account(name ac,
+      transaction_trace create_code_account(name account,
                                             const public_key& pub_key,
                                             const char* expected_except);
-      transaction_trace create_code_account(name ac,
+      transaction_trace create_code_account(name account,
                                             bool is_priv = false,
                                             const char* expected_except = nullptr);
-      transaction_trace create_code_account(name ac, const char* expected_except);
+      transaction_trace create_code_account(name account, const char* expected_except);
 
       /*
        * Set the code for an account.
        * Validates the transaction status as with @ref eosio::expect.
        */
-      transaction_trace set_code(name ac,
+      transaction_trace set_code(const call_stack* stack,
+                                 name ac,
                                  const char* filename,
                                  const char* expected_except = nullptr);
+      transaction_trace set_code(name ac,
+                                 const char* filename,
+                                 const char* expected_except = nullptr)
+      {
+         return set_code(nullptr, ac, filename, expected_except);
+      }
 
       /**
        * Creates a new token.
        * The eosio.token contract should be deployed on the @c contract account.
        */
-      transaction_trace create_token(name contract,
+      transaction_trace create_token(const call_stack* stack,
+                                     name contract,
                                      name signer,
                                      name issuer,
                                      asset maxsupply,
                                      const char* expected_except = nullptr);
+      transaction_trace create_token(name contract,
+                                     name signer,
+                                     name issuer,
+                                     asset maxsupply,
+                                     const char* expected_except = nullptr)
+      {
+         return create_token(nullptr, contract, signer, issuer, maxsupply, expected_except);
+      }
 
-      transaction_trace issue(const name& contract,
+      transaction_trace issue(const call_stack* stack,
+                              const name& contract,
                               const name& issuer,
                               const asset& amount,
                               const char* expected_except = nullptr);
+      transaction_trace issue(const name& contract,
+                              const name& issuer,
+                              const asset& amount,
+                              const char* expected_except = nullptr)
+      {
+         return issue(nullptr, contract, issuer, amount, expected_except);
+      }
 
-      transaction_trace transfer(const name& contract,
+      transaction_trace transfer(const call_stack* stack,
+                                 const name& contract,
                                  const name& from,
                                  const name& to,
                                  const asset& amount,
                                  const std::string& memo = "",
                                  const char* expected_except = nullptr);
+      transaction_trace transfer(const name& contract,
+                                 const name& from,
+                                 const name& to,
+                                 const asset& amount,
+                                 const std::string& memo = "",
+                                 const char* expected_except = nullptr)
+      {
+         return transfer(nullptr, contract, from, to, amount, memo, expected_except);
+      }
 
-      transaction_trace issue_and_transfer(const name& contract,
+      transaction_trace issue_and_transfer(const call_stack* stack,
+                                           const name& contract,
                                            const name& issuer,
                                            const name& to,
                                            const asset& amount,
                                            const std::string& memo = "",
                                            const char* expected_except = nullptr);
+      transaction_trace issue_and_transfer(const name& contract,
+                                           const name& issuer,
+                                           const name& to,
+                                           const asset& amount,
+                                           const std::string& memo = "",
+                                           const char* expected_except = nullptr)
+      {
+         return issue_and_transfer(nullptr, contract, issuer, to, amount, memo, expected_except);
+      }
    };  // test_chain
 
    /**
@@ -496,6 +663,13 @@ namespace eosio
 
       /// Pushes a query transaction. Validates the transaction status according to @ref
       /// eosio::expect.
+      transaction_trace transact(const call_stack* stack,
+                                 std::vector<action>&& actions,
+                                 const std::vector<private_key>& keys,
+                                 const char* expected_except = nullptr);
+      transaction_trace transact(const call_stack* stack,
+                                 std::vector<action>&& actions,
+                                 const char* expected_except = nullptr);
       transaction_trace transact(std::vector<action>&& actions,
                                  const std::vector<private_key>& keys,
                                  const char* expected_except = nullptr);
@@ -503,13 +677,14 @@ namespace eosio
                                  const char* expected_except = nullptr);
 
       template <typename Action, typename... Args>
-      auto act(const std::optional<std::vector<std::vector<char>>>& cfd,
+      auto act(const call_stack* stack,
+               const std::optional<std::vector<std::vector<char>>>& cfd,
                const Action& action,
                Args&&... args)
       {
          using Ret = decltype(internal_use_do_not_use::get_return_type(Action::get_mem_ptr()));
          auto trace = this->trace(cfd, action, std::forward<Args>(args)...);
-         expect(trace);
+         expect(EOSIO_HERE(stack), trace);
          if constexpr (!std::is_same_v<Ret, void>)
          {
             return convert_from_bin<Ret>(trace.action_traces[0].return_value);
@@ -518,6 +693,23 @@ namespace eosio
          {
             return trace;
          }
+      }
+
+      template <typename Action, typename... Args>
+      auto act(const std::optional<std::vector<std::vector<char>>>& cfd,
+               const Action& action,
+               Args&&... args)
+      {
+         return act(nullptr, cfd, action, std::forward<Args>(args)...);
+      }
+
+      template <typename Action, typename Stack, typename... Args>
+      auto act(const std::optional<std::vector<std::vector<char>>>& cfd,
+               const Action& action,
+               Stack&& stack,
+               Args&&... args) -> decltype(act(stack, cfd, action, std::forward<Args>(args)...))
+      {
+         return act(stack, cfd, action, std::forward<Args>(args)...);
       }
 
       template <typename Action, typename... Args>
