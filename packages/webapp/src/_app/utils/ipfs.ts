@@ -1,5 +1,4 @@
 import CID from "cids";
-const { create: ipfsHttpClient } = require("ipfs-http-client");
 import IpfsHash from "ipfs-only-hash";
 
 import { IpfsPostRequest } from "_api/schemas";
@@ -14,9 +13,11 @@ export const validateCID = (str: string) => {
     }
 };
 
-const IPFS_CLIENT = ipfsHttpClient(ipfsApiBaseUrl);
 export const uploadToIpfs = async (file: File) => {
-    const uploadResponse = await IPFS_CLIENT.add(file, {
+    const IpfsHttpClient = await import("ipfs-http-client");
+    const client = IpfsHttpClient.create({ url: ipfsApiBaseUrl });
+
+    const uploadResponse = await client.add(file, {
         progress: (p: any) => console.log(`uploading to ipfs progress: ${p}`),
     });
     console.log(uploadResponse);
