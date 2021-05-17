@@ -17,6 +17,8 @@ export const GetAnInviteCTA = () => {
                 <ActionButton
                     href="https://www.notion.so/edenos/Getting-an-Invite-2d38947d5be94dcb84dfa1ae48894802"
                     size={ActionButtonSize.L}
+                    target="_blank"
+                    isExternal
                 >
                     Learn more
                 </ActionButton>

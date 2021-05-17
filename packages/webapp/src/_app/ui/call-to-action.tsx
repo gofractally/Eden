@@ -1,9 +1,11 @@
 import { ActionButton, ActionButtonSize, Card } from "_app";
 
 interface Props {
-    href?: string;
-    onClick?: (e: React.MouseEvent<HTMLButtonElement, MouseEvent>) => void;
     buttonLabel?: string;
+    onClick?: (e: React.MouseEvent<HTMLButtonElement, MouseEvent>) => void;
+    href?: string;
+    target?: string;
+    isExternal?: boolean;
     children: React.ReactNode;
 }
 
@@ -12,6 +14,8 @@ export const CallToAction = ({
     onClick,
     buttonLabel,
     children,
+    target,
+    isExternal,
 }: Props) => (
     <Card>
         <section className="text-gray-600 body-font">
@@ -26,6 +30,8 @@ export const CallToAction = ({
                             onClick={onClick}
                             size={ActionButtonSize.L}
                             className="flex-shrink-0 mt-10 sm:mt-0"
+                            target={target}
+                            isExternal={isExternal}
                         >
                             {buttonLabel || "Go"}
                         </ActionButton>
