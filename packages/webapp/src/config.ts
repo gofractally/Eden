@@ -75,9 +75,10 @@ export const chainConfig = {
 
 // SECRETS CONFIG
 if (
-    !process.env.IPFS_PINATA_API ||
-    !process.env.IPFS_PINATA_JWT ||
-    !process.env.IPFS_UPLOAD_ENDPOINT_URL
+    typeof window === "undefined" &&
+    (!process.env.IPFS_PINATA_API ||
+        !process.env.IPFS_PINATA_JWT ||
+        !process.env.IPFS_UPLOAD_ENDPOINT_URL)
 ) {
     throw new Error("Missing Config Secrets are not set");
 }
