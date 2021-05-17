@@ -18,44 +18,49 @@ using user_context = test_chain::user_context;
 using eden::accounts;
 using eden::members;
 
-void chain_setup(test_chain& t)
+inline constexpr const call_stack* stack = nullptr;
+#define H EOSIO_HERE(stack)
+
+void chain_setup(const call_stack* stack, test_chain& t)
 {
-   t.set_code("eosio"_n, "boot.wasm");
-   t.as("eosio"_n).act<boot::actions::boot>();
+   t.set_code(H, "eosio"_n, "boot.wasm");
+   t.as("eosio"_n).act<boot::actions::boot>(H);
    t.start_block();  // preactivate feature activates protocol features at the start of a block
-   t.set_code("eosio"_n, "bios.wasm");
+   t.set_code(H, "eosio"_n, "bios.wasm");
 }
 
-void token_setup(test_chain& t)
+void token_setup(const call_stack* stack, test_chain& t)
 {
-   t.create_code_account("eosio.token"_n);
-   t.set_code("eosio.token"_n, "token.wasm");
-   t.as("eosio.token"_n).act<token::actions::create>("eosio.token"_n, s2a("1000000.0000 EOS"));
-   t.as("eosio.token"_n).act<token::actions::issue>("eosio.token"_n, s2a("1000000.0000 EOS"), "");
-   t.as("eosio.token"_n).act<token::actions::create>("eosio.token"_n, s2a("1000000.0000 OTHER"));
-   t.as("eosio.token"_n).act<token::actions::issue>("eosio.token"_n, s2a("1000000.0000 OTHER"), "");
+   t.create_code_account(H, "eosio.token"_n);
+   t.set_code(H, "eosio.token"_n, "token.wasm");
+   t.as("eosio.token"_n).act<token::actions::create>(H, "eosio.token"_n, s2a("1000000.0000 EOS"));
+   t.as("eosio.token"_n)
+       .act<token::actions::issue>(H, "eosio.token"_n, s2a("1000000.0000 EOS"), "");
+   t.as("eosio.token"_n).act<token::actions::create>(H, "eosio.token"_n, s2a("1000000.0000 OTHER"));
+   t.as("eosio.token"_n)
+       .act<token::actions::issue>(H, "eosio.token"_n, s2a("1000000.0000 OTHER"), "");
 }
 
-void atomicmarket_setup(test_chain& t)
+void atomicmarket_setup(const call_stack* stack, test_chain& t)
 {
-   t.create_code_account("atomicmarket"_n);
-   //t.set_code("atomicmarket"_n, "atomicmarket.wasm");
+   t.create_code_account(H, "atomicmarket"_n);
+   //t.set_code(H, "atomicmarket"_n, "atomicmarket.wasm");
 }
 
-void atomicassets_setup(test_chain& t)
+void atomicassets_setup(const call_stack* stack, test_chain& t)
 {
-   t.create_code_account("atomicassets"_n);
-   t.set_code("atomicassets"_n, "atomicassets.wasm");
-   t.as("atomicassets"_n).act<atomicassets::actions::init>();
+   t.create_code_account(H, "atomicassets"_n);
+   t.set_code(H, "atomicassets"_n, "atomicassets.wasm");
+   t.as("atomicassets"_n).act<atomicassets::actions::init>(H);
 }
 
-void eden_setup(test_chain& t)
+void eden_setup(const call_stack* stack, test_chain& t)
 {
-   token_setup(t);
-   atomicassets_setup(t);
-   atomicmarket_setup(t);
-   t.create_code_account("eden.gm"_n);
-   t.set_code("eden.gm"_n, "eden.wasm");
+   token_setup(H, t);
+   atomicassets_setup(H, t);
+   atomicmarket_setup(H, t);
+   t.create_code_account(H, "eden.gm"_n);
+   t.set_code(H, "eden.gm"_n, "eden.wasm");
 }
 
 auto get_token_balance(eosio::name owner)
@@ -134,55 +139,56 @@ struct eden_tester
    user_context bertie = chain.as("bertie"_n);
    user_context ahab = chain.as("ahab"_n);
 
-   eden_tester()
+   eden_tester(const call_stack* stack)
    {
-      chain_setup(chain);
-      eden_setup(chain);
+      chain_setup(H, chain);
+      eden_setup(H, chain);
       for (auto account : {"alice"_n, "pip"_n, "egeon"_n, "bertie"_n, "ahab"_n})
       {
-         chain.create_account(account);
+         chain.create_account(H, account);
          chain.as("eosio.token"_n)
-             .act<token::actions::transfer>("eosio.token"_n, account, s2a("1000.0000 EOS"), "memo");
+             .act<token::actions::transfer>(H, "eosio.token"_n, account, s2a("1000.0000 EOS"),
+                                            "memo");
          chain.as("eosio.token"_n)
-             .act<token::actions::transfer>("eosio.token"_n, account, s2a("1000.0000 OTHER"),
+             .act<token::actions::transfer>(H, "eosio.token"_n, account, s2a("1000.0000 OTHER"),
                                             "memo");
       }
    }
-   void genesis()
+   void genesis(const call_stack* stack)
    {
-      eden_gm.act<actions::genesis>("Eden", eosio::symbol("EOS", 4), s2a("10.0000 EOS"),
+      eden_gm.act<actions::genesis>(H, "Eden", eosio::symbol("EOS", 4), s2a("10.0000 EOS"),
                                     std::vector{"alice"_n, "pip"_n, "egeon"_n},
                                     "QmTYqoPYf7DiVebTnvwwFdTgsYXg2RnuPrt8uddjfW2kHS",
                                     attribute_map{}, s2a("1.0000 EOS"), 7 * 24 * 60 * 60, "");
 
-      alice.act<actions::inductprofil>(1, alice_profile);
-      pip.act<actions::inductprofil>(2, pip_profile);
-      egeon.act<actions::inductprofil>(3, egeon_profile);
+      alice.act<actions::inductprofil>(H, 1, alice_profile);
+      pip.act<actions::inductprofil>(H, 2, pip_profile);
+      egeon.act<actions::inductprofil>(H, 3, egeon_profile);
 
-      alice.act<token::actions::transfer>("alice"_n, "eden.gm"_n, s2a("100.0000 EOS"), "memo");
-      pip.act<token::actions::transfer>("pip"_n, "eden.gm"_n, s2a("10.0000 EOS"), "memo");
-      egeon.act<token::actions::transfer>("egeon"_n, "eden.gm"_n, s2a("10.0000 EOS"), "memo");
+      alice.act<token::actions::transfer>(H, "alice"_n, "eden.gm"_n, s2a("100.0000 EOS"), "memo");
+      pip.act<token::actions::transfer>(H, "pip"_n, "eden.gm"_n, s2a("10.0000 EOS"), "memo");
+      egeon.act<token::actions::transfer>(H, "egeon"_n, "eden.gm"_n, s2a("10.0000 EOS"), "memo");
 
-      alice.act<actions::inductdonate>("alice"_n, 1, s2a("10.0000 EOS"));
-      pip.act<actions::inductdonate>("pip"_n, 2, s2a("10.0000 EOS"));
-      egeon.act<actions::inductdonate>("egeon"_n, 3, s2a("10.0000 EOS"));
+      alice.act<actions::inductdonate>(H, "alice"_n, 1, s2a("10.0000 EOS"));
+      pip.act<actions::inductdonate>(H, "pip"_n, 2, s2a("10.0000 EOS"));
+      egeon.act<actions::inductdonate>(H, "egeon"_n, 3, s2a("10.0000 EOS"));
    }
 };
 
 TEST_CASE("genesis NFT pre-setup")
 {
-   eden_tester t;
+   eden_tester t{H};
 
    t.eden_gm.act<atomicassets::actions::createcol>(
-       "eden.gm"_n, "eden.gm"_n, true, std::vector{"eden.gm"_n}, std::vector{"eden.gm"_n}, 0.05,
+       H, "eden.gm"_n, "eden.gm"_n, true, std::vector{"eden.gm"_n}, std::vector{"eden.gm"_n}, 0.05,
        atomicassets::attribute_map{});
    std::vector<atomicassets::format> schema{{"account", "string"}, {"name", "string"},
                                             {"img", "ipfs"},       {"bio", "string"},
                                             {"social", "string"},  {"video", "ipfs"}};
-   t.eden_gm.act<atomicassets::actions::createschema>("eden.gm"_n, "eden.gm"_n, eden::schema_name,
-                                                      schema);
+   t.eden_gm.act<atomicassets::actions::createschema>(H, "eden.gm"_n, "eden.gm"_n,
+                                                      eden::schema_name, schema);
 
-   t.eden_gm.act<actions::genesis>("Eden", eosio::symbol("EOS", 4), s2a("10.0000 EOS"),
+   t.eden_gm.act<actions::genesis>(H, "Eden", eosio::symbol("EOS", 4), s2a("10.0000 EOS"),
                                    std::vector{"alice"_n, "pip"_n, "egeon"_n},
                                    "QmTYqoPYf7DiVebTnvwwFdTgsYXg2RnuPrt8uddjfW2kHS",
                                    attribute_map{}, s2a("1.0000 EOS"), 7 * 24 * 60 * 60, "");
@@ -190,38 +196,38 @@ TEST_CASE("genesis NFT pre-setup")
 
 TEST_CASE("genesis NFT pre-setup with incorrect schema")
 {
-   eden_tester t;
+   eden_tester t{H};
 
    t.eden_gm.act<atomicassets::actions::createcol>(
-       "eden.gm"_n, "eden.gm"_n, true, std::vector{"eden.gm"_n}, std::vector{"eden.gm"_n}, 0.05,
+       H, "eden.gm"_n, "eden.gm"_n, true, std::vector{"eden.gm"_n}, std::vector{"eden.gm"_n}, 0.05,
        atomicassets::attribute_map{});
    std::vector<atomicassets::format> schema{{"account", "uint64"}, {"name", "string"}};
-   t.eden_gm.act<atomicassets::actions::createschema>("eden.gm"_n, "eden.gm"_n, eden::schema_name,
-                                                      schema);
+   t.eden_gm.act<atomicassets::actions::createschema>(H, "eden.gm"_n, "eden.gm"_n,
+                                                      eden::schema_name, schema);
 
    auto trace = t.eden_gm.trace<actions::genesis>(
        "Eden", eosio::symbol("EOS", 4), s2a("10.0000 EOS"),
        std::vector{"alice"_n, "pip"_n, "egeon"_n}, "QmTYqoPYf7DiVebTnvwwFdTgsYXg2RnuPrt8uddjfW2kHS",
        attribute_map{}, s2a("1.0000 EOS"), 7 * 24 * 60 * 60, "");
-   expect(trace, "there already is an attribute with the same name");
+   expect(H, trace, "there already is an attribute with the same name");
 }
 
 TEST_CASE("genesis NFT pre-setup with compatible schema")
 {
-   eden_tester t;
+   eden_tester t{H};
 
    t.eden_gm.act<atomicassets::actions::createcol>(
-       "eden.gm"_n, "eden.gm"_n, true, std::vector{"eden.gm"_n}, std::vector{"eden.gm"_n}, 0.05,
+       H, "eden.gm"_n, "eden.gm"_n, true, std::vector{"eden.gm"_n}, std::vector{"eden.gm"_n}, 0.05,
        atomicassets::attribute_map{});
    std::vector<atomicassets::format> schema{{"social", "string"},
                                             {"pi", "float"},
                                             {"video", "ipfs"},
                                             {"account", "string"},
                                             {"name", "string"}};
-   t.eden_gm.act<atomicassets::actions::createschema>("eden.gm"_n, "eden.gm"_n, eden::schema_name,
-                                                      schema);
+   t.eden_gm.act<atomicassets::actions::createschema>(H, "eden.gm"_n, "eden.gm"_n,
+                                                      eden::schema_name, schema);
 
-   t.eden_gm.act<actions::genesis>("Eden", eosio::symbol("EOS", 4), s2a("10.0000 EOS"),
+   t.eden_gm.act<actions::genesis>(H, "Eden", eosio::symbol("EOS", 4), s2a("10.0000 EOS"),
                                    std::vector{"alice"_n, "pip"_n, "egeon"_n},
                                    "QmTYqoPYf7DiVebTnvwwFdTgsYXg2RnuPrt8uddjfW2kHS",
                                    attribute_map{}, s2a("1.0000 EOS"), 7 * 24 * 60 * 60, "");
@@ -229,8 +235,8 @@ TEST_CASE("genesis NFT pre-setup with compatible schema")
 
 TEST_CASE("genesis")
 {
-   eden_tester t;
-   t.eden_gm.act<actions::genesis>("Eden", eosio::symbol("EOS", 4), s2a("10.0000 EOS"),
+   eden_tester t{H};
+   t.eden_gm.act<actions::genesis>(H, "Eden", eosio::symbol("EOS", 4), s2a("10.0000 EOS"),
                                    std::vector{"alice"_n, "pip"_n, "egeon"_n},
                                    "QmTYqoPYf7DiVebTnvwwFdTgsYXg2RnuPrt8uddjfW2kHS",
                                    attribute_map{}, s2a("1.0000 EOS"), 7 * 24 * 60 * 60, "");
@@ -239,33 +245,33 @@ TEST_CASE("genesis")
    CHECK(get_eden_membership("pip"_n).status() == eden::member_status::pending_membership);
    CHECK(get_eden_membership("egeon"_n).status() == eden::member_status::pending_membership);
 
-   t.alice.act<actions::inductprofil>(1, alice_profile);
-   t.pip.act<actions::inductprofil>(2, pip_profile);
-   t.egeon.act<actions::inductprofil>(3, egeon_profile);
+   t.alice.act<actions::inductprofil>(H, 1, alice_profile);
+   t.pip.act<actions::inductprofil>(H, 2, pip_profile);
+   t.egeon.act<actions::inductprofil>(H, 3, egeon_profile);
 
    CHECK(get_eden_account("alice"_n) == std::nullopt);
    CHECK(get_token_balance("alice"_n) == s2a("1000.0000 EOS"));
 
-   t.alice.act<token::actions::transfer>("alice"_n, "eden.gm"_n, s2a("100.0000 EOS"), "memo");
-   t.pip.act<token::actions::transfer>("pip"_n, "eden.gm"_n, s2a("10.0000 EOS"), "memo");
-   t.egeon.act<token::actions::transfer>("egeon"_n, "eden.gm"_n, s2a("10.0000 EOS"), "memo");
+   t.alice.act<token::actions::transfer>(H, "alice"_n, "eden.gm"_n, s2a("100.0000 EOS"), "memo");
+   t.pip.act<token::actions::transfer>(H, "pip"_n, "eden.gm"_n, s2a("10.0000 EOS"), "memo");
+   t.egeon.act<token::actions::transfer>(H, "egeon"_n, "eden.gm"_n, s2a("10.0000 EOS"), "memo");
 
    CHECK(get_eden_account("alice"_n) != std::nullopt);
    CHECK(get_eden_account("alice"_n)->balance() == s2a("100.0000 EOS"));
    CHECK(get_token_balance("alice"_n) == s2a("900.0000 EOS"));
 
-   t.alice.act<actions::inductdonate>("alice"_n, 1, s2a("10.0000 EOS"));
-   t.pip.act<actions::inductdonate>("pip"_n, 2, s2a("10.0000 EOS"));
+   t.alice.act<actions::inductdonate>(H, "alice"_n, 1, s2a("10.0000 EOS"));
+   t.pip.act<actions::inductdonate>(H, "pip"_n, 2, s2a("10.0000 EOS"));
 
-   t.eden_gm.act<actions::addtogenesis>("bertie"_n);
+   t.eden_gm.act<actions::addtogenesis>(H, "bertie"_n);
 
-   t.egeon.act<actions::inductdonate>("egeon"_n, 3, s2a("10.0000 EOS"));
+   t.egeon.act<actions::inductdonate>(H, "egeon"_n, 3, s2a("10.0000 EOS"));
 
    CHECK(get_globals().stage == eden::contract_stage::genesis);
 
-   t.bertie.act<actions::inductprofil>(4, bertie_profile);
-   t.bertie.act<token::actions::transfer>("bertie"_n, "eden.gm"_n, s2a("100.0000 EOS"), "memo");
-   t.bertie.act<actions::inductdonate>("bertie"_n, 4, s2a("10.0000 EOS"));
+   t.bertie.act<actions::inductprofil>(H, 4, bertie_profile);
+   t.bertie.act<token::actions::transfer>(H, "bertie"_n, "eden.gm"_n, s2a("100.0000 EOS"), "memo");
+   t.bertie.act<actions::inductdonate>(H, "bertie"_n, 4, s2a("10.0000 EOS"));
 
    CHECK(get_eden_account("alice"_n) != std::nullopt);
    CHECK(get_eden_account("alice"_n)->balance() == s2a("90.0000 EOS"));
@@ -284,7 +290,8 @@ TEST_CASE("genesis")
 
    {
       auto template_id = get_eden_membership("alice"_n).nft_template_id();
-      expect(t.eden_gm.trace<atomicassets::actions::mintasset>(
+      expect(H,
+             t.eden_gm.trace<atomicassets::actions::mintasset>(
                  "eden.gm"_n, "eden.gm"_n, eden::schema_name, template_id, "alice"_n,
                  eden::atomicassets::attribute_map(), eden::atomicassets::attribute_map{},
                  std::vector<eosio::asset>()),
@@ -309,8 +316,8 @@ TEST_CASE("genesis")
 
 TEST_CASE("genesis expiration")
 {
-   eden_tester t;
-   t.eden_gm.act<actions::genesis>("Eden", eosio::symbol("EOS", 4), s2a("10.0000 EOS"),
+   eden_tester t{H};
+   t.eden_gm.act<actions::genesis>(H, "Eden", eosio::symbol("EOS", 4), s2a("10.0000 EOS"),
                                    std::vector{"alice"_n, "pip"_n, "egeon"_n, "bertie"_n},
                                    "QmTYqoPYf7DiVebTnvwwFdTgsYXg2RnuPrt8uddjfW2kHS",
                                    attribute_map{}, s2a("1.0000 EOS"), 7 * 24 * 60 * 60, "");
@@ -320,17 +327,17 @@ TEST_CASE("genesis expiration")
    CHECK(get_eden_membership("egeon"_n).status() == eden::member_status::pending_membership);
    CHECK(get_eden_membership("bertie"_n).status() == eden::member_status::pending_membership);
 
-   t.alice.act<actions::inductprofil>(1, alice_profile);
-   t.pip.act<actions::inductprofil>(2, pip_profile);
-   t.egeon.act<actions::inductprofil>(3, egeon_profile);
+   t.alice.act<actions::inductprofil>(H, 1, alice_profile);
+   t.pip.act<actions::inductprofil>(H, 2, pip_profile);
+   t.egeon.act<actions::inductprofil>(H, 3, egeon_profile);
 
-   t.alice.act<token::actions::transfer>("alice"_n, "eden.gm"_n, s2a("100.0000 EOS"), "memo");
-   t.pip.act<token::actions::transfer>("pip"_n, "eden.gm"_n, s2a("10.0000 EOS"), "memo");
-   t.egeon.act<token::actions::transfer>("egeon"_n, "eden.gm"_n, s2a("10.0000 EOS"), "memo");
+   t.alice.act<token::actions::transfer>(H, "alice"_n, "eden.gm"_n, s2a("100.0000 EOS"), "memo");
+   t.pip.act<token::actions::transfer>(H, "pip"_n, "eden.gm"_n, s2a("10.0000 EOS"), "memo");
+   t.egeon.act<token::actions::transfer>(H, "egeon"_n, "eden.gm"_n, s2a("10.0000 EOS"), "memo");
 
-   t.alice.act<actions::inductdonate>("alice"_n, 1, s2a("10.0000 EOS"));
-   t.pip.act<actions::inductdonate>("pip"_n, 2, s2a("10.0000 EOS"));
-   t.egeon.act<actions::inductdonate>("egeon"_n, 3, s2a("10.0000 EOS"));
+   t.alice.act<actions::inductdonate>(H, "alice"_n, 1, s2a("10.0000 EOS"));
+   t.pip.act<actions::inductdonate>(H, "pip"_n, 2, s2a("10.0000 EOS"));
+   t.egeon.act<actions::inductdonate>(H, "egeon"_n, 3, s2a("10.0000 EOS"));
 
    CHECK(get_eden_membership("alice"_n).status() == eden::member_status::active_member);
    CHECK(get_eden_membership("pip"_n).status() == eden::member_status::active_member);
@@ -340,9 +347,9 @@ TEST_CASE("genesis expiration")
 
    // Wait for Bertie's genesis invitation to expire
    t.chain.start_block(7 * 24 * 60 * 60 * 1000);
-   expect(t.alice.trace<actions::gc>(42), "Nothing to do");
+   expect(H, t.alice.trace<actions::gc>(42), "Nothing to do");
    t.chain.start_block();
-   t.alice.act<actions::gc>(42);
+   t.alice.act<actions::gc>(H, 42);
 
    CHECK(get_globals().stage == eden::contract_stage::active);
 
@@ -355,87 +362,96 @@ TEST_CASE("genesis expiration")
 
 TEST_CASE("induction")
 {
-   eden_tester t;
-   t.genesis();
+   eden_tester t{H};
+   t.genesis(H);
 
-   t.alice.act<actions::inductinit>(4, "alice"_n, "bertie"_n, std::vector{"pip"_n, "egeon"_n});
-   t.bertie.act<token::actions::transfer>("bertie"_n, "eden.gm"_n, s2a("10.0000 EOS"), "memo");
+   t.alice.act<actions::inductinit>(H, 4, "alice"_n, "bertie"_n, std::vector{"pip"_n, "egeon"_n});
+   t.bertie.act<token::actions::transfer>(H, "bertie"_n, "eden.gm"_n, s2a("10.0000 EOS"), "memo");
    CHECK(get_eden_membership("bertie"_n).status() == eden::member_status::pending_membership);
 
    // cannot endorse before video and profile are set
    auto blank_hash_data =
        eosio::convert_to_bin(std::tuple(std::string{}, eden::new_member_profile{}));
-   expect(t.alice.trace<actions::inductendorse>(
+   expect(H,
+          t.alice.trace<actions::inductendorse>(
               "alice"_n, 4, eosio::sha256(blank_hash_data.data(), blank_hash_data.size())),
           "not set");
 
-   expect(t.bertie.trace<actions::inductinit>(5, "bertie"_n, "ahab"_n,
+   expect(H,
+          t.bertie.trace<actions::inductinit>(5, "bertie"_n, "ahab"_n,
                                               std::vector{"pip"_n, "egeon"_n}),
           "inactive member bertie");
 
-   expect(t.alice.trace<actions::inductinit>(6, "alice"_n, "bertie"_n,
+   expect(H,
+          t.alice.trace<actions::inductinit>(6, "alice"_n, "bertie"_n,
                                              std::vector{"pip"_n, "egeon"_n}),
           "already in progress");
-   expect(t.alice.trace<actions::inductinit>(7, "alice"_n, "ahab"_n,
+   expect(H,
+          t.alice.trace<actions::inductinit>(7, "alice"_n, "ahab"_n,
                                              std::vector{"alice"_n, "egeon"_n}),
           "inviter cannot be in the witnesses list");
-   expect(t.alice.trace<actions::inductinit>(8, "alice"_n, "ahab"_n, std::vector{"pip"_n, "pip"_n}),
+   expect(H,
+          t.alice.trace<actions::inductinit>(8, "alice"_n, "ahab"_n, std::vector{"pip"_n, "pip"_n}),
           "duplicated entry");
    expect(
+       H,
        t.alice.trace<actions::inductinit>(9, "alice"_n, "ahab"_n, std::vector{"pip"_n, "bertie"_n}),
        "inactive member bertie");
    expect(
+       H,
        t.alice.trace<actions::inductinit>(10, "alice"_n, "void"_n, std::vector{"pip"_n, "egeon"_n}),
        "Account void does not exist");
 
    std::string bertie_video = "QmTYqoPYf7DiVebTnvwwFdTgsYXg2RnuPrt8uddjfW2kHS";
-   t.bertie.act<actions::inductprofil>(4, bertie_profile);
-   t.alice.act<actions::inductvideo>("alice"_n, 4, bertie_video);  // Can be inviter or witness
+   t.bertie.act<actions::inductprofil>(H, 4, bertie_profile);
+   t.alice.act<actions::inductvideo>(H, "alice"_n, 4, bertie_video);  // Can be inviter or witness
 
-   expect(t.bertie.trace<actions::inductdonate>("bertie"_n, 4, s2a("10.0000 EOS")),
+   expect(H, t.bertie.trace<actions::inductdonate>("bertie"_n, 4, s2a("10.0000 EOS")),
           "induction is not fully endorsed");
 
    auto hash_data = eosio::convert_to_bin(std::tuple(bertie_video, bertie_profile));
    auto induction_hash = eosio::sha256(hash_data.data(), hash_data.size());
-   expect(t.bertie.trace<actions::inductendorse>("alice"_n, 4, induction_hash),
+   expect(H, t.bertie.trace<actions::inductendorse>("alice"_n, 4, induction_hash),
           "missing authority of alice");
-   expect(t.bertie.trace<actions::inductendorse>("bertie"_n, 4, induction_hash),
+   expect(H, t.bertie.trace<actions::inductendorse>("bertie"_n, 4, induction_hash),
           "Induction can only be endorsed by inviter or a witness");
-   expect(t.alice.trace<actions::inductendorse>(
+   expect(H,
+          t.alice.trace<actions::inductendorse>(
               "alice"_n, 4, eosio::sha256(hash_data.data(), hash_data.size() - 1)),
           "Outdated endorsement");
 
-   auto endorse_all = [&] {
-      t.alice.act<actions::inductendorse>("alice"_n, 4, induction_hash);
-      t.pip.act<actions::inductendorse>("pip"_n, 4, induction_hash);
-      t.egeon.act<actions::inductendorse>("egeon"_n, 4, induction_hash);
+   auto endorse_all = [&](const call_stack* stack) {
+      t.alice.act<actions::inductendorse>(H, "alice"_n, 4, induction_hash);
+      t.pip.act<actions::inductendorse>(H, "pip"_n, 4, induction_hash);
+      t.egeon.act<actions::inductendorse>(H, "egeon"_n, 4, induction_hash);
    };
-   endorse_all();
+   endorse_all(H);
    t.chain.start_block();
-   expect(t.alice.trace<actions::inductendorse>("alice"_n, 4, induction_hash), "Already endorsed");
+   expect(H, t.alice.trace<actions::inductendorse>("alice"_n, 4, induction_hash),
+          "Already endorsed");
 
    // changing the profile resets endorsements
-   t.bertie.act<actions::inductprofil>(4, bertie_profile);
-   expect(t.bertie.trace<actions::inductdonate>("bertie"_n, 4, s2a("10.0000 EOS")),
+   t.bertie.act<actions::inductprofil>(H, 4, bertie_profile);
+   expect(H, t.bertie.trace<actions::inductdonate>("bertie"_n, 4, s2a("10.0000 EOS")),
           "induction is not fully endorsed");
    t.chain.start_block();
-   endorse_all();
+   endorse_all(H);
 
    // changing the video resets endorsements
-   t.pip.act<actions::inductvideo>("pip"_n, 4, bertie_video);
-   expect(t.bertie.trace<actions::inductdonate>("bertie"_n, 4, s2a("10.0000 EOS")),
+   t.pip.act<actions::inductvideo>(H, "pip"_n, 4, bertie_video);
+   expect(H, t.bertie.trace<actions::inductdonate>("bertie"_n, 4, s2a("10.0000 EOS")),
           "induction is not fully endorsed");
    t.chain.start_block();
-   endorse_all();
+   endorse_all(H);
 
-   t.bertie.act<actions::inductdonate>("bertie"_n, 4, s2a("10.0000 EOS"));
+   t.bertie.act<actions::inductdonate>(H, "bertie"_n, 4, s2a("10.0000 EOS"));
    CHECK(get_eden_membership("bertie"_n).status() == eden::member_status::active_member);
 }
 
 TEST_CASE("induction gc")
 {
-   eden_tester t;
-   t.genesis();
+   eden_tester t{H};
+   t.genesis(H);
 
    std::vector<eosio::name> test_accounts;
    auto test_account_base = "edenmember"_n;
@@ -450,14 +466,14 @@ TEST_CASE("induction gc")
    for (auto account : test_accounts)
    {
       t.chain.start_block();
-      t.chain.create_account(account);
+      t.chain.create_account(H, account);
       t.chain.as("eosio.token"_n)
-          .act<token::actions::transfer>("eosio.token"_n, account, s2a("1000.0000 EOS"), "memo");
+          .act<token::actions::transfer>(H, "eosio.token"_n, account, s2a("1000.0000 EOS"), "memo");
    }
 
-   auto finish_induction = [&](uint64_t induction_id, eosio::name inviter, eosio::name invitee,
-                               const std::vector<eosio::name>& witnesses) {
-      t.chain.as(invitee).act<token::actions::transfer>(invitee, "eden.gm"_n, s2a("10.0000 EOS"),
+   auto finish_induction = [&](const call_stack* stack, uint64_t induction_id, eosio::name inviter,
+                               eosio::name invitee, const std::vector<eosio::name>& witnesses) {
+      t.chain.as(invitee).act<token::actions::transfer>(H, invitee, "eden.gm"_n, s2a("10.0000 EOS"),
                                                         "memo");
 
       std::string video = "QmTYqoPYf7DiVebTnvwwFdTgsYXg2RnuPrt8uddjfW2kHS";
@@ -465,18 +481,18 @@ TEST_CASE("induction gc")
                                        "Qmb7WmZiSDXss5HfuKfoSf6jxTDrHzr8AoAUDeDMLNDuws",
                                        "Hi, I'm the coolest " + invitee.to_string() + " ever!",
                                        "{\"blog\":\"" + invitee.to_string() + "example.com\"}"};
-      t.chain.as(invitee).act<actions::inductprofil>(induction_id, profile);
-      t.chain.as(inviter).act<actions::inductvideo>(inviter, induction_id, video);
+      t.chain.as(invitee).act<actions::inductprofil>(H, induction_id, profile);
+      t.chain.as(inviter).act<actions::inductvideo>(H, inviter, induction_id, video);
 
       auto hash_data = eosio::convert_to_bin(std::tuple(video, profile));
       auto induction_hash = eosio::sha256(hash_data.data(), hash_data.size());
 
-      t.chain.as(inviter).act<actions::inductendorse>(inviter, induction_id, induction_hash);
+      t.chain.as(inviter).act<actions::inductendorse>(H, inviter, induction_id, induction_hash);
       for (auto witness : witnesses)
       {
-         t.chain.as(witness).act<actions::inductendorse>(witness, induction_id, induction_hash);
+         t.chain.as(witness).act<actions::inductendorse>(H, witness, induction_id, induction_hash);
       }
-      t.chain.as(invitee).act<actions::inductdonate>(invitee, induction_id, s2a("10.0000 EOS"));
+      t.chain.as(invitee).act<actions::inductdonate>(H, invitee, induction_id, s2a("10.0000 EOS"));
       CHECK(get_eden_membership(invitee).status() == eden::member_status::active_member);
    };
 
@@ -486,9 +502,9 @@ TEST_CASE("induction gc")
       t.chain.start_block();  // don't run out of cpu
       auto account = test_accounts.at(i);
       auto induction_id = i + 4;
-      t.alice.act<actions::inductinit>(induction_id, "alice"_n, account,
+      t.alice.act<actions::inductinit>(H, induction_id, "alice"_n, account,
                                        std::vector{"pip"_n, "egeon"_n});
-      finish_induction(induction_id, "alice"_n, account, {"pip"_n, "egeon"_n});
+      finish_induction(H, induction_id, "alice"_n, account, {"pip"_n, "egeon"_n});
    }
    CHECK(members("eden.gm"_n).stats().active_members == 37);
    CHECK(members("eden.gm"_n).stats().pending_members == 0);
@@ -504,12 +520,12 @@ TEST_CASE("induction gc")
       {
          auto inviter = test_accounts.at(j);
          auto induction_id = base_induction_id + j;
-         t.chain.as(inviter).act<actions::inductinit>(induction_id, inviter, invitee,
+         t.chain.as(inviter).act<actions::inductinit>(H, induction_id, inviter, invitee,
                                                       std::vector{"pip"_n, "egeon"_n});
       }
    }
 
-   expect(t.alice.trace<actions::gc>(32),
+   expect(H, t.alice.trace<actions::gc>(32),
           "Nothing to do");  // lots of invites; none are available for gc
 
    // Complete some invites
@@ -519,7 +535,7 @@ TEST_CASE("induction gc")
       auto member_idx = i + 34;
       auto invitee = test_accounts.at(34 + i);
       uint64_t base_induction_id = 34 + 4 + i * 64;
-      finish_induction(base_induction_id, test_accounts.at(0), invitee, {"pip"_n, "egeon"_n});
+      finish_induction(H, base_induction_id, test_accounts.at(0), invitee, {"pip"_n, "egeon"_n});
       CHECK(members("eden.gm"_n).stats().active_members == 37 + i + 1);
       CHECK(members("eden.gm"_n).stats().pending_members == 2 - i);
    }
@@ -529,7 +545,7 @@ TEST_CASE("induction gc")
    CHECK(get_table_size<eden::endorsed_induction_table_type>() == 0);
    CHECK(get_table_size<eden::induction_gc_table_type>() > 0);
 
-   t.ahab.act<actions::gc>(32);  // ahab is not a member, but gc needs no permissions
+   t.ahab.act<actions::gc>(H, 32);  // ahab is not a member, but gc needs no permissions
 
    CHECK(get_table_size<eden::induction_table_type>() == 0);
    CHECK(get_table_size<eden::endorsement_table_type>() == 0);
@@ -537,12 +553,12 @@ TEST_CASE("induction gc")
    CHECK(get_table_size<eden::induction_gc_table_type>() == 0);
 
    // An expired invitation
-   t.alice.act<actions::inductinit>(42, "alice"_n, test_accounts.at(37),
+   t.alice.act<actions::inductinit>(H, 42, "alice"_n, test_accounts.at(37),
                                     std::vector{"pip"_n, "egeon"_n});
    t.chain.start_block(1000 * 60 * 60 * 24 * 7);
-   expect(t.alice.trace<actions::gc>(32), "Nothing to do");
+   expect(H, t.alice.trace<actions::gc>(32), "Nothing to do");
    t.chain.start_block();
-   t.alice.act<actions::gc>(32);
+   t.alice.act<actions::gc>(H, 32);
 
    CHECK(get_table_size<eden::induction_table_type>() == 0);
    CHECK(get_table_size<eden::endorsement_table_type>() == 0);
@@ -555,33 +571,36 @@ TEST_CASE("induction gc")
 
 TEST_CASE("deposit and spend")
 {
-   eden_tester t;
-   t.eden_gm.act<actions::genesis>("Eden", eosio::symbol("EOS", 4), s2a("10.0000 EOS"),
+   eden_tester t{H};
+   t.eden_gm.act<actions::genesis>(H, "Eden", eosio::symbol("EOS", 4), s2a("10.0000 EOS"),
                                    std::vector{"alice"_n, "pip"_n, "egeon"_n},
                                    "QmTYqoPYf7DiVebTnvwwFdTgsYXg2RnuPrt8uddjfW2kHS",
                                    attribute_map{}, s2a("1.0000 EOS"), 7 * 24 * 60 * 60, "");
-   expect(t.alice.trace<token::actions::transfer>("alice"_n, "eden.gm"_n, s2a("10.0000 OTHER"),
+   expect(H,
+          t.alice.trace<token::actions::transfer>("alice"_n, "eden.gm"_n, s2a("10.0000 OTHER"),
                                                   "memo"),
           "token must be a valid 4,EOS");
    expect(
+       H,
        t.alice.trace<token::actions::transfer>("alice"_n, "eden.gm"_n, s2a("9.9999 EOS"), "memo"),
        "insufficient deposit to open an account");
    CHECK(get_eden_account("alice"_n) == std::nullopt);
-   t.alice.act<token::actions::transfer>("alice"_n, "eden.gm"_n, s2a("10.0000 EOS"), "memo");
+   t.alice.act<token::actions::transfer>(H, "alice"_n, "eden.gm"_n, s2a("10.0000 EOS"), "memo");
    CHECK(get_eden_account("alice"_n) != std::nullopt);
    CHECK(get_eden_account("alice"_n)->balance() == s2a("10.0000 EOS"));
    CHECK(get_token_balance("alice"_n) == s2a("990.0000 EOS"));
 
-   expect(t.pip.trace<actions::withdraw>("pip"_n, s2a("10.0000 EOS")), "insufficient balance");
-   expect(t.pip.trace<actions::withdraw>("alice"_n, s2a("10.0000 EOS")),
+   expect(H, t.pip.trace<actions::withdraw>("pip"_n, s2a("10.0000 EOS")), "insufficient balance");
+   expect(H, t.pip.trace<actions::withdraw>("alice"_n, s2a("10.0000 EOS")),
           "missing authority of alice");
-   expect(t.alice.trace<actions::withdraw>("alice"_n, s2a("10.0001 EOS")), "insufficient balance");
+   expect(H, t.alice.trace<actions::withdraw>("alice"_n, s2a("10.0001 EOS")),
+          "insufficient balance");
    CHECK(get_eden_account("alice"_n)->balance() == s2a("10.0000 EOS"));
    CHECK(get_token_balance("alice"_n) == s2a("990.0000 EOS"));
-   t.alice.act<actions::withdraw>("alice"_n, s2a("4.0000 EOS"));
+   t.alice.act<actions::withdraw>(H, "alice"_n, s2a("4.0000 EOS"));
    CHECK(get_eden_account("alice"_n)->balance() == s2a("6.0000 EOS"));
    CHECK(get_token_balance("alice"_n) == s2a("994.0000 EOS"));
-   t.alice.act<actions::withdraw>("alice"_n, s2a("6.0000 EOS"));
+   t.alice.act<actions::withdraw>(H, "alice"_n, s2a("6.0000 EOS"));
    CHECK(get_eden_account("alice"_n) == std::nullopt);
    CHECK(get_token_balance("alice"_n) == s2a("1000.0000 EOS"));
 }
