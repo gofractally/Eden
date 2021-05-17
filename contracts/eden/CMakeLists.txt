@@ -24,9 +24,9 @@ add_custom_command(TARGET eden-abigen POST_BUILD
     COMMAND ${ROOT_BINARY_DIR}/cltester eden-abigen.wasm >${ROOT_BINARY_DIR}/eden.abi
 )
 
-add_executable(test-eden tests/test-eden.cpp src/globals.cpp src/accounts.cpp src/members.cpp)
+add_executable(test-eden tests/test-eden.cpp src/globals.cpp src/accounts.cpp src/members.cpp src/atomicassets.cpp)
 target_include_directories(test-eden PUBLIC include)
-target_include_directories(test-eden PUBLIC ../token/include ../boot/include)
+target_include_directories(test-eden PUBLIC ../token/include ../boot/include ../../external/atomicassets-contract/include)
 target_link_libraries(test-eden catch2 cltestlib)
 set_target_properties(test-eden PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${ROOT_BINARY_DIR})
 eden_tester_test(test-eden)
