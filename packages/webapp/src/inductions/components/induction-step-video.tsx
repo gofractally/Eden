@@ -67,6 +67,7 @@ export const InductionStepVideo = ({
             setSubmittedVideo(true);
         } catch (error) {
             onError(error, "Unable to set the induction video");
+            setVideoSubmissionPhase(undefined);
         }
     };
 
