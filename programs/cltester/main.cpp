@@ -19,8 +19,10 @@
 #include <eosio/ship_protocol.hpp>
 #include <eosio/to_bin.hpp>
 #include <eosio/vm/backend.hpp>
+#include "dwarf.hpp"
 
 #include <stdio.h>
+#include <ucontext.h>
 #include <chrono>
 #include <optional>
 
@@ -43,7 +45,12 @@ using eosio::vm::span;
 
 struct callbacks;
 using rhf_t = eosio::vm::registered_host_functions<callbacks>;
-using backend_t = eosio::vm::backend<rhf_t, eosio::vm::jit>;
+using backend_t = eosio::vm::backend<rhf_t,
+                                     eosio::vm::jit_profile,
+                                     eosio::vm::default_options,
+                                     eosio::vm::profile_instr_map>;
+
+inline constexpr int max_backtrace_frames = 512;
 
 inline constexpr int block_interval_ms = 500;
 inline constexpr int block_interval_us = block_interval_ms * 1000;
@@ -686,6 +693,20 @@ struct callbacks
 {
    ::state& state;
 
+   void backtrace()
+   {
+      void* data[max_backtrace_frames];
+      ucontext_t uc;
+      if (getcontext(&uc))
+      {
+         fprintf(stderr, "getcontext() failed\n");
+         return;
+      }
+      int count = state.backend.get_context().backtrace(data, sizeof(data) / sizeof(data[0]), &uc);
+      for (int i = 0; i < count; ++i)
+         fprintf(stderr, "%p %x\n", data[i], state.backend.get_debug().translate(data[i]));
+   }
+
    void check_bounds(void* data, size_t size)
    {
       volatile auto check = *((const char*)data + size - 1);
@@ -720,12 +741,20 @@ struct callbacks
       // todo: verify cb_alloc isn't in imports
       if (state.backend.get_module().tables.size() < 0 ||
           state.backend.get_module().tables[0].table.size() < cb_alloc)
+      {
+         backtrace();
          throw std::runtime_error("cb_alloc is out of range");
+      }
+      auto top_frame = state.backend.get_context()._top_frame;
       auto result = state.backend.get_context().execute(  //
           this, eosio::vm::jit_visitor(42), state.backend.get_module().tables[0].table[cb_alloc],
           cb_alloc_data, size);
+      state.backend.get_context()._top_frame = top_frame;
       if (!result || !result->is_a<eosio::vm::i32_const_t>())
+      {
+         backtrace();
          throw std::runtime_error("cb_alloc returned incorrect type");
+      }
       char* begin = state.wa.get_base_ptr<char>() + result->to_ui32();
       check_bounds(begin, size);
       return begin;
@@ -742,14 +771,25 @@ struct callbacks
       memcpy(alloc(cb_alloc_data, cb_alloc, data.size), data.data, data.size);
    }
 
-   void tester_abort() { throw std::runtime_error("called tester_abort"); }
+   void tester_abort()
+   {
+      backtrace();
+      throw std::runtime_error("called tester_abort");
+   }
 
-   void eosio_exit(int32_t) { throw std::runtime_error("called eosio_exit"); }
+   void eosio_exit(int32_t)
+   {
+      backtrace();
+      throw std::runtime_error("called eosio_exit");
+   }
 
    void eosio_assert_message(bool condition, span<const char> msg)
    {
       if (!condition)
+      {
+         backtrace();
          throw ::assert_exception(span_str(msg));
+      }
    }
 
    void prints_l(span<const char> str) { std::cout.write(str.data(), str.size()); }
@@ -1450,6 +1490,7 @@ static void run(const char* wasm, const std::vector<std::string>& args)
    eosio::vm::wasm_allocator wa;
    auto code = eosio::vm::read_wasm(wasm);
    backend_t backend(code, nullptr);
+   auto d = dwarf::get_info_from_wasm({(const char*)code.data(), code.size()});
    ::state state{wasm, wa, backend, args};
    callbacks cb{state};
    state.files.emplace_back(stdin, false);
