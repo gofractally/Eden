@@ -30,7 +30,7 @@ const urlify = (address: string) => {
 };
 
 export const MemberSocialLinks = ({ member }: Props) => (
-    <div className="flex flex-col flex-wrap max-h-24 mt-5 text-sm w-full">
+    <div className="flex md:flex-row flex-wrap flex-col items-center mt-5 text-sm">
         <SocialButton
             handle={member.account}
             icon={EosCommunityIcon}

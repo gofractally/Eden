@@ -10,7 +10,7 @@ interface Props {
     className?: string;
 }
 
-const BASE_CLASS = "hover:underline items-center flex space-x-3 p-1";
+const BASE_CLASS = "hover:underline space-x-3 p-1 flex-grow flex flex-wrap";
 
 export const SocialButton = ({
     handle,
