@@ -106,7 +106,7 @@ export const InductionProfileForm = ({
             <Form.LabeledSet label="" htmlFor="imgFile" className="col-span-6">
                 <div className="flex items-center mb-1 space-x-1">
                     <p className="text-sm font-medium text-gray-700">
-                        Profile Image
+                        Profile image
                     </p>
                     <HelpLink href="https://www.notion.so/edenos/Upload-Profile-Photo-c15a7a050d3c411faca21a3cd3d2f0a3" />
                 </div>
