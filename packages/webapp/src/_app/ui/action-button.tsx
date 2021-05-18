@@ -1,5 +1,6 @@
 import React from "react";
 import NextLink from "next/link";
+import { FaSpinner } from "react-icons/fa";
 
 interface Props {
     children: React.ReactNode;
@@ -8,6 +9,7 @@ interface Props {
     type?: ActionButtonType;
     isSubmit?: boolean;
     disabled?: boolean;
+    isLoading?: boolean;
     size?: ActionButtonSize;
     fullWidth?: boolean;
     className?: string;
@@ -47,6 +49,7 @@ export const ActionButton = ({
     type = ActionButtonType.PRIMARY,
     size = ActionButtonSize.M,
     fullWidth,
+    isLoading,
     className = "",
 }: Props) => {
     const baseClass =
@@ -59,7 +62,12 @@ export const ActionButton = ({
     if (href) {
         return (
             <NextLink href={href}>
-                <a className={buttonClass}>{children}</a>
+                <a className={buttonClass}>
+                    {isLoading && (
+                        <FaSpinner className="inline-flex animate-spin mr-2" />
+                    )}
+                    {children}
+                </a>
             </NextLink>
         );
     }
@@ -71,6 +79,9 @@ export const ActionButton = ({
             className={buttonClass}
             disabled={disabled}
         >
+            {isLoading && (
+                <FaSpinner className="inline-flex animate-spin mr-1 mb-1 align-middle" />
+            )}
             {children}
         </button>
     );

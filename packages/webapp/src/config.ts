@@ -41,6 +41,8 @@ APP_MINIMUM_DONATION_AMOUNT="${process.env.NEXT_PUBLIC_APP_MINIMUM_DONATION_AMOU
 `);
 
 export const ipfsBaseUrl = "https://ipfs.io/ipfs"; //"https://ipfs.pink.gg/ipfs";
+export const ipfsApiBaseUrl = "https://ipfs.infura.io:5001/api/v0";
+
 export const blockExplorerAccountBaseUrl =
     process.env.NEXT_PUBLIC_BLOCKEXPLORER_ACCOUNT_BASE_URL;
 
@@ -76,9 +78,7 @@ export const chainConfig = {
 // SECRETS CONFIG
 if (
     typeof window === "undefined" &&
-    (!process.env.IPFS_PINATA_API ||
-        !process.env.IPFS_PINATA_JWT ||
-        !process.env.IPFS_UPLOAD_ENDPOINT_URL)
+    (!process.env.IPFS_PINATA_API || !process.env.IPFS_PINATA_JWT)
 ) {
     throw new Error("Missing Config Secrets are not set");
 }
@@ -86,5 +86,4 @@ if (
 export const ipfsConfig = {
     pinataApi: process.env.IPFS_PINATA_API || "",
     pinataJwt: process.env.IPFS_PINATA_JWT || "",
-    uploadEndpointUrl: process.env.IPFS_UPLOAD_ENDPOINT_URL || "",
 };
