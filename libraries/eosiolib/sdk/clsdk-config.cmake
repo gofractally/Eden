@@ -90,12 +90,15 @@ target_link_libraries(eosio-contract-abigen INTERFACE
     -lcltestlib
 )
 
-add_library(cltestlib INTERFACE)
-target_link_libraries(cltestlib INTERFACE
+add_library(cltestlib
+    # recompile so stack traces have good file paths
+    ${clsdk_DIR}/eosiolib/tester/tester.cpp
+)
+target_link_libraries(cltestlib PUBLIC
     eosio-core
     -lcltestlib
 )
-target_include_directories(cltestlib INTERFACE
+target_include_directories(cltestlib PUBLIC
     ${clsdk_DIR}/catch2/include
     ${clsdk_DIR}/contracts
     ${clsdk_DIR}/eosiolib/contracts/include
