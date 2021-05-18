@@ -84,7 +84,7 @@ const MemberBio = ({ bio }: { bio: string }) => {
     return (
         <>
             <h4 className="font-semibold text-xl">Member Profile Statement</h4>
-            <p className="text-gray-900 pt-2 pl-2">{renderContent()}</p>
+            <p className="text-gray-900 pt-2">{renderContent()}</p>
         </>
     );
 };
