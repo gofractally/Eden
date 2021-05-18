@@ -85,6 +85,13 @@ namespace eden
          if (stats().pending_members == 0)
          {
             globals.set_stage(contract_stage::active);
+            // Lock the supply of genesis NFTs
+            for (const auto& member : member_tb)
+            {
+               eosio::action({contract, "active"_n}, atomic_assets_account, "locktemplate"_n,
+                             std::tuple(contract, contract, member.nft_template_id()))
+                   .send();
+            }
          }
       }
    }

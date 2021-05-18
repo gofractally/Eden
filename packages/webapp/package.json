@@ -26,7 +26,8 @@
         "ual-anchor": "^1.0.5",
         "ual-ledger": "^0.3.0",
         "ual-reactjs-renderer": "^0.3.1",
-        "ual-scatter": "^0.3.0"
+        "ual-scatter": "^0.3.0",
+        "zod": "^3.0.0-beta.1"
     },
     "devDependencies": {
         "@types/node": "~14.0.23",

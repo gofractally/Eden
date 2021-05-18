@@ -9081,3 +9081,8 @@ yocto-queue@^0.1.0:
   version "0.1.0"
   resolved "https://registry.yarnpkg.com/yocto-queue/-/yocto-queue-0.1.0.tgz#0294eb3dee05028d31ee1a5fa2c556a6aaf10a1b"
   integrity sha512-rVksvsnNCdJ/ohGc6xgPwyN8eheCxsiLM8mxuE/t/mOVqJewPuO1miLpTHQiRgTKCLexL4MeAFVagts7HmNZ2Q==
+
+zod@^3.0.0-beta.1:
+  version "3.0.0-beta.4"
+  resolved "https://registry.yarnpkg.com/zod/-/zod-3.0.0-beta.4.tgz#aef17364b169e0b236640b10d2d121ec250c04bc"
+  integrity sha512-QpgPbIh3987OC4brzgwA2BQYE48dX1pK+l+y6rDuRTsV1IJIuKoh0eWOGnKMEK5j3uGMTDPRGbMJ0SfzawgIbg==

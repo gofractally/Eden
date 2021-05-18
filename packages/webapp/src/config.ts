@@ -73,6 +73,24 @@ export const chainConfig = {
     rpcEndpoints: [rpcEndpoint],
 };
 
+
 export const ipfsUrl = (ipfsHash: string) => `${ipfsBaseUrl}/${ipfsHash}`;
 export const explorerAccountUrl = (accountName: string) =>
     `${blockExplorerAccountBaseUrl}/${accountName}`;
+
+// SECRETS CONFIG
+if (
+    typeof window === "undefined" &&
+    (!process.env.IPFS_PINATA_API ||
+        !process.env.IPFS_PINATA_JWT ||
+        !process.env.IPFS_UPLOAD_ENDPOINT_URL)
+) {
+    throw new Error("Missing Config Secrets are not set");
+}
+
+export const ipfsConfig = {
+    pinataApi: process.env.IPFS_PINATA_API || "",
+    pinataJwt: process.env.IPFS_PINATA_JWT || "",
+    uploadEndpointUrl: process.env.IPFS_UPLOAD_ENDPOINT_URL || "",
+};
+
