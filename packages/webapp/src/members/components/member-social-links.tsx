@@ -23,8 +23,8 @@ const urlify = (address: string) => {
 
 export const MemberSocialLinks = ({ member }: Props) => (
     <div
-        className="grid gap-y-2 justify-around sm:justify-between mt-5 text-sm"
-        style={{ gridTemplateColumns: "repeat(auto-fill, 13rem)" }}
+        className="grid gap-y-2 sm:justify-between mt-5 text-sm"
+        style={{ gridTemplateColumns: "repeat(auto-fill, 12.5rem)" }}
     >
         <SocialButton
             handle={member.account}
