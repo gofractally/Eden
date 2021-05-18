@@ -22,7 +22,10 @@ const urlify = (address: string) => {
 };
 
 export const MemberSocialLinks = ({ member }: Props) => (
-    <div className="flex md:flex-row flex-wrap flex-col items-center mt-5 text-sm">
+    <div
+        className="grid gap-y-2 justify-around sm:justify-between mt-5 text-sm"
+        style={{ gridTemplateColumns: "repeat(auto-fill, 13rem)" }}
+    >
         <SocialButton
             handle={member.account}
             icon={EosCommunityIcon}
