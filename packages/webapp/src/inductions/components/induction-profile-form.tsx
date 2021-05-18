@@ -8,6 +8,7 @@ import {
     ActionButton,
     HelpLink,
     handleFileChange,
+    Text,
 } from "_app";
 import { NewMemberProfile } from "../interfaces";
 
@@ -163,6 +164,7 @@ export const InductionProfileForm = ({
                     disabled={isLoading || disabled}
                     value={socialFields.eosCommunity}
                     onChange={onChangeSocialFields}
+                    placeholder="YourUsername"
                 />
             </Form.LabeledSet>
             <Form.LabeledSet
@@ -176,6 +178,7 @@ export const InductionProfileForm = ({
                     disabled={isLoading || disabled}
                     value={socialFields.twitter}
                     onChange={onChangeSocialFields}
+                    placeholder="YourHandle"
                 />
             </Form.LabeledSet>
             <Form.LabeledSet
@@ -189,6 +192,7 @@ export const InductionProfileForm = ({
                     disabled={isLoading || disabled}
                     value={socialFields.telegram}
                     onChange={onChangeSocialFields}
+                    placeholder="YourHandle"
                 />
             </Form.LabeledSet>
             <Form.LabeledSet
@@ -202,6 +206,7 @@ export const InductionProfileForm = ({
                     disabled={isLoading || disabled}
                     value={socialFields.blog}
                     onChange={onChangeSocialFields}
+                    placeholder="yoursite.com"
                 />
             </Form.LabeledSet>
             <Form.LabeledSet
@@ -215,6 +220,7 @@ export const InductionProfileForm = ({
                     disabled={isLoading || disabled}
                     value={socialFields.linkedin}
                     onChange={onChangeSocialFields}
+                    placeholder="YourHandle"
                 />
             </Form.LabeledSet>
             <Form.LabeledSet
@@ -228,6 +234,7 @@ export const InductionProfileForm = ({
                     disabled={isLoading || disabled}
                     value={socialFields.facebook}
                     onChange={onChangeSocialFields}
+                    placeholder="YourUsername"
                 />
             </Form.LabeledSet>
 
@@ -238,6 +245,16 @@ export const InductionProfileForm = ({
                     value={Number(consentsToPublish)}
                     onChange={() => setConsentsToPublish(!consentsToPublish)}
                 />
+            </div>
+
+            <div className="col-span-6">
+                <Text>
+                    <span className="italic font-medium">Don't worry!</span>{" "}
+                    Even though you are committing your information to the
+                    blockchain right now, you will be able to review your
+                    profile and make changes to it all the way up until you
+                    complete your donation.
+                </Text>
             </div>
 
             {onSubmit && (
