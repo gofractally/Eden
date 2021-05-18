@@ -63,12 +63,7 @@ export const ActionButton = ({
     const cursorClass = disabled ? "cursor-not-allowed" : "cursor-pointer";
     const buttonClass = `${baseClass} ${size} ${widthClass} ${colorClass} ${cursorClass} ${className}`;
 
-    let targetProps = {
-        target,
-        rel: isExternal ? "noopener noreferrer" : undefined,
-    };
-
-    if (onClick) {
+    if (isSubmit || onClick) {
         return (
             <button
                 onClick={onClick}
@@ -86,7 +81,12 @@ export const ActionButton = ({
 
     if (isExternal) {
         return (
-            <a className={buttonClass} href={href} {...targetProps}>
+            <a
+                className={buttonClass}
+                href={href}
+                rel="noopener noreferrer"
+                target={target}
+            >
                 {isLoading && (
                     <FaSpinner className="inline-flex animate-spin mr-2" />
                 )}
@@ -97,7 +97,7 @@ export const ActionButton = ({
 
     return (
         <NextLink href={href}>
-            <a className={buttonClass} {...targetProps}>
+            <a className={buttonClass} target={target}>
                 {isLoading && (
                     <FaSpinner className="inline-flex animate-spin mr-2" />
                 )}
