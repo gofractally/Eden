@@ -104,7 +104,7 @@ export const InductionStepVideo = ({ induction, isReviewing, role }: Props) => {
 };
 
 const VideoSubmitConfirmation = () => (
-    <InductionJourneyContainer role={InductionJourney.INVITER} step={3}>
+    <InductionJourneyContainer journey={InductionJourney.INVITER} step={3}>
         <Heading size={1} className="mb-5">
             Received!
         </Heading>
@@ -141,7 +141,7 @@ const AddUpdateVideoHash = ({
     isReviewing,
     submissionPhase,
 }: AddUpdateVideoHashProps) => (
-    <InductionJourneyContainer role={InductionJourney.INVITER} step={3}>
+    <InductionJourneyContainer journey={InductionJourney.INVITER} step={3}>
         <Heading size={1} className="mb-2">
             {isReviewing ? "Review induction video" : "Induction ceremony"}
         </Heading>
@@ -169,7 +169,7 @@ const WaitingForInductionCeremony = ({
 }: {
     induction: Induction;
 }) => (
-    <InductionJourneyContainer role={InductionJourney.INVITEE} step={3}>
+    <InductionJourneyContainer journey={InductionJourney.INVITEE} step={3}>
         <Heading size={1} className="mb-5">
             Pending induction ceremony
         </Heading>

@@ -100,7 +100,7 @@ const ProfileSubmitConfirmation = ({
 }) => {
     return (
         <InductionJourneyContainer
-            role={
+            journey={
                 isCommunityActive
                     ? InductionJourney.INVITEE
                     : InductionJourney.GENESIS
@@ -144,7 +144,7 @@ const CreateModifyProfile = ({
     isReviewing,
 }: CreateModifyProfileProps) => (
     <InductionJourneyContainer
-        role={
+        journey={
             isCommunityActive
                 ? InductionJourney.INVITEE
                 : InductionJourney.GENESIS
@@ -191,7 +191,7 @@ const WaitingForInviteeProfile = ({
 
     return (
         <InductionJourneyContainer
-            role={getInductionJourney()}
+            journey={getInductionJourney()}
             step={!isCommunityActive ? 1 : 2}
         >
             <Heading size={1} className="mb-5">

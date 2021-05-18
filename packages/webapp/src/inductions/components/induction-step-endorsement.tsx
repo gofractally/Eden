@@ -173,7 +173,7 @@ export const InductionStepEndorsement = (props: Props) => {
     return (
         <>
             <InductionJourneyContainer
-                role={getInductionJourneyRole()}
+                journey={getInductionJourneyRole()}
                 step={getInductionJourneyStep()}
             >
                 <Heading size={1} className="mb-2">

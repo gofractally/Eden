@@ -83,21 +83,21 @@ export enum InductionJourney {
 }
 
 interface Props {
-    role: InductionJourney;
+    journey: InductionJourney;
     step: 1 | 2 | 3 | 4 | 5;
     vAlign?: "top" | "center";
     children: React.ReactNode;
 }
 
 export const InductionJourneyContainer = ({
-    role,
+    journey,
     step,
     vAlign = "center",
     children,
 }: Props) => {
     let steps: Step[];
 
-    switch (role) {
+    switch (journey) {
         case InductionJourney.GENESIS:
             steps = GENESIS_INDUCTION_STEPS;
             break;
