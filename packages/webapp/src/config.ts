@@ -72,3 +72,19 @@ export const chainConfig = {
     chainId: process.env.NEXT_PUBLIC_EOS_CHAIN_ID,
     rpcEndpoints: [rpcEndpoint],
 };
+
+// SECRETS CONFIG
+if (
+    typeof window === "undefined" &&
+    (!process.env.IPFS_PINATA_API ||
+        !process.env.IPFS_PINATA_JWT ||
+        !process.env.IPFS_UPLOAD_ENDPOINT_URL)
+) {
+    throw new Error("Missing Config Secrets are not set");
+}
+
+export const ipfsConfig = {
+    pinataApi: process.env.IPFS_PINATA_API || "",
+    pinataJwt: process.env.IPFS_PINATA_JWT || "",
+    uploadEndpointUrl: process.env.IPFS_UPLOAD_ENDPOINT_URL || "",
+};
