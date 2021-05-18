@@ -73,11 +73,6 @@ export const chainConfig = {
     rpcEndpoints: [rpcEndpoint],
 };
 
-
-export const ipfsUrl = (ipfsHash: string) => `${ipfsBaseUrl}/${ipfsHash}`;
-export const explorerAccountUrl = (accountName: string) =>
-    `${blockExplorerAccountBaseUrl}/${accountName}`;
-
 // SECRETS CONFIG
 if (
     typeof window === "undefined" &&
@@ -93,4 +88,3 @@ export const ipfsConfig = {
     pinataJwt: process.env.IPFS_PINATA_JWT || "",
     uploadEndpointUrl: process.env.IPFS_UPLOAD_ENDPOINT_URL || "",
 };
-

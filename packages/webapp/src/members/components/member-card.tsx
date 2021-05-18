@@ -1,8 +1,7 @@
 import React, { useState } from "react";
 import { FaVideo } from "react-icons/fa";
 
-import { SocialButton } from "_app";
-import { ipfsUrl } from "config";
+import { SocialButton, ipfsUrl } from "_app";
 
 import { MemberData } from "../interfaces";
 import { MemberSocialLinks } from "./member-social-links";
