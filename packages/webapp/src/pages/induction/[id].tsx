@@ -57,7 +57,7 @@ export const InductionDetailsPage = () => {
 
     const status = getInductionStatus(induction);
 
-    const renderInductionStep = () => {
+    const renderInductionStep = useMemo(() => {
         if (!induction) return "";
 
         if (reviewStep === "profile") {
@@ -109,7 +109,7 @@ export const InductionDetailsPage = () => {
             default:
                 return "";
         }
-    };
+    }, [induction, isCommunityActive, isEndorser, endorsements, reviewStep]);
 
     return isLoadingEndorsements || isLoadingCommunityState ? (
         <p>Loading Induction...</p>
@@ -122,7 +122,7 @@ export const InductionDetailsPage = () => {
         </RawLayout>
     ) : (
         <SingleColLayout title={`Induction #${inductionId}`}>
-            {renderInductionStep()}
+            {renderInductionStep}
         </SingleColLayout>
     );
 };

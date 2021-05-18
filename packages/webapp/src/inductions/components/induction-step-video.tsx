@@ -16,7 +16,10 @@ import {
 } from "../utils";
 import { Induction } from "../interfaces";
 import { setInductionVideoTransaction } from "../transactions";
-import { InductionVideoForm } from "./induction-video-form";
+import {
+    InductionVideoForm,
+    VideoSubmissionPhase,
+} from "./induction-video-form";
 import {
     InductionJourneyContainer,
     InductionRole,
@@ -36,9 +39,13 @@ export const InductionStepVideo = ({
 }: Props) => {
     const [ualAccount] = useUALAccount();
     const [submittedVideo, setSubmittedVideo] = useState(false);
+    const [videoSubmissionPhase, setVideoSubmissionPhase] = useState<
+        VideoSubmissionPhase | undefined
+    >(undefined);
 
     const submitInductionVideo = async (videoFile: File) => {
         try {
+            setVideoSubmissionPhase("uploading");
             const videoHash = await uploadToIpfs(videoFile);
 
             const authorizerAccount = ualAccount.accountName;
@@ -48,11 +55,13 @@ export const InductionStepVideo = ({
                 videoHash
             );
             console.info(transaction);
+            setVideoSubmissionPhase("signing");
             const signedTrx = await ualAccount.signTransaction(transaction, {
                 broadcast: false,
             });
             console.info("inductvideo trx", signedTrx);
 
+            setVideoSubmissionPhase("finishing");
             await uploadIpfsFileWithTransaction(signedTrx, videoHash);
 
             setSubmittedVideo(true);
@@ -81,6 +90,7 @@ export const InductionStepVideo = ({
                     induction={induction}
                     onSubmit={submitInductionVideo}
                     isReviewing={isReviewing}
+                    submissionPhase={videoSubmissionPhase}
                 />
                 <MemberCardPreview memberData={memberData} />
             </>
@@ -125,12 +135,14 @@ interface AddUpdateVideoHashProps {
     induction: Induction;
     onSubmit?: (videoFile: File) => Promise<void>;
     isReviewing?: boolean;
+    submissionPhase?: VideoSubmissionPhase;
 }
 
 const AddUpdateVideoHash = ({
     induction,
     onSubmit,
     isReviewing,
+    submissionPhase,
 }: AddUpdateVideoHashProps) => (
     <InductionJourneyContainer role={InductionRole.INVITER} step={3}>
         <Heading size={1} className="mb-2">
@@ -151,7 +163,11 @@ const AddUpdateVideoHash = ({
                 CID hash below.
             </Text>
         </div>
-        <InductionVideoForm video={induction.video} onSubmit={onSubmit} />
+        <InductionVideoForm
+            video={induction.video}
+            onSubmit={onSubmit}
+            submissionPhase={submissionPhase}
+        />
     </InductionJourneyContainer>
 );
 

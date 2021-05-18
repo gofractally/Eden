@@ -3,12 +3,18 @@ import React, { FormEvent, useEffect, useRef, useState } from "react";
 
 import { ActionButton, Form, handleFileChange, onError } from "_app";
 
+export type VideoSubmissionPhase = "uploading" | "signing" | "finishing";
 interface Props {
     video: string;
     onSubmit?: (video: File) => Promise<void>;
+    submissionPhase?: VideoSubmissionPhase;
 }
 
-export const InductionVideoForm = ({ video, onSubmit }: Props) => {
+export const InductionVideoForm = ({
+    video,
+    onSubmit,
+    submissionPhase,
+}: Props) => {
     const [isLoading, setIsLoading] = useState(false);
     const [uploadedVideo, setUploadedVideo] = useState<File | undefined>(
         undefined
@@ -40,6 +46,19 @@ export const InductionVideoForm = ({ video, onSubmit }: Props) => {
         }
     };
 
+    const getSubmissionText = () => {
+        switch (submissionPhase) {
+            case "uploading":
+                return "Uploading video...";
+            case "signing":
+                return "Waiting for you to sign...";
+            case "finishing":
+                return "Finishing up...";
+            default:
+                return "Submit";
+        }
+    };
+
     return (
         <form onSubmit={submitTransaction} className="space-y-3">
             <Form.LabeledSet
@@ -62,10 +81,10 @@ export const InductionVideoForm = ({ video, onSubmit }: Props) => {
                 <div className="pt-4">
                     <ActionButton
                         isSubmit
-                        disabled={isLoading}
+                        disabled={isLoading || !uploadedVideo}
                         isLoading={isLoading}
                     >
-                        {isLoading ? "Submitting..." : "Submit"}
+                        {getSubmissionText()}
                     </ActionButton>
                 </div>
             )}
@@ -90,7 +109,7 @@ const VideoClip = ({ url }: { url: string }) => {
     }, [url]);
 
     return (
-        <video ref={videoRef} controls>
+        <video key={url} ref={videoRef} controls>
             <source src={url} />
         </video>
     );
