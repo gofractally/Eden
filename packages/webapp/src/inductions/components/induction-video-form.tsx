@@ -2,6 +2,7 @@ import { ipfsBaseUrl } from "config";
 import React, { FormEvent, useEffect, useRef, useState } from "react";
 
 import { ActionButton, Form, handleFileChange, onError } from "_app";
+import { ipfsUrl } from "_app/utils/config-helpers";
 
 export type VideoSubmissionPhase = "uploading" | "signing" | "finishing";
 interface Props {
@@ -42,7 +43,7 @@ export const InductionVideoForm = ({
         if (uploadedVideo) {
             return URL.createObjectURL(uploadedVideo);
         } else {
-            return `${ipfsBaseUrl}/${video}`;
+            return ipfsUrl(video);
         }
     };
 
