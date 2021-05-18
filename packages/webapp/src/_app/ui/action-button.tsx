@@ -80,7 +80,7 @@ export const ActionButton = ({
             disabled={disabled}
         >
             {isLoading && (
-                <FaSpinner className="inline-flex animate-spin mr-2" />
+                <FaSpinner className="inline-flex animate-spin mr-1 mb-1 align-middle" />
             )}
             {children}
         </button>
