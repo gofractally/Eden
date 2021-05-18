@@ -1,7 +1,14 @@
 import React, { FormEvent, useState } from "react";
 
 import { EdenNftSocialHandles } from "nfts";
-import { useFormFields, Form, Heading, ActionButton, onError } from "_app";
+import {
+    useFormFields,
+    Form,
+    Heading,
+    ActionButton,
+    HelpLink,
+    onError,
+} from "_app";
 import { NewMemberProfile } from "../interfaces";
 
 interface Props {
@@ -96,11 +103,13 @@ export const InductionProfileForm = ({
                 />
             </Form.LabeledSet>
 
-            <Form.LabeledSet
-                label="Profile Image"
-                htmlFor="img"
-                className="col-span-6"
-            >
+            <Form.LabeledSet label="" htmlFor="imgFile" className="col-span-6">
+                <div className="flex items-center mb-1 space-x-1">
+                    <p className="text-sm font-medium text-gray-700">
+                        Profile Image
+                    </p>
+                    <HelpLink href="https://www.notion.so/edenos/Upload-Profile-Photo-c15a7a050d3c411faca21a3cd3d2f0a3" />
+                </div>
                 <Form.FileInput
                     id="imgFile"
                     accept="image/*"
@@ -248,9 +257,10 @@ export const InductionProfileForm = ({
             </div>
 
             {onSubmit && (
-                <div className="pt-4">
+                <div className="col-span-6 pt-4">
                     <ActionButton
                         isSubmit
+                        isLoading={isLoading}
                         disabled={isLoading || !consentsToPublish}
                     >
                         {isLoading ? "Submitting..." : "Submit"}

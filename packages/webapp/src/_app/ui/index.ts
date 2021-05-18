@@ -2,6 +2,7 @@ export * from "./action-button";
 export * from "./button";
 export * from "./heading";
 export * from "./form";
+export * from "./help-link";
 export * from "./link";
 export * from "./social-button";
 export * from "./text";
