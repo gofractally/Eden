@@ -1,8 +1,7 @@
 import React, { useState } from "react";
 import { FaVideo } from "react-icons/fa";
 
-import { SocialButton } from "_app";
-import { ipfsBaseUrl } from "config";
+import { SocialButton, ipfsUrl } from "_app";
 
 import { MemberData } from "../interfaces";
 import { MemberSocialLinks } from "./member-social-links";
@@ -28,7 +27,7 @@ export const MemberCard = ({ member }: Props) => {
                         icon={FaVideo}
                         color="black"
                         size={5}
-                        href={`${ipfsBaseUrl}/${member.inductionVideo}`}
+                        href={ipfsUrl(member.inductionVideo)}
                     />
                 </div>
             )}

@@ -9,6 +9,12 @@ export const CONTRACT_MEMBER_TABLE = "member";
 export const CONTRACT_INDUCTION_TABLE = "induction";
 export const CONTRACT_ENDORSEMENT_TABLE = "endorsement";
 
+interface TableResponse<T> {
+    rows: [string, T][];
+    more: boolean;
+    next_key: string;
+}
+
 export const getRow = async <T>(
     table: string,
     keyName: string,
@@ -20,11 +26,11 @@ export const getRow = async <T>(
         : undefined;
 };
 
-export const getTableRows = async (
+export const getTableRows = async <T = any>(
     table: string,
     lowerBound: any,
     limit = 1
-): Promise<any[]> => {
+): Promise<T[]> => {
     const requestBody = {
         code: edenContractAccount,
         index_position: 1,
@@ -45,14 +51,14 @@ export const getTableRows = async (
         body: JSON.stringify(requestBody),
     });
 
-    const data = await response.json();
+    const data = (await response.json()) as TableResponse<T>;
     console.info(`fetched table ${edenContractAccount}.${table} rows`, data);
 
     if (!data || !data.rows) {
         throw new Error("Invalid table results");
     }
 
-    return data.rows.map((row: any) => row[1]);
+    return data.rows.map((row) => row[1]);
 };
 
 export const getTableIndexRows = async (
