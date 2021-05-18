@@ -6,6 +6,8 @@ import {
     Heading,
     onError,
     Text,
+    uploadIpfsFileWithTransaction,
+    uploadToIpfs,
     useUALAccount,
 } from "_app";
 import {
@@ -35,8 +37,10 @@ export const InductionStepVideo = ({
     const [ualAccount] = useUALAccount();
     const [submittedVideo, setSubmittedVideo] = useState(false);
 
-    const submitInductionVideo = async (videoHash: string) => {
+    const submitInductionVideo = async (videoFile: File) => {
         try {
+            const videoHash = await uploadToIpfs(videoFile);
+
             const authorizerAccount = ualAccount.accountName;
             const transaction = setInductionVideoTransaction(
                 authorizerAccount,
@@ -45,9 +49,12 @@ export const InductionStepVideo = ({
             );
             console.info(transaction);
             const signedTrx = await ualAccount.signTransaction(transaction, {
-                broadcast: true,
+                broadcast: false,
             });
             console.info("inductvideo trx", signedTrx);
+
+            await uploadIpfsFileWithTransaction(signedTrx, videoHash);
+
             setSubmittedVideo(true);
         } catch (error) {
             onError(error, "Unable to set the induction video");
@@ -116,7 +123,7 @@ const VideoSubmitConfirmation = () => (
 
 interface AddUpdateVideoHashProps {
     induction: Induction;
-    onSubmit?: (videoHash: string) => Promise<void>;
+    onSubmit?: (videoFile: File) => Promise<void>;
     isReviewing?: boolean;
 }
 

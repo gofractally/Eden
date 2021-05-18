@@ -7,7 +7,7 @@ import {
     Heading,
     ActionButton,
     HelpLink,
-    onError,
+    handleFileChange,
 } from "_app";
 import { NewMemberProfile } from "../interfaces";
 
@@ -49,24 +49,6 @@ export const InductionProfileForm = ({
 
     const onChangeSocialFields = (e: React.ChangeEvent<HTMLInputElement>) =>
         setSocialFields(e);
-
-    const handleProfileImageUpload = async (
-        e: React.ChangeEvent<HTMLInputElement>
-    ) => {
-        e.preventDefault();
-
-        if (!e.target.files || !e.target.files.length) {
-            return;
-        }
-
-        var file = e.target.files[0];
-
-        if (!file.type.match("image.*")) {
-            return onError(new Error("You can only select image files"));
-        }
-
-        setUploadedImage(file);
-    };
 
     const submitTransaction = async (e: FormEvent) => {
         e.preventDefault();
@@ -114,7 +96,9 @@ export const InductionProfileForm = ({
                     id="imgFile"
                     accept="image/*"
                     label="select an image file"
-                    onChange={handleProfileImageUpload}
+                    onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                        handleFileChange(e, "image", setUploadedImage)
+                    }
                 />
                 {uploadedImage || fields.img ? (
                     <img
