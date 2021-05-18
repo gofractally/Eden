@@ -90,7 +90,7 @@ export const InductionStepEndorsement = (props: Props) => {
             console.info("donation trx", signedTrx);
 
             // tolerance time to make sure blockchain processed the transactions
-            await new Promise((resolve) => setTimeout(resolve, 4000));
+            await new Promise((resolve) => setTimeout(resolve, 6000));
 
             // invalidate ["member", accountName] query so it will refetch with their full name
             queryClient.invalidateQueries(["member", authorizerAccount]);
