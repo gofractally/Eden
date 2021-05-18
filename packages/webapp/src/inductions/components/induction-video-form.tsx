@@ -65,7 +65,7 @@ export const InductionVideoForm = ({
             <Form.LabeledSet
                 label="Induction video"
                 htmlFor="videoFile"
-                description="As an official witness and endorser, you need to upload the video of the induction ceremony to IPFS and paste the IPFS CID hash here."
+                description="As an official witness, upload the video of the induction ceremony here."
             >
                 <Form.FileInput
                     id="videoFile"

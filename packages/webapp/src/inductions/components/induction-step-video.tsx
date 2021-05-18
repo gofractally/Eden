@@ -159,10 +159,6 @@ const AddUpdateVideoHash = ({
                 prospective Eden member will record a short, scripted video
                 conference call inducting the new member.
             </Text>
-            <Text className="leading-normal">
-                Once complete, upload the recording to IPFS and submit the IPFS
-                CID hash below.
-            </Text>
         </div>
         <InductionVideoForm
             video={induction.video}
