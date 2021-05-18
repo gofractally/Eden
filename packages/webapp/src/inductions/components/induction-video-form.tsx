@@ -60,7 +60,11 @@ export const InductionVideoForm = ({ video, onSubmit }: Props) => {
 
             {onSubmit && (
                 <div className="pt-4">
-                    <ActionButton isSubmit disabled={isLoading}>
+                    <ActionButton
+                        isSubmit
+                        disabled={isLoading}
+                        isLoading={isLoading}
+                    >
                         {isLoading ? "Submitting..." : "Submit"}
                     </ActionButton>
                 </div>
