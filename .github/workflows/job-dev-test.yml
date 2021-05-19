@@ -15,4 +15,4 @@ jobs:
               run: |
                   curl -i --fail-with-body --request POST \
                   --url 'https://eden-on-eos-pqhreob6f-clarionos.vercel.app/api/jobs/test' \
-                  --header 'x-job-key: ${{ secrets.DEV_JOBS_AUTH_GC }}-fake'
+                  --header 'x-job-key: ${{ secrets.DEV_JOBS_AUTH_GC }}'
