@@ -105,8 +105,8 @@ export const InviteeJourney = ({
                                 isCommunityActive={isCommunityActive}
                                 setIsReviewingProfile={setIsReviewingProfile}
                             />
-                            <MemberCardPreview memberData={memberData} />
                         </Container>
+                        <MemberCardPreview memberData={memberData} />
                     </>
                 );
             }
