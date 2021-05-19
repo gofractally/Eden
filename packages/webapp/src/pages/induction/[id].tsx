@@ -1,17 +1,15 @@
-import React, { useMemo, useState } from "react";
+import React, { useMemo } from "react";
 import { useRouter } from "next/router";
 
 import {
     CallToAction,
+    Card,
     RawLayout,
     SingleColLayout,
     useGetInductionWithEndorsements,
     useIsCommunityActive,
 } from "_app";
 import {
-    InductionStepEndorsement,
-    InductionStepProfile,
-    InductionStepVideo,
     InductionStatus,
     getInductionStatus,
     useInductionUserRole,
@@ -21,52 +19,24 @@ import {
     InviterWitnessJourney,
 } from "inductions";
 
-// TODO: Finish building this out and switch to using it.
-export const InductionDetailsPage2 = () => {
+export const InductionDetailsPage = () => {
     const router = useRouter();
     const inductionId = router.query.id;
 
-    const [reviewStep, setReviewStep] = useState<
-        "profile" | "video" | undefined
-    >();
-
-    const {
-        data: isCommunityActive,
-        isLoading: isLoadingCommunityState,
-    } = useIsCommunityActive();
+    const { isLoading: isLoadingCommunityState } = useIsCommunityActive();
 
     const {
         data,
         isLoading: isLoadingEndorsements,
     } = useGetInductionWithEndorsements(inductionId as string);
 
+    const isLoading = isLoadingEndorsements || isLoadingCommunityState;
+
     const induction = data?.induction;
     const endorsements = data?.endorsements ?? [];
 
-    if (isLoadingEndorsements || isLoadingCommunityState) {
-        return <p>Loading Induction...</p>;
-    }
-    const status = getInductionStatus(induction);
-
-    if (
-        status === InductionStatus.invalid ||
-        status === InductionStatus.expired
-    ) {
-        return (
-            <RawLayout title="Invite not found">
-                <CallToAction
-                    href="/induction"
-                    buttonLabel="Membership Dashboard"
-                >
-                    Hmmm... this invitation couldn't be found. The invitee may
-                    have already been inducted, or their invitation could have
-                    expired.
-                </CallToAction>
-            </RawLayout>
-        );
-    }
-
     const userRole = useInductionUserRole(endorsements, induction);
+    const status = getInductionStatus(induction);
 
     const renderInductionJourney = useMemo(() => {
         if (!induction) return "";
@@ -99,101 +69,38 @@ export const InductionDetailsPage2 = () => {
                     />
                 );
         }
-    }, []);
+    }, [induction, endorsements, status, userRole]);
+
+    // TODO: We need a common loading spinner component.
+    if (isLoading) {
+        return (
+            <SingleColLayout title="Loading">
+                <Card title="Loading...">...</Card>
+            </SingleColLayout>
+        );
+    }
+
+    if (
+        status === InductionStatus.invalid ||
+        status === InductionStatus.expired
+    ) {
+        return (
+            <RawLayout title="Invite not found">
+                <CallToAction
+                    href="/induction"
+                    buttonLabel="Membership Dashboard"
+                >
+                    Hmmm... this invitation couldn't be found. The invitee may
+                    have already been inducted, or their invitation could have
+                    expired.
+                </CallToAction>
+            </RawLayout>
+        );
+    }
 
     return (
         <SingleColLayout title={`Induction #${inductionId}`}>
             {renderInductionJourney}
-        </SingleColLayout>
-    );
-};
-
-export const InductionDetailsPage = () => {
-    const router = useRouter();
-    const inductionId = router.query.id;
-
-    const [reviewStep, setReviewStep] = useState<
-        "profile" | "video" | undefined
-    >();
-
-    const {
-        data: isCommunityActive,
-        isLoading: isLoadingCommunityState,
-    } = useIsCommunityActive();
-
-    const {
-        data,
-        isLoading: isLoadingEndorsements,
-    } = useGetInductionWithEndorsements(inductionId as string);
-    const induction = data?.induction;
-    const endorsements = data?.endorsements ?? [];
-
-    const userRole = useInductionUserRole(endorsements, induction);
-    const status = getInductionStatus(induction);
-
-    const renderInductionStep = useMemo(() => {
-        if (!induction) return "";
-
-        if (reviewStep === "profile") {
-            return (
-                <InductionStepProfile
-                    induction={induction}
-                    isCommunityActive={isCommunityActive}
-                    role={userRole}
-                    isReviewing
-                />
-            );
-        }
-
-        if (reviewStep === "video") {
-            return (
-                <InductionStepVideo
-                    induction={induction}
-                    isReviewing
-                    role={userRole}
-                />
-            );
-        }
-
-        switch (status) {
-            case InductionStatus.waitingForProfile:
-                return (
-                    <InductionStepProfile
-                        induction={induction}
-                        role={userRole}
-                        isCommunityActive={isCommunityActive}
-                    />
-                );
-            case InductionStatus.waitingForVideo:
-                return (
-                    <InductionStepVideo induction={induction} role={userRole} />
-                );
-            case InductionStatus.waitingForEndorsement:
-                return (
-                    <InductionStepEndorsement
-                        induction={induction}
-                        endorsements={endorsements}
-                        isCommunityActive={isCommunityActive}
-                        setReviewStep={setReviewStep}
-                    />
-                );
-            default:
-                return "";
-        }
-    }, [induction, isCommunityActive, endorsements, reviewStep]);
-
-    return isLoadingEndorsements || isLoadingCommunityState ? (
-        <p>Loading Induction...</p>
-    ) : status === InductionStatus.invalid ? (
-        <RawLayout title="Invite not found">
-            <CallToAction href="/induction" buttonLabel="Membership Dashboard">
-                Hmmm... this invitation couldn't be found. The invitee may have
-                already been inducted, or their invitation could have expired.
-            </CallToAction>
-        </RawLayout>
-    ) : (
-        <SingleColLayout title={`Induction #${inductionId}`}>
-            {renderInductionStep}
         </SingleColLayout>
     );
 };
