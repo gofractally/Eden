@@ -32,7 +32,9 @@ export const useCurrentMember = () => {
 };
 
 export const useIsCommunityActive = () =>
-    useQuery("isCommunityActive", getIsCommunityActive);
+    useQuery("isCommunityActive", getIsCommunityActive, {
+        refetchOnWindowFocus: false,
+    });
 
 export const useGetInductionWithEndorsements = (inductionId: string) =>
     useQuery(["induction", inductionId], getInductionWithEndorsements);
