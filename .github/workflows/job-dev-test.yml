@@ -11,6 +11,6 @@ jobs:
         steps:
             - name: Test Job
               run: |
-                  curl --request POST \
+                  curl -i -f --request POST \
                   --url 'https://eden-dev.vercel.app/api/jobs/test' \
                   --header 'x-job-key: ${{ secrets.DEV_JOBS_AUTH_GC }}'
