@@ -80,9 +80,12 @@ export const InviterWitnessJourney = ({
     // Inviter video submission confirmation
     if (submittedVideo) {
         return (
-            <Container step={3}>
-                <InviterWitnessVideoSubmitConfirmation />
-            </Container>
+            <>
+                <Container step={3}>
+                    <InviterWitnessVideoSubmitConfirmation />
+                </Container>
+                <MemberCardPreview memberData={memberData} />
+            </>
         );
     }
 
