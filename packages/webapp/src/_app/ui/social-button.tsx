@@ -11,7 +11,7 @@ interface Props {
 }
 
 const BASE_CLASS =
-    "hover:underline items-center flex space-x-2 dark:text-gray-300";
+    "hover:underline space-x-3 p-1 flex-grow flex flex-wrap dark:text-gray-300";
 
 export const SocialButton = ({
     handle,

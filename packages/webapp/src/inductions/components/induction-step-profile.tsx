@@ -7,6 +7,8 @@ import {
     Link,
     onError,
     Text,
+    uploadIpfsFileWithTransaction,
+    uploadToIpfs,
     useUALAccount,
 } from "_app";
 import { Induction, NewMemberProfile } from "../interfaces";
@@ -36,20 +38,31 @@ export const InductionStepProfile = ({
     const isInviter = ualAccount?.accountName === induction.inviter;
 
     const submitInductionProfileTransaction = async (
-        newMemberProfile: NewMemberProfile
+        newMemberProfile: NewMemberProfile,
+        uploadedImage?: File
     ) => {
         try {
+            const img = uploadedImage
+                ? await uploadToIpfs(uploadedImage)
+                : newMemberProfile.img;
+
             const authorizerAccount = ualAccount.accountName;
             const transaction = setInductionProfileTransaction(
                 authorizerAccount,
                 induction.id,
-                newMemberProfile
+                { ...newMemberProfile, img }
             );
             console.info(transaction);
+
             const signedTrx = await ualAccount.signTransaction(transaction, {
-                broadcast: true,
+                broadcast: !uploadedImage,
             });
             console.info("inductprofil trx", signedTrx);
+
+            if (uploadedImage) {
+                await uploadIpfsFileWithTransaction(signedTrx, img);
+            }
+
             setSubmittedProfile(true);
         } catch (error) {
             onError(error, "Unable to set the profile");

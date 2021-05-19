@@ -2,9 +2,9 @@ import React from "react";
 import Link from "next/link";
 import dayjs from "dayjs";
 
-import { atomicAssets, ipfsUrl } from "config";
+import { assetToString, ipfsUrl } from "_app";
+import { atomicAssets } from "config";
 import { MemberData } from "../interfaces";
-import { assetToString } from "_app";
 
 interface Props {
     members: MemberData[];

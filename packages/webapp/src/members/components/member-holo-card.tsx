@@ -1,8 +1,8 @@
 import dayjs from "dayjs";
 import useDimensions from "react-cool-dimensions";
 
-import { ipfsUrl } from "config";
-import { MemberData } from "members";
+import { ipfsUrl } from "_app";
+import { MemberData } from "../interfaces";
 
 interface Props {
     member: MemberData;
