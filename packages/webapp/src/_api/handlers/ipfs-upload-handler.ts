@@ -1,5 +1,10 @@
 import { eosDefaultApi, eosJsonRpc } from "_app";
-import { edenContractAccount, ipfsApiBaseUrl, ipfsConfig } from "config";
+import {
+    edenContractAccount,
+    ipfsApiBaseUrl,
+    ipfsConfig,
+    validUploadActions,
+} from "config";
 
 import { BadRequestError, InternalServerError } from "../error-handlers";
 import { IpfsPostRequest } from "../schemas";
@@ -9,19 +14,6 @@ interface ActionIpfsData {
     contract: string;
     action: string;
 }
-
-interface ValidUploadActions {
-    [contract: string]: {
-        [action: string]: { maxSize: number };
-    };
-}
-
-const VALID_UPLOAD_ACTIONS: ValidUploadActions = {
-    [edenContractAccount]: {
-        inductprofil: { maxSize: 1_000_000 },
-        inductvideo: { maxSize: 100_000_000 },
-    },
-};
 
 export const ipfsUploadHandler = async (request: IpfsPostRequest) => {
     const signatures = request.eosTransaction.signatures;
@@ -68,8 +60,8 @@ const parseActionIpfsCid = async (
 
     const serializedAction = actions[0];
     if (
-        !VALID_UPLOAD_ACTIONS[serializedAction.account] ||
-        !VALID_UPLOAD_ACTIONS[serializedAction.account][serializedAction.name]
+        !validUploadActions[serializedAction.account] ||
+        !validUploadActions[serializedAction.account][serializedAction.name]
     ) {
         throw new BadRequestError([
             "contract action is not whitelisted for upload",
@@ -156,7 +148,7 @@ const confirmIpfsPin = async (requestId: string) => {
 
 const validateActionFile = async (fileData: ActionIpfsData) => {
     const validActionFile =
-        VALID_UPLOAD_ACTIONS[fileData.contract][fileData.action];
+        validUploadActions[fileData.contract][fileData.action];
     const fileStats = await getIpfsFileStats(fileData.cid);
     if (fileStats.CumulativeSize > validActionFile.maxSize) {
         throw new Error(
