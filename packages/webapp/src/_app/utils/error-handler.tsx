@@ -47,7 +47,7 @@ const eosResourcesError = (message: string) => {
                                 {message}
                             </p>
                         </div>
-                        <HelpLink href="https://www.notion.so/edenos/EdenOS-c0c42c7c426f407fadb215a017b54eb9" />
+                        <HelpLink href="https://www.notion.so/edenos/Insufficient-Resources-609b22f1e5744e329f25c15cc8b720bb" />
                     </div>
                     <button
                         className="text-sm underline hover:text-black mt-2"
