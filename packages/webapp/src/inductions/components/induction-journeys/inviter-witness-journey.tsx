@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { Dispatch, SetStateAction, useState } from "react";
 import { Heading, Link, Text, useIsCommunityActive, useUALAccount } from "_app";
 import {
     EndorsementsStatus,
@@ -39,6 +39,26 @@ const Container = ({ step, children }: ContainerProps) => {
     );
 };
 
+const RecommendReview = ({
+    setIsReviewingVideo,
+}: {
+    setIsReviewingVideo: Dispatch<SetStateAction<boolean>>;
+}) => (
+    <div className="mt-4 space-y-3">
+        <Text>
+            In the meantime, we recommend reviewing the prospective member
+            profile information below for accuracy. If anything needs to be
+            corrected, ask the invitee to sign in and make the corrections.
+        </Text>
+        <Text>
+            If the induction video needs to be corrected,{" "}
+            <Link onClick={() => setIsReviewingVideo(true)}>click here</Link>.
+            Keep in mind that modifying the induction video will reset any
+            endorsements.
+        </Text>
+    </div>
+);
+
 interface Props {
     endorsements: Endorsement[];
     induction: Induction;
@@ -58,12 +78,30 @@ export const InviterWitnessJourney = ({
     const memberData = convertPendingProfileToMemberData(induction);
 
     // Inviter video submission confirmation
-    if (submittedVideo)
+    if (submittedVideo) {
         return (
             <Container step={3}>
                 <InviterWitnessVideoSubmitConfirmation />
             </Container>
         );
+    }
+
+    const renderVideoStep = () => (
+        <>
+            <Container step={3}>
+                <InviterWitnessVideoForm
+                    induction={induction}
+                    isReviewingVideo={isReviewingVideo}
+                    setSubmittedVideo={setSubmittedVideo}
+                />
+            </Container>
+            <MemberCardPreview memberData={memberData} />
+        </>
+    );
+
+    if (isReviewingVideo) {
+        return renderVideoStep();
+    }
 
     switch (inductionStatus) {
         case InductionStatus.waitingForProfile:
@@ -73,18 +111,7 @@ export const InviterWitnessJourney = ({
                 </Container>
             );
         case InductionStatus.waitingForVideo:
-            return (
-                <>
-                    <Container step={3}>
-                        <InviterWitnessVideoForm
-                            induction={induction}
-                            isReviewingVideo={isReviewingVideo}
-                            setSubmittedVideo={setSubmittedVideo}
-                        />
-                    </Container>
-                    <MemberCardPreview memberData={memberData} />
-                </>
-            );
+            return renderVideoStep();
         case InductionStatus.waitingForEndorsement:
             // TODO: waitingForDonation should be an InductionStatus
             const waitingForDonation = endorsements.every(
@@ -100,13 +127,21 @@ export const InviterWitnessJourney = ({
                             <InductionExpiresIn induction={induction} />
                             <EndorsementsStatus endorsements={endorsements} />
                             {isCommunityActive ? (
-                                <Text>
-                                    This induction is fully endorsed! As soon as
-                                    the prospective member completes their
-                                    donation to the Eden community, their
-                                    membership will be activated and their Eden
-                                    NFTs will be minted and distributed.
-                                </Text>
+                                <>
+                                    <Text>
+                                        This induction is fully endorsed! As
+                                        soon as the prospective member completes
+                                        their donation to the Eden community,
+                                        their membership will be activated and
+                                        their Eden NFTs will be minted and
+                                        distributed.
+                                    </Text>
+                                    <RecommendReview
+                                        setIsReviewingVideo={
+                                            setIsReviewingVideo
+                                        }
+                                    />
+                                </>
                             ) : (
                                 <Text>
                                     As soon as this prospective member completes
@@ -123,10 +158,9 @@ export const InviterWitnessJourney = ({
                 );
             }
 
-            const userEndorsementIsPending = Boolean(
+            const userEndorsementIsPending =
                 endorsements.find((e) => e.endorser === ualAccount?.accountName)
-                    ?.endorsed
-            );
+                    ?.endorsed === 0;
 
             return (
                 <>
@@ -147,30 +181,9 @@ export const InviterWitnessJourney = ({
                                 <Text>
                                     Waiting for all witnesses to endorse.
                                 </Text>
-                                <div className="mt-4 space-y-3">
-                                    <Text>
-                                        In the meantime, we recommend reviewing
-                                        the prospective member profile
-                                        information below for accuracy. If
-                                        anything needs to be corrected, ask the
-                                        invitee to sign in and make the
-                                        corrections.
-                                    </Text>
-                                    <Text>
-                                        If the induction video needs to be
-                                        corrected,{" "}
-                                        <Link
-                                            onClick={() =>
-                                                setIsReviewingVideo(true)
-                                            }
-                                        >
-                                            click here
-                                        </Link>
-                                        . Keep in mind that modifying the
-                                        induction video will reset any
-                                        endorsements.
-                                    </Text>
-                                </div>
+                                <RecommendReview
+                                    setIsReviewingVideo={setIsReviewingVideo}
+                                />
                             </>
                         )}
                     </Container>

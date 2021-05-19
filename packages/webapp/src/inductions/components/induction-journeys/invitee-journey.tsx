@@ -57,7 +57,7 @@ export const InviteeJourney = ({
     const memberData = convertPendingProfileToMemberData(induction);
 
     // Invitee profile submission confirmation
-    if (submittedProfile)
+    if (submittedProfile) {
         return (
             <Container step={isCommunityActive ? 3 : 2}>
                 <InviteeProfileSubmitConfirmation
@@ -65,18 +65,25 @@ export const InviteeJourney = ({
                 />
             </Container>
         );
+    }
+
+    const renderProfileStep = () => (
+        <Container step={isCommunityActive ? 2 : 1} vAlign="top">
+            <InviteeProfileForm
+                induction={induction}
+                isReviewingProfile={isReviewingProfile}
+                setSubmittedProfile={setSubmittedProfile}
+            />
+        </Container>
+    );
+
+    if (isReviewingProfile) {
+        return renderProfileStep();
+    }
 
     switch (inductionStatus) {
         case InductionStatus.waitingForProfile:
-            return (
-                <Container step={isCommunityActive ? 2 : 1} vAlign="top">
-                    <InviteeProfileForm
-                        induction={induction}
-                        isReviewingProfile={isReviewingProfile}
-                        setSubmittedProfile={setSubmittedProfile}
-                    />
-                </Container>
-            );
+            return renderProfileStep();
         case InductionStatus.waitingForVideo:
             return (
                 <>
