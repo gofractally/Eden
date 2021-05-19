@@ -1,5 +1,8 @@
 name: job-dev-test
 on:
+    push:
+        branches:
+            - "sparkplug0025/*" # todo: remove it before merging
     schedule:
         - cron: "*/2 * * * *"
 jobs:
