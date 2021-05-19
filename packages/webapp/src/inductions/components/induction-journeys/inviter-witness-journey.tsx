@@ -113,51 +113,6 @@ export const InviterWitnessJourney = ({
         case InductionStatus.waitingForVideo:
             return renderVideoStep();
         case InductionStatus.waitingForEndorsement:
-            // TODO: waitingForDonation should be an InductionStatus
-            const waitingForDonation = endorsements.every(
-                (e) => e.endorsed === 1
-            );
-            if (waitingForDonation) {
-                return (
-                    <>
-                        <Container step={isCommunityActive ? 4 : 2}>
-                            <Heading size={1} className="mb-2">
-                                Pending donation
-                            </Heading>
-                            <InductionExpiresIn induction={induction} />
-                            <EndorsementsStatus endorsements={endorsements} />
-                            {isCommunityActive ? (
-                                <>
-                                    <Text>
-                                        This induction is fully endorsed! As
-                                        soon as the prospective member completes
-                                        their donation to the Eden community,
-                                        their membership will be activated and
-                                        their Eden NFTs will be minted and
-                                        distributed.
-                                    </Text>
-                                    <RecommendReview
-                                        setIsReviewingVideo={
-                                            setIsReviewingVideo
-                                        }
-                                    />
-                                </>
-                            ) : (
-                                <Text>
-                                    As soon as this prospective member completes
-                                    their donation to the Eden community, their
-                                    membership is ready for activation. Once all
-                                    Genesis members are fully inducted,
-                                    memberships will be activated and Eden NFTs
-                                    will be distributed.
-                                </Text>
-                            )}
-                        </Container>
-                        <MemberCardPreview memberData={memberData} />
-                    </>
-                );
-            }
-
             const userEndorsementIsPending =
                 endorsements.find((e) => e.endorser === ualAccount?.accountName)
                     ?.endorsed === 0;
@@ -185,6 +140,42 @@ export const InviterWitnessJourney = ({
                                     setIsReviewingVideo={setIsReviewingVideo}
                                 />
                             </>
+                        )}
+                    </Container>
+                    <MemberCardPreview memberData={memberData} />
+                </>
+            );
+        case InductionStatus.waitingForDonation:
+            return (
+                <>
+                    <Container step={isCommunityActive ? 4 : 2}>
+                        <Heading size={1} className="mb-2">
+                            Pending donation
+                        </Heading>
+                        <InductionExpiresIn induction={induction} />
+                        <EndorsementsStatus endorsements={endorsements} />
+                        {isCommunityActive ? (
+                            <>
+                                <Text>
+                                    This induction is fully endorsed! As soon as
+                                    the prospective member completes their
+                                    donation to the Eden community, their
+                                    membership will be activated and their Eden
+                                    NFTs will be minted and distributed.
+                                </Text>
+                                <RecommendReview
+                                    setIsReviewingVideo={setIsReviewingVideo}
+                                />
+                            </>
+                        ) : (
+                            <Text>
+                                As soon as this prospective member completes
+                                their donation to the Eden community, their
+                                membership is ready for activation. Once all
+                                Genesis members are fully inducted, memberships
+                                will be activated and Eden NFTs will be
+                                distributed.
+                            </Text>
                         )}
                     </Container>
                     <MemberCardPreview memberData={memberData} />

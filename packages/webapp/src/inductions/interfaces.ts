@@ -32,6 +32,7 @@ export enum InductionStatus {
     waitingForProfile,
     waitingForVideo,
     waitingForEndorsement,
+    waitingForDonation,
 }
 
 export interface Endorsement {

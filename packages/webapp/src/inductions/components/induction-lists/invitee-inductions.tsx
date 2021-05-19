@@ -1,5 +1,3 @@
-import dayjs from "dayjs";
-
 import {
     ActionButton,
     ActionButtonSize,
@@ -72,11 +70,6 @@ const getTableData = (inductions: Induction[]): InductionTable.Row[] => {
                 )
                 .join(", ") || "";
 
-        const isFullyEndorsed =
-            allEndorsements &&
-            allEndorsements.filter((endorsement) => endorsement.endorsed)
-                .length === allEndorsements.length;
-
         const remainingTime = getInductionRemainingTimeDays(ind);
 
         return {
@@ -87,7 +80,7 @@ const getTableData = (inductions: Induction[]): InductionTable.Row[] => {
             status: (
                 <InviteeInductionStatus
                     induction={ind}
-                    isFullyEndorsed={isFullyEndorsed}
+                    endorsements={allEndorsements}
                 />
             ),
         };
@@ -95,14 +88,14 @@ const getTableData = (inductions: Induction[]): InductionTable.Row[] => {
 };
 
 interface InviteeInductionStatusProps {
+    endorsements?: Endorsement[];
     induction: Induction;
-    isFullyEndorsed?: boolean;
 }
 const InviteeInductionStatus = ({
+    endorsements,
     induction,
-    isFullyEndorsed,
 }: InviteeInductionStatusProps) => {
-    const status = getInductionStatus(induction);
+    const status = getInductionStatus(induction, endorsements);
     switch (status) {
         case InductionStatus.expired:
             return (
@@ -138,7 +131,16 @@ const InviteeInductionStatus = ({
                 </ActionButton>
             );
         case InductionStatus.waitingForEndorsement:
-            return isFullyEndorsed ? (
+            <ActionButton
+                href={`/induction/${induction.id}`}
+                type={ActionButtonType.NEUTRAL}
+                size={ActionButtonSize.S}
+                fullWidth
+            >
+                Pending endorsements
+            </ActionButton>;
+        case InductionStatus.waitingForDonation:
+            return (
                 <ActionButton
                     href={`/induction/${induction.id}`}
                     type={ActionButtonType.INDUCTION_STATUS_ACTION}
@@ -146,15 +148,6 @@ const InviteeInductionStatus = ({
                     fullWidth
                 >
                     Donate & complete
-                </ActionButton>
-            ) : (
-                <ActionButton
-                    href={`/induction/${induction.id}`}
-                    type={ActionButtonType.NEUTRAL}
-                    size={ActionButtonSize.S}
-                    fullWidth
-                >
-                    Pending endorsements
                 </ActionButton>
             );
         default:

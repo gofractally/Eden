@@ -94,30 +94,6 @@ export const InviteeJourney = ({
                 </>
             );
         case InductionStatus.waitingForEndorsement:
-            // TODO: waitingForDonation should be an InductionStatus
-            const waitingForDonation = endorsements.every(
-                (e) => e.endorsed === 1
-            );
-            if (waitingForDonation) {
-                return (
-                    <>
-                        <Container step={isCommunityActive ? 4 : 2}>
-                            <Heading size={1} className="mb-2">
-                                Pending donation
-                            </Heading>
-                            <InductionExpiresIn induction={induction} />
-                            <EndorsementsStatus endorsements={endorsements} />
-                            <InviteeDonateForm
-                                induction={induction}
-                                isCommunityActive={isCommunityActive}
-                                setIsReviewingProfile={setIsReviewingProfile}
-                            />
-                        </Container>
-                        <MemberCardPreview memberData={memberData} />
-                    </>
-                );
-            }
-
             return (
                 <>
                     <Container step={3}>
@@ -143,6 +119,24 @@ export const InviteeJourney = ({
                                 profile will reset any endorsements.
                             </Text>
                         </div>
+                    </Container>
+                    <MemberCardPreview memberData={memberData} />
+                </>
+            );
+        case InductionStatus.waitingForDonation:
+            return (
+                <>
+                    <Container step={isCommunityActive ? 4 : 2}>
+                        <Heading size={1} className="mb-2">
+                            Pending donation
+                        </Heading>
+                        <InductionExpiresIn induction={induction} />
+                        <EndorsementsStatus endorsements={endorsements} />
+                        <InviteeDonateForm
+                            induction={induction}
+                            isCommunityActive={isCommunityActive}
+                            setIsReviewingProfile={setIsReviewingProfile}
+                        />
                     </Container>
                     <MemberCardPreview memberData={memberData} />
                 </>

@@ -95,7 +95,7 @@ const InviterInductionStatus = ({
     induction,
     endorsements,
 }: InviterInductionStatusProps) => {
-    const status = getInductionStatus(induction);
+    const status = getInductionStatus(induction, endorsements);
     switch (status) {
         case InductionStatus.expired:
             return (
@@ -142,7 +142,7 @@ const InviterInductionStatus = ({
                         fullWidth
                         href={`/induction/${induction.id}`}
                     >
-                        Pending completion
+                        Pending endorsements
                     </ActionButton>
                 );
             }
@@ -153,7 +153,18 @@ const InviterInductionStatus = ({
                     fullWidth
                     href={`/induction/${induction.id}`}
                 >
-                    Review &amp; Endorse
+                    Review &amp; endorse
+                </ActionButton>
+            );
+        case InductionStatus.waitingForDonation:
+            return (
+                <ActionButton
+                    type={ActionButtonType.INDUCTION_STATUS_WAITING}
+                    size={ActionButtonSize.S}
+                    fullWidth
+                    href={`/induction/${induction.id}`}
+                >
+                    Pending donation
                 </ActionButton>
             );
         default:

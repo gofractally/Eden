@@ -36,7 +36,7 @@ export const InductionDetailsPage = () => {
     const endorsements = data?.endorsements ?? [];
 
     const userRole = useInductionUserRole(endorsements, induction);
-    const status = getInductionStatus(induction);
+    const status = getInductionStatus(induction, endorsements);
 
     const renderInductionJourney = useMemo(() => {
         if (!induction) return "";

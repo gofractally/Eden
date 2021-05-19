@@ -27,16 +27,24 @@ export const convertPendingProfileToMemberData = (
     };
 };
 
-export const getInductionStatus = (induction?: Induction) => {
+export const getInductionStatus = (
+    induction?: Induction,
+    endorsements?: Endorsement[]
+) => {
     if (!induction) return InductionStatus.invalid;
 
     const isExpired = dayjs(eosBlockTimestampISO(induction.created_at))
         .add(INDUCTION_EXPIRATION_DAYS, "day")
         .isBefore(dayjs());
 
-    return isExpired
-        ? InductionStatus.expired
-        : !induction.new_member_profile.name
+    if (isExpired) return InductionStatus.expired;
+
+    const isWaitingForDonation =
+        endorsements?.every((e) => e.endorsed === 1) ?? false;
+
+    if (isWaitingForDonation) return InductionStatus.waitingForDonation;
+
+    return !induction.new_member_profile.name
         ? InductionStatus.waitingForProfile
         : !induction.video
         ? InductionStatus.waitingForVideo
