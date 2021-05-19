@@ -31,5 +31,5 @@ export default async (req: NextApiRequest, res: NextApiResponse) => {
     console.info("Job Authorized!");
     console.info("Test Completed!");
 
-    return { success: "Test Job Completed!" };
+    return res.status(200).json({ success: "Test Job Completed!" });
 };
