@@ -34,7 +34,7 @@ export const Table = ({
     rowClassName = "",
     tableHeader,
 }: TableProps) => {
-    const tableClass = `xs:m-0 sm:-mx-4 md:m-0 bg-white border-t border-b md:border border-gray-200 md:rounded md:shadow-sm text-gray-700 ${className}`;
+    const tableClass = `xs:m-0 sm:-mx-4 md:m-0 bg-white border-t border-b md:border border-gray-200 dark:border-gray-600 md:rounded md:shadow-sm text-gray-700 dark:bg-gray-700 dark:text-gray-300 ${className}`;
     return (
         <div className="mb-8">
             {tableHeader && (
@@ -67,7 +67,7 @@ interface TableRowsProps {
 const TableRows = ({ columns, data, className = "" }: TableRowsProps) => {
     const tableRowsClass = `divide-y divide-gray-200 ${className}`;
     const tableRowClass =
-        "flex items-center pr-2 pl-4 sm:px-4 py-3 space-y-1 md:space-y-0 hover:bg-gray-50";
+        "flex items-center pr-2 pl-4 sm:px-4 py-3 space-y-1 md:space-y-0 dark:bg-gray-500 dark:hover:bg-gray-500";
     return (
         <div className={tableRowsClass}>
             {data.map((row, i) => {
@@ -111,7 +111,7 @@ const TableRows = ({ columns, data, className = "" }: TableRowsProps) => {
 };
 
 const TableHeader = ({ columns, className = "" }: TableHeaderProps) => {
-    const tableHeaderClass = `hidden md:flex items-center px-4 py-3 title-font font-medium text-gray-900 text-sm bg-gray-200 ${className}`;
+    const tableHeaderClass = `hidden md:flex items-center px-4 py-3 title-font font-medium text-gray-900 text-sm bg-gray-200 dark:bg-gray-600 dark:text-gray-300 ${className}`;
 
     return (
         <div className={tableHeaderClass} role="rowgroup">

@@ -25,8 +25,8 @@ export enum ActionButtonSize {
 
 export enum ActionButtonType {
     PRIMARY = "bg-blue-500 border-blue-500 text-white hover:bg-blue-600",
-    DISABLED = "border-gray-400 bg-gray-300 text-gray-500",
-    INDUCTION_STATUS_WAITING = "bg-gray-50 text-gray-800 hover:bg-gray-200",
+    DISABLED = "border-gray-400 bg-gray-300 text-gray-500 dark:text-gray-400",
+    INDUCTION_STATUS_WAITING = "bg-gray-50 text-gray-800 dark:text-gray-300 hover:bg-gray-200",
     INDUCTION_STATUS_PROFILE = "bg-blue-500 border-blue-500 text-white hover:bg-blue-600",
     INDUCTION_STATUS_CEREMONY = "bg-blue-500 border-blue-500 text-white hover:bg-blue-600",
     INDUCTION_STATUS_ACTION = "bg-green-500 text-white hover:bg-green-600",
@@ -57,7 +57,7 @@ export const ActionButton = ({
     isExternal,
 }: Props) => {
     const baseClass =
-        "inline-block items-center text-center border focus:outline-none dark:bg-blue-700 dark:bg-border-blue-700";
+        "inline-block items-center text-center border focus:outline-none dark:bg-blue-700 dark:border-blue-800";
     const widthClass = fullWidth ? "w-full" : "";
     let colorClass = disabled ? ActionButtonType.DISABLED : type;
     const cursorClass = disabled ? "cursor-not-allowed" : "cursor-pointer";

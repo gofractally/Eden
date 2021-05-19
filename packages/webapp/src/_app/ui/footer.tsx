@@ -1,13 +1,15 @@
 import { Link } from "_app/ui";
 
 export const Footer = () => (
-    <footer className="border-t text-gray-600 body-font border-gray-200 bg-white">
+    <footer className="border-t text-gray-600 dark:bg-gray-900 body-font border-gray-200 dark:border-gray-700 bg-white">
         <div className="container px-4 py-8 mx-auto flex md:items-center lg:items-start md:flex-row md:flex-nowrap flex-wrap flex-col">
             <div className="w-64 m flex-shrink-0 mx-auto text-center md:text-left">
                 <a className="flex title-font font-medium items-center md:justify-start justify-center text-gray-900">
-                    <span className="text-xl">We are...</span>
+                    <span className="text-xl dark:text-gray-300">
+                        We are...
+                    </span>
                 </a>
-                <p className="mt-2 text-sm text-gray-500">
+                <p className="mt-2 text-sm text-gray-500 dark:text-gray-400">
                     A community working to maximize the power and independence
                     of its members, thereby securing life, liberty, property,
                     and justice for all.
@@ -15,7 +17,7 @@ export const Footer = () => (
             </div>
             <div className="flex-grow flex flex-wrap md:pl-20 -mb-8 md:mt-0 mt-10 md:text-left text-center">
                 <div className="lg:w-1/4 md:w-1/2 w-full px-4">
-                    <h2 className="title-font font-medium text-gray-900 tracking-widest text-sm mb-3">
+                    <h2 className="title-font font-medium text-gray-900 dark:text-gray-300 tracking-widest text-sm mb-3">
                         EDEN
                     </h2>
                     <nav className="list-none mb-10">
@@ -37,7 +39,7 @@ export const Footer = () => (
                     </nav>
                 </div>
                 <div className="lg:w-1/4 md:w-1/2 w-full px-4">
-                    <h2 className="title-font font-medium text-gray-900 tracking-widest text-sm mb-3">
+                    <h2 className="title-font font-medium text-gray-900 dark:text-gray-300 tracking-widest text-sm mb-3">
                         RESOURCES
                     </h2>
                     <nav className="list-none mb-10">

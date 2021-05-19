@@ -126,7 +126,7 @@ const InviteBanner = ({ canInvite, asCallToAction }: InviteBannerProps) => {
                         Invite to Eden
                     </ActionButton>
                 </div>
-                <div className="text-sm text-gray-700 w-3/4 md:w-auto mt-2 md:mt-0">
+                <div className="text-sm text-gray-700 dark:text-gray-300 w-3/4 md:w-auto mt-2 md:mt-0">
                     Invite your trusted contacts in the EOS community to Eden.
                 </div>
             </div>
