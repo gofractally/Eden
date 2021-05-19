@@ -22,7 +22,6 @@
 #include "dwarf.hpp"
 
 #include <stdio.h>
-#include <ucontext.h>
 #include <chrono>
 #include <optional>
 
@@ -699,22 +698,21 @@ struct callbacks
    void backtrace()
    {
       void* data[max_backtrace_frames];
-      ucontext_t uc;
-      if (getcontext(&uc))
-      {
-         fprintf(stderr, "getcontext() failed\n");
-         return;
-      }
-      int count = state.backend.get_context().backtrace(data, sizeof(data) / sizeof(data[0]), &uc);
+      int count =
+          state.backend.get_context().backtrace(data, sizeof(data) / sizeof(data[0]), nullptr);
       for (int i = 0; i < count; ++i)
       {
          auto offset = state.backend.get_debug().translate(data[i]);
-         fprintf(stderr, "%p %x\n", data[i], offset);
+         fprintf(stderr, "%p %08x\n", data[i], offset);
          auto it =
-             std::lower_bound(state.dwarf_info.locations.begin(), state.dwarf_info.locations.end(),
-                              offset, [](auto& a, auto& b) { return a.address < b; });
-         if (it != state.dwarf_info.locations.end())
-            fprintf(stderr, "%s:%d\n", state.dwarf_info.files[it->file_index].c_str(), it->line);
+             std::upper_bound(state.dwarf_info.locations.begin(), state.dwarf_info.locations.end(),
+                              offset, [](auto a, const auto& b) { return a < b.begin_address; });
+         if (it != state.dwarf_info.locations.begin())
+         {
+            --it;
+            if (offset < it->end_address)
+               fprintf(stderr, "%s:%d\n", state.dwarf_info.files[it->file_index].c_str(), it->line);
+         }
       }
    }
 

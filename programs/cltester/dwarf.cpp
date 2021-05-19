@@ -1,6 +1,6 @@
 #include "dwarf.hpp"
 
-#include <eosio/varint.hpp>
+#include <eosio/from_bin.hpp>
 #include <eosio/vm/constants.hpp>
 #include <eosio/vm/sections.hpp>
 
@@ -107,13 +107,13 @@ namespace dwarf
          auto str = get_string(s);
          if (str.empty())
             break;
-         auto dir = eosio::from_bin<eosio::varuint32>(s);
-         auto mod_time = eosio::from_bin<eosio::varuint32>(s);
-         auto filesize = eosio::from_bin<eosio::varuint32>(s);
-         eosio::check(dir.value <= state.file_names.size(),
+         auto dir = eosio::varuint32_from_bin(s);
+         auto mod_time = eosio::varuint32_from_bin(s);
+         auto filesize = eosio::varuint32_from_bin(s);
+         eosio::check(dir <= state.file_names.size(),
                       "invalid include_directory number in .debug_line");
-         if (dir.value)
-            str = state.include_directories[dir.value] + "/" + str;
+         if (dir)
+            str = state.include_directories[dir] + "/" + str;
          state.file_names.push_back(std::move(str));
       }
 
@@ -131,23 +131,32 @@ namespace dwarf
       eosio::check(state.maximum_operations_per_instruction == 1,
                    "mismatched maximum_operations_per_instruction in .debug_line");
       state.is_stmt = state.default_is_stmt;
-      auto default_state = state;
+      auto initial_state = state;
 
+      std::optional<location> current;
       auto add_row = [&] {
-         if (state.end_sequence)
-            return;
-         //  printf("%d %d\n", state.file, state.file_names.size());
-         if (state.file >= state.file_names.size())
-            state.file = 0;  // TODO: debug this and remove
-         eosio::check(state.file < state.file_names.size(), "invalid file index in .debug_line");
-         auto& filename = state.file_names[state.file];
-         auto it = files.find(filename);
-         if (it == files.end())
+         if (current && (state.end_sequence || state.file != current->file_index ||
+                         state.line != current->line))
          {
-            it = files.insert({filename, result.files.size()}).first;
-            result.files.push_back(filename);
+            current->end_address = state.address;
+            eosio::check(current->file_index < state.file_names.size(),
+                         "invalid file index in .debug_line");
+            auto& filename = state.file_names[current->file_index];
+            auto it = files.find(filename);
+            if (it == files.end())
+            {
+               it = files.insert({filename, result.files.size()}).first;
+               result.files.push_back(filename);
+            }
+            current->file_index = it->second;
+            result.locations.push_back(*current);
+            current = {};
          }
-         result.locations.push_back({state.address, it->second, state.line});
+         if (!state.end_sequence && !current)
+            current = location{.begin_address = state.address,
+                               .end_address = state.address,
+                               .file_index = state.file,
+                               .line = state.line};
       };
 
       while (s.remaining())
@@ -155,7 +164,7 @@ namespace dwarf
          auto opcode = eosio::from_bin<uint8_t>(s);
          if (!opcode)
          {
-            auto size = eosio::from_bin<eosio::varuint32>(s).value;
+            auto size = eosio::varuint32_from_bin(s);
             eosio::check(size <= s.remaining(), "bytecode overrun in .debug_line");
             eosio::input_stream extended{s.pos, s.pos + size};
             s.skip(size);
@@ -165,13 +174,14 @@ namespace dwarf
                case dw_lne_end_sequence:
                   state.end_sequence = true;
                   add_row();
+                  state = initial_state;
                   break;
                case dw_lne_set_address:
-                  state.address = eosio::from_bin<uint32_t>(s);
+                  state.address = eosio::from_bin<uint32_t>(extended);
                   state.op_index = 0;
                   break;
                case dw_lne_set_discriminator:
-                  state.discriminator = eosio::from_bin<eosio::varuint32>(s).value;
+                  state.discriminator = eosio::varuint32_from_bin(extended);
                   break;
                default:
                   // printf("extended opcode %d\n", (int)extended_opcode);
@@ -190,16 +200,16 @@ namespace dwarf
                   state.epilogue_begin = false;
                   break;
                case dw_lns_advance_pc:
-                  state.address += eosio::from_bin<eosio::varuint32>(s).value;
+                  state.address += eosio::varuint32_from_bin(s);
                   break;
                case dw_lns_advance_line:
-                  state.line += eosio::from_bin<eosio::varint32>(s).value;
+                  state.line += sleb32_from_bin(s);
                   break;
                case dw_lns_set_file:
-                  state.file = eosio::from_bin<eosio::varuint32>(s).value;
+                  state.file = eosio::varuint32_from_bin(s);
                   break;
                case dw_lns_set_column:
-                  state.column = eosio::from_bin<eosio::varuint32>(s).value;
+                  state.column = eosio::varuint32_from_bin(s);
                   break;
                case dw_lns_negate_stmt:
                   state.is_stmt = !state.is_stmt;
@@ -221,13 +231,13 @@ namespace dwarf
                   state.epilogue_begin = true;
                   break;
                case dw_lns_set_isa:
-                  state.isa = eosio::from_bin<eosio::varuint32>(s).value;
+                  state.isa = eosio::varuint32_from_bin(s);
                   break;
                default:
                   // printf("opcode %d\n", (int)opcode);
                   // printf("  args: %d\n", state.standard_opcode_lengths[opcode]);
                   // for (uint8_t i = 0; i < state.standard_opcode_lengths[opcode]; ++i)
-                  //    eosio::from_bin<eosio::varuint32>(s);
+                  //    eosio::varuint32_from_bin(s);
                   break;
             }
          }  // opcode < state.opcode_base
@@ -295,7 +305,8 @@ namespace dwarf
 
       std::sort(result.locations.begin(), result.locations.end());
       for (auto& loc : result.locations)
-         printf("%08x %s:%d\n", loc.address, result.files[loc.file_index].c_str(), loc.line);
+         printf("[%08x,%08x) %s:%d\n", loc.begin_address, loc.end_address,
+                result.files[loc.file_index].c_str(), loc.line);
       return result;
    }
 

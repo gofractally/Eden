@@ -4,11 +4,15 @@ namespace dwarf
 {
    struct location
    {
-      uint32_t address = 0;
+      uint32_t begin_address = 0;
+      uint32_t end_address = 0;
       uint32_t file_index = 0;
       uint32_t line = 0;
 
-      friend bool operator<(const location& a, const location& b) { return a.address < b.address; }
+      friend bool operator<(const location& a, const location& b)
+      {
+         return a.begin_address < b.begin_address;
+      }
    };
 
    struct info

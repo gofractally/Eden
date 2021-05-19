@@ -19,18 +19,25 @@ namespace eosio
    void from_bin(T& obj, S& stream);
 
    template <typename S>
-   void varuint32_from_bin(uint32_t& dest, S& stream)
+   uint32_t varuint32_from_bin(S& stream)
    {
-      dest = 0;
+      uint32_t result = 0;
       int shift = 0;
       uint8_t b = 0;
       do
       {
          check(shift < 35, convert_stream_error(stream_error::invalid_varuint_encoding));
          from_bin(b, stream);
-         dest |= uint32_t(b & 0x7f) << shift;
+         result |= uint32_t(b & 0x7f) << shift;
          shift += 7;
       } while (b & 0x80);
+      return result;
+   }
+
+   template <typename S>
+   void varuint32_from_bin(uint32_t& dest, S& stream)
+   {
+      dest = varuint32_from_bin(stream);
    }
 
    template <typename S>
@@ -48,6 +55,7 @@ namespace eosio
       } while (b & 0x80);
    }
 
+   // zig-zag encoding
    template <typename S>
    void varint32_from_bin(int32_t& result, S& stream)
    {
@@ -57,6 +65,25 @@ namespace eosio
          result = ((~v) >> 1) | 0x8000'0000;
       else
          result = v >> 1;
+   }
+
+   // signed leb128 encoding
+   template <typename S>
+   int32_t sleb32_from_bin(S& stream)
+   {
+      uint32_t result = 0;
+      int shift = 0;
+      uint8_t b = 0;
+      do
+      {
+         check(shift < 35, convert_stream_error(stream_error::invalid_varuint_encoding));
+         from_bin(b, stream);
+         result |= uint32_t(b & 0x7f) << shift;
+         shift += 7;
+      } while (b & 0x80);
+      if (shift < 32 && (b & 0x40))
+         result |= -(uint32_t(1) << shift);
+      return result;
    }
 
    template <typename T, typename S>
