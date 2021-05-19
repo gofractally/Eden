@@ -16,9 +16,9 @@ import {
     getInductionStatus,
     useInductionUserRole,
     InductionRole,
-    UnauthenticatedJourney,
+    ThirdPartyJourney,
     InviteeJourney,
-    InviterJourney,
+    InviterWitnessJourney,
 } from "inductions";
 
 // TODO: Finish building this out and switch to using it.
@@ -72,15 +72,14 @@ export const InductionDetailsPage2 = () => {
         if (!induction) return "";
         switch (userRole) {
             case InductionRole.Inviter:
+            case InductionRole.Endorser:
                 return (
-                    <InviterJourney
+                    <InviterWitnessJourney
                         endorsements={endorsements}
                         induction={induction}
                         inductionStatus={status}
                     />
                 );
-            case InductionRole.Endorser:
-                return React.Fragment;
             case InductionRole.Invitee:
                 return (
                     <InviteeJourney
@@ -90,11 +89,10 @@ export const InductionDetailsPage2 = () => {
                     />
                 );
             case InductionRole.Member:
-                return React.Fragment;
-            case InductionRole.Unauthenticated:
             case InductionRole.Unknown:
+            case InductionRole.Unauthenticated:
                 return (
-                    <UnauthenticatedJourney
+                    <ThirdPartyJourney
                         endorsements={endorsements}
                         induction={induction}
                         inductionStatus={status}

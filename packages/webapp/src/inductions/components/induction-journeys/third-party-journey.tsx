@@ -29,7 +29,7 @@ interface Props {
     inductionStatus: InductionStatus;
 }
 
-export const UnauthenticatedJourney = ({
+export const ThirdPartyJourney = ({
     endorsements,
     induction,
     inductionStatus,
@@ -110,4 +110,4 @@ export const UnauthenticatedJourney = ({
     }
 };
 
-export default UnauthenticatedJourney;
+export default ThirdPartyJourney;

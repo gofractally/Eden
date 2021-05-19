@@ -45,7 +45,7 @@ interface Props {
     inductionStatus: InductionStatus;
 }
 
-export const InviterJourney = ({
+export const InviterWitnessJourney = ({
     endorsements,
     induction,
     inductionStatus,
@@ -182,4 +182,4 @@ export const InviterJourney = ({
     }
 };
 
-export default InviterJourney;
+export default InviterWitnessJourney;
