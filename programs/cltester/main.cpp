@@ -543,6 +543,7 @@ struct file
 struct state
 {
    const char* wasm;
+   dwarf::info& dwarf_info;
    eosio::vm::wasm_allocator& wa;
    backend_t& backend;
    std::vector<std::string> args;
@@ -649,6 +650,7 @@ FC_REFLECT(push_trx_args, (transaction)(context_free_data)(signatures)(keys))
       return selected().IDX.previous_secondary(iterator, primary);                                \
    }
 
+// clang-format off
 #define DB_WRAPPERS_FLOAT_SECONDARY(IDX, TYPE)                                                 \
    int db_##IDX##_find_secondary(uint64_t code, uint64_t scope, uint64_t table,                \
                                  const TYPE& secondary, uint64_t& primary)                     \
@@ -688,6 +690,7 @@ FC_REFLECT(push_trx_args, (transaction)(context_free_data)(signatures)(keys))
    {                                                                                           \
       return selected().IDX.previous_secondary(iterator, primary);                             \
    }
+// clang-format on
 
 struct callbacks
 {
@@ -704,7 +707,15 @@ struct callbacks
       }
       int count = state.backend.get_context().backtrace(data, sizeof(data) / sizeof(data[0]), &uc);
       for (int i = 0; i < count; ++i)
-         fprintf(stderr, "%p %x\n", data[i], state.backend.get_debug().translate(data[i]));
+      {
+         auto offset = state.backend.get_debug().translate(data[i]);
+         fprintf(stderr, "%p %x\n", data[i], offset);
+         auto it =
+             std::lower_bound(state.dwarf_info.locations.begin(), state.dwarf_info.locations.end(),
+                              offset, [](auto& a, auto& b) { return a.address < b; });
+         if (it != state.dwarf_info.locations.end())
+            fprintf(stderr, "%s:%d\n", state.dwarf_info.files[it->file_index].c_str(), it->line);
+      }
    }
 
    void check_bounds(void* data, size_t size)
@@ -1490,8 +1501,8 @@ static void run(const char* wasm, const std::vector<std::string>& args)
    eosio::vm::wasm_allocator wa;
    auto code = eosio::vm::read_wasm(wasm);
    backend_t backend(code, nullptr);
-   auto d = dwarf::get_info_from_wasm({(const char*)code.data(), code.size()});
-   ::state state{wasm, wa, backend, args};
+   auto dwarf_info = dwarf::get_info_from_wasm({(const char*)code.data(), code.size()});
+   ::state state{wasm, dwarf_info, wa, backend, args};
    callbacks cb{state};
    state.files.emplace_back(stdin, false);
    state.files.emplace_back(stdout, false);
@@ -1504,8 +1515,7 @@ static void run(const char* wasm, const std::vector<std::string>& args)
    backend(cb, "env", "_start");
 }
 
-const char usage[] =
-    "usage: cltester [-h or --help] [-v or --verbose] file.wasm [args for wasm]\n";
+const char usage[] = "usage: cltester [-h or --help] [-v or --verbose] file.wasm [args for wasm]\n";
 
 int main(int argc, char* argv[])
 {

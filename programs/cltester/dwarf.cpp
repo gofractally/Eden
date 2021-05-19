@@ -4,22 +4,31 @@
 #include <eosio/vm/constants.hpp>
 #include <eosio/vm/sections.hpp>
 
+#include <stdio.h>
+
 namespace dwarf
 {
    inline constexpr uint8_t lns_version = 4;
 
-   inline constexpr uint32_t dw_lns_copy = 0x01;
-   inline constexpr uint32_t dw_lns_advance_pc = 0x02;
-   inline constexpr uint32_t dw_lns_advance_line = 0x03;
-   inline constexpr uint32_t dw_lns_set_file = 0x04;
-   inline constexpr uint32_t dw_lns_set_column = 0x05;
-   inline constexpr uint32_t dw_lns_negate_stmt = 0x06;
-   inline constexpr uint32_t dw_lns_set_basic_block = 0x07;
-   inline constexpr uint32_t dw_lns_const_add_pc = 0x08;
-   inline constexpr uint32_t dw_lns_fixed_advance_pc = 0x09;
-   inline constexpr uint32_t dw_lns_set_prologue_end = 0x0a;
-   inline constexpr uint32_t dw_lns_set_epilogue_begin = 0x0b;
-   inline constexpr uint32_t dw_lns_set_isa = 0x0c;
+   inline constexpr uint8_t dw_lns_copy = 0x01;
+   inline constexpr uint8_t dw_lns_advance_pc = 0x02;
+   inline constexpr uint8_t dw_lns_advance_line = 0x03;
+   inline constexpr uint8_t dw_lns_set_file = 0x04;
+   inline constexpr uint8_t dw_lns_set_column = 0x05;
+   inline constexpr uint8_t dw_lns_negate_stmt = 0x06;
+   inline constexpr uint8_t dw_lns_set_basic_block = 0x07;
+   inline constexpr uint8_t dw_lns_const_add_pc = 0x08;
+   inline constexpr uint8_t dw_lns_fixed_advance_pc = 0x09;
+   inline constexpr uint8_t dw_lns_set_prologue_end = 0x0a;
+   inline constexpr uint8_t dw_lns_set_epilogue_begin = 0x0b;
+   inline constexpr uint8_t dw_lns_set_isa = 0x0c;
+
+   inline constexpr uint8_t dw_lne_end_sequence = 0x01;
+   inline constexpr uint8_t dw_lne_set_address = 0x02;
+   inline constexpr uint8_t dw_lne_define_file = 0x03;
+   inline constexpr uint8_t dw_lne_set_discriminator = 0x04;
+   inline constexpr uint8_t dw_lne_lo_user = 0x80;
+   inline constexpr uint8_t dw_lne_hi_user = 0xff;
 
    struct line_state
    {
@@ -72,14 +81,6 @@ namespace dwarf
       }
    }
 
-   uint32_t get_lns_opcode(eosio::input_stream& s)
-   {
-      uint32_t result = eosio::from_bin<uint8_t>(s);
-      if (!result)
-         result = eosio::from_bin<eosio::varuint32>(s);
-      return result;
-   }
-
    void parse_debug_line_unit_header(line_state& state, eosio::input_stream& s)
    {
       auto version = eosio::from_bin<uint16_t>(s);
@@ -119,19 +120,139 @@ namespace dwarf
       eosio::check(instructions_pos == s.pos, "mismatched header_length in .debug_line");
    }
 
-   void parse_debug_line_unit(eosio::input_stream s)
+   void parse_debug_line_unit(info& result,
+                              std::map<std::string, uint32_t>& files,
+                              eosio::input_stream s)
    {
       line_state state;
       parse_debug_line_unit_header(state, s);
-   }
+      eosio::check(state.minimum_instruction_length == 1,
+                   "mismatched minimum_instruction_length in .debug_line");
+      eosio::check(state.maximum_operations_per_instruction == 1,
+                   "mismatched maximum_operations_per_instruction in .debug_line");
+      state.is_stmt = state.default_is_stmt;
+      auto default_state = state;
 
-   void parse_debug_line(eosio::input_stream s)
+      auto add_row = [&] {
+         if (state.end_sequence)
+            return;
+         //  printf("%d %d\n", state.file, state.file_names.size());
+         if (state.file >= state.file_names.size())
+            state.file = 0;  // TODO: debug this and remove
+         eosio::check(state.file < state.file_names.size(), "invalid file index in .debug_line");
+         auto& filename = state.file_names[state.file];
+         auto it = files.find(filename);
+         if (it == files.end())
+         {
+            it = files.insert({filename, result.files.size()}).first;
+            result.files.push_back(filename);
+         }
+         result.locations.push_back({state.address, it->second, state.line});
+      };
+
+      while (s.remaining())
+      {
+         auto opcode = eosio::from_bin<uint8_t>(s);
+         if (!opcode)
+         {
+            auto size = eosio::from_bin<eosio::varuint32>(s).value;
+            eosio::check(size <= s.remaining(), "bytecode overrun in .debug_line");
+            eosio::input_stream extended{s.pos, s.pos + size};
+            s.skip(size);
+            auto extended_opcode = eosio::from_bin<uint8_t>(extended);
+            switch (extended_opcode)
+            {
+               case dw_lne_end_sequence:
+                  state.end_sequence = true;
+                  add_row();
+                  break;
+               case dw_lne_set_address:
+                  state.address = eosio::from_bin<uint32_t>(s);
+                  state.op_index = 0;
+                  break;
+               case dw_lne_set_discriminator:
+                  state.discriminator = eosio::from_bin<eosio::varuint32>(s).value;
+                  break;
+               default:
+                  // printf("extended opcode %d\n", (int)extended_opcode);
+                  break;
+            }
+         }
+         else if (opcode < state.opcode_base)
+         {
+            switch (opcode)
+            {
+               case dw_lns_copy:
+                  add_row();
+                  state.discriminator = 0;
+                  state.basic_block = false;
+                  state.prologue_end = false;
+                  state.epilogue_begin = false;
+                  break;
+               case dw_lns_advance_pc:
+                  state.address += eosio::from_bin<eosio::varuint32>(s).value;
+                  break;
+               case dw_lns_advance_line:
+                  state.line += eosio::from_bin<eosio::varint32>(s).value;
+                  break;
+               case dw_lns_set_file:
+                  state.file = eosio::from_bin<eosio::varuint32>(s).value;
+                  break;
+               case dw_lns_set_column:
+                  state.column = eosio::from_bin<eosio::varuint32>(s).value;
+                  break;
+               case dw_lns_negate_stmt:
+                  state.is_stmt = !state.is_stmt;
+                  break;
+               case dw_lns_set_basic_block:
+                  state.basic_block = true;
+                  break;
+               case dw_lns_const_add_pc:
+                  state.address += (255 - state.opcode_base) / state.line_range;
+                  break;
+               case dw_lns_fixed_advance_pc:
+                  state.address += eosio::from_bin<uint16_t>(s);
+                  state.op_index = 0;
+                  break;
+               case dw_lns_set_prologue_end:
+                  state.prologue_end = true;
+                  break;
+               case dw_lns_set_epilogue_begin:
+                  state.epilogue_begin = true;
+                  break;
+               case dw_lns_set_isa:
+                  state.isa = eosio::from_bin<eosio::varuint32>(s).value;
+                  break;
+               default:
+                  // printf("opcode %d\n", (int)opcode);
+                  // printf("  args: %d\n", state.standard_opcode_lengths[opcode]);
+                  // for (uint8_t i = 0; i < state.standard_opcode_lengths[opcode]; ++i)
+                  //    eosio::from_bin<eosio::varuint32>(s);
+                  break;
+            }
+         }  // opcode < state.opcode_base
+         else
+         {
+            state.address += (opcode - state.opcode_base) / state.line_range;
+            state.line += state.line_base + ((opcode - state.opcode_base) % state.line_range);
+            add_row();
+            state.basic_block = false;
+            state.prologue_end = false;
+            state.epilogue_begin = false;
+            state.discriminator = 0;
+         }
+      }  // while (s.remaining())
+   }     // parse_debug_line_unit
+
+   void parse_debug_line(info& result,
+                         std::map<std::string, uint32_t>& files,
+                         eosio::input_stream s)
    {
       while (s.remaining())
       {
          uint32_t unit_length = eosio::from_bin<uint32_t>(s);
          eosio::check(unit_length <= s.remaining(), "bad unit_length in .debug_line");
-         parse_debug_line_unit({s.pos, s.pos + unit_length});
+         parse_debug_line_unit(result, files, {s.pos, s.pos + unit_length});
          s.skip(unit_length);
       }
    }
@@ -153,6 +274,7 @@ namespace dwarf
    info get_info_from_wasm(eosio::input_stream stream)
    {
       info result;
+      std::map<std::string, uint32_t> files;
 
       wasm_header header;
       eosio::from_bin(header, stream);
@@ -167,10 +289,13 @@ namespace dwarf
          {
             auto name = eosio::from_bin<std::string>(section.data);
             if (name == ".debug_line")
-               dwarf::parse_debug_line(section.data);
+               dwarf::parse_debug_line(result, files, section.data);
          }
       }
 
+      std::sort(result.locations.begin(), result.locations.end());
+      for (auto& loc : result.locations)
+         printf("%08x %s:%d\n", loc.address, result.files[loc.file_index].c_str(), loc.line);
       return result;
    }
 
