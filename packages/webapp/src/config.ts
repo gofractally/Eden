@@ -75,6 +75,19 @@ export const chainConfig = {
     rpcEndpoints: [rpcEndpoint],
 };
 
+interface ValidUploadActions {
+    [contract: string]: {
+        [action: string]: { maxSize: number };
+    };
+}
+
+export const validUploadActions: ValidUploadActions = {
+    [edenContractAccount]: {
+        inductprofil: { maxSize: 1_000_000 },
+        inductvideo: { maxSize: 100_000_000 },
+    },
+};
+
 // SECRETS CONFIG
 if (
     typeof window === "undefined" &&

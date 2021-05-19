@@ -9,6 +9,8 @@ import {
     HelpLink,
     handleFileChange,
 } from "_app";
+import { edenContractAccount, validUploadActions } from "config";
+
 import { NewMemberProfile } from "../interfaces";
 
 interface Props {
@@ -100,7 +102,9 @@ export const InductionProfileForm = ({
                         handleFileChange(
                             e,
                             "image",
-                            1_000_000,
+                            validUploadActions[edenContractAccount][
+                                "inductprofil"
+                            ].maxSize,
                             setUploadedImage
                         )
                     }

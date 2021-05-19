@@ -1,8 +1,8 @@
-import { ipfsBaseUrl } from "config";
 import React, { FormEvent, useEffect, useRef, useState } from "react";
 
-import { ActionButton, Form, handleFileChange, onError } from "_app";
+import { ActionButton, Form, handleFileChange } from "_app";
 import { ipfsUrl } from "_app/utils/config-helpers";
+import { edenContractAccount, validUploadActions } from "config";
 
 export type VideoSubmissionPhase = "uploading" | "signing" | "finishing";
 interface Props {
@@ -75,7 +75,9 @@ export const InductionVideoForm = ({
                         handleFileChange(
                             e,
                             "video",
-                            100_000_000,
+                            validUploadActions[edenContractAccount][
+                                "inductvideo"
+                            ].maxSize,
                             setUploadedVideo
                         )
                     }
