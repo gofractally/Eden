@@ -97,7 +97,12 @@ export const InductionProfileForm = ({
                     accept="image/*"
                     label="select an image file"
                     onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-                        handleFileChange(e, "image", setUploadedImage)
+                        handleFileChange(
+                            e,
+                            "image",
+                            1_000_000,
+                            setUploadedImage
+                        )
                     }
                 />
                 {uploadedImage || fields.img ? (
