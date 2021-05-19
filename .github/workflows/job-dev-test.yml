@@ -8,6 +8,8 @@ on:
 jobs:
     cron:
         runs-on: ubuntu-latest
+        container: curlimages/curl:latest
+
         steps:
             - name: Test Job
               run: |
