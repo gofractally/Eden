@@ -81,7 +81,7 @@ const MemberImage = ({ member }: { member: MemberData }) => {
 
 const MintDate = ({ createdAt }: { createdAt: number }) => (
     <div>
-        <p className="text-sm text-gray-500">
+        <p className="text-sm text-gray-500 dark:text-gray-300">
             {createdAt === 0
                 ? "not an eden member"
                 : dayjs(createdAt).format("l")}
@@ -114,7 +114,9 @@ const MemberNames = ({ member }: { member: MemberData }) => (
         {member.account ? (
             <>
                 <p className="font-medium">{member.name}</p>
-                <p className="text-sm text-gray-600">@{member.account}</p>
+                <p className="text-sm text-gray-600 dark:text-gray-300">
+                    @{member.account}
+                </p>
             </>
         ) : (
             member.name
