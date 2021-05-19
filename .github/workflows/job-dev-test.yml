@@ -11,6 +11,6 @@ jobs:
         steps:
             - name: Test Job
               run: |
-                  curl -i -f --request POST \
+                  curl -i --fail-with-body --request POST \
                   --url 'https://eden-on-eos-pqhreob6f-clarionos.vercel.app/api/jobs/test' \
                   --header 'x-job-key: ${{ secrets.DEV_JOBS_AUTH_GC }}-fake'
