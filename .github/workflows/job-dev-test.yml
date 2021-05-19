@@ -1,0 +1,13 @@
+name: job-dev-test
+on:
+    schedule:
+        - cron: "*/2 * * * *"
+jobs:
+    cron:
+        runs-on: ubuntu-latest
+        steps:
+            - name: Test Job
+              run: |
+                  curl --request POST \
+                  --url 'https://eden-dev.vercel.app/api/jobs/test' \
+                  --header 'x-job-key: ${{ secrets.DEV_JOBS_AUTH_GC }}'

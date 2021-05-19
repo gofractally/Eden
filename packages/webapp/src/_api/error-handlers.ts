@@ -13,6 +13,13 @@ export class BadRequestError extends ServerError {
     }
 }
 
+export class UnauthorizedRequestError extends ServerError {
+    constructor(error: any) {
+        super(401, error);
+        this.name = "UnauthorizedRequestError";
+    }
+}
+
 export class InternalServerError extends ServerError {
     constructor(error: any) {
         super(500, error);
