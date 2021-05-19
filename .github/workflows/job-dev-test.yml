@@ -1,8 +1,5 @@
 name: job-dev-test
 on:
-    push:
-        branches:
-            - "sparkplug0025/*" # todo: remove it before merging
     schedule:
         - cron: "0 * * * *" # every hour
 jobs:
@@ -14,5 +11,5 @@ jobs:
             - name: Test Job
               run: |
                   curl -i --fail-with-body --request POST \
-                  --url 'https://eden-on-eos-pqhreob6f-clarionos.vercel.app/api/jobs/test' \
+                  --url 'https://eden-dev.vercel.app/api/jobs/test' \
                   --header 'x-job-key: ${{ secrets.DEV_JOBS_AUTH_GC }}'
