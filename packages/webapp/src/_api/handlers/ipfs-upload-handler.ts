@@ -162,7 +162,7 @@ const validateActionFile = async (fileData: ActionIpfsData) => {
         throw new Error(
             `Uploaded File size exceeds the max size of ${Math.floor(
                 validActionFile.maxSize / 1_000_000
-            )} Mbs`
+            )} Mb`
         );
     }
 };

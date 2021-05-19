@@ -28,6 +28,7 @@ export const useFormFields = <T>(initialState: T): [T, SetValuesEvent] => {
 export const handleFileChange = async (
     e: React.ChangeEvent<HTMLInputElement>,
     mimePrefix: string,
+    maxSize: number,
     setFile: (file: File) => void
 ) => {
     e.preventDefault();
@@ -40,6 +41,16 @@ export const handleFileChange = async (
 
     if (!file.type.match(`${mimePrefix}.*`)) {
         return onError(new Error(`You can only select ${mimePrefix} files`));
+    }
+
+    if (file.size > maxSize) {
+        return onError(
+            new Error(
+                `The file cannot be larger than ${Math.floor(
+                    maxSize / 1_000_000
+                )} Mb`
+            )
+        );
     }
 
     setFile(file);

@@ -72,7 +72,12 @@ export const InductionVideoForm = ({
                     accept="video/*"
                     label="select a video file"
                     onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-                        handleFileChange(e, "video", setUploadedVideo)
+                        handleFileChange(
+                            e,
+                            "video",
+                            100_000_000,
+                            setUploadedVideo
+                        )
                     }
                 />
                 {(video || uploadedVideo) && <VideoClip url={getVideoUrl()} />}
