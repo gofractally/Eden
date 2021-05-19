@@ -1,7 +1,6 @@
-import { useMemo } from "react";
 import dayjs from "dayjs";
 
-import { eosBlockTimestampISO, useUALAccount } from "_app";
+import { eosBlockTimestampISO } from "_app";
 import { MemberData } from "members";
 import {
     Endorsement,
@@ -70,23 +69,4 @@ export const getInductionUserRole = (
         return InductionRole.Endorser;
     }
     return InductionRole.Unknown;
-};
-
-export const useInductionUserRole = (
-    endorsements: Endorsement[],
-    induction?: Induction
-): InductionRole => {
-    const [ualAccount] = useUALAccount();
-    const userRole: InductionRole = useMemo(() => {
-        if (!ualAccount) return InductionRole.Unauthenticated;
-        if (!induction) return InductionRole.Unknown;
-        const accountName = ualAccount.accountName;
-        if (accountName === induction.invitee) return InductionRole.Invitee;
-        if (accountName === induction.inviter) return InductionRole.Inviter;
-        if (endorsements.find((e) => e.endorser === accountName)) {
-            return InductionRole.Endorser;
-        }
-        return InductionRole.Unknown;
-    }, [ualAccount, induction, endorsements]);
-    return userRole;
 };

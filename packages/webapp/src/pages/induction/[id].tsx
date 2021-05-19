@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import React, { useMemo, useState } from "react";
 import { useRouter } from "next/router";
 
 import {
@@ -15,7 +15,93 @@ import {
     InductionStatus,
     getInductionStatus,
     useInductionUserRole,
+    InductionRole,
+    UnauthenticatedJourney,
+    InviteeJourney,
 } from "inductions";
+
+// TODO: Finish building this out and switch to using it.
+export const InductionDetailsPage2 = () => {
+    const router = useRouter();
+    const inductionId = router.query.id;
+
+    const [reviewStep, setReviewStep] = useState<
+        "profile" | "video" | undefined
+    >();
+
+    const {
+        data: isCommunityActive,
+        isLoading: isLoadingCommunityState,
+    } = useIsCommunityActive();
+
+    const {
+        data,
+        isLoading: isLoadingEndorsements,
+    } = useGetInductionWithEndorsements(inductionId as string);
+
+    const induction = data?.induction;
+    const endorsements = data?.endorsements ?? [];
+
+    if (isLoadingEndorsements || isLoadingCommunityState) {
+        return <p>Loading Induction...</p>;
+    }
+    const status = getInductionStatus(induction);
+
+    if (
+        status === InductionStatus.invalid ||
+        status === InductionStatus.expired
+    ) {
+        return (
+            <RawLayout title="Invite not found">
+                <CallToAction
+                    href="/induction"
+                    buttonLabel="Membership Dashboard"
+                >
+                    Hmmm... this invitation couldn't be found. The invitee may
+                    have already been inducted, or their invitation could have
+                    expired.
+                </CallToAction>
+            </RawLayout>
+        );
+    }
+
+    const userRole = useInductionUserRole(endorsements, induction);
+
+    const renderInductionJourney = useMemo(() => {
+        if (!induction) return "";
+        switch (userRole) {
+            case InductionRole.Inviter:
+                return React.Fragment;
+            case InductionRole.Endorser:
+                return React.Fragment;
+            case InductionRole.Invitee:
+                return (
+                    <InviteeJourney
+                        endorsements={endorsements}
+                        induction={induction}
+                        inductionStatus={status}
+                    />
+                );
+            case InductionRole.Member:
+                return React.Fragment;
+            case InductionRole.Unauthenticated:
+            case InductionRole.Unknown:
+                return (
+                    <UnauthenticatedJourney
+                        endorsements={endorsements}
+                        induction={induction}
+                        inductionStatus={status}
+                    />
+                );
+        }
+    }, []);
+
+    return (
+        <SingleColLayout title={`Induction #${inductionId}`}>
+            {renderInductionJourney}
+        </SingleColLayout>
+    );
+};
 
 export const InductionDetailsPage = () => {
     const router = useRouter();
