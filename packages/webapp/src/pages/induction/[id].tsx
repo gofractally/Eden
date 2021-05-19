@@ -18,6 +18,7 @@ import {
     InductionRole,
     UnauthenticatedJourney,
     InviteeJourney,
+    InviterJourney,
 } from "inductions";
 
 // TODO: Finish building this out and switch to using it.
@@ -71,7 +72,13 @@ export const InductionDetailsPage2 = () => {
         if (!induction) return "";
         switch (userRole) {
             case InductionRole.Inviter:
-                return React.Fragment;
+                return (
+                    <InviterJourney
+                        endorsements={endorsements}
+                        induction={induction}
+                        inductionStatus={status}
+                    />
+                );
             case InductionRole.Endorser:
                 return React.Fragment;
             case InductionRole.Invitee:
