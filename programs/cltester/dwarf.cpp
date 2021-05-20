@@ -149,6 +149,10 @@ namespace dwarf
                result.files.push_back(filename);
             }
             current->file_index = it->second;
+
+            fprintf(stderr, "[%08x,%08x) %s:%d\n", current->begin_address, current->end_address,
+                    result.files[current->file_index].c_str(), current->line);
+
             result.locations.push_back(*current);
             current = {};
          }
@@ -184,7 +188,7 @@ namespace dwarf
                   state.discriminator = eosio::varuint32_from_bin(extended);
                   break;
                default:
-                  // printf("extended opcode %d\n", (int)extended_opcode);
+                  // fprintf(stderr, "extended opcode %d\n", (int)extended_opcode);
                   break;
             }
          }
@@ -234,8 +238,8 @@ namespace dwarf
                   state.isa = eosio::varuint32_from_bin(s);
                   break;
                default:
-                  // printf("opcode %d\n", (int)opcode);
-                  // printf("  args: %d\n", state.standard_opcode_lengths[opcode]);
+                  // fprintf(stderr, "opcode %d\n", (int)opcode);
+                  // fprintf(stderr, "  args: %d\n", state.standard_opcode_lengths[opcode]);
                   // for (uint8_t i = 0; i < state.standard_opcode_lengths[opcode]; ++i)
                   //    eosio::varuint32_from_bin(s);
                   break;
@@ -258,10 +262,15 @@ namespace dwarf
                          std::map<std::string, uint32_t>& files,
                          eosio::input_stream s)
    {
+      // fprintf(stderr, "parse_debug_line %08x\n", (uint32_t)s.remaining());
+      // auto bb = s.pos;
+      // int i = 0;
       while (s.remaining())
       {
          uint32_t unit_length = eosio::from_bin<uint32_t>(s);
          eosio::check(unit_length <= s.remaining(), "bad unit_length in .debug_line");
+         // fprintf(stderr, "??? %08x\n", (uint8_t)(s.pos - bb));
+         // if (i++ == 0)
          parse_debug_line_unit(result, files, {s.pos, s.pos + unit_length});
          s.skip(unit_length);
       }
@@ -304,9 +313,9 @@ namespace dwarf
       }
 
       std::sort(result.locations.begin(), result.locations.end());
-      for (auto& loc : result.locations)
-         printf("[%08x,%08x) %s:%d\n", loc.begin_address, loc.end_address,
-                result.files[loc.file_index].c_str(), loc.line);
+      // for (auto& loc : result.locations)
+      //    fprintf(stderr, "[%08x,%08x) %s:%d\n", loc.begin_address, loc.end_address,
+      //           result.files[loc.file_index].c_str(), loc.line);
       return result;
    }
 

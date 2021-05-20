@@ -1,5 +1,5 @@
 add_library(simple-malloc)
-target_compile_options(simple-malloc PRIVATE -fno-exceptions -D__eosio_cdt__)
+target_compile_options(simple-malloc PRIVATE -fno-exceptions -D__eosio_cdt__ -mthread-model single)
 target_sources(simple-malloc PRIVATE simple_malloc.cpp)
 add_custom_command(
     TARGET simple-malloc
@@ -9,6 +9,7 @@ add_custom_command(
 )
 
 add_library(eosio-contracts-wasi-polyfill)
+target_compile_options(eosio-contracts-wasi-polyfill PRIVATE -fno-exceptions -D__eosio_cdt__ -mthread-model single)
 target_sources(eosio-contracts-wasi-polyfill PRIVATE
     contracts/wasi-polyfill/__wasi_fd_fdstat_get.cpp
     contracts/wasi-polyfill/__wasi_fd_close.cpp
@@ -18,6 +19,7 @@ target_sources(eosio-contracts-wasi-polyfill PRIVATE
 set_target_properties(eosio-contracts-wasi-polyfill PROPERTIES ARCHIVE_OUTPUT_DIRECTORY ${ROOT_BINARY_DIR}/clsdk/lib-wasm)
 
 add_library(eosio-core)
+target_compile_options(eosio-core PUBLIC -fno-exceptions -D__eosio_cdt__ -mthread-model single)
 target_link_libraries(eosio-core PUBLIC abieos boost)
 target_include_directories(eosio-core PUBLIC core)
 target_compile_options(eosio-core PUBLIC -fno-exceptions -D__eosio_cdt__)
@@ -68,15 +70,27 @@ target_sources(eosio-contract-abigen PRIVATE
     tester/wasi_polyfill/__wasi_proc_exit.cpp
 )
 target_compile_options(eosio-contract-abigen PUBLIC -DCOMPILING_ABIGEN)
+target_compile_options(eosio-contract-abigen PUBLIC -fno-exceptions -D__eosio_cdt__ -mthread-model single)
 target_include_directories(eosio-contract-abigen PUBLIC contracts)
 target_link_libraries(eosio-contract-abigen PUBLIC
     boost
     eosio-core
+    -lc++
+    -lc++abi
+    -lc
     eosio-contracts-wasi-polyfill
+    ${WASI_SDK_PREFIX}/lib/clang/11.0.0/lib/wasi/libclang_rt.builtins-wasm32.a
+    ${WASI_SDK_PREFIX}/share/wasi-sysroot/lib/wasm32-wasi/crt1.o
 )
 set_target_properties(eosio-contract-abigen PROPERTIES ARCHIVE_OUTPUT_DIRECTORY ${ROOT_BINARY_DIR}/clsdk/lib-wasm)
+target_link_options(eosio-contract-abigen PUBLIC
+    -Wl,--entry,_start
+    $<$<OR:$<CONFIG:Release>,$<CONFIG:MinSizeRel>>:-Wl,--strip-all>
+    -nostdlib
+)
 
 add_library(cltestlib)
+target_compile_options(cltestlib PUBLIC -fno-exceptions -D__eosio_cdt__ -mthread-model single)
 target_sources(cltestlib PRIVATE
     tester/tester.cpp
     tester/tester_intrinsics.cpp
@@ -96,10 +110,22 @@ target_sources(cltestlib PRIVATE
     tester/wasi_polyfill/__wasi_path_open.cpp
     tester/wasi_polyfill/__wasi_proc_exit.cpp
 )
-target_link_libraries(cltestlib PUBLIC boost eosio-core)
+target_link_libraries(cltestlib PUBLIC 
+    boost eosio-core
+    -lc++
+    -lc++abi
+    -lc
+    ${WASI_SDK_PREFIX}/lib/clang/11.0.0/lib/wasi/libclang_rt.builtins-wasm32.a
+    ${WASI_SDK_PREFIX}/share/wasi-sysroot/lib/wasm32-wasi/crt1.o
+)
 target_include_directories(cltestlib PUBLIC contracts tester)
 target_link_options(cltestlib INTERFACE -Wl,--export-table)
 set_target_properties(cltestlib PROPERTIES ARCHIVE_OUTPUT_DIRECTORY ${ROOT_BINARY_DIR}/clsdk/lib-wasm)
+target_link_options(cltestlib PUBLIC
+    -Wl,--entry,_start
+    $<$<OR:$<CONFIG:Release>,$<CONFIG:MinSizeRel>>:-Wl,--strip-all>
+    -nostdlib
+)
 
 copy_headers(contracts/eosio eosiolib/contracts/include/eosio)
 copy_headers(core eosiolib/core/include)
