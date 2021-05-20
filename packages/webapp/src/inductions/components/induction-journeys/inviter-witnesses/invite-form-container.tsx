@@ -11,6 +11,7 @@ import {
 import { initializeInductionTransaction } from "../../../transactions";
 import { InductionJourneyContainer, InductionJourney } from "inductions";
 import { InductionInviteForm } from ".";
+import { InductionStepInviter } from "../common";
 
 interface Props {
     ualAccount: any;
@@ -44,7 +45,11 @@ export const InductionInviteFormContainer = ({ ualAccount }: Props) => {
     return (
         <InductionJourneyContainer
             journey={InductionJourney.Inviter}
-            step={initializedInductionId ? 2 : 1}
+            step={
+                initializedInductionId
+                    ? InductionStepInviter.PendingProfile
+                    : InductionStepInviter.CreateInvite
+            }
         >
             {initializedInductionId ? (
                 <InviteConfirmation inductionId={initializedInductionId} />

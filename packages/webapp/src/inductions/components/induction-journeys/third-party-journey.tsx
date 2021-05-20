@@ -12,24 +12,32 @@ import {
     WaitingForVideo,
 } from "inductions/components";
 import { Endorsement, Induction, InductionStatus } from "inductions/interfaces";
+import { InductionStepGenesis, InductionStepInvitee } from "./common";
 
 interface ContainerProps {
-    step: 1 | 2 | 3 | 4 | 5;
+    step: InductionStepInvitee | InductionStepGenesis;
     memberPreview?: MemberData;
     children: React.ReactNode;
 }
 
-const Container = ({ step, memberPreview, children }: ContainerProps) => (
-    <>
-        <InductionJourneyContainer
-            journey={InductionJourney.Invitee}
-            step={step}
-        >
-            {children}
-        </InductionJourneyContainer>
-        {memberPreview && <MemberCardPreview memberData={memberPreview} />}
-    </>
-);
+const Container = ({ step, memberPreview, children }: ContainerProps) => {
+    const { data: isCommunityActive } = useIsCommunityActive();
+    return (
+        <>
+            <InductionJourneyContainer
+                journey={
+                    isCommunityActive
+                        ? InductionJourney.Invitee
+                        : InductionJourney.Genesis
+                }
+                step={step}
+            >
+                {children}
+            </InductionJourneyContainer>
+            {memberPreview && <MemberCardPreview memberData={memberPreview} />}
+        </>
+    );
+};
 
 interface Props {
     endorsements: Endorsement[];
@@ -49,19 +57,31 @@ export const ThirdPartyJourney = ({
     switch (inductionStatus) {
         case InductionStatus.PendingProfile:
             return (
-                <Container step={isCommunityActive ? 2 : 1}>
+                <Container
+                    step={
+                        isCommunityActive
+                            ? InductionStepInvitee.Profile
+                            : InductionStepGenesis.Profile
+                    }
+                >
                     <WaitingForProfile induction={induction} />
                 </Container>
             );
-        case InductionStatus.PendingCeremonyVideo:
+        case InductionStatus.PendingCeremonyVideo: // not possible in Genesis mode
             return (
-                <Container step={3} memberPreview={memberData}>
+                <Container
+                    step={InductionStepInvitee.PendingVideoAndEndorsements}
+                    memberPreview={memberData}
+                >
                     <WaitingForVideo induction={induction} />
                 </Container>
             );
-        case InductionStatus.PendingEndorsement:
+        case InductionStatus.PendingEndorsement: // not possible in Genesis mode
             return (
-                <Container step={3} memberPreview={memberData}>
+                <Container
+                    step={InductionStepInvitee.PendingVideoAndEndorsements}
+                    memberPreview={memberData}
+                >
                     <Heading size={1} className="mb-2">
                         Endorsements
                     </Heading>
@@ -73,7 +93,11 @@ export const ThirdPartyJourney = ({
         case InductionStatus.PendingDonation:
             return (
                 <Container
-                    step={isCommunityActive ? 4 : 2}
+                    step={
+                        isCommunityActive
+                            ? InductionStepInvitee.Donate
+                            : InductionStepGenesis.Donate
+                    }
                     memberPreview={memberData}
                 >
                     <Heading size={1} className="mb-2">

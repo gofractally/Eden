@@ -16,9 +16,10 @@ import {
     WaitingForProfile,
 } from "inductions/components";
 import { Endorsement, Induction, InductionStatus } from "inductions/interfaces";
+import { InductionStepGenesis, InductionStepInviter } from "./common";
 
 interface ContainerProps {
-    step: 1 | 2 | 3 | 4 | 5;
+    step: InductionStepInviter | InductionStepGenesis;
     memberPreview?: MemberData;
     children: React.ReactNode;
 }
@@ -84,15 +85,23 @@ export const InviterWitnessJourney = ({
 
     // Inviter video submission confirmation
     if (submittedVideo) {
+        // not possible in Genesis mode
         return (
-            <Container step={3} memberPreview={memberData}>
+            <Container
+                step={InductionStepInviter.VideoAndEndorse}
+                memberPreview={memberData}
+            >
                 <InductionVideoSubmitConfirmation />
             </Container>
         );
     }
 
     const renderVideoStep = () => (
-        <Container step={3} memberPreview={memberData}>
+        // not possible in Genesis mode
+        <Container
+            step={InductionStepInviter.VideoAndEndorse}
+            memberPreview={memberData}
+        >
             <InductionVideoFormContainer
                 induction={induction}
                 isReviewingVideo={isReviewingVideo}
@@ -108,19 +117,28 @@ export const InviterWitnessJourney = ({
     switch (inductionStatus) {
         case InductionStatus.PendingProfile:
             return (
-                <Container step={isCommunityActive ? 2 : 1}>
+                <Container
+                    step={
+                        isCommunityActive
+                            ? InductionStepInviter.PendingProfile
+                            : InductionStepGenesis.Profile
+                    }
+                >
                     <WaitingForProfile induction={induction} />
                 </Container>
             );
         case InductionStatus.PendingCeremonyVideo:
             return renderVideoStep();
-        case InductionStatus.PendingEndorsement:
+        case InductionStatus.PendingEndorsement: // not possible in Genesis mode
             const userEndorsementIsPending =
                 endorsements.find((e) => e.endorser === ualAccount?.accountName)
                     ?.endorsed === 0;
 
             return (
-                <Container step={3} memberPreview={memberData}>
+                <Container
+                    step={InductionStepInviter.VideoAndEndorse}
+                    memberPreview={memberData}
+                >
                     <Heading size={1} className="mb-2">
                         Endorsements
                     </Heading>
@@ -144,7 +162,11 @@ export const InviterWitnessJourney = ({
         case InductionStatus.PendingDonation:
             return (
                 <Container
-                    step={isCommunityActive ? 4 : 2}
+                    step={
+                        isCommunityActive
+                            ? InductionStepInviter.PendingDonation
+                            : InductionStepGenesis.Donate
+                    }
                     memberPreview={memberData}
                 >
                     <Heading size={1} className="mb-2">

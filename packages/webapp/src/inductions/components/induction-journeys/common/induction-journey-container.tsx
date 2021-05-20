@@ -27,6 +27,14 @@ export const INVITEE_INDUCTION_STEPS: Step[] = [
     },
 ];
 
+export enum InductionStepInvitee {
+    GetInvite = 1,
+    Profile,
+    PendingVideoAndEndorsements,
+    Donate,
+    Complete,
+}
+
 export const INVITER_INDUCTION_STEPS: Step[] = [
     {
         title: "CREATE INVITE",
@@ -53,6 +61,14 @@ export const INVITER_INDUCTION_STEPS: Step[] = [
     },
 ];
 
+export enum InductionStepInviter {
+    CreateInvite = 1,
+    PendingProfile,
+    VideoAndEndorse,
+    PendingDonation,
+    Complete,
+}
+
 export const GENESIS_INDUCTION_STEPS: Step[] = [
     {
         title: "SET UP YOUR PROFILE",
@@ -75,6 +91,13 @@ export const GENESIS_INDUCTION_STEPS: Step[] = [
     },
 ];
 
+export enum InductionStepGenesis {
+    Profile = 1,
+    Donate,
+    StandBy,
+    Complete,
+}
+
 export enum InductionJourney {
     Invitee = "invitee",
     Inviter = "inviter",
@@ -83,10 +106,13 @@ export enum InductionJourney {
 
 interface Props {
     journey: InductionJourney;
-    step: 1 | 2 | 3 | 4 | 5;
+    step: InductionStepGenesis | InductionStepInviter | InductionStepInvitee;
     vAlign?: "top" | "center";
     children: React.ReactNode;
 }
+
+// TODO: Tighter coupling between the steps enums and the steps themselves above. For example, maybe use a key instead of (index + 1).
+// TODO: Infer journey from the step type passed in. (no need to pass the journey in separately.)
 
 export const InductionJourneyContainer = ({
     journey,

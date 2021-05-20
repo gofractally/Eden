@@ -16,9 +16,10 @@ import {
     WaitingForVideo,
 } from "inductions/components";
 import { Endorsement, Induction, InductionStatus } from "inductions/interfaces";
+import { InductionStepGenesis, InductionStepInvitee } from "./common";
 
 interface ContainerProps {
-    step: 1 | 2 | 3 | 4 | 5;
+    step: InductionStepInvitee | InductionStepGenesis;
     memberPreview?: MemberData;
     children: React.ReactNode;
     vAlign?: "top";
@@ -71,7 +72,13 @@ export const InviteeJourney = ({
     // Invitee profile submission confirmation
     if (submittedProfile) {
         return (
-            <Container step={isCommunityActive ? 3 : 2}>
+            <Container
+                step={
+                    isCommunityActive
+                        ? InductionStepInvitee.PendingVideoAndEndorsements
+                        : InductionStepGenesis.Donate
+                }
+            >
                 <InductionProfileSubmitConfirmation
                     isCommunityActive={isCommunityActive}
                 />
@@ -80,7 +87,14 @@ export const InviteeJourney = ({
     }
 
     const renderProfileStep = () => (
-        <Container step={isCommunityActive ? 2 : 1} vAlign="top">
+        <Container
+            step={
+                isCommunityActive
+                    ? InductionStepInvitee.Profile
+                    : InductionStepGenesis.Profile
+            }
+            vAlign="top"
+        >
             <InductionProfileFormContainer
                 induction={induction}
                 isReviewingProfile={isReviewingProfile}
@@ -96,15 +110,21 @@ export const InviteeJourney = ({
     switch (inductionStatus) {
         case InductionStatus.PendingProfile:
             return renderProfileStep();
-        case InductionStatus.PendingCeremonyVideo:
+        case InductionStatus.PendingCeremonyVideo: // not possible in Genesis mode
             return (
-                <Container step={3} memberPreview={memberData}>
+                <Container
+                    step={InductionStepInvitee.PendingVideoAndEndorsements}
+                    memberPreview={memberData}
+                >
                     <WaitingForVideo induction={induction} />
                 </Container>
             );
-        case InductionStatus.PendingEndorsement:
+        case InductionStatus.PendingEndorsement: // not possible in Genesis mode
             return (
-                <Container step={3} memberPreview={memberData}>
+                <Container
+                    step={InductionStepInvitee.PendingVideoAndEndorsements}
+                    memberPreview={memberData}
+                >
                     <Heading size={1} className="mb-2">
                         Endorsements
                     </Heading>
@@ -128,7 +148,11 @@ export const InviteeJourney = ({
         case InductionStatus.PendingDonation:
             return (
                 <Container
-                    step={isCommunityActive ? 4 : 2}
+                    step={
+                        isCommunityActive
+                            ? InductionStepInvitee.Donate
+                            : InductionStepGenesis.Donate
+                    }
                     memberPreview={memberData}
                 >
                     <Heading size={1} className="mb-2">
