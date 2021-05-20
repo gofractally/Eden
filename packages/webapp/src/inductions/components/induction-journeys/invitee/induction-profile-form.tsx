@@ -11,8 +11,7 @@ import {
     Text,
 } from "_app";
 import { edenContractAccount, validUploadActions } from "config";
-
-import { NewMemberProfile } from "../interfaces";
+import { NewMemberProfile } from "inductions";
 
 interface Props {
     newMemberProfile: NewMemberProfile;
@@ -21,12 +20,6 @@ interface Props {
         newMemberProfile: NewMemberProfile,
         uploadedImage?: File
     ) => Promise<void>;
-}
-
-export interface InitInductionFormData {
-    invitee: string;
-    witness1: string;
-    witness2: string;
 }
 
 export const InductionProfileForm = ({

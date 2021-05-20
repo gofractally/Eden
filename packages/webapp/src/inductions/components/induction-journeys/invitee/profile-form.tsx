@@ -8,7 +8,7 @@ import {
 } from "_app";
 import { InductionExpiresIn, setInductionProfileTransaction } from "inductions";
 import { Induction, NewMemberProfile } from "inductions/interfaces";
-import { InductionProfileForm } from "inductions/components/induction-profile-form";
+import { InductionProfileForm } from ".";
 
 interface Props {
     induction: Induction;
@@ -16,7 +16,7 @@ interface Props {
     setSubmittedProfile: Dispatch<SetStateAction<boolean>>;
 }
 
-export const InviteeProfileForm = ({
+export const InductionProfileFormContainer = ({
     induction,
     isReviewingProfile,
     setSubmittedProfile,
