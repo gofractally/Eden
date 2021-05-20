@@ -9,7 +9,7 @@ interface Props {
     setIsReviewingVideo: Dispatch<SetStateAction<boolean>>;
 }
 
-export const InviterWitnessEndorsementForm = ({
+export const InductionEndorsementForm = ({
     induction,
     setIsReviewingVideo,
 }: Props) => {

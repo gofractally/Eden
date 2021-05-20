@@ -1,5 +1,11 @@
 import React, { Dispatch, SetStateAction, useState } from "react";
 import { Heading, Link, Text, useIsCommunityActive, useUALAccount } from "_app";
+import { convertPendingProfileToMemberData } from "inductions";
+import {
+    InductionVideoFormContainer,
+    InductionEndorsementForm,
+    InductionVideoSubmitConfirmation,
+} from "./inviter-witnesses";
 import {
     EndorsementsStatus,
     InductionExpiresIn,
@@ -9,12 +15,6 @@ import {
     WaitingForProfile,
 } from "inductions/components";
 import { Endorsement, Induction, InductionStatus } from "inductions/interfaces";
-import { convertPendingProfileToMemberData } from "inductions";
-import { InviterWitnessVideoForm } from "./inviter-witnesses/video-form";
-import {
-    InviterWitnessEndorsementForm,
-    InviterWitnessVideoSubmitConfirmation,
-} from "./inviter-witnesses";
 
 interface ContainerProps {
     step: 1 | 2 | 3 | 4 | 5;
@@ -82,7 +82,7 @@ export const InviterWitnessJourney = ({
         return (
             <>
                 <Container step={3}>
-                    <InviterWitnessVideoSubmitConfirmation />
+                    <InductionVideoSubmitConfirmation />
                 </Container>
                 <MemberCardPreview memberData={memberData} />
             </>
@@ -92,7 +92,7 @@ export const InviterWitnessJourney = ({
     const renderVideoStep = () => (
         <>
             <Container step={3}>
-                <InviterWitnessVideoForm
+                <InductionVideoFormContainer
                     induction={induction}
                     isReviewingVideo={isReviewingVideo}
                     setSubmittedVideo={setSubmittedVideo}
@@ -129,7 +129,7 @@ export const InviterWitnessJourney = ({
                         <InductionExpiresIn induction={induction} />
                         <EndorsementsStatus endorsements={endorsements} />
                         {userEndorsementIsPending ? (
-                            <InviterWitnessEndorsementForm
+                            <InductionEndorsementForm
                                 induction={induction}
                                 setIsReviewingVideo={setIsReviewingVideo}
                             />

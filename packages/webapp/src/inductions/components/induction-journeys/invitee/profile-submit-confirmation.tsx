@@ -5,7 +5,7 @@ interface Props {
     isCommunityActive?: boolean;
 }
 
-export const InviteeProfileSubmitConfirmation = ({
+export const InductionProfileSubmitConfirmation = ({
     isCommunityActive,
 }: Props) => {
     return (

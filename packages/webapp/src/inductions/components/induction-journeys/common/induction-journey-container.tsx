@@ -1,6 +1,5 @@
 import React from "react";
 import { assetToString, Card, Steps, Step } from "_app";
-
 import { minimumDonationAmount } from "config";
 
 export const INVITEE_INDUCTION_STEPS: Step[] = [

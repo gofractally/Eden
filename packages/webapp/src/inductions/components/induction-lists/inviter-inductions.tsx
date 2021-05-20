@@ -1,8 +1,3 @@
-import { getEndorsementsByInductionId } from "inductions/api";
-import {
-    getInductionRemainingTimeDays,
-    getInductionStatus,
-} from "inductions/utils";
 import {
     ActionButton,
     ActionButtonSize,
@@ -11,7 +6,13 @@ import {
     useMemberListByAccountNames,
 } from "_app";
 import * as InductionTable from "_app/ui/table";
-import { Endorsement, Induction, InductionStatus } from "../../interfaces";
+
+import {
+    getEndorsementsByInductionId,
+    getInductionRemainingTimeDays,
+    getInductionStatus,
+} from "inductions";
+import { Endorsement, Induction, InductionStatus } from "inductions/interfaces";
 
 interface Props {
     inductions: Induction[];

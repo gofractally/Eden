@@ -8,9 +8,12 @@ import {
 } from "_app";
 import * as InductionTable from "_app/ui/table";
 
-import { getEndorsementsByInductionId } from "../../api";
-import { getInductionRemainingTimeDays, getInductionStatus } from "../../utils";
-import { Endorsement, Induction, InductionStatus } from "../../interfaces";
+import {
+    getEndorsementsByInductionId,
+    getInductionRemainingTimeDays,
+    getInductionStatus,
+} from "inductions";
+import { Endorsement, Induction, InductionStatus } from "inductions/interfaces";
 
 interface Props {
     inductions: Induction[];

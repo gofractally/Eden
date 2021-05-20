@@ -1,5 +1,11 @@
 import React, { useState } from "react";
 import { Heading, Link, Text, useIsCommunityActive } from "_app";
+import { convertPendingProfileToMemberData } from "inductions";
+import {
+    InductionDonateForm,
+    InductionProfileFormContainer,
+    InductionProfileSubmitConfirmation,
+} from "./invitee";
 import {
     EndorsementsStatus,
     InductionExpiresIn,
@@ -9,10 +15,6 @@ import {
     WaitingForVideo,
 } from "inductions/components";
 import { Endorsement, Induction, InductionStatus } from "inductions/interfaces";
-import { InviteeProfileForm } from "./invitee/profile-form";
-import { InviteeProfileSubmitConfirmation } from "./invitee";
-import { convertPendingProfileToMemberData } from "inductions";
-import { InviteeDonateForm } from "./invitee/donate-form";
 
 interface ContainerProps {
     step: 1 | 2 | 3 | 4 | 5;
@@ -60,7 +62,7 @@ export const InviteeJourney = ({
     if (submittedProfile) {
         return (
             <Container step={isCommunityActive ? 3 : 2}>
-                <InviteeProfileSubmitConfirmation
+                <InductionProfileSubmitConfirmation
                     isCommunityActive={isCommunityActive}
                 />
             </Container>
@@ -69,7 +71,7 @@ export const InviteeJourney = ({
 
     const renderProfileStep = () => (
         <Container step={isCommunityActive ? 2 : 1} vAlign="top">
-            <InviteeProfileForm
+            <InductionProfileFormContainer
                 induction={induction}
                 isReviewingProfile={isReviewingProfile}
                 setSubmittedProfile={setSubmittedProfile}
@@ -132,7 +134,7 @@ export const InviteeJourney = ({
                         </Heading>
                         <InductionExpiresIn induction={induction} />
                         <EndorsementsStatus endorsements={endorsements} />
-                        <InviteeDonateForm
+                        <InductionDonateForm
                             induction={induction}
                             isCommunityActive={isCommunityActive}
                             setIsReviewingProfile={setIsReviewingProfile}

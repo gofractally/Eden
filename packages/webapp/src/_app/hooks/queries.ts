@@ -4,7 +4,6 @@ import { EdenMember, getEdenMember } from "members";
 import { getIsCommunityActive } from "_app/api";
 
 import { useUALAccount } from "../eos";
-import { getInductionWithEndorsements } from "inductions/api";
 
 export const useMemberByAccountName = (accountName: string) =>
     useQuery(
@@ -33,11 +32,5 @@ export const useCurrentMember = () => {
 
 export const useIsCommunityActive = () =>
     useQuery("isCommunityActive", getIsCommunityActive, {
-        refetchOnWindowFocus: false,
-    });
-
-export const useGetInductionWithEndorsements = (inductionId: string) =>
-    useQuery(["induction", inductionId], getInductionWithEndorsements, {
-        // gets rid of bugs cause by refetching right after anchor/scatter signing
         refetchOnWindowFocus: false,
     });

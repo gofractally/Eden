@@ -11,8 +11,8 @@ import {
     useUALAccount,
     onError,
 } from "_app";
-import { Induction } from "inductions/interfaces";
 import { donateAndCompleteInductionTransaction } from "inductions";
+import { Induction } from "inductions/interfaces";
 
 interface Props {
     induction: Induction;
@@ -20,7 +20,7 @@ interface Props {
     setIsReviewingProfile: (isReviewing: boolean) => void;
 }
 
-export const InviteeDonateForm = ({
+export const InductionDonateForm = ({
     induction,
     isCommunityActive,
     setIsReviewingProfile,

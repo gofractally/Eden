@@ -1,5 +1,4 @@
 import React, { useState } from "react";
-
 import {
     Text,
     Link,
@@ -8,15 +7,16 @@ import {
     ActionButton,
     ActionButtonSize,
 } from "_app";
-import { initializeInductionTransaction } from "../transactions";
+
+import { initializeInductionTransaction } from "../../../transactions";
 import { InductionJourneyContainer, InductionJourney } from "inductions";
-import { InitInductionForm } from "./init-induction-form";
+import { InductionInviteForm } from ".";
 
 interface Props {
     ualAccount: any;
 }
 
-export const InitInduction = ({ ualAccount }: Props) => {
+export const InductionInviteFormContainer = ({ ualAccount }: Props) => {
     const [initializedInductionId, setInitializedInductionId] = useState("");
 
     const submitTransaction = async (newInduction: any) => {
@@ -53,7 +53,7 @@ export const InitInduction = ({ ualAccount }: Props) => {
                     <Heading size={1} className="mb-8">
                         Invite to Eden
                     </Heading>
-                    <InitInductionForm onSubmit={submitTransaction} />
+                    <InductionInviteForm onSubmit={submitTransaction} />
                 </>
             )}
         </InductionJourneyContainer>

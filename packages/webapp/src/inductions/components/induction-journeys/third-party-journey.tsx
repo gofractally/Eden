@@ -1,6 +1,8 @@
 import React from "react";
 import { Heading, Text, useIsCommunityActive } from "_app";
+import { convertPendingProfileToMemberData } from "inductions";
 import {
+    EndorsementsStatus,
     InductionExpiresIn,
     InductionJourney,
     InductionJourneyContainer,
@@ -9,8 +11,6 @@ import {
     WaitingForVideo,
 } from "inductions/components";
 import { Endorsement, Induction, InductionStatus } from "inductions/interfaces";
-import { convertPendingProfileToMemberData } from "inductions";
-import { EndorsementsStatus } from "./common";
 
 interface ContainerProps {
     step: 1 | 2 | 3 | 4 | 5;

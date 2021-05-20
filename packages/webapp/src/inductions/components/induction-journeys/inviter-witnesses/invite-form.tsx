@@ -1,5 +1,4 @@
 import { FormEvent, useState } from "react";
-
 import { useFormFields, Form, ActionButton } from "_app";
 
 interface Props {
@@ -18,7 +17,7 @@ const initialForm: InitInductionFormData = {
     witness2: "",
 };
 
-export const InitInductionForm = ({ onSubmit }: Props) => {
+export const InductionInviteForm = ({ onSubmit }: Props) => {
     const [isLoading, setIsLoading] = useState(false);
 
     const [fields, setFields] = useFormFields({ ...initialForm });

@@ -1,9 +1,6 @@
 import React from "react";
 import { ActionButton, ActionButtonSize } from "_app";
-import {
-    InductionJourneyContainer,
-    InductionJourney,
-} from "./induction-journey-container";
+import { InductionJourney, InductionJourneyContainer } from ".";
 
 export const GetAnInviteCTA = () => {
     return (

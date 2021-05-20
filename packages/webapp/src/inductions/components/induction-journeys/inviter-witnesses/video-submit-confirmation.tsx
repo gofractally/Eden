@@ -1,7 +1,7 @@
 import React from "react";
 import { ActionButton, ActionButtonSize, Heading, Text } from "_app";
 
-export const InviterWitnessVideoSubmitConfirmation = () => {
+export const InductionVideoSubmitConfirmation = () => {
     return (
         <>
             <Heading size={1} className="mb-5">
