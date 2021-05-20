@@ -129,7 +129,7 @@ const InviteeInductionStatus = ({
         case InductionStatus.waitingForVideo:
             return (
                 <ActionButton
-                    type={ActionButtonType.INDUCTION_STATUS_WAITING}
+                    type={ActionButtonType.NEUTRAL}
                     size={ActionButtonSize.S}
                     fullWidth
                     href={`/induction/${induction.id}`}
@@ -150,7 +150,7 @@ const InviteeInductionStatus = ({
             ) : (
                 <ActionButton
                     href={`/induction/${induction.id}`}
-                    type={ActionButtonType.INDUCTION_STATUS_WAITING}
+                    type={ActionButtonType.NEUTRAL}
                     size={ActionButtonSize.S}
                     fullWidth
                 >

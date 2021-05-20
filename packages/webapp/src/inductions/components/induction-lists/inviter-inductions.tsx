@@ -111,7 +111,7 @@ const InviterInductionStatus = ({
         case InductionStatus.waitingForProfile:
             return (
                 <ActionButton
-                    type={ActionButtonType.INDUCTION_STATUS_WAITING}
+                    type={ActionButtonType.NEUTRAL}
                     size={ActionButtonSize.S}
                     fullWidth
                     href={`/induction/${induction.id}`}
@@ -137,7 +137,7 @@ const InviterInductionStatus = ({
             if (inviterEndorsement?.endorsed) {
                 return (
                     <ActionButton
-                        type={ActionButtonType.INDUCTION_STATUS_WAITING}
+                        type={ActionButtonType.NEUTRAL}
                         size={ActionButtonSize.S}
                         fullWidth
                         href={`/induction/${induction.id}`}
