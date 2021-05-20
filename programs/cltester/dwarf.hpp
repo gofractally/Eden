@@ -39,10 +39,12 @@ namespace dwarf
    struct info
    {
       uint32_t code_offset = 0;
+      std::vector<char> strings;
       std::vector<std::string> files;
       std::vector<location> locations;        // sorted
       std::vector<abbrev_decl> abbrev_decls;  // sorted
 
+      const char* get_str(uint32_t offset) const;
       const location* get_location(uint32_t address) const;
       const abbrev_decl* get_abbrev_decl(uint32_t table_offset, uint32_t code) const;
    };

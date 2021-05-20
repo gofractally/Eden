@@ -41,18 +41,25 @@ namespace eosio
    }
 
    template <typename S>
-   void varuint64_from_bin(uint64_t& dest, S& stream)
+   uint64_t varuint64_from_bin(S& stream)
    {
-      dest = 0;
+      uint64_t result = 0;
       int shift = 0;
       uint8_t b = 0;
       do
       {
          check(shift < 70, convert_stream_error(stream_error::invalid_varuint_encoding));
          from_bin(b, stream);
-         dest |= uint64_t(b & 0x7f) << shift;
+         result |= uint64_t(b & 0x7f) << shift;
          shift += 7;
       } while (b & 0x80);
+      return result;
+   }
+
+   template <typename S>
+   void varuint64_from_bin(uint64_t& dest, S& stream)
+   {
+      dest = varuint64_from_bin(stream);
    }
 
    // zig-zag encoding
@@ -65,6 +72,25 @@ namespace eosio
          result = ((~v) >> 1) | 0x8000'0000;
       else
          result = v >> 1;
+   }
+
+   // signed leb128 encoding
+   template <typename S>
+   int64_t sleb64_from_bin(S& stream)
+   {
+      uint64_t result = 0;
+      int shift = 0;
+      uint8_t b = 0;
+      do
+      {
+         check(shift < 70, convert_stream_error(stream_error::invalid_varuint_encoding));
+         from_bin(b, stream);
+         result |= uint64_t(b & 0x7f) << shift;
+         shift += 7;
+      } while (b & 0x80);
+      if (shift < 64 && (b & 0x40))
+         result |= -(uint64_t(1) << shift);
+      return result;
    }
 
    // signed leb128 encoding

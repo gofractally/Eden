@@ -30,6 +30,32 @@ namespace dwarf
    inline constexpr uint8_t dw_lne_lo_user = 0x80;
    inline constexpr uint8_t dw_lne_hi_user = 0xff;
 
+   inline constexpr uint8_t dw_form_addr = 0x01;
+   inline constexpr uint8_t dw_form_block2 = 0x03;
+   inline constexpr uint8_t dw_form_block4 = 0x04;
+   inline constexpr uint8_t dw_form_data2 = 0x05;
+   inline constexpr uint8_t dw_form_data4 = 0x06;
+   inline constexpr uint8_t dw_form_data8 = 0x07;
+   inline constexpr uint8_t dw_form_string = 0x08;
+   inline constexpr uint8_t dw_form_block = 0x09;
+   inline constexpr uint8_t dw_form_block1 = 0x0a;
+   inline constexpr uint8_t dw_form_data1 = 0x0b;
+   inline constexpr uint8_t dw_form_flag = 0x0c;
+   inline constexpr uint8_t dw_form_sdata = 0x0d;
+   inline constexpr uint8_t dw_form_strp = 0x0e;
+   inline constexpr uint8_t dw_form_udata = 0x0f;
+   inline constexpr uint8_t dw_form_ref_addr = 0x10;
+   inline constexpr uint8_t dw_form_ref1 = 0x11;
+   inline constexpr uint8_t dw_form_ref2 = 0x12;
+   inline constexpr uint8_t dw_form_ref4 = 0x13;
+   inline constexpr uint8_t dw_form_ref8 = 0x14;
+   inline constexpr uint8_t dw_form_ref_udata = 0x15;
+   inline constexpr uint8_t dw_form_indirect = 0x16;
+   inline constexpr uint8_t dw_form_sec_offset = 0x17;
+   inline constexpr uint8_t dw_form_exprloc = 0x18;
+   inline constexpr uint8_t dw_form_flag_present = 0x19;
+   inline constexpr uint8_t dw_form_ref_sig8 = 0x20;
+
    struct line_state
    {
       uint8_t minimum_instruction_length = 0;
@@ -56,7 +82,7 @@ namespace dwarf
       uint32_t discriminator = 0;
    };
 
-   std::string get_string(eosio::input_stream& s)
+   std::string_view get_string(eosio::input_stream& s)
    {
       auto begin = s.pos;
       while (true)
@@ -67,7 +93,7 @@ namespace dwarf
          if (!ch)
             break;
       }
-      return {begin, s.pos - 1};
+      return {begin, size_t(s.pos - begin - 1)};
    }
 
    void get_strings(std::vector<std::string>& v, eosio::input_stream& s)
@@ -77,7 +103,7 @@ namespace dwarf
          auto str = get_string(s);
          if (str.empty())
             break;
-         v.push_back(std::move(str));
+         v.push_back(std::string{str});
       }
    }
 
@@ -104,7 +130,7 @@ namespace dwarf
       state.file_names.push_back("");
       while (true)
       {
-         auto str = get_string(s);
+         auto str = (std::string)get_string(s);
          if (str.empty())
             break;
          auto dir = eosio::varuint32_from_bin(s);
@@ -302,6 +328,129 @@ namespace dwarf
       }
    }
 
+   struct attr_address
+   {
+      uint32_t value = 0;
+   };
+
+   struct attr_block
+   {
+      eosio::input_stream data;
+   };
+
+   struct attr_data
+   {
+      uint64_t value = 0;
+   };
+
+   struct attr_exprloc
+   {
+      eosio::input_stream data;
+   };
+
+   struct attr_flag
+   {
+      bool value = false;
+   };
+
+   struct attr_sec_offset
+   {
+      uint32_t value = 0;
+   };
+
+   struct attr_ref
+   {
+      uint64_t value = 0;
+   };
+
+   struct attr_ref_addr
+   {
+      uint32_t value = 0;
+   };
+
+   struct attr_ref_sig8
+   {
+      uint64_t value = 0;
+   };
+
+   using attr_value = std::variant<  //
+       attr_address,
+       attr_block,
+       attr_data,
+       attr_exprloc,
+       attr_flag,
+       attr_sec_offset,
+       attr_ref,
+       attr_ref_addr,
+       attr_ref_sig8,
+       std::string_view>;
+
+   attr_value parse_attr_value(info& result, uint32_t form, eosio::input_stream& s)
+   {
+      auto vardata = [&](size_t size) {
+         eosio::check(size < s.remaining(), "variable-length overrun in dwarf entry");
+         eosio::input_stream result{s.pos, s.pos + size};
+         s.skip(size);
+         return result;
+      };
+
+      switch (form)
+      {
+         case dw_form_addr:
+            return attr_address{eosio::from_bin<uint32_t>(s)};
+         case dw_form_block:
+            return attr_block{vardata(eosio::varuint32_from_bin(s))};
+         case dw_form_block1:
+            return attr_block{vardata(eosio::from_bin<uint8_t>(s))};
+         case dw_form_block2:
+            return attr_block{vardata(eosio::from_bin<uint16_t>(s))};
+         case dw_form_block4:
+            return attr_block{vardata(eosio::from_bin<uint32_t>(s))};
+         case dw_form_sdata:
+            return attr_data{(uint64_t)eosio::sleb64_from_bin(s)};
+         case dw_form_udata:
+            return attr_data{eosio::varuint64_from_bin(s)};
+         case dw_form_data1:
+            return attr_data{eosio::from_bin<uint8_t>(s)};
+         case dw_form_data2:
+            return attr_data{eosio::from_bin<uint16_t>(s)};
+         case dw_form_data4:
+            return attr_data{eosio::from_bin<uint32_t>(s)};
+         case dw_form_data8:
+            return attr_data{eosio::from_bin<uint64_t>(s)};
+         case dw_form_exprloc:
+            return attr_exprloc{vardata(eosio::varuint32_from_bin(s))};
+         case dw_form_flag_present:
+            return attr_flag{true};
+         case dw_form_flag:
+            return attr_flag{(bool)eosio::from_bin<uint8_t>(s)};
+         case dw_form_sec_offset:
+            return attr_sec_offset{eosio::from_bin<uint32_t>(s)};
+         case dw_form_ref_udata:
+            return attr_ref{eosio::varuint64_from_bin(s)};
+         case dw_form_ref1:
+            return attr_ref{eosio::from_bin<uint8_t>(s)};
+         case dw_form_ref2:
+            return attr_ref{eosio::from_bin<uint16_t>(s)};
+         case dw_form_ref4:
+            return attr_ref{eosio::from_bin<uint32_t>(s)};
+         case dw_form_ref8:
+            return attr_ref{eosio::from_bin<uint64_t>(s)};
+         case dw_form_ref_addr:
+            return attr_ref_addr{eosio::from_bin<uint32_t>(s)};
+         case dw_form_ref_sig8:
+            return attr_ref_sig8{eosio::from_bin<uint64_t>(s)};
+         case dw_form_string:
+            return get_string(s);
+         case dw_form_strp:
+            return std::string_view{result.get_str(eosio::from_bin<uint32_t>(s))};
+         case dw_form_indirect:
+            return parse_attr_value(result, eosio::varuint32_from_bin(s), s);
+         default:
+            throw std::runtime_error("unknown form in dwarf entry");
+      }
+   }
+
    struct wasm_header
    {
       uint32_t magic = 0;
@@ -340,9 +489,19 @@ namespace dwarf
          {
             auto name = eosio::from_bin<std::string>(section.data);
             if (name == ".debug_line")
+            {
                dwarf::parse_debug_line(result, files, section.data);
+            }
             else if (name == ".debug_abbrev")
+            {
                dwarf::parse_debug_abbrev(result, files, section.data);
+            }
+            else if (name == ".debug_str")
+            {
+               result.strings = std::vector<char>{section.data.pos, section.data.end};
+               eosio::check(result.strings.empty() || result.strings.back() == 0,
+                            ".debug_str is malformed");
+            }
          }
       }
 
@@ -352,6 +511,12 @@ namespace dwarf
       //    fprintf(stderr, "[%08x,%08x) %s:%d\n", loc.begin_address, loc.end_address,
       //           result.files[loc.file_index].c_str(), loc.line);
       return result;
+   }
+
+   const char* info::get_str(uint32_t offset) const
+   {
+      eosio::check(offset < strings.size(), "string out of range in .debug_str");
+      return &strings[offset];
    }
 
    const location* info::get_location(uint32_t address) const
