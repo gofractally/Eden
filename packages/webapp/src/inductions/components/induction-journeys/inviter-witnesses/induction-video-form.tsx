@@ -1,8 +1,8 @@
 import React, { FormEvent, useEffect, useMemo, useRef, useState } from "react";
 
 import { ActionButton, Form, handleFileChange } from "_app";
-import { ipfsUrl } from "_app/utils/config-helpers";
 import { edenContractAccount, validUploadActions } from "config";
+import { ipfsUrl } from "_app/utils/config-helpers";
 
 export type VideoSubmissionPhase = "uploading" | "signing" | "finishing";
 interface Props {
