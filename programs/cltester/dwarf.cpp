@@ -150,8 +150,8 @@ namespace dwarf
             }
             current->file_index = it->second;
 
-            fprintf(stderr, "[%08x,%08x) %s:%d\n", current->begin_address, current->end_address,
-                    result.files[current->file_index].c_str(), current->line);
+            // fprintf(stderr, "[%08x,%08x) %s:%d\n", current->begin_address, current->end_address,
+            //         result.files[current->file_index].c_str(), current->line);
 
             result.locations.push_back(*current);
             current = {};
@@ -293,6 +293,7 @@ namespace dwarf
    info get_info_from_wasm(eosio::input_stream stream)
    {
       info result;
+      auto file_begin = stream.pos;
       std::map<std::string, uint32_t> files;
 
       wasm_header header;
@@ -303,8 +304,13 @@ namespace dwarf
                    "wasm file version does not match");
       while (stream.remaining())
       {
+         auto section_begin = stream.pos;
          auto section = eosio::from_bin<wasm_section>(stream);
-         if (section.id == eosio::vm::section_id::custom_section)
+         if (section.id == eosio::vm::section_id::code_section)
+         {
+            result.code_offset = section_begin - file_begin;
+         }
+         else if (section.id == eosio::vm::section_id::custom_section)
          {
             auto name = eosio::from_bin<std::string>(section.data);
             if (name == ".debug_line")

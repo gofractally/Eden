@@ -17,6 +17,7 @@ namespace dwarf
 
    struct info
    {
+      uint32_t code_offset = 0;
       std::vector<std::string> files;
       std::vector<location> locations;  // sorted by address
    };

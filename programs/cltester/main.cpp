@@ -702,7 +702,7 @@ struct callbacks
           state.backend.get_context().backtrace(data, sizeof(data) / sizeof(data[0]), nullptr);
       for (int i = 0; i < count; ++i)
       {
-         auto offset = state.backend.get_debug().translate(data[i]);
+         auto offset = state.backend.get_debug().translate(data[i]) - state.dwarf_info.code_offset;
          fprintf(stderr, "%p %08x\n", data[i], offset);
          auto it =
              std::upper_bound(state.dwarf_info.locations.begin(), state.dwarf_info.locations.end(),
