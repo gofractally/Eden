@@ -1,10 +1,10 @@
 import React, { Dispatch, SetStateAction, useState } from "react";
+import { useQueryClient } from "react-query";
 import { onError, ActionButton, Form, Link, Text, useUALAccount } from "_app";
 import { submitEndorsementTransaction } from "inductions";
-import { Endorsement, Induction } from "inductions/interfaces";
+import { Induction } from "inductions/interfaces";
 
 interface Props {
-    endorsements: Endorsement[];
     induction: Induction;
     setIsReviewingVideo: Dispatch<SetStateAction<boolean>>;
 }
@@ -12,22 +12,11 @@ interface Props {
 export const InviterWitnessEndorsementForm = ({
     induction,
     setIsReviewingVideo,
-    ...props
 }: Props) => {
     const [ualAccount] = useUALAccount();
+    const queryClient = useQueryClient();
     const [isReviewed, setReviewed] = useState(false);
     const [isLoading, setLoading] = useState(false);
-    const [endorsements, setEndorsements] = useState([...props.endorsements]);
-
-    const updateEndorsements = () => {
-        // update the current endorsers list
-        const updatedEndorsements = endorsements.map((endorsement) =>
-            endorsement.endorser === ualAccount.accountName
-                ? { ...endorsement, endorsed: 1 }
-                : endorsement
-        );
-        setEndorsements(updatedEndorsements);
-    };
 
     const submitEndorsement = async () => {
         try {
@@ -45,12 +34,15 @@ export const InviterWitnessEndorsementForm = ({
             });
             console.info("inductendors trx", signedTrx);
 
-            updateEndorsements();
+            // tolerance time to make sure blockchain processed the transactions
+            await new Promise((resolve) => setTimeout(resolve, 6000));
+
+            // refetch induction/endorsements to update endorsements list or go to pending donate screen
+            queryClient.invalidateQueries(["induction", induction.id]);
         } catch (error) {
             onError(error, "Unable to submit endorsement");
+            setLoading(false);
         }
-
-        setLoading(false);
     };
 
     return (
@@ -81,8 +73,9 @@ export const InviterWitnessEndorsementForm = ({
                     <ActionButton
                         disabled={isLoading || !isReviewed}
                         onClick={submitEndorsement}
+                        isLoading={isLoading}
                     >
-                        {isLoading ? "Submitting endorsement..." : "Submit"}
+                        {isLoading ? "Submitting..." : "Submit"}
                     </ActionButton>
                 </div>
             </div>

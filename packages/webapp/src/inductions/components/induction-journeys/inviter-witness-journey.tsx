@@ -130,7 +130,6 @@ export const InviterWitnessJourney = ({
                         <EndorsementsStatus endorsements={endorsements} />
                         {userEndorsementIsPending ? (
                             <InviterWitnessEndorsementForm
-                                endorsements={endorsements}
                                 induction={induction}
                                 setIsReviewingVideo={setIsReviewingVideo}
                             />
