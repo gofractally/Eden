@@ -1,6 +1,7 @@
 #include <accounts.hpp>
 #include <boot/boot.hpp>
 #include <eden-atomicassets.hpp>
+#include <eden-atomicmarket.hpp>
 #include <eden.hpp>
 #include <eosio/tester.hpp>
 #include <members.hpp>
@@ -12,6 +13,7 @@
 using namespace eosio;
 using namespace std::literals;
 namespace atomicassets = eden::atomicassets;
+namespace atomicmarket = eden::atomicmarket;
 using atomicassets::attribute_map;
 namespace actions = eden::actions;
 using user_context = test_chain::user_context;
@@ -39,7 +41,10 @@ void token_setup(test_chain& t)
 void atomicmarket_setup(test_chain& t)
 {
    t.create_code_account("atomicmarket"_n);
-   //t.set_code("atomicmarket"_n, "atomicmarket.wasm");
+   t.set_code("atomicmarket"_n, "atomicmarket.wasm");
+   t.as("atomicmarket"_n).act<atomicmarket::actions::init>();
+   t.as("atomicmarket"_n)
+       .act<atomicmarket::actions::addconftoken>("eosio.token"_n, eosio::symbol("EOS", 4));
 }
 
 void atomicassets_setup(test_chain& t)
@@ -430,6 +435,19 @@ TEST_CASE("induction")
 
    t.bertie.act<actions::inductdonate>("bertie"_n, 4, s2a("10.0000 EOS"));
    CHECK(get_eden_membership("bertie"_n).status() == eden::member_status::active_member);
+}
+
+TEST_CASE("auction")
+{
+   eden_tester t;
+   t.genesis();
+   t.ahab.act<token::actions::transfer>("ahab"_n, eden::atomic_market_account, s2a("10.0000 EOS"),
+                                        "deposit");
+   t.ahab.act<atomicmarket::actions::auctionbid>("ahab"_n, 1, s2a("10.0000 EOS"), eosio::name{});
+   t.chain.start_block(7 * 24 * 60 * 60 * 1000);
+   t.chain.start_block();
+   t.ahab.act<atomicmarket::actions::auctclaimbuy>(1);
+   t.eden_gm.act<atomicmarket::actions::auctclaimsel>(1);
 }
 
 TEST_CASE("induction gc")
