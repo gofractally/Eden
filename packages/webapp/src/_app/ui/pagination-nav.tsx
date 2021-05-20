@@ -14,7 +14,7 @@ export const PaginationNav = ({ hasPrevious, hasNext, paginate }: Props) => (
     <div className="mt-4 max-w-md mx-auto text-center space-x-4">
         {hasPrevious && (
             <ActionButton
-                type={ActionButtonType.NEUTRAL}
+                type={ActionButtonType.Neutral}
                 size={ActionButtonSize.S}
                 onClick={() => paginate(-1)}
             >
@@ -23,7 +23,7 @@ export const PaginationNav = ({ hasPrevious, hasNext, paginate }: Props) => (
         )}
         {hasNext && (
             <ActionButton
-                type={ActionButtonType.NEUTRAL}
+                type={ActionButtonType.Neutral}
                 size={ActionButtonSize.S}
                 onClick={() => paginate(1)}
             >

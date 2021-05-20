@@ -100,10 +100,10 @@ const EndorserInductionStatus = ({
 }: EndorserInductionStatusProps) => {
     const status = getInductionStatus(induction);
     switch (status) {
-        case InductionStatus.expired:
+        case InductionStatus.Expired:
             return (
                 <ActionButton
-                    type={ActionButtonType.DISABLED}
+                    type={ActionButtonType.Disabled}
                     size={ActionButtonSize.S}
                     fullWidth
                     disabled
@@ -111,10 +111,10 @@ const EndorserInductionStatus = ({
                     Expired
                 </ActionButton>
             );
-        case InductionStatus.waitingForProfile:
+        case InductionStatus.PendingProfile:
             return (
                 <ActionButton
-                    type={ActionButtonType.NEUTRAL}
+                    type={ActionButtonType.Neutral}
                     size={ActionButtonSize.S}
                     fullWidth
                     href={`/induction/${induction.id}`}
@@ -122,10 +122,10 @@ const EndorserInductionStatus = ({
                     Waiting for profile
                 </ActionButton>
             );
-        case InductionStatus.waitingForVideo:
+        case InductionStatus.PendingCeremonyVideo:
             return (
                 <ActionButton
-                    type={ActionButtonType.INDUCTION_STATUS_CEREMONY}
+                    type={ActionButtonType.InductionStatusCeremony}
                     size={ActionButtonSize.S}
                     fullWidth
                     href={`/induction/${induction.id}`}
@@ -133,11 +133,11 @@ const EndorserInductionStatus = ({
                     Complete ceremony
                 </ActionButton>
             );
-        case InductionStatus.waitingForEndorsement:
+        case InductionStatus.PendingEndorsement:
             if (endorsement.endorsed) {
                 return (
                     <ActionButton
-                        type={ActionButtonType.NEUTRAL}
+                        type={ActionButtonType.Neutral}
                         size={ActionButtonSize.S}
                         fullWidth
                         href={`/induction/${induction.id}`}
@@ -148,7 +148,7 @@ const EndorserInductionStatus = ({
             }
             return (
                 <ActionButton
-                    type={ActionButtonType.INDUCTION_STATUS_ACTION}
+                    type={ActionButtonType.InductionStatusAction}
                     size={ActionButtonSize.S}
                     fullWidth
                     href={`/induction/${induction.id}`}

@@ -100,10 +100,10 @@ const InviteeInductionStatus = ({
 }: InviteeInductionStatusProps) => {
     const status = getInductionStatus(induction, endorsements);
     switch (status) {
-        case InductionStatus.expired:
+        case InductionStatus.Expired:
             return (
                 <ActionButton
-                    type={ActionButtonType.DISABLED}
+                    type={ActionButtonType.Disabled}
                     size={ActionButtonSize.S}
                     fullWidth
                     disabled
@@ -111,10 +111,10 @@ const InviteeInductionStatus = ({
                     Expired
                 </ActionButton>
             );
-        case InductionStatus.waitingForProfile:
+        case InductionStatus.PendingProfile:
             return (
                 <ActionButton
-                    type={ActionButtonType.INDUCTION_STATUS_PROFILE}
+                    type={ActionButtonType.InductionStatusProfile}
                     size={ActionButtonSize.S}
                     fullWidth
                     href={`/induction/${induction.id}`}
@@ -122,10 +122,10 @@ const InviteeInductionStatus = ({
                     Create my profile
                 </ActionButton>
             );
-        case InductionStatus.waitingForVideo:
+        case InductionStatus.PendingCeremonyVideo:
             return (
                 <ActionButton
-                    type={ActionButtonType.NEUTRAL}
+                    type={ActionButtonType.Neutral}
                     size={ActionButtonSize.S}
                     fullWidth
                     href={`/induction/${induction.id}`}
@@ -133,22 +133,22 @@ const InviteeInductionStatus = ({
                     Induction ceremony
                 </ActionButton>
             );
-        case InductionStatus.waitingForEndorsement:
+        case InductionStatus.PendingEndorsement:
             return (
                 <ActionButton
                     href={`/induction/${induction.id}`}
-                    type={ActionButtonType.NEUTRAL}
+                    type={ActionButtonType.Neutral}
                     size={ActionButtonSize.S}
                     fullWidth
                 >
                     Pending endorsements
                 </ActionButton>
             );
-        case InductionStatus.waitingForDonation:
+        case InductionStatus.PendingDonation:
             return (
                 <ActionButton
                     href={`/induction/${induction.id}`}
-                    type={ActionButtonType.INDUCTION_STATUS_ACTION}
+                    type={ActionButtonType.InductionStatusAction}
                     size={ActionButtonSize.S}
                     fullWidth
                 >

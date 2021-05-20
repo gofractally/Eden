@@ -98,10 +98,10 @@ const InviterInductionStatus = ({
 }: InviterInductionStatusProps) => {
     const status = getInductionStatus(induction, endorsements);
     switch (status) {
-        case InductionStatus.expired:
+        case InductionStatus.Expired:
             return (
                 <ActionButton
-                    type={ActionButtonType.DISABLED}
+                    type={ActionButtonType.Disabled}
                     size={ActionButtonSize.S}
                     fullWidth
                     disabled
@@ -109,10 +109,10 @@ const InviterInductionStatus = ({
                     Expired
                 </ActionButton>
             );
-        case InductionStatus.waitingForProfile:
+        case InductionStatus.PendingProfile:
             return (
                 <ActionButton
-                    type={ActionButtonType.NEUTRAL}
+                    type={ActionButtonType.Neutral}
                     size={ActionButtonSize.S}
                     fullWidth
                     href={`/induction/${induction.id}`}
@@ -120,10 +120,10 @@ const InviterInductionStatus = ({
                     Waiting for profile
                 </ActionButton>
             );
-        case InductionStatus.waitingForVideo:
+        case InductionStatus.PendingCeremonyVideo:
             return (
                 <ActionButton
-                    type={ActionButtonType.INDUCTION_STATUS_CEREMONY}
+                    type={ActionButtonType.InductionStatusCeremony}
                     size={ActionButtonSize.S}
                     fullWidth
                     href={`/induction/${induction.id}`}
@@ -131,14 +131,14 @@ const InviterInductionStatus = ({
                     Complete ceremony
                 </ActionButton>
             );
-        case InductionStatus.waitingForEndorsement:
+        case InductionStatus.PendingEndorsement:
             const inviterEndorsement = endorsements?.find(
                 (end) => end.inviter === induction.inviter
             );
             if (inviterEndorsement?.endorsed) {
                 return (
                     <ActionButton
-                        type={ActionButtonType.NEUTRAL}
+                        type={ActionButtonType.Neutral}
                         size={ActionButtonSize.S}
                         fullWidth
                         href={`/induction/${induction.id}`}
@@ -149,7 +149,7 @@ const InviterInductionStatus = ({
             }
             return (
                 <ActionButton
-                    type={ActionButtonType.INDUCTION_STATUS_ACTION}
+                    type={ActionButtonType.InductionStatusAction}
                     size={ActionButtonSize.S}
                     fullWidth
                     href={`/induction/${induction.id}`}
@@ -157,10 +157,10 @@ const InviterInductionStatus = ({
                     Review &amp; endorse
                 </ActionButton>
             );
-        case InductionStatus.waitingForDonation:
+        case InductionStatus.PendingDonation:
             return (
                 <ActionButton
-                    type={ActionButtonType.NEUTRAL}
+                    type={ActionButtonType.Neutral}
                     size={ActionButtonSize.S}
                     fullWidth
                     href={`/induction/${induction.id}`}

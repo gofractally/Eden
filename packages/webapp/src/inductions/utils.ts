@@ -31,24 +31,24 @@ export const getInductionStatus = (
     induction?: Induction,
     endorsements?: Endorsement[]
 ) => {
-    if (!induction) return InductionStatus.invalid;
+    if (!induction) return InductionStatus.Invalid;
 
     const isExpired = dayjs(eosBlockTimestampISO(induction.created_at))
         .add(INDUCTION_EXPIRATION_DAYS, "day")
         .isBefore(dayjs());
 
-    if (isExpired) return InductionStatus.expired;
+    if (isExpired) return InductionStatus.Expired;
 
     const isWaitingForDonation =
         endorsements?.every((e) => e.endorsed === 1) ?? false;
 
-    if (isWaitingForDonation) return InductionStatus.waitingForDonation;
+    if (isWaitingForDonation) return InductionStatus.PendingDonation;
 
     return !induction.new_member_profile.name
-        ? InductionStatus.waitingForProfile
+        ? InductionStatus.PendingProfile
         : !induction.video
-        ? InductionStatus.waitingForVideo
-        : InductionStatus.waitingForEndorsement;
+        ? InductionStatus.PendingCeremonyVideo
+        : InductionStatus.PendingEndorsement;
 };
 
 export const getInductionRemainingTimeDays = (induction?: Induction) => {

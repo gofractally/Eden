@@ -32,8 +32,8 @@ const Container = ({ step, memberPreview, children }: ContainerProps) => {
             <InductionJourneyContainer
                 journey={
                     isCommunityActive
-                        ? InductionJourney.INVITER
-                        : InductionJourney.GENESIS
+                        ? InductionJourney.Inviter
+                        : InductionJourney.Genesis
                 }
                 step={step}
             >
@@ -106,15 +106,15 @@ export const InviterWitnessJourney = ({
     }
 
     switch (inductionStatus) {
-        case InductionStatus.waitingForProfile:
+        case InductionStatus.PendingProfile:
             return (
                 <Container step={isCommunityActive ? 2 : 1}>
                     <WaitingForProfile induction={induction} />
                 </Container>
             );
-        case InductionStatus.waitingForVideo:
+        case InductionStatus.PendingCeremonyVideo:
             return renderVideoStep();
-        case InductionStatus.waitingForEndorsement:
+        case InductionStatus.PendingEndorsement:
             const userEndorsementIsPending =
                 endorsements.find((e) => e.endorser === ualAccount?.accountName)
                     ?.endorsed === 0;
@@ -141,7 +141,7 @@ export const InviterWitnessJourney = ({
                     )}
                 </Container>
             );
-        case InductionStatus.waitingForDonation:
+        case InductionStatus.PendingDonation:
             return (
                 <Container
                     step={isCommunityActive ? 4 : 2}

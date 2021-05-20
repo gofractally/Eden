@@ -43,7 +43,7 @@ export const InductionInviteFormContainer = ({ ualAccount }: Props) => {
 
     return (
         <InductionJourneyContainer
-            journey={InductionJourney.INVITER}
+            journey={InductionJourney.Inviter}
             step={initializedInductionId ? 2 : 1}
         >
             {initializedInductionId ? (

@@ -27,12 +27,12 @@ export enum InductionRole {
 }
 
 export enum InductionStatus {
-    invalid,
-    expired,
-    waitingForProfile,
-    waitingForVideo,
-    waitingForEndorsement,
-    waitingForDonation,
+    Invalid,
+    Expired,
+    PendingProfile,
+    PendingCeremonyVideo,
+    PendingEndorsement,
+    PendingDonation,
 }
 
 export interface Endorsement {

@@ -76,9 +76,9 @@ export const GENESIS_INDUCTION_STEPS: Step[] = [
 ];
 
 export enum InductionJourney {
-    INVITEE = "invitee",
-    INVITER = "inviter",
-    GENESIS = "genesis",
+    Invitee = "invitee",
+    Inviter = "inviter",
+    Genesis = "genesis",
 }
 
 interface Props {
@@ -97,13 +97,13 @@ export const InductionJourneyContainer = ({
     let steps: Step[];
 
     switch (journey) {
-        case InductionJourney.GENESIS:
+        case InductionJourney.Genesis:
             steps = GENESIS_INDUCTION_STEPS;
             break;
-        case InductionJourney.INVITEE:
+        case InductionJourney.Invitee:
             steps = INVITEE_INDUCTION_STEPS;
             break;
-        case InductionJourney.INVITER:
+        case InductionJourney.Inviter:
             steps = INVITER_INDUCTION_STEPS;
             break;
     }

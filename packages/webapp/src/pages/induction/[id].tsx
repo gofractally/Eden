@@ -81,8 +81,8 @@ export const InductionDetailsPage = () => {
     }
 
     if (
-        status === InductionStatus.invalid ||
-        status === InductionStatus.expired
+        status === InductionStatus.Invalid ||
+        status === InductionStatus.Expired
     ) {
         return (
             <RawLayout title="Invite not found">

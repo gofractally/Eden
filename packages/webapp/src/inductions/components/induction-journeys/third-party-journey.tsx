@@ -22,7 +22,7 @@ interface ContainerProps {
 const Container = ({ step, memberPreview, children }: ContainerProps) => (
     <>
         <InductionJourneyContainer
-            journey={InductionJourney.INVITEE}
+            journey={InductionJourney.Invitee}
             step={step}
         >
             {children}
@@ -47,19 +47,19 @@ export const ThirdPartyJourney = ({
     const memberData = convertPendingProfileToMemberData(induction);
 
     switch (inductionStatus) {
-        case InductionStatus.waitingForProfile:
+        case InductionStatus.PendingProfile:
             return (
                 <Container step={isCommunityActive ? 2 : 1}>
                     <WaitingForProfile induction={induction} />
                 </Container>
             );
-        case InductionStatus.waitingForVideo:
+        case InductionStatus.PendingCeremonyVideo:
             return (
                 <Container step={3} memberPreview={memberData}>
                     <WaitingForVideo induction={induction} />
                 </Container>
             );
-        case InductionStatus.waitingForEndorsement:
+        case InductionStatus.PendingEndorsement:
             return (
                 <Container step={3} memberPreview={memberData}>
                     <Heading size={1} className="mb-2">
@@ -70,7 +70,7 @@ export const ThirdPartyJourney = ({
                     <Text>Waiting for all witnesses to endorse.</Text>
                 </Container>
             );
-        case InductionStatus.waitingForDonation:
+        case InductionStatus.PendingDonation:
             return (
                 <Container
                     step={isCommunityActive ? 4 : 2}

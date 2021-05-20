@@ -38,8 +38,8 @@ const Container = ({
             <InductionJourneyContainer
                 journey={
                     isCommunityActive
-                        ? InductionJourney.INVITEE
-                        : InductionJourney.GENESIS
+                        ? InductionJourney.Invitee
+                        : InductionJourney.Genesis
                 }
                 step={step}
                 {...props}
@@ -94,15 +94,15 @@ export const InviteeJourney = ({
     }
 
     switch (inductionStatus) {
-        case InductionStatus.waitingForProfile:
+        case InductionStatus.PendingProfile:
             return renderProfileStep();
-        case InductionStatus.waitingForVideo:
+        case InductionStatus.PendingCeremonyVideo:
             return (
                 <Container step={3} memberPreview={memberData}>
                     <WaitingForVideo induction={induction} />
                 </Container>
             );
-        case InductionStatus.waitingForEndorsement:
+        case InductionStatus.PendingEndorsement:
             return (
                 <Container step={3} memberPreview={memberData}>
                     <Heading size={1} className="mb-2">
@@ -125,7 +125,7 @@ export const InviteeJourney = ({
                     </div>
                 </Container>
             );
-        case InductionStatus.waitingForDonation:
+        case InductionStatus.PendingDonation:
             return (
                 <Container
                     step={isCommunityActive ? 4 : 2}
