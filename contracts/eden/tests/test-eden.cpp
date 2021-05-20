@@ -1,6 +1,7 @@
 #include <accounts.hpp>
 #include <boot/boot.hpp>
 #include <eden-atomicassets.hpp>
+#include <eden-atomicmarket.hpp>
 #include <eden.hpp>
 #include <eosio/tester.hpp>
 #include <members.hpp>
@@ -12,6 +13,7 @@
 using namespace eosio;
 using namespace std::literals;
 namespace atomicassets = eden::atomicassets;
+namespace atomicmarket = eden::atomicmarket;
 using atomicassets::attribute_map;
 namespace actions = eden::actions;
 using user_context = test_chain::user_context;
@@ -39,7 +41,10 @@ void token_setup(test_chain& t)
 void atomicmarket_setup(test_chain& t)
 {
    t.create_code_account("atomicmarket"_n);
-   //t.set_code("atomicmarket"_n, "atomicmarket.wasm");
+   t.set_code("atomicmarket"_n, "atomicmarket.wasm");
+   t.as("atomicmarket"_n).act<atomicmarket::actions::init>();
+   t.as("atomicmarket"_n)
+       .act<atomicmarket::actions::addconftoken>("eosio.token"_n, eosio::symbol("EOS", 4));
 }
 
 void atomicassets_setup(test_chain& t)
@@ -71,6 +76,13 @@ auto get_eden_account(eosio::name owner)
 const eden::member& get_eden_membership(eosio::name account)
 {
    return members{"eden.gm"_n}.get_member(account);
+}
+
+auto get_globals()
+{
+   eden::tester_clear_global_singleton();
+   eden::globals globals("eden.gm"_n);
+   return globals.get();
 }
 
 template <typename T>
@@ -249,7 +261,16 @@ TEST_CASE("genesis")
 
    t.alice.act<actions::inductdonate>("alice"_n, 1, s2a("10.0000 EOS"));
    t.pip.act<actions::inductdonate>("pip"_n, 2, s2a("10.0000 EOS"));
+
+   t.eden_gm.act<actions::addtogenesis>("bertie"_n);
+
    t.egeon.act<actions::inductdonate>("egeon"_n, 3, s2a("10.0000 EOS"));
+
+   CHECK(get_globals().stage == eden::contract_stage::genesis);
+
+   t.bertie.act<actions::inductprofil>(4, bertie_profile);
+   t.bertie.act<token::actions::transfer>("bertie"_n, "eden.gm"_n, s2a("100.0000 EOS"), "memo");
+   t.bertie.act<actions::inductdonate>("bertie"_n, 4, s2a("10.0000 EOS"));
 
    CHECK(get_eden_account("alice"_n) != std::nullopt);
    CHECK(get_eden_account("alice"_n)->balance() == s2a("90.0000 EOS"));
@@ -258,10 +279,37 @@ TEST_CASE("genesis")
    CHECK(get_eden_membership("alice"_n).status() == eden::member_status::active_member);
    CHECK(get_eden_membership("pip"_n).status() == eden::member_status::active_member);
    CHECK(get_eden_membership("egeon"_n).status() == eden::member_status::active_member);
+   CHECK(get_eden_membership("bertie"_n).status() == eden::member_status::active_member);
 
-   eden::tester_clear_global_singleton();
-   eden::globals globals("eden.gm"_n);
-   CHECK(globals.get().stage == eden::contract_stage::active);
+   CHECK(get_globals().stage == eden::contract_stage::active);
+
+   CHECK(get_table_size<eden::induction_table_type>() == 0);
+   CHECK(get_table_size<eden::endorsement_table_type>() == 0);
+   CHECK(get_table_size<eden::member_table_type>() == 4);
+
+   {
+      auto template_id = get_eden_membership("alice"_n).nft_template_id();
+      expect(t.eden_gm.trace<atomicassets::actions::mintasset>(
+                 "eden.gm"_n, "eden.gm"_n, eden::schema_name, template_id, "alice"_n,
+                 eden::atomicassets::attribute_map(), eden::atomicassets::attribute_map{},
+                 std::vector<eosio::asset>()),
+             "maxsupply has already been reached");
+   }
+
+   // Verify that all members have the same set of NFTs
+   std::vector<int32_t> expected_assets;
+   for (auto member : {"alice"_n, "pip"_n, "egeon"_n, "bertie"_n})
+   {
+      expected_assets.push_back(get_eden_membership(member).nft_template_id());
+   }
+   std::sort(expected_assets.begin(), expected_assets.end());
+   for (auto member : {"alice"_n, "pip"_n, "egeon"_n, "bertie"_n, "atomicmarket"_n})
+   {
+      INFO(member.to_string() << "'s assets");
+      auto assets = eden::atomicassets::assets_by_owner(eden::atomic_assets_account, member);
+      std::sort(assets.begin(), assets.end());
+      CHECK(assets == expected_assets);
+   }
 }
 
 TEST_CASE("genesis expiration")
@@ -293,11 +341,7 @@ TEST_CASE("genesis expiration")
    CHECK(get_eden_membership("pip"_n).status() == eden::member_status::active_member);
    CHECK(get_eden_membership("egeon"_n).status() == eden::member_status::active_member);
 
-   {
-      eden::tester_clear_global_singleton();
-      eden::globals globals("eden.gm"_n);
-      CHECK(globals.get().stage == eden::contract_stage::genesis);
-   }
+   CHECK(get_globals().stage == eden::contract_stage::genesis);
 
    // Wait for Bertie's genesis invitation to expire
    t.chain.start_block(7 * 24 * 60 * 60 * 1000);
@@ -305,11 +349,7 @@ TEST_CASE("genesis expiration")
    t.chain.start_block();
    t.alice.act<actions::gc>(42);
 
-   {
-      eden::tester_clear_global_singleton();
-      eden::globals globals("eden.gm"_n);
-      CHECK(globals.get().stage == eden::contract_stage::active);
-   }
+   CHECK(get_globals().stage == eden::contract_stage::active);
 
    CHECK(members("eden.gm"_n).stats().active_members == 3);
    CHECK(members("eden.gm"_n).stats().pending_members == 0);
@@ -395,6 +435,19 @@ TEST_CASE("induction")
 
    t.bertie.act<actions::inductdonate>("bertie"_n, 4, s2a("10.0000 EOS"));
    CHECK(get_eden_membership("bertie"_n).status() == eden::member_status::active_member);
+}
+
+TEST_CASE("auction")
+{
+   eden_tester t;
+   t.genesis();
+   t.ahab.act<token::actions::transfer>("ahab"_n, eden::atomic_market_account, s2a("10.0000 EOS"),
+                                        "deposit");
+   t.ahab.act<atomicmarket::actions::auctionbid>("ahab"_n, 1, s2a("10.0000 EOS"), eosio::name{});
+   t.chain.start_block(7 * 24 * 60 * 60 * 1000);
+   t.chain.start_block();
+   t.ahab.act<atomicmarket::actions::auctclaimbuy>(1);
+   t.eden_gm.act<atomicmarket::actions::auctclaimsel>(1);
 }
 
 TEST_CASE("induction gc")

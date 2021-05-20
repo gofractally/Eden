@@ -1,4 +1,4 @@
-import React, { FormEvent, useMemo, useState } from "react";
+import React, { FormEvent, useState } from "react";
 
 import { EdenNftSocialHandles } from "nfts";
 import {
@@ -6,15 +6,21 @@ import {
     Form,
     Heading,
     ActionButton,
-    Link,
-    validateCID,
+    HelpLink,
+    handleFileChange,
+    Text,
 } from "_app";
+import { edenContractAccount, validUploadActions } from "config";
+
 import { NewMemberProfile } from "../interfaces";
 
 interface Props {
     newMemberProfile: NewMemberProfile;
     disabled?: boolean;
-    onSubmit?: (newMemberProfile: NewMemberProfile) => Promise<void>;
+    onSubmit?: (
+        newMemberProfile: NewMemberProfile,
+        uploadedImage?: File
+    ) => Promise<void>;
 }
 
 export interface InitInductionFormData {
@@ -31,15 +37,15 @@ export const InductionProfileForm = ({
     const [isLoading, setIsLoading] = useState(false);
     const [consentsToPublish, setConsentsToPublish] = useState(false);
 
+    const [uploadedImage, setUploadedImage] = useState<File | undefined>(
+        undefined
+    );
+
     const [fields, setFields] = useFormFields({ ...newMemberProfile });
 
     const [socialFields, setSocialFields] = useFormFields(
         convertNewMemberProfileSocial(newMemberProfile.social)
     );
-
-    const isPhotoValidCID = useMemo(() => validateCID(fields.img), [
-        fields.img,
-    ]);
 
     const onChangeFields = (e: React.ChangeEvent<HTMLInputElement>) =>
         setFields(e);
@@ -58,7 +64,10 @@ export const InductionProfileForm = ({
         });
 
         setIsLoading(true);
-        await onSubmit({ ...fields, social: JSON.stringify(socialHandles) });
+        await onSubmit(
+            { ...fields, social: JSON.stringify(socialHandles) },
+            uploadedImage
+        );
         setIsLoading(false);
     };
 
@@ -79,40 +88,35 @@ export const InductionProfileForm = ({
                 />
             </Form.LabeledSet>
 
-            <Form.LabeledSet label="" htmlFor="img" className="col-span-6">
+            <Form.LabeledSet label="" htmlFor="imgFile" className="col-span-6">
                 <div className="flex items-center mb-1 space-x-1">
                     <p className="text-sm font-medium text-gray-700">
-                        Profile image (IPFS CID)
+                        Profile image
                     </p>
-                    <Link
-                        isExternal
-                        href="https://www.notion.so/edenos/Upload-Profile-Photo-c15a7a050d3c411faca21a3cd3d2f0a3"
-                        target="_blank"
-                        className="hover:no-underline"
-                    >
-                        <div className="flex justify-center items-center h-5 w-5 rounded-full bg-gray-300 hover:bg-gray-200 border border-gray-400">
-                            <span className="text-gray-800 hover:text-gray-700 font-semibold text-sm">
-                                ?
-                            </span>
-                        </div>
-                    </Link>
+                    <HelpLink href="https://www.notion.so/edenos/Upload-Profile-Photo-c15a7a050d3c411faca21a3cd3d2f0a3" />
                 </div>
-                <Form.Input
-                    id="img"
-                    type="text"
-                    required
-                    disabled={isLoading || disabled}
-                    value={fields.img}
-                    onChange={onChangeFields}
+                <Form.FileInput
+                    id="imgFile"
+                    accept="image/*"
+                    label="select an image file"
+                    onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                        handleFileChange(
+                            e,
+                            "image",
+                            validUploadActions[edenContractAccount][
+                                "inductprofil"
+                            ].maxSize,
+                            setUploadedImage
+                        )
+                    }
                 />
-                {fields.img && !isPhotoValidCID && (
-                    <p className={"text-red-500 text-sm mt-1"}>
-                        This is not a valid IPFS CID.
-                    </p>
-                )}
-                {isPhotoValidCID ? (
+                {uploadedImage || fields.img ? (
                     <img
-                        src={`https://ipfs.io/ipfs/${fields.img}`}
+                        src={
+                            uploadedImage
+                                ? URL.createObjectURL(uploadedImage)
+                                : `https://ipfs.io/ipfs/${fields.img}`
+                        }
                         alt="profile pic"
                         className="object-cover rounded-full h-24 w-24 mt-4 mx-auto"
                     />
@@ -169,6 +173,7 @@ export const InductionProfileForm = ({
                     disabled={isLoading || disabled}
                     value={socialFields.eosCommunity}
                     onChange={onChangeSocialFields}
+                    placeholder="YourUsername"
                 />
             </Form.LabeledSet>
             <Form.LabeledSet
@@ -182,6 +187,7 @@ export const InductionProfileForm = ({
                     disabled={isLoading || disabled}
                     value={socialFields.twitter}
                     onChange={onChangeSocialFields}
+                    placeholder="YourHandle"
                 />
             </Form.LabeledSet>
             <Form.LabeledSet
@@ -195,6 +201,7 @@ export const InductionProfileForm = ({
                     disabled={isLoading || disabled}
                     value={socialFields.telegram}
                     onChange={onChangeSocialFields}
+                    placeholder="YourHandle"
                 />
             </Form.LabeledSet>
             <Form.LabeledSet
@@ -208,6 +215,7 @@ export const InductionProfileForm = ({
                     disabled={isLoading || disabled}
                     value={socialFields.blog}
                     onChange={onChangeSocialFields}
+                    placeholder="yoursite.com"
                 />
             </Form.LabeledSet>
             <Form.LabeledSet
@@ -221,6 +229,7 @@ export const InductionProfileForm = ({
                     disabled={isLoading || disabled}
                     value={socialFields.linkedin}
                     onChange={onChangeSocialFields}
+                    placeholder="YourHandle"
                 />
             </Form.LabeledSet>
             <Form.LabeledSet
@@ -234,6 +243,7 @@ export const InductionProfileForm = ({
                     disabled={isLoading || disabled}
                     value={socialFields.facebook}
                     onChange={onChangeSocialFields}
+                    placeholder="YourUsername"
                 />
             </Form.LabeledSet>
 
@@ -246,10 +256,21 @@ export const InductionProfileForm = ({
                 />
             </div>
 
+            <div className="col-span-6">
+                <Text>
+                    <span className="italic font-medium">Don't worry!</span>{" "}
+                    Even though you are committing your information to the
+                    blockchain right now, you will be able to review your
+                    profile and make changes to it all the way up until you
+                    complete your donation.
+                </Text>
+            </div>
+
             {onSubmit && (
-                <div className="pt-4">
+                <div className="col-span-6 pt-4">
                     <ActionButton
                         isSubmit
+                        isLoading={isLoading}
                         disabled={isLoading || !consentsToPublish}
                     >
                         {isLoading ? "Submitting..." : "Submit"}

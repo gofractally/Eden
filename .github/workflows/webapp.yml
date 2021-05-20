@@ -44,10 +44,11 @@ jobs:
               with:
                   name: Cypress E2E Videos and Screenshots
                   path: |
-                      packages/webapp/cypress/videos
+                      packages/webapp/cypress/screenshots
                       packages/webapp/cypress/videos
 
     webapp-build:
+        needs: webapp-e2e
         name: Build Eden Community WebApp
         runs-on: ubuntu-latest
 

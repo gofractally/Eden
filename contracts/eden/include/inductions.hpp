@@ -163,6 +163,7 @@ namespace eden
       {
       }
 
+      const induction_table_type& get_table() { return induction_tb; }
       const induction& get_induction(uint64_t id) const;
       const induction& get_endorsed_induction(eosio::name invitee) const;
       bool has_induction(eosio::name invitee) const;
@@ -184,6 +185,7 @@ namespace eden
       bool is_endorser(uint64_t id, eosio::name witness) const;
 
       void create_nfts(const induction& induction, int32_t template_id);
+      void mint_nft(int template_id, eosio::name new_asset_owner);
       void start_auction(const induction& induction, uint64_t asset_id);
       void erase_induction(const induction& induction);
       uint32_t erase_expired(uint32_t limit, std::vector<eosio::name>& removed_members);
@@ -199,7 +201,9 @@ namespace eden
       void create_endorsement(eosio::name inviter,
                               eosio::name invitee,
                               eosio::name endorser,
-                              uint64_t induction_id);
+                              uint64_t induction_id,
+                              bool endorsed = false);
+      void add_endorsement(const induction& induction, eosio::name endorser, bool endorsed);
 
       // Should only be used during genesis
       void endorse_all(const induction& induction);

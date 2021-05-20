@@ -49,16 +49,15 @@ export const InductionDetailsPage = () => {
 
     // TODO: Consider deriving the user's role here and return an enum of roles: INVITER, ENDORSER, INVITEE, MEMBER, EOS_USER, UNAUTHENTICATED.
     // Almost every child component of this page cares about the role of the user in relation to the invite/induction. We can pass role down.
-    const isEndorser = useMemo(() => {
-        const result = endorsements.find(
+    const isEndorser = useMemo(() => 
+         endorsements.some(
             (endorsement) => endorsement.endorser === ualAccount?.accountName
-        );
-        return Boolean(result);
-    }, [ualAccount, endorsements]);
+        )
+    , [ualAccount, endorsements]);
 
     const status = getInductionStatus(induction);
 
-    const renderInductionStep = () => {
+    const renderInductionStep = useMemo(() => {
         if (!induction) return "";
 
         if (reviewStep === "profile") {
@@ -110,7 +109,7 @@ export const InductionDetailsPage = () => {
             default:
                 return "";
         }
-    };
+    }, [induction, isCommunityActive, isEndorser, endorsements, reviewStep]);
 
     return isLoadingEndorsements || isLoadingCommunityState ? (
         <p>Loading Induction...</p>
@@ -123,7 +122,7 @@ export const InductionDetailsPage = () => {
         </RawLayout>
     ) : (
         <SingleColLayout title={`Induction #${inductionId}`}>
-            {renderInductionStep()}
+            {renderInductionStep}
         </SingleColLayout>
     );
 };
