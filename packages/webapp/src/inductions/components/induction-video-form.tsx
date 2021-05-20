@@ -1,4 +1,4 @@
-import React, { FormEvent, useEffect, useRef, useState } from "react";
+import React, { FormEvent, useEffect, useMemo, useRef, useState } from "react";
 
 import { ActionButton, Form, handleFileChange } from "_app";
 import { ipfsUrl } from "_app/utils/config-helpers";
@@ -39,13 +39,13 @@ export const InductionVideoForm = ({
         setIsLoading(false);
     };
 
-    const getVideoUrl = () => {
+    const videoUrl = useMemo(() => {
         if (uploadedVideo) {
             return URL.createObjectURL(uploadedVideo);
         } else {
             return ipfsUrl(video);
         }
-    };
+    }, [uploadedVideo, video]);
 
     const getSubmissionText = () => {
         switch (submissionPhase) {
@@ -82,7 +82,7 @@ export const InductionVideoForm = ({
                         )
                     }
                 />
-                {(video || uploadedVideo) && <VideoClip url={getVideoUrl()} />}
+                {(video || uploadedVideo) && <VideoClip url={videoUrl} />}
             </Form.LabeledSet>
 
             {onSubmit && (
