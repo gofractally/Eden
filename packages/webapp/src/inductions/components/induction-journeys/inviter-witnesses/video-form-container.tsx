@@ -11,11 +11,8 @@ import {
     getInductionRemainingTimeDays,
     setInductionVideoTransaction,
 } from "inductions";
-import {
-    InductionVideoForm,
-    VideoSubmissionPhase,
-} from "inductions/components/induction-video-form";
 import { Induction } from "inductions/interfaces";
+import { VideoSubmissionPhase, InductionVideoForm } from ".";
 
 interface Props {
     induction: Induction;
@@ -23,7 +20,7 @@ interface Props {
     setSubmittedVideo: Dispatch<SetStateAction<boolean>>;
 }
 
-export const InviterWitnessVideoForm = ({
+export const InductionVideoFormContainer = ({
     induction,
     isReviewingVideo,
     setSubmittedVideo,
