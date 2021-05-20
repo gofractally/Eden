@@ -1,5 +1,6 @@
 import React, { Dispatch, SetStateAction, useState } from "react";
 import { Heading, Link, Text, useIsCommunityActive, useUALAccount } from "_app";
+import { MemberData } from "members";
 import { convertPendingProfileToMemberData } from "inductions";
 import {
     InductionVideoFormContainer,
@@ -18,24 +19,28 @@ import { Endorsement, Induction, InductionStatus } from "inductions/interfaces";
 
 interface ContainerProps {
     step: 1 | 2 | 3 | 4 | 5;
+    memberPreview?: MemberData;
     children: React.ReactNode;
 }
 
-const Container = ({ step, children }: ContainerProps) => {
+const Container = ({ step, memberPreview, children }: ContainerProps) => {
     // TODO: Does deeply nesting these everywhere trigger multiple queries?
     const { data: isCommunityActive } = useIsCommunityActive();
 
     return (
-        <InductionJourneyContainer
-            journey={
-                isCommunityActive
-                    ? InductionJourney.INVITER
-                    : InductionJourney.GENESIS
-            }
-            step={step}
-        >
-            {children}
-        </InductionJourneyContainer>
+        <>
+            <InductionJourneyContainer
+                journey={
+                    isCommunityActive
+                        ? InductionJourney.INVITER
+                        : InductionJourney.GENESIS
+                }
+                step={step}
+            >
+                {children}
+            </InductionJourneyContainer>{" "}
+            {memberPreview && <MemberCardPreview memberData={memberPreview} />}
+        </>
     );
 };
 
@@ -80,26 +85,20 @@ export const InviterWitnessJourney = ({
     // Inviter video submission confirmation
     if (submittedVideo) {
         return (
-            <>
-                <Container step={3}>
-                    <InductionVideoSubmitConfirmation />
-                </Container>
-                <MemberCardPreview memberData={memberData} />
-            </>
+            <Container step={3} memberPreview={memberData}>
+                <InductionVideoSubmitConfirmation />
+            </Container>
         );
     }
 
     const renderVideoStep = () => (
-        <>
-            <Container step={3}>
-                <InductionVideoFormContainer
-                    induction={induction}
-                    isReviewingVideo={isReviewingVideo}
-                    setSubmittedVideo={setSubmittedVideo}
-                />
-            </Container>
-            <MemberCardPreview memberData={memberData} />
-        </>
+        <Container step={3} memberPreview={memberData}>
+            <InductionVideoFormContainer
+                induction={induction}
+                isReviewingVideo={isReviewingVideo}
+                setSubmittedVideo={setSubmittedVideo}
+            />
+        </Container>
     );
 
     if (isReviewingVideo) {
@@ -121,67 +120,61 @@ export const InviterWitnessJourney = ({
                     ?.endorsed === 0;
 
             return (
-                <>
-                    <Container step={3}>
-                        <Heading size={1} className="mb-2">
-                            Endorsements
-                        </Heading>
-                        <InductionExpiresIn induction={induction} />
-                        <EndorsementsStatus endorsements={endorsements} />
-                        {userEndorsementIsPending ? (
-                            <InductionEndorsementForm
-                                induction={induction}
+                <Container step={3} memberPreview={memberData}>
+                    <Heading size={1} className="mb-2">
+                        Endorsements
+                    </Heading>
+                    <InductionExpiresIn induction={induction} />
+                    <EndorsementsStatus endorsements={endorsements} />
+                    {userEndorsementIsPending ? (
+                        <InductionEndorsementForm
+                            induction={induction}
+                            setIsReviewingVideo={setIsReviewingVideo}
+                        />
+                    ) : (
+                        <>
+                            <Text>Waiting for all witnesses to endorse.</Text>
+                            <RecommendReview
                                 setIsReviewingVideo={setIsReviewingVideo}
                             />
-                        ) : (
-                            <>
-                                <Text>
-                                    Waiting for all witnesses to endorse.
-                                </Text>
-                                <RecommendReview
-                                    setIsReviewingVideo={setIsReviewingVideo}
-                                />
-                            </>
-                        )}
-                    </Container>
-                    <MemberCardPreview memberData={memberData} />
-                </>
+                        </>
+                    )}
+                </Container>
             );
         case InductionStatus.waitingForDonation:
             return (
-                <>
-                    <Container step={isCommunityActive ? 4 : 2}>
-                        <Heading size={1} className="mb-2">
-                            Pending donation
-                        </Heading>
-                        <InductionExpiresIn induction={induction} />
-                        <EndorsementsStatus endorsements={endorsements} />
-                        {isCommunityActive ? (
-                            <>
-                                <Text>
-                                    This induction is fully endorsed! As soon as
-                                    the prospective member completes their
-                                    donation to the Eden community, their
-                                    membership will be activated and their Eden
-                                    NFTs will be minted and distributed.
-                                </Text>
-                                <RecommendReview
-                                    setIsReviewingVideo={setIsReviewingVideo}
-                                />
-                            </>
-                        ) : (
+                <Container
+                    step={isCommunityActive ? 4 : 2}
+                    memberPreview={memberData}
+                >
+                    <Heading size={1} className="mb-2">
+                        Pending donation
+                    </Heading>
+                    <InductionExpiresIn induction={induction} />
+                    <EndorsementsStatus endorsements={endorsements} />
+                    {isCommunityActive ? (
+                        <>
                             <Text>
-                                As soon as this prospective member completes
-                                their donation to the Eden community, their
-                                membership is ready for activation. Once all
-                                Genesis members are fully inducted, memberships
-                                will be activated and Eden NFTs will be
+                                This induction is fully endorsed! As soon as the
+                                prospective member completes their donation to
+                                the Eden community, their membership will be
+                                activated and their Eden NFTs will be minted and
                                 distributed.
                             </Text>
-                        )}
-                    </Container>
-                    <MemberCardPreview memberData={memberData} />
-                </>
+                            <RecommendReview
+                                setIsReviewingVideo={setIsReviewingVideo}
+                            />
+                        </>
+                    ) : (
+                        <Text>
+                            As soon as this prospective member completes their
+                            donation to the Eden community, their membership is
+                            ready for activation. Once all Genesis members are
+                            fully inducted, memberships will be activated and
+                            Eden NFTs will be distributed.
+                        </Text>
+                    )}
+                </Container>
             );
         default:
             return <p>Unknown error</p>;

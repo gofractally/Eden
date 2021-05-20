@@ -134,14 +134,16 @@ const InviteeInductionStatus = ({
                 </ActionButton>
             );
         case InductionStatus.waitingForEndorsement:
-            <ActionButton
-                href={`/induction/${induction.id}`}
-                type={ActionButtonType.NEUTRAL}
-                size={ActionButtonSize.S}
-                fullWidth
-            >
-                Pending endorsements
-            </ActionButton>;
+            return (
+                <ActionButton
+                    href={`/induction/${induction.id}`}
+                    type={ActionButtonType.NEUTRAL}
+                    size={ActionButtonSize.S}
+                    fullWidth
+                >
+                    Pending endorsements
+                </ActionButton>
+            );
         case InductionStatus.waitingForDonation:
             return (
                 <ActionButton
