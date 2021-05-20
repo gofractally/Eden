@@ -94,6 +94,7 @@ export const InviteeDonateForm = ({
                 <ActionButton
                     disabled={isLoading || !isProfileReviewed}
                     onClick={submitDonation}
+                    isLoading={isLoading}
                 >
                     {isLoading
                         ? "Submitting donation..."
