@@ -149,10 +149,8 @@ namespace dwarf
                result.files.push_back(filename);
             }
             current->file_index = it->second;
-
             // fprintf(stderr, "[%08x,%08x) %s:%d\n", current->begin_address, current->end_address,
             //         result.files[current->file_index].c_str(), current->line);
-
             result.locations.push_back(*current);
             current = {};
          }
@@ -262,17 +260,45 @@ namespace dwarf
                          std::map<std::string, uint32_t>& files,
                          eosio::input_stream s)
    {
-      // fprintf(stderr, "parse_debug_line %08x\n", (uint32_t)s.remaining());
-      // auto bb = s.pos;
-      // int i = 0;
       while (s.remaining())
       {
          uint32_t unit_length = eosio::from_bin<uint32_t>(s);
          eosio::check(unit_length <= s.remaining(), "bad unit_length in .debug_line");
-         // fprintf(stderr, "??? %08x\n", (uint8_t)(s.pos - bb));
-         // if (i++ == 0)
          parse_debug_line_unit(result, files, {s.pos, s.pos + unit_length});
          s.skip(unit_length);
+      }
+   }
+
+   void parse_debug_abbrev(info& result,
+                           std::map<std::string, uint32_t>& files,
+                           eosio::input_stream s)
+   {
+      auto begin = s.pos;
+      while (s.remaining())
+      {
+         uint32_t table_offset = s.pos - begin;
+         while (true)
+         {
+            abbrev_decl decl;
+            decl.table_offset = table_offset;
+            decl.code = eosio::varuint32_from_bin(s);
+            if (!decl.code)
+               break;
+            decl.tag = eosio::varuint32_from_bin(s);
+            decl.has_children = eosio::from_bin<uint8_t>(s);
+            while (true)
+            {
+               abbrev_attr attr;
+               attr.name = eosio::varuint32_from_bin(s);
+               attr.form = eosio::varuint32_from_bin(s);
+               if (!attr.name)
+                  break;
+               decl.attrs.push_back(attr);
+            }
+            // printf("%08x [%d]: tag: %d children: %d attrs: %d\n", decl.table_offset, decl.code,
+            //        decl.tag, decl.has_children, (int)decl.attrs.size());
+            result.abbrev_decls.push_back(std::move(decl));
+         }
       }
    }
 
@@ -315,14 +341,35 @@ namespace dwarf
             auto name = eosio::from_bin<std::string>(section.data);
             if (name == ".debug_line")
                dwarf::parse_debug_line(result, files, section.data);
+            else if (name == ".debug_abbrev")
+               dwarf::parse_debug_abbrev(result, files, section.data);
          }
       }
 
       std::sort(result.locations.begin(), result.locations.end());
+      std::sort(result.abbrev_decls.begin(), result.abbrev_decls.end());
       // for (auto& loc : result.locations)
       //    fprintf(stderr, "[%08x,%08x) %s:%d\n", loc.begin_address, loc.end_address,
       //           result.files[loc.file_index].c_str(), loc.line);
       return result;
    }
 
+   const location* info::get_location(uint32_t address) const
+   {
+      auto it = std::upper_bound(locations.begin(), locations.end(), address,
+                                 [](auto a, const auto& b) { return a < b.begin_address; });
+      if (it != locations.begin() && address < (--it)->end_address)
+         return &*it;
+      return nullptr;
+   }
+
+   const abbrev_decl* info::get_abbrev_decl(uint32_t table_offset, uint32_t code) const
+   {
+      auto key = std::pair{table_offset, code};
+      auto it = std::lower_bound(abbrev_decls.begin(), abbrev_decls.end(), key,
+                                 [](const auto& a, const auto& b) { return a.key() < b; });
+      if (it != abbrev_decls.end() && it->key() == key)
+         return &*it;
+      return nullptr;
+   }
 }  // namespace dwarf

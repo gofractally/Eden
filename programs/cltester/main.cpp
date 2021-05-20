@@ -704,15 +704,8 @@ struct callbacks
       {
          auto offset = state.backend.get_debug().translate(data[i]) - state.dwarf_info.code_offset;
          fprintf(stderr, "%p %08x\n", data[i], offset);
-         auto it =
-             std::upper_bound(state.dwarf_info.locations.begin(), state.dwarf_info.locations.end(),
-                              offset, [](auto a, const auto& b) { return a < b.begin_address; });
-         if (it != state.dwarf_info.locations.begin())
-         {
-            --it;
-            if (offset < it->end_address)
-               fprintf(stderr, "%s:%d\n", state.dwarf_info.files[it->file_index].c_str(), it->line);
-         }
+         if (const auto* loc = state.dwarf_info.get_location(offset))
+            fprintf(stderr, "%s:%d\n", state.dwarf_info.files[loc->file_index].c_str(), loc->line);
       }
    }
 
