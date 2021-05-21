@@ -138,7 +138,9 @@ export const InviteeJourney = ({
                         Pending donation
                     </Heading>
                     <InductionExpiresIn induction={induction} />
-                    <EndorsementsStatus endorsements={endorsements} />
+                    {isCommunityActive && (
+                        <EndorsementsStatus endorsements={endorsements} />
+                    )}
                     <InductionDonateForm
                         induction={induction}
                         isCommunityActive={isCommunityActive}
