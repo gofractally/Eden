@@ -52,17 +52,14 @@ const parseActionIpfsCid = async (
     serializedTransaction: Uint8Array
 ): Promise<ActionIpfsData> => {
     const trx = eosDefaultApi.deserializeTransaction(serializedTransaction);
-    const { actions } = trx;
-    if (!actions || actions.length !== 1) {
-        // TODO: we might support multiple actions files/uploads in the future
-        throw new BadRequestError(["only 1 action per upload"]);
-    }
 
-    const serializedAction = actions[0];
-    if (
-        !validUploadActions[serializedAction.account] ||
-        !validUploadActions[serializedAction.account][serializedAction.name]
-    ) {
+    const serializedAction = trx.actions.find(
+        (action: any) =>
+            validUploadActions[action.account] &&
+            validUploadActions[action.account][action.name]
+    );
+
+    if (!serializedAction) {
         throw new BadRequestError([
             "contract action is not whitelisted for upload",
         ]);
