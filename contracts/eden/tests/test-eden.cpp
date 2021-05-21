@@ -346,6 +346,22 @@ TEST_CASE("genesis expiration")
    // Wait for Bertie's genesis invitation to expire
    t.chain.start_block(7 * 24 * 60 * 60 * 1000);
    expect(t.alice.trace<actions::gc>(42), "Nothing to do");
+   // Extend Bertie's invitation
+   expect(t.eden_gm.trace<actions::genesisdelay>(
+              4, t.chain.get_head_block_info().timestamp.to_time_point() + eosio::days(8)),
+          "too far in the future");
+   expect(t.eden_gm.trace<actions::genesisdelay>(
+              4, t.chain.get_head_block_info().timestamp.to_time_point() - eosio::days(8)),
+          "later than the current expiration");
+   t.chain.start_block(10 * 1000);
+   expect(t.eden_gm.trace<actions::genesisdelay>(
+              4, t.chain.get_head_block_info().timestamp.to_time_point()),
+          "in the past");
+   t.eden_gm.trace<actions::genesisdelay>(
+       4, t.chain.get_head_block_info().timestamp.to_time_point() + eosio::milliseconds(10500));
+   expect(t.alice.trace<actions::gc>(42), "Nothing to do");
+   t.chain.start_block(10 * 1000);
+   expect(t.alice.trace<actions::gc>(42), "Nothing to do");
    t.chain.start_block();
    t.alice.act<actions::gc>(42);
 

@@ -70,6 +70,20 @@ namespace eden
                          endorsed);
    }
 
+   void inductions::update_expiration(const induction& induction, eosio::time_point new_expiration)
+   {
+      eosio::block_timestamp new_created_at(new_expiration -
+                                            eosio::seconds(induction_expiration_secs));
+      auto current_time = eosio::current_block_time().to_time_point();
+      eosio::check(new_created_at > induction.created_at(),
+                   "New expiration must be later than the current expiration");
+      eosio::check(new_expiration >= current_time, "New expiration is in the past");
+      eosio::check((new_expiration - current_time).to_seconds() <= induction_expiration_secs,
+                   "New expiration is too far in the future");
+      induction_tb.modify(induction, contract,
+                          [&](auto& row) { row.created_at() = new_created_at; });
+   }
+
    void inductions::update_profile(const induction& induction,
                                    const new_member_profile& new_member_profile)
    {

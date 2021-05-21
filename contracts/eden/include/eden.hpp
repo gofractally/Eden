@@ -52,7 +52,8 @@ namespace eden
                    uint32_t auction_duration,
                    eosio::ignore<std::string> memo);
 
-      void addtogenesis(eosio::name);
+      void addtogenesis(eosio::name new_genesis_member);
+      void genesisdelay(uint64_t induction_id, eosio::time_point new_expiration);
 
       void clearall();
 
@@ -111,6 +112,7 @@ namespace eden
               memo,
               ricardian_contract(genesis_ricardian)),
        action(addtogenesis, account),
+       action(genesisdelay, id, new_expiration),
        action(clearall, ricardian_contract(clearall_ricardian)),
        action(inductinit,
               id,

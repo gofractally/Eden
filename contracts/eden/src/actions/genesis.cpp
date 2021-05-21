@@ -16,6 +16,16 @@ namespace eden
       get_global_singleton(get_self()).remove();
    }
 
+   void eden::genesisdelay(uint64_t induction_id, eosio::time_point new_expiration)
+   {
+      require_auth(get_self());
+      inductions inductions(get_self());
+      const auto& induction = inductions.get_induction(induction_id);
+
+      eosio::check(globals(get_self()).get().stage == contract_stage::genesis, "Not in genesis");
+      inductions.update_expiration(induction, new_expiration);
+   }
+
    void eden::addtogenesis(eosio::name newmember)
    {
       require_auth(get_self());
