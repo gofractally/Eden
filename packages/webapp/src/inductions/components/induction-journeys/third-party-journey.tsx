@@ -5,7 +5,6 @@ import { convertPendingProfileToMemberData } from "inductions";
 import {
     EndorsementsStatus,
     InductionExpiresIn,
-    InductionJourney,
     InductionJourneyContainer,
     MemberCardPreview,
     WaitingForProfile,
@@ -20,24 +19,14 @@ interface ContainerProps {
     children: React.ReactNode;
 }
 
-const Container = ({ step, memberPreview, children }: ContainerProps) => {
-    const { data: isCommunityActive } = useIsCommunityActive();
-    return (
-        <>
-            <InductionJourneyContainer
-                journey={
-                    isCommunityActive
-                        ? InductionJourney.Invitee
-                        : InductionJourney.Genesis
-                }
-                step={step}
-            >
-                {children}
-            </InductionJourneyContainer>
-            {memberPreview && <MemberCardPreview memberData={memberPreview} />}
-        </>
-    );
-};
+const Container = ({ step, memberPreview, children }: ContainerProps) => (
+    <>
+        <InductionJourneyContainer step={step}>
+            {children}
+        </InductionJourneyContainer>
+        {memberPreview && <MemberCardPreview memberData={memberPreview} />}
+    </>
+);
 
 interface Props {
     endorsements: Endorsement[];

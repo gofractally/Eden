@@ -10,7 +10,6 @@ import {
 import {
     EndorsementsStatus,
     InductionExpiresIn,
-    InductionJourney,
     InductionJourneyContainer,
     MemberCardPreview,
     WaitingForVideo,
@@ -30,27 +29,14 @@ const Container = ({
     memberPreview,
     children,
     ...props
-}: ContainerProps) => {
-    // TODO: Does deeply nesting these everywhere trigger multiple queries?
-    const { data: isCommunityActive } = useIsCommunityActive();
-
-    return (
-        <>
-            <InductionJourneyContainer
-                journey={
-                    isCommunityActive
-                        ? InductionJourney.Invitee
-                        : InductionJourney.Genesis
-                }
-                step={step}
-                {...props}
-            >
-                {children}
-            </InductionJourneyContainer>
-            {memberPreview && <MemberCardPreview memberData={memberPreview} />}
-        </>
-    );
-};
+}: ContainerProps) => (
+    <>
+        <InductionJourneyContainer step={step} {...props}>
+            {children}
+        </InductionJourneyContainer>
+        {memberPreview && <MemberCardPreview memberData={memberPreview} />}
+    </>
+);
 
 interface Props {
     endorsements: Endorsement[];

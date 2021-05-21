@@ -1,14 +1,11 @@
 import React from "react";
 import { ActionButton, ActionButtonSize } from "_app";
-import { InductionJourney, InductionJourneyContainer } from ".";
+import { InductionJourneyContainer } from ".";
 import { InductionStepInvitee } from "./induction-journeys";
 
 export const GetAnInviteCTA = () => {
     return (
-        <InductionJourneyContainer
-            journey={InductionJourney.Invitee}
-            step={InductionStepInvitee.GetInvite}
-        >
+        <InductionJourneyContainer step={InductionStepInvitee.GetInvite}>
             <>
                 <p className="mb-10 text-2xl font-medium title-font text-gray-900">
                     Ready to join Eden? The membership process begins with an

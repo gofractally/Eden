@@ -2,136 +2,141 @@ import React from "react";
 import { assetToString, Card, Steps, Step } from "_app";
 import { minimumDonationAmount } from "config";
 
+export type InductionStep =
+    | InductionStepGenesis
+    | InductionStepInviter
+    | InductionStepInvitee;
+
+export enum InductionStepInvitee {
+    GetInvite = "invitee-get-invite",
+    Profile = "invitee-profile",
+    PendingVideoAndEndorsements = "invitee-pending-video-and-endorsements",
+    Donate = "invitee-donate",
+    Complete = "invitee-complete",
+}
+
 export const INVITEE_INDUCTION_STEPS: Step[] = [
     {
+        key: InductionStepInvitee.GetInvite,
         title: "GET INVITED",
         text: "Make sure you have an EOS address.",
     },
     {
+        key: InductionStepInvitee.Profile,
         title: "SET UP YOUR PROFILE",
         text: "Let the community know who you are.",
     },
     {
+        key: InductionStepInvitee.PendingVideoAndEndorsements,
         title: "GET ENDORSED",
         text: "Complete the induction ceremony.",
     },
     {
+        key: InductionStepInvitee.Donate,
         title: "DONATE",
         text: `Give ${assetToString(
             minimumDonationAmount
         )} to the Eden community.`,
     },
     {
+        key: InductionStepInvitee.Complete,
         title: "YOU'RE IN",
         text: "NFTs are minted. Welcome to Eden.",
     },
 ];
 
-export enum InductionStepInvitee {
-    GetInvite = 1,
-    Profile,
-    PendingVideoAndEndorsements,
-    Donate,
-    Complete,
+export enum InductionStepInviter {
+    CreateInvite = "inviter-create-invite",
+    PendingProfile = "inviter-pending-profile",
+    VideoAndEndorse = "inviter-video-and-endorse",
+    PendingDonation = "inviter-pending-donation",
+    Complete = "inviter-complete",
 }
 
 export const INVITER_INDUCTION_STEPS: Step[] = [
     {
+        key: InductionStepInviter.CreateInvite,
         title: "CREATE INVITE",
         text: "Add invitee and witnesses by EOS account.",
     },
     {
+        key: InductionStepInviter.PendingProfile,
         title: "INVITEE PROFILE",
         text: "Invitee must log in and set up their profile.",
     },
     {
+        key: InductionStepInviter.VideoAndEndorse,
         title: "INDUCT & ENDORSE",
         text:
             "Record and attach induction ceremony. Inviter and witnesses endorse invitee.",
     },
     {
+        key: InductionStepInviter.PendingDonation,
         title: "INVITEE DONATION",
         text: `Invitee donates ${assetToString(
             minimumDonationAmount
         )} to the Eden community.`,
     },
     {
+        key: InductionStepInviter.Complete,
         title: "ALL DONE",
         text: "NFTs are minted. We have a new member!",
     },
 ];
 
-export enum InductionStepInviter {
-    CreateInvite = 1,
-    PendingProfile,
-    VideoAndEndorse,
-    PendingDonation,
-    Complete,
+export enum InductionStepGenesis {
+    Profile = "genesis-profile",
+    Donate = "genesis-donate",
+    StandBy = "genesis-standby",
+    Complete = "genesis-complete",
 }
 
 export const GENESIS_INDUCTION_STEPS: Step[] = [
     {
+        key: InductionStepGenesis.Profile,
         title: "SET UP YOUR PROFILE",
         text: "Let the community know who you are.",
     },
     {
+        key: InductionStepGenesis.Donate,
         title: "DONATE",
         text: `Give ${assetToString(
             minimumDonationAmount
         )} to the Eden community.`,
     },
     {
+        key: InductionStepGenesis.StandBy,
         title: "STAND BY",
         text:
             "All Genesis members must complete the process for the community to go live.",
     },
     {
+        key: InductionStepGenesis.Complete,
         title: "YOU'RE IN",
         text: "The community is activated. Welcome to Eden.",
     },
 ];
 
-export enum InductionStepGenesis {
-    Profile = 1,
-    Donate,
-    StandBy,
-    Complete,
-}
-
-export enum InductionJourney {
-    Invitee = "invitee",
-    Inviter = "inviter",
-    Genesis = "genesis",
-}
-
 interface Props {
-    journey: InductionJourney;
-    step: InductionStepGenesis | InductionStepInviter | InductionStepInvitee;
+    step: InductionStep;
     vAlign?: "top" | "center";
     children: React.ReactNode;
 }
 
-// TODO: Tighter coupling between the steps enums and the steps themselves above. For example, maybe use a key instead of (index + 1).
-// TODO: Infer journey from the step type passed in. (no need to pass the journey in separately.)
-
 export const InductionJourneyContainer = ({
-    journey,
     step,
     vAlign = "center",
     children,
 }: Props) => {
-    let steps: Step[];
+    function isStepIn<T>(steps: T) {
+        return Object.values(steps).includes(step);
+    }
 
-    switch (journey) {
-        case InductionJourney.Genesis:
-            steps = GENESIS_INDUCTION_STEPS;
-            break;
-        case InductionJourney.Invitee:
-            steps = INVITEE_INDUCTION_STEPS;
-            break;
-        case InductionJourney.Inviter:
-            steps = INVITER_INDUCTION_STEPS;
-            break;
+    let steps: Step[] = INVITEE_INDUCTION_STEPS;
+    if (isStepIn(InductionStepGenesis)) {
+        steps = GENESIS_INDUCTION_STEPS;
+    } else if (isStepIn(InductionStepInviter)) {
+        steps = INVITER_INDUCTION_STEPS;
     }
 
     const vAlignClass = vAlign === "center" ? "lg:items-center" : "";
