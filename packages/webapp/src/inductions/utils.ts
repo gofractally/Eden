@@ -42,12 +42,12 @@ export const getInductionStatus = (
     const isWaitingForDonation =
         endorsements?.every((e) => e.endorsed === 1) ?? false;
 
-    if (isWaitingForDonation) return InductionStatus.PendingDonation;
-
     return !induction.new_member_profile.name
         ? InductionStatus.PendingProfile
         : !induction.video
         ? InductionStatus.PendingCeremonyVideo
+        : isWaitingForDonation
+        ? InductionStatus.PendingDonation
         : InductionStatus.PendingEndorsement;
 };
 
