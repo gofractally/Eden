@@ -120,15 +120,10 @@ export const GENESIS_INDUCTION_STEPS: Step[] = [
 
 interface Props {
     step: InductionStep;
-    vAlign?: "top" | "center";
     children: React.ReactNode;
 }
 
-export const InductionJourneyContainer = ({
-    step,
-    vAlign = "center",
-    children,
-}: Props) => {
+export const InductionJourneyContainer = ({ step, children }: Props) => {
     function isStepIn<T>(steps: T) {
         return Object.values(steps).includes(step);
     }
@@ -140,15 +135,13 @@ export const InductionJourneyContainer = ({
         steps = INVITER_INDUCTION_STEPS;
     }
 
-    const vAlignClass = vAlign === "center" ? "lg:items-center" : "";
-
     return (
         <Card>
-            <div className={`flex flex-col lg:flex-row ${vAlignClass}`}>
+            <div className="flex flex-col lg:flex-row lg:items-center">
                 <div className="lg:w-1/2 xl:w-3/5 px-4 sm:px-12 md:px-16 xl:px-24 pt-8 pb-4">
                     {children}
                 </div>
-                <div className="lg:w-1/2 xl:w-2/5 mt-8 sm:px-8 md:px-12 lg:px-0">
+                <div className="lg:w-1/2 xl:w-2/5 mt-8 sm:px-8 md:px-12 lg:px-0 self-start">
                     <Steps steps={steps} currentStep={step} />
                 </div>
             </div>

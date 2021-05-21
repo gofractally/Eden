@@ -21,17 +21,11 @@ interface ContainerProps {
     step: InductionStepInvitee | InductionStepGenesis;
     memberPreview?: MemberData;
     children: React.ReactNode;
-    vAlign?: "top";
 }
 
-const Container = ({
-    step,
-    memberPreview,
-    children,
-    ...props
-}: ContainerProps) => (
+const Container = ({ step, memberPreview, children }: ContainerProps) => (
     <>
-        <InductionJourneyContainer step={step} {...props}>
+        <InductionJourneyContainer step={step}>
             {children}
         </InductionJourneyContainer>
         {memberPreview && <MemberCardPreview memberData={memberPreview} />}
@@ -79,7 +73,6 @@ export const InviteeJourney = ({
                     ? InductionStepInvitee.Profile
                     : InductionStepGenesis.Profile
             }
-            vAlign="top"
         >
             <InductionProfileFormContainer
                 induction={induction}
