@@ -6,9 +6,26 @@
 
 #include <stdio.h>
 
+namespace
+{
+   template <class... Ts>
+   struct overloaded : Ts...
+   {
+      using Ts::operator()...;
+   };
+   template <class... Ts>
+   overloaded(Ts...) -> overloaded<Ts...>;
+}  // namespace
+
+#define ENUM_DECL(prefix, type, name, value) inline constexpr type prefix##name = value;
+#define ENUM_DECODE(prefix, _, name, value) \
+   case value:                              \
+      return prefix #name;
+
 namespace dwarf
 {
    inline constexpr uint8_t lns_version = 4;
+   inline constexpr uint8_t compile_unit_version = 4;
 
    inline constexpr uint8_t dw_lns_copy = 0x01;
    inline constexpr uint8_t dw_lns_advance_pc = 0x02;
@@ -30,31 +47,231 @@ namespace dwarf
    inline constexpr uint8_t dw_lne_lo_user = 0x80;
    inline constexpr uint8_t dw_lne_hi_user = 0xff;
 
-   inline constexpr uint8_t dw_form_addr = 0x01;
-   inline constexpr uint8_t dw_form_block2 = 0x03;
-   inline constexpr uint8_t dw_form_block4 = 0x04;
-   inline constexpr uint8_t dw_form_data2 = 0x05;
-   inline constexpr uint8_t dw_form_data4 = 0x06;
-   inline constexpr uint8_t dw_form_data8 = 0x07;
-   inline constexpr uint8_t dw_form_string = 0x08;
-   inline constexpr uint8_t dw_form_block = 0x09;
-   inline constexpr uint8_t dw_form_block1 = 0x0a;
-   inline constexpr uint8_t dw_form_data1 = 0x0b;
-   inline constexpr uint8_t dw_form_flag = 0x0c;
-   inline constexpr uint8_t dw_form_sdata = 0x0d;
-   inline constexpr uint8_t dw_form_strp = 0x0e;
-   inline constexpr uint8_t dw_form_udata = 0x0f;
-   inline constexpr uint8_t dw_form_ref_addr = 0x10;
-   inline constexpr uint8_t dw_form_ref1 = 0x11;
-   inline constexpr uint8_t dw_form_ref2 = 0x12;
-   inline constexpr uint8_t dw_form_ref4 = 0x13;
-   inline constexpr uint8_t dw_form_ref8 = 0x14;
-   inline constexpr uint8_t dw_form_ref_udata = 0x15;
-   inline constexpr uint8_t dw_form_indirect = 0x16;
-   inline constexpr uint8_t dw_form_sec_offset = 0x17;
-   inline constexpr uint8_t dw_form_exprloc = 0x18;
-   inline constexpr uint8_t dw_form_flag_present = 0x19;
-   inline constexpr uint8_t dw_form_ref_sig8 = 0x20;
+// clang-format off
+#define DW_ATS(a, b, x)                \
+   x(a, b, sibling, 0x01)              \
+   x(a, b, location, 0x02)             \
+   x(a, b, name, 0x03)                 \
+   x(a, b, ordering, 0x09)             \
+   x(a, b, byte_size, 0x0b)            \
+   x(a, b, bit_offset, 0x0c)           \
+   x(a, b, bit_size, 0x0d)             \
+   x(a, b, stmt_list, 0x10)            \
+   x(a, b, low_pc, 0x11)               \
+   x(a, b, high_pc, 0x12)              \
+   x(a, b, language, 0x13)             \
+   x(a, b, discr, 0x15)                \
+   x(a, b, discr_value, 0x16)          \
+   x(a, b, visibility, 0x17)           \
+   x(a, b, import, 0x18)               \
+   x(a, b, string_length, 0x19)        \
+   x(a, b, common_reference, 0x1a)     \
+   x(a, b, comp_dir, 0x1b)             \
+   x(a, b, const_value, 0x1c)          \
+   x(a, b, containing_type, 0x1d)      \
+   x(a, b, default_value, 0x1e)        \
+   x(a, b, inline, 0x20)               \
+   x(a, b, is_optional, 0x21)          \
+   x(a, b, lower_bound, 0x22)          \
+   x(a, b, producer, 0x25)             \
+   x(a, b, prototyped, 0x27)           \
+   x(a, b, return_addr, 0x2a)          \
+   x(a, b, start_scope, 0x2c)          \
+   x(a, b, bit_stride, 0x2e)           \
+   x(a, b, upper_bound, 0x2f)          \
+   x(a, b, abstract_origin, 0x31)      \
+   x(a, b, accessibility, 0x32)        \
+   x(a, b, address_class, 0x33)        \
+   x(a, b, artificial, 0x34)           \
+   x(a, b, base_types, 0x35)           \
+   x(a, b, calling_convention, 0x36)   \
+   x(a, b, count, 0x37)                \
+   x(a, b, data_member_location, 0x38) \
+   x(a, b, decl_column, 0x39)          \
+   x(a, b, decl_file, 0x3a)            \
+   x(a, b, decl_line, 0x3b)            \
+   x(a, b, declaration, 0x3c)          \
+   x(a, b, discr_list, 0x3d)           \
+   x(a, b, encoding, 0x3e)             \
+   x(a, b, external, 0x3f)             \
+   x(a, b, frame_base, 0x40)           \
+   x(a, b, friend, 0x41)               \
+   x(a, b, identifier_case, 0x42)      \
+   x(a, b, macro_info, 0x43)           \
+   x(a, b, namelist_item, 0x44)        \
+   x(a, b, priority, 0x45)             \
+   x(a, b, segment, 0x46)              \
+   x(a, b, specification, 0x47)        \
+   x(a, b, static_link, 0x48)          \
+   x(a, b, type, 0x49)                 \
+   x(a, b, use_location, 0x4a)         \
+   x(a, b, variable_parameter, 0x4b)   \
+   x(a, b, virtuality, 0x4c)           \
+   x(a, b, vtable_elem_location, 0x4d) \
+   x(a, b, allocated, 0x4e)            \
+   x(a, b, associated, 0x4f)           \
+   x(a, b, data_location, 0x50)        \
+   x(a, b, byte_stride, 0x51)          \
+   x(a, b, entry_pc, 0x52)             \
+   x(a, b, use_UTF8, 0x53)             \
+   x(a, b, extension, 0x54)            \
+   x(a, b, ranges, 0x55)               \
+   x(a, b, trampoline, 0x56)           \
+   x(a, b, call_column, 0x57)          \
+   x(a, b, call_file, 0x58)            \
+   x(a, b, call_line, 0x59)            \
+   x(a, b, description, 0x5a)          \
+   x(a, b, binary_scale, 0x5b)         \
+   x(a, b, decimal_scale, 0x5c)        \
+   x(a, b, small, 0x5d)                \
+   x(a, b, decimal_sign, 0x5e)         \
+   x(a, b, digit_count, 0x5f)          \
+   x(a, b, picture_string, 0x60)       \
+   x(a, b, mutable, 0x61)              \
+   x(a, b, threads_scaled, 0x62)       \
+   x(a, b, explicit, 0x63)             \
+   x(a, b, object_pointer, 0x64)       \
+   x(a, b, endianity, 0x65)            \
+   x(a, b, elemental, 0x66)            \
+   x(a, b, pure, 0x67)                 \
+   x(a, b, recursive, 0x68)            \
+   x(a, b, signature, 0x69)            \
+   x(a, b, main_subprogram, 0x6a)      \
+   x(a, b, data_bit_offset, 0x6b)      \
+   x(a, b, const_expr, 0x6c)           \
+   x(a, b, enum_class, 0x6d)           \
+   x(a, b, linkage_name, 0x6e)         \
+   x(a, b, lo_user, 0x2000)            \
+   x(a, b, hi_user, 0x3fff)
+   // clang-format on
+
+   DW_ATS(dw_at_, uint16_t, ENUM_DECL)
+   std::string dw_at_to_str(uint16_t value)
+   {
+      switch (value)
+      {
+         DW_ATS("DW_AT_", _, ENUM_DECODE)
+         default:
+            return "DW_AT_" + std::to_string(value);
+      }
+   }
+
+// clang-format off
+#define DW_FORMS(a, b, x)           \
+   x(a, b, addr, 0x01)              \
+   x(a, b, block2, 0x03)            \
+   x(a, b, block4, 0x04)            \
+   x(a, b, data2, 0x05)             \
+   x(a, b, data4, 0x06)             \
+   x(a, b, data8, 0x07)             \
+   x(a, b, string, 0x08)            \
+   x(a, b, block, 0x09)             \
+   x(a, b, block1, 0x0a)            \
+   x(a, b, data1, 0x0b)             \
+   x(a, b, flag, 0x0c)              \
+   x(a, b, sdata, 0x0d)             \
+   x(a, b, strp, 0x0e)              \
+   x(a, b, udata, 0x0f)             \
+   x(a, b, ref_addr, 0x10)          \
+   x(a, b, ref1, 0x11)              \
+   x(a, b, ref2, 0x12)              \
+   x(a, b, ref4, 0x13)              \
+   x(a, b, ref8, 0x14)              \
+   x(a, b, ref_udata, 0x15)         \
+   x(a, b, indirect, 0x16)          \
+   x(a, b, sec_offset, 0x17)        \
+   x(a, b, exprloc, 0x18)           \
+   x(a, b, flag_present, 0x19)      \
+   x(a, b, ref_sig8, 0x20)
+   // clang-format on
+
+   DW_FORMS(dw_form_, uint8_t, ENUM_DECL)
+   std::string dw_form_to_str(uint8_t value)
+   {
+      switch (value)
+      {
+         DW_FORMS("DW_FORM_", _, ENUM_DECODE)
+         default:
+            return "DW_FORM_" + std::to_string(value);
+      }
+   }
+
+// clang-format off
+#define DW_TAGS(a, b, x)                     \
+   x(a, b, array_type, 0x01)                 \
+   x(a, b, class_type, 0x02)                 \
+   x(a, b, entry_point, 0x03)                \
+   x(a, b, enumeration_type, 0x04)           \
+   x(a, b, formal_parameter, 0x05)           \
+   x(a, b, imported_declaration, 0x08)       \
+   x(a, b, label, 0x0a)                      \
+   x(a, b, lexical_block, 0x0b)              \
+   x(a, b, member, 0x0d)                     \
+   x(a, b, pointer_type, 0x0f)               \
+   x(a, b, reference_type, 0x10)             \
+   x(a, b, compile_unit, 0x11)               \
+   x(a, b, string_type, 0x12)                \
+   x(a, b, structure_type, 0x13)             \
+   x(a, b, subroutine_type, 0x15)            \
+   x(a, b, typedef, 0x16)                    \
+   x(a, b, union_type, 0x17)                 \
+   x(a, b, unspecified_parameters, 0x18)     \
+   x(a, b, variant, 0x19)                    \
+   x(a, b, common_block, 0x1a)               \
+   x(a, b, common_inclusion, 0x1b)           \
+   x(a, b, inheritance, 0x1c)                \
+   x(a, b, inlined_subroutine, 0x1d)         \
+   x(a, b, module, 0x1e)                     \
+   x(a, b, ptr_to_member_type, 0x1f)         \
+   x(a, b, set_type, 0x20)                   \
+   x(a, b, subrange_type, 0x21)              \
+   x(a, b, with_stmt, 0x22)                  \
+   x(a, b, access_declaration, 0x23)         \
+   x(a, b, base_type, 0x24)                  \
+   x(a, b, catch_block, 0x25)                \
+   x(a, b, const_type, 0x26)                 \
+   x(a, b, constant, 0x27)                   \
+   x(a, b, enumerator, 0x28)                 \
+   x(a, b, file_type, 0x29)                  \
+   x(a, b, friend, 0x2a)                     \
+   x(a, b, namelist, 0x2b)                   \
+   x(a, b, namelist_item, 0x2c)              \
+   x(a, b, packed_type, 0x2d)                \
+   x(a, b, subprogram, 0x2e)                 \
+   x(a, b, template_type_parameter, 0x2f)    \
+   x(a, b, template_value_parameter, 0x30)   \
+   x(a, b, thrown_type, 0x31)                \
+   x(a, b, try_block, 0x32)                  \
+   x(a, b, variant_part, 0x33)               \
+   x(a, b, variable, 0x34)                   \
+   x(a, b, volatile_type, 0x35)              \
+   x(a, b, dwarf_procedure, 0x36)            \
+   x(a, b, restrict_type, 0x37)              \
+   x(a, b, interface_type, 0x38)             \
+   x(a, b, namespace, 0x39)                  \
+   x(a, b, imported_module, 0x3a)            \
+   x(a, b, unspecified_type, 0x3b)           \
+   x(a, b, partial_unit, 0x3c)               \
+   x(a, b, imported_unit, 0x3d)              \
+   x(a, b, condition, 0x3f)                  \
+   x(a, b, shared_type, 0x40)                \
+   x(a, b, type_unit, 0x41)                  \
+   x(a, b, rvalue_reference_type, 0x42)      \
+   x(a, b, template_alias, 0x43)             \
+   x(a, b, lo_user, 0x4080)                  \
+   x(a, b, hi_user, 0xfff  )
+   // clang-format on
+
+   DW_TAGS(dw_tag_, uint16_t, ENUM_DECL)
+   std::string dw_tag_to_str(uint16_t value)
+   {
+      switch (value)
+      {
+         DW_TAGS("DW_TAG_", _, ENUM_DECODE)
+         default:
+            return "DW_TAG_" + std::to_string(value);
+      }
+   }
 
    struct line_state
    {
@@ -385,6 +602,17 @@ namespace dwarf
        attr_ref_sig8,
        std::string_view>;
 
+   std::string to_string(const attr_value& v)
+   {
+      overloaded o{
+          [](const attr_address& s) { return std::to_string(s.value); },     //
+          [](const attr_sec_offset& s) { return std::to_string(s.value); },  //
+          [](const std::string_view& s) { return (std::string)s; },          //
+          [](const auto&) { return std::string{}; }                          //
+      };
+      return std::visit(o, v);
+   }
+
    attr_value parse_attr_value(info& result, uint32_t form, eosio::input_stream& s)
    {
       auto vardata = [&](size_t size) {
@@ -449,6 +677,89 @@ namespace dwarf
          default:
             throw std::runtime_error("unknown form in dwarf entry");
       }
+   }  // parse_attr_value
+
+   const abbrev_decl* get_die_abbrev(info& result,
+                                     int indent,
+                                     uint32_t debug_abbrev_offset,
+                                     eosio::input_stream& s)
+   {
+      auto code = eosio::varuint32_from_bin(s);
+      if (!code)
+         return nullptr;
+      const auto* abbrev = result.get_abbrev_decl(debug_abbrev_offset, code);
+      eosio::check(abbrev, "Bad abbrev in .debug_info");
+      fprintf(stderr, "%*s%s\n", indent, "", dw_tag_to_str(abbrev->tag).c_str());
+      return abbrev;
+   }
+
+   template <typename F>
+   void parse_die_attrs(info& result,
+                        int indent,
+                        const abbrev_decl& abbrev,
+                        eosio::input_stream& s,
+                        F f)
+   {
+      for (const auto& attr : abbrev.attrs)
+      {
+         auto value = parse_attr_value(result, attr.form, s);
+         fprintf(stderr, "%*s%s %s: %s\n", indent + 2, "", dw_at_to_str(attr.name).c_str(),
+                 dw_form_to_str(attr.form).c_str(), to_string(value).c_str());
+         f(attr, value);
+      }
+   }
+
+   void skip_die_children(info& result,
+                          int indent,
+                          uint32_t debug_abbrev_offset,
+                          const abbrev_decl& abbrev,
+                          eosio::input_stream& s)
+   {
+      if (!abbrev.has_children)
+         return;
+      while (true)
+      {
+         auto* child = get_die_abbrev(result, indent, debug_abbrev_offset, s);
+         if (!child)
+            break;
+         parse_die_attrs(result, indent + 4, *child, s, [&](auto&&...) {});
+         skip_die_children(result, indent + 4, debug_abbrev_offset, *child, s);
+      }
+   }
+
+   void parse_debug_info_unit(info& result,
+                              std::map<std::string, uint32_t>& files,
+                              eosio::input_stream s)
+   {
+      auto version = eosio::from_bin<uint16_t>(s);
+      eosio::check(version == compile_unit_version, "bad version in .debug_info");
+      auto debug_abbrev_offset = eosio::from_bin<uint32_t>(s);
+      auto address_size = eosio::from_bin<uint8_t>(s);
+      eosio::check(address_size == 4, "mismatched address_size in .debug_info");
+
+      auto* root = get_die_abbrev(result, 0, debug_abbrev_offset, s);
+      eosio::check(root && root->tag == dw_tag_compile_unit,
+                   "missing DW_TAG_type_unit in .debug_info");
+      parse_die_attrs(result, 4, *root, s, [&](const auto& attr, auto&& value) {
+         //
+      });
+      if (root->has_children)
+      {
+         skip_die_children(result, 4, debug_abbrev_offset, *root, s);
+      }
+   }  // parse_debug_info_unit
+
+   void parse_debug_info(info& result,
+                         std::map<std::string, uint32_t>& files,
+                         eosio::input_stream s)
+   {
+      while (s.remaining())
+      {
+         uint32_t unit_length = eosio::from_bin<uint32_t>(s);
+         eosio::check(unit_length <= s.remaining(), "bad unit_length in .debug_info");
+         parse_debug_info_unit(result, files, {s.pos, s.pos + unit_length});
+         s.skip(unit_length);
+      }
    }
 
    struct wasm_header
@@ -477,33 +788,38 @@ namespace dwarf
                    "wasm file magic number does not match");
       eosio::check(header.version == eosio::vm::constants::version,
                    "wasm file version does not match");
-      while (stream.remaining())
-      {
-         auto section_begin = stream.pos;
-         auto section = eosio::from_bin<wasm_section>(stream);
-         if (section.id == eosio::vm::section_id::code_section)
+      auto scan = [&](auto stream, auto f) {
+         while (stream.remaining())
          {
-            result.code_offset = section_begin - file_begin;
+            auto section_begin = stream.pos;
+            auto section = eosio::from_bin<wasm_section>(stream);
+            if (section.id == eosio::vm::section_id::code_section)
+               result.code_offset = section_begin - file_begin;
+            else if (section.id == eosio::vm::section_id::custom_section)
+               f(section, eosio::from_bin<std::string>(section.data));
          }
-         else if (section.id == eosio::vm::section_id::custom_section)
+      };
+
+      scan(stream, [&](auto& section, const auto& name) {
+         if (name == ".debug_line")
          {
-            auto name = eosio::from_bin<std::string>(section.data);
-            if (name == ".debug_line")
-            {
-               dwarf::parse_debug_line(result, files, section.data);
-            }
-            else if (name == ".debug_abbrev")
-            {
-               dwarf::parse_debug_abbrev(result, files, section.data);
-            }
-            else if (name == ".debug_str")
-            {
-               result.strings = std::vector<char>{section.data.pos, section.data.end};
-               eosio::check(result.strings.empty() || result.strings.back() == 0,
-                            ".debug_str is malformed");
-            }
+            dwarf::parse_debug_line(result, files, section.data);
          }
-      }
+         else if (name == ".debug_abbrev")
+         {
+            dwarf::parse_debug_abbrev(result, files, section.data);
+         }
+         else if (name == ".debug_str")
+         {
+            result.strings = std::vector<char>{section.data.pos, section.data.end};
+            eosio::check(result.strings.empty() || result.strings.back() == 0,
+                         ".debug_str is malformed");
+         }
+      });
+      scan(stream, [&](auto& section, const auto& name) {
+         if (name == ".debug_info")
+            dwarf::parse_debug_info(result, files, section.data);
+      });
 
       std::sort(result.locations.begin(), result.locations.end());
       std::sort(result.abbrev_decls.begin(), result.abbrev_decls.end());
