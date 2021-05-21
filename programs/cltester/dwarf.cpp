@@ -4,6 +4,7 @@
 #include <eosio/vm/constants.hpp>
 #include <eosio/vm/sections.hpp>
 
+#include <cxxabi.h>
 #include <stdio.h>
 
 namespace
@@ -613,6 +614,27 @@ namespace dwarf
       return std::visit(o, v);
    }
 
+   std::optional<uint32_t> get_address(const attr_value& v)
+   {
+      if (auto* x = std::get_if<attr_address>(&v))
+         return x->value;
+      return {};
+   }
+
+   std::optional<uint64_t> get_data(const attr_value& v)
+   {
+      if (auto* x = std::get_if<attr_data>(&v))
+         return x->value;
+      return {};
+   }
+
+   std::optional<std::string_view> get_string(const attr_value& v)
+   {
+      if (auto* x = std::get_if<std::string_view>(&v))
+         return *x;
+      return {};
+   }
+
    attr_value parse_attr_value(info& result, uint32_t form, eosio::input_stream& s)
    {
       auto vardata = [&](size_t size) {
@@ -682,14 +704,20 @@ namespace dwarf
    const abbrev_decl* get_die_abbrev(info& result,
                                      int indent,
                                      uint32_t debug_abbrev_offset,
+                                     const char* begin_s,
                                      eosio::input_stream& s)
    {
+      const char* p = s.pos;
       auto code = eosio::varuint32_from_bin(s);
       if (!code)
+      {
+         // fprintf(stderr, "0x%08x: %*sNULL\n", uint32_t(p - begin_s), indent - 12, "");
          return nullptr;
+      }
       const auto* abbrev = result.get_abbrev_decl(debug_abbrev_offset, code);
       eosio::check(abbrev, "Bad abbrev in .debug_info");
-      fprintf(stderr, "%*s%s\n", indent, "", dw_tag_to_str(abbrev->tag).c_str());
+      // fprintf(stderr, "0x%08x: %*s%s\n", uint32_t(p - begin_s), indent - 12, "",
+      //         dw_tag_to_str(abbrev->tag).c_str());
       return abbrev;
    }
 
@@ -698,66 +726,155 @@ namespace dwarf
                         int indent,
                         const abbrev_decl& abbrev,
                         eosio::input_stream& s,
-                        F f)
+                        F&& f)
    {
       for (const auto& attr : abbrev.attrs)
       {
          auto value = parse_attr_value(result, attr.form, s);
-         fprintf(stderr, "%*s%s %s: %s\n", indent + 2, "", dw_at_to_str(attr.name).c_str(),
-                 dw_form_to_str(attr.form).c_str(), to_string(value).c_str());
+         // fprintf(stderr, "%*s%s %s: %s\n", indent + 2, "", dw_at_to_str(attr.name).c_str(),
+         //         dw_form_to_str(attr.form).c_str(), to_string(value).c_str());
          f(attr, value);
       }
    }
+
+   std::string demangle(const std::string& name)
+   {
+      auto result = abi::__cxa_demangle(name.c_str(), nullptr, nullptr, nullptr);
+      if (result)
+      {
+         std::string x = result;
+         free(result);
+         return x;
+      }
+      return name;
+   }
+
+   struct common_attrs
+   {
+      std::optional<uint32_t> low_pc;
+      std::optional<uint32_t> high_pc;
+      std::optional<std::string> linkage_name;
+      std::optional<std::string> specification;
+      std::optional<std::string> name;
+
+      std::string get_name() const
+      {
+         if (linkage_name)
+            return demangle(*linkage_name);
+         if (specification)
+            return demangle(*specification);
+         if (name)
+            return *name;
+         return "";
+      }
+
+      void operator()(const abbrev_attr& attr, attr_value& value)
+      {
+         switch (attr.name)
+         {
+            case dw_at_low_pc:
+               low_pc = get_address(value);
+               break;
+            case dw_at_high_pc:
+               high_pc = get_address(value);
+               if (low_pc && !high_pc)
+               {
+                  auto size = get_data(value);
+                  if (size)
+                     high_pc = *low_pc + *size;
+               }
+               break;
+            case dw_at_linkage_name:
+               linkage_name = get_string(value);
+               break;
+            case dw_at_specification:
+               specification = get_string(value);
+               break;
+            case dw_at_name:
+               name = get_string(value);
+               break;
+            default:
+               break;
+         }
+      }
+   };  // common_attrs
 
    void skip_die_children(info& result,
                           int indent,
                           uint32_t debug_abbrev_offset,
                           const abbrev_decl& abbrev,
+                          const char* begin_s,
                           eosio::input_stream& s)
    {
       if (!abbrev.has_children)
          return;
       while (true)
       {
-         auto* child = get_die_abbrev(result, indent, debug_abbrev_offset, s);
+         auto* child = get_die_abbrev(result, indent, debug_abbrev_offset, begin_s, s);
          if (!child)
             break;
          parse_die_attrs(result, indent + 4, *child, s, [&](auto&&...) {});
-         skip_die_children(result, indent + 4, debug_abbrev_offset, *child, s);
+         skip_die_children(result, indent + 4, debug_abbrev_offset, *child, begin_s, s);
       }
    }
 
-   void parse_debug_info_unit(info& result,
-                              std::map<std::string, uint32_t>& files,
-                              eosio::input_stream s)
+   void parse_die_children(info& result,
+                           uint32_t indent,
+                           uint32_t debug_abbrev_offset,
+                           const abbrev_decl& abbrev,
+                           const char* begin_s,
+                           eosio::input_stream& s)
    {
+      if (!abbrev.has_children)
+         return;
+      while (true)
+      {
+         auto* child = get_die_abbrev(result, indent, debug_abbrev_offset, begin_s, s);
+         if (!child)
+            break;
+         common_attrs common;
+         parse_die_attrs(result, indent + 4, *child, s, common);
+         if (child->tag == dw_tag_subprogram)
+         {
+            auto name = common.get_name();
+            if (!name.empty() && common.low_pc && *common.low_pc && common.high_pc)
+            {
+               subprogram p{
+                   .begin_address = *common.low_pc,
+                   .end_address = *common.high_pc,
+                   .name = name,
+               };
+               result.subprograms.push_back(std::move(p));
+            }
+         }
+         parse_die_children(result, indent + 4, debug_abbrev_offset, *child, begin_s, s);
+      }
+   }  // parse_die_children
+
+   void parse_debug_info_unit(info& result, const char* begin_s, eosio::input_stream s)
+   {
+      uint32_t indent = 12;
       auto version = eosio::from_bin<uint16_t>(s);
       eosio::check(version == compile_unit_version, "bad version in .debug_info");
       auto debug_abbrev_offset = eosio::from_bin<uint32_t>(s);
       auto address_size = eosio::from_bin<uint8_t>(s);
       eosio::check(address_size == 4, "mismatched address_size in .debug_info");
 
-      auto* root = get_die_abbrev(result, 0, debug_abbrev_offset, s);
+      auto* root = get_die_abbrev(result, indent, debug_abbrev_offset, begin_s, s);
       eosio::check(root && root->tag == dw_tag_compile_unit,
                    "missing DW_TAG_type_unit in .debug_info");
-      parse_die_attrs(result, 4, *root, s, [&](const auto& attr, auto&& value) {
-         //
-      });
-      if (root->has_children)
-      {
-         skip_die_children(result, 4, debug_abbrev_offset, *root, s);
-      }
+      parse_die_attrs(result, indent + 4, *root, s, [&](const auto& attr, auto&& value) {});
+      parse_die_children(result, indent + 4, debug_abbrev_offset, *root, begin_s, s);
    }  // parse_debug_info_unit
 
-   void parse_debug_info(info& result,
-                         std::map<std::string, uint32_t>& files,
-                         eosio::input_stream s)
+   void parse_debug_info(info& result, eosio::input_stream s)
    {
+      const char* begin_s = s.pos;
       while (s.remaining())
       {
          uint32_t unit_length = eosio::from_bin<uint32_t>(s);
          eosio::check(unit_length <= s.remaining(), "bad unit_length in .debug_info");
-         parse_debug_info_unit(result, files, {s.pos, s.pos + unit_length});
+         parse_debug_info_unit(result, begin_s, {s.pos, s.pos + unit_length});
          s.skip(unit_length);
       }
    }
@@ -818,14 +935,17 @@ namespace dwarf
       });
       scan(stream, [&](auto& section, const auto& name) {
          if (name == ".debug_info")
-            dwarf::parse_debug_info(result, files, section.data);
+            dwarf::parse_debug_info(result, section.data);
       });
 
       std::sort(result.locations.begin(), result.locations.end());
       std::sort(result.abbrev_decls.begin(), result.abbrev_decls.end());
+      std::sort(result.subprograms.begin(), result.subprograms.end());
       // for (auto& loc : result.locations)
       //    fprintf(stderr, "[%08x,%08x) %s:%d\n", loc.begin_address, loc.end_address,
       //           result.files[loc.file_index].c_str(), loc.line);
+      // for (auto& p : result.subprograms)
+      //    fprintf(stderr, "[%08x,%08x) %s\n", p.begin_address, p.end_address, p.name.c_str());
       return result;
    }
 
@@ -850,6 +970,15 @@ namespace dwarf
       auto it = std::lower_bound(abbrev_decls.begin(), abbrev_decls.end(), key,
                                  [](const auto& a, const auto& b) { return a.key() < b; });
       if (it != abbrev_decls.end() && it->key() == key)
+         return &*it;
+      return nullptr;
+   }
+
+   const subprogram* info::get_subprogram(uint32_t address) const
+   {
+      auto it = std::upper_bound(subprograms.begin(), subprograms.end(), address,
+                                 [](auto a, const auto& b) { return a < b.begin_address; });
+      if (it != subprograms.begin() && address < (--it)->end_address)
          return &*it;
       return nullptr;
    }

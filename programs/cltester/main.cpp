@@ -702,10 +702,16 @@ struct callbacks
           state.backend.get_context().backtrace(data, sizeof(data) / sizeof(data[0]), nullptr);
       for (int i = 0; i < count; ++i)
       {
-         auto offset = state.backend.get_debug().translate(data[i]) - state.dwarf_info.code_offset;
-         fprintf(stderr, "%p %08x\n", data[i], offset);
-         if (const auto* loc = state.dwarf_info.get_location(offset))
-            fprintf(stderr, "%s:%d\n", state.dwarf_info.files[loc->file_index].c_str(), loc->line);
+         auto& di = state.dwarf_info;
+         auto file_offset = state.backend.get_debug().translate(data[i]);
+         if (const auto* sub = di.get_subprogram(file_offset - di.code_offset))
+            fprintf(stderr, "%s\n", sub->name.c_str());
+         else
+            fprintf(stderr, "<unknown>\n");
+         if (const auto* loc = di.get_location(file_offset - di.code_offset))
+            fprintf(stderr, "    %s:%d\n", di.files[loc->file_index].c_str(), loc->line);
+         else if (file_offset < 0xffff'ffff)
+            fprintf(stderr, "    <wasm address %08x>\n", file_offset - di.code_offset);
       }
    }
 
