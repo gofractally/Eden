@@ -8,9 +8,9 @@ import { getMembers, MembersGrid, getNewMembers } from "members";
 import { SingleColLayout, Card, PaginationNav } from "_app";
 
 const QUERY_MEMBERS = "query_members";
-const MEMBERS_PAGE_SIZE = 12;
+const MEMBERS_PAGE_SIZE = 16;
 const QUERY_NEW_MEMBERS = "query_new_members";
-const NEW_MEMBERS_PAGE_SIZE = 4;
+const NEW_MEMBERS_PAGE_SIZE = 8;
 
 export const getServerSideProps: GetServerSideProps = async ({ query }) => {
     const queryClient = new QueryClient();
