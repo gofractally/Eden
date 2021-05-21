@@ -373,6 +373,23 @@ namespace eden
       return limit;
    }
 
+   void inductions::erase_endorser(eosio::name endorser)
+   {
+      auto endorser_idx = endorsement_tb.get_index<"byendorser"_n>();
+      auto pos = endorser_idx.lower_bound(uint128_t{endorser.value} << 64);
+      auto end = endorser_idx.end();
+      while (pos != end && pos->endorser() == endorser)
+      {
+         induction_tb.modify(induction_tb.get(pos->induction_id()), contract, [&](auto& row) {
+            eosio::check(
+                --row.endorsements() > 0,
+                "Not enough remaining endorsers.  It should be safe to clear the contract, "
+                "however, as this should only happen if no NFTs have been issued yet...");
+         });
+         pos = endorser_idx.erase(pos);
+      }
+   }
+
    void inductions::validate_profile(const new_member_profile& new_member_profile) const
    {
       eosio::check(!new_member_profile.name.empty(), "new member profile name is empty");

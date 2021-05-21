@@ -374,6 +374,55 @@ TEST_CASE("genesis expiration")
    CHECK(get_table_size<eden::member_table_type>() == 3);
 }
 
+TEST_CASE("genesis replacement")
+{
+   eden_tester t;
+   t.eden_gm.act<actions::genesis>("Eden", eosio::symbol("EOS", 4), s2a("10.0000 EOS"),
+                                   std::vector{"alice"_n, "pip"_n, "egeon"_n},
+                                   "QmTYqoPYf7DiVebTnvwwFdTgsYXg2RnuPrt8uddjfW2kHS",
+                                   attribute_map{}, s2a("1.0000 EOS"), 7 * 24 * 60 * 60, "");
+
+   CHECK(get_eden_membership("alice"_n).status() == eden::member_status::pending_membership);
+   CHECK(get_eden_membership("pip"_n).status() == eden::member_status::pending_membership);
+   CHECK(get_eden_membership("egeon"_n).status() == eden::member_status::pending_membership);
+
+   t.eden_gm.act<actions::inductcancel>("eden.gm"_n, 2);
+   t.eden_gm.act<actions::addtogenesis>("bertie"_n);
+
+   CHECK(get_eden_membership("alice"_n).status() == eden::member_status::pending_membership);
+   CHECK(get_eden_membership("egeon"_n).status() == eden::member_status::pending_membership);
+   CHECK(get_eden_membership("bertie"_n).status() == eden::member_status::pending_membership);
+
+   CHECK(members("eden.gm"_n).stats().active_members == 0);
+   CHECK(members("eden.gm"_n).stats().pending_members == 3);
+   CHECK(get_table_size<eden::induction_table_type>() == 3);
+   CHECK(get_table_size<eden::endorsement_table_type>() == 6);
+
+   t.alice.act<actions::inductprofil>(1, alice_profile);
+   t.egeon.act<actions::inductprofil>(3, egeon_profile);
+   t.bertie.act<actions::inductprofil>(4, bertie_profile);
+
+   t.alice.act<token::actions::transfer>("alice"_n, "eden.gm"_n, s2a("100.0000 EOS"), "memo");
+   t.egeon.act<token::actions::transfer>("egeon"_n, "eden.gm"_n, s2a("10.0000 EOS"), "memo");
+   t.bertie.act<token::actions::transfer>("bertie"_n, "eden.gm"_n, s2a("10.0000 EOS"), "memo");
+
+   t.alice.act<actions::inductdonate>("alice"_n, 1, s2a("10.0000 EOS"));
+   t.egeon.act<actions::inductdonate>("egeon"_n, 3, s2a("10.0000 EOS"));
+   t.bertie.act<actions::inductdonate>("bertie"_n, 4, s2a("10.0000 EOS"));
+
+   CHECK(get_eden_membership("alice"_n).status() == eden::member_status::active_member);
+   CHECK(get_eden_membership("egeon"_n).status() == eden::member_status::active_member);
+   CHECK(get_eden_membership("bertie"_n).status() == eden::member_status::active_member);
+
+   CHECK(get_globals().stage == eden::contract_stage::active);
+
+   CHECK(members("eden.gm"_n).stats().active_members == 3);
+   CHECK(members("eden.gm"_n).stats().pending_members == 0);
+   CHECK(get_table_size<eden::induction_table_type>() == 0);
+   CHECK(get_table_size<eden::endorsement_table_type>() == 0);
+   CHECK(get_table_size<eden::member_table_type>() == 3);
+}
+
 TEST_CASE("induction")
 {
    eden_tester t;

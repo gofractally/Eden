@@ -58,7 +58,7 @@ namespace eden
          inductions.add_endorsement(induction, newmember, true);
       }
 
-      uint64_t induction_id = members.stats().active_members + members.stats().pending_members;
+      uint64_t induction_id = inductions.get_table().available_primary_key();
       auto inviter = get_self();
       auto invitee = newmember;
 
