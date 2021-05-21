@@ -129,11 +129,17 @@ namespace eden
    {
       eosio::require_auth(account);
 
-      globals{get_self()}.check_active();
-
       inductions inductions{get_self()};
-      eosio::check(inductions.is_endorser(id, account),
-                   "Induction can only be canceled by inviter or a witness");
+      bool is_genesis = globals{get_self()}.get().stage == contract_stage::genesis;
+      if (is_genesis)
+      {
+         eosio::check(account == get_self(), "Only an admin can cancel genesis inductions");
+      }
+      else
+      {
+         eosio::check(inductions.is_endorser(id, account),
+                      "Induction can only be canceled by inviter or a witness");
+      }
 
       const auto& induction = inductions.get_induction(id);
       auto invitee = induction.invitee();
@@ -142,6 +148,11 @@ namespace eden
       {
          members members(get_self());
          members.remove_if_pending(invitee);
+         if (is_genesis)
+         {
+            inductions.erase_endorser(invitee);
+            members.maybe_activate_contract();
+         }
       }
    }
 
