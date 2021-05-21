@@ -37,8 +37,11 @@ export const getMembers = async (
     return data.map(convertAtomicTemplateToMember);
 };
 
-export const getNewMembers = async (): Promise<MemberData[]> => {
-    const data = await getAuctions(edenContractAccount);
+export const getNewMembers = async (
+    page?: number,
+    limit?: number
+): Promise<MemberData[]> => {
+    const data = await getAuctions(edenContractAccount, undefined, page, limit);
     return data.map(convertAtomicAssetToMemberWithSalesData);
 };
 
