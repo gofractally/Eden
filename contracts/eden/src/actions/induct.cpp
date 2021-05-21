@@ -106,15 +106,7 @@ namespace eden
          inductions.queue_gc(inductee);
       }
 
-      // If this is the last genesis member, activate the contract
-      globals globals{get_self()};
-      if (globals.get().stage == contract_stage::genesis)
-      {
-         if (members.stats().pending_members == 0)
-         {
-            globals.set_stage(contract_stage::active);
-         }
-      }
+      members.maybe_activate_contract();
    }
 
    void eden::gc(uint32_t limit)
@@ -129,6 +121,7 @@ namespace eden
          {
             members.remove_if_pending(member);
          }
+         members.maybe_activate_contract();
       }
    }
 
@@ -136,11 +129,17 @@ namespace eden
    {
       eosio::require_auth(account);
 
-      globals{get_self()}.check_active();
-
       inductions inductions{get_self()};
-      eosio::check(inductions.is_endorser(id, account),
-                   "Induction can only be canceled by inviter or a witness");
+      bool is_genesis = globals{get_self()}.get().stage == contract_stage::genesis;
+      if (is_genesis)
+      {
+         eosio::check(account == get_self(), "Only an admin can cancel genesis inductions");
+      }
+      else
+      {
+         eosio::check(inductions.is_endorser(id, account),
+                      "Induction can only be canceled by inviter or a witness");
+      }
 
       const auto& induction = inductions.get_induction(id);
       auto invitee = induction.invitee();
@@ -149,6 +148,11 @@ namespace eden
       {
          members members(get_self());
          members.remove_if_pending(invitee);
+         if (is_genesis)
+         {
+            inductions.erase_endorser(invitee);
+            members.maybe_activate_contract();
+         }
       }
    }
 

@@ -1,0 +1,25 @@
+set(ATOMICMARKET_URL https://github.com/eoscommunity/Eden/releases/download/deps/atomicmarket.tar.bz2)
+set(ATOMICMARKET_ARCHIVE ${CMAKE_CURRENT_BINARY_DIR}/atomicmarket.tar.bz2)
+set(ATOMICMARKET_EXTRACTED ${ROOT_BINARY_DIR}/atomicmarket.wasm)
+
+if(NOT EXISTS ${ATOMICMARKET_ARCHIVE})
+    message("Downloading ${ATOMICMARKET_URL}")
+    file(DOWNLOAD ${ATOMICMARKET_URL} ${ATOMICMARKET_ARCHIVE}
+        STATUS ATOMICMARKET_DOWNLOAD_STATUS
+        TIMEOUT 60
+        SHOW_PROGRESS
+        TLS_VERIFY ON)
+    list(POP_BACK ATOMICMARKET_DOWNLOAD_STATUS ATOMICMARKET_DOWNLOAD_STATUS_MSG)
+    if(NOT ATOMICMARKET_DOWNLOAD_STATUS EQUAL 0)
+        file(REMOVE ${ATOMICMARKET_ARCHIVE})
+        message(FATAL_ERROR "Download ${ATOMICMARKET_URL} failed. ${ATOMICMARKET_DOWNLOAD_STATUS_MSG}")
+    endif()
+endif()
+
+if(NOT EXISTS ${ATOMICMARKET_EXTRACTED})
+    message("Extracting ${ATOMICMARKET_ARCHIVE}")
+    execute_process(
+        WORKING_DIRECTORY ${ROOT_BINARY_DIR}
+        COMMAND tar xf ${ATOMICMARKET_ARCHIVE} --strip-components=1
+    )
+endif()

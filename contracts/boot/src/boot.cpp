@@ -1,4 +1,5 @@
 #include <boot/boot.hpp>
+#include <eosio/from_json.hpp>
 
 static constexpr eosio::blockchain_parameters blockchain_parameters = {
     .max_block_net_usage = 1024 * 1024,
@@ -17,11 +18,24 @@ static constexpr eosio::blockchain_parameters blockchain_parameters = {
     .max_transaction_delay = 45 * 24 * 3600,
     .max_inline_action_size = 512 * 24,
     .max_inline_action_depth = 6,
-    .max_authority_depth = 5000};
+    .max_authority_depth = 6};
+
+static const std::vector<std::string> protocol_features{
+    "4e7bf348da00a945489b2a681749eb56f5de00b900014e137ddae39f48f69d67"};
 
 void boot::boot_contract::boot()
 {
    eosio::set_blockchain_parameters(blockchain_parameters);
+   for (const auto& feature : protocol_features)
+   {
+      std::vector<char> buf;
+      buf.push_back('"');
+      buf.insert(buf.end(), feature.begin(), feature.end());
+      buf.push_back('"');
+      buf.push_back('\0');
+      eosio::json_token_stream stream(buf.data());
+      eosio::preactivate_feature(eosio::from_json<eosio::checksum256>(stream));
+   }
 }
 
 EOSIO_ACTION_DISPATCHER(boot::actions)

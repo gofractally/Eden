@@ -53,11 +53,13 @@ namespace eden
    };
    EOSIO_REFLECT(member_v1, base member_v0, election_sequence);
 
+   using member_variant = std::variant<member_v0, member_v1>;
+
    struct member
    {
       member() = default;
       member(const member&) = delete;
-      std::variant<member_v0, member_v1> value;
+      member_variant value;
       EDEN_FORWARD_MEMBERS(value, account, name, status, nft_template_id, election_sequence);
       EDEN_FORWARD_FUNCTIONS(value, primary_key)
    };
@@ -73,7 +75,8 @@ namespace eden
    };
    EOSIO_REFLECT(member_stats_v0, active_members, pending_members, completed_waiting_inductions);
 
-   using member_stats_singleton = eosio::singleton<"memberstats"_n, std::variant<member_stats_v0>>;
+   using member_stats_variant = std::variant<member_stats_v0>;
+   using member_stats_singleton = eosio::singleton<"memberstats"_n, member_stats_variant>;
 
    class members
    {
@@ -104,6 +107,8 @@ namespace eden
       void set_nft(eosio::name account, int32_t nft_template_id);
       void set_active(eosio::name account, const std::string& name);
       void renew(eosio::name account);
+      // Activates the contract if all genesis members are active
+      void maybe_activate_contract();
       member_stats_v0 stats();
 
       // this method is used only for administrative purposes,

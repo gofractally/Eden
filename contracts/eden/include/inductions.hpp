@@ -44,11 +44,13 @@ namespace eden
                  video,
                  new_member_profile)
 
+   using induction_variant = std::variant<induction_v0>;
+
    struct induction
    {
       induction() = default;
       induction(const induction&) = delete;
-      std::variant<induction_v0> value;
+      induction_variant value;
       EDEN_FORWARD_MEMBERS(value,
                            id,
                            inviter,
@@ -92,9 +94,11 @@ namespace eden
    };
    EOSIO_REFLECT(endorsement_v0, id, inviter, invitee, endorser, induction_id, endorsed)
 
+   using endorsement_variant = std::variant<endorsement_v0>;
+
    struct endorsement
    {
-      std::variant<endorsement_v0> value;
+      endorsement_variant value;
       EDEN_FORWARD_MEMBERS(value, id, inviter, invitee, endorser, induction_id, endorsed)
       EDEN_FORWARD_FUNCTIONS(value, primary_key, get_endorser_key, induction_id_key)
    };
@@ -159,6 +163,7 @@ namespace eden
       {
       }
 
+      const induction_table_type& get_table() { return induction_tb; }
       const induction& get_induction(uint64_t id) const;
       const induction& get_endorsed_induction(eosio::name invitee) const;
       bool has_induction(eosio::name invitee) const;
@@ -167,6 +172,8 @@ namespace eden
                                 eosio::name inviter,
                                 eosio::name invitee,
                                 const std::vector<eosio::name>& witnesses);
+
+      void update_expiration(const induction& induction, eosio::time_point new_expiration);
 
       void update_profile(const induction& induction, const new_member_profile& new_member_profile);
 
@@ -180,10 +187,12 @@ namespace eden
       bool is_endorser(uint64_t id, eosio::name witness) const;
 
       void create_nfts(const induction& induction, int32_t template_id);
+      void mint_nft(int template_id, eosio::name new_asset_owner);
       void start_auction(const induction& induction, uint64_t asset_id);
       void erase_induction(const induction& induction);
       uint32_t erase_expired(uint32_t limit, std::vector<eosio::name>& removed_members);
       uint32_t erase_by_inductee(eosio::name inductee, uint32_t limit);
+      void erase_endorser(eosio::name endorser);
       uint32_t gc(uint32_t limit, std::vector<eosio::name>& removed_members);
       void queue_gc(eosio::name inductee);
       void create_induction(uint64_t id,
@@ -195,7 +204,9 @@ namespace eden
       void create_endorsement(eosio::name inviter,
                               eosio::name invitee,
                               eosio::name endorser,
-                              uint64_t induction_id);
+                              uint64_t induction_id,
+                              bool endorsed = false);
+      void add_endorsement(const induction& induction, eosio::name endorser, bool endorsed);
 
       // Should only be used during genesis
       void endorse_all(const induction& induction);

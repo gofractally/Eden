@@ -13,7 +13,7 @@ export const anchor = new Anchor([chainConfig], {
     // Optional: The callback service URL to use, defaults to https://cb.anchor.link
     // service: 'https://cb.anchor.link',
     // Optional: A flag to disable the Greymass Fuel integration, defaults to false (enabled)
-    disableGreymassFuel: true,
+    // disableGreymassFuel: true,
     // Optional: An account name on a Fuel enabled network to specify as the referrer for transactions
     // fuelReferrer: 'teamgreymass',
     // Optional: A flag to enable the Anchor Link UI request status, defaults to true (enabled)

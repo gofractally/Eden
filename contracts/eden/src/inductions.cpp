@@ -50,7 +50,8 @@ namespace eden
    void inductions::create_endorsement(eosio::name inviter,
                                        eosio::name invitee,
                                        eosio::name endorser,
-                                       uint64_t induction_id)
+                                       uint64_t induction_id,
+                                       bool endorsed)
    {
       endorsement_tb.emplace(contract, [&](auto& row) {
          row.id() = endorsement_tb.available_primary_key();
@@ -58,8 +59,27 @@ namespace eden
          row.invitee() = invitee;
          row.endorser() = endorser;
          row.induction_id() = induction_id;
-         row.endorsed() = false;
+         row.endorsed() = endorsed;
       });
+   }
+
+   void inductions::add_endorsement(const induction& induction, eosio::name endorser, bool endorsed)
+   {
+      induction_tb.modify(induction, contract, [&](auto& row) { ++row.endorsements(); });
+      create_endorsement(induction.inviter(), induction.invitee(), endorser, induction.id(),
+                         endorsed);
+   }
+
+   void inductions::update_expiration(const induction& induction, eosio::time_point new_expiration)
+   {
+      eosio::block_timestamp new_created_at(new_expiration -
+                                            eosio::seconds(induction_expiration_secs));
+      auto current_time = eosio::current_block_time().to_time_point();
+      eosio::check(new_expiration >= current_time, "New expiration is in the past");
+      eosio::check((new_expiration - current_time).to_seconds() <= induction_expiration_secs,
+                   "New expiration is too far in the future");
+      induction_tb.modify(induction, contract,
+                          [&](auto& row) { row.created_at() = new_created_at; });
    }
 
    void inductions::update_profile(const induction& induction,
@@ -201,15 +221,30 @@ namespace eden
          immutable_data.push_back({"attributions", induction.new_member_profile().attributions});
       }
       const auto collection_name = contract;
+      const auto max_supply = (globals.get().stage == contract_stage::genesis)
+                                  ? 0u
+                                  : uint32_t{induction.endorsements() + 2};
       eosio::action{{contract, "active"_n},
                     atomic_assets_account,
                     "createtempl"_n,
-                    std::tuple{contract, collection_name, schema_name, true, true,
-                               uint32_t{induction.endorsements() + 2}, immutable_data}}
+                    std::tuple{contract, collection_name, schema_name, true, true, max_supply,
+                               immutable_data}}
           .send();
 
       // Finalize and clean up induction state.  Must happen last.
       eosio::action{{contract, "active"_n}, contract, "inducted"_n, induction.invitee()}.send();
+   }
+
+   void inductions::mint_nft(int template_id, eosio::name new_asset_owner)
+   {
+      const auto collection_name = contract;
+      eosio::action{{contract, "active"_n},
+                    atomic_assets_account,
+                    "mintasset"_n,
+                    std::tuple{contract, collection_name, schema_name, template_id, new_asset_owner,
+                               atomicassets::attribute_map{}, atomicassets::attribute_map{},
+                               std::vector<eosio::asset>{}}}
+          .send();
    }
 
    void inductions::create_nfts(const induction& induction, int32_t template_id)
@@ -225,16 +260,9 @@ namespace eden
          itr++;
       }
 
-      const auto collection_name = contract;
       for (eosio::name new_asset_owner : new_owners)
       {
-         eosio::action{{contract, "active"_n},
-                       atomic_assets_account,
-                       "mintasset"_n,
-                       std::tuple{contract, collection_name, schema_name, template_id,
-                                  new_asset_owner, atomicassets::attribute_map{},
-                                  atomicassets::attribute_map{}, std::vector<eosio::asset>{}}}
-             .send();
+         mint_nft(template_id, new_asset_owner);
       }
    }
 
@@ -341,6 +369,23 @@ namespace eden
          --limit;
       }
       return limit;
+   }
+
+   void inductions::erase_endorser(eosio::name endorser)
+   {
+      auto endorser_idx = endorsement_tb.get_index<"byendorser"_n>();
+      auto pos = endorser_idx.lower_bound(uint128_t{endorser.value} << 64);
+      auto end = endorser_idx.end();
+      while (pos != end && pos->endorser() == endorser)
+      {
+         induction_tb.modify(induction_tb.get(pos->induction_id()), contract, [&](auto& row) {
+            eosio::check(
+                --row.endorsements() > 0,
+                "Not enough remaining endorsers.  It should be safe to clear the contract, "
+                "however, as this should only happen if no NFTs have been issued yet...");
+         });
+         pos = endorser_idx.erase(pos);
+      }
    }
 
    void inductions::validate_profile(const new_member_profile& new_member_profile) const

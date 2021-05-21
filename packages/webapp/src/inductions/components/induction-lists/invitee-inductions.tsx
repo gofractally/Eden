@@ -32,8 +32,8 @@ const INVITEE_INDUCTION_COLUMNS: InductionTable.Column[] = [
         label: "Inviter",
     },
     {
-        key: "voters",
-        label: "Voters",
+        key: "witnesses",
+        label: "Witnesses",
         className: "hidden md:flex",
     },
     {
@@ -82,7 +82,7 @@ const getTableData = (inductions: Induction[]): InductionTable.Row[] => {
         return {
             key: ind.id,
             inviter: inviter ? inviter.name : ind.inviter,
-            voters: endorsers,
+            witnesses: endorsers,
             time_remaining: remainingTime,
             status: (
                 <InviteeInductionStatus
@@ -129,7 +129,7 @@ const InviteeInductionStatus = ({
         case InductionStatus.waitingForVideo:
             return (
                 <ActionButton
-                    type={ActionButtonType.INDUCTION_STATUS_WAITING}
+                    type={ActionButtonType.NEUTRAL}
                     size={ActionButtonSize.S}
                     fullWidth
                     href={`/induction/${induction.id}`}
@@ -150,7 +150,7 @@ const InviteeInductionStatus = ({
             ) : (
                 <ActionButton
                     href={`/induction/${induction.id}`}
-                    type={ActionButtonType.INDUCTION_STATUS_WAITING}
+                    type={ActionButtonType.NEUTRAL}
                     size={ActionButtonSize.S}
                     fullWidth
                 >

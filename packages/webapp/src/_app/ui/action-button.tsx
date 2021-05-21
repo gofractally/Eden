@@ -1,16 +1,20 @@
 import React from "react";
 import NextLink from "next/link";
+import { FaSpinner } from "react-icons/fa";
 
 interface Props {
     children: React.ReactNode;
-    href?: string;
     onClick?: (e: React.MouseEvent<HTMLButtonElement, MouseEvent>) => void;
     type?: ActionButtonType;
     isSubmit?: boolean;
     disabled?: boolean;
+    isLoading?: boolean;
     size?: ActionButtonSize;
     fullWidth?: boolean;
     className?: string;
+    href?: string;
+    target?: string;
+    isExternal?: boolean;
 }
 
 export enum ActionButtonSize {
@@ -22,7 +26,7 @@ export enum ActionButtonSize {
 export enum ActionButtonType {
     PRIMARY = "bg-blue-500 border-blue-500 text-white hover:bg-blue-600",
     DISABLED = "border-gray-400 bg-gray-300 text-gray-500",
-    INDUCTION_STATUS_WAITING = "bg-gray-50 text-gray-800 hover:bg-gray-200",
+    NEUTRAL = "bg-gray-50 text-gray-800 hover:bg-gray-200",
     INDUCTION_STATUS_PROFILE = "bg-blue-500 border-blue-500 text-white hover:bg-blue-600",
     INDUCTION_STATUS_CEREMONY = "bg-blue-500 border-blue-500 text-white hover:bg-blue-600",
     INDUCTION_STATUS_ACTION = "bg-green-500 text-white hover:bg-green-600",
@@ -40,14 +44,17 @@ export enum ActionButtonType {
  */
 export const ActionButton = ({
     children,
-    href,
     onClick,
     isSubmit,
     disabled,
     type = ActionButtonType.PRIMARY,
     size = ActionButtonSize.M,
     fullWidth,
+    isLoading,
     className = "",
+    href = "#",
+    target,
+    isExternal,
 }: Props) => {
     const baseClass =
         "inline-block items-center text-center border focus:outline-none";
@@ -56,22 +63,46 @@ export const ActionButton = ({
     const cursorClass = disabled ? "cursor-not-allowed" : "cursor-pointer";
     const buttonClass = `${baseClass} ${size} ${widthClass} ${colorClass} ${cursorClass} ${className}`;
 
-    if (href) {
+    if (isSubmit || onClick) {
         return (
-            <NextLink href={href}>
-                <a className={buttonClass}>{children}</a>
-            </NextLink>
+            <button
+                onClick={onClick}
+                type={isSubmit ? "submit" : "button"}
+                className={buttonClass}
+                disabled={disabled}
+            >
+                {isLoading && (
+                    <FaSpinner className="inline-flex animate-spin mr-1 mb-1 align-middle" />
+                )}
+                {children}
+            </button>
+        );
+    }
+
+    if (isExternal) {
+        return (
+            <a
+                className={buttonClass}
+                href={href}
+                rel="noopener noreferrer"
+                target={target}
+            >
+                {isLoading && (
+                    <FaSpinner className="inline-flex animate-spin mr-2" />
+                )}
+                {children}
+            </a>
         );
     }
 
     return (
-        <button
-            onClick={onClick}
-            type={isSubmit ? "submit" : "button"}
-            className={buttonClass}
-            disabled={disabled}
-        >
-            {children}
-        </button>
+        <NextLink href={href}>
+            <a className={buttonClass} target={target}>
+                {isLoading && (
+                    <FaSpinner className="inline-flex animate-spin mr-2" />
+                )}
+                {children}
+            </a>
+        </NextLink>
     );
 };

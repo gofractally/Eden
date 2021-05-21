@@ -41,6 +41,8 @@ APP_MINIMUM_DONATION_AMOUNT="${process.env.NEXT_PUBLIC_APP_MINIMUM_DONATION_AMOU
 `);
 
 export const ipfsBaseUrl = "https://ipfs.io/ipfs"; //"https://ipfs.pink.gg/ipfs";
+export const ipfsApiBaseUrl = "https://ipfs.infura.io:5001/api/v0";
+
 export const blockExplorerAccountBaseUrl =
     process.env.NEXT_PUBLIC_BLOCKEXPLORER_ACCOUNT_BASE_URL;
 
@@ -71,4 +73,36 @@ export const rpcEndpoint = {
 export const chainConfig = {
     chainId: process.env.NEXT_PUBLIC_EOS_CHAIN_ID,
     rpcEndpoints: [rpcEndpoint],
+};
+
+interface ValidUploadActions {
+    [contract: string]: {
+        [action: string]: { maxSize: number };
+    };
+}
+
+export const validUploadActions: ValidUploadActions = {
+    [edenContractAccount]: {
+        inductprofil: { maxSize: 1_000_000 },
+        inductvideo: { maxSize: 100_000_000 },
+    },
+};
+
+// SECRETS CONFIG
+if (
+    typeof window === "undefined" &&
+    (!process.env.IPFS_PINATA_API ||
+        !process.env.IPFS_PINATA_JWT ||
+        !process.env.JOBS_AUTH_GC)
+) {
+    throw new Error("Missing Config Secrets are not set");
+}
+
+export const ipfsConfig = {
+    pinataApi: process.env.IPFS_PINATA_API || "",
+    pinataJwt: process.env.IPFS_PINATA_JWT || "",
+};
+
+export const jobKeys = {
+    gc: process.env.JOBS_AUTH_GC || "",
 };

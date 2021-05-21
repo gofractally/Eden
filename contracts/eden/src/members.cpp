@@ -133,6 +133,24 @@ namespace eden
 
    struct member_stats_v0 members::stats() { return std::get<member_stats_v0>(member_stats.get()); }
 
+   void members::maybe_activate_contract()
+   {
+      if (globals.get().stage == contract_stage::genesis)
+      {
+         if (stats().pending_members == 0)
+         {
+            globals.set_stage(contract_stage::active);
+            // Lock the supply of genesis NFTs
+            for (const auto& member : member_tb)
+            {
+               eosio::action({contract, "active"_n}, atomic_assets_account, "locktemplate"_n,
+                             std::tuple(contract, contract, member.nft_template_id()))
+                   .send();
+            }
+         }
+      }
+   }
+
    void members::clear_all()
    {
       auto members_itr = member_tb.lower_bound(0);

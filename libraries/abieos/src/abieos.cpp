@@ -19,13 +19,13 @@ struct abieos_context_s
    std::map<name, abi> contracts{};
 };
 
-void fix_null_str(const char*& s)
+static void fix_null_str(const char*& s)
 {
    if (!s)
       s = "";
 }
 
-bool set_error(abieos_context* context, std::string error) noexcept
+static bool set_error(abieos_context* context, std::string error) noexcept
 {
    context->last_error_buffer = std::move(error);
    context->last_error = context->last_error_buffer.c_str();
@@ -33,7 +33,7 @@ bool set_error(abieos_context* context, std::string error) noexcept
 }
 
 template <typename T, typename F>
-auto handle_exceptions(abieos_context* context, T errval, F f) noexcept -> decltype(f())
+static auto handle_exceptions(abieos_context* context, T errval, F f) noexcept -> decltype(f())
 {
    if (!context)
       return errval;
@@ -131,7 +131,7 @@ extern "C" abieos_bool abieos_set_abi(abieos_context* context, uint64_t contract
       std::string abi_copy{abi};
       eosio::json_token_stream stream(abi_copy.data());
       from_json(def, stream);
-      if (!check_abi_version(def.version, error))
+      if (!eosio::check_abi_version(def.version, error))
          return set_error(context, std::move(error));
       abieos::abi c;
       convert(def, c);
@@ -153,7 +153,7 @@ extern "C" abieos_bool abieos_set_abi_bin(abieos_context* context,
       eosio::input_stream stream{data, size};
       std::string version;
       from_bin(version, stream);
-      if (!check_abi_version(version, error))
+      if (!eosio::check_abi_version(version, error))
          return set_error(context, std::move(error));
       abi_def def{};
       stream = {data, size};

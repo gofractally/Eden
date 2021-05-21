@@ -1,7 +1,14 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { useRouter } from "next/router";
 
-import { RawLayout, SingleColLayout, useFetchedData } from "_app";
+import {
+    CallToAction,
+    RawLayout,
+    SingleColLayout,
+    useFetchedData,
+    useIsCommunityActive,
+    useUALAccount,
+} from "_app";
 import {
     getInductionWithEndorsements,
     Induction,
@@ -16,11 +23,18 @@ import {
 export const InductionDetailsPage = () => {
     const router = useRouter();
     const inductionId = router.query.id;
+    const [ualAccount] = useUALAccount();
+
     const [reviewStep, setReviewStep] = useState<
         "profile" | "video" | undefined
     >();
 
-    const [inductionEndorsements, isLoading] = useFetchedData<{
+    const {
+        data: isCommunityActive,
+        isLoading: isLoadingCommunityState,
+    } = useIsCommunityActive();
+
+    const [inductionEndorsements, isLoadingEndorsements] = useFetchedData<{
         induction: Induction;
         endorsements: Endorsement[];
     }>(getInductionWithEndorsements, inductionId);
@@ -33,20 +47,35 @@ export const InductionDetailsPage = () => {
         ? inductionEndorsements.endorsements
         : [];
 
+    // TODO: Consider deriving the user's role here and return an enum of roles: INVITER, ENDORSER, INVITEE, MEMBER, EOS_USER, UNAUTHENTICATED.
+    // Almost every child component of this page cares about the role of the user in relation to the invite/induction. We can pass role down.
+    const isEndorser = useMemo(() => 
+         endorsements.some(
+            (endorsement) => endorsement.endorser === ualAccount?.accountName
+        )
+    , [ualAccount, endorsements]);
+
     const status = getInductionStatus(induction);
 
-    const renderInductionStep = () => {
+    const renderInductionStep = useMemo(() => {
         if (!induction) return "";
 
         if (reviewStep === "profile") {
-            return <InductionStepProfile induction={induction} isReviewing />;
+            return (
+                <InductionStepProfile
+                    induction={induction}
+                    isCommunityActive={isCommunityActive}
+                    isEndorser={isEndorser}
+                    isReviewing
+                />
+            );
         }
 
         if (reviewStep === "video") {
             return (
                 <InductionStepVideo
                     induction={induction}
-                    endorsements={endorsements}
+                    isEndorser={isEndorser}
                     isReviewing
                 />
             );
@@ -54,12 +83,18 @@ export const InductionDetailsPage = () => {
 
         switch (status) {
             case InductionStatus.waitingForProfile:
-                return <InductionStepProfile induction={induction} />;
+                return (
+                    <InductionStepProfile
+                        induction={induction}
+                        isEndorser={isEndorser}
+                        isCommunityActive={isCommunityActive}
+                    />
+                );
             case InductionStatus.waitingForVideo:
                 return (
                     <InductionStepVideo
                         induction={induction}
-                        endorsements={endorsements}
+                        isEndorser={isEndorser}
                     />
                 );
             case InductionStatus.waitingForEndorsement:
@@ -67,28 +102,27 @@ export const InductionDetailsPage = () => {
                     <InductionStepEndorsement
                         induction={induction}
                         endorsements={endorsements}
+                        isCommunityActive={isCommunityActive}
                         setReviewStep={setReviewStep}
                     />
                 );
             default:
                 return "";
         }
-    };
+    }, [induction, isCommunityActive, isEndorser, endorsements, reviewStep]);
 
-    return isLoading ? (
+    return isLoadingEndorsements || isLoadingCommunityState ? (
         <p>Loading Induction...</p>
     ) : status === InductionStatus.invalid ? (
-        <RawLayout title="Induction not found">
-            <div className="text-center max-w p-8">
-                <p>
-                    Perhaps this induction was completed successfully or, in the
-                    worst case scenario, it was expired after 7 days.
-                </p>
-            </div>
+        <RawLayout title="Invite not found">
+            <CallToAction href="/induction" buttonLabel="Membership Dashboard">
+                Hmmm... this invitation couldn't be found. The invitee may have
+                already been inducted, or their invitation could have expired.
+            </CallToAction>
         </RawLayout>
     ) : (
         <SingleColLayout title={`Induction #${inductionId}`}>
-            {renderInductionStep()}
+            {renderInductionStep}
         </SingleColLayout>
     );
 };

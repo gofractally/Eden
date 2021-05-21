@@ -1,5 +1,6 @@
 #pragma once
 
+#include <eosio/asset.hpp>
 #include <eosio/check.hpp>
 #include <eosio/contract.hpp>
 #include <eosio/dispatcher.hpp>
@@ -60,6 +61,14 @@ namespace eden::atomicassets
                         eosio::name collection_name,
                         eosio::name schema_name,
                         const std::vector<format>& schema_format);
+      void mintasset(eosio::name authorized_creator,
+                     eosio::name collection_name,
+                     eosio::name schema_name,
+                     int32_t template_id,
+                     eosio::name new_asset_owner,
+                     const attribute_map& immutable_data,
+                     const attribute_map& mutable_data,
+                     const std::vector<eosio::asset>& tokens_to_back);
       void addnotifyacc(eosio::name collection_name, eosio::name account_to_add);
    };
    EOSIO_ACTIONS(atomicassets_contract,
@@ -69,6 +78,7 @@ namespace eden::atomicassets
                  setcoldata,
                  createschema,
                  extendschema,
+                 mintasset,
                  addnotifyacc);
 
    attribute_map read_immutable_data(eosio::name contract,
@@ -81,6 +91,11 @@ namespace eden::atomicassets
                         eosio::name schema,
                         double market_fee,
                         const attribute_map& attrs);
+
+   bool is_locked(eosio::name contract, eosio::name collection, int32_t template_id);
+
+   // Used for testing
+   std::vector<int32_t> assets_by_owner(eosio::name contract, eosio::name owner);
 
    void validate_ipfs(const std::string& cid);
 }  // namespace eden::atomicassets

@@ -1,0 +1,20 @@
+name: job-dev-test
+on:
+    schedule:
+        - cron: "0 * * * *" # every hour
+    workflow_dispatch:
+        inputs:
+            reason:
+                description: "What is the reason for triggering it manually?"
+                required: true
+jobs:
+    cron:
+        runs-on: ubuntu-latest
+        container: curlimages/curl:latest
+
+        steps:
+            - name: Test Job
+              run: |
+                  curl -i --fail-with-body --request POST \
+                  --url 'https://eden-dev.vercel.app/api/jobs/test' \
+                  --header 'x-job-key: ${{ secrets.DEV_JOBS_AUTH_GC }}'

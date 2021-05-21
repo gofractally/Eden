@@ -1,5 +1,7 @@
 #pragma once
 
+#error TODO: has compilation bugs and undefined behavior; use might_not_exist unless you need has_value detection
+
 #include <eosio/check.hpp>
 
 namespace eosio

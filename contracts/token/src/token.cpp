@@ -143,6 +143,9 @@ namespace token
       eosio::check(it->balance.amount == 0, "Cannot close because the balance is not zero.");
       acnts.erase(it);
    }
-
-   EOSIO_ACTION_DISPATCHER(actions)
 }  // namespace token
+
+EOSIO_ACTION_DISPATCHER(token::actions)
+EOSIO_ABIGEN(actions(token::actions),
+             table("accounts"_n, token::account),
+             table("stat"_n, token::currency_stats))

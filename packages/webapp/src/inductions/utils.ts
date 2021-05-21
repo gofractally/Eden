@@ -1,5 +1,8 @@
 import dayjs from "dayjs";
+
+import { eosBlockTimestampISO } from "_app";
 import { MemberData } from "members";
+
 import { Induction, InductionStatus } from "./interfaces";
 
 const INDUCTION_EXPIRATION_DAYS = 7;
@@ -23,7 +26,7 @@ export const convertPendingProfileToMemberData = (
 export const getInductionStatus = (induction?: Induction) => {
     if (!induction) return InductionStatus.invalid;
 
-    const isExpired = dayjs(induction.created_at)
+    const isExpired = dayjs(eosBlockTimestampISO(induction.created_at))
         .add(INDUCTION_EXPIRATION_DAYS, "day")
         .isBefore(dayjs());
 
@@ -39,10 +42,9 @@ export const getInductionStatus = (induction?: Induction) => {
 export const getInductionRemainingTimeDays = (induction?: Induction) => {
     if (!induction) return "";
 
-    const remainingTimeObj = dayjs(induction.created_at).add(
-        INDUCTION_EXPIRATION_DAYS,
-        "day"
-    );
+    const remainingTimeObj = dayjs(
+        eosBlockTimestampISO(induction.created_at)
+    ).add(INDUCTION_EXPIRATION_DAYS, "day");
 
     const isExpired = induction && remainingTimeObj.isBefore(dayjs());
 
