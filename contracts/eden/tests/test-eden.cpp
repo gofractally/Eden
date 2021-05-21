@@ -262,7 +262,8 @@ TEST_CASE("genesis")
    t.alice.act<actions::inductdonate>("alice"_n, 1, s2a("10.0000 EOS"));
    t.pip.act<actions::inductdonate>("pip"_n, 2, s2a("10.0000 EOS"));
 
-   t.eden_gm.act<actions::addtogenesis>("bertie"_n);
+   t.eden_gm.act<actions::addtogenesis>(
+       "bertie"_n, t.chain.get_head_block_info().timestamp.to_time_point() + eosio::days(1));
 
    t.egeon.act<actions::inductdonate>("egeon"_n, 3, s2a("10.0000 EOS"));
 
@@ -347,17 +348,17 @@ TEST_CASE("genesis expiration")
    t.chain.start_block(7 * 24 * 60 * 60 * 1000);
    expect(t.alice.trace<actions::gc>(42), "Nothing to do");
    // Extend Bertie's invitation
-   expect(t.eden_gm.trace<actions::genesisdelay>(
+   expect(t.eden_gm.trace<actions::gensetexpire>(
               4, t.chain.get_head_block_info().timestamp.to_time_point() + eosio::days(8)),
           "too far in the future");
-   expect(t.eden_gm.trace<actions::genesisdelay>(
+   expect(t.eden_gm.trace<actions::gensetexpire>(
               4, t.chain.get_head_block_info().timestamp.to_time_point() - eosio::days(8)),
-          "later than the current expiration");
+          "in the past");
    t.chain.start_block(10 * 1000);
-   expect(t.eden_gm.trace<actions::genesisdelay>(
+   expect(t.eden_gm.trace<actions::gensetexpire>(
               4, t.chain.get_head_block_info().timestamp.to_time_point()),
           "in the past");
-   t.eden_gm.trace<actions::genesisdelay>(
+   t.eden_gm.trace<actions::gensetexpire>(
        4, t.chain.get_head_block_info().timestamp.to_time_point() + eosio::milliseconds(10500));
    expect(t.alice.trace<actions::gc>(42), "Nothing to do");
    t.chain.start_block(10 * 1000);
@@ -391,7 +392,8 @@ TEST_CASE("genesis replacement")
    t.alice.act<actions::inductdonate>("alice"_n, 1, s2a("10.0000 EOS"));
 
    t.eden_gm.act<actions::inductcancel>("eden.gm"_n, 2);
-   t.eden_gm.act<actions::addtogenesis>("bertie"_n);
+   t.eden_gm.act<actions::addtogenesis>(
+       "bertie"_n, t.chain.get_head_block_info().timestamp.to_time_point() + eosio::days(1));
 
    CHECK(get_eden_membership("alice"_n).status() == eden::member_status::active_member);
    CHECK(get_eden_membership("egeon"_n).status() == eden::member_status::pending_membership);

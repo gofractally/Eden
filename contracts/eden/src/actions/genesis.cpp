@@ -16,7 +16,7 @@ namespace eden
       get_global_singleton(get_self()).remove();
    }
 
-   void eden::genesisdelay(uint64_t induction_id, eosio::time_point new_expiration)
+   void eden::gensetexpire(uint64_t induction_id, eosio::time_point new_expiration)
    {
       require_auth(get_self());
       inductions inductions(get_self());
@@ -26,7 +26,7 @@ namespace eden
       inductions.update_expiration(induction, new_expiration);
    }
 
-   void eden::addtogenesis(eosio::name newmember)
+   void eden::addtogenesis(eosio::name newmember, eosio::time_point expiration)
    {
       require_auth(get_self());
       members members(get_self());
@@ -69,6 +69,7 @@ namespace eden
       auto total_endorsements = initial_members.size();
       inductions.create_induction(induction_id, inviter, invitee, total_endorsements,
                                   genesis_video);
+      inductions.update_expiration(inductions.get_induction(induction_id), expiration);
 
       for (const auto& endorser : initial_members)
       {

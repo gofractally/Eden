@@ -75,8 +75,6 @@ namespace eden
       eosio::block_timestamp new_created_at(new_expiration -
                                             eosio::seconds(induction_expiration_secs));
       auto current_time = eosio::current_block_time().to_time_point();
-      eosio::check(new_created_at > induction.created_at(),
-                   "New expiration must be later than the current expiration");
       eosio::check(new_expiration >= current_time, "New expiration is in the past");
       eosio::check((new_expiration - current_time).to_seconds() <= induction_expiration_secs,
                    "New expiration is too far in the future");
