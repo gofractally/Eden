@@ -603,13 +603,21 @@ namespace dwarf
        attr_ref_sig8,
        std::string_view>;
 
+   std::string hex(uint32_t v)
+   {
+      char b[11];
+      snprintf(b, sizeof(b), "0x%08x", v);
+      return b;
+   }
+
    std::string to_string(const attr_value& v)
    {
       overloaded o{
-          [](const attr_address& s) { return std::to_string(s.value); },     //
-          [](const attr_sec_offset& s) { return std::to_string(s.value); },  //
-          [](const std::string_view& s) { return (std::string)s; },          //
-          [](const auto&) { return std::string{}; }                          //
+          [](const attr_address& s) { return hex(s.value); },        //
+          [](const attr_sec_offset& s) { return hex(s.value); },     //
+          [](const attr_ref& s) { return hex(s.value); },            //
+          [](const std::string_view& s) { return (std::string)s; },  //
+          [](const auto&) { return std::string{}; }                  //
       };
       return std::visit(o, v);
    }
@@ -624,6 +632,13 @@ namespace dwarf
    std::optional<uint64_t> get_data(const attr_value& v)
    {
       if (auto* x = std::get_if<attr_data>(&v))
+         return x->value;
+      return {};
+   }
+
+   std::optional<uint64_t> get_ref(const attr_value& v)
+   {
+      if (auto* x = std::get_if<attr_ref>(&v))
          return x->value;
       return {};
    }
@@ -704,19 +719,19 @@ namespace dwarf
    const abbrev_decl* get_die_abbrev(info& result,
                                      int indent,
                                      uint32_t debug_abbrev_offset,
-                                     const char* begin_s,
+                                     const eosio::input_stream& whole_s,
                                      eosio::input_stream& s)
    {
       const char* p = s.pos;
       auto code = eosio::varuint32_from_bin(s);
       if (!code)
       {
-         // fprintf(stderr, "0x%08x: %*sNULL\n", uint32_t(p - begin_s), indent - 12, "");
+         // fprintf(stderr, "0x%08x: %*sNULL\n", uint32_t(p - whole_s.pos), indent - 12, "");
          return nullptr;
       }
       const auto* abbrev = result.get_abbrev_decl(debug_abbrev_offset, code);
       eosio::check(abbrev, "Bad abbrev in .debug_info");
-      // fprintf(stderr, "0x%08x: %*s%s\n", uint32_t(p - begin_s), indent - 12, "",
+      // fprintf(stderr, "0x%08x: %*s%s\n", uint32_t(p - whole_s.pos), indent - 12, "",
       //         dw_tag_to_str(abbrev->tag).c_str());
       return abbrev;
    }
@@ -724,7 +739,10 @@ namespace dwarf
    template <typename F>
    void parse_die_attrs(info& result,
                         int indent,
+                        uint32_t debug_abbrev_offset,
                         const abbrev_decl& abbrev,
+                        const eosio::input_stream& whole_s,
+                        const eosio::input_stream& unit_s,
                         eosio::input_stream& s,
                         F&& f)
    {
@@ -733,7 +751,22 @@ namespace dwarf
          auto value = parse_attr_value(result, attr.form, s);
          // fprintf(stderr, "%*s%s %s: %s\n", indent + 2, "", dw_at_to_str(attr.name).c_str(),
          //         dw_form_to_str(attr.form).c_str(), to_string(value).c_str());
-         f(attr, value);
+         if (attr.name == dw_at_specification)
+         {
+            if (auto ref = get_ref(value))
+            {
+               // fprintf(stderr, "%*sref: %08x, unit: %08x\n", indent + 4, "", uint32_t(*ref),
+               //         uint32_t(unit_s.pos - whole_s.pos));
+               eosio::check(*ref < unit_s.remaining(), "DW_AT_specification out of range");
+               eosio::input_stream ref_s{unit_s.pos + *ref, unit_s.end};
+               auto ref_abbrev =
+                   get_die_abbrev(result, indent + 4, debug_abbrev_offset, whole_s, ref_s);
+               parse_die_attrs(result, indent + 4, debug_abbrev_offset, *ref_abbrev, whole_s,
+                               unit_s, ref_s, f);
+            }
+         }
+         else
+            f(attr, value);
       }
    }
 
@@ -754,15 +787,12 @@ namespace dwarf
       std::optional<uint32_t> low_pc;
       std::optional<uint32_t> high_pc;
       std::optional<std::string> linkage_name;
-      std::optional<std::string> specification;
       std::optional<std::string> name;
 
       std::string get_name() const
       {
          if (linkage_name)
             return demangle(*linkage_name);
-         if (specification)
-            return demangle(*specification);
          if (name)
             return *name;
          return "";
@@ -787,9 +817,6 @@ namespace dwarf
             case dw_at_linkage_name:
                linkage_name = get_string(value);
                break;
-            case dw_at_specification:
-               specification = get_string(value);
-               break;
             case dw_at_name:
                name = get_string(value);
                break;
@@ -803,18 +830,20 @@ namespace dwarf
                           int indent,
                           uint32_t debug_abbrev_offset,
                           const abbrev_decl& abbrev,
-                          const char* begin_s,
+                          const eosio::input_stream& whole_s,
+                          const eosio::input_stream& unit_s,
                           eosio::input_stream& s)
    {
       if (!abbrev.has_children)
          return;
       while (true)
       {
-         auto* child = get_die_abbrev(result, indent, debug_abbrev_offset, begin_s, s);
+         auto* child = get_die_abbrev(result, indent, debug_abbrev_offset, whole_s, s);
          if (!child)
             break;
-         parse_die_attrs(result, indent + 4, *child, s, [&](auto&&...) {});
-         skip_die_children(result, indent + 4, debug_abbrev_offset, *child, begin_s, s);
+         parse_die_attrs(result, indent + 4, debug_abbrev_offset, *child, whole_s, unit_s, s,
+                         [&](auto&&...) {});
+         skip_die_children(result, indent + 4, debug_abbrev_offset, *child, whole_s, unit_s, s);
       }
    }
 
@@ -822,18 +851,20 @@ namespace dwarf
                            uint32_t indent,
                            uint32_t debug_abbrev_offset,
                            const abbrev_decl& abbrev,
-                           const char* begin_s,
+                           const eosio::input_stream& whole_s,
+                           const eosio::input_stream& unit_s,
                            eosio::input_stream& s)
    {
       if (!abbrev.has_children)
          return;
       while (true)
       {
-         auto* child = get_die_abbrev(result, indent, debug_abbrev_offset, begin_s, s);
+         auto* child = get_die_abbrev(result, indent, debug_abbrev_offset, whole_s, s);
          if (!child)
             break;
          common_attrs common;
-         parse_die_attrs(result, indent + 4, *child, s, common);
+         parse_die_attrs(result, indent + 4, debug_abbrev_offset, *child, whole_s, unit_s, s,
+                         common);
          if (child->tag == dw_tag_subprogram)
          {
             auto name = common.get_name();
@@ -847,11 +878,14 @@ namespace dwarf
                result.subprograms.push_back(std::move(p));
             }
          }
-         parse_die_children(result, indent + 4, debug_abbrev_offset, *child, begin_s, s);
+         parse_die_children(result, indent + 4, debug_abbrev_offset, *child, whole_s, unit_s, s);
       }
    }  // parse_die_children
 
-   void parse_debug_info_unit(info& result, const char* begin_s, eosio::input_stream s)
+   void parse_debug_info_unit(info& result,
+                              const eosio::input_stream& whole_s,
+                              const eosio::input_stream& unit_s,
+                              eosio::input_stream s)
    {
       uint32_t indent = 12;
       auto version = eosio::from_bin<uint16_t>(s);
@@ -860,21 +894,23 @@ namespace dwarf
       auto address_size = eosio::from_bin<uint8_t>(s);
       eosio::check(address_size == 4, "mismatched address_size in .debug_info");
 
-      auto* root = get_die_abbrev(result, indent, debug_abbrev_offset, begin_s, s);
+      auto* root = get_die_abbrev(result, indent, debug_abbrev_offset, whole_s, s);
       eosio::check(root && root->tag == dw_tag_compile_unit,
                    "missing DW_TAG_type_unit in .debug_info");
-      parse_die_attrs(result, indent + 4, *root, s, [&](const auto& attr, auto&& value) {});
-      parse_die_children(result, indent + 4, debug_abbrev_offset, *root, begin_s, s);
+      parse_die_attrs(result, indent + 4, debug_abbrev_offset, *root, whole_s, unit_s, s,
+                      [&](auto&&...) {});
+      parse_die_children(result, indent + 4, debug_abbrev_offset, *root, whole_s, unit_s, s);
    }  // parse_debug_info_unit
 
    void parse_debug_info(info& result, eosio::input_stream s)
    {
-      const char* begin_s = s.pos;
+      auto whole_s = s;
       while (s.remaining())
       {
+         auto unit_s = s;
          uint32_t unit_length = eosio::from_bin<uint32_t>(s);
          eosio::check(unit_length <= s.remaining(), "bad unit_length in .debug_info");
-         parse_debug_info_unit(result, begin_s, {s.pos, s.pos + unit_length});
+         parse_debug_info_unit(result, whole_s, unit_s, {s.pos, s.pos + unit_length});
          s.skip(unit_length);
       }
    }

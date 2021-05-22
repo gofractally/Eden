@@ -704,14 +704,17 @@ struct callbacks
       {
          auto& di = state.dwarf_info;
          auto file_offset = state.backend.get_debug().translate(data[i]);
-         if (const auto* sub = di.get_subprogram(file_offset - di.code_offset))
-            fprintf(stderr, "%s\n", sub->name.c_str());
+         if (file_offset == 0xffff'ffff)
+            continue;
+         const auto* loc = di.get_location(file_offset - di.code_offset);
+         const auto* sub = di.get_subprogram(file_offset - di.code_offset);
+         if (loc)
+            fprintf(stderr, "%s:%d", di.files[loc->file_index].c_str(), loc->line);
          else
-            fprintf(stderr, "<unknown>\n");
-         if (const auto* loc = di.get_location(file_offset - di.code_offset))
-            fprintf(stderr, "    %s:%d\n", di.files[loc->file_index].c_str(), loc->line);
-         else if (file_offset < 0xffff'ffff)
-            fprintf(stderr, "    <wasm address %08x>\n", file_offset - di.code_offset);
+            fprintf(stderr, "<wasm address 0x%08x>", file_offset - di.code_offset);
+         if (sub)
+            fprintf(stderr, ": %s", sub->name.c_str());
+         fprintf(stderr, "\n");
       }
    }
 
