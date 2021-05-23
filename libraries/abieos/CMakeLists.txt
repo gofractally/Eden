@@ -9,7 +9,7 @@ target_link_libraries(abieos PUBLIC rapidjson)
 target_include_directories(abieos PUBLIC include)
 
 if(IS_WASM)
-    target_compile_options(abieos PUBLIC -fno-exceptions -D__eosio_cdt__ -mthread-model single)
+    target_compile_options(abieos PUBLIC -fno-exceptions -D__eosio_cdt__)
     set_target_properties(abieos PROPERTIES ARCHIVE_OUTPUT_DIRECTORY ${ROOT_BINARY_DIR}/clsdk/lib-wasm)
 
     copy_headers(include/eosio abieos/include/eosio)
