@@ -68,7 +68,7 @@ auto get_eden_account(eosio::name owner)
    return accounts{"eden.gm"_n}.get_account(owner);
 }
 
-const eden::member& get_eden_membership(eosio::name account)
+auto get_eden_membership(eosio::name account)
 {
    return members{"eden.gm"_n}.get_member(account);
 }
