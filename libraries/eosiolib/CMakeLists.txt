@@ -5,8 +5,8 @@ function(add_libs suffix)
     add_custom_command(
         TARGET simple-malloc${suffix}
         PRE_LINK
-        COMMAND cp ${WASI_SDK_PREFIX}/share/wasi-sysroot/lib/wasm32-wasi/libc.a libc-no-malloc.a
-        COMMAND ${WASI_SDK_PREFIX}/bin/llvm-ar d libc-no-malloc.a dlmalloc.o
+        COMMAND cp ${WASI_SDK_PREFIX}/share/wasi-sysroot/lib/wasm32-wasi/libc.a libc-no-malloc${suffix}.a
+        COMMAND ${WASI_SDK_PREFIX}/bin/llvm-ar d libc-no-malloc${suffix}.a dlmalloc.o
     )
 
     add_library(eosio-contracts-wasi-polyfill${suffix})
@@ -45,7 +45,7 @@ function(add_libs suffix)
         -L${CMAKE_CURRENT_BINARY_DIR}
         -lc++
         -lc++abi
-        -lc-no-malloc
+        -lc-no-malloc${suffix}
         simple-malloc${suffix}
         eosio-contracts-wasi-polyfill${suffix}
         ${WASI_SDK_PREFIX}/lib/clang/11.0.0/lib/wasi/libclang_rt.builtins-wasm32.a
