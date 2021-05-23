@@ -18,12 +18,16 @@
 #include <eosio/fixed_bytes.hpp>
 #include <eosio/ship_protocol.hpp>
 #include <eosio/to_bin.hpp>
-#include <eosio/vm/backend.hpp>
 #include "dwarf.hpp"
 
 #include <stdio.h>
 #include <chrono>
 #include <optional>
+
+// TODO
+#define private public
+#include <eosio/vm/backend.hpp>
+#undef private
 
 using namespace std::literals;
 
@@ -44,10 +48,42 @@ using eosio::vm::span;
 
 struct callbacks;
 using rhf_t = eosio::vm::registered_host_functions<callbacks>;
-using backend_t = eosio::vm::backend<rhf_t,
-                                     eosio::vm::jit_profile,
-                                     eosio::vm::default_options,
-                                     eosio::vm::profile_instr_map>;
+
+void backtrace();
+
+template <typename Context>
+struct trace_writer : public eosio::vm::machine_code_writer<Context>
+{
+   using base = eosio::vm::machine_code_writer<Context>;
+   using base::machine_code_writer;
+
+   void emit_unreachable()
+   {
+      auto icount = this->fixed_size_instr(16);
+      this->emit_error_handler(&on_unreachable);
+   }
+
+   static void on_unreachable()
+   {
+      backtrace();
+      base::on_unreachable();
+   }
+};
+
+struct jit_backtrace
+{
+   template <typename Host>
+   using context = eosio::vm::jit_execution_context<Host, true>;
+   template <typename Host, typename Options, typename DebugInfo>
+   using parser = eosio::vm::binary_parser<trace_writer<context<Host>>, Options, DebugInfo>;
+   static constexpr bool is_jit = true;
+};
+
+using backend_t = eosio::vm::backend<  //
+    rhf_t,
+    jit_backtrace,
+    eosio::vm::default_options,
+    eosio::vm::profile_instr_map>;
 
 inline constexpr int max_backtrace_frames = 512;
 
@@ -694,6 +730,10 @@ FC_REFLECT(push_trx_args, (transaction)(context_free_data)(signatures)(keys))
 struct callbacks
 {
    ::state& state;
+   static callbacks* single;  // TODO: remove
+
+   callbacks(::state& state) : state{state} { single = this; }
+   ~callbacks() { single = nullptr; }
 
    void backtrace()
    {
@@ -1426,6 +1466,14 @@ struct callbacks
       std::memcpy(hash_val, hash.data(), hash.data_size());
    }
 };  // callbacks
+
+callbacks* callbacks::single = nullptr;  // TODO: remove
+
+void backtrace()
+{
+   if (callbacks::single)
+      callbacks::single->backtrace();
+}
 
 #define DB_REGISTER_SECONDARY(IDX)                                                         \
    rhf_t::add<&callbacks::db_##IDX##_find_secondary>("env", "db_" #IDX "_find_secondary"); \
