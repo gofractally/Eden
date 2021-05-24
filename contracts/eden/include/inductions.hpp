@@ -173,6 +173,8 @@ namespace eden
                                 eosio::name invitee,
                                 const std::vector<eosio::name>& witnesses);
 
+      void update_expiration(const induction& induction, eosio::time_point new_expiration);
+
       void update_profile(const induction& induction, const new_member_profile& new_member_profile);
 
       void update_video(const induction& induction, const std::string& video);
@@ -190,6 +192,7 @@ namespace eden
       void erase_induction(const induction& induction);
       uint32_t erase_expired(uint32_t limit, std::vector<eosio::name>& removed_members);
       uint32_t erase_by_inductee(eosio::name inductee, uint32_t limit);
+      void erase_endorser(eosio::name endorser);
       uint32_t gc(uint32_t limit, std::vector<eosio::name>& removed_members);
       void queue_gc(eosio::name inductee);
       void create_induction(uint64_t id,

@@ -62,9 +62,11 @@ export const getOwners = async (templateId: number): Promise<string[]> => {
 
 export const getAuctions = async (
     seller?: string,
-    templateIds?: string[]
+    templateIds?: string[],
+    page = 1,
+    limit = 9999
 ): Promise<AuctionableTemplateData[]> => {
-    let url = `${atomicAssets.apiMarketUrl}/auctions?state=1&collection_name=${atomicAssets.collection}&schema_name=${atomicAssets.schema}&page=1&limit=9999&order=desc&sort=created${LAUNCH_TIMESTAMP}`;
+    let url = `${atomicAssets.apiMarketUrl}/auctions?state=1&collection_name=${atomicAssets.collection}&schema_name=${atomicAssets.schema}&page=${page}&limit=${limit}&order=desc&sort=created${LAUNCH_TIMESTAMP}`;
 
     if (seller) {
         url += `&seller=${seller}`;

@@ -7,8 +7,11 @@ import {
     Heading,
     ActionButton,
     HelpLink,
-    onError,
+    handleFileChange,
+    Text,
 } from "_app";
+import { edenContractAccount, validUploadActions } from "config";
+
 import { NewMemberProfile } from "../interfaces";
 
 interface Props {
@@ -49,24 +52,6 @@ export const InductionProfileForm = ({
 
     const onChangeSocialFields = (e: React.ChangeEvent<HTMLInputElement>) =>
         setSocialFields(e);
-
-    const handleProfileImageUpload = async (
-        e: React.ChangeEvent<HTMLInputElement>
-    ) => {
-        e.preventDefault();
-
-        if (!e.target.files || !e.target.files.length) {
-            return;
-        }
-
-        var file = e.target.files[0];
-
-        if (!file.type.match("image.*")) {
-            return onError(new Error("You can only select image files"));
-        }
-
-        setUploadedImage(file);
-    };
 
     const submitTransaction = async (e: FormEvent) => {
         e.preventDefault();
@@ -114,7 +99,16 @@ export const InductionProfileForm = ({
                     id="imgFile"
                     accept="image/*"
                     label="select an image file"
-                    onChange={handleProfileImageUpload}
+                    onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                        handleFileChange(
+                            e,
+                            "image",
+                            validUploadActions[edenContractAccount][
+                                "inductprofil"
+                            ].maxSize,
+                            setUploadedImage
+                        )
+                    }
                 />
                 {uploadedImage || fields.img ? (
                     <img
@@ -179,6 +173,7 @@ export const InductionProfileForm = ({
                     disabled={isLoading || disabled}
                     value={socialFields.eosCommunity}
                     onChange={onChangeSocialFields}
+                    placeholder="YourUsername"
                 />
             </Form.LabeledSet>
             <Form.LabeledSet
@@ -192,6 +187,7 @@ export const InductionProfileForm = ({
                     disabled={isLoading || disabled}
                     value={socialFields.twitter}
                     onChange={onChangeSocialFields}
+                    placeholder="YourHandle"
                 />
             </Form.LabeledSet>
             <Form.LabeledSet
@@ -205,6 +201,7 @@ export const InductionProfileForm = ({
                     disabled={isLoading || disabled}
                     value={socialFields.telegram}
                     onChange={onChangeSocialFields}
+                    placeholder="YourHandle"
                 />
             </Form.LabeledSet>
             <Form.LabeledSet
@@ -218,6 +215,7 @@ export const InductionProfileForm = ({
                     disabled={isLoading || disabled}
                     value={socialFields.blog}
                     onChange={onChangeSocialFields}
+                    placeholder="yoursite.com"
                 />
             </Form.LabeledSet>
             <Form.LabeledSet
@@ -231,6 +229,7 @@ export const InductionProfileForm = ({
                     disabled={isLoading || disabled}
                     value={socialFields.linkedin}
                     onChange={onChangeSocialFields}
+                    placeholder="YourHandle"
                 />
             </Form.LabeledSet>
             <Form.LabeledSet
@@ -244,6 +243,7 @@ export const InductionProfileForm = ({
                     disabled={isLoading || disabled}
                     value={socialFields.facebook}
                     onChange={onChangeSocialFields}
+                    placeholder="YourUsername"
                 />
             </Form.LabeledSet>
 
@@ -254,6 +254,16 @@ export const InductionProfileForm = ({
                     value={Number(consentsToPublish)}
                     onChange={() => setConsentsToPublish(!consentsToPublish)}
                 />
+            </div>
+
+            <div className="col-span-6">
+                <Text>
+                    <span className="italic font-medium">Don't worry!</span>{" "}
+                    Even though you are committing your information to the
+                    blockchain right now, you will be able to review your
+                    profile and make changes to it all the way up until you
+                    complete your donation.
+                </Text>
             </div>
 
             {onSubmit && (

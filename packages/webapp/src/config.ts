@@ -75,10 +75,25 @@ export const chainConfig = {
     rpcEndpoints: [rpcEndpoint],
 };
 
+interface ValidUploadActions {
+    [contract: string]: {
+        [action: string]: { maxSize: number };
+    };
+}
+
+export const validUploadActions: ValidUploadActions = {
+    [edenContractAccount]: {
+        inductprofil: { maxSize: 1_000_000 },
+        inductvideo: { maxSize: 100_000_000 },
+    },
+};
+
 // SECRETS CONFIG
 if (
     typeof window === "undefined" &&
-    (!process.env.IPFS_PINATA_API || !process.env.IPFS_PINATA_JWT)
+    (!process.env.IPFS_PINATA_API ||
+        !process.env.IPFS_PINATA_JWT ||
+        !process.env.JOBS_AUTH_GC)
 ) {
     throw new Error("Missing Config Secrets are not set");
 }
@@ -86,4 +101,8 @@ if (
 export const ipfsConfig = {
     pinataApi: process.env.IPFS_PINATA_API || "",
     pinataJwt: process.env.IPFS_PINATA_JWT || "",
+};
+
+export const jobKeys = {
+    gc: process.env.JOBS_AUTH_GC || "",
 };

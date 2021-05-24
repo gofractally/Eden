@@ -12,3 +12,4 @@ export * from "./footer";
 export * from "./table";
 export * from "./step";
 export * from "./call-to-action";
+export * from "./pagination-nav";

@@ -17,7 +17,7 @@ const openInNewTab = (url: string) => {
 };
 
 export const MembersGrid = ({ members, dataTestId }: Props) => {
-    const containerClass = `grid grid-cols-1 max-w-xs sm:max-w-xl md:max-w-none sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-5 mx-auto`;
+    const containerClass = `grid grid-cols-1 max-w-xs sm:max-w-xl md:max-w-none sm:grid-cols-2 lg:grid-cols-4 gap-5 mx-auto`;
     return (
         <div className={containerClass} data-testid={dataTestId}>
             {(members.length &&

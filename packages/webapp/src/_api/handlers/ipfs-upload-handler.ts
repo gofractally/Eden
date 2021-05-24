@@ -1,8 +1,19 @@
 import { eosDefaultApi, eosJsonRpc } from "_app";
-import { edenContractAccount, ipfsConfig } from "config";
+import {
+    edenContractAccount,
+    ipfsApiBaseUrl,
+    ipfsConfig,
+    validUploadActions,
+} from "config";
 
 import { BadRequestError, InternalServerError } from "../error-handlers";
 import { IpfsPostRequest } from "../schemas";
+
+interface ActionIpfsData {
+    cid: string;
+    contract: string;
+    action: string;
+}
 
 export const ipfsUploadHandler = async (request: IpfsPostRequest) => {
     const signatures = request.eosTransaction.signatures;
@@ -10,13 +21,15 @@ export const ipfsUploadHandler = async (request: IpfsPostRequest) => {
         request.eosTransaction.serializedTransaction
     );
 
-    const actionIpfsCid = await parseActionIpfsCid(serializedTransaction);
+    const actionIpfsData = await parseActionIpfsCid(serializedTransaction);
 
-    if (request.cid !== actionIpfsCid) {
+    if (request.cid !== actionIpfsData.cid) {
         throw new BadRequestError(
             "uploaded file is different than stated in signed transaction"
         );
     }
+
+    await validateActionFile(actionIpfsData);
 
     try {
         const broadcastedTrx = await eosJsonRpc.send_transaction({
@@ -35,44 +48,39 @@ export const ipfsUploadHandler = async (request: IpfsPostRequest) => {
     }
 };
 
-const VALID_UPLOAD_ACTIONS = {
-    [edenContractAccount]: ["inductprofil", "inductvideo"],
-};
 const parseActionIpfsCid = async (
     serializedTransaction: Uint8Array
-): Promise<string> => {
+): Promise<ActionIpfsData> => {
     const trx = eosDefaultApi.deserializeTransaction(serializedTransaction);
-    const { actions } = trx;
-    if (!actions || actions.length !== 1) {
-        // TODO: we might support multiple actions files/uploads in the future
-        throw new BadRequestError(["only 1 action per upload"]);
-    }
 
-    const action = actions[0];
-    if (
-        !VALID_UPLOAD_ACTIONS[action.account] ||
-        VALID_UPLOAD_ACTIONS[action.account].indexOf(action.name) < 0
-    ) {
+    const serializedAction = trx.actions.find(
+        (action: any) =>
+            validUploadActions[action.account] &&
+            validUploadActions[action.account][action.name]
+    );
+
+    if (!serializedAction) {
         throw new BadRequestError([
             "contract action is not whitelisted for upload",
         ]);
     }
 
-    const actionData = (await eosDefaultApi.deserializeActions([action]))[0];
+    const actionData = (
+        await eosDefaultApi.deserializeActions([serializedAction])
+    )[0];
 
-    if (
-        action.account === edenContractAccount &&
-        action.name === "inductprofil"
-    ) {
-        return actionData.data.new_member_profile.img as string;
-    } else if (
-        action.account === edenContractAccount &&
-        action.name === "inductvideo"
-    ) {
-        return actionData.data.video as string;
+    const contract = serializedAction.account;
+    const action = serializedAction.name;
+    let cid = "";
+    if (contract === edenContractAccount && action === "inductprofil") {
+        cid = actionData.data.new_member_profile.img as string;
+    } else if (contract === edenContractAccount && action === "inductvideo") {
+        cid = actionData.data.video as string;
     } else {
         throw new InternalServerError("Unknown how to parse action");
     }
+
+    return { cid, action, contract };
 };
 
 const pinIpfsCid = async (cid: string) => {
@@ -132,5 +140,31 @@ const confirmIpfsPin = async (requestId: string) => {
         ) {
             throw new InternalServerError("Fail to pin uploaded file to IPFS");
         }
+    }
+};
+
+const validateActionFile = async (fileData: ActionIpfsData) => {
+    const validActionFile =
+        validUploadActions[fileData.contract][fileData.action];
+    const fileStats = await getIpfsFileStats(fileData.cid);
+    if (fileStats.CumulativeSize > validActionFile.maxSize) {
+        throw new Error(
+            `Uploaded File size exceeds the max size of ${Math.floor(
+                validActionFile.maxSize / 1_000_000
+            )} Mb`
+        );
+    }
+};
+
+const getIpfsFileStats = async (cid: string) => {
+    try {
+        const fileStatsResponse = await fetch(
+            `${ipfsApiBaseUrl}/object/stat?arg=${cid}`
+        );
+        return fileStatsResponse.json();
+    } catch (error) {
+        throw new InternalServerError(
+            "Can't retrieve file stats: " + error.message
+        );
     }
 };

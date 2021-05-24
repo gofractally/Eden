@@ -73,3 +73,7 @@ export const serializeType = async (
 export const hash256EosjsSerialBuffer = (
     buffer: eosjsSerialize.SerialBuffer
 ): string => hash.sha256().update(buffer.asUint8Array()).digest("hex");
+
+export const eosBlockTimestampISO = (timestamp: string) => {
+    return timestamp.endsWith("Z") ? timestamp : timestamp + "Z";
+};

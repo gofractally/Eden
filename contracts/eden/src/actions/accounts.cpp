@@ -4,12 +4,20 @@
 
 namespace eden
 {
+   static bool is_possible_deposit_account(eosio::name account)
+   {
+      constexpr auto eosio_prefix = "eosio"_n;
+      constexpr auto eosio_mask = 0xFFFFFFFC00000000;
+      return account != atomic_market_account && account != atomic_assets_account &&
+             (account.value & eosio_mask) != eosio_prefix.value;
+   }
+
    void eden::notify_transfer(eosio::name from,
                               eosio::name to,
                               const eosio::asset& quantity,
                               std::string memo)
    {
-      if (to != get_self())
+      if (to != get_self() || !is_possible_deposit_account(from))
          return;
 
       globals globals{get_self()};

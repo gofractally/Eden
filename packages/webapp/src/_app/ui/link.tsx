@@ -18,7 +18,9 @@ export const Link = ({
     isExternal,
     onClick,
 }: Props) => {
-    const linkClass = `${className || ""} text-yellow-500 hover:underline`;
+    const linkClass = `${
+        className || ""
+    } text-yellow-500 cursor-pointer hover:underline`;
 
     let targetProps = {
         target,
