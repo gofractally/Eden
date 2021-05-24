@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { Dispatch, SetStateAction, useState } from "react";
 
 import { Heading, Link, Text, useIsCommunityActive } from "_app";
 import { convertPendingProfileToMemberData } from "inductions";
@@ -21,6 +21,68 @@ import {
     InductionProfileSubmitConfirmation,
 } from "./invitee";
 
+interface Props {
+    endorsements: Endorsement[];
+    induction: Induction;
+    inductionStatus: InductionStatus;
+}
+
+export const InviteeJourney = ({
+    endorsements,
+    induction,
+    inductionStatus,
+}: Props) => {
+    const [submittedProfile, setSubmittedProfile] = useState(false);
+    const [isReviewingProfile, setIsReviewingProfile] = useState(false);
+
+    if (submittedProfile) {
+        return <SubmittedProfileStep />;
+    }
+
+    if (isReviewingProfile) {
+        return (
+            <ProfileStep
+                induction={induction}
+                isReviewingProfile={isReviewingProfile}
+                setSubmittedProfile={setSubmittedProfile}
+            />
+        );
+    }
+
+    switch (inductionStatus) {
+        case InductionStatus.PendingProfile:
+            return (
+                <ProfileStep
+                    induction={induction}
+                    isReviewingProfile={isReviewingProfile}
+                    setSubmittedProfile={setSubmittedProfile}
+                />
+            );
+        case InductionStatus.PendingCeremonyVideo: // not possible in Genesis mode
+            return <PendingCeremonyVideoStep induction={induction} />;
+        case InductionStatus.PendingEndorsement: // not possible in Genesis mode
+            return (
+                <PendingEndorsementStep
+                    induction={induction}
+                    endorsements={endorsements}
+                    setIsReviewingProfile={setIsReviewingProfile}
+                />
+            );
+        case InductionStatus.PendingDonation:
+            return (
+                <PendingDonationStep
+                    induction={induction}
+                    endorsements={endorsements}
+                    setIsReviewingProfile={setIsReviewingProfile}
+                />
+            );
+        default:
+            return <p>Unknown error</p>;
+    }
+};
+
+export default InviteeJourney;
+
 interface ContainerProps {
     step: InductionStepInvitee | InductionStepGenesis;
     memberPreview?: MemberData;
@@ -36,41 +98,36 @@ const Container = ({ step, memberPreview, children }: ContainerProps) => (
     </>
 );
 
-interface Props {
-    endorsements: Endorsement[];
+const SubmittedProfileStep = () => {
+    const { data: isCommunityActive } = useIsCommunityActive();
+    return (
+        <Container
+            step={
+                isCommunityActive
+                    ? InductionStepInvitee.PendingVideoAndEndorsements
+                    : InductionStepGenesis.Donate
+            }
+        >
+            <InductionProfileSubmitConfirmation
+                isCommunityActive={isCommunityActive}
+            />
+        </Container>
+    );
+};
+
+interface ProfileStepProps {
     induction: Induction;
-    inductionStatus: InductionStatus;
+    isReviewingProfile: boolean;
+    setSubmittedProfile: Dispatch<SetStateAction<boolean>>;
 }
 
-export const InviteeJourney = ({
-    endorsements,
+const ProfileStep = ({
     induction,
-    inductionStatus,
-}: Props) => {
-    const [submittedProfile, setSubmittedProfile] = useState(false);
-    const [isReviewingProfile, setIsReviewingProfile] = useState(false);
+    isReviewingProfile,
+    setSubmittedProfile,
+}: ProfileStepProps) => {
     const { data: isCommunityActive } = useIsCommunityActive();
-
-    const memberData = convertPendingProfileToMemberData(induction);
-
-    // Invitee profile submission confirmation
-    if (submittedProfile) {
-        return (
-            <Container
-                step={
-                    isCommunityActive
-                        ? InductionStepInvitee.PendingVideoAndEndorsements
-                        : InductionStepGenesis.Donate
-                }
-            >
-                <InductionProfileSubmitConfirmation
-                    isCommunityActive={isCommunityActive}
-                />
-            </Container>
-        );
-    }
-
-    const renderProfileStep = () => (
+    return (
         <Container
             step={
                 isCommunityActive
@@ -85,76 +142,86 @@ export const InviteeJourney = ({
             />
         </Container>
     );
-
-    if (isReviewingProfile) {
-        return renderProfileStep();
-    }
-
-    switch (inductionStatus) {
-        case InductionStatus.PendingProfile:
-            return renderProfileStep();
-        case InductionStatus.PendingCeremonyVideo: // not possible in Genesis mode
-            return (
-                <Container
-                    step={InductionStepInvitee.PendingVideoAndEndorsements}
-                    memberPreview={memberData}
-                >
-                    <WaitingForVideo induction={induction} />
-                </Container>
-            );
-        case InductionStatus.PendingEndorsement: // not possible in Genesis mode
-            return (
-                <Container
-                    step={InductionStepInvitee.PendingVideoAndEndorsements}
-                    memberPreview={memberData}
-                >
-                    <Heading size={1} className="mb-2">
-                        Endorsements
-                    </Heading>
-                    <InductionExpiresIn induction={induction} />
-                    <EndorsementsStatus endorsements={endorsements} />
-                    <div className="space-y-3">
-                        <Text>To continue, all witnesses must endorse.</Text>
-                        <Text>
-                            Now is a good time to review your profile
-                            information below. If anything needs to be
-                            corrected,{" "}
-                            <Link onClick={() => setIsReviewingProfile(true)}>
-                                click here to make those adjustments.
-                            </Link>{" "}
-                            Keep in mind that any modifications to your profile
-                            will reset any endorsements.
-                        </Text>
-                    </div>
-                </Container>
-            );
-        case InductionStatus.PendingDonation:
-            return (
-                <Container
-                    step={
-                        isCommunityActive
-                            ? InductionStepInvitee.Donate
-                            : InductionStepGenesis.Donate
-                    }
-                    memberPreview={memberData}
-                >
-                    <Heading size={1} className="mb-2">
-                        Pending donation
-                    </Heading>
-                    <InductionExpiresIn induction={induction} />
-                    {isCommunityActive && (
-                        <EndorsementsStatus endorsements={endorsements} />
-                    )}
-                    <InductionDonateForm
-                        induction={induction}
-                        isCommunityActive={isCommunityActive}
-                        setIsReviewingProfile={setIsReviewingProfile}
-                    />
-                </Container>
-            );
-        default:
-            return <p>Unknown error</p>;
-    }
 };
 
-export default InviteeJourney;
+const PendingCeremonyVideoStep = ({ induction }: { induction: Induction }) => {
+    const memberData = convertPendingProfileToMemberData(induction);
+    return (
+        <Container
+            step={InductionStepInvitee.PendingVideoAndEndorsements}
+            memberPreview={memberData}
+        >
+            <WaitingForVideo induction={induction} />
+        </Container>
+    );
+};
+
+interface PendingCompletionStepProps {
+    induction: Induction;
+    endorsements: Endorsement[];
+    setIsReviewingProfile: Dispatch<SetStateAction<boolean>>;
+}
+
+const PendingEndorsementStep = ({
+    induction,
+    endorsements,
+    setIsReviewingProfile,
+}: PendingCompletionStepProps) => {
+    const memberData = convertPendingProfileToMemberData(induction);
+    return (
+        <Container
+            step={InductionStepInvitee.PendingVideoAndEndorsements}
+            memberPreview={memberData}
+        >
+            <Heading size={1} className="mb-2">
+                Endorsements
+            </Heading>
+            <InductionExpiresIn induction={induction} />
+            <EndorsementsStatus endorsements={endorsements} />
+            <div className="space-y-3">
+                <Text>To continue, all witnesses must endorse.</Text>
+                <Text>
+                    Now is a good time to review your profile information below.
+                    If anything needs to be corrected,{" "}
+                    <Link onClick={() => setIsReviewingProfile(true)}>
+                        click here to make those adjustments.
+                    </Link>{" "}
+                    Keep in mind that any modifications to your profile will
+                    reset any endorsements.
+                </Text>
+            </div>
+        </Container>
+    );
+};
+
+const PendingDonationStep = ({
+    induction,
+    endorsements,
+    setIsReviewingProfile,
+}: PendingCompletionStepProps) => {
+    const memberData = convertPendingProfileToMemberData(induction);
+    const { data: isCommunityActive } = useIsCommunityActive();
+    return (
+        <Container
+            step={
+                isCommunityActive
+                    ? InductionStepInvitee.Donate
+                    : InductionStepGenesis.Donate
+            }
+            memberPreview={memberData}
+        >
+            <Heading size={1} className="mb-2">
+                Pending donation
+            </Heading>
+            <InductionExpiresIn induction={induction} />
+            {isCommunityActive && (
+                <EndorsementsStatus endorsements={endorsements} />
+            )}
+            <InductionDonateForm
+                induction={induction}
+                isCommunityActive={isCommunityActive}
+                setIsReviewingProfile={setIsReviewingProfile}
+            />
+        </Container>
+    );
+};

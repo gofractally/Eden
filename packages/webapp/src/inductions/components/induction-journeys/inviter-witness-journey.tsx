@@ -32,131 +32,51 @@ export const InviterWitnessJourney = ({
     induction,
     inductionStatus,
 }: Props) => {
-    const [ualAccount] = useUALAccount();
     const [submittedVideo, setSubmittedVideo] = useState(false);
     const [isReviewingVideo, setIsReviewingVideo] = useState(false);
-    const { data: isCommunityActive } = useIsCommunityActive();
-
-    const memberData = convertPendingProfileToMemberData(induction);
 
     if (submittedVideo) {
         // not possible in Genesis mode
-        return (
-            <Container
-                step={InductionStepInviter.VideoAndEndorse}
-                memberPreview={memberData}
-            >
-                <InductionVideoSubmitConfirmation />
-            </Container>
-        );
+        return <SubmittedVideoStep induction={induction} />;
     }
 
-    const renderVideoStep = () => (
+    if (isReviewingVideo) {
         // not possible in Genesis mode
-        <Container
-            step={InductionStepInviter.VideoAndEndorse}
-            memberPreview={memberData}
-        >
-            <InductionVideoFormContainer
+        return (
+            <VideoStep
                 induction={induction}
                 isReviewingVideo={isReviewingVideo}
                 setSubmittedVideo={setSubmittedVideo}
             />
-        </Container>
-    );
-
-    if (isReviewingVideo) {
-        return renderVideoStep();
+        );
     }
 
     switch (inductionStatus) {
         case InductionStatus.PendingProfile:
+            return <PendingProfileStep induction={induction} />;
+        case InductionStatus.PendingCeremonyVideo: // not possible in Genesis mode
             return (
-                <Container
-                    step={
-                        isCommunityActive
-                            ? InductionStepInviter.PendingProfile
-                            : InductionStepGenesis.Profile
-                    }
-                >
-                    <WaitingForProfile induction={induction} />
-                </Container>
+                <VideoStep
+                    induction={induction}
+                    isReviewingVideo={isReviewingVideo}
+                    setSubmittedVideo={setSubmittedVideo}
+                />
             );
-        case InductionStatus.PendingCeremonyVideo:
-            return renderVideoStep();
         case InductionStatus.PendingEndorsement: // not possible in Genesis mode
-            const userEndorsementIsPending =
-                endorsements.find((e) => e.endorser === ualAccount?.accountName)
-                    ?.endorsed === 0;
-
             return (
-                <Container
-                    step={InductionStepInviter.VideoAndEndorse}
-                    memberPreview={memberData}
-                >
-                    <Heading size={1} className="mb-2">
-                        Endorsements
-                    </Heading>
-                    <InductionExpiresIn induction={induction} />
-                    <EndorsementsStatus endorsements={endorsements} />
-                    {userEndorsementIsPending ? (
-                        <>
-                            <RecommendReview
-                                setIsReviewingVideo={setIsReviewingVideo}
-                            />
-                            <InductionEndorsementForm induction={induction} />
-                        </>
-                    ) : (
-                        <>
-                            <Text>
-                                Waiting for all witnesses to endorse. In the
-                                meantime:
-                            </Text>
-                            <RecommendReview
-                                setIsReviewingVideo={setIsReviewingVideo}
-                            />
-                        </>
-                    )}
-                </Container>
+                <PendingEndorsementStep
+                    induction={induction}
+                    endorsements={endorsements}
+                    setIsReviewingVideo={setIsReviewingVideo}
+                />
             );
         case InductionStatus.PendingDonation:
             return (
-                <Container
-                    step={
-                        isCommunityActive
-                            ? InductionStepInviter.PendingDonation
-                            : InductionStepGenesis.Donate
-                    }
-                    memberPreview={memberData}
-                >
-                    <Heading size={1} className="mb-2">
-                        Pending donation
-                    </Heading>
-                    <InductionExpiresIn induction={induction} />
-                    <EndorsementsStatus endorsements={endorsements} />
-                    {isCommunityActive ? (
-                        <>
-                            <Text>
-                                This induction is fully endorsed! As soon as the
-                                prospective member completes their donation to
-                                the Eden community, their membership will be
-                                activated and their Eden NFTs will be minted and
-                                distributed.
-                            </Text>
-                            <RecommendReview
-                                setIsReviewingVideo={setIsReviewingVideo}
-                            />
-                        </>
-                    ) : (
-                        <Text>
-                            As soon as this prospective member completes their
-                            donation to the Eden community, their membership is
-                            ready for activation. Once all Genesis members are
-                            fully inducted, memberships will be activated and
-                            Eden NFTs will be distributed.
-                        </Text>
-                    )}
-                </Container>
+                <PendingDonationStep
+                    induction={induction}
+                    endorsements={endorsements}
+                    setIsReviewingVideo={setIsReviewingVideo}
+                />
             );
         default:
             return <p>Unknown error</p>;
@@ -200,3 +120,150 @@ const RecommendReview = ({
         </Text>
     </div>
 );
+
+const SubmittedVideoStep = ({ induction }: { induction: Induction }) => {
+    const memberData = convertPendingProfileToMemberData(induction);
+    return (
+        <Container
+            step={InductionStepInviter.VideoAndEndorse}
+            memberPreview={memberData}
+        >
+            <InductionVideoSubmitConfirmation />
+        </Container>
+    );
+};
+
+interface VideoStepProps {
+    induction: Induction;
+    isReviewingVideo: boolean;
+    setSubmittedVideo: Dispatch<SetStateAction<boolean>>;
+}
+
+const VideoStep = ({
+    induction,
+    isReviewingVideo,
+    setSubmittedVideo,
+}: VideoStepProps) => {
+    const memberData = convertPendingProfileToMemberData(induction);
+    return (
+        <Container
+            step={InductionStepInviter.VideoAndEndorse}
+            memberPreview={memberData}
+        >
+            <InductionVideoFormContainer
+                induction={induction}
+                isReviewingVideo={isReviewingVideo}
+                setSubmittedVideo={setSubmittedVideo}
+            />
+        </Container>
+    );
+};
+
+const PendingProfileStep = ({ induction }: { induction: Induction }) => {
+    const { data: isCommunityActive } = useIsCommunityActive();
+    return (
+        <Container
+            step={
+                isCommunityActive
+                    ? InductionStepInviter.PendingProfile
+                    : InductionStepGenesis.Profile
+            }
+        >
+            <WaitingForProfile induction={induction} />
+        </Container>
+    );
+};
+
+interface PendingCompletionProps {
+    induction: Induction;
+    endorsements: Endorsement[];
+    setIsReviewingVideo: Dispatch<SetStateAction<boolean>>;
+}
+
+const PendingEndorsementStep = ({
+    induction,
+    endorsements,
+    setIsReviewingVideo,
+}: PendingCompletionProps) => {
+    const [ualAccount] = useUALAccount();
+    const memberData = convertPendingProfileToMemberData(induction);
+    const userEndorsementIsPending =
+        endorsements.find((e) => e.endorser === ualAccount?.accountName)
+            ?.endorsed === 0;
+
+    return (
+        <Container
+            step={InductionStepInviter.VideoAndEndorse}
+            memberPreview={memberData}
+        >
+            <Heading size={1} className="mb-2">
+                Endorsements
+            </Heading>
+            <InductionExpiresIn induction={induction} />
+            <EndorsementsStatus endorsements={endorsements} />
+            {userEndorsementIsPending ? (
+                <>
+                    <RecommendReview
+                        setIsReviewingVideo={setIsReviewingVideo}
+                    />
+                    <InductionEndorsementForm induction={induction} />
+                </>
+            ) : (
+                <>
+                    <Text>
+                        Waiting for all witnesses to endorse. In the meantime:
+                    </Text>
+                    <RecommendReview
+                        setIsReviewingVideo={setIsReviewingVideo}
+                    />
+                </>
+            )}
+        </Container>
+    );
+};
+
+const PendingDonationStep = ({
+    induction,
+    endorsements,
+    setIsReviewingVideo,
+}: PendingCompletionProps) => {
+    const { data: isCommunityActive } = useIsCommunityActive();
+    const memberData = convertPendingProfileToMemberData(induction);
+    return (
+        <Container
+            step={
+                isCommunityActive
+                    ? InductionStepInviter.PendingDonation
+                    : InductionStepGenesis.Donate
+            }
+            memberPreview={memberData}
+        >
+            <Heading size={1} className="mb-2">
+                Pending donation
+            </Heading>
+            <InductionExpiresIn induction={induction} />
+            <EndorsementsStatus endorsements={endorsements} />
+            {isCommunityActive ? (
+                <>
+                    <Text>
+                        This induction is fully endorsed! As soon as the
+                        prospective member completes their donation to the Eden
+                        community, their membership will be activated and their
+                        Eden NFTs will be minted and distributed.
+                    </Text>
+                    <RecommendReview
+                        setIsReviewingVideo={setIsReviewingVideo}
+                    />
+                </>
+            ) : (
+                <Text>
+                    As soon as this prospective member completes their donation
+                    to the Eden community, their membership is ready for
+                    activation. Once all Genesis members are fully inducted,
+                    memberships will be activated and Eden NFTs will be
+                    distributed.
+                </Text>
+            )}
+        </Container>
+    );
+};

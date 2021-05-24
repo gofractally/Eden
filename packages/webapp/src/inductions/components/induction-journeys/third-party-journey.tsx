@@ -41,78 +41,24 @@ export const ThirdPartyJourney = ({
     induction,
     inductionStatus,
 }: Props) => {
-    const { data: isCommunityActive } = useIsCommunityActive();
-
-    const memberData = convertPendingProfileToMemberData(induction);
-
     switch (inductionStatus) {
         case InductionStatus.PendingProfile:
-            return (
-                <Container
-                    step={
-                        isCommunityActive
-                            ? InductionStepInvitee.Profile
-                            : InductionStepGenesis.Profile
-                    }
-                >
-                    <WaitingForProfile induction={induction} />
-                </Container>
-            );
+            return <PendingProfileStep induction={induction} />;
         case InductionStatus.PendingCeremonyVideo: // not possible in Genesis mode
-            return (
-                <Container
-                    step={InductionStepInvitee.PendingVideoAndEndorsements}
-                    memberPreview={memberData}
-                >
-                    <WaitingForVideo induction={induction} />
-                </Container>
-            );
+            return <PendingVideoStep induction={induction} />;
         case InductionStatus.PendingEndorsement: // not possible in Genesis mode
             return (
-                <Container
-                    step={InductionStepInvitee.PendingVideoAndEndorsements}
-                    memberPreview={memberData}
-                >
-                    <Heading size={1} className="mb-2">
-                        Endorsements
-                    </Heading>
-                    <InductionExpiresIn induction={induction} />
-                    <EndorsementsStatus endorsements={endorsements} />
-                    <Text>Waiting for all witnesses to endorse.</Text>
-                </Container>
+                <PendingEndorsementStep
+                    induction={induction}
+                    endorsements={endorsements}
+                />
             );
         case InductionStatus.PendingDonation:
             return (
-                <Container
-                    step={
-                        isCommunityActive
-                            ? InductionStepInvitee.Donate
-                            : InductionStepGenesis.Donate
-                    }
-                    memberPreview={memberData}
-                >
-                    <Heading size={1} className="mb-2">
-                        Pending donation
-                    </Heading>
-                    <InductionExpiresIn induction={induction} />
-                    <EndorsementsStatus endorsements={endorsements} />
-                    {isCommunityActive ? (
-                        <Text>
-                            This induction is fully endorsed! As soon as the
-                            prospective member completes their donation to the
-                            Eden community, their membership will be activated
-                            and their Eden NFTs will be minted and distributed.
-                        </Text>
-                    ) : (
-                        <Text>
-                            As soon as this prospective member completes their
-                            donation to the Eden community, their membership is
-                            ready for activation. Once all Genesis members are
-                            fully inducted, memberships will be activated and
-                            Eden NFTs will be distributed.
-                        </Text>
-                    )}
-                </Container>
+                <PendingDonationStep
+                    induction={induction}
+                    endorsements={endorsements}
+                />
             );
         default:
             return <p>Unknown error</p>;
@@ -120,3 +66,95 @@ export const ThirdPartyJourney = ({
 };
 
 export default ThirdPartyJourney;
+
+const PendingProfileStep = ({ induction }: { induction: Induction }) => {
+    const { data: isCommunityActive } = useIsCommunityActive();
+    return (
+        <Container
+            step={
+                isCommunityActive
+                    ? InductionStepInvitee.Profile
+                    : InductionStepGenesis.Profile
+            }
+        >
+            <WaitingForProfile induction={induction} />
+        </Container>
+    );
+};
+
+const PendingVideoStep = ({ induction }: { induction: Induction }) => {
+    const memberData = convertPendingProfileToMemberData(induction);
+    return (
+        <Container
+            step={InductionStepInvitee.PendingVideoAndEndorsements}
+            memberPreview={memberData}
+        >
+            <WaitingForVideo induction={induction} />
+        </Container>
+    );
+};
+
+interface PendingCompletionProps {
+    induction: Induction;
+    endorsements: Endorsement[];
+}
+
+const PendingEndorsementStep = ({
+    induction,
+    endorsements,
+}: PendingCompletionProps) => {
+    const memberData = convertPendingProfileToMemberData(induction);
+    return (
+        <Container
+            step={InductionStepInvitee.PendingVideoAndEndorsements}
+            memberPreview={memberData}
+        >
+            <Heading size={1} className="mb-2">
+                Endorsements
+            </Heading>
+            <InductionExpiresIn induction={induction} />
+            <EndorsementsStatus endorsements={endorsements} />
+            <Text>Waiting for all witnesses to endorse.</Text>
+        </Container>
+    );
+};
+
+const PendingDonationStep = ({
+    induction,
+    endorsements,
+}: PendingCompletionProps) => {
+    const { data: isCommunityActive } = useIsCommunityActive();
+    const memberData = convertPendingProfileToMemberData(induction);
+    return (
+        <Container
+            step={
+                isCommunityActive
+                    ? InductionStepInvitee.Donate
+                    : InductionStepGenesis.Donate
+            }
+            memberPreview={memberData}
+        >
+            <Heading size={1} className="mb-2">
+                Pending donation
+            </Heading>
+            <InductionExpiresIn induction={induction} />
+            <EndorsementsStatus endorsements={endorsements} />
+            {isCommunityActive ? (
+                <Text>
+                    This induction is fully endorsed! As soon as the prospective
+                    member completes their donation to the Eden community, their
+                    membership will be activated and their Eden NFTs will be
+                    minted and distributed.
+                </Text>
+            ) : (
+                <Text>
+                    As soon as this prospective member completes their donation
+                    to the Eden community, their membership is ready for
+                    activation. Once all Genesis members are fully inducted,
+                    memberships will be activated and Eden NFTs will be
+                    distributed.
+                </Text>
+            )}
+        </Container>
+    );
+};
