@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import {
     Text,
     Link,
@@ -7,11 +7,13 @@ import {
     ActionButton,
     ActionButtonSize,
 } from "_app";
+import {
+    InductionInviteForm,
+    InductionStepInviter,
+    InductionStepsContainer,
+} from "inductions";
 
 import { initializeInductionTransaction } from "../../../transactions";
-import { InductionStepsContainer } from "inductions";
-import { InductionInviteForm } from ".";
-import { InductionStepInviter } from "../common";
 
 interface Props {
     ualAccount: any;

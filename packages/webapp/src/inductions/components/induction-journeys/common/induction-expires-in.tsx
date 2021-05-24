@@ -1,4 +1,3 @@
-import React from "react";
 import { Text } from "_app";
 import { getInductionRemainingTimeDays } from "inductions";
 import { Induction } from "inductions/interfaces";

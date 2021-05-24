@@ -1,6 +1,8 @@
 import React from "react";
-import { assetToString, Card } from "_app";
+
 import { minimumDonationAmount } from "config";
+import { assetToString, Card } from "_app";
+
 import { Step, Steps } from ".";
 
 export type InductionStep =

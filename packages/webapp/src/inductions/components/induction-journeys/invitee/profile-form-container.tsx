@@ -1,4 +1,5 @@
-import React, { Dispatch, SetStateAction } from "react";
+import { Dispatch, SetStateAction } from "react";
+
 import {
     Heading,
     onError,
@@ -6,9 +7,12 @@ import {
     uploadToIpfs,
     useUALAccount,
 } from "_app";
-import { InductionExpiresIn, setInductionProfileTransaction } from "inductions";
+import {
+    InductionExpiresIn,
+    InductionProfileForm,
+    setInductionProfileTransaction,
+} from "inductions";
 import { Induction, NewMemberProfile } from "inductions/interfaces";
-import { InductionProfileForm } from ".";
 
 interface Props {
     induction: Induction;

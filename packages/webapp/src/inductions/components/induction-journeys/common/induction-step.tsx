@@ -1,4 +1,3 @@
-import React from "react";
 import { InductionStep } from "inductions";
 
 export type Step = {

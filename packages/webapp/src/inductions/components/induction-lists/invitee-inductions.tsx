@@ -7,7 +7,6 @@ import {
     useMemberListByAccountNames,
 } from "_app";
 import * as InductionTable from "_app/ui/table";
-
 import {
     getEndorsementsByInductionId,
     getInductionRemainingTimeDays,

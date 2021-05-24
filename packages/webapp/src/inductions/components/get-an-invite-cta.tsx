@@ -1,7 +1,5 @@
-import React from "react";
 import { ActionButton, ActionButtonSize } from "_app";
-import { InductionStepsContainer } from ".";
-import { InductionStepInvitee } from "./induction-journeys";
+import { InductionStepsContainer, InductionStepInvitee } from "inductions";
 
 export const GetAnInviteCTA = () => {
     return (

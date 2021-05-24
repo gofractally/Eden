@@ -1,6 +1,5 @@
-import React, { FormEvent, useState } from "react";
+import { FormEvent, useState } from "react";
 
-import { EdenNftSocialHandles } from "nfts";
 import {
     useFormFields,
     Form,
@@ -11,6 +10,7 @@ import {
     Text,
 } from "_app";
 import { edenContractAccount, validUploadActions } from "config";
+import { EdenNftSocialHandles } from "nfts";
 import { NewMemberProfile } from "inductions";
 
 interface Props {

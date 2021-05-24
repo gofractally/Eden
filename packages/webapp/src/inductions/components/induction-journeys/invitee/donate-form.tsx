@@ -1,6 +1,7 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import { useRouter } from "next/router";
 import { useQueryClient } from "react-query";
+
 import { minimumDonationAmount } from "config";
 import {
     ActionButton,

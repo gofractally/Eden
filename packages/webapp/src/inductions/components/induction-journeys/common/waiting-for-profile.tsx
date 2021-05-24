@@ -1,4 +1,3 @@
-import React from "react";
 import { ActionButton, ActionButtonSize, Heading, Link, Text } from "_app";
 import { getInductionRemainingTimeDays } from "inductions";
 import { Induction } from "inductions/interfaces";

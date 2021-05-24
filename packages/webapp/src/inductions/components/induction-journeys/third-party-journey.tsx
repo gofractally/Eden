@@ -1,17 +1,19 @@
 import React from "react";
+
 import { Heading, Text, useIsCommunityActive } from "_app";
 import { MemberData } from "members";
-import { convertPendingProfileToMemberData } from "inductions";
 import {
+    convertPendingProfileToMemberData,
     EndorsementsStatus,
     InductionExpiresIn,
+    InductionStepGenesis,
+    InductionStepInvitee,
     InductionStepsContainer,
     MemberCardPreview,
     WaitingForProfile,
     WaitingForVideo,
-} from "inductions/components";
+} from "inductions";
 import { Endorsement, Induction, InductionStatus } from "inductions/interfaces";
-import { InductionStepGenesis, InductionStepInvitee } from "./common";
 
 interface ContainerProps {
     step: InductionStepInvitee | InductionStepGenesis;

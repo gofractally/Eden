@@ -1,9 +1,8 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import { useQueryClient } from "react-query";
 
 import { onError, ActionButton, Form, useUALAccount } from "_app";
 import { submitEndorsementTransaction } from "inductions";
-
 import { Induction } from "inductions/interfaces";
 
 interface Props {

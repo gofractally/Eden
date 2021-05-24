@@ -1,4 +1,5 @@
-import React, { Dispatch, SetStateAction, useState } from "react";
+import { Dispatch, SetStateAction, useState } from "react";
+
 import {
     Heading,
     onError,
@@ -9,10 +10,11 @@ import {
 } from "_app";
 import {
     getInductionRemainingTimeDays,
+    InductionVideoForm,
     setInductionVideoTransaction,
+    VideoSubmissionPhase,
 } from "inductions";
 import { Induction } from "inductions/interfaces";
-import { VideoSubmissionPhase, InductionVideoForm } from ".";
 
 interface Props {
     induction: Induction;

@@ -1,21 +1,25 @@
 import React, { Dispatch, SetStateAction, useState } from "react";
+
 import { Heading, Link, Text, useIsCommunityActive, useUALAccount } from "_app";
+
 import { MemberData } from "members";
-import { convertPendingProfileToMemberData } from "inductions";
+import {
+    convertPendingProfileToMemberData,
+    EndorsementsStatus,
+    InductionExpiresIn,
+    InductionStepGenesis,
+    InductionStepInviter,
+    InductionStepsContainer,
+    MemberCardPreview,
+    WaitingForProfile,
+} from "inductions";
+import { Endorsement, Induction, InductionStatus } from "inductions/interfaces";
+
 import {
     InductionVideoFormContainer,
     InductionEndorsementForm,
     InductionVideoSubmitConfirmation,
 } from "./inviter-witnesses";
-import {
-    EndorsementsStatus,
-    InductionExpiresIn,
-    InductionStepsContainer,
-    MemberCardPreview,
-    WaitingForProfile,
-} from "inductions/components";
-import { Endorsement, Induction, InductionStatus } from "inductions/interfaces";
-import { InductionStepGenesis, InductionStepInviter } from "./common";
 
 interface Props {
     endorsements: Endorsement[];

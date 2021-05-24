@@ -1,4 +1,3 @@
-import React from "react";
 import { ActionButton, ActionButtonSize, Heading, Text } from "_app";
 
 interface Props {

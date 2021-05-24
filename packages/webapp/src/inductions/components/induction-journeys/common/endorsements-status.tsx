@@ -1,4 +1,3 @@
-import React from "react";
 import { Heading, Link, useMemberListByAccountNames } from "_app";
 import { Endorsement } from "inductions/interfaces";
 
