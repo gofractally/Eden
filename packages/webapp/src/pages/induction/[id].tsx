@@ -69,18 +69,10 @@ export const InductionDetailsPage = () => {
         }
     }, [induction, endorsements, status, userRole]);
 
-    // TODO: We need a common loading spinner component.
-    if (isLoading) {
-        return (
-            <SingleColLayout title="Loading">
-                <Card title="Loading...">...</Card>
-            </SingleColLayout>
-        );
-    }
-
     if (
-        status === InductionStatus.Invalid ||
-        status === InductionStatus.Expired
+        !isLoading &&
+        (status === InductionStatus.Invalid ||
+            status === InductionStatus.Expired)
     ) {
         return (
             <RawLayout title="Invite not found">
@@ -97,8 +89,14 @@ export const InductionDetailsPage = () => {
     }
 
     return (
-        <SingleColLayout title={`Induction #${inductionId}`}>
-            {renderInductionJourney}
+        <SingleColLayout
+            title={isLoading ? "Loading" : `Induction #${inductionId}`}
+        >
+            {isLoading ? (
+                <Card title="Loading...">...</Card>
+            ) : (
+                renderInductionJourney
+            )}
         </SingleColLayout>
     );
 };
