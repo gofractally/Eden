@@ -137,8 +137,8 @@ namespace eden
       }
       else
       {
-         eosio::check(inductions.is_endorser(id, account),
-                      "Induction can only be canceled by inviter or a witness");
+         eosio::check(inductions.is_invitee(id, account) || inductions.is_endorser(id, account),
+                      "Induction can only be canceled by an endorser or the invitee itself");
       }
 
       const auto& induction = inductions.get_induction(id);
