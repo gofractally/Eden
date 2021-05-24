@@ -10,7 +10,7 @@ import {
 import {
     EndorsementsStatus,
     InductionExpiresIn,
-    InductionJourneyContainer,
+    InductionStepsContainer,
     MemberCardPreview,
     WaitingForProfile,
 } from "inductions/components";
@@ -25,9 +25,9 @@ interface ContainerProps {
 
 const Container = ({ step, memberPreview, children }: ContainerProps) => (
     <>
-        <InductionJourneyContainer step={step}>
+        <InductionStepsContainer step={step}>
             {children}
-        </InductionJourneyContainer>
+        </InductionStepsContainer>
         {memberPreview && <MemberCardPreview memberData={memberPreview} />}
     </>
 );

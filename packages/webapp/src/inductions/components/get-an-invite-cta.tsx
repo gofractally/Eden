@@ -1,11 +1,11 @@
 import React from "react";
 import { ActionButton, ActionButtonSize } from "_app";
-import { InductionJourneyContainer } from ".";
+import { InductionStepsContainer } from ".";
 import { InductionStepInvitee } from "./induction-journeys";
 
 export const GetAnInviteCTA = () => {
     return (
-        <InductionJourneyContainer step={InductionStepInvitee.GetInvite}>
+        <InductionStepsContainer step={InductionStepInvitee.GetInvite}>
             <>
                 <p className="mb-10 text-2xl font-medium title-font text-gray-900">
                     Ready to join Eden? The membership process begins with an
@@ -21,6 +21,6 @@ export const GetAnInviteCTA = () => {
                     Learn more
                 </ActionButton>
             </>
-        </InductionJourneyContainer>
+        </InductionStepsContainer>
     );
 };

@@ -9,7 +9,7 @@ import {
 } from "_app";
 
 import { initializeInductionTransaction } from "../../../transactions";
-import { InductionJourneyContainer } from "inductions";
+import { InductionStepsContainer } from "inductions";
 import { InductionInviteForm } from ".";
 import { InductionStepInviter } from "../common";
 
@@ -43,7 +43,7 @@ export const InductionInviteFormContainer = ({ ualAccount }: Props) => {
     };
 
     return (
-        <InductionJourneyContainer
+        <InductionStepsContainer
             step={
                 initializedInductionId
                     ? InductionStepInviter.PendingProfile
@@ -60,7 +60,7 @@ export const InductionInviteFormContainer = ({ ualAccount }: Props) => {
                     <InductionInviteForm onSubmit={submitTransaction} />
                 </>
             )}
-        </InductionJourneyContainer>
+        </InductionStepsContainer>
     );
 };
 

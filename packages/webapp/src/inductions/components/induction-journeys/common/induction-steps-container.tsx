@@ -123,7 +123,7 @@ interface Props {
     children: React.ReactNode;
 }
 
-export const InductionJourneyContainer = ({ step, children }: Props) => {
+export const InductionStepsContainer = ({ step, children }: Props) => {
     const isStepIn = <T,>(steps: T) => Object.values(steps).includes(step);
 
     let steps: Step[] = INVITEE_INDUCTION_STEPS;

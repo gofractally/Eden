@@ -5,7 +5,7 @@ import { convertPendingProfileToMemberData } from "inductions";
 import {
     EndorsementsStatus,
     InductionExpiresIn,
-    InductionJourneyContainer,
+    InductionStepsContainer,
     MemberCardPreview,
     WaitingForProfile,
     WaitingForVideo,
@@ -21,9 +21,9 @@ interface ContainerProps {
 
 const Container = ({ step, memberPreview, children }: ContainerProps) => (
     <>
-        <InductionJourneyContainer step={step}>
+        <InductionStepsContainer step={step}>
             {children}
-        </InductionJourneyContainer>
+        </InductionStepsContainer>
         {memberPreview && <MemberCardPreview memberData={memberPreview} />}
     </>
 );
