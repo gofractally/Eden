@@ -17,41 +17,6 @@ import {
 import { Endorsement, Induction, InductionStatus } from "inductions/interfaces";
 import { InductionStepGenesis, InductionStepInviter } from "./common";
 
-interface ContainerProps {
-    step: InductionStepInviter | InductionStepGenesis;
-    memberPreview?: MemberData;
-    children: React.ReactNode;
-}
-
-const Container = ({ step, memberPreview, children }: ContainerProps) => (
-    <>
-        <InductionStepsContainer step={step}>
-            {children}
-        </InductionStepsContainer>
-        {memberPreview && <MemberCardPreview memberData={memberPreview} />}
-    </>
-);
-
-const RecommendReview = ({
-    setIsReviewingVideo,
-}: {
-    setIsReviewingVideo: Dispatch<SetStateAction<boolean>>;
-}) => (
-    <div className="mt-4 space-y-3">
-        <Text>
-            In the meantime, we recommend reviewing the prospective member
-            profile information below for accuracy. If anything needs to be
-            corrected, ask the invitee to sign in and make the corrections.
-        </Text>
-        <Text>
-            If the induction video needs to be corrected,{" "}
-            <Link onClick={() => setIsReviewingVideo(true)}>click here</Link>.
-            Keep in mind that modifying the induction video will reset any
-            endorsements.
-        </Text>
-    </div>
-);
-
 interface Props {
     endorsements: Endorsement[];
     induction: Induction;
@@ -70,7 +35,6 @@ export const InviterWitnessJourney = ({
 
     const memberData = convertPendingProfileToMemberData(induction);
 
-    // Inviter video submission confirmation
     if (submittedVideo) {
         // not possible in Genesis mode
         return (
@@ -132,13 +96,18 @@ export const InviterWitnessJourney = ({
                     <InductionExpiresIn induction={induction} />
                     <EndorsementsStatus endorsements={endorsements} />
                     {userEndorsementIsPending ? (
-                        <InductionEndorsementForm
-                            induction={induction}
-                            setIsReviewingVideo={setIsReviewingVideo}
-                        />
+                        <>
+                            <RecommendReview
+                                setIsReviewingVideo={setIsReviewingVideo}
+                            />
+                            <InductionEndorsementForm induction={induction} />
+                        </>
                     ) : (
                         <>
-                            <Text>Waiting for all witnesses to endorse.</Text>
+                            <Text>
+                                Waiting for all witnesses to endorse. In the
+                                meantime:
+                            </Text>
                             <RecommendReview
                                 setIsReviewingVideo={setIsReviewingVideo}
                             />
@@ -191,3 +160,39 @@ export const InviterWitnessJourney = ({
 };
 
 export default InviterWitnessJourney;
+
+interface ContainerProps {
+    step: InductionStepInviter | InductionStepGenesis;
+    memberPreview?: MemberData;
+    children: React.ReactNode;
+}
+
+const Container = ({ step, memberPreview, children }: ContainerProps) => (
+    <>
+        <InductionStepsContainer step={step}>
+            {children}
+        </InductionStepsContainer>
+        {memberPreview && <MemberCardPreview memberData={memberPreview} />}
+    </>
+);
+
+const RecommendReview = ({
+    setIsReviewingVideo,
+}: {
+    setIsReviewingVideo: Dispatch<SetStateAction<boolean>>;
+}) => (
+    <div className="mt-4 space-y-3">
+        <Text>
+            Carefully review the prospective member profile information below.
+            Make sure that all social handles and links are accurate and
+            working. If anything needs to be corrected, ask the invitee to sign
+            in and make the corrections.
+        </Text>
+        <Text>
+            If the induction video needs to be corrected,{" "}
+            <Link onClick={() => setIsReviewingVideo(true)}>click here</Link>.
+            Keep in mind that modifying the induction video will reset any
+            endorsements.
+        </Text>
+    </div>
+);

@@ -1,18 +1,16 @@
-import React, { Dispatch, SetStateAction, useState } from "react";
+import React, { useState } from "react";
 import { useQueryClient } from "react-query";
-import { onError, ActionButton, Form, Link, Text, useUALAccount } from "_app";
+
+import { onError, ActionButton, Form, useUALAccount } from "_app";
 import { submitEndorsementTransaction } from "inductions";
+
 import { Induction } from "inductions/interfaces";
 
 interface Props {
     induction: Induction;
-    setIsReviewingVideo: Dispatch<SetStateAction<boolean>>;
 }
 
-export const InductionEndorsementForm = ({
-    induction,
-    setIsReviewingVideo,
-}: Props) => {
+export const InductionEndorsementForm = ({ induction }: Props) => {
     const [ualAccount] = useUALAccount();
     const queryClient = useQueryClient();
     const [isReviewed, setReviewed] = useState(false);
@@ -46,22 +44,7 @@ export const InductionEndorsementForm = ({
     };
 
     return (
-        <div className="space-y-3">
-            <Text>
-                <span className="underline font-medium">Carefully review</span>{" "}
-                the prospective member profile information below. Make sure that
-                all social handles and links are accurate and working. If
-                anything needs to be corrected, ask the invitee to sign in and
-                make the corrections.
-            </Text>
-            <Text>
-                If the induction video needs to be corrected,{" "}
-                <Link onClick={() => setIsReviewingVideo(true)}>
-                    click here
-                </Link>
-                . Keep in mind that modifying the induction video will reset any
-                endorsements.
-            </Text>
+        <div className="mt-4">
             <div className="flex items-end xl:items-center flex-col xl:flex-row p-3 border rounded-md">
                 <Form.Checkbox
                     id="reviewed"
