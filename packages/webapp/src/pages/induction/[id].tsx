@@ -33,7 +33,7 @@ export const InductionDetailsPage = () => {
     const isLoading = isLoadingEndorsements || isLoadingCommunityState;
 
     const induction = data?.induction;
-    const endorsements = data?.endorsements ?? [];
+    const endorsements = data?.endorsements || [];
 
     const userRole = useInductionUserRole(endorsements, induction);
     const status = getInductionStatus(induction, endorsements);
@@ -58,9 +58,7 @@ export const InductionDetailsPage = () => {
                         inductionStatus={status}
                     />
                 );
-            case InductionRole.Member:
-            case InductionRole.Unknown:
-            case InductionRole.Unauthenticated:
+            default:
                 return (
                     <ThirdPartyJourney
                         endorsements={endorsements}

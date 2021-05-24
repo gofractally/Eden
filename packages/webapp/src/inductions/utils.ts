@@ -39,8 +39,9 @@ export const getInductionStatus = (
 
     if (isExpired) return InductionStatus.Expired;
 
-    const isWaitingForDonation =
-        endorsements?.every((e) => e.endorsed === 1) ?? false;
+    const isWaitingForDonation = Boolean(
+        endorsements?.every((e) => e.endorsed === 1)
+    );
 
     return !induction.new_member_profile.name
         ? InductionStatus.PendingProfile

@@ -124,9 +124,7 @@ interface Props {
 }
 
 export const InductionJourneyContainer = ({ step, children }: Props) => {
-    function isStepIn<T>(steps: T) {
-        return Object.values(steps).includes(step);
-    }
+    const isStepIn = <T,>(steps: T) => Object.values(steps).includes(step);
 
     let steps: Step[] = INVITEE_INDUCTION_STEPS;
     if (isStepIn(InductionStepGenesis)) {

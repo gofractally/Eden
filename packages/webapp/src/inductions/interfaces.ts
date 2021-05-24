@@ -17,13 +17,13 @@ export interface Induction {
 }
 
 export enum InductionRole {
-    Inviter = "inviter",
-    Endorser = "endorser",
-    Invitee = "invitee",
-    Member = "member", // use?
-    NonMember = "non-member", // use?
-    Unauthenticated = "unauthenticated",
-    Unknown = "unknown",
+    Inviter,
+    Endorser,
+    Invitee,
+    Member,
+    NonMember,
+    Unauthenticated,
+    Unknown,
 }
 
 export enum InductionStatus {
