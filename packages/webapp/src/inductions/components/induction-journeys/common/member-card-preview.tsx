@@ -1,4 +1,3 @@
-import React from "react";
 import { Card } from "_app";
 import { MemberData, MemberHoloCard, MemberCard } from "members";
 

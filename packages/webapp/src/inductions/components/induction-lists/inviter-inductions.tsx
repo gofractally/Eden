@@ -1,8 +1,3 @@
-import { getEndorsementsByInductionId } from "inductions/api";
-import {
-    getInductionRemainingTimeDays,
-    getInductionStatus,
-} from "inductions/utils";
 import {
     ActionButton,
     ActionButtonSize,
@@ -11,7 +6,12 @@ import {
     useMemberListByAccountNames,
 } from "_app";
 import * as InductionTable from "_app/ui/table";
-import { Endorsement, Induction, InductionStatus } from "../../interfaces";
+import {
+    getEndorsementsByInductionId,
+    getInductionRemainingTimeDays,
+    getInductionStatus,
+} from "inductions";
+import { Endorsement, Induction, InductionStatus } from "inductions/interfaces";
 
 interface Props {
     inductions: Induction[];
@@ -95,12 +95,12 @@ const InviterInductionStatus = ({
     induction,
     endorsements,
 }: InviterInductionStatusProps) => {
-    const status = getInductionStatus(induction);
+    const status = getInductionStatus(induction, endorsements);
     switch (status) {
-        case InductionStatus.expired:
+        case InductionStatus.Expired:
             return (
                 <ActionButton
-                    type={ActionButtonType.DISABLED}
+                    type={ActionButtonType.Disabled}
                     size={ActionButtonSize.S}
                     fullWidth
                     disabled
@@ -108,10 +108,10 @@ const InviterInductionStatus = ({
                     Expired
                 </ActionButton>
             );
-        case InductionStatus.waitingForProfile:
+        case InductionStatus.PendingProfile:
             return (
                 <ActionButton
-                    type={ActionButtonType.NEUTRAL}
+                    type={ActionButtonType.Neutral}
                     size={ActionButtonSize.S}
                     fullWidth
                     href={`/induction/${induction.id}`}
@@ -119,10 +119,10 @@ const InviterInductionStatus = ({
                     Waiting for profile
                 </ActionButton>
             );
-        case InductionStatus.waitingForVideo:
+        case InductionStatus.PendingCeremonyVideo:
             return (
                 <ActionButton
-                    type={ActionButtonType.INDUCTION_STATUS_CEREMONY}
+                    type={ActionButtonType.InductionStatusCeremony}
                     size={ActionButtonSize.S}
                     fullWidth
                     href={`/induction/${induction.id}`}
@@ -130,30 +130,41 @@ const InviterInductionStatus = ({
                     Complete ceremony
                 </ActionButton>
             );
-        case InductionStatus.waitingForEndorsement:
+        case InductionStatus.PendingEndorsement:
             const inviterEndorsement = endorsements?.find(
                 (end) => end.inviter === induction.inviter
             );
             if (inviterEndorsement?.endorsed) {
                 return (
                     <ActionButton
-                        type={ActionButtonType.NEUTRAL}
+                        type={ActionButtonType.Neutral}
                         size={ActionButtonSize.S}
                         fullWidth
                         href={`/induction/${induction.id}`}
                     >
-                        Pending completion
+                        Pending endorsements
                     </ActionButton>
                 );
             }
             return (
                 <ActionButton
-                    type={ActionButtonType.INDUCTION_STATUS_ACTION}
+                    type={ActionButtonType.InductionStatusAction}
                     size={ActionButtonSize.S}
                     fullWidth
                     href={`/induction/${induction.id}`}
                 >
-                    Review &amp; Endorse
+                    Review &amp; endorse
+                </ActionButton>
+            );
+        case InductionStatus.PendingDonation:
+            return (
+                <ActionButton
+                    type={ActionButtonType.Neutral}
+                    size={ActionButtonSize.S}
+                    fullWidth
+                    href={`/induction/${induction.id}`}
+                >
+                    Pending donation
                 </ActionButton>
             );
         default:

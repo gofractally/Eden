@@ -1,13 +1,9 @@
-import React from "react";
 import { ActionButton, ActionButtonSize } from "_app";
-import {
-    InductionJourneyContainer,
-    InductionRole,
-} from "./induction-journey-container";
+import { InductionStepsContainer, InductionStepInvitee } from "inductions";
 
 export const GetAnInviteCTA = () => {
     return (
-        <InductionJourneyContainer role={InductionRole.INVITEE} step={1}>
+        <InductionStepsContainer step={InductionStepInvitee.GetInvite}>
             <>
                 <p className="mb-10 text-2xl font-medium title-font text-gray-900">
                     Ready to join Eden? The membership process begins with an
@@ -23,6 +19,6 @@ export const GetAnInviteCTA = () => {
                     Learn more
                 </ActionButton>
             </>
-        </InductionJourneyContainer>
+        </InductionStepsContainer>
     );
 };

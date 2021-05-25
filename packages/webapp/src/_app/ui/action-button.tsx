@@ -24,12 +24,12 @@ export enum ActionButtonSize {
 }
 
 export enum ActionButtonType {
-    PRIMARY = "bg-blue-500 border-blue-500 text-white hover:bg-blue-600",
-    DISABLED = "border-gray-400 bg-gray-300 text-gray-500",
-    NEUTRAL = "bg-gray-50 text-gray-800 hover:bg-gray-200",
-    INDUCTION_STATUS_PROFILE = "bg-blue-500 border-blue-500 text-white hover:bg-blue-600",
-    INDUCTION_STATUS_CEREMONY = "bg-blue-500 border-blue-500 text-white hover:bg-blue-600",
-    INDUCTION_STATUS_ACTION = "bg-green-500 text-white hover:bg-green-600",
+    Primary = "bg-blue-500 border-blue-500 text-white hover:bg-blue-600",
+    Disabled = "border-gray-400 bg-gray-300 text-gray-500",
+    Neutral = "bg-gray-50 text-gray-800 hover:bg-gray-200",
+    InductionStatusProfile = "bg-blue-500 border-blue-500 text-white hover:bg-blue-600",
+    InductionStatusCeremony = "bg-blue-500 border-blue-500 text-white hover:bg-blue-600",
+    InductionStatusAction = "bg-green-500 text-white hover:bg-green-600",
 }
 /**
  * ActionButton Best Practices:
@@ -47,7 +47,7 @@ export const ActionButton = ({
     onClick,
     isSubmit,
     disabled,
-    type = ActionButtonType.PRIMARY,
+    type = ActionButtonType.Primary,
     size = ActionButtonSize.M,
     fullWidth,
     isLoading,
@@ -59,7 +59,7 @@ export const ActionButton = ({
     const baseClass =
         "inline-block items-center text-center border focus:outline-none";
     const widthClass = fullWidth ? "w-full" : "";
-    let colorClass = disabled ? ActionButtonType.DISABLED : type;
+    let colorClass = disabled ? ActionButtonType.Disabled : type;
     const cursorClass = disabled ? "cursor-not-allowed" : "cursor-pointer";
     const buttonClass = `${baseClass} ${size} ${widthClass} ${colorClass} ${cursorClass} ${className}`;
 

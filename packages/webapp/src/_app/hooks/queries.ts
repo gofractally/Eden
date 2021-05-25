@@ -31,4 +31,6 @@ export const useCurrentMember = () => {
 };
 
 export const useIsCommunityActive = () =>
-    useQuery("isCommunityActive", getIsCommunityActive);
+    useQuery("isCommunityActive", getIsCommunityActive, {
+        refetchOnWindowFocus: false,
+    });

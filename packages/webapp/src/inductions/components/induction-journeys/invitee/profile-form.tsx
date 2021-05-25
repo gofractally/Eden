@@ -1,6 +1,5 @@
-import React, { FormEvent, useState } from "react";
+import { FormEvent, useState } from "react";
 
-import { EdenNftSocialHandles } from "nfts";
 import {
     useFormFields,
     Form,
@@ -11,8 +10,8 @@ import {
     Text,
 } from "_app";
 import { edenContractAccount, validUploadActions } from "config";
-
-import { NewMemberProfile } from "../interfaces";
+import { EdenNftSocialHandles } from "nfts";
+import { NewMemberProfile } from "inductions";
 
 interface Props {
     newMemberProfile: NewMemberProfile;
@@ -21,12 +20,6 @@ interface Props {
         newMemberProfile: NewMemberProfile,
         uploadedImage?: File
     ) => Promise<void>;
-}
-
-export interface InitInductionFormData {
-    invitee: string;
-    witness1: string;
-    witness2: string;
 }
 
 export const InductionProfileForm = ({
