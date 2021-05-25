@@ -1,7 +1,18 @@
 import { useEffect, useState } from "react";
 
-import { appName, chainConfig } from "config";
+import { appName, availableWallets, chainConfig } from "config";
 import { anchor, scatter, ledger } from "./config";
+
+const authenticators: any[] = [];
+if (availableWallets.includes("ANCHOR")) {
+    authenticators.push(anchor);
+}
+if (availableWallets.includes("SCATTER")) {
+    authenticators.push(scatter);
+}
+if (availableWallets.includes("LEDGER")) {
+    authenticators.push(ledger);
+}
 
 export const EdenUALProvider: React.FC = ({ children }) => {
     const [hasMounted, setHasMounted] = useState(false);
@@ -17,7 +28,7 @@ export const EdenUALProvider: React.FC = ({ children }) => {
         return (
             <UALProvider
                 chains={[chainConfig]}
-                authenticators={[anchor, scatter, ledger]}
+                authenticators={authenticators}
                 appName={appName}
             >
                 {children}
