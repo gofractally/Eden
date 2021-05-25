@@ -6,6 +6,7 @@ import {
     RawLayout,
     SingleColLayout,
     useIsCommunityActive,
+    useUALAccount,
 } from "_app";
 import {
     getInductionStatus,
@@ -17,6 +18,9 @@ import {
 export const InductionDetailsPage = () => {
     const router = useRouter();
     const inductionId = router.query.id;
+
+    // refetches inductions query on sign in (in case previously cleared on sign out)
+    useUALAccount(); // see https://github.com/eoscommunity/Eden/pull/239
 
     const { isLoading: isLoadingCommunityState } = useIsCommunityActive();
 
