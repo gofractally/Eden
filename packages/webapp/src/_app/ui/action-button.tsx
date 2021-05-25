@@ -27,6 +27,7 @@ export enum ActionButtonType {
     Primary = "bg-blue-500 border-blue-500 text-white hover:bg-blue-600",
     Disabled = "border-gray-400 bg-gray-300 text-gray-500",
     Neutral = "bg-gray-50 text-gray-800 hover:bg-gray-200",
+    Danger = "bg-red-500 text-white hover:bg-red-600",
     InductionStatusProfile = "bg-blue-500 border-blue-500 text-white hover:bg-blue-600",
     InductionStatusCeremony = "bg-blue-500 border-blue-500 text-white hover:bg-blue-600",
     InductionStatusAction = "bg-green-500 text-white hover:bg-green-600",

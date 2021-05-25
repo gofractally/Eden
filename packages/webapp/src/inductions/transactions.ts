@@ -195,3 +195,27 @@ export const donateAndCompleteInductionTransaction = (
         ],
     };
 };
+
+export const cancelInductionTransaction = (
+    authorizerAccount: string,
+    id: string
+) => {
+    return {
+        actions: [
+            {
+                account: edenContractAccount,
+                name: "inductcancel",
+                authorization: [
+                    {
+                        actor: authorizerAccount,
+                        permission: "active",
+                    },
+                ],
+                data: {
+                    account: authorizerAccount,
+                    id,
+                },
+            },
+        ],
+    };
+};
