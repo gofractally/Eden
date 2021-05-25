@@ -1,17 +1,20 @@
+import { useState } from "react";
+
 import {
     ActionButton,
     ActionButtonSize,
     ActionButtonType,
+    onError,
     useFetchedData,
     useMemberListByAccountNames,
+    useUALAccount,
 } from "_app";
 import * as InductionTable from "_app/ui/table";
-import {
-    getEndorsementsByInductionId,
-    getInductionRemainingTimeDays,
-    getInductionStatus,
-} from "inductions";
-import { Endorsement, Induction, InductionStatus } from "inductions/interfaces";
+
+import { getEndorsementsByInductionId } from "../../api";
+import { getInductionRemainingTimeDays, getInductionStatus } from "../../utils";
+import { Endorsement, Induction, InductionStatus } from "../../interfaces";
+import { cancelInductionTransaction } from "../../transactions";
 
 interface Props {
     inductions: Induction[];
@@ -96,16 +99,51 @@ const InviterInductionStatus = ({
     endorsements,
 }: InviterInductionStatusProps) => {
     const status = getInductionStatus(induction, endorsements);
+
+    const [ualAccount] = useUALAccount();
+    const [isLoading, setLoading] = useState(false);
+    const [isCanceled, setCanceled] = useState(false);
+
+    // TODO: move it up to work with invitee and endorsers status too
+    const cancelInduction = async () => {
+        try {
+            const authorizerAccount = ualAccount.accountName;
+            const transaction = cancelInductionTransaction(
+                authorizerAccount,
+                induction.id
+            );
+            console.info(transaction);
+
+            setLoading(true);
+
+            const signedTrx = await ualAccount.signTransaction(transaction, {
+                broadcast: true,
+            });
+            console.info("inductcancel trx", signedTrx);
+
+            setCanceled(true);
+        } catch (error) {
+            onError(error, "Unable to cancel induction");
+        }
+
+        setLoading(false);
+    };
+
+    if (isCanceled) {
+        return <div className="w-full text-center text-red-500">Canceled</div>;
+    }
+
     switch (status) {
         case InductionStatus.Expired:
             return (
                 <ActionButton
-                    type={ActionButtonType.Disabled}
+                    type={ActionButtonType.Danger}
                     size={ActionButtonSize.S}
                     fullWidth
-                    disabled
+                    isLoading={isLoading}
+                    onClick={cancelInduction}
                 >
-                    Expired
+                    Cancel expired
                 </ActionButton>
             );
         case InductionStatus.PendingProfile:
