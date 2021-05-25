@@ -16,12 +16,23 @@ export interface Induction {
     new_member_profile: NewMemberProfile;
 }
 
+export enum InductionRole {
+    Inviter,
+    Endorser,
+    Invitee,
+    Member,
+    NonMember,
+    Unauthenticated,
+    Unknown,
+}
+
 export enum InductionStatus {
-    invalid,
-    expired,
-    waitingForProfile,
-    waitingForVideo,
-    waitingForEndorsement,
+    Invalid,
+    Expired,
+    PendingProfile,
+    PendingCeremonyVideo,
+    PendingEndorsement,
+    PendingDonation,
 }
 
 export interface Endorsement {

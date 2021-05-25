@@ -1,5 +1,4 @@
-import React, { useState } from "react";
-
+import { useState } from "react";
 import {
     Text,
     Link,
@@ -8,15 +7,19 @@ import {
     ActionButton,
     ActionButtonSize,
 } from "_app";
-import { initializeInductionTransaction } from "../transactions";
-import { InductionJourneyContainer, InductionRole } from "inductions";
-import { InitInductionForm } from "./init-induction-form";
+import {
+    InductionInviteForm,
+    InductionStepInviter,
+    InductionStepsContainer,
+} from "inductions";
+
+import { initializeInductionTransaction } from "../../../transactions";
 
 interface Props {
     ualAccount: any;
 }
 
-export const InitInduction = ({ ualAccount }: Props) => {
+export const InductionInviteFormContainer = ({ ualAccount }: Props) => {
     const [initializedInductionId, setInitializedInductionId] = useState("");
 
     const submitTransaction = async (newInduction: any) => {
@@ -42,9 +45,12 @@ export const InitInduction = ({ ualAccount }: Props) => {
     };
 
     return (
-        <InductionJourneyContainer
-            role={InductionRole.INVITER}
-            step={initializedInductionId ? 2 : 1}
+        <InductionStepsContainer
+            step={
+                initializedInductionId
+                    ? InductionStepInviter.PendingProfile
+                    : InductionStepInviter.CreateInvite
+            }
         >
             {initializedInductionId ? (
                 <InviteConfirmation inductionId={initializedInductionId} />
@@ -53,10 +59,10 @@ export const InitInduction = ({ ualAccount }: Props) => {
                     <Heading size={1} className="mb-8">
                         Invite to Eden
                     </Heading>
-                    <InitInductionForm onSubmit={submitTransaction} />
+                    <InductionInviteForm onSubmit={submitTransaction} />
                 </>
             )}
-        </InductionJourneyContainer>
+        </InductionStepsContainer>
     );
 };
 

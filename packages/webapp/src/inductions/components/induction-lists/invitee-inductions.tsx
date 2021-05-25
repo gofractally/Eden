@@ -1,5 +1,3 @@
-import dayjs from "dayjs";
-
 import {
     ActionButton,
     ActionButtonSize,
@@ -9,10 +7,12 @@ import {
     useMemberListByAccountNames,
 } from "_app";
 import * as InductionTable from "_app/ui/table";
-
-import { getEndorsementsByInductionId } from "../../api";
-import { getInductionRemainingTimeDays, getInductionStatus } from "../../utils";
-import { Endorsement, Induction, InductionStatus } from "../../interfaces";
+import {
+    getEndorsementsByInductionId,
+    getInductionRemainingTimeDays,
+    getInductionStatus,
+} from "inductions";
+import { Endorsement, Induction, InductionStatus } from "inductions/interfaces";
 
 interface Props {
     inductions: Induction[];
@@ -72,11 +72,6 @@ const getTableData = (inductions: Induction[]): InductionTable.Row[] => {
                 )
                 .join(", ") || "";
 
-        const isFullyEndorsed =
-            allEndorsements &&
-            allEndorsements.filter((endorsement) => endorsement.endorsed)
-                .length === allEndorsements.length;
-
         const remainingTime = getInductionRemainingTimeDays(ind);
 
         return {
@@ -87,7 +82,7 @@ const getTableData = (inductions: Induction[]): InductionTable.Row[] => {
             status: (
                 <InviteeInductionStatus
                     induction={ind}
-                    isFullyEndorsed={isFullyEndorsed}
+                    endorsements={allEndorsements}
                 />
             ),
         };
@@ -95,19 +90,19 @@ const getTableData = (inductions: Induction[]): InductionTable.Row[] => {
 };
 
 interface InviteeInductionStatusProps {
+    endorsements?: Endorsement[];
     induction: Induction;
-    isFullyEndorsed?: boolean;
 }
 const InviteeInductionStatus = ({
+    endorsements,
     induction,
-    isFullyEndorsed,
 }: InviteeInductionStatusProps) => {
-    const status = getInductionStatus(induction);
+    const status = getInductionStatus(induction, endorsements);
     switch (status) {
-        case InductionStatus.expired:
+        case InductionStatus.Expired:
             return (
                 <ActionButton
-                    type={ActionButtonType.DISABLED}
+                    type={ActionButtonType.Disabled}
                     size={ActionButtonSize.S}
                     fullWidth
                     disabled
@@ -115,10 +110,10 @@ const InviteeInductionStatus = ({
                     Expired
                 </ActionButton>
             );
-        case InductionStatus.waitingForProfile:
+        case InductionStatus.PendingProfile:
             return (
                 <ActionButton
-                    type={ActionButtonType.INDUCTION_STATUS_PROFILE}
+                    type={ActionButtonType.InductionStatusProfile}
                     size={ActionButtonSize.S}
                     fullWidth
                     href={`/induction/${induction.id}`}
@@ -126,10 +121,10 @@ const InviteeInductionStatus = ({
                     Create my profile
                 </ActionButton>
             );
-        case InductionStatus.waitingForVideo:
+        case InductionStatus.PendingCeremonyVideo:
             return (
                 <ActionButton
-                    type={ActionButtonType.NEUTRAL}
+                    type={ActionButtonType.Neutral}
                     size={ActionButtonSize.S}
                     fullWidth
                     href={`/induction/${induction.id}`}
@@ -137,24 +132,26 @@ const InviteeInductionStatus = ({
                     Induction ceremony
                 </ActionButton>
             );
-        case InductionStatus.waitingForEndorsement:
-            return isFullyEndorsed ? (
+        case InductionStatus.PendingEndorsement:
+            return (
                 <ActionButton
                     href={`/induction/${induction.id}`}
-                    type={ActionButtonType.INDUCTION_STATUS_ACTION}
-                    size={ActionButtonSize.S}
-                    fullWidth
-                >
-                    Donate & complete
-                </ActionButton>
-            ) : (
-                <ActionButton
-                    href={`/induction/${induction.id}`}
-                    type={ActionButtonType.NEUTRAL}
+                    type={ActionButtonType.Neutral}
                     size={ActionButtonSize.S}
                     fullWidth
                 >
                     Pending endorsements
+                </ActionButton>
+            );
+        case InductionStatus.PendingDonation:
+            return (
+                <ActionButton
+                    href={`/induction/${induction.id}`}
+                    type={ActionButtonType.InductionStatusAction}
+                    size={ActionButtonSize.S}
+                    fullWidth
+                >
+                    Donate & complete
                 </ActionButton>
             );
         default:

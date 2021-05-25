@@ -10,6 +10,5 @@ export * from "./header-nav";
 export * from "./card";
 export * from "./footer";
 export * from "./table";
-export * from "./step";
 export * from "./call-to-action";
 export * from "./pagination-nav";
