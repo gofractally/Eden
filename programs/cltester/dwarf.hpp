@@ -1,4 +1,5 @@
 #include <eosio/stream.hpp>
+#include <memory>
 
 namespace dwarf
 {
@@ -48,6 +49,17 @@ namespace dwarf
       }
    };
 
+   struct jit_addr
+   {
+      uint32_t wasm_addr;
+      void* addr;
+
+      friend bool operator<(const jit_addr& a, const jit_addr& b)
+      {
+         return a.wasm_addr < b.wasm_addr;
+      }
+   };
+
    struct info
    {
       uint32_t code_offset = 0;
@@ -64,4 +76,9 @@ namespace dwarf
    };
 
    info get_info_from_wasm(eosio::input_stream stream);
+
+   struct debugger_registration;
+   std::shared_ptr<debugger_registration> register_with_debugger(  //
+       info& info,
+       std::vector<jit_addr>&& addresses);
 }  // namespace dwarf

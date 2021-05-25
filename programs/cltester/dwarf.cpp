@@ -5,6 +5,7 @@
 #include <eosio/vm/sections.hpp>
 
 #include <cxxabi.h>
+#include <elf.h>
 #include <stdio.h>
 
 namespace
@@ -1018,4 +1019,115 @@ namespace dwarf
          return &*it;
       return nullptr;
    }
+
+   enum jit_actions : uint32_t
+   {
+      jit_noaction = 0,
+      jit_register_fn,
+      jit_unregister_fn
+   };
+
+   struct jit_code_entry
+   {
+      jit_code_entry* next_entry = nullptr;
+      jit_code_entry* prev_entry = nullptr;
+      const char* symfile_addr = nullptr;
+      uint64_t symfile_size = 0;
+   };
+
+   struct jit_descriptor
+   {
+      uint32_t version = 1;
+      jit_actions action_flag = jit_noaction;
+      jit_code_entry* relevant_entry = nullptr;
+      jit_code_entry* first_entry = nullptr;
+   };
+}  // namespace dwarf
+
+extern "C"
+{
+   void __attribute__((noinline, optnone)) __jit_debug_register_code(){};
+   dwarf::jit_descriptor __jit_debug_descriptor;
+}
+
+namespace dwarf
+{
+   struct debugger_registration
+   {
+      jit_code_entry desc;
+      std::vector<char> symfile;
+
+      ~debugger_registration()
+      {
+         if (desc.next_entry)
+            desc.next_entry->prev_entry = desc.prev_entry;
+         if (desc.prev_entry)
+            desc.prev_entry->next_entry = desc.next_entry;
+         if (__jit_debug_descriptor.first_entry == &desc)
+            __jit_debug_descriptor.first_entry = desc.next_entry;
+         __jit_debug_descriptor.action_flag = jit_unregister_fn;
+         __jit_debug_descriptor.relevant_entry = &desc;
+         fflush(stdout);
+         fprintf(stderr, "\n\nunregister...\n");
+         __jit_debug_register_code();
+         fprintf(stderr, "\n\n");
+      }
+
+      void reg()
+      {
+         desc.symfile_addr = symfile.data();
+         desc.symfile_size = symfile.size();
+         if (__jit_debug_descriptor.first_entry)
+         {
+            __jit_debug_descriptor.first_entry->prev_entry = &desc;
+            desc.next_entry = __jit_debug_descriptor.first_entry;
+         }
+         __jit_debug_descriptor.action_flag = jit_register_fn;
+         __jit_debug_descriptor.first_entry = &desc;
+         __jit_debug_descriptor.relevant_entry = &desc;
+         fflush(stdout);
+         fprintf(stderr, "\n\nregister...\n");
+         __jit_debug_register_code();
+         fprintf(stderr, "\n\n");
+      }
+
+      template <typename T>
+      void write(const T& x)
+      {
+         symfile.insert(symfile.end(), (const char*)(&x), (const char*)(&x + 1));
+      }
+   };
+
+   std::shared_ptr<debugger_registration> register_with_debugger(  //
+       info& info,
+       std::vector<jit_addr>&& addresses)
+   {
+      auto result = std::make_shared<debugger_registration>();
+      std::sort(addresses.begin(), addresses.end());
+      // for (auto& x : addresses)
+      //    fprintf(stdout, "%p %08x\n", x.addr, x.wasm_addr);
+
+      Elf64_Ehdr header{
+          .e_ident = {ELFMAG0, ELFMAG1, ELFMAG2, ELFMAG3, ELFCLASS64, ELFDATA2LSB, EV_CURRENT,
+                      ELFOSABI_LINUX, 0},
+          .e_type = ET_EXEC,
+          .e_machine = EM_X86_64,
+          .e_version = EV_CURRENT,
+          .e_entry = 0,
+          .e_phoff = 0,
+          .e_shoff = 0,
+          .e_flags = 0,
+          .e_ehsize = sizeof(header),
+          .e_phentsize = 0,
+          .e_phnum = 0,
+          .e_shentsize = 0,
+          .e_shnum = 0,
+          .e_shstrndx = 0,
+      };
+      result->write(header);
+
+      result->reg();
+      return result;
+   }
+
 }  // namespace dwarf
