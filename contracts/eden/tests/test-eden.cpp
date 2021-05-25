@@ -667,21 +667,22 @@ TEST_CASE("induction cancelling")
    // inviter can cancel
    t.alice.act<actions::inductinit>(101, "alice"_n, "bertie"_n, std::vector{"pip"_n, "egeon"_n});
    t.alice.act<actions::inductcancel>("alice"_n, 101);
-   CHECK(!get_eden_membership("bertie"_n));
+   CHECK(get_table_size<eden::induction_table_type>() == 0);
 
    // invitee can cancel
    t.alice.act<actions::inductinit>(102, "alice"_n, "bertie"_n, std::vector{"pip"_n, "egeon"_n});
    t.bertie.act<actions::inductcancel>("bertie"_n, 102);
-   CHECK(!get_eden_membership("bertie"_n));
+   CHECK(get_table_size<eden::induction_table_type>() == 0);
 
    // endorser can cancel
    t.alice.act<actions::inductinit>(103, "alice"_n, "bertie"_n, std::vector{"pip"_n, "egeon"_n});
    t.pip.act<actions::inductcancel>("pip"_n, 103);
-   CHECK(!get_eden_membership("bertie"_n));
+   CHECK(get_table_size<eden::induction_table_type>() == 0);
 
    t.alice.act<actions::inductinit>(104, "alice"_n, "bertie"_n, std::vector{"pip"_n, "egeon"_n});
    expect(t.ahab.act<actions::inductcancel>("ahab"_n, 104),
           "Induction can only be canceled by an endorser or the invitee itself");
+   CHECK(get_table_size<eden::induction_table_type>() == 1);
    CHECK(get_eden_membership("bertie"_n).status() == eden::member_status::pending_membership);
 }
 
