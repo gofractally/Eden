@@ -35,7 +35,7 @@ const gcJob = async ({ limit }: JobRequest) => {
                         authorization: [
                             {
                                 actor: edenContractAccount,
-                                permission: "active",
+                                permission: "gc",
                             },
                         ],
                         data: {
