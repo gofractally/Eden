@@ -5,11 +5,13 @@ export const jobHandler = async (
     req: NextApiRequest,
     res: NextApiResponse,
     jobKey: string,
-    executeJob: () => Promise<any>
+    executeJob: (params?: any) => Promise<any>,
+    requestParser?: any
 ) => {
     try {
         authJobRequest(req, jobKey);
-        const jobResponse = await executeJob();
+        const parsedJobRequest = parseJobRequest(requestParser, req.body);
+        const jobResponse = await executeJob(parsedJobRequest);
         return res.status(200).json(jobResponse);
     } catch (error) {
         console.error(error);
@@ -17,7 +19,7 @@ export const jobHandler = async (
     }
 };
 
-export const authJobRequest = (req: NextApiRequest, jobKey: string) => {
+const authJobRequest = (req: NextApiRequest, jobKey: string) => {
     if (req.method !== "POST") {
         throw new BadRequestError(["request not supported"]);
     }
@@ -26,4 +28,13 @@ export const authJobRequest = (req: NextApiRequest, jobKey: string) => {
     if (!xJobKey || jobKey !== xJobKey) {
         throw new Error("Invalid Job Key");
     }
+};
+
+const parseJobRequest = (requestParser: any, body: any) => {
+    if (!requestParser) return undefined;
+    const result = requestParser(body);
+    if (!result.success) {
+        throw new BadRequestError(result.error.flatten());
+    }
+    return result.data;
 };
