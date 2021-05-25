@@ -1,6 +1,7 @@
 #include "dwarf.hpp"
 
 #include <eosio/from_bin.hpp>
+#include <eosio/to_bin.hpp>
 #include <eosio/vm/constants.hpp>
 #include <eosio/vm/sections.hpp>
 
@@ -275,32 +276,6 @@ namespace dwarf
       }
    }
 
-   struct line_state
-   {
-      uint8_t minimum_instruction_length = 0;
-      uint8_t maximum_operations_per_instruction = 0;
-      uint8_t default_is_stmt = 0;
-      int8_t line_base = 0;
-      uint8_t line_range = 0;
-      uint8_t opcode_base = 0;
-      std::vector<uint8_t> standard_opcode_lengths;
-      std::vector<std::string> include_directories;
-      std::vector<std::string> file_names;
-
-      uint32_t address = 0;
-      uint32_t op_index = 0;
-      uint32_t file = 1;
-      uint32_t line = 1;
-      uint32_t column = 0;
-      bool is_stmt = false;
-      bool basic_block = false;
-      bool end_sequence = false;
-      bool prologue_end = false;
-      bool epilogue_begin = false;
-      uint32_t isa = 0;
-      uint32_t discriminator = 0;
-   };
-
    std::string_view get_string(eosio::input_stream& s)
    {
       auto begin = s.pos;
@@ -326,27 +301,42 @@ namespace dwarf
       }
    }
 
-   void parse_debug_line_unit_header(line_state& state, eosio::input_stream& s)
+   template <typename Stream>
+   void write_string(const std::string& s, Stream& stream)
    {
-      auto version = eosio::from_bin<uint16_t>(s);
-      eosio::check(version == lns_version, "bad version in .debug_line");
-      uint32_t header_length = eosio::from_bin<uint32_t>(s);
-      eosio::check(header_length <= s.remaining(), "bad header_length in .debug_line");
-      auto instructions_pos = s.pos + header_length;
+      stream.write(s.c_str(), s.size() + 1);
+   }
 
-      eosio::from_bin(state.minimum_instruction_length, s);
-      eosio::from_bin(state.maximum_operations_per_instruction, s);
-      eosio::from_bin(state.default_is_stmt, s);
-      eosio::from_bin(state.line_base, s);
-      eosio::from_bin(state.line_range, s);
-      eosio::from_bin(state.opcode_base, s);
-      state.standard_opcode_lengths.push_back(0);
-      for (int i = 1; i < state.opcode_base; ++i)
-         state.standard_opcode_lengths.push_back(eosio::from_bin<uint8_t>(s));
-      state.include_directories.push_back("");
-      get_strings(state.include_directories, s);
+   struct line_header
+   {
+      uint8_t minimum_instruction_length = 1;
+      uint8_t maximum_operations_per_instruction = 1;
+      uint8_t default_is_stmt = 1;
+      int8_t line_base = -5;
+      uint8_t line_range = 14;
+      uint8_t opcode_base = 13;
+      std::vector<uint8_t> standard_opcode_lengths = {0, 0, 1, 1, 1, 1, 0, 0, 0, 1, 0, 0, 1};
+      std::vector<std::string> include_directories;
+      std::vector<std::string> file_names;
+   };
 
-      state.file_names.push_back("");
+   template <typename S>
+   void from_bin(line_header& obj, S& s)
+   {
+      eosio::from_bin(obj.minimum_instruction_length, s);
+      eosio::from_bin(obj.maximum_operations_per_instruction, s);
+      eosio::from_bin(obj.default_is_stmt, s);
+      eosio::from_bin(obj.line_base, s);
+      eosio::from_bin(obj.line_range, s);
+      eosio::from_bin(obj.opcode_base, s);
+      obj.standard_opcode_lengths.clear();
+      obj.standard_opcode_lengths.push_back(0);
+      for (int i = 1; i < obj.opcode_base; ++i)
+         obj.standard_opcode_lengths.push_back(eosio::from_bin<uint8_t>(s));
+      obj.include_directories.push_back("");
+      get_strings(obj.include_directories, s);
+
+      obj.file_names.push_back("");
       while (true)
       {
          auto str = (std::string)get_string(s);
@@ -355,13 +345,67 @@ namespace dwarf
          auto dir = eosio::varuint32_from_bin(s);
          auto mod_time = eosio::varuint32_from_bin(s);
          auto filesize = eosio::varuint32_from_bin(s);
-         eosio::check(dir <= state.file_names.size(),
+         eosio::check(dir <= obj.file_names.size(),
                       "invalid include_directory number in .debug_line");
          if (dir)
-            str = state.include_directories[dir] + "/" + str;
-         state.file_names.push_back(std::move(str));
+            str = obj.include_directories[dir] + "/" + str;
+         obj.file_names.push_back(std::move(str));
       }
+   }  // from_bin(line_header)
 
+   template <typename S>
+   void to_bin(const line_header& obj, S& s)
+   {
+      eosio::to_bin(obj.minimum_instruction_length, s);
+      eosio::to_bin(obj.maximum_operations_per_instruction, s);
+      eosio::to_bin(obj.default_is_stmt, s);
+      eosio::to_bin(obj.line_base, s);
+      eosio::to_bin(obj.line_range, s);
+      eosio::to_bin(obj.opcode_base, s);
+      eosio::check(obj.standard_opcode_lengths.size() == obj.opcode_base,
+                   "mismatched standard_opcode_lengths size");
+      for (int i = 1; i < obj.opcode_base; ++i)
+         eosio::to_bin<uint8_t>(obj.standard_opcode_lengths[i], s);
+      for (int i = 1; i < obj.include_directories.size(); ++i)
+         write_string(obj.include_directories[i], s);
+      s.write(0);
+
+      for (int i = 1; i < obj.file_names.size(); ++i)
+      {
+         // TODO: preserve dir, mod_time, filesize
+         write_string(obj.file_names[i], s);
+         s.write(0);  // dir
+         s.write(0);  // mod_time
+         s.write(0);  // filesize
+      }
+      s.write(0);
+   }  // to_bin(line_header)
+
+   struct line_state
+   {
+      line_header header;
+      uint32_t address = 0;
+      uint32_t op_index = 0;
+      uint32_t file = 1;
+      uint32_t line = 1;
+      uint32_t column = 0;
+      bool is_stmt = false;
+      bool basic_block = false;
+      bool end_sequence = false;
+      bool prologue_end = false;
+      bool epilogue_begin = false;
+      uint32_t isa = 0;
+      uint32_t discriminator = 0;
+   };
+
+   void parse_debug_line_unit_header(line_state& state, eosio::input_stream& s)
+   {
+      auto version = eosio::from_bin<uint16_t>(s);
+      eosio::check(version == lns_version, "bad version in .debug_line");
+      uint32_t header_length = eosio::from_bin<uint32_t>(s);
+      eosio::check(header_length <= s.remaining(), "bad header_length in .debug_line");
+      auto instructions_pos = s.pos + header_length;
+      from_bin(state.header, s);
       eosio::check(instructions_pos == s.pos, "mismatched header_length in .debug_line");
    }
 
@@ -371,11 +415,11 @@ namespace dwarf
    {
       line_state state;
       parse_debug_line_unit_header(state, s);
-      eosio::check(state.minimum_instruction_length == 1,
+      eosio::check(state.header.minimum_instruction_length == 1,
                    "mismatched minimum_instruction_length in .debug_line");
-      eosio::check(state.maximum_operations_per_instruction == 1,
+      eosio::check(state.header.maximum_operations_per_instruction == 1,
                    "mismatched maximum_operations_per_instruction in .debug_line");
-      state.is_stmt = state.default_is_stmt;
+      state.is_stmt = state.header.default_is_stmt;
       auto initial_state = state;
 
       std::optional<location> current;
@@ -384,9 +428,9 @@ namespace dwarf
                          state.line != current->line))
          {
             current->end_address = state.address;
-            eosio::check(current->file_index < state.file_names.size(),
+            eosio::check(current->file_index < state.header.file_names.size(),
                          "invalid file index in .debug_line");
-            auto& filename = state.file_names[current->file_index];
+            auto& filename = state.header.file_names[current->file_index];
             auto it = files.find(filename);
             if (it == files.end())
             {
@@ -435,7 +479,7 @@ namespace dwarf
                   break;
             }
          }
-         else if (opcode < state.opcode_base)
+         else if (opcode < state.header.opcode_base)
          {
             switch (opcode)
             {
@@ -465,7 +509,7 @@ namespace dwarf
                   state.basic_block = true;
                   break;
                case dw_lns_const_add_pc:
-                  state.address += (255 - state.opcode_base) / state.line_range;
+                  state.address += (255 - state.header.opcode_base) / state.header.line_range;
                   break;
                case dw_lns_fixed_advance_pc:
                   state.address += eosio::from_bin<uint16_t>(s);
@@ -482,16 +526,17 @@ namespace dwarf
                   break;
                default:
                   // fprintf(stderr, "opcode %d\n", (int)opcode);
-                  // fprintf(stderr, "  args: %d\n", state.standard_opcode_lengths[opcode]);
-                  // for (uint8_t i = 0; i < state.standard_opcode_lengths[opcode]; ++i)
+                  // fprintf(stderr, "  args: %d\n", state.header.standard_opcode_lengths[opcode]);
+                  // for (uint8_t i = 0; i < state.header.standard_opcode_lengths[opcode]; ++i)
                   //    eosio::varuint32_from_bin(s);
                   break;
             }
-         }  // opcode < state.opcode_base
+         }  // opcode < state.header.opcode_base
          else
          {
-            state.address += (opcode - state.opcode_base) / state.line_range;
-            state.line += state.line_base + ((opcode - state.opcode_base) % state.line_range);
+            state.address += (opcode - state.header.opcode_base) / state.header.line_range;
+            state.line += state.header.line_base +
+                          ((opcode - state.header.opcode_base) % state.header.line_range);
             add_row();
             state.basic_block = false;
             state.prologue_end = false;
@@ -512,6 +557,25 @@ namespace dwarf
          parse_debug_line_unit(result, files, {s.pos, s.pos + unit_length});
          s.skip(unit_length);
       }
+   }
+
+   std::vector<char> generate_debug_line(const info& info)
+   {
+      line_header header;
+      header.file_names.push_back("");
+      header.file_names.insert(header.file_names.end(), info.files.begin(), info.files.end());
+      eosio::size_stream header_size;
+      to_bin(header, header_size);
+
+      std::vector<char> result(header_size.size + 22);
+      eosio::fixed_buf_stream s{result.data(), result.size()};
+      eosio::to_bin(uint32_t(0xffff'ffff), s);
+      eosio::to_bin(uint64_t(header_size.size + 10), s);
+      eosio::to_bin(uint16_t(lns_version), s);
+      eosio::to_bin(uint64_t(header_size.size), s);
+      to_bin(header, s);
+      eosio::check(s.pos == s.end, "generate_debug_line: calculated incorrect stream size");
+      return result;
    }
 
    void parse_debug_abbrev(info& result,
@@ -1092,9 +1156,24 @@ namespace dwarf
       }
 
       template <typename T>
-      void write(const T& x)
+      size_t write(const T& x)
       {
+         auto result = symfile.size();
          symfile.insert(symfile.end(), (const char*)(&x), (const char*)(&x + 1));
+         return result;
+      }
+
+      template <typename T>
+      void write(size_t pos, const T& x)
+      {
+         memcpy(symfile.data() + pos, (const char*)(&x), sizeof(x));
+      }
+
+      size_t append(const std::vector<char>& v)
+      {
+         auto result = symfile.size();
+         symfile.insert(symfile.end(), v.begin(), v.end());
+         return result;
       }
    };
 
@@ -1107,24 +1186,84 @@ namespace dwarf
       // for (auto& x : addresses)
       //    fprintf(stdout, "%p %08x\n", x.addr, x.wasm_addr);
 
+      std::vector<char> strings;
+      strings.push_back(0);
+      auto add_str = [&](const char* s) {
+         auto result = strings.size();
+         strings.insert(strings.end(), s, s + strlen(s) + 1);
+         return result;
+      };
+
+      constexpr uint16_t num_sections = 3;
       Elf64_Ehdr header{
           .e_ident = {ELFMAG0, ELFMAG1, ELFMAG2, ELFMAG3, ELFCLASS64, ELFDATA2LSB, EV_CURRENT,
                       ELFOSABI_LINUX, 0},
           .e_type = ET_EXEC,
           .e_machine = EM_X86_64,
           .e_version = EV_CURRENT,
-          .e_entry = 0,
+          .e_entry = 0,  // TODO
           .e_phoff = 0,
-          .e_shoff = 0,
+          .e_shoff = sizeof(header),
           .e_flags = 0,
           .e_ehsize = sizeof(header),
           .e_phentsize = 0,
           .e_phnum = 0,
-          .e_shentsize = 0,
-          .e_shnum = 0,
-          .e_shstrndx = 0,
+          .e_shentsize = sizeof(Elf64_Shdr),
+          .e_shnum = num_sections,
+          .e_shstrndx = 1,
       };
-      result->write(header);
+      auto header_pos = result->write(header);
+
+      Elf64_Shdr reserved_sec_header{
+          .sh_name = 0,
+          .sh_type = 0,
+          .sh_flags = 0,
+          .sh_addr = 0,
+          .sh_offset = 0,
+          .sh_size = 0,
+          .sh_link = 0,
+          .sh_info = 0,
+          .sh_addralign = 0,
+          .sh_entsize = 0,
+      };
+      result->write(reserved_sec_header);
+
+      Elf64_Shdr str_sec_header{
+          .sh_name = (Elf64_Word)add_str(".shstrtab"),
+          .sh_type = SHT_STRTAB,
+          .sh_flags = 0,
+          .sh_addr = 0,
+          .sh_offset = 0,
+          .sh_size = 0,
+          .sh_link = 0,
+          .sh_info = 0,
+          .sh_addralign = 0,
+          .sh_entsize = 0,
+      };
+      auto str_sec_header_pos = result->write(str_sec_header);
+
+      Elf64_Shdr line_sec_header{
+          .sh_name = (Elf64_Word)add_str(".debug_line"),
+          .sh_type = SHT_PROGBITS,
+          .sh_flags = 0,
+          .sh_addr = 0,
+          .sh_offset = 0,
+          .sh_size = 0,
+          .sh_link = 0,
+          .sh_info = 0,
+          .sh_addralign = 0,
+          .sh_entsize = 0,
+      };
+      auto line_sec_header_pos = result->write(line_sec_header);
+
+      auto line = generate_debug_line(info);
+      line_sec_header.sh_offset = result->append(line);
+      line_sec_header.sh_size = line.size();
+      result->write(line_sec_header_pos, line_sec_header);
+
+      str_sec_header.sh_offset = result->append(strings);
+      str_sec_header.sh_size = strings.size();
+      result->write(str_sec_header_pos, str_sec_header);
 
       result->reg();
       return result;
