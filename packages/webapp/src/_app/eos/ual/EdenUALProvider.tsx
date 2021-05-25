@@ -4,13 +4,13 @@ import { appName, availableWallets, chainConfig } from "config";
 import { anchor, scatter, ledger } from "./config";
 
 const authenticators: any[] = [];
-if (availableWallets.indexOf("ANCHOR") >= 0) {
+if (availableWallets.includes("ANCHOR")) {
     authenticators.push(anchor);
 }
-if (availableWallets.indexOf("SCATTER") >= 0) {
+if (availableWallets.includes("SCATTER")) {
     authenticators.push(scatter);
 }
-if (availableWallets.indexOf("LEDGER") >= 0) {
+if (availableWallets.includes("LEDGER")) {
     authenticators.push(ledger);
 }
 
