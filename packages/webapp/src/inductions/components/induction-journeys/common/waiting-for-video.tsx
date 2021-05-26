@@ -8,7 +8,7 @@ export const WaitingForVideo = ({ induction }: { induction: Induction }) => {
             <Heading size={1} className="mb-5">
                 Pending induction ceremony
             </Heading>
-            <div className="space-y-3 mb-8">
+            <div className="space-y-3">
                 <Text className="leading-normal">
                     Your inviter or one of the witnesses will be in touch with
                     you to schedule a short, recorded video induction ceremony.
