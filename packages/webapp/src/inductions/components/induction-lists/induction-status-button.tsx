@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { FaTrash } from "react-icons/fa";
 
 import {
     ActionButton,
@@ -65,7 +66,8 @@ export const InductionStatusButton = ({
                 isLoading={isLoading}
                 onClick={cancelInduction}
             >
-                Cancel expired
+                <FaTrash className="mr-2" />
+                Expired
             </ActionButton>
         );
     }
