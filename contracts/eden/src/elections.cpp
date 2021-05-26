@@ -32,39 +32,6 @@ namespace eden
       return result;
    }
 
-   static constexpr std::size_t ceil_log12(uint16_t x)
-   {
-      std::size_t result = 0;
-      for (uint32_t i = 1; i < x; ++result, i *= 12)
-      {
-      }
-      return result;
-   }
-
-   struct rational
-   {
-      uint8_t num;
-      uint8_t den;
-   };
-   // \pre 0 <= y <= 1
-   // \pre 0 < y.den <= 4
-   // \pre 0 <= x <= 10,000
-   static uint16_t ceil_pow(uint16_t x, rational y)
-   {
-      // result = x^(n/d);
-      // result^d = x^n;
-      // result^d - x^n = 0;
-      //
-      // result^d - x^n >= 0
-      // (result-1)^d - x^n < 0
-
-      // Could be implemented entirely in integer arithmetic using Newton's method,
-      // but performance probably doesn't matter, since we only need to do it once
-      // per election.
-      return static_cast<uint16_t>(
-          std::ceil(std::pow(static_cast<double>(x), static_cast<double>(y.num) / (y.den))));
-   }
-
    static uint32_t int_pow(uint32_t base, uint32_t exponent)
    {
       uint32_t result = 1;
@@ -75,45 +42,95 @@ namespace eden
       return result;
    }
 
-   election_config make_election_config(uint16_t num_participants)
+   uint32_t int_root(uint32_t x, uint32_t y)
    {
-      std::size_t num_rounds = ceil_log12(num_participants);
-      uint16_t max_group_size = ceil_pow(num_participants, {1, static_cast<uint8_t>(num_rounds)});
-      uint32_t high_total = int_pow(max_group_size, num_rounds);
-      uint32_t num_low_rounds = 0;
-      uint32_t num_mixed_rounds = 0;
-      for (; num_low_rounds < num_rounds && high_total > num_participants; ++num_low_rounds)
+      // find z, such that $z^y \le x < (z+1)^y$
+      //
+      // hard coded limits based on the election constraints
+      uint32_t low = 0, high = 12;
+      while (high - low > 1)
       {
-         high_total = high_total / max_group_size * (max_group_size - 1);
-         if (high_total < num_participants)
+         uint32_t mid = (high + low) / 2;
+         if (x < int_pow(mid, y))
          {
-            num_mixed_rounds = 1;
-            break;
+            high = mid;
+         }
+         else
+         {
+            low = mid;
          }
       }
+      return low;
+   }
 
-      uint32_t num_high_rounds = num_rounds - num_mixed_rounds - num_low_rounds;
-      election_config result(num_rounds);
+   std::size_t count_rounds(uint32_t num_members)
+   {
+      std::size_t result = 1;
+      for (uint32_t i = 12; i <= num_members; i *= 4)
+      {
+         ++result;
+      }
+      return result;
+   }
 
-      uint32_t next_group = 1;
-      for (uint32_t i = 0; i < num_high_rounds; ++i)
+   auto get_group_sizes(uint32_t num_members, std::size_t num_rounds)
+   {
+      auto basic_group_size = int_root(num_members, num_rounds);
+      if (basic_group_size == 3)
       {
-         auto& round = result[result.size() - i - 1];
-         round.num_groups = next_group;
-         round.num_participants = next_group = next_group * max_group_size;
+         std::vector<uint32_t> result(num_rounds, 4);
+         // result.front() is always 4, but for some reason, that causes clang to miscompile this.
+         // TODO: look for UB...
+         auto large_rounds =
+             static_cast<std::size_t>(std::log(static_cast<double>(num_members) /
+                                               int_pow(result.front(), num_rounds - 1) / 3) /
+                                      std::log(1.25));
+         result.back() = 3;
+         eosio::check(large_rounds <= 1,
+                      "More that one large round is unexpected when the final group size is 3.");
+         for (int i = result.size() - large_rounds - 1; i < result.size() - 1; ++i)
+         {
+            result[i] = 5;
+         }
+         return result;
       }
-      for (uint32_t i = 0; i < num_low_rounds; ++i)
+      else if (basic_group_size >= 6)
       {
-         auto& round = result[result.size() - num_high_rounds - i - 1];
-         round.num_groups = next_group;
-         round.num_participants = next_group = next_group * (max_group_size - 1);
+         // 5,6,...,6,N
+         std::vector<uint32_t> result(num_rounds, 6);
+         result.front() = 5;
+         auto divisor = int_pow(6, num_rounds - 1);
+         result.back() = (num_members + divisor - 1) / divisor;
+         return result;
       }
-      if (num_mixed_rounds == 1)
+      else
       {
-         auto& round = result.front();
-         round.num_groups = next_group;
-         round.num_participants = num_participants;
+         // \lfloor \log_{(G+1)/G}\frac{N}{G^R} \rfloor
+         auto large_rounds = static_cast<std::size_t>(
+             std::log(static_cast<double>(num_members) / int_pow(basic_group_size, num_rounds)) /
+             std::log((basic_group_size + 1.0) / basic_group_size));
+         // x,x,x,x,x,x
+         std::vector<uint32_t> result(num_rounds, basic_group_size + 1);
+         std::fill_n(result.begin(), num_rounds - large_rounds, basic_group_size);
+         return result;
       }
+   }
+
+   election_config make_election_config(uint16_t num_participants)
+   {
+      if (num_participants == 0)
+         return {};
+      auto sizes = get_group_sizes(num_participants, count_rounds(num_participants));
+      election_config result(sizes.size());
+      uint16_t next_participants = 1;
+      for (uint32_t i = 0; i < sizes.size() - 1; ++i)
+      {
+         auto idx = result.size() - i - 1;
+         uint16_t participants = next_participants * sizes[idx];
+         result[idx] = {participants, next_participants};
+         next_participants = participants;
+      }
+      result[0] = {num_participants, next_participants};
       return result;
    }
 

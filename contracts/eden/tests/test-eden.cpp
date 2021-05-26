@@ -722,7 +722,7 @@ TEST_CASE("election config")
 {
    auto verify_cfg = [](const auto& config, uint16_t num_participants) {
       INFO("participants: " << num_participants)
-      if (num_participants <= 1)
+      if (num_participants < 1)
       {
          CHECK(config.empty());
       }
@@ -734,9 +734,11 @@ TEST_CASE("election config")
          {
             CHECK(config[i].num_groups == config[i + 1].num_participants);
          }
-         // There are at most two group sizes
+         // There are at most two group sizes, except for the last round
          std::set<uint16_t> group_sizes;
-         for (const auto& round_config : config)
+         auto early_rounds = config;
+         early_rounds.pop_back();
+         for (const auto& round_config : early_rounds)
          {
             group_sizes.insert(round_config.group_max_size());
             if (round_config.num_short_groups())
@@ -838,9 +840,11 @@ TEST_CASE("election with multiple rounds")
    // With 200 members, there should be three rounds
    CHECK(get_table_size<eden::vote_table_type>() == 200);
    generic_group_vote(get_current_groups());
-   CHECK(get_table_size<eden::vote_table_type>() == 36);
+   CHECK(get_table_size<eden::vote_table_type>() == 48);
    generic_group_vote(get_current_groups());
-   CHECK(get_table_size<eden::vote_table_type>() == 6);
+   CHECK(get_table_size<eden::vote_table_type>() == 12);
+   generic_group_vote(get_current_groups());
+   CHECK(get_table_size<eden::vote_table_type>() == 3);
    generic_group_vote(get_current_groups());
    CHECK(get_table_size<eden::vote_table_type>() == 0);
 
