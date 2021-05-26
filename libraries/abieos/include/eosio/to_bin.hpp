@@ -56,7 +56,7 @@ namespace eosio
          uint8_t b = val & 0x7f;
          done = (val >> 6) == (val >> 7);
          val >>= 7;
-         b |= ((val > 0) << 7);
+         b |= (!done << 7);
          stream.write(b);
       }
    }

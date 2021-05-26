@@ -1321,7 +1321,8 @@ namespace dwarf
        info& info,
        std::vector<jit_addr>&& addresses,
        const void* code_start,
-       size_t code_size)
+       size_t code_size,
+       const void* entry)
    {
       auto result = std::make_shared<debugger_registration>();
       std::sort(addresses.begin(), addresses.end());
@@ -1345,7 +1346,7 @@ namespace dwarf
           .e_type = ET_EXEC,
           .e_machine = EM_X86_64,
           .e_version = EV_CURRENT,
-          .e_entry = 0,  // TODO
+          .e_entry = Elf64_Addr(entry),
           .e_phoff = 0,
           .e_shoff = sizeof(header),
           .e_flags = 0,
@@ -1400,6 +1401,10 @@ namespace dwarf
       write_sec(str_sec_header, str_sec_header_pos, strings);
 
       result->reg();
+
+      fprintf(stdout, "\n\n\n%p\n\n\n", entry);
+      asm("int $3");
+
       return result;
    }
 

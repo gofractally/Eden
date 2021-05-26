@@ -82,5 +82,6 @@ namespace dwarf
        info& info,
        std::vector<jit_addr>&& addresses,
        const void* code_start,
-       size_t code_size);
+       size_t code_size,
+       const void* entry);
 }  // namespace dwarf
