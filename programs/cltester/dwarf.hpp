@@ -80,5 +80,7 @@ namespace dwarf
    struct debugger_registration;
    std::shared_ptr<debugger_registration> register_with_debugger(  //
        info& info,
-       std::vector<jit_addr>&& addresses);
+       std::vector<jit_addr>&& addresses,
+       const void* code_start,
+       size_t code_size);
 }  // namespace dwarf

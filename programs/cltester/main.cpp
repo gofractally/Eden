@@ -1551,12 +1551,14 @@ static void run(const char* wasm, const std::vector<std::string>& args)
    backend_t backend(code, nullptr);
    auto dwarf_info = dwarf::get_info_from_wasm({(const char*)code.data(), code.size()});
 
+   auto& alloc = backend.get_module().allocator;
    auto& dbg = backend.get_debug();
    std::vector<dwarf::jit_addr> addresses;
    for (auto& entry : dbg.data)
       addresses.push_back(
           {entry.wasm_addr - dwarf_info.code_offset, (char*)dbg.base_address + entry.offset});
-   auto reg = register_with_debugger(dwarf_info, std::move(addresses));
+   auto reg = register_with_debugger(dwarf_info, std::move(addresses), alloc.get_code_start(),
+                                     alloc._code_size);
 
    ::state state{wasm, dwarf_info, wa, backend, args};
    callbacks cb{state};

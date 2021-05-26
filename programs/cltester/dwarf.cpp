@@ -582,6 +582,14 @@ namespace dwarf
       uint32_t file = 1;
       uint32_t line = 1;
 
+      auto extended = [&](auto f) {
+         eosio::to_bin(uint8_t(0), s);
+         eosio::size_stream sz;
+         f(sz);
+         eosio::varuint32_to_bin(sz.size, s);
+         f(s);
+      };
+
       for (auto& loc : info.locations)
       {
          auto range = get_addr_range(info, addresses, loc.begin_address, loc.end_address);
@@ -592,15 +600,17 @@ namespace dwarf
          {
             if (address && range->first < *address)
             {
-               eosio::to_bin(uint8_t(0), s);
-               eosio::to_bin(uint8_t(dw_lne_end_sequence), s);
-               file = 1;
-               line = 1;
+               extended([&](auto& s) {
+                  eosio::to_bin(uint8_t(dw_lne_end_sequence), s);
+                  file = 1;
+                  line = 1;
+               });
             }
-            eosio::to_bin(uint8_t(0), s);
-            eosio::to_bin(uint8_t(dw_lne_set_address), s);
-            eosio::to_bin(range->first, s);
-            address = range->first;
+            extended([&](auto& s) {
+               eosio::to_bin(uint8_t(dw_lne_set_address), s);
+               eosio::to_bin(range->first, s);
+               address = range->first;
+            });
          }
 
          if (file != loc.file_index + 1)
@@ -621,17 +631,19 @@ namespace dwarf
 
          if (address != range->second)
          {
-            eosio::to_bin(uint8_t(0), s);
-            eosio::to_bin(uint8_t(dw_lne_set_address), s);
-            eosio::to_bin(range->second, s);
-            address = range->second;
+            extended([&](auto& s) {
+               eosio::to_bin(uint8_t(dw_lne_set_address), s);
+               eosio::to_bin(range->second, s);
+               address = range->second;
+            });
          }
       }  // for(loc)
 
       if (address)
       {
-         eosio::to_bin(uint8_t(0), s);
-         eosio::to_bin(uint8_t(dw_lne_end_sequence), s);
+         extended([&](auto& s) {  //
+            eosio::to_bin(uint8_t(dw_lne_end_sequence), s);
+         });
       }
    }  // write_line_program
 
@@ -648,7 +660,7 @@ namespace dwarf
       std::vector<char> result(header_size.size + program_size.size + 22);
       eosio::fixed_buf_stream s{result.data(), result.size()};
       eosio::to_bin(uint32_t(0xffff'ffff), s);
-      eosio::to_bin(uint64_t(header_size.size + 10), s);
+      eosio::to_bin(uint64_t(header_size.size + program_size.size + 10), s);
       eosio::to_bin(uint16_t(lns_version), s);
       eosio::to_bin(uint64_t(header_size.size), s);
       to_bin(header, s);
@@ -1059,6 +1071,55 @@ namespace dwarf
       }
    }
 
+   std::vector<char> generate_debug_abbrev(const info& info, const std::vector<jit_addr>& addresses)
+   {
+      std::vector<char> result;
+      eosio::vector_stream s{result};
+      eosio::varuint32_to_bin(1, s);                    // code
+      eosio::varuint32_to_bin(dw_tag_compile_unit, s);  // tag
+      eosio::to_bin(uint8_t(0), s);                     // has_children
+
+      auto attr = [&](auto at, auto form) {
+         eosio::varuint32_to_bin(at, s);
+         eosio::varuint32_to_bin(form, s);
+      };
+      attr(dw_at_low_pc, dw_form_addr);
+      attr(dw_at_high_pc, dw_form_addr);
+      attr(dw_at_stmt_list, dw_form_sec_offset);
+      attr(0, 0);
+
+      return result;
+   }
+
+   std::vector<char> generate_debug_info(const info& info,
+                                         const std::vector<jit_addr>& addresses,
+                                         const void* code_start,
+                                         size_t code_size)
+   {
+      std::vector<char> content;
+      {
+         eosio::vector_stream s{content};
+         eosio::to_bin(uint16_t(compile_unit_version), s);
+         eosio::to_bin(uint64_t(0), s);                              // debug_abbrev_offset
+         eosio::to_bin(uint8_t(8), s);                               // address_size
+         eosio::varuint32_to_bin(1, s);                              // code
+         eosio::to_bin(uint64_t(code_start), s);                     // dw_at_low_pc
+         eosio::to_bin(uint64_t((char*)code_start + code_size), s);  // dw_at_high_pc
+         eosio::to_bin(uint64_t(0), s);                              // dw_at_stmt_list
+         eosio::varuint32_to_bin(0, s);                              // code
+      }
+
+      {
+         std::vector<char> result(content.size() + 12);
+         eosio::fixed_buf_stream s{result.data(), result.size()};
+         eosio::to_bin(uint32_t(0xffff'ffff), s);
+         eosio::to_bin(uint64_t(content.size()), s);
+         s.write(content.data(), content.size());
+         eosio::check(s.pos == s.end, "generate_debug_info: calculated incorrect stream size");
+         return result;
+      }
+   }
+
    struct wasm_header
    {
       uint32_t magic = 0;
@@ -1258,7 +1319,9 @@ namespace dwarf
 
    std::shared_ptr<debugger_registration> register_with_debugger(  //
        info& info,
-       std::vector<jit_addr>&& addresses)
+       std::vector<jit_addr>&& addresses,
+       const void* code_start,
+       size_t code_size)
    {
       auto result = std::make_shared<debugger_registration>();
       std::sort(addresses.begin(), addresses.end());
@@ -1268,12 +1331,14 @@ namespace dwarf
       std::vector<char> strings;
       strings.push_back(0);
       auto add_str = [&](const char* s) {
+         if (!s || !*s)
+            return size_t(0);
          auto result = strings.size();
          strings.insert(strings.end(), s, s + strlen(s) + 1);
          return result;
       };
 
-      constexpr uint16_t num_sections = 3;
+      constexpr uint16_t num_sections = 6;
       Elf64_Ehdr header{
           .e_ident = {ELFMAG0, ELFMAG1, ELFMAG2, ELFMAG3, ELFCLASS64, ELFDATA2LSB, EV_CURRENT,
                       ELFOSABI_LINUX, 0},
@@ -1293,56 +1358,46 @@ namespace dwarf
       };
       auto header_pos = result->write(header);
 
-      Elf64_Shdr reserved_sec_header{
-          .sh_name = 0,
-          .sh_type = 0,
-          .sh_flags = 0,
-          .sh_addr = 0,
-          .sh_offset = 0,
-          .sh_size = 0,
-          .sh_link = 0,
-          .sh_info = 0,
-          .sh_addralign = 0,
-          .sh_entsize = 0,
+      auto sec_header = [&](const char* name, Elf64_Word type, Elf64_Xword flags) {
+         Elf64_Shdr header{
+             .sh_name = (Elf64_Word)add_str(name),
+             .sh_type = type,
+             .sh_flags = flags,
+             .sh_addr = 0,
+             .sh_offset = 0,
+             .sh_size = 0,
+             .sh_link = 0,
+             .sh_info = 0,
+             .sh_addralign = 0,
+             .sh_entsize = 0,
+         };
+         auto pos = result->write(header);
+         return std::pair{header, pos};
       };
-      result->write(reserved_sec_header);
+      auto [reserved_sec_header, reserved_sec_header_pos] = sec_header(0, 0, 0);
+      auto [str_sec_header, str_sec_header_pos] = sec_header(".shstrtab", SHT_STRTAB, 0);
+      auto [code_sec_header, code_sec_header_pos] =
+          sec_header("code", SHT_NOBITS, SHF_ALLOC | SHF_EXECINSTR);
+      auto [line_sec_header, line_sec_header_pos] = sec_header(".debug_line", SHT_PROGBITS, 0);
+      auto [abbrev_sec_header, abbrev_sec_header_pos] =
+          sec_header(".debug_abbrev", SHT_PROGBITS, 0);
+      auto [info_sec_header, info_sec_header_pos] = sec_header(".debug_info", SHT_PROGBITS, 0);
 
-      Elf64_Shdr str_sec_header{
-          .sh_name = (Elf64_Word)add_str(".shstrtab"),
-          .sh_type = SHT_STRTAB,
-          .sh_flags = 0,
-          .sh_addr = 0,
-          .sh_offset = 0,
-          .sh_size = 0,
-          .sh_link = 0,
-          .sh_info = 0,
-          .sh_addralign = 0,
-          .sh_entsize = 0,
+      code_sec_header.sh_addr = Elf64_Addr(code_start);
+      code_sec_header.sh_size = code_size;
+      result->write(code_sec_header_pos, code_sec_header);
+
+      auto write_sec = [&](auto& header, auto pos, const auto& data) {
+         header.sh_offset = result->append(data);
+         header.sh_size = data.size();
+         result->write(pos, header);
       };
-      auto str_sec_header_pos = result->write(str_sec_header);
 
-      Elf64_Shdr line_sec_header{
-          .sh_name = (Elf64_Word)add_str(".debug_line"),
-          .sh_type = SHT_PROGBITS,
-          .sh_flags = 0,
-          .sh_addr = 0,
-          .sh_offset = 0,
-          .sh_size = 0,
-          .sh_link = 0,
-          .sh_info = 0,
-          .sh_addralign = 0,
-          .sh_entsize = 0,
-      };
-      auto line_sec_header_pos = result->write(line_sec_header);
-
-      auto line = generate_debug_line(info, addresses);
-      line_sec_header.sh_offset = result->append(line);
-      line_sec_header.sh_size = line.size();
-      result->write(line_sec_header_pos, line_sec_header);
-
-      str_sec_header.sh_offset = result->append(strings);
-      str_sec_header.sh_size = strings.size();
-      result->write(str_sec_header_pos, str_sec_header);
+      write_sec(line_sec_header, line_sec_header_pos, generate_debug_line(info, addresses));
+      write_sec(abbrev_sec_header, abbrev_sec_header_pos, generate_debug_abbrev(info, addresses));
+      write_sec(info_sec_header, info_sec_header_pos,
+                generate_debug_info(info, addresses, code_start, code_size));
+      write_sec(str_sec_header, str_sec_header_pos, strings);
 
       result->reg();
       return result;
