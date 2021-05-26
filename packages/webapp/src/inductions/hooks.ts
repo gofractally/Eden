@@ -18,9 +18,12 @@ export const useInductionUserRole = (
     return userRole;
 };
 
+export const GET_INDUCTION_WITH_ENDORSEMENTS_QUERY =
+    "induction-with-endorsements";
+
 export const useGetInductionWithEndorsements = (inductionId: string) =>
     useQuery(
-        ["induction", inductionId],
+        [GET_INDUCTION_WITH_ENDORSEMENTS_QUERY, inductionId],
         () => getInductionWithEndorsements(inductionId),
         {
             // gets rid of bugs cause by refetching right after anchor/scatter signing

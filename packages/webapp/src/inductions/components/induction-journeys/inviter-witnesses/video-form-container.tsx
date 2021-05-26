@@ -1,4 +1,5 @@
 import { Dispatch, SetStateAction, useState } from "react";
+import { useQueryClient } from "react-query";
 
 import {
     Heading,
@@ -8,13 +9,12 @@ import {
     uploadToIpfs,
     useUALAccount,
 } from "_app";
-import {
-    getInductionRemainingTimeDays,
-    InductionVideoForm,
-    setInductionVideoTransaction,
-    VideoSubmissionPhase,
-} from "inductions";
-import { Induction } from "inductions/interfaces";
+
+import { Induction } from "../../../interfaces";
+import { getInductionRemainingTimeDays } from "../../../utils";
+import { setInductionVideoTransaction } from "../../../transactions";
+import { InductionVideoForm, VideoSubmissionPhase } from "./video-form";
+import { GET_INDUCTION_WITH_ENDORSEMENTS_QUERY } from "inductions/hooks";
 
 interface Props {
     induction: Induction;
@@ -28,6 +28,7 @@ export const InductionVideoFormContainer = ({
     setSubmittedVideo,
 }: Props) => {
     const [ualAccount] = useUALAccount();
+    const queryClient = useQueryClient();
     const [videoSubmissionPhase, setVideoSubmissionPhase] = useState<
         VideoSubmissionPhase | undefined
     >(undefined);
@@ -52,6 +53,11 @@ export const InductionVideoFormContainer = ({
 
             setVideoSubmissionPhase("finishing");
             await uploadIpfsFileWithTransaction(signedTrx, videoHash);
+
+            queryClient.invalidateQueries([
+                GET_INDUCTION_WITH_ENDORSEMENTS_QUERY,
+                induction.id,
+            ]);
 
             setSubmittedVideo(true);
         } catch (error) {
