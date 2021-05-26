@@ -680,7 +680,7 @@ TEST_CASE("induction cancelling")
    CHECK(get_table_size<eden::induction_table_type>() == 0);
 
    t.alice.act<actions::inductinit>(104, "alice"_n, "bertie"_n, std::vector{"pip"_n, "egeon"_n});
-   expect(t.ahab.act<actions::inductcancel>("ahab"_n, 104),
+   expect(t.ahab.trace<actions::inductcancel>("ahab"_n, 104),
           "Induction can only be canceled by an endorser or the invitee itself");
    CHECK(get_table_size<eden::induction_table_type>() == 1);
    CHECK(get_eden_membership("bertie"_n).status() == eden::member_status::pending_membership);
