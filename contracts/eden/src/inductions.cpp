@@ -409,7 +409,7 @@ namespace eden
    bool inductions::is_invitee(uint64_t id, eosio::name invitee) const
    {
       auto& induction = get_induction(id);
-      return induction.invitee == invitee;
+      return induction.invitee() == invitee;
    }
 
    bool inductions::has_induction(eosio::name invitee) const
