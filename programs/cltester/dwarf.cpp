@@ -559,21 +559,100 @@ namespace dwarf
       }
    }
 
-   std::vector<char> generate_debug_line(const info& info)
+   std::optional<std::pair<uint64_t, uint64_t>> get_addr_range(
+       const info& info,
+       const std::vector<jit_addr>& addresses,
+       uint32_t begin,
+       uint32_t end)
+   {
+      // TODO: cuts off a range which ends at the wasm's end
+      auto it1 = std::lower_bound(addresses.begin(), addresses.end(), begin,
+                                  [](const auto& a, auto b) { return a.wasm_addr < b; });
+      auto it2 = std::lower_bound(addresses.begin(), addresses.end(), end,
+                                  [](const auto& a, auto b) { return a.wasm_addr < b; });
+      if (it1 < it2 && it2 != addresses.end())
+         return std::pair{uint64_t(it1->addr), uint64_t(it2->addr)};
+      return {};
+   }
+
+   template <typename S>
+   void write_line_program(const info& info, const std::vector<jit_addr>& addresses, S& s)
+   {
+      std::optional<uint64_t> address = 0;
+      uint32_t file = 1;
+      uint32_t line = 1;
+
+      for (auto& loc : info.locations)
+      {
+         auto range = get_addr_range(info, addresses, loc.begin_address, loc.end_address);
+         if (!range)
+            continue;
+
+         if (!address || range->first != *address)
+         {
+            if (address && range->first < *address)
+            {
+               eosio::to_bin(uint8_t(0), s);
+               eosio::to_bin(uint8_t(dw_lne_end_sequence), s);
+               file = 1;
+               line = 1;
+            }
+            eosio::to_bin(uint8_t(0), s);
+            eosio::to_bin(uint8_t(dw_lne_set_address), s);
+            eosio::to_bin(range->first, s);
+            address = range->first;
+         }
+
+         if (file != loc.file_index + 1)
+         {
+            eosio::to_bin(uint8_t(dw_lns_set_file), s);
+            eosio::varuint32_to_bin(loc.file_index + 1, s);
+            file = loc.file_index + 1;
+         }
+
+         if (line != loc.line)
+         {
+            eosio::to_bin(uint8_t(dw_lns_advance_line), s);
+            eosio::sleb64_to_bin(int32_t(loc.line - line), s);
+            line = loc.line;
+         }
+
+         eosio::to_bin(uint8_t(dw_lns_copy), s);
+
+         if (address != range->second)
+         {
+            eosio::to_bin(uint8_t(0), s);
+            eosio::to_bin(uint8_t(dw_lne_set_address), s);
+            eosio::to_bin(range->second, s);
+            address = range->second;
+         }
+      }  // for(loc)
+
+      if (address)
+      {
+         eosio::to_bin(uint8_t(0), s);
+         eosio::to_bin(uint8_t(dw_lne_end_sequence), s);
+      }
+   }  // write_line_program
+
+   std::vector<char> generate_debug_line(const info& info, const std::vector<jit_addr>& addresses)
    {
       line_header header;
       header.file_names.push_back("");
       header.file_names.insert(header.file_names.end(), info.files.begin(), info.files.end());
       eosio::size_stream header_size;
       to_bin(header, header_size);
+      eosio::size_stream program_size;
+      write_line_program(info, addresses, program_size);
 
-      std::vector<char> result(header_size.size + 22);
+      std::vector<char> result(header_size.size + program_size.size + 22);
       eosio::fixed_buf_stream s{result.data(), result.size()};
       eosio::to_bin(uint32_t(0xffff'ffff), s);
       eosio::to_bin(uint64_t(header_size.size + 10), s);
       eosio::to_bin(uint16_t(lns_version), s);
       eosio::to_bin(uint64_t(header_size.size), s);
       to_bin(header, s);
+      write_line_program(info, addresses, s);
       eosio::check(s.pos == s.end, "generate_debug_line: calculated incorrect stream size");
       return result;
    }
@@ -1256,7 +1335,7 @@ namespace dwarf
       };
       auto line_sec_header_pos = result->write(line_sec_header);
 
-      auto line = generate_debug_line(info);
+      auto line = generate_debug_line(info, addresses);
       line_sec_header.sh_offset = result->append(line);
       line_sec_header.sh_size = line.size();
       result->write(line_sec_header_pos, line_sec_header);
