@@ -1,4 +1,4 @@
-import { ActionButton, ActionButtonSize, Heading, Text } from "_app";
+import { Button, Heading, Text } from "_app";
 
 interface Props {
     isCommunityActive?: boolean;
@@ -22,12 +22,9 @@ export const InductionProfileSubmitConfirmation = ({
                         : "The next step in the induction process is to submit your donation. Once all Genesis members have completed their profiles and donations, the community will be activated."}
                 </Text>
             </div>
-            <ActionButton
-                onClick={() => window.location.reload()}
-                size={ActionButtonSize.L}
-            >
+            <Button onClick={() => window.location.reload()} size="lg">
                 {isCommunityActive ? "See induction status" : "Onward!"}
-            </ActionButton>
+            </Button>
         </>
     );
 };

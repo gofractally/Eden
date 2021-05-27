@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useQueryClient } from "react-query";
 
-import { onError, ActionButton, Form, useUALAccount } from "_app";
+import { onError, Button, Form, useUALAccount } from "_app";
 import { submitEndorsementTransaction } from "inductions";
 import { Induction } from "inductions/interfaces";
 import { GET_INDUCTION_WITH_ENDORSEMENTS_QUERY } from "inductions/hooks";
@@ -56,13 +56,13 @@ export const InductionEndorsementForm = ({ induction }: Props) => {
                     onChange={() => setReviewed(!isReviewed)}
                 />
                 <div className="pt-1 justify-end">
-                    <ActionButton
+                    <Button
                         disabled={isLoading || !isReviewed}
                         onClick={submitEndorsement}
                         isLoading={isLoading}
                     >
                         {isLoading ? "Submitting..." : "Submit"}
-                    </ActionButton>
+                    </Button>
                 </div>
             </div>
         </div>

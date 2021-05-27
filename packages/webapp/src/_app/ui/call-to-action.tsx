@@ -1,4 +1,4 @@
-import { ActionButton, ActionButtonSize, Card } from "_app";
+import { Button, Card } from "_app";
 
 interface Props {
     buttonLabel?: string;
@@ -25,16 +25,16 @@ export const CallToAction = ({
                         <h1 className="flex-grow sm:pr-16 text-2xl font-medium title-font text-gray-900">
                             {children}
                         </h1>
-                        <ActionButton
+                        <Button
                             href={href}
                             onClick={onClick}
-                            size={ActionButtonSize.L}
+                            size="lg"
                             className="flex-shrink-0 mt-10 sm:mt-0"
                             target={target}
                             isExternal={isExternal}
                         >
                             {buttonLabel || "Go"}
-                        </ActionButton>
+                        </Button>
                     </div>
                 ) : (
                     <div className="lg:w-4/5 flex flex-col sm:flex-row sm:items-center items-start mx-auto">

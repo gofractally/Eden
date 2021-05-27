@@ -1,8 +1,4 @@
-import {
-    ActionButton,
-    ActionButtonType,
-    ActionButtonSize,
-} from "./action-button";
+import { Button } from "./button";
 
 interface Props {
     paginate: (increment: number) => void;
@@ -13,22 +9,14 @@ interface Props {
 export const PaginationNav = ({ hasPrevious, hasNext, paginate }: Props) => (
     <div className="mt-4 max-w-md mx-auto text-center space-x-4">
         {hasPrevious && (
-            <ActionButton
-                type={ActionButtonType.Neutral}
-                size={ActionButtonSize.S}
-                onClick={() => paginate(-1)}
-            >
+            <Button type="neutral" size="sm" onClick={() => paginate(-1)}>
                 Previous Page
-            </ActionButton>
+            </Button>
         )}
         {hasNext && (
-            <ActionButton
-                type={ActionButtonType.Neutral}
-                size={ActionButtonSize.S}
-                onClick={() => paginate(1)}
-            >
+            <Button type="neutral" size="sm" onClick={() => paginate(1)}>
                 Next Page
-            </ActionButton>
+            </Button>
         )}
     </div>
 );
