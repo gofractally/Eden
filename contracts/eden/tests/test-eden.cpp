@@ -65,7 +65,7 @@ void eden_setup(test_chain& t)
 
 auto get_token_balance(eosio::name owner)
 {
-   return token::contract::get_balance("eosio.token"_n, "alice"_n, symbol_code{"EOS"});
+   return token::contract::get_balance("eosio.token"_n, owner, symbol_code{"EOS"});
 }
 
 auto get_eden_account(eosio::name owner)
@@ -319,7 +319,7 @@ TEST_CASE("genesis expiration")
    t.eden_gm.act<actions::genesis>("Eden", eosio::symbol("EOS", 4), s2a("10.0000 EOS"),
                                    std::vector{"alice"_n, "pip"_n, "egeon"_n, "bertie"_n},
                                    "QmTYqoPYf7DiVebTnvwwFdTgsYXg2RnuPrt8uddjfW2kHS",
-                                   attribute_map{}, s2a("1.0000 EOS"), 7 * 24 * 60 * 60, "");
+                                   attribute_map{}, s2a("1.0000 EOS"), 14 * 24 * 60 * 60, "");
 
    CHECK(get_eden_membership("alice"_n).status() == eden::member_status::pending_membership);
    CHECK(get_eden_membership("pip"_n).status() == eden::member_status::pending_membership);
@@ -536,6 +536,45 @@ TEST_CASE("auction")
    t.eden_gm.act<atomicmarket::actions::auctclaimsel>(1);
 }
 
+TEST_CASE("auction batch claim")
+{
+   eden_tester t;
+   t.genesis();
+   t.ahab.act<token::actions::transfer>("ahab"_n, eden::atomic_market_account, s2a("10.0000 EOS"),
+                                        "deposit");
+   t.ahab.act<atomicmarket::actions::auctionbid>("ahab"_n, 1, s2a("10.0000 EOS"), eosio::name{});
+   t.chain.start_block(7 * 24 * 60 * 60 * 1000);
+   t.chain.start_block();
+   t.ahab.act<atomicmarket::actions::auctclaimbuy>(1);
+   auto old_balance = get_token_balance("eden.gm"_n);
+   t.eden_gm.act<actions::gc>(42);
+   auto new_balance = get_token_balance("eden.gm"_n);
+   // 0.5 EOS left deposited in atomicmarket
+   // 0.1 EOS to each of the maker and taker marketplaces
+   CHECK(new_balance - old_balance == s2a("9.3000 EOS"));
+}
+
+TEST_CASE("auction migration")
+{
+   eden_tester t;
+   t.genesis();
+   t.eden_gm.act<actions::unmigrate>();
+   t.ahab.act<token::actions::transfer>("ahab"_n, eden::atomic_market_account, s2a("10.0000 EOS"),
+                                        "deposit");
+   t.ahab.act<atomicmarket::actions::auctionbid>("ahab"_n, 1, s2a("10.0000 EOS"), eosio::name{});
+   t.chain.start_block(7 * 24 * 60 * 60 * 1000);
+   t.chain.start_block();
+   t.ahab.act<atomicmarket::actions::auctclaimbuy>(1);
+   auto old_balance = get_token_balance("eden.gm"_n);
+   expect(t.eden_gm.trace<actions::gc>(42), "Nothing to do");
+   t.eden_gm.act<actions::migrate>(128);
+   t.eden_gm.act<actions::gc>(42);
+   auto new_balance = get_token_balance("eden.gm"_n);
+   // 0.5 EOS left deposited in atomicmarket
+   // 0.1 EOS to each of the maker and taker marketplaces
+   CHECK(new_balance - old_balance == s2a("9.3000 EOS"));
+}
+
 TEST_CASE("induction gc")
 {
    eden_tester t;
@@ -597,6 +636,10 @@ TEST_CASE("induction gc")
    CHECK(members("eden.gm"_n).stats().active_members == 37);
    CHECK(members("eden.gm"_n).stats().pending_members == 0);
 
+   // clear the auctions
+   t.chain.start_block(8 * 24 * 60 * 60 * 1000);
+   t.alice.act<actions::gc>(64);
+
    for (std::size_t i = 0; i <= 2; ++i)
    {
       // many inductions for the same invitee
@@ -634,6 +677,10 @@ TEST_CASE("induction gc")
    CHECK(get_table_size<eden::induction_gc_table_type>() > 0);
 
    t.ahab.act<actions::gc>(32);  // ahab is not a member, but gc needs no permissions
+
+   // clear the auctions
+   t.chain.start_block(8 * 24 * 60 * 60 * 1000);
+   t.alice.act<actions::gc>(64);
 
    CHECK(get_table_size<eden::induction_table_type>() == 0);
    CHECK(get_table_size<eden::endorsement_table_type>() == 0);
