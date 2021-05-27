@@ -496,7 +496,8 @@ TEST_CASE("induction")
               "alice"_n, 4, eosio::sha256(hash_data.data(), hash_data.size() - 1)),
           "Outdated endorsement");
 
-   auto endorse_all = [&] {
+   auto endorse_all = [&]
+   {
       t.alice.act<actions::inductendorse>("alice"_n, 4, induction_hash);
       t.pip.act<actions::inductendorse>("pip"_n, 4, induction_hash);
       t.egeon.act<actions::inductendorse>("egeon"_n, 4, induction_hash);
@@ -560,7 +561,8 @@ TEST_CASE("induction gc")
    }
 
    auto finish_induction = [&](uint64_t induction_id, eosio::name inviter, eosio::name invitee,
-                               const std::vector<eosio::name>& witnesses) {
+                               const std::vector<eosio::name>& witnesses)
+   {
       t.chain.as(invitee).act<token::actions::transfer>(invitee, "eden.gm"_n, s2a("10.0000 EOS"),
                                                         "memo");
 
@@ -655,6 +657,33 @@ TEST_CASE("induction gc")
 
    CHECK(members("eden.gm"_n).stats().active_members == 40);
    CHECK(members("eden.gm"_n).stats().pending_members == 0);
+}
+
+TEST_CASE("induction cancelling")
+{
+   eden_tester t;
+   t.genesis();
+
+   // inviter can cancel
+   t.alice.act<actions::inductinit>(101, "alice"_n, "bertie"_n, std::vector{"pip"_n, "egeon"_n});
+   t.alice.act<actions::inductcancel>("alice"_n, 101);
+   CHECK(get_table_size<eden::induction_table_type>() == 0);
+
+   // invitee can cancel
+   t.alice.act<actions::inductinit>(102, "alice"_n, "bertie"_n, std::vector{"pip"_n, "egeon"_n});
+   t.bertie.act<actions::inductcancel>("bertie"_n, 102);
+   CHECK(get_table_size<eden::induction_table_type>() == 0);
+
+   // endorser can cancel
+   t.alice.act<actions::inductinit>(103, "alice"_n, "bertie"_n, std::vector{"pip"_n, "egeon"_n});
+   t.pip.act<actions::inductcancel>("pip"_n, 103);
+   CHECK(get_table_size<eden::induction_table_type>() == 0);
+
+   t.alice.act<actions::inductinit>(104, "alice"_n, "bertie"_n, std::vector{"pip"_n, "egeon"_n});
+   expect(t.ahab.trace<actions::inductcancel>("ahab"_n, 104),
+          "Induction can only be canceled by an endorser or the invitee itself");
+   CHECK(get_table_size<eden::induction_table_type>() == 1);
+   CHECK(get_eden_membership("bertie"_n).status() == eden::member_status::pending_membership);
 }
 
 TEST_CASE("deposit and spend")

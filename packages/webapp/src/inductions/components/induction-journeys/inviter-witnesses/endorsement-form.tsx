@@ -4,6 +4,7 @@ import { useQueryClient } from "react-query";
 import { onError, ActionButton, Form, useUALAccount } from "_app";
 import { submitEndorsementTransaction } from "inductions";
 import { Induction } from "inductions/interfaces";
+import { GET_INDUCTION_WITH_ENDORSEMENTS_QUERY } from "inductions/hooks";
 
 interface Props {
     induction: Induction;
@@ -35,7 +36,10 @@ export const InductionEndorsementForm = ({ induction }: Props) => {
             await new Promise((resolve) => setTimeout(resolve, 6000));
 
             // refetch induction/endorsements to update endorsements list or go to pending donate screen
-            queryClient.invalidateQueries(["induction", induction.id]);
+            queryClient.invalidateQueries([
+                GET_INDUCTION_WITH_ENDORSEMENTS_QUERY,
+                induction.id,
+            ]);
         } catch (error) {
             onError(error, "Unable to submit endorsement");
             setLoading(false);

@@ -59,7 +59,12 @@ export const InviteeJourney = ({
                 />
             );
         case InductionStatus.PendingCeremonyVideo: // not possible in Genesis mode
-            return <PendingCeremonyVideoStep induction={induction} />;
+            return (
+                <PendingCeremonyVideoStep
+                    induction={induction}
+                    setIsReviewingProfile={setIsReviewingProfile}
+                />
+            );
         case InductionStatus.PendingEndorsement: // not possible in Genesis mode
             return (
                 <PendingEndorsementStep
@@ -144,7 +149,15 @@ const ProfileStep = ({
     );
 };
 
-const PendingCeremonyVideoStep = ({ induction }: { induction: Induction }) => {
+interface PendingCeremonyVideoStepProps {
+    induction: Induction;
+    setIsReviewingProfile: Dispatch<SetStateAction<boolean>>;
+}
+
+const PendingCeremonyVideoStep = ({
+    induction,
+    setIsReviewingProfile,
+}: PendingCeremonyVideoStepProps) => {
     const memberData = convertPendingProfileToMemberData(induction);
     return (
         <Container
@@ -152,6 +165,12 @@ const PendingCeremonyVideoStep = ({ induction }: { induction: Induction }) => {
             memberPreview={memberData}
         >
             <WaitingForVideo induction={induction} />
+            <Text className="my-3">
+                If anything needs to be corrected,{" "}
+                <Link onClick={() => setIsReviewingProfile(true)}>
+                    click here to make those adjustments.
+                </Link>
+            </Text>
         </Container>
     );
 };
