@@ -57,12 +57,18 @@ export const ActionButton = ({
     target,
     isExternal,
 }: Props) => {
-    const baseClass =
-        "inline-block items-center text-center border focus:outline-none";
+    const baseClass = "inline-block border focus:outline-none";
     const widthClass = fullWidth ? "w-full" : "";
     let colorClass = disabled ? ActionButtonType.Disabled : type;
     const cursorClass = disabled ? "cursor-not-allowed" : "cursor-pointer";
     const buttonClass = `${baseClass} ${size} ${widthClass} ${colorClass} ${cursorClass} ${className}`;
+
+    const buttonContents = () => (
+        <div className="flex items-center justify-center">
+            {isLoading && <FaSpinner className="animate-spin mr-2" />}
+            {children}
+        </div>
+    );
 
     if (isSubmit || onClick) {
         return (
@@ -72,10 +78,7 @@ export const ActionButton = ({
                 className={buttonClass}
                 disabled={disabled}
             >
-                {isLoading && (
-                    <FaSpinner className="inline-flex animate-spin mr-1 mb-1 align-middle" />
-                )}
-                {children}
+                {buttonContents()}
             </button>
         );
     }
@@ -88,10 +91,7 @@ export const ActionButton = ({
                 rel="noopener noreferrer"
                 target={target}
             >
-                {isLoading && (
-                    <FaSpinner className="inline-flex animate-spin mr-2" />
-                )}
-                {children}
+                {buttonContents()}
             </a>
         );
     }
@@ -99,10 +99,7 @@ export const ActionButton = ({
     return (
         <NextLink href={href}>
             <a className={buttonClass} target={target}>
-                {isLoading && (
-                    <FaSpinner className="inline-flex animate-spin mr-2" />
-                )}
-                {children}
+                {buttonContents()}
             </a>
         </NextLink>
     );
