@@ -24,8 +24,6 @@ export const MemberCard = ({ member }: Props) => {
                     <SocialButton
                         handle="View Induction Ceremony"
                         icon={FaVideo}
-                        color="black"
-                        size={5}
                         href={ipfsUrl(member.inductionVideo)}
                     />
                 </div>
