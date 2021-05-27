@@ -44,15 +44,16 @@ namespace eden
       using auction_table_type = eosio::multi_index<
           "auctions"_n,
           auction,
-          eosio::indexed_by<"byassets"_n,
-                            eosio::const_mem_fun<auction, eosio::checksum256, &auction::by_assets>>>;
+          eosio::indexed_by<
+              "byassets"_n,
+              eosio::const_mem_fun<auction, eosio::checksum256, &auction::by_assets>>>;
    }  // namespace atomicmarket
 
    void auctions::add_auction(uint64_t asset_id)
    {
       auction_tb.emplace(contract, [&](auto& row) {
-         row.asset_id = asset_id;
-         row.last_known_end_time =
+         row.asset_id() = asset_id;
+         row.last_known_end_time() =
              eosio::current_time_point() + eosio::seconds(globals.get().auction_duration);
       });
    }
@@ -60,8 +61,8 @@ namespace eden
    void auctions::add_auction(uint64_t asset_id, uint32_t end_time)
    {
       auction_tb.emplace(contract, [&](auto& row) {
-         row.asset_id = asset_id;
-         row.last_known_end_time = eosio::time_point_sec{end_time};
+         row.asset_id() = asset_id;
+         row.last_known_end_time() = eosio::time_point_sec{end_time};
       });
    }
 
@@ -80,19 +81,20 @@ namespace eden
       auto iter = end_time_idx.begin();
       auto end = end_time_idx.end();
       eosio::time_point_sec current_time = eosio::current_time_point();
-      for (; max_steps > 0 && iter != end && iter->last_known_end_time < current_time; --max_steps)
+      for (; max_steps > 0 && iter != end && iter->last_known_end_time() < current_time;
+           --max_steps)
       {
          const auto& auction = *iter++;
          // Find the auction in atomicmarket if it exists.  There may be multiple auction rows
          // with these assets, as the asset can be reauctioned before we claim the funds.
          // We can distinguish the right auction by seller.
-         auto key = eosio::sha256(reinterpret_cast<const char*>(&auction.asset_id),
-                                  sizeof(auction.asset_id));
+         auto key = eosio::sha256(reinterpret_cast<const char*>(&auction.asset_id()),
+                                  sizeof(auction.asset_id()));
          auto market_iter = asset_id_idx.lower_bound(key);
          while (true)
          {
             if (market_iter->asset_ids.size() != 1 ||
-                market_iter->asset_ids.front() != auction.asset_id)
+                market_iter->asset_ids.front() != auction.asset_id())
             {
                market_iter = asset_id_idx.end();
                break;
@@ -129,14 +131,14 @@ namespace eden
                   eosio::action{{contract, "active"_n},
                                 atomic_assets_account,
                                 "burnasset"_n,
-                                std::tuple(contract, auction.asset_id)};
+                                std::tuple(contract, auction.asset_id())};
                }
                auction_tb.erase(auction);
             }
             else
             {
                auction_tb.modify(auction, contract, [&](auto& row) {
-                  row.last_known_end_time = eosio::time_point_sec(market_iter->end_time);
+                  row.last_known_end_time() = eosio::time_point_sec(market_iter->end_time);
                });
             }
          }

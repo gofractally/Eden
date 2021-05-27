@@ -4,6 +4,7 @@
 #include <eosio/multi_index.hpp>
 #include <eosio/time.hpp>
 #include <globals.hpp>
+#include <utils.hpp>
 
 namespace eden
 {
@@ -15,16 +16,27 @@ namespace eden
    EOSIO_REFLECT(migrate_auction_v0, last_auction_id);
 
    // All active auctions
-   struct auction
+   struct auction_v0
    {
       uint64_t asset_id;
       eosio::time_point_sec last_known_end_time;
       uint64_t primary_key() const { return asset_id; }
       uint64_t by_end_time() const { return last_known_end_time.sec_since_epoch(); }
    };
-   EOSIO_REFLECT(auction, asset_id, last_known_end_time);
+   EOSIO_REFLECT(auction_v0, asset_id, last_known_end_time);
+
+   using auction_variant = std::variant<auction_v0>;
+
+   struct auction
+   {
+      auction_variant value;
+      EDEN_FORWARD_MEMBERS(value, asset_id, last_known_end_time);
+      EDEN_FORWARD_FUNCTIONS(value, primary_key, by_end_time);
+   };
+   EOSIO_REFLECT(auction, value);
+
    using auction_table_type = eosio::multi_index<
-       "auctions"_n,
+       "auction"_n,
        auction,
        eosio::indexed_by<"bytime"_n,
                          eosio::const_mem_fun<auction, uint64_t, &auction::by_end_time>>>;
