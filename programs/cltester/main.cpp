@@ -174,6 +174,16 @@ struct file;
 struct test_chain;
 struct test_rodeos;
 
+struct cached_debugging_module
+{
+   using backend_t = eosio::vm::backend<eosio::chain::eos_vm_host_functions_t,
+                                        eosio::vm::jit_profile,
+                                        eosio::vm::default_options,
+                                        eosio::vm::profile_instr_map>;
+   std::unique_ptr<backend_t> module;
+   std::shared_ptr<dwarf::debugger_registration> reg;
+};
+
 struct state
 {
    const char* wasm;
@@ -183,6 +193,7 @@ struct state
    std::vector<std::string> args;
    std::map<fc::sha256, fc::sha256> substitutions;
    std::map<fc::sha256, std::vector<uint8_t>> codes;
+   std::map<fc::sha256, std::shared_ptr<cached_debugging_module>> cached_modules;
    std::vector<file> files;
    std::vector<std::unique_ptr<test_chain>> chains;
    std::vector<std::unique_ptr<test_rodeos>> rodeoses;
@@ -288,27 +299,18 @@ std::shared_ptr<dwarf::debugger_registration> enable_debug(std::vector<uint8_t>&
 
 struct debugging_module : eosio::chain::wasm_instantiated_module_interface
 {
-   using backend_t = eosio::vm::backend<eosio::chain::eos_vm_host_functions_t,
-                                        eosio::vm::jit_profile,
-                                        eosio::vm::default_options,
-                                        eosio::vm::profile_instr_map>;
-   std::unique_ptr<backend_t> module;
-   std::shared_ptr<dwarf::debugger_registration> reg;
+   std::shared_ptr<cached_debugging_module> cached;
 
-   debugging_module(std::unique_ptr<backend_t> mod,
-                    std::shared_ptr<dwarf::debugger_registration> reg)
-       : module{std::move(mod)}, reg{std::move(reg)}
-   {
-   }
+   debugging_module(std::shared_ptr<cached_debugging_module> cached) : cached{std::move(cached)} {}
 
    void apply(eosio::chain::apply_context& context) override
    {
-      module->set_wasm_allocator(&context.control.get_wasm_allocator());
+      cached->module->set_wasm_allocator(&context.control.get_wasm_allocator());
       eosio::chain::webassembly::interface iface(context);
-      module->initialize(&iface);
-      module->call(iface, "env", "apply", context.get_receiver().to_uint64_t(),
-                   context.get_action().account.to_uint64_t(),
-                   context.get_action().name.to_uint64_t());
+      cached->module->initialize(&iface);
+      cached->module->call(iface, "env", "apply", context.get_receiver().to_uint64_t(),
+                           context.get_action().account.to_uint64_t(),
+                           context.get_action().name.to_uint64_t());
    }
 };
 
@@ -491,6 +493,10 @@ struct test_chain
    {
       if (vm_type || vm_version)
          return nullptr;
+
+      if (auto it = state.cached_modules.find(code_hash); it != state.cached_modules.end())
+         return std::make_unique<debugging_module>(it->second);
+
       if (auto it = state.codes.find(code_hash); it != state.codes.end())
       {
          IR::Module module;
@@ -504,10 +510,13 @@ struct test_chain
          try
          {
             eosio::vm::wasm_code_ptr code(it->second.data(), size);
-            auto bkend = std::make_unique<debugging_module::backend_t>(code, size, nullptr);
+            auto bkend = std::make_unique<cached_debugging_module::backend_t>(code, size, nullptr);
             eosio::chain::eos_vm_host_functions_t::resolve(bkend->get_module());
             auto reg = enable_debug(it->second, *bkend, dwarf_info, "apply");
-            return std::make_unique<debugging_module>(std::move(bkend), std::move(reg));
+            auto cached = std::make_shared<cached_debugging_module>(
+                cached_debugging_module{std::move(bkend), std::move(reg)});
+            state.cached_modules[code_hash] = cached;
+            return std::make_unique<debugging_module>(cached);
          }
          catch (eosio::vm::exception& e)
          {
