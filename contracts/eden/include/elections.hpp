@@ -150,24 +150,13 @@ namespace eden
        eosio::singleton<"elect.curr"_n, current_election_state>;
 
    // Requirements:
-   // - The maximum group size is 12
-   // - The number of rounds is minimal given the maximum group size
-   // - The group size shall be as uniform as possible.
-   // - Equalizing group sizes within a round is more important than
-   //   equalizing them across rounds
+   // - Except for the last round, the group size shall be in [4,6]
+   // - The last round has a minimum group size of 3
+   // - The maximum group size shall be as small as possible
+   // - The group sizes within a round shall have a maximum difference of 1
    //
-   // Determines the group sizes of each round as follows:
-   // Select a group size, S, such that
-   // - The first round contains groups of size S or (S-1)
-   // - Zero or more subsequent rounds contain groups of uniform size (S-1)
-   // - Zero or more subsequent rounds contain groups of uniform size S
-   //
-   // R = \ceil{log_12(N)}
-   // S = \ceil{N^{1/R}}
-   // Choose 0 <= K < R so that S^K (S-1)^{R-K} <= N <= S^{K+1} (S-1)^{R-K-1}
-   //
-   // \post config.back().num_groups == 1 (unless num_participants <= 1)
-   // \post config.front().num_participants() == num_participants (unless num_participants <= 1)
+   // \post config.back().num_groups == 1 (unless num_participants < 1)
+   // \post config.front().num_participants() == num_participants (unless num_participants < 1)
    // \post config[i].num_groups == config[i+1].num_participants
    election_config make_election_config(uint16_t num_participants);
 

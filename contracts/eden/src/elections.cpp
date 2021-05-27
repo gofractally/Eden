@@ -88,7 +88,7 @@ namespace eden
          result.back() = 3;
          eosio::check(large_rounds <= 1,
                       "More that one large round is unexpected when the final group size is 3.");
-         for (int i = result.size() - large_rounds - 1; i < result.size() - 1; ++i)
+         for (std::size_t i = result.size() - large_rounds - 1; i < result.size() - 1; ++i)
          {
             result[i] = 5;
          }
