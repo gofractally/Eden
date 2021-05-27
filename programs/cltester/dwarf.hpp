@@ -75,6 +75,7 @@ namespace dwarf
       const subprogram* get_subprogram(uint32_t address) const;
    };
 
+   eosio::input_stream wasm_exclude_custom(eosio::input_stream stream);
    info get_info_from_wasm(eosio::input_stream stream);
 
    struct debugger_registration;

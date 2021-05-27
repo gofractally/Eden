@@ -1,7 +1,17 @@
-add_executable(token src/token.cpp)
-target_include_directories(token PUBLIC include)
-target_link_libraries(token eosio-contract-simple-malloc)
-set_target_properties(token PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${ROOT_BINARY_DIR})
+function(add_token suffix)
+    add_executable(token${suffix} src/token.cpp)
+    target_include_directories(token${suffix} PUBLIC include)
+    target_link_libraries(token${suffix} eosio-contract-simple-malloc${suffix})
+    set_target_properties(token${suffix} PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${ROOT_BINARY_DIR})
+
+    add_custom_command(TARGET token${suffix} POST_BUILD
+        COMMAND mkdir -p ${ROOT_BINARY_DIR}/clsdk/contracts
+        COMMAND cp -a $<TARGET_FILE:token${suffix}> ${ROOT_BINARY_DIR}/clsdk/contracts
+    )
+endfunction()
+
+add_token("")
+add_token("-debug")
 
 add_executable(token-abigen src/token.cpp)
 target_include_directories(token-abigen PUBLIC include)
@@ -14,10 +24,6 @@ add_custom_command(TARGET token-abigen POST_BUILD
 
 configure_file(include/token/token.hpp ${ROOT_BINARY_DIR}/clsdk/contracts/token/token.hpp COPYONLY)
 configure_file(include/token/token_ricardian.hpp ${ROOT_BINARY_DIR}/clsdk/contracts/token/token_ricardian.hpp COPYONLY)
-add_custom_command(TARGET token POST_BUILD
-    COMMAND mkdir -p ${ROOT_BINARY_DIR}/clsdk/contracts
-    COMMAND cp -a $<TARGET_FILE:token> ${ROOT_BINARY_DIR}/clsdk/contracts
-)
 
 add_executable(test-token tests/test-token.cpp)
 target_include_directories(test-token PUBLIC include)

@@ -1,7 +1,19 @@
+#define EOSIO_EOS_VM_JIT_RUNTIME_ENABLED
+
+#include <eosio/chain/types.hpp>
+
+// TODO
+#define private public
+#include <eosio/chain/wasm_interface_private.hpp>
+#include <eosio/chain/webassembly/runtime_interface.hpp>
+#include <eosio/vm/backend.hpp>
+#undef private
+
 #include <eosio/chain/apply_context.hpp>
 #include <eosio/chain/controller.hpp>
 #include <eosio/chain/generated_transaction_object.hpp>
 #include <eosio/chain/transaction_context.hpp>
+#include <eosio/chain/webassembly/interface.hpp>
 #include <eosio/state_history/create_deltas.hpp>
 #include <eosio/state_history/serialization.hpp>
 #include <eosio/state_history/trace_converter.hpp>
@@ -23,11 +35,6 @@
 #include <stdio.h>
 #include <chrono>
 #include <optional>
-
-// TODO
-#define private public
-#include <eosio/vm/backend.hpp>
-#undef private
 
 using namespace std::literals;
 
@@ -133,7 +140,7 @@ namespace
    }
 
    template <typename C, typename F0, typename F1, typename G>
-   auto do_startup(C&& control, F0&&, F1&& f1, G&&)
+   auto do_startup(C&& control, F0&&, F1&& f1, G &&)
        -> std::enable_if_t<std::is_constructible_v<std::decay_t<decltype(*control)>,
                                                    eosio::chain::controller::config,
                                                    protocol_feature_set>>
@@ -161,6 +168,25 @@ struct assert_exception : std::exception
    assert_exception(std::string&& msg) : msg(std::move(msg)) {}
 
    const char* what() const noexcept override { return msg.c_str(); }
+};
+
+struct file;
+struct test_chain;
+struct test_rodeos;
+
+struct state
+{
+   const char* wasm;
+   dwarf::info& dwarf_info;
+   eosio::vm::wasm_allocator& wa;
+   backend_t& backend;
+   std::vector<std::string> args;
+   std::map<fc::sha256, fc::sha256> substitutions;
+   std::map<fc::sha256, std::vector<uint8_t>> codes;
+   std::vector<file> files;
+   std::vector<std::unique_ptr<test_chain>> chains;
+   std::vector<std::unique_ptr<test_rodeos>> rodeoses;
+   std::optional<uint32_t> selected_chain_index;
 };
 
 struct intrinsic_context
@@ -238,11 +264,60 @@ struct test_chain_ref
    test_chain_ref& operator=(const test_chain_ref&);
 };
 
+template <typename Backend>
+std::shared_ptr<dwarf::debugger_registration> enable_debug(std::vector<uint8_t>& code,
+                                                           Backend& backend,
+                                                           dwarf::info& dwarf_info,
+                                                           const char* entry)
+{
+   auto& module = backend.get_module();
+   auto func_index = module.get_exported_function(entry);
+   if (func_index == std::numeric_limits<uint32_t>::max())
+      throw std::runtime_error("can not find " + std::string(entry));
+   auto& alloc = module.allocator;
+   auto& dbg = backend.get_debug();
+   std::vector<dwarf::jit_addr> addresses;
+   for (auto& entry : dbg.data)
+      addresses.push_back(
+          {entry.wasm_addr - dwarf_info.code_offset, (char*)dbg.base_address + entry.offset});
+   return register_with_debugger(
+       dwarf_info, std::move(addresses), alloc.get_code_start(), alloc._code_size,
+       (char*)alloc.get_code_start() +
+           module.code[func_index - module.get_imported_functions_size()].jit_code_offset);
+}
+
+struct debugging_module : eosio::chain::wasm_instantiated_module_interface
+{
+   using backend_t = eosio::vm::backend<eosio::chain::eos_vm_host_functions_t,
+                                        eosio::vm::jit_profile,
+                                        eosio::vm::default_options,
+                                        eosio::vm::profile_instr_map>;
+   std::unique_ptr<backend_t> module;
+   std::shared_ptr<dwarf::debugger_registration> reg;
+
+   debugging_module(std::unique_ptr<backend_t> mod,
+                    std::shared_ptr<dwarf::debugger_registration> reg)
+       : module{std::move(mod)}, reg{std::move(reg)}
+   {
+   }
+
+   void apply(eosio::chain::apply_context& context) override
+   {
+      module->set_wasm_allocator(&context.control.get_wasm_allocator());
+      eosio::chain::webassembly::interface iface(context);
+      module->initialize(&iface);
+      module->call(iface, "env", "apply", context.get_receiver().to_uint64_t(),
+                   context.get_action().account.to_uint64_t(),
+                   context.get_action().name.to_uint64_t());
+   }
+};
+
 struct test_chain
 {
    eosio::chain::private_key_type producer_key{
        "5KQwrPbwdL6PhXujxW37FSSQZ1JiwsST4cqQzDeyXtP79zkvFD3"s};
 
+   ::state& state;
    fc::temp_directory dir;
    std::unique_ptr<eosio::chain::controller::config> cfg;
    std::unique_ptr<eosio::chain::controller> control;
@@ -254,7 +329,7 @@ struct test_chain
    std::unique_ptr<intrinsic_context> intr_ctx;
    std::set<test_chain_ref*> refs;
 
-   test_chain(const char* snapshot)
+   test_chain(::state& state, const char* snapshot) : state{state}
    {
       eosio::chain::genesis_state genesis;
       genesis.initial_timestamp = fc::time_point::from_iso_string("2020-01-01T00:00:00.000");
@@ -309,6 +384,16 @@ struct test_chain
                               {*control->get_protocol_feature_manager().get_builtin_digest(
                                   eosio::chain::builtin_protocol_feature_t::preactivate_feature)});
       }
+
+      auto& iface = control->get_wasm_interface();
+      iface.substitute_apply = [this](const eosio::chain::digest_type& code_hash, uint8_t vm_type,
+                                      uint8_t vm_version, eosio::chain::apply_context& context) {
+         return substitute_apply(code_hash, vm_type, vm_version, context);
+      };
+      iface.substitute_module = [this](const eosio::chain::digest_type& code_hash, uint8_t vm_type,
+                                       uint8_t vm_version) {
+         return substitute_module(code_hash, vm_type, vm_version);
+      };
    }
 
    test_chain(const test_chain&) = delete;
@@ -383,7 +468,56 @@ struct test_chain
           [&](eosio::chain::digest_type d) { return std::vector{producer_key.sign(d)}; });
       control->commit_block();
    }
-};
+
+   bool substitute_apply(const eosio::chain::digest_type& code_hash,
+                         uint8_t vm_type,
+                         uint8_t vm_version,
+                         eosio::chain::apply_context& context)
+   {
+      if (vm_type || vm_version)
+         return false;
+      if (auto it = state.substitutions.find(code_hash); it != state.substitutions.end())
+      {
+         control->get_wasm_interface().apply(it->second, 0, 0, context);
+         return true;
+      }
+      return false;
+   }
+
+   std::unique_ptr<eosio::chain::wasm_instantiated_module_interface> substitute_module(
+       const eosio::chain::digest_type& code_hash,
+       uint8_t vm_type,
+       uint8_t vm_version)
+   {
+      if (vm_type || vm_version)
+         return nullptr;
+      if (auto it = state.codes.find(code_hash); it != state.codes.end())
+      {
+         IR::Module module;
+         auto dwarf_info =
+             dwarf::get_info_from_wasm({(const char*)it->second.data(), it->second.size()});
+         auto size = dwarf::wasm_exclude_custom({(const char*)it->second.data(), it->second.size()})
+                         .remaining();
+         Serialization::MemoryInputStream stream(it->second.data(), size);
+         WASM::scoped_skip_checks no_check;
+         WASM::serialize(stream, module);
+         try
+         {
+            eosio::vm::wasm_code_ptr code(it->second.data(), size);
+            auto bkend = std::make_unique<debugging_module::backend_t>(code, size, nullptr);
+            eosio::chain::eos_vm_host_functions_t::resolve(bkend->get_module());
+            auto reg = enable_debug(it->second, *bkend, dwarf_info, "apply");
+            return std::make_unique<debugging_module>(std::move(bkend), std::move(reg));
+         }
+         catch (eosio::vm::exception& e)
+         {
+            FC_THROW_EXCEPTION(eosio::chain::wasm_execution_error,
+                               "Error building eos-vm interp: ${e}", ("e", e.what()));
+         }
+      }
+      return nullptr;
+   }
+};  // test_chain
 
 test_chain_ref::test_chain_ref(test_chain& chain)
 {
@@ -573,19 +707,6 @@ struct file
       f = nullptr;
       owns = false;
    }
-};
-
-struct state
-{
-   const char* wasm;
-   dwarf::info& dwarf_info;
-   eosio::vm::wasm_allocator& wa;
-   backend_t& backend;
-   std::vector<std::string> args;
-   std::vector<file> files;
-   std::vector<std::unique_ptr<test_chain>> chains;
-   std::vector<std::unique_ptr<test_rodeos>> rodeoses;
-   std::optional<uint32_t> selected_chain_index;
 };
 
 struct push_trx_args
@@ -1079,7 +1200,7 @@ struct callbacks
 
    uint32_t tester_create_chain(span<const char> snapshot)
    {
-      state.chains.push_back(std::make_unique<test_chain>(span_str(snapshot).c_str()));
+      state.chains.push_back(std::make_unique<test_chain>(state, span_str(snapshot).c_str()));
       if (state.chains.size() == 1)
          state.selected_chain_index = 0;
       return state.chains.size() - 1;
@@ -1544,29 +1665,49 @@ void register_callbacks()
    rhf_t::add<&callbacks::ripemd160>("env", "ripemd160");
 }
 
-static void run(const char* wasm, const std::vector<std::string>& args)
+void fill_substitutions(::state& state, const std::map<std::string, std::string>& substitutions)
+{
+   for (auto& [a, b] : substitutions)
+   {
+      std::vector<uint8_t> acode;
+      std::vector<uint8_t> bcode;
+      try
+      {
+         acode = eosio::vm::read_wasm(a);
+      }
+      catch (...)
+      {
+         std::cerr << "skipping substitution: can not read " << a << "\n";
+         continue;
+      }
+      try
+      {
+         bcode = eosio::vm::read_wasm(b);
+      }
+      catch (...)
+      {
+         std::cerr << "skipping substitution: can not read " << b << "\n";
+         continue;
+      }
+      auto ahash = fc::sha256::hash((const char*)acode.data(), acode.size());
+      auto bhash = fc::sha256::hash((const char*)bcode.data(), bcode.size());
+      state.substitutions[ahash] = bhash;
+      state.codes[bhash] = std::move(bcode);
+   }
+}
+
+static void run(const char* wasm,
+                const std::vector<std::string>& args,
+                const std::map<std::string, std::string>& substitutions)
 {
    eosio::vm::wasm_allocator wa;
    auto code = eosio::vm::read_wasm(wasm);
    backend_t backend(code, nullptr);
-   auto& module = backend.get_module();
    auto dwarf_info = dwarf::get_info_from_wasm({(const char*)code.data(), code.size()});
-
-   auto func_index = module.get_exported_function("_start");
-   if (func_index == std::numeric_limits<uint32_t>::max())
-      throw std::runtime_error("can not find _start");
-   auto& alloc = module.allocator;
-   auto& dbg = backend.get_debug();
-   std::vector<dwarf::jit_addr> addresses;
-   for (auto& entry : dbg.data)
-      addresses.push_back(
-          {entry.wasm_addr - dwarf_info.code_offset, (char*)dbg.base_address + entry.offset});
-   auto reg = register_with_debugger(
-       dwarf_info, std::move(addresses), alloc.get_code_start(), alloc._code_size,
-       (char*)alloc.get_code_start() +
-           module.code[func_index - module.get_imported_functions_size()].jit_code_offset);
+   auto reg = enable_debug(code, backend, dwarf_info, "_start");
 
    ::state state{wasm, dwarf_info, wa, backend, args};
+   fill_substitutions(state, substitutions);
    callbacks cb{state};
    state.files.emplace_back(stdin, false);
    state.files.emplace_back(stdout, false);
@@ -1579,7 +1720,25 @@ static void run(const char* wasm, const std::vector<std::string>& args)
    backend(cb, "env", "_start");
 }
 
-const char usage[] = "usage: cltester [-h or --help] [-v or --verbose] file.wasm [args for wasm]\n";
+const char usage[] = "USAGE: cltester [OPTIONS] file.wasm [args for wasm]...\n";
+const char help[] = R"(
+OPTIONS:
+      -h, --help
+
+            Show this message
+
+      -v, --verbose
+
+            Show detailed logging
+
+      -s contract.wasm debug.wasm
+      --subst contract.wasm debug.wasm
+
+            Whenever contract.wasm needs to run, substitute debug.wasm in its
+            place and enable debugging support. This bypasses size limits and
+            other constraints on debug.wasm. eosiolib still enforces
+            constraints on contract.wasm. (repeatable)
+)";
 
 int main(int argc, char* argv[])
 {
@@ -1587,6 +1746,7 @@ int main(int argc, char* argv[])
 
    bool show_usage = false;
    bool error = false;
+   std::map<std::string, std::string> substitutions;
    int next_arg = 1;
    while (next_arg < argc && argv[next_arg][0] == '-')
    {
@@ -1594,6 +1754,19 @@ int main(int argc, char* argv[])
          show_usage = true;
       else if (!strcmp(argv[next_arg], "-v") || !strcmp(argv[next_arg], "--verbose"))
          fc::logger::get(DEFAULT_LOGGER).set_log_level(fc::log_level::debug);
+      else if (!strcmp(argv[next_arg], "-s") || !strcmp(argv[next_arg], "--subst"))
+      {
+         next_arg += 2;
+         if (next_arg >= argc)
+         {
+            std::cerr << argv[next_arg - 2] << " needs 2 args\n";
+            error = true;
+         }
+         else
+         {
+            substitutions[argv[next_arg - 1]] = argv[next_arg];
+         }
+      }
       else
       {
          std::cerr << "unknown option: " << argv[next_arg] << "\n";
@@ -1606,13 +1779,15 @@ int main(int argc, char* argv[])
    if (show_usage || error)
    {
       std::cerr << usage;
+      if (show_usage)
+         std::cerr << help;
       return error;
    }
    try
    {
       std::vector<std::string> args{argv + next_arg, argv + argc};
       register_callbacks();
-      run(argv[next_arg], args);
+      run(argv[next_arg], args, substitutions);
       return 0;
    }
    catch (::assert_exception& e)

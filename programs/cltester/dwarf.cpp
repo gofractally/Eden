@@ -1134,6 +1134,25 @@ namespace dwarf
    };
    EOSIO_REFLECT(wasm_section, id, data)
 
+   eosio::input_stream wasm_exclude_custom(eosio::input_stream stream)
+   {
+      auto begin = stream.pos;
+      wasm_header header;
+      eosio::from_bin(header, stream);
+      eosio::check(header.magic == eosio::vm::constants::magic,
+                   "wasm file magic number does not match");
+      eosio::check(header.version == eosio::vm::constants::version,
+                   "wasm file version does not match");
+      while (stream.remaining())
+      {
+         auto section_begin = stream.pos;
+         auto section = eosio::from_bin<wasm_section>(stream);
+         if (section.id == eosio::vm::section_id::custom_section)
+            return {begin, section_begin};
+      }
+      return {begin, stream.pos};
+   }
+
    info get_info_from_wasm(eosio::input_stream stream)
    {
       info result;
@@ -1403,7 +1422,7 @@ namespace dwarf
       result->reg();
 
       fprintf(stdout, "\n\n\n%p\n\n\n", entry);
-      asm("int $3");
+      // asm("int $3");
 
       return result;
    }
