@@ -32,6 +32,21 @@ namespace eden
       return result;
    }
 
+   void election_seeder::update(eosio::input_stream& bytes)
+   {
+      eosio::check(bytes.remaining() >= 80, "Stream overrun");
+      auto hash1 = eosio::sha256(bytes.pos, 80);
+      auto hash2 = eosio::sha256(reinterpret_cast<char*>(hash1.extract_as_byte_array().data()), 32);
+      eosio::check(hash2 < current, "New seed block must have greater POW than previous seed.");
+      eosio::time_point_sec block_time;
+      bytes.skip(4 + 32 + 32);
+      eosio::from_bin(block_time, bytes);
+      bytes.skip(4 + 4);
+      eosio::check(block_time >= eosio::time_point_sec(start_time), "Seed block is too early");
+      eosio::check(block_time < eosio::time_point_sec(end_time), "Seed block is too late");
+      current = hash2;
+   }
+
    static uint32_t int_pow(uint32_t base, uint32_t exponent)
    {
       uint32_t result = 1;
@@ -190,10 +205,127 @@ namespace eden
       });
    }
 
+   static eosio::time_point_sec get_election_time(uint32_t election_start_time,
+                                                  eosio::time_point_sec base_time)
+   {
+      auto sys_time = std::chrono::time_point_cast<std::chrono::seconds>(
+          std::chrono::system_clock::from_time_t(base_time.sec_since_epoch()));
+      auto days = std::chrono::time_point_cast<std::chrono::days>(sys_time);
+      auto time = sys_time - days;
+      std::chrono::weekday start_day(days);
+      auto target_time = std::chrono::seconds(election_start_time);
+      auto target_day = std::chrono::duration_cast<std::chrono::days>(target_time);
+      target_time -= target_day;
+      std::chrono::seconds advance =
+          (std::chrono::weekday(target_day.count()) - start_day) + (target_time - time);
+      if (advance < std::chrono::seconds(0))
+      {
+         advance += std::chrono::days(7);
+      }
+      return base_time + advance.count();
+   }
+
+   void elections::set_time(uint8_t day, const std::string& time)
+   {
+      auto get_digit = [](char ch) {
+         eosio::check(ch >= '0' && ch <= '9', "Expected HH:MM");
+         return ch - '0';
+      };
+      eosio::check(time.size() == 5 && time[2] == ':', "Expected HH:MM");
+      auto hours = get_digit(time[0]) * 10 + get_digit(time[1]);
+      auto minutes = get_digit(time[3]) * 10 + get_digit(time[4]);
+      eosio::check(day < 7, "days out of range");
+      eosio::check(hours < 24, "hours out of range");
+      eosio::check(minutes < 60, "minutes out of range");
+      globals globals(contract);
+      globals.set_election_start_time(((24 * day + hours) * 60 + minutes) * 60);
+      if (!state_sing.exists())
+      {
+         init();
+      }
+      else if (std::holds_alternative<current_election_state_pending_date>(state_sing.get()))
+      {
+         trigger_election();
+      }
+   }
+
+   void elections::init()
+   {
+      eosio::time_point_sec now = eosio::current_time_point();
+      globals globals{contract};
+      const auto& state = globals.get();
+      state_sing.set(current_election_state_registration{get_election_time(
+                         state.election_start_time, now + eosio::days(180))},
+                     contract);
+   }
+
+   // Schedules an election at the earliest possible time at least 30 days
+   // in the future.
+   void elections::trigger_election()
+   {
+      eosio::time_point_sec now = eosio::current_time_point();
+      globals globals{contract};
+      const auto& state = globals.get();
+      if (state.election_start_time == 0xffffffff)
+      {
+         // If we've met the conditions for triggering an election, but the
+         // date has not been set (only possible if genesis was run using
+         // a prior version of the contract), wait until the date is set
+         // before scheduling the election.
+         state_sing.set(current_election_state_pending_date{}, contract);
+      }
+      else
+      {
+         eosio::check(state_sing.exists(), "Invariant failure: missing election state");
+         // Ignore events that would trigger an election unless they move
+         // the next election closer.
+         auto current_state = state_sing.get();
+         if (auto* current = std::get_if<current_election_state_registration>(&current_state))
+         {
+            auto new_start_time = eosio::block_timestamp{
+                get_election_time(state.election_start_time, now + eosio::days(30))};
+            if (new_start_time < current->start_time)
+            {
+               state_sing.set(current_election_state_registration{new_start_time}, contract);
+            }
+         }
+      }
+   }
+
+   void elections::seed(const eosio::bytes& btc_header)
+   {
+      eosio::check(btc_header.data.size() == 80, "Wrong size for BTC block header");
+      auto state = state_sing.get();
+      if (auto* registration = std::get_if<current_election_state_registration>(&state))
+      {
+         auto now = eosio::current_block_time();
+         eosio::block_timestamp seeding_start =
+             eosio::time_point(registration->start_time) - eosio::seconds(election_seeding_window);
+         eosio::check(now >= seeding_start, "Cannot start seeding yet");
+         state = current_election_state_seeding{
+             {.start_time = seeding_start, .end_time = registration->start_time}};
+      }
+      if (auto* seeding = std::get_if<current_election_state_seeding>(&state))
+      {
+         eosio::input_stream stream{btc_header.data};
+         seeding->seed.update(stream);
+      }
+      else
+      {
+         eosio::check(false, "Cannot seed election now");
+      }
+      state_sing.set(state, contract);
+   }
+
    void elections::start_election(const eosio::checksum256& seed)
    {
-      eosio::check(!state_sing.exists(), "An election is already in progress");
-      state_sing.set(current_election_state_init_voters{0, election_rng{seed}}, contract);
+      eosio::check(std::holds_alternative<current_election_state_seeding>(state_sing.get()),
+                   "Election seed not set");
+      auto old_state = std::get<current_election_state_seeding>(state_sing.get());
+      eosio::check(eosio::current_block_time() >= old_state.seed.end_time,
+                   "Seeding window is still open");
+      state_sing.set(current_election_state_init_voters{0, election_rng{old_state.seed.current}},
+                     contract);
 
       election_state_singleton state(contract, default_scope);
       auto state_value = std::get<election_state_v0>(state.get_or_default());

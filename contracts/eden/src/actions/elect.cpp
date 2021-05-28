@@ -3,6 +3,12 @@
 
 namespace eden
 {
+   void eden::electseed(const eosio::bytes& btc_header)
+   {
+      elections elections{get_self()};
+      elections.seed(btc_header);
+   }
+
    void eden::electinit(const eosio::checksum256& seed)
    {
       require_auth(get_self());

@@ -1,6 +1,7 @@
 #pragma once
 
 #include <constants.hpp>
+#include <eosio/bytes.hpp>
 #include <eosio/multi_index.hpp>
 #include <eosio/singleton.hpp>
 
@@ -11,16 +12,6 @@ namespace eden
       uint64_t election_sequence = 0;  // incremented when an election starts
       eosio::name lead_representative;
       std::vector<eosio::name> board;
-      // The time at which the last election was started
-      // Do we schedule the next election based on when the previous
-      // election was scheduled to start or when it actually started?
-      // Does the contract manage the election schedule including dates,
-      // or is the date set from outside?
-      // Having the contract manage it is inconvenient if we want so
-      // allow the community to define their own schedule.  It's easy
-      // for a contract to enforce a fixed interval between elections,
-      // but most convenient schedules for humans require
-      // a full calendar tracking weeks, months, and leap years.
       eosio::block_timestamp last_election_time;
    };
    EOSIO_REFLECT(election_state_v0,
@@ -109,6 +100,46 @@ namespace eden
    };
    EOSIO_REFLECT(election_rng, inbuf, outbuf, index)
 
+   // election states:
+   //
+   // There is always an election scheduled.
+   //
+   // - registration
+   // - seeding
+   // - generation
+   // - voting
+   // - ending round
+   // - seeding final
+   // - choose final
+
+   struct current_election_state_pending_date
+   {
+   };
+   EOSIO_REFLECT(current_election_state_pending_date);
+
+   struct current_election_state_registration
+   {
+      eosio::block_timestamp start_time;
+   };
+   EOSIO_REFLECT(current_election_state_registration, start_time);
+
+   struct election_seeder
+   {
+      eosio::checksum256 current{0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
+                                 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
+                                 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF};
+      eosio::block_timestamp start_time;
+      eosio::block_timestamp end_time;
+      void update(eosio::input_stream& bytes);
+   };
+   EOSIO_REFLECT(election_seeder, current, start_time, end_time);
+
+   struct current_election_state_seeding
+   {
+      election_seeder seed;
+   };
+   EOSIO_REFLECT(current_election_state_seeding, seed);
+
    // In this phase, every voter is assigned a unique random integer id in [0,N)
    struct current_election_state_init_voters
    {
@@ -142,7 +173,10 @@ namespace eden
    };
    EOSIO_REFLECT(current_election_state_active)
 
-   using current_election_state = std::variant<current_election_state_init_voters,
+   using current_election_state = std::variant<current_election_state_pending_date,
+                                               current_election_state_registration,
+                                               current_election_state_seeding,
+                                               current_election_state_init_voters,
                                                current_election_state_group_voters,
                                                current_election_state_build_groups,
                                                current_election_state_active>;
@@ -190,6 +224,10 @@ namespace eden
             state_sing(contract, default_scope)
       {
       }
+      void set_time(uint8_t day, const std::string& time);
+      void init();
+      void trigger_election();
+      void seed(const eosio::bytes& btc_header);
       void start_election(const eosio::checksum256& seed);
       uint32_t prepare_election(uint32_t max_steps);
       // \pre voter is a member of the group

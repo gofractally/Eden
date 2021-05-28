@@ -14,4 +14,5 @@ namespace eden
    inline constexpr double initial_market_fee = 0.05;
 
    inline constexpr uint32_t max_gc_on_induction = 32;
+   inline constexpr uint32_t election_seeding_window = 24 * 60 * 60;
 }  // namespace eden

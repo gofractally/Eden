@@ -3,6 +3,7 @@
 #include <constants.hpp>
 #include <eden-atomicassets.hpp>
 #include <eosio/asset.hpp>
+#include <eosio/bytes.hpp>
 #include <eosio/eosio.hpp>
 #include <inductions.hpp>
 #include <string>
@@ -50,6 +51,8 @@ namespace eden
                    atomicassets::attribute_map collection_attributes,
                    eosio::asset auction_starting_bid,
                    uint32_t auction_duration,
+                   uint8_t election_day,
+                   const std::string& election_time,
                    eosio::ignore<std::string> memo);
 
       void addtogenesis(eosio::name new_genesis_member, eosio::time_point expiration);
@@ -73,6 +76,8 @@ namespace eden
       void inductcancel(eosio::name account, uint64_t id);
 
       void inducted(eosio::name inductee);
+
+      void electseed(const eosio::bytes& btc_header);
 
       void electinit(const eosio::checksum256& seed);
 
@@ -121,6 +126,8 @@ namespace eden
               collection_attributes,
               auction_starting_bid,
               auction_duration,
+              election_day,
+              election_time,
               memo,
               ricardian_contract(genesis_ricardian)),
        action(addtogenesis, account, expiration),
@@ -139,6 +146,7 @@ namespace eden
               id,
               induction_data_hash,
               ricardian_contract(inductendorse_ricardian)),
+       action(electseed, btc_header),
        action(electinit, seed),
        action(electprepare, max_steps),
        action(electvote, group_id, voter, candidate),

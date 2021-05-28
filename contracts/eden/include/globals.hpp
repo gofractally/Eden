@@ -1,5 +1,6 @@
 #pragma once
 
+#include <chrono>
 #include <constants.hpp>
 #include <eosio/asset.hpp>
 #include <eosio/singleton.hpp>
@@ -13,6 +14,8 @@ namespace eden
       active
    };
 
+   struct global_data_v1;
+
    struct global_data_v0
    {
       std::string community;
@@ -20,6 +23,7 @@ namespace eden
       eosio::asset auction_starting_bid;
       uint32_t auction_duration;
       contract_stage_type stage;
+      global_data_v1 upgrade() const;
    };
    EOSIO_REFLECT(global_data_v0,
                  community,
@@ -28,7 +32,14 @@ namespace eden
                  auction_duration,
                  stage)
 
-   using global_variant = std::variant<global_data_v0>;
+   struct global_data_v1 : global_data_v0
+   {
+      uint32_t election_start_time = 0xffffffffu;  // seconds from the start of Sunday
+      auto upgrade() const { return *this; }
+   };
+   EOSIO_REFLECT(global_data_v1, base global_data_v0, election_start_time);
+
+   using global_variant = std::variant<global_data_v0, global_data_v1>;
    using global_singleton = eosio::singleton<"global"_n, global_variant>;
 
    global_singleton& get_global_singleton(eosio::name contract);
@@ -40,17 +51,15 @@ namespace eden
    {
      private:
       eosio::name contract;
-      global_data_v0 data;
+      global_data_v1 data;
 
      public:
-      explicit globals(eosio::name contract)
-          : contract(contract), data(std::get<global_data_v0>(get_global_singleton(contract).get()))
-      {
-      }
-      explicit globals(eosio::name contract, const global_data_v0& initial_value);
-      const global_data_v0& get() { return data; }
+      explicit globals(eosio::name contract);
+      explicit globals(eosio::name contract, const global_data_v1& initial_value);
+      const global_data_v1& get() { return data; }
       void check_active() const;
       eosio::symbol default_token() const { return data.minimum_donation.symbol; }
       void set_stage(contract_stage stage);
+      void set_election_start_time(uint32_t time);
    };
 }  // namespace eden
