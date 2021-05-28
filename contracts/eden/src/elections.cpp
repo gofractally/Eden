@@ -241,7 +241,7 @@ namespace eden
       globals.set_election_start_time(((24 * day + hours) * 60 + minutes) * 60);
       if (!state_sing.exists())
       {
-         init();
+         set_default_election(eosio::current_time_point());
       }
       else if (std::holds_alternative<current_election_state_pending_date>(state_sing.get()))
       {
@@ -249,13 +249,12 @@ namespace eden
       }
    }
 
-   void elections::init()
+   void elections::set_default_election(eosio::time_point_sec origin_time)
    {
-      eosio::time_point_sec now = eosio::current_time_point();
       globals globals{contract};
       const auto& state = globals.get();
       state_sing.set(current_election_state_registration{get_election_time(
-                         state.election_start_time, now + eosio::days(180))},
+                         state.election_start_time, origin_time + eosio::days(180))},
                      contract);
    }
 
@@ -322,6 +321,7 @@ namespace eden
       eosio::check(std::holds_alternative<current_election_state_seeding>(state_sing.get()),
                    "Election seed not set");
       auto old_state = std::get<current_election_state_seeding>(state_sing.get());
+      auto election_start_time = old_state.seed.end_time;
       eosio::check(eosio::current_block_time() >= old_state.seed.end_time,
                    "Seeding window is still open");
       state_sing.set(current_election_state_init_voters{0, election_rng{old_state.seed.current}},
@@ -330,7 +330,7 @@ namespace eden
       election_state_singleton state(contract, default_scope);
       auto state_value = std::get<election_state_v0>(state.get_or_default());
       ++state_value.election_sequence;
-      state_value.last_election_time = eosio::current_block_time();
+      state_value.last_election_time = election_start_time;
       state.set(state_value, contract);
 
       bylaws bylaws(contract);
@@ -489,11 +489,11 @@ namespace eden
          // Either finalize the election or move to the next round
          if (group.next_group == 0)
          {
-            state_sing.remove();
             election_state_singleton results(contract, default_scope);
             auto result = std::get<election_state_v0>(results.get());
             result.lead_representative = best->first;
             result.board = std::move(group_members);
+            set_default_election(result.last_election_time.to_time_point());
             results.set(result, contract);
          }
          else
