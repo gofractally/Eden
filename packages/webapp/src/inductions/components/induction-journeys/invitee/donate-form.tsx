@@ -4,7 +4,7 @@ import { useQueryClient } from "react-query";
 
 import { minimumDonationAmount } from "config";
 import {
-    ActionButton,
+    Button,
     Text,
     Link,
     Form,
@@ -92,7 +92,7 @@ export const InductionDonateForm = ({
                 />
             </div>
             <div className="pt-1">
-                <ActionButton
+                <Button
                     disabled={isLoading || !isProfileReviewed}
                     onClick={submitDonation}
                     isLoading={isLoading}
@@ -100,7 +100,7 @@ export const InductionDonateForm = ({
                     {isLoading
                         ? "Submitting donation..."
                         : `Donate ${assetToString(minimumDonationAmount)}`}
-                </ActionButton>
+                </Button>
             </div>
         </div>
     );

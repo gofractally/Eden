@@ -1,4 +1,4 @@
-import { ActionButton, ActionButtonSize, Heading, Link, Text } from "_app";
+import { Button, Heading, Link, Text } from "_app";
 import { getInductionRemainingTimeDays } from "inductions";
 import { Induction } from "inductions/interfaces";
 
@@ -29,9 +29,9 @@ export const WaitingForProfile = ({ induction }: { induction: Induction }) => {
                     {getInductionRemainingTimeDays(induction)}.
                 </Text>
             </div>
-            <ActionButton href="/induction" size={ActionButtonSize.L}>
+            <Button href="/induction" size="lg">
                 Membership dashboard
-            </ActionButton>
+            </Button>
         </>
     );
 };

@@ -1,13 +1,7 @@
 import { useState } from "react";
 import { FaTrash } from "react-icons/fa";
 
-import {
-    ActionButton,
-    ActionButtonSize,
-    ActionButtonType,
-    onError,
-    useUALAccount,
-} from "_app";
+import { ButtonType, Button, onError, useUALAccount } from "_app";
 
 import { Induction, InductionStatus } from "../../interfaces";
 import { cancelInductionTransaction } from "../../transactions";
@@ -59,46 +53,46 @@ export const InductionStatusButton = ({
         return <div className="w-full text-center text-red-500">Canceled</div>;
     } else if (status === InductionStatus.Expired) {
         return (
-            <ActionButton
-                type={ActionButtonType.Danger}
-                size={ActionButtonSize.S}
+            <Button
+                type="danger"
+                size="sm"
                 fullWidth
                 isLoading={isLoading}
                 onClick={cancelInduction}
             >
                 <FaTrash className="mr-2" />
                 Expired
-            </ActionButton>
+            </Button>
         );
     }
 
-    let buttonType = ActionButtonType.Disabled;
+    let buttonType: ButtonType = "disabled";
     let buttonLabel = "";
     switch (status) {
         case InductionStatus.PendingProfile:
             if (isInvitee) {
-                buttonType = ActionButtonType.InductionStatusCeremony;
+                buttonType = "inductionStatusCeremony";
                 buttonLabel = "Create my profile";
             } else {
-                buttonType = ActionButtonType.Neutral;
+                buttonType = "neutral";
                 buttonLabel = "Waiting for profile";
             }
             break;
         case InductionStatus.PendingCeremonyVideo:
             if (isInvitee) {
-                buttonType = ActionButtonType.Neutral;
+                buttonType = "neutral";
                 buttonLabel = "Induction ceremony";
             } else {
-                buttonType = ActionButtonType.InductionStatusCeremony;
+                buttonType = "inductionStatusCeremony";
                 buttonLabel = "Complete ceremony";
             }
             break;
         case InductionStatus.PendingEndorsement:
             if (canEndorse) {
-                buttonType = ActionButtonType.InductionStatusAction;
+                buttonType = "inductionStatusAction";
                 buttonLabel = "Review & endorse";
             } else {
-                buttonType = ActionButtonType.Neutral;
+                buttonType = "neutral";
                 buttonLabel = unknownEndorsements
                     ? "Pending completion"
                     : "Pending endorsements";
@@ -106,10 +100,10 @@ export const InductionStatusButton = ({
             break;
         case InductionStatus.PendingDonation:
             if (isInvitee) {
-                buttonType = ActionButtonType.InductionStatusAction;
+                buttonType = "inductionStatusAction";
                 buttonLabel = "Donate & complete";
             } else {
-                buttonType = ActionButtonType.Neutral;
+                buttonType = "neutral";
                 buttonLabel = "Pending donation";
             }
             break;
@@ -118,13 +112,13 @@ export const InductionStatusButton = ({
     }
 
     return (
-        <ActionButton
-            size={ActionButtonSize.S}
+        <Button
+            size="sm"
             fullWidth
             href={`/induction/${induction.id}`}
             type={buttonType}
         >
             {buttonLabel}
-        </ActionButton>
+        </Button>
     );
 };

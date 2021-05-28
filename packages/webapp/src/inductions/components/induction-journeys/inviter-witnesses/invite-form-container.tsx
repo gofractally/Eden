@@ -1,12 +1,5 @@
 import { useState } from "react";
-import {
-    Text,
-    Link,
-    onError,
-    Heading,
-    ActionButton,
-    ActionButtonSize,
-} from "_app";
+import { Text, Link, onError, Heading, Button } from "_app";
 import {
     InductionInviteForm,
     InductionStepInviter,
@@ -92,8 +85,8 @@ const InviteConfirmation = ({ inductionId }: { inductionId: string }) => (
                 this invitation expires, you will be able to issue another.
             </Text>
         </div>
-        <ActionButton href="/induction" size={ActionButtonSize.L}>
+        <Button href="/induction" size="lg">
             See your invitations
-        </ActionButton>
+        </Button>
     </>
 );
