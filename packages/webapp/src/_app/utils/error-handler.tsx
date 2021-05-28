@@ -6,6 +6,10 @@ export const onError = (error: Error, title = "") => {
 
     let message = error.toString();
     message = message.replace("Error: assertion failure with message:", "");
+    message = message.replace(
+        "induction for this invitation is already in progress",
+        "You already invited this member. If you want to modify the ceremony participants, please cancel the induction first in the membership page."
+    );
 
     const insufficientResources =
         message.indexOf("transaction net usage") >= 0 ||

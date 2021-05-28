@@ -29,6 +29,7 @@ export type ButtonType =
     | "disabled"
     | "neutral"
     | "danger"
+    | "dangerOutline"
     | "inductionStatusProfile"
     | "inductionStatusCeremony"
     | "inductionStatusAction";
@@ -37,6 +38,7 @@ const TYPES: { [key in ButtonType]: string } = {
     disabled: "border-gray-400 bg-gray-300 text-gray-500",
     neutral: "bg-gray-50 text-gray-800 hover:bg-gray-200",
     danger: "bg-red-500 text-white hover:bg-red-600",
+    dangerOutline: "text-gray-500 hover:text-red-500 border-none",
     inductionStatusProfile:
         "bg-blue-500 border-blue-500 text-white hover:bg-blue-600",
     inductionStatusCeremony:
