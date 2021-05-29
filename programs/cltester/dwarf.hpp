@@ -20,7 +20,9 @@ namespace dwarf
    {
       uint32_t begin_address;
       uint32_t end_address;
-      std::string name;
+      std::optional<std::string> linkage_name;
+      std::optional<std::string> name;
+      std::string demangled_name;
 
       friend bool operator<(const subprogram& a, const subprogram& b)
       {

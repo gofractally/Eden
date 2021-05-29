@@ -50,6 +50,8 @@ namespace dwarf
    inline constexpr uint8_t dw_lne_lo_user = 0x80;
    inline constexpr uint8_t dw_lne_hi_user = 0xff;
 
+   inline constexpr uint16_t dw_lang_c_plus_plus = 0x0004;
+
 // clang-format off
 #define DW_ATS(a, b, x)                \
    x(a, b, sibling, 0x01)              \
@@ -945,7 +947,7 @@ namespace dwarf
       std::optional<std::string> linkage_name;
       std::optional<std::string> name;
 
-      std::string get_name() const
+      std::string get_demangled_name() const
       {
          if (linkage_name)
             return demangle(*linkage_name);
@@ -1023,13 +1025,16 @@ namespace dwarf
                          common);
          if (child->tag == dw_tag_subprogram)
          {
-            auto name = common.get_name();
-            if (!name.empty() && common.low_pc && *common.low_pc && common.high_pc)
+            auto demangled_name = common.get_demangled_name();
+            if (!demangled_name.empty() && common.low_pc && *common.low_pc &&
+                *common.low_pc < 0xffff'ffff && common.high_pc)
             {
                subprogram p{
                    .begin_address = *common.low_pc,
                    .end_address = *common.high_pc,
-                   .name = name,
+                   .linkage_name = common.linkage_name,
+                   .name = common.name,
+                   .demangled_name = demangled_name,
                };
                result.subprograms.push_back(std::move(p));
             }
@@ -1071,54 +1076,131 @@ namespace dwarf
       }
    }
 
-   std::vector<char> generate_debug_abbrev(const info& info, const std::vector<jit_addr>& addresses)
+   struct attr_form_value
    {
-      std::vector<char> result;
-      eosio::vector_stream s{result};
-      eosio::varuint32_to_bin(1, s);                    // code
-      eosio::varuint32_to_bin(dw_tag_compile_unit, s);  // tag
-      eosio::to_bin(uint8_t(0), s);                     // has_children
+      using value_type = std::variant<uint64_t, std::string>;
 
-      auto attr = [&](auto at, auto form) {
-         eosio::varuint32_to_bin(at, s);
-         eosio::varuint32_to_bin(form, s);
+      uint32_t attr = 0;
+      uint32_t form = 0;
+      value_type value;
+
+      auto key() const { return std::pair{attr, form}; }
+
+      friend bool operator<(const attr_form_value& a, const attr_form_value& b)
+      {
+         return a.key() < b.key();
+      }
+   };
+
+   struct die_pattern
+   {
+      uint32_t tag = 0;
+      bool has_children = false;
+      std::vector<attr_form_value> attrs;
+
+      auto key() const { return std::tuple{tag, has_children, attrs}; }
+
+      friend bool operator<(const die_pattern& a, const die_pattern& b)
+      {
+         return a.key() < b.key();
+      }
+   };
+
+   void write_die(std::vector<char>& abbrev_data,
+                  std::vector<char>& info_inner,
+                  std::map<die_pattern, uint32_t>& codes,
+                  const die_pattern& die)
+   {
+      auto it = codes.find(die);
+      if (it == codes.end())
+      {
+         it = codes.insert(std::pair{die, codes.size() + 1}).first;
+         eosio::vector_stream s{abbrev_data};
+         eosio::varuint32_to_bin(it->second, s);
+         eosio::varuint32_to_bin(die.tag, s);
+         eosio::to_bin(die.has_children, s);
+         for (const auto& attr : die.attrs)
+         {
+            eosio::varuint32_to_bin(attr.attr, s);
+            eosio::varuint32_to_bin(attr.form, s);
+         }
+         eosio::varuint32_to_bin(0, s);
+         eosio::varuint32_to_bin(0, s);
+      }
+
+      eosio::vector_stream s{info_inner};
+      eosio::varuint32_to_bin(it->second, s);  // code
+      for (const auto& attr : die.attrs)
+      {
+         std::visit(overloaded{
+                        [&](uint64_t v) { eosio::to_bin(v, s); },               //
+                        [&](const std::string& str) { write_string(str, s); },  //
+                    },
+                    attr.value);
+      }
+   }  // write_die
+
+   void write_dies(std::vector<char>& abbrev_data,
+                   std::vector<char>& info_data,
+                   const info& info,
+                   const std::vector<jit_addr>& addresses,
+                   const void* code_start,
+                   size_t code_size)
+   {
+      std::vector<char> info_inner;
+      std::map<die_pattern, uint32_t> codes;
+      die_pattern die;
+
+      eosio::vector_stream inner_s{info_inner};
+      eosio::to_bin(uint16_t(compile_unit_version), inner_s);
+      eosio::to_bin(uint64_t(0), inner_s);  // debug_abbrev_offset
+      eosio::to_bin(uint8_t(8), inner_s);   // address_size
+
+      die.tag = dw_tag_compile_unit;
+      die.has_children = true;
+      die.attrs = {
+          {dw_at_language, dw_form_data8, uint64_t(dw_lang_c_plus_plus)},
+          {dw_at_low_pc, dw_form_addr, uint64_t(code_start)},
+          {dw_at_high_pc, dw_form_addr, uint64_t((char*)code_start + code_size)},
+          {dw_at_stmt_list, dw_form_sec_offset, uint64_t(0)},
       };
-      attr(dw_at_low_pc, dw_form_addr);
-      attr(dw_at_high_pc, dw_form_addr);
-      attr(dw_at_stmt_list, dw_form_sec_offset);
-      attr(0, 0);
+      write_die(abbrev_data, info_inner, codes, die);
 
-      return result;
-   }
-
-   std::vector<char> generate_debug_info(const info& info,
-                                         const std::vector<jit_addr>& addresses,
-                                         const void* code_start,
-                                         size_t code_size)
-   {
-      std::vector<char> content;
+      for (auto& sub : info.subprograms)
       {
-         eosio::vector_stream s{content};
-         eosio::to_bin(uint16_t(compile_unit_version), s);
-         eosio::to_bin(uint64_t(0), s);                              // debug_abbrev_offset
-         eosio::to_bin(uint8_t(8), s);                               // address_size
-         eosio::varuint32_to_bin(1, s);                              // code
-         eosio::to_bin(uint64_t(code_start), s);                     // dw_at_low_pc
-         eosio::to_bin(uint64_t((char*)code_start + code_size), s);  // dw_at_high_pc
-         eosio::to_bin(uint64_t(0), s);                              // dw_at_stmt_list
-         eosio::varuint32_to_bin(0, s);                              // code
+         auto range = get_addr_range(info, addresses, sub.begin_address, sub.end_address);
+         if (!range)
+         {
+            // fprintf(stderr, "address lookup fail: %s %08x-%08x\n", sub.demangled_name.c_str(),
+            //         sub.begin_address, sub.end_address);
+            continue;
+         }
+
+         die.tag = dw_tag_subprogram;
+         die.has_children = false;
+         die.attrs = {
+             {dw_at_low_pc, dw_form_addr, uint64_t(range->first)},
+             {dw_at_high_pc, dw_form_addr, uint64_t(range->second)},
+         };
+         if (sub.linkage_name)
+            die.attrs.push_back({dw_at_linkage_name, dw_form_string, *sub.linkage_name});
+         if (sub.name)
+            die.attrs.push_back({dw_at_name, dw_form_string, *sub.name});
+         else if (sub.linkage_name)
+            die.attrs.push_back({dw_at_name, dw_form_string, sub.demangled_name});
+         write_die(abbrev_data, info_inner, codes, die);
       }
 
-      {
-         std::vector<char> result(content.size() + 12);
-         eosio::fixed_buf_stream s{result.data(), result.size()};
-         eosio::to_bin(uint32_t(0xffff'ffff), s);
-         eosio::to_bin(uint64_t(content.size()), s);
-         s.write(content.data(), content.size());
-         eosio::check(s.pos == s.end, "generate_debug_info: calculated incorrect stream size");
-         return result;
-      }
-   }
+      eosio::varuint32_to_bin(0, inner_s);  // end children
+      eosio::varuint32_to_bin(0, inner_s);  // end module
+      info_data.resize(info_inner.size() + 12);
+      eosio::fixed_buf_stream outer_s{info_data.data(), info_data.size()};
+      eosio::to_bin(uint32_t(0xffff'ffff), outer_s);
+      eosio::to_bin(uint64_t(info_inner.size()), outer_s);
+      outer_s.write(info_inner.data(), info_inner.size());
+      eosio::check(outer_s.pos == outer_s.end,
+                   "generate_debug_info: calculated incorrect stream size");
+   }  // write_dies
 
    struct wasm_header
    {
@@ -1413,10 +1495,13 @@ namespace dwarf
          result->write(pos, header);
       };
 
+      std::vector<char> abbrev_data;
+      std::vector<char> info_data;
+      write_dies(abbrev_data, info_data, info, addresses, code_start, code_size);
+
       write_sec(line_sec_header, line_sec_header_pos, generate_debug_line(info, addresses));
-      write_sec(abbrev_sec_header, abbrev_sec_header_pos, generate_debug_abbrev(info, addresses));
-      write_sec(info_sec_header, info_sec_header_pos,
-                generate_debug_info(info, addresses, code_start, code_size));
+      write_sec(abbrev_sec_header, abbrev_sec_header_pos, abbrev_data);
+      write_sec(info_sec_header, info_sec_header_pos, info_data);
       write_sec(str_sec_header, str_sec_header_pos, strings);
 
       result->reg();

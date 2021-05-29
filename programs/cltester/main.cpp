@@ -883,7 +883,7 @@ struct callbacks
          else
             fprintf(stderr, "<wasm address 0x%08x>", file_offset - di.code_offset);
          if (sub)
-            fprintf(stderr, ": %s", sub->name.c_str());
+            fprintf(stderr, ": %s", sub->demangled_name.c_str());
          fprintf(stderr, "\n");
       }
    }
