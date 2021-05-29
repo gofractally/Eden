@@ -1,4 +1,7 @@
-#define EOSIO_EOS_VM_JIT_RUNTIME_ENABLED
+#include "debug-eos-vm.hpp"
+
+#undef LIKELY
+#undef UNLIKELY
 
 #include <eosio/chain/types.hpp>
 
@@ -6,7 +9,6 @@
 #define private public
 #include <eosio/chain/wasm_interface_private.hpp>
 #include <eosio/chain/webassembly/runtime_interface.hpp>
-#include <eosio/vm/backend.hpp>
 #undef private
 
 #include <eosio/chain/apply_context.hpp>
@@ -58,11 +60,16 @@ using rhf_t = eosio::vm::registered_host_functions<callbacks>;
 
 void backtrace();
 
+using debug_contract_backend = eosio::vm::backend<eosio::chain::eos_vm_host_functions_t,
+                                                  debug_eos_vm::jit_capture_fn,
+                                                  eosio::vm::default_options,
+                                                  debug_eos_vm::debug_instr_map>;
+
 template <typename Context>
 struct trace_writer : public eosio::vm::machine_code_writer<Context>
 {
    using base = eosio::vm::machine_code_writer<Context>;
-   using base::machine_code_writer;
+   using base::base;
 
    void emit_unreachable()
    {
@@ -82,7 +89,7 @@ struct jit_backtrace
    template <typename Host>
    using context = eosio::vm::jit_execution_context<Host, true>;
    template <typename Host, typename Options, typename DebugInfo>
-   using parser = eosio::vm::binary_parser<trace_writer<context<Host>>, Options, DebugInfo>;
+   using parser = debug_eos_vm::capture_fn_parser<trace_writer<context<Host>>, Options, DebugInfo>;
    static constexpr bool is_jit = true;
 };
 
@@ -90,7 +97,7 @@ using backend_t = eosio::vm::backend<  //
     rhf_t,
     jit_backtrace,
     eosio::vm::default_options,
-    eosio::vm::profile_instr_map>;
+    debug_eos_vm::debug_instr_map>;
 
 inline constexpr int max_backtrace_frames = 512;
 
@@ -176,11 +183,7 @@ struct test_rodeos;
 
 struct cached_debugging_module
 {
-   using backend_t = eosio::vm::backend<eosio::chain::eos_vm_host_functions_t,
-                                        eosio::vm::jit_profile,
-                                        eosio::vm::default_options,
-                                        eosio::vm::profile_instr_map>;
-   std::unique_ptr<backend_t> module;
+   std::unique_ptr<debug_contract_backend> module;
    std::shared_ptr<dwarf::debugger_registration> reg;
 };
 
@@ -288,9 +291,9 @@ std::shared_ptr<dwarf::debugger_registration> enable_debug(std::vector<uint8_t>&
    auto& alloc = module.allocator;
    auto& dbg = backend.get_debug();
    std::vector<dwarf::jit_addr> addresses;
-   for (auto& entry : dbg.data)
+   for (auto& entry : dbg.instr_locs)
       addresses.push_back(
-          {entry.wasm_addr - dwarf_info.code_offset, (char*)dbg.base_address + entry.offset});
+          {entry.wasm_addr - dwarf_info.code_offset, (char*)dbg.code_begin + entry.code_offset});
    return register_with_debugger(
        dwarf_info, std::move(addresses), alloc.get_code_start(), alloc._code_size,
        (char*)alloc.get_code_start() +
@@ -510,7 +513,7 @@ struct test_chain
          try
          {
             eosio::vm::wasm_code_ptr code(it->second.data(), size);
-            auto bkend = std::make_unique<cached_debugging_module::backend_t>(code, size, nullptr);
+            auto bkend = std::make_unique<debug_contract_backend>(code, size, nullptr);
             eosio::chain::eos_vm_host_functions_t::resolve(bkend->get_module());
             auto reg = enable_debug(it->second, *bkend, dwarf_info, "apply");
             auto cached = std::make_shared<cached_debugging_module>(
