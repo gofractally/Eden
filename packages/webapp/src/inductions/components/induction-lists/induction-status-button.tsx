@@ -112,13 +112,23 @@ export const InductionStatusButton = ({
     }
 
     return (
-        <Button
-            size="sm"
-            fullWidth
-            href={`/induction/${induction.id}`}
-            type={buttonType}
-        >
-            {buttonLabel}
-        </Button>
+        <div className="flex items-center justify-center w-full">
+            <Button
+                size="sm"
+                fullWidth
+                href={`/induction/${induction.id}`}
+                type={buttonType}
+            >
+                {buttonLabel}
+            </Button>
+            <Button
+                type="dangerOutline"
+                size="sm"
+                className="ml-2"
+                onClick={cancelInduction}
+            >
+                <FaTrash />
+            </Button>
+        </div>
     );
 };
