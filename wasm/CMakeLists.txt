@@ -39,11 +39,11 @@ endfunction()
 file(COPY ${ROOT_SOURCE_DIR}/LICENSE DESTINATION ${ROOT_BINARY_DIR}/clsdk/licenses)
 
 add_library(wasm-base INTERFACE)
-target_compile_options(wasm-base INTERFACE -fno-exceptions -D__eosio_cdt__ -O3)
+target_compile_options(wasm-base INTERFACE -fno-exceptions -D__eosio_cdt__ -mthread-model single -O3)
 target_link_options(wasm-base INTERFACE -Wl,--strip-all -O3)
 
 add_library(wasm-base-debug INTERFACE)
-target_compile_options(wasm-base-debug INTERFACE -fno-exceptions -D__eosio_cdt__ -ggdb)
+target_compile_options(wasm-base-debug INTERFACE -fno-exceptions -D__eosio_cdt__ -mthread-model single -ggdb)
 target_link_options(wasm-base-debug INTERFACE -ggdb)
 
 add_subdirectory(../contracts contracts)

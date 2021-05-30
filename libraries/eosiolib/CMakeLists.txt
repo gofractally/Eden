@@ -72,9 +72,18 @@ function(add_libs suffix)
     target_link_libraries(eosio-contract-abigen${suffix} PUBLIC
         boost
         eosio-core${suffix}
+        -lc++
+        -lc++abi
+        -lc
         eosio-contracts-wasi-polyfill${suffix}
+        ${WASI_SDK_PREFIX}/lib/clang/11.0.0/lib/wasi/libclang_rt.builtins-wasm32.a
+        ${WASI_SDK_PREFIX}/share/wasi-sysroot/lib/wasm32-wasi/crt1.o
     )
     set_target_properties(eosio-contract-abigen${suffix} PROPERTIES ARCHIVE_OUTPUT_DIRECTORY ${ROOT_BINARY_DIR}/clsdk/lib-wasm)
+    target_link_options(eosio-contract-abigen${suffix} PUBLIC
+        -Wl,--entry,_start
+        -nostdlib
+    )
 
     add_library(cltestlib${suffix})
     target_sources(cltestlib${suffix} PRIVATE
@@ -96,10 +105,21 @@ function(add_libs suffix)
         tester/wasi_polyfill/__wasi_path_open.cpp
         tester/wasi_polyfill/__wasi_proc_exit.cpp
     )
-    target_link_libraries(cltestlib${suffix} PUBLIC boost eosio-core${suffix})
+    target_link_libraries(cltestlib${suffix} PUBLIC 
+        boost eosio-core${suffix}
+        -lc++
+        -lc++abi
+        -lc
+        ${WASI_SDK_PREFIX}/lib/clang/11.0.0/lib/wasi/libclang_rt.builtins-wasm32.a
+        ${WASI_SDK_PREFIX}/share/wasi-sysroot/lib/wasm32-wasi/crt1.o
+    )
     target_include_directories(cltestlib${suffix} PUBLIC contracts tester)
     target_link_options(cltestlib${suffix} INTERFACE -Wl,--export-table)
     set_target_properties(cltestlib${suffix} PROPERTIES ARCHIVE_OUTPUT_DIRECTORY ${ROOT_BINARY_DIR}/clsdk/lib-wasm)
+    target_link_options(cltestlib${suffix} PUBLIC
+        -Wl,--entry,_start
+        -nostdlib
+    )
 
     copy_headers(contracts/eosio eosiolib/contracts/include/eosio)
     copy_headers(core eosiolib/core/include)
