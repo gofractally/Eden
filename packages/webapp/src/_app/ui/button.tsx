@@ -71,7 +71,7 @@ export const Button = ({
     target,
     isExternal,
 }: Props) => {
-    const baseClass = "inline-block border focus:outline-none";
+    const baseClass = "inline-block border focus:outline-none text-center";
     const widthClass = fullWidth ? "w-full" : "";
     let colorClass = TYPES[disabled ? "disabled" : type];
     const cursorClass = disabled ? "cursor-not-allowed" : "cursor-pointer";
