@@ -1,4 +1,7 @@
-import toast from "react-hot-toast";
+import { useEffect } from "react";
+import useDimensions from "react-cool-dimensions";
+import toast, { Toaster as ReactHotToaster } from "react-hot-toast";
+
 import { HelpLink } from "_app/ui";
 
 export const onError = (error: Error, title = "") => {
@@ -65,5 +68,18 @@ const eosResourcesError = (message: string) => {
         {
             duration: 999_999_999,
         }
+    );
+};
+
+export const Toaster = () => {
+    const { observe, width } = useDimensions();
+    useEffect(() => observe(document.body), []);
+    return (
+        <ReactHotToaster
+            position="top-right"
+            toastOptions={{
+                style: { marginTop: width < 768 ? "144px" : "60px" },
+            }}
+        />
     );
 };
