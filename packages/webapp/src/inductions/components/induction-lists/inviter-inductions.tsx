@@ -25,7 +25,7 @@ const INVITER_INDUCTION_COLUMNS: InductionTable.Column[] = [
     },
     {
         key: "inviter_witnesses",
-        label: "Inviter & Witnesses",
+        label: "Witnesses",
         className: "hidden md:flex",
     },
     {
