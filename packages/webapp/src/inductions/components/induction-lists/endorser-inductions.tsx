@@ -1,7 +1,11 @@
-import { useFetchedData, useMemberByAccountName } from "_app";
+import {
+    useFetchedData,
+    useMemberByAccountName,
+    useMemberListByAccountNames,
+} from "_app";
 import * as InductionTable from "_app/ui/table";
 
-import { getInduction } from "../../api";
+import { getEndorsementsByInductionId, getInduction } from "../../api";
 import { getInductionRemainingTimeDays, getInductionStatus } from "../../utils";
 import { Endorsement, Induction } from "../../interfaces";
 import { InductionStatusButton } from "./induction-status-button";
@@ -32,8 +36,8 @@ const ENDORSER_INDUCTION_COLUMNS: InductionTable.Column[] = [
         label: "Invitee",
     },
     {
-        key: "inviter",
-        label: "Inviter",
+        key: "inviterAndWitnesses",
+        label: "Inviter & Witnesses",
         className: "hidden md:flex",
     },
     {
@@ -57,6 +61,37 @@ const getTableData = (endorsements: Endorsement[]): InductionTable.Row[] => {
 
         const { data: inviter } = useMemberByAccountName(endorsement.inviter);
 
+        const [allEndorsements] = useFetchedData<Endorsement[]>(
+            getEndorsementsByInductionId,
+            endorsement.induction_id
+        );
+
+        const endorsersAccounts =
+            allEndorsements
+                ?.map(
+                    (endorsement: Endorsement): string => endorsement.endorser
+                )
+                .filter(
+                    (endorser: string) =>
+                        ![endorsement.inviter, endorsement.endorser].includes(
+                            endorser
+                        )
+                ) || [];
+
+        const endorsersMembers = useMemberListByAccountNames(endorsersAccounts);
+
+        const endorsers =
+            endorsersMembers
+                .map(
+                    (member, index) =>
+                        member.data?.name || endorsersAccounts[index]
+                )
+                .join(", ") || "";
+
+        const inviterName = inviter ? inviter.name : endorsement.inviter;
+        const inviterAndWitnesses =
+            inviterName + (endorsers ? ", " + endorsers : "");
+
         const remainingTime = getInductionRemainingTimeDays(induction);
 
         const invitee =
@@ -67,7 +102,7 @@ const getTableData = (endorsements: Endorsement[]): InductionTable.Row[] => {
         return {
             key: `${endorsement.induction_id}-${endorsement.id}`,
             invitee,
-            inviter: inviter ? inviter.name : endorsement.inviter,
+            inviterAndWitnesses,
             time_remaining: remainingTime,
             status: induction ? (
                 <InductionStatusButton
