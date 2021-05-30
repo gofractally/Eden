@@ -7,6 +7,8 @@
 #include <eosio/vm/backend.hpp>
 #undef private
 
+#include "dwarf.hpp"
+
 namespace debug_eos_vm
 {
    // TODO: This can be dropped if binary_parser gains additional imap.* calls
@@ -183,30 +185,9 @@ namespace debug_eos_vm
       size_t wasm_size = 0;
       size_t code_size = 0;
 
-      struct fn_loc
-      {
-         uint32_t code_prologue = 0;
-         uint32_t code_body = 0;
-         uint32_t code_epilogue = 0;
-         uint32_t code_end = 0;
-
-         uint32_t wasm_begin = 0;
-         uint32_t wasm_end = 0;
-      };
-      std::vector<fn_loc> fn_locs;
-
-      struct instr_loc
-      {
-         uint32_t code_offset;
-         uint32_t wasm_addr;
-
-         friend bool operator<(const instr_loc& a, const instr_loc& b)
-         {
-            return a.code_offset < b.code_offset;
-         }
-      };
-      std::vector<instr_loc> instr_locs;
-      const instr_loc* offset_to_addr = nullptr;
+      std::vector<dwarf::jit_fn_loc> fn_locs;
+      std::vector<dwarf::jit_instr_loc> instr_locs;
+      const dwarf::jit_instr_loc* offset_to_addr = nullptr;
       std::size_t offset_to_addr_len = 0;
 
       uint32_t code_offset(const void* p)
@@ -324,4 +305,21 @@ namespace debug_eos_vm
       }
    };  // debug_instr_map
 
+   template <typename Backend>
+   std::shared_ptr<dwarf::debugger_registration> enable_debug(std::vector<uint8_t>& code,
+                                                              Backend& backend,
+                                                              dwarf::info& dwarf_info,
+                                                              const char* entry)
+   {
+      auto& module = backend.get_module();
+      auto func_index = module.get_exported_function(entry);
+      if (func_index == std::numeric_limits<uint32_t>::max())
+         throw std::runtime_error("can not find " + std::string(entry));
+      auto& alloc = module.allocator;
+      auto& dbg = backend.get_debug();
+      return dwarf::register_with_debugger(
+          dwarf_info, dbg.fn_locs, dbg.instr_locs, alloc.get_code_start(), alloc._code_size,
+          (char*)alloc.get_code_start() +
+              module.code[func_index - module.get_imported_functions_size()].jit_code_offset);
+   }
 }  // namespace debug_eos_vm

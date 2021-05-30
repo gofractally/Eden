@@ -347,7 +347,7 @@ namespace dwarf
          auto dir = eosio::varuint32_from_bin(s);
          auto mod_time = eosio::varuint32_from_bin(s);
          auto filesize = eosio::varuint32_from_bin(s);
-         eosio::check(dir <= obj.file_names.size(),
+         eosio::check(dir <= obj.include_directories.size(),
                       "invalid include_directory number in .debug_line");
          if (dir)
             str = obj.include_directories[dir] + "/" + str;
@@ -386,6 +386,7 @@ namespace dwarf
    struct line_state
    {
       line_header header;
+      std::optional<uint32_t> sequence_begin;
       uint32_t address = 0;
       uint32_t op_index = 0;
       uint32_t file = 1;
@@ -426,6 +427,8 @@ namespace dwarf
 
       std::optional<location> current;
       auto add_row = [&] {
+         if (!state.sequence_begin)
+            state.sequence_begin = state.address;
          if (current && (state.end_sequence || state.file != current->file_index ||
                          state.line != current->line))
          {
@@ -440,9 +443,11 @@ namespace dwarf
                result.files.push_back(filename);
             }
             current->file_index = it->second;
-            // fprintf(stderr, "[%08x,%08x) %s:%d\n", current->begin_address, current->end_address,
+            // fprintf(stderr, "%08x [%08x,%08x) %s:%d\n", *state.sequence_begin,
+            //         current->begin_address, current->end_address,
             //         result.files[current->file_index].c_str(), current->line);
-            result.locations.push_back(*current);
+            if (*state.sequence_begin && *state.sequence_begin < 0xffff'ffff)
+               result.locations.push_back(*current);
             current = {};
          }
          if (!state.end_sequence && !current)
@@ -563,22 +568,32 @@ namespace dwarf
 
    std::optional<std::pair<uint64_t, uint64_t>> get_addr_range(
        const info& info,
-       const std::vector<jit_addr>& addresses,
+       const std::vector<jit_fn_loc>& fn_locs,
+       const std::vector<jit_instr_loc>& instr_locs,
+       const void* code_start,
        uint32_t begin,
        uint32_t end)
    {
       // TODO: cuts off a range which ends at the wasm's end
-      auto it1 = std::lower_bound(addresses.begin(), addresses.end(), begin,
+      auto it1 =
+          std::lower_bound(instr_locs.begin(), instr_locs.end(), info.wasm_code_offset + begin,
+                           [](const auto& a, auto b) { return a.wasm_addr < b; });
+      auto it2 = std::lower_bound(instr_locs.begin(), instr_locs.end(), info.wasm_code_offset + end,
                                   [](const auto& a, auto b) { return a.wasm_addr < b; });
-      auto it2 = std::lower_bound(addresses.begin(), addresses.end(), end,
-                                  [](const auto& a, auto b) { return a.wasm_addr < b; });
-      if (it1 < it2 && it2 != addresses.end())
-         return std::pair{uint64_t(it1->addr), uint64_t(it2->addr)};
+      if (it1 < it2 && it2 != instr_locs.end())
+      {
+         return std::pair{uint64_t((char*)code_start + it1->code_offset),
+                          uint64_t((char*)code_start + it2->code_offset)};
+      }
       return {};
    }
 
    template <typename S>
-   void write_line_program(const info& info, const std::vector<jit_addr>& addresses, S& s)
+   void write_line_program(const info& info,
+                           const std::vector<jit_fn_loc>& fn_locs,
+                           const std::vector<jit_instr_loc>& instr_locs,
+                           const void* code_start,
+                           S& s)
    {
       std::optional<uint64_t> address = 0;
       uint32_t file = 1;
@@ -594,7 +609,8 @@ namespace dwarf
 
       for (auto& loc : info.locations)
       {
-         auto range = get_addr_range(info, addresses, loc.begin_address, loc.end_address);
+         auto range = get_addr_range(info, fn_locs, instr_locs, code_start, loc.begin_address,
+                                     loc.end_address);
          if (!range)
             continue;
 
@@ -649,7 +665,10 @@ namespace dwarf
       }
    }  // write_line_program
 
-   std::vector<char> generate_debug_line(const info& info, const std::vector<jit_addr>& addresses)
+   std::vector<char> generate_debug_line(const info& info,
+                                         const std::vector<jit_fn_loc>& fn_locs,
+                                         const std::vector<jit_instr_loc>& instr_locs,
+                                         const void* code_start)
    {
       line_header header;
       header.file_names.push_back("");
@@ -657,7 +676,7 @@ namespace dwarf
       eosio::size_stream header_size;
       to_bin(header, header_size);
       eosio::size_stream program_size;
-      write_line_program(info, addresses, program_size);
+      write_line_program(info, fn_locs, instr_locs, code_start, program_size);
 
       std::vector<char> result(header_size.size + program_size.size + 22);
       eosio::fixed_buf_stream s{result.data(), result.size()};
@@ -666,7 +685,7 @@ namespace dwarf
       eosio::to_bin(uint16_t(lns_version), s);
       eosio::to_bin(uint64_t(header_size.size), s);
       to_bin(header, s);
-      write_line_program(info, addresses, s);
+      write_line_program(info, fn_locs, instr_locs, code_start, s);
       eosio::check(s.pos == s.end, "generate_debug_line: calculated incorrect stream size");
       return result;
    }
@@ -1143,7 +1162,8 @@ namespace dwarf
    void write_dies(std::vector<char>& abbrev_data,
                    std::vector<char>& info_data,
                    const info& info,
-                   const std::vector<jit_addr>& addresses,
+                   const std::vector<jit_fn_loc>& fn_locs,
+                   const std::vector<jit_instr_loc>& instr_locs,
                    const void* code_start,
                    size_t code_size)
    {
@@ -1168,7 +1188,8 @@ namespace dwarf
 
       for (auto& sub : info.subprograms)
       {
-         auto range = get_addr_range(info, addresses, sub.begin_address, sub.end_address);
+         auto range = get_addr_range(info, fn_locs, instr_locs, code_start, sub.begin_address,
+                                     sub.end_address);
          if (!range)
          {
             // fprintf(stderr, "address lookup fail: %s %08x-%08x\n", sub.demangled_name.c_str(),
@@ -1253,7 +1274,7 @@ namespace dwarf
             auto section_begin = stream.pos;
             auto section = eosio::from_bin<wasm_section>(stream);
             if (section.id == eosio::vm::section_id::code_section)
-               result.code_offset = section_begin - file_begin;
+               result.wasm_code_offset = section_begin - file_begin;
             else if (section.id == eosio::vm::section_id::custom_section)
                f(section, eosio::from_bin<std::string>(section.data));
          }
@@ -1420,16 +1441,13 @@ namespace dwarf
 
    std::shared_ptr<debugger_registration> register_with_debugger(  //
        info& info,
-       std::vector<jit_addr>&& addresses,
+       const std::vector<jit_fn_loc>& fn_locs,
+       const std::vector<jit_instr_loc>& instr_locs,
        const void* code_start,
        size_t code_size,
        const void* entry)
    {
       auto result = std::make_shared<debugger_registration>();
-      std::sort(addresses.begin(), addresses.end());
-      // for (auto& x : addresses)
-      //    fprintf(stdout, "%p %08x\n", x.addr, x.wasm_addr);
-
       std::vector<char> strings;
       strings.push_back(0);
       auto add_str = [&](const char* s) {
@@ -1497,9 +1515,10 @@ namespace dwarf
 
       std::vector<char> abbrev_data;
       std::vector<char> info_data;
-      write_dies(abbrev_data, info_data, info, addresses, code_start, code_size);
+      write_dies(abbrev_data, info_data, info, fn_locs, instr_locs, code_start, code_size);
 
-      write_sec(line_sec_header, line_sec_header_pos, generate_debug_line(info, addresses));
+      write_sec(line_sec_header, line_sec_header_pos,
+                generate_debug_line(info, fn_locs, instr_locs, code_start));
       write_sec(abbrev_sec_header, abbrev_sec_header_pos, abbrev_data);
       write_sec(info_sec_header, info_sec_header_pos, info_data);
       write_sec(str_sec_header, str_sec_header_pos, strings);

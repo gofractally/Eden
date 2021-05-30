@@ -32,7 +32,6 @@
 #include <eosio/fixed_bytes.hpp>
 #include <eosio/ship_protocol.hpp>
 #include <eosio/to_bin.hpp>
-#include "dwarf.hpp"
 
 #include <stdio.h>
 #include <chrono>
@@ -278,28 +277,6 @@ struct test_chain_ref
    test_chain_ref& operator=(const test_chain_ref&);
 };
 
-template <typename Backend>
-std::shared_ptr<dwarf::debugger_registration> enable_debug(std::vector<uint8_t>& code,
-                                                           Backend& backend,
-                                                           dwarf::info& dwarf_info,
-                                                           const char* entry)
-{
-   auto& module = backend.get_module();
-   auto func_index = module.get_exported_function(entry);
-   if (func_index == std::numeric_limits<uint32_t>::max())
-      throw std::runtime_error("can not find " + std::string(entry));
-   auto& alloc = module.allocator;
-   auto& dbg = backend.get_debug();
-   std::vector<dwarf::jit_addr> addresses;
-   for (auto& entry : dbg.instr_locs)
-      addresses.push_back(
-          {entry.wasm_addr - dwarf_info.code_offset, (char*)dbg.code_begin + entry.code_offset});
-   return register_with_debugger(
-       dwarf_info, std::move(addresses), alloc.get_code_start(), alloc._code_size,
-       (char*)alloc.get_code_start() +
-           module.code[func_index - module.get_imported_functions_size()].jit_code_offset);
-}
-
 struct debugging_module : eosio::chain::wasm_instantiated_module_interface
 {
    std::shared_ptr<cached_debugging_module> cached;
@@ -515,7 +492,7 @@ struct test_chain
             eosio::vm::wasm_code_ptr code(it->second.data(), size);
             auto bkend = std::make_unique<debug_contract_backend>(code, size, nullptr);
             eosio::chain::eos_vm_host_functions_t::resolve(bkend->get_module());
-            auto reg = enable_debug(it->second, *bkend, dwarf_info, "apply");
+            auto reg = debug_eos_vm::enable_debug(it->second, *bkend, dwarf_info, "apply");
             auto cached = std::make_shared<cached_debugging_module>(
                 cached_debugging_module{std::move(bkend), std::move(reg)});
             state.cached_modules[code_hash] = cached;
@@ -879,12 +856,12 @@ struct callbacks
          auto file_offset = state.backend.get_debug().translate(data[i]);
          if (file_offset == 0xffff'ffff)
             continue;
-         const auto* loc = di.get_location(file_offset - di.code_offset);
-         const auto* sub = di.get_subprogram(file_offset - di.code_offset);
+         const auto* loc = di.get_location(file_offset - di.wasm_code_offset);
+         const auto* sub = di.get_subprogram(file_offset - di.wasm_code_offset);
          if (loc)
             fprintf(stderr, "%s:%d", di.files[loc->file_index].c_str(), loc->line);
          else
-            fprintf(stderr, "<wasm address 0x%08x>", file_offset - di.code_offset);
+            fprintf(stderr, "<wasm address 0x%08x>", file_offset - di.wasm_code_offset);
          if (sub)
             fprintf(stderr, ": %s", sub->demangled_name.c_str());
          fprintf(stderr, "\n");
@@ -1716,7 +1693,7 @@ static void run(const char* wasm,
    auto code = eosio::vm::read_wasm(wasm);
    backend_t backend(code, nullptr);
    auto dwarf_info = dwarf::get_info_from_wasm({(const char*)code.data(), code.size()});
-   auto reg = enable_debug(code, backend, dwarf_info, "_start");
+   auto reg = debug_eos_vm::enable_debug(code, backend, dwarf_info, "_start");
 
    ::state state{wasm, dwarf_info, wa, backend, args};
    fill_substitutions(state, substitutions);

@@ -1,8 +1,27 @@
+#pragma once
+
 #include <eosio/stream.hpp>
 #include <memory>
 
 namespace dwarf
 {
+   struct jit_fn_loc
+   {
+      uint32_t code_prologue = 0;
+      uint32_t code_body = 0;
+      uint32_t code_epilogue = 0;
+      uint32_t code_end = 0;
+
+      uint32_t wasm_begin = 0;
+      uint32_t wasm_end = 0;
+   };
+
+   struct jit_instr_loc
+   {
+      uint32_t code_offset;
+      uint32_t wasm_addr;
+   };
+
    struct location
    {
       uint32_t begin_address = 0;
@@ -51,20 +70,9 @@ namespace dwarf
       }
    };
 
-   struct jit_addr
-   {
-      uint32_t wasm_addr;
-      void* addr;
-
-      friend bool operator<(const jit_addr& a, const jit_addr& b)
-      {
-         return a.wasm_addr < b.wasm_addr;
-      }
-   };
-
    struct info
    {
-      uint32_t code_offset = 0;
+      uint32_t wasm_code_offset = 0;
       std::vector<char> strings;
       std::vector<std::string> files;
       std::vector<location> locations;        // sorted
@@ -83,7 +91,8 @@ namespace dwarf
    struct debugger_registration;
    std::shared_ptr<debugger_registration> register_with_debugger(  //
        info& info,
-       std::vector<jit_addr>&& addresses,
+       const std::vector<jit_fn_loc>& fn_locs,
+       const std::vector<jit_instr_loc>& instr_locs,
        const void* code_start,
        size_t code_size,
        const void* entry);
