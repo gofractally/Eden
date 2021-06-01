@@ -52,9 +52,8 @@ const getTableData = (inductions: Induction[]): InductionTable.Row[] => {
                 ?.map(
                     (endorsement: Endorsement): string => endorsement.endorser
                 )
-                .filter(
-                    (endorsement: string) => endorsement !== induction.inviter
-                ) || [];
+                .filter((endorser: string) => endorser !== induction.inviter) ||
+            [];
 
         const endorsersMembers = useMemberListByAccountNames(endorsersAccounts);
 
