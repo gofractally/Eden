@@ -11,7 +11,9 @@ import {
     assetToString,
     useUALAccount,
     onError,
+    QUERY_MEMBER,
 } from "_app";
+
 import { donateAndCompleteInductionTransaction } from "inductions";
 import { Induction } from "inductions/interfaces";
 
@@ -51,7 +53,7 @@ export const InductionDonateForm = ({
             await new Promise((resolve) => setTimeout(resolve, 6000));
 
             // invalidate ["member", accountName] query so it will refetch with their full name
-            queryClient.invalidateQueries(["member", authorizerAccount]);
+            queryClient.invalidateQueries([QUERY_MEMBER, authorizerAccount]);
 
             // router goes to the newly created member page
             router.push(`/members/${induction.invitee}`);

@@ -6,6 +6,7 @@ export const RPC_GET_TABLE_ROWS = `${RPC_URL}/v1/chain/get_table_rows`;
 export const CONTRACT_SCOPE = "0";
 export const CONTRACT_GLOBAL_TABLE = "global";
 export const CONTRACT_MEMBER_TABLE = "member";
+export const CONTRACT_MEMBERSTATS_TABLE = "memberstats";
 export const CONTRACT_INDUCTION_TABLE = "induction";
 export const CONTRACT_ENDORSEMENT_TABLE = "endorsement";
 
@@ -17,13 +18,19 @@ interface TableResponse<T> {
 
 export const getRow = async <T>(
     table: string,
-    keyName: string,
-    keyValue: string
+    keyName?: string,
+    keyValue?: string
 ): Promise<T | undefined> => {
     const rows = await getTableRows(table, keyValue);
-    return rows.length > 0 && `${rows[0][keyName]}` === `${keyValue}`
-        ? rows[0]
-        : undefined;
+    if (!rows.length) {
+        return undefined;
+    }
+
+    if (keyName && keyValue && `${rows[0][keyName]}` !== `${keyValue}`) {
+        return undefined;
+    }
+
+    return rows[0];
 };
 
 export const getTableRows = async <T = any>(
