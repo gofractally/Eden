@@ -8,16 +8,16 @@ namespace eden
    void migrations::init()
    {
       migration_singleton migration(contract, default_scope);
-      migration.set(
-          std::variant_alternative_t<std::variant_size_v<migration_variant> - 1, migration_variant>(),
-          contract);
+      migration.set(std::variant_alternative_t<std::variant_size_v<migration_variant> - 1,
+                                               migration_variant>(),
+                    contract);
    }
 
    uint32_t migrations::migrate_some(uint32_t max_steps)
    {
       migration_singleton migration(contract, default_scope);
       auto state = migration.get_or_default(migration_variant());
-      while (state.index() != std::variant_size_v<migration_variant> - 1)
+      while (max_steps > 0 && state.index() != std::variant_size_v<migration_variant> - 1)
       {
          std::visit(
              [&](auto& current_state) {

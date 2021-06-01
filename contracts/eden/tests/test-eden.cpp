@@ -567,7 +567,16 @@ TEST_CASE("auction migration")
    t.ahab.act<atomicmarket::actions::auctclaimbuy>(1);
    auto old_balance = get_token_balance("eden.gm"_n);
    expect(t.eden_gm.trace<actions::gc>(42), "Nothing to do");
-   t.eden_gm.act<actions::migrate>(128);
+   while (true)
+   {
+      t.chain.start_block();
+      auto trace = t.eden_gm.trace<actions::migrate>(1);
+      if (trace.except)
+      {
+         expect(trace, "Nothing to do");
+         break;
+      }
+   }
    t.eden_gm.act<actions::gc>(42);
    auto new_balance = get_token_balance("eden.gm"_n);
    // 0.5 EOS left deposited in atomicmarket
