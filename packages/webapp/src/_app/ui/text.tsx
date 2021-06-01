@@ -9,8 +9,8 @@ const TYPES: { [key in TextType]: string } = {
 export type TextSize = "base" | "md" | "xs";
 const SIZES: { [key in TextSize]: string } = {
     base: "text-base",
-    md: "text-xs",
-    xs: "text-md",
+    md: "text-md",
+    xs: "text-xs",
 };
 
 interface Props {
