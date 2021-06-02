@@ -35,7 +35,8 @@ export const getRow = async <T>(
 
 export const getTableRows = async <T = any>(
     table: string,
-    lowerBound: any,
+    lowerBound: any = "0",
+    upperBound: any = null,
     limit = 1
 ): Promise<T[]> => {
     const requestBody = {
@@ -45,12 +46,12 @@ export const getTableRows = async <T = any>(
         key_type: "",
         limit: `${limit}`,
         lower_bound: lowerBound,
+        upper_bound: upperBound,
         reverse: false,
         scope: CONTRACT_SCOPE,
         show_payer: false,
         table: table,
         table_key: "",
-        upper_bound: null,
     };
 
     const response = await fetch(RPC_GET_TABLE_ROWS, {
@@ -91,7 +92,7 @@ export const getTableIndexRows = async (
         key_type: keyType,
         limit: `${limit}`,
         lower_bound: lowerBound,
-        upper_bound: upperBound || null,
+        upper_bound: upperBound,
         reverse: false,
         scope: CONTRACT_SCOPE,
         show_payer: false,
