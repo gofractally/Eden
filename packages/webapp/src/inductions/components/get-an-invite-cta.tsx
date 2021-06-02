@@ -1,4 +1,4 @@
-import { ActionButton, ActionButtonSize } from "_app";
+import { Button } from "_app";
 import { InductionStepsContainer, InductionStepInvitee } from "inductions";
 
 export const GetAnInviteCTA = () => {
@@ -10,14 +10,14 @@ export const GetAnInviteCTA = () => {
                     invitation. Reach out to a current member to get yours!
                     We'll guide you through the rest.
                 </p>
-                <ActionButton
+                <Button
                     href="https://www.notion.so/edenos/Getting-an-Invite-2d38947d5be94dcb84dfa1ae48894802"
-                    size={ActionButtonSize.L}
+                    size="lg"
                     target="_blank"
                     isExternal
                 >
                     Learn more
-                </ActionButton>
+                </Button>
             </>
         </InductionStepsContainer>
     );

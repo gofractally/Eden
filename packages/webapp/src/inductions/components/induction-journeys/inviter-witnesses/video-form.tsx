@@ -1,6 +1,6 @@
 import React, { FormEvent, useEffect, useMemo, useRef, useState } from "react";
 
-import { ActionButton, Form, handleFileChange } from "_app";
+import { Button, Form, handleFileChange } from "_app";
 import { edenContractAccount, validUploadActions } from "config";
 import { ipfsUrl } from "_app/utils/config-helpers";
 
@@ -87,13 +87,13 @@ export const InductionVideoForm = ({
 
             {onSubmit && (
                 <div className="pt-4">
-                    <ActionButton
+                    <Button
                         isSubmit
                         disabled={isLoading || !uploadedVideo}
                         isLoading={isLoading}
                     >
                         {getSubmissionText()}
-                    </ActionButton>
+                    </Button>
                 </div>
             )}
         </form>

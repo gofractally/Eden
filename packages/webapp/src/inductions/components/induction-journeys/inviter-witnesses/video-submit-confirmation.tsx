@@ -1,4 +1,4 @@
-import { ActionButton, ActionButtonSize, Heading, Text } from "_app";
+import { Button, Heading, Text } from "_app";
 
 export const InductionVideoSubmitConfirmation = () => {
     return (
@@ -17,12 +17,9 @@ export const InductionVideoSubmitConfirmation = () => {
                     is waiting for their endorsement.
                 </Text>
             </div>
-            <ActionButton
-                onClick={() => window.location.reload()}
-                size={ActionButtonSize.L}
-            >
+            <Button onClick={() => window.location.reload()} size="lg">
                 Onward!
-            </ActionButton>
+            </Button>
         </>
     );
 };

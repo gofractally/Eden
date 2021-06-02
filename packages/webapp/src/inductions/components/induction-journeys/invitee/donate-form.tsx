@@ -4,14 +4,16 @@ import { useQueryClient } from "react-query";
 
 import { minimumDonationAmount } from "config";
 import {
-    ActionButton,
+    Button,
     Text,
     Link,
     Form,
     assetToString,
     useUALAccount,
     onError,
+    QUERY_MEMBER,
 } from "_app";
+
 import { donateAndCompleteInductionTransaction } from "inductions";
 import { Induction } from "inductions/interfaces";
 
@@ -51,7 +53,7 @@ export const InductionDonateForm = ({
             await new Promise((resolve) => setTimeout(resolve, 6000));
 
             // invalidate ["member", accountName] query so it will refetch with their full name
-            queryClient.invalidateQueries(["member", authorizerAccount]);
+            queryClient.invalidateQueries([QUERY_MEMBER, authorizerAccount]);
 
             // router goes to the newly created member page
             router.push(`/members/${induction.invitee}`);
@@ -92,7 +94,7 @@ export const InductionDonateForm = ({
                 />
             </div>
             <div className="pt-1">
-                <ActionButton
+                <Button
                     disabled={isLoading || !isProfileReviewed}
                     onClick={submitDonation}
                     isLoading={isLoading}
@@ -100,7 +102,7 @@ export const InductionDonateForm = ({
                     {isLoading
                         ? "Submitting donation..."
                         : `Donate ${assetToString(minimumDonationAmount)}`}
-                </ActionButton>
+                </Button>
             </div>
         </div>
     );

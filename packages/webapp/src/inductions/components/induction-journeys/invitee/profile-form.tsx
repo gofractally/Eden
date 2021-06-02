@@ -4,7 +4,7 @@ import {
     useFormFields,
     Form,
     Heading,
-    ActionButton,
+    Button,
     HelpLink,
     handleFileChange,
     Text,
@@ -261,13 +261,13 @@ export const InductionProfileForm = ({
 
             {onSubmit && (
                 <div className="col-span-6 pt-4">
-                    <ActionButton
+                    <Button
                         isSubmit
                         isLoading={isLoading}
                         disabled={isLoading || !consentsToPublish}
                     >
                         {isLoading ? "Submitting..." : "Submit"}
-                    </ActionButton>
+                    </Button>
                 </div>
             )}
         </form>

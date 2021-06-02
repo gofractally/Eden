@@ -1,4 +1,3 @@
-export * from "./action-button";
 export * from "./button";
 export * from "./heading";
 export * from "./form";
