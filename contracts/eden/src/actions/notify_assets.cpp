@@ -1,3 +1,4 @@
+#include <auctions.hpp>
 #include <eden.hpp>
 #include <inductions.hpp>
 #include <members.hpp>
@@ -52,5 +53,7 @@ namespace eden
       inductions inductions{get_self()};
       const auto& induction = inductions.get_endorsed_induction(eosio::name(invitee));
       inductions.start_auction(induction, asset_id);
+      auctions auctions{get_self()};
+      auctions.add_auction(asset_id);
    }
 }  // namespace eden

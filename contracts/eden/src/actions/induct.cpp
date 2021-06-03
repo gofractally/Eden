@@ -1,4 +1,5 @@
 #include <accounts.hpp>
+#include <auctions.hpp>
 #include <eden.hpp>
 #include <inductions.hpp>
 #include <members.hpp>
@@ -113,7 +114,13 @@ namespace eden
    {
       inductions inductions{get_self()};
       std::vector<eosio::name> removed_members;
-      eosio::check(inductions.gc(limit, removed_members) != limit, "Nothing to do.");
+      auto remaining = inductions.gc(limit, removed_members);
+      if (remaining)
+      {
+         auctions auctions{get_self()};
+         remaining = auctions.finish_auctions(remaining);
+      }
+      eosio::check(remaining != limit, "Nothing to do.");
       if (!removed_members.empty())
       {
          members members(get_self());

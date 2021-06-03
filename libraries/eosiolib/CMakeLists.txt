@@ -32,6 +32,7 @@ target_link_options(eosio-contract-base PUBLIC
     -Wl,--stack-first
     -Wl,--entry,apply
     -Wl,-z,stack-size=8192
+    -Wl,--no-merge-data-segments
     $<$<OR:$<CONFIG:Release>,$<CONFIG:MinSizeRel>>:-Wl,--strip-all>
     -nostdlib
 )
