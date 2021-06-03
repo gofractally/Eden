@@ -11,6 +11,7 @@ interface Props {
     status: InductionStatus;
     canEndorse?: boolean;
     isInvitee?: boolean;
+    isSpectator?: boolean;
     unknownEndorsements?: boolean;
 }
 
@@ -19,6 +20,7 @@ export const InductionStatusButton = ({
     status,
     canEndorse,
     isInvitee,
+    isSpectator,
     unknownEndorsements,
 }: Props) => {
     const [ualAccount] = useUALAccount();
@@ -52,7 +54,9 @@ export const InductionStatusButton = ({
     if (isCanceled) {
         return <div className="w-full text-center text-red-500">Canceled</div>;
     } else if (status === InductionStatus.Expired) {
-        return (
+        return isSpectator ? (
+            <div className="w-full text-center text-gray-400">Expired</div>
+        ) : (
             <Button
                 type="danger"
                 size="sm"
@@ -121,14 +125,16 @@ export const InductionStatusButton = ({
             >
                 {buttonLabel}
             </Button>
-            <Button
-                type="dangerOutline"
-                size="sm"
-                className="ml-2"
-                onClick={cancelInduction}
-            >
-                <FaTrash />
-            </Button>
+            {!isSpectator && (
+                <Button
+                    type="dangerOutline"
+                    size="sm"
+                    className="ml-2"
+                    onClick={cancelInduction}
+                >
+                    <FaTrash />
+                </Button>
+            )}
         </div>
     );
 };

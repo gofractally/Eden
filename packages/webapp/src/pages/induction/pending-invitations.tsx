@@ -3,6 +3,7 @@ import { useQuery } from "react-query";
 import { SingleColLayout, Card, PaginationNav, membersStatsQuery } from "_app";
 import { getInductions } from "inductions";
 import { useEffect, useState } from "react";
+import { SpectatorInductions } from "inductions";
 
 const QUERY_INDUCTIONS = "query_inductions";
 const PAGE_SIZE = 10;
@@ -46,28 +47,18 @@ export const PendingInvitationsPage = () => {
 
     return (
         <SingleColLayout>
-            <Card title="Pending Inductions" titleSize={2}>
-                {inductions.isLoading && "Loading pending inductions..."}
-                {inductions.error && "Fail to load inductions"}
-                {inductions.data && (
-                    <>
-                        <ul>
-                            {inductions.data.map((i) => (
-                                <li key={i.id}>
-                                    {i.inviter} - {i.invitee}
-                                </li>
-                            ))}
-                        </ul>
-                        <PaginationNav
-                            paginate={paginateInductions}
-                            hasNext={inductions.data.length >= PAGE_SIZE}
-                            hasPrevious={
-                                inductions.data[0].id !== page.firstKey
-                            }
-                        />
-                    </>
-                )}
-            </Card>
+            {inductions.isLoading && "Loading pending inductions..."}
+            {inductions.error && "Fail to load inductions"}
+            {inductions.data && (
+                <div className="space-y-4">
+                    <SpectatorInductions inductions={inductions.data} />
+                    <PaginationNav
+                        paginate={paginateInductions}
+                        hasNext={inductions.data.length >= PAGE_SIZE}
+                        hasPrevious={inductions.data[0].id !== page.firstKey}
+                    />
+                </div>
+            )}
         </SingleColLayout>
     );
 };
