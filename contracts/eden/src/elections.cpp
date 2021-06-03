@@ -149,6 +149,23 @@ namespace eden
       return result;
    }
 
+   // Divide members into groups so that the members of each group
+   // have a contiguous range of ids.
+   uint32_t round_info::member_index_to_group(uint32_t idx)
+   {
+      auto num_large = large_groups();
+      auto min_size = min_group_size();
+      auto members_in_large = (min_size + 1) * num_large;
+      if(idx < members_in_large)
+      {
+         return idx / (min_size + 1);
+      }
+      else
+      {
+         return (idx - members_in_large) / min_size + num_large;
+      }
+   }
+
    // Incremental implementation of shuffle
    // After adding all voters, each voter will have unique integer in [0, N) as
    // a group_id.
@@ -436,6 +453,20 @@ namespace eden
                    "The election is not ready for voting");
    }
 
+   uint32_t elections::finish_round(uint32_t max_steps)
+   {
+      auto state = state_sing.get();
+      if(auto* prev_round = std::get_if<current_election_state_active>(&state))
+      {
+         eosio::check(prev_round->round_end <= eosio::current_block_timestamp(), "Round has not finished yet");
+         state = current_election_state_post_round{0};
+      }
+      eosio::check(std::hold_alternative<current_election_state_post_round>(state), "No round to finish now");
+      auto data = std::get<current_election_state_post_round>(state);
+      group_tb.lower_bound(data.last_group);
+      state_sing.set(data, contract);
+   }
+   
    void elections::vote(uint64_t group_id, eosio::name voter, eosio::name candidate)
    {
       eosio::require_auth(voter);
@@ -456,7 +487,7 @@ namespace eden
       vote_tb.modify(vote, contract, [&](auto& row) { row.candidate = candidate; });
    }
 
-   void elections::finish_group(uint64_t group_id)
+   void elections::finish_group(uint8_t round, uint16_t group_id, vote_table_type::index_type::const_iterator)
    {
       check_active();
       // count votes

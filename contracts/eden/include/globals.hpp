@@ -35,6 +35,7 @@ namespace eden
    struct global_data_v1 : global_data_v0
    {
       uint32_t election_start_time = 0xffffffffu;  // seconds from the start of Sunday
+      uint32_t election_round_time_sec = 60 * 60;  // each round lasts 1 hour (TODO: + time to report results)
       auto upgrade() const { return *this; }
    };
    EOSIO_REFLECT(global_data_v1, base global_data_v0, election_start_time);

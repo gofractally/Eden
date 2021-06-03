@@ -29,16 +29,15 @@ namespace eden
    // versioned.  Just wait to update the contract until the
    // election is over.
 
-   // Group ID == 0 shall not exist.
-   struct group
+   struct round_info
    {
-      uint64_t group_id;
-      uint64_t next_group;
-      uint8_t group_size;
-      uint64_t primary_key() const { return group_id; }
+      uint8_t round_number;
+      uint16_t members;
+      uint32_t groups();
+      uint32_t large_groups();
+      uint32_t min_group_size();
+      uint32_t member_index_to_group(uint32_t idx);
    };
-   EOSIO_REFLECT(group, group_id, next_group, group_size);
-   using group_table_type = eosio::multi_index<"group"_n, group>;
 
    // Invariants:
    // a member can only have a vote record in one group at a time
@@ -46,16 +45,17 @@ namespace eden
    struct vote
    {
       eosio::name member;
-      uint64_t group_id;
+      uint8_t round;
+      uint16_t index;
       eosio::name candidate = {};
       uint64_t primary_key() const { return member.value; }
-      uint64_t by_group() const { return group_id; }
+      uint64_t by_index() const { return round << 16 | index; }
    };
    EOSIO_REFLECT(vote, member, group_id, candidate);
    using vote_table_type = eosio::multi_index<
        "votes"_n,
        vote,
-       eosio::indexed_by<"bygroup"_n, eosio::const_mem_fun<vote, uint64_t, &vote::by_group>>>;
+       eosio::indexed_by<"bygroup"_n, eosio::const_mem_fun<vote, uint64_t, &vote::by_index>>>;
 
    // the voters are the members at the start of the election
    // Ensure that there are no races with inductions that occur in the middle of an election
@@ -170,8 +170,14 @@ namespace eden
 
    struct current_election_state_active
    {
+      eosio::block_timestamp round_end;
    };
    EOSIO_REFLECT(current_election_state_active)
+
+   struct current_election_state_post_round
+   {
+      uint64_t last_group;
+   };
 
    using current_election_state = std::variant<current_election_state_pending_date,
                                                current_election_state_registration,
@@ -230,6 +236,7 @@ namespace eden
       void seed(const eosio::bytes& btc_header);
       void start_election(const eosio::checksum256& seed);
       uint32_t prepare_election(uint32_t max_steps);
+      uint32_t finish_round(uint32_t max_steps);
       // \pre voter is a member of the group
       // \pre voter has not yet reported his vote in this group
       // Don't report your vote until your group has reached consensus.
@@ -237,7 +244,7 @@ namespace eden
       // TODO: will this lead to insta-locking votes?  If we allow it
       // to change, is it a problem that finishgroup cannot know that
       // a user doesn't intend to change his vote?
-      void vote(uint64_t group_id, eosio::name voter, eosio::name candidate);
+      void vote(uint8_t round, eosio::name voter, eosio::name candidate);
       // \pre more than 2/3 of the group members vote for the same candidate
       // OR the remaining votes + the votes for the candidate with the most votes <= 2/3 of the group.
       void finish_group(uint64_t group_id);
