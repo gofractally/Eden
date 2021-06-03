@@ -3,6 +3,7 @@
 #include <eden.hpp>
 #include <inductions.hpp>
 #include <members.hpp>
+#include <migrations.hpp>
 
 namespace eden
 {
@@ -81,12 +82,23 @@ namespace eden
 
       globals globals{get_self()};
       inductions inductions{get_self()};
-      accounts accounts{get_self()};
+      accounts user_accounts{get_self()};
+      accounts internal_accounts{get_self(), "owned"_n};
 
       const auto& induction = inductions.get_induction(id);
       eosio::check(payer == induction.invitee(), "only inductee may donate using this action");
       eosio::check(quantity == globals.get().minimum_donation, "incorrect donation");
-      accounts.sub_balance(payer, quantity);
+      user_accounts.sub_balance(payer, quantity);
+      migrations migrations{get_self()};
+      if (auto migration = migrations.get<migrate_account_v0>())
+      {
+         migration->adjust_balance(payer, -quantity);
+         migrations.set(*migration);
+      }
+      else if (migrations.is_completed<migrate_account_v0>())
+      {
+         internal_accounts.add_balance("master"_n, quantity);
+      }
       inductions.create_nft(induction);
    }
 

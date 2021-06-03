@@ -8,6 +8,16 @@
 
 namespace eden
 {
+   struct migrate_account_v0
+   {
+      eosio::name last_visited;
+      // user_total = \sum balance(account) \forall account <= last_visited
+      eosio::asset user_total;
+      uint32_t migrate_some(eosio::name contract, uint32_t max_steps);
+      void adjust_balance(eosio::name owner, eosio::asset amount);
+   };
+   EOSIO_REFLECT(migrate_account_v0, last_visited, user_total)
+
    struct account_v0
    {
       eosio::name owner;
@@ -19,6 +29,13 @@ namespace eden
 
    using account_variant = std::variant<account_v0>;
 
+   // invariant: The total of all accounts (including internal and user accounts)
+   // is equal to the eosio.token balance of the contract.
+   //
+   // scopes:
+   // - default_scope: users
+   // - "owned": internal accounting
+   // - "outgoing": Should never exist outside a transaction.
    struct account
    {
       account_variant value;
@@ -37,8 +54,8 @@ namespace eden
       globals globals;
 
      public:
-      accounts(eosio::name contract)
-          : contract(contract), account_tb(contract, default_scope), globals(contract)
+      accounts(eosio::name contract, eosio::name scope = eosio::name{default_scope})
+          : contract(contract), account_tb(contract, scope.value), globals(contract)
       {
       }
 

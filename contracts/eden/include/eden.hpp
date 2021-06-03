@@ -42,6 +42,8 @@ namespace eden
 
       void withdraw(eosio::name owner, const eosio::asset& quantity);
 
+      void donate(eosio::name payer, const eosio::asset& quantity);
+
       void genesis(std::string community,
                    eosio::symbol community_symbol,
                    eosio::asset minimum_donation,
@@ -106,6 +108,7 @@ namespace eden
        eden,
        "eden.gm"_n,
        action(withdraw, owner, quantity, ricardian_contract(withdraw_ricardian)),
+       action(donate, owner, quantity),
        action(genesis,
               community,
               community_symbol,

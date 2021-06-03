@@ -1,22 +1,26 @@
-#include <boost/mp11/algorithm.hpp>
 #include <migrations.hpp>
 
 namespace eden
 {
+   void migrations::set(const migration_variant& new_value)
+   {
+      eosio::check(migration_sing.get().index() == new_value.index(),
+                   "Cannot change current migration");
+      migration_sing.set(new_value, contract);
+   }
+
    void migrations::clear_all() { migration_singleton(contract, default_scope).remove(); }
 
    void migrations::init()
    {
-      migration_singleton migration(contract, default_scope);
-      migration.set(std::variant_alternative_t<std::variant_size_v<migration_variant> - 1,
-                                               migration_variant>(),
-                    contract);
+      migration_sing.set(std::variant_alternative_t<std::variant_size_v<migration_variant> - 1,
+                                                    migration_variant>(),
+                         contract);
    }
 
    uint32_t migrations::migrate_some(uint32_t max_steps)
    {
-      migration_singleton migration(contract, default_scope);
-      auto state = migration.get_or_default(migration_variant());
+      auto state = migration_sing.get_or_default(migration_variant());
       while (max_steps > 0 && state.index() != std::variant_size_v<migration_variant> - 1)
       {
          std::visit(
@@ -36,7 +40,7 @@ namespace eden
              },
              state);
       }
-      migration.set(state, contract);
+      migration_sing.set(state, contract);
       return max_steps;
    }
 }  // namespace eden
