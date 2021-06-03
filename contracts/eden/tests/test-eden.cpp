@@ -773,6 +773,19 @@ TEST_CASE("deposit and spend")
    CHECK(get_token_balance("alice"_n) == s2a("1000.0000 EOS"));
 }
 
+TEST_CASE("accounting")
+{
+   eden_tester t;
+   t.genesis();
+   // should now have 30.0000 EOS, with a 90.0000 EOS deposit from alice
+   CHECK(get_token_balance("eden.gm"_n) == s2a("120.0000 EOS"));
+   expect(t.eden_gm.trace<actions::transfer>("eosio"_n, s2a("30.0001 EOS"), ""),
+          "insufficient balance");
+   t.eden_gm.act<actions::transfer>("eosio"_n, s2a("30.0000 EOS"), "");
+   CHECK(get_token_balance("eden.gm"_n) == s2a("90.0000 EOS"));
+   CHECK(get_token_balance("eosio"_n) == s2a("30.0000 EOS"));
+}
+
 TEST_CASE("account migration")
 {
    eden_tester t;
