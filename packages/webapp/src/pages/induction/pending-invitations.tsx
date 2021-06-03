@@ -1,90 +1,47 @@
-import { GetServerSideProps } from "next";
-import { useRouter } from "next/router";
-import { QueryClient, useQuery } from "react-query";
-import { dehydrate } from "react-query/hydration";
+import { useQuery } from "react-query";
 
 import { SingleColLayout, Card, PaginationNav, membersStatsQuery } from "_app";
 import { getInductions } from "inductions";
+import { useEffect, useState } from "react";
 
 const QUERY_INDUCTIONS = "query_inductions";
-const PAGE_SIZE = 2;
+const PAGE_SIZE = 10;
 
-export const getServerSideProps: GetServerSideProps = async ({ query }) => {
-    const queryClient = new QueryClient();
-
-    const page = (query.page as string) || "0";
-    const isUpper = (query.isUpper as string) === "true";
-
-    const lowerBound = isUpper ? undefined : page;
-    const upperBound = isUpper ? page : undefined;
-
-    await Promise.all([
-        queryClient.prefetchQuery(membersStatsQuery),
-        queryClient.prefetchQuery([QUERY_INDUCTIONS, page], () =>
-            getInductions(lowerBound, upperBound, PAGE_SIZE)
-        ),
-    ]);
-
-    return {
-        props: {
-            dehydratedState: dehydrate(queryClient),
-            page,
-            isUpper,
-        },
-    };
-};
-
-interface Props {
-    page: string;
-    isUpper: boolean;
-}
-
-export const PendingInvitationsPage = ({ page, isUpper }: Props) => {
-    const router = useRouter();
-    console.info("pros page >>>", page);
-    // const [page, setPage] = useState(props.page);
-
-    const lowerBound = isUpper ? undefined : page;
-    const upperBound = isUpper ? page : undefined;
-
-    const { data: memberStats } = useQuery({
-        ...membersStatsQuery,
-        keepPreviousData: true,
+export const PendingInvitationsPage = () => {
+    const [page, setPage] = useState({
+        boundId: "0",
+        isUpper: false,
+        firstKey: "",
     });
-    const totalPages =
-        memberStats && Math.ceil(memberStats.pending_members / PAGE_SIZE);
+
+    const lowerBound = !page.isUpper ? page.boundId : undefined;
+    const upperBound = page.isUpper ? page.boundId : undefined;
 
     const inductions = useQuery(
         [QUERY_INDUCTIONS, lowerBound, upperBound],
-        () => getInductions(lowerBound, upperBound, PAGE_SIZE),
-        { keepPreviousData: true }
+        () => getInductions(lowerBound, upperBound, PAGE_SIZE)
     );
+
+    useEffect(() => {
+        if (inductions.data && inductions.data.length && !page.firstKey) {
+            setPage({ ...page, firstKey: inductions.data[0].id });
+        }
+    }, [inductions.data]);
 
     const paginateInductions = (increment: number) => {
         if (!inductions.data) return;
 
-        let page = "";
-        let isUpper = false;
         if (increment > 0) {
             const lastItem = inductions.data[inductions.data.length - 1];
-            const lowerBound = (BigInt(lastItem.id) + 1n).toString();
-            console.info(lastItem.id, lowerBound);
-            page = lowerBound;
+            const boundId = (BigInt(lastItem.id) + 1n).toString();
+            console.info(lastItem.id, boundId);
+            setPage({ ...page, boundId, isUpper: false });
         } else {
             const firstItem = inductions.data[0];
-            const upperBound = (BigInt(firstItem.id) - 1n).toString();
-            console.info(firstItem.id, upperBound);
-            page = upperBound;
-            isUpper = true;
+            const boundId = (BigInt(firstItem.id) - 1n).toString();
+            console.info(firstItem.id, boundId);
+            setPage({ ...page, boundId, isUpper: true });
         }
-
-        router.push(
-            {
-                query: { page, isUpper },
-            },
-            undefined,
-            { scroll: false }
-        );
     };
 
     return (
@@ -104,7 +61,9 @@ export const PendingInvitationsPage = ({ page, isUpper }: Props) => {
                         <PaginationNav
                             paginate={paginateInductions}
                             hasNext={inductions.data.length >= PAGE_SIZE}
-                            hasPrevious={page !== "0"}
+                            hasPrevious={
+                                inductions.data[0].id !== page.firstKey
+                            }
                         />
                     </>
                 )}

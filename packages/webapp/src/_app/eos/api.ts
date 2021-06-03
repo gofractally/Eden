@@ -39,6 +39,8 @@ export const getTableRows = async <T = any>(
     upperBound: any = null,
     limit = 1
 ): Promise<T[]> => {
+    const reverse = Boolean(lowerBound === "0" && upperBound);
+
     const requestBody = {
         code: edenContractAccount,
         index_position: 1,
@@ -47,7 +49,7 @@ export const getTableRows = async <T = any>(
         limit: `${limit}`,
         lower_bound: lowerBound,
         upper_bound: upperBound,
-        reverse: false,
+        reverse,
         scope: CONTRACT_SCOPE,
         show_payer: false,
         table: table,
@@ -66,7 +68,8 @@ export const getTableRows = async <T = any>(
         throw new Error("Invalid table results");
     }
 
-    return data.rows.map((row) => row[1]);
+    const rows = reverse ? data.rows.reverse() : data.rows;
+    return rows.map((row) => row[1]);
 };
 
 export const getTableIndexRows = async (
