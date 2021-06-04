@@ -22,16 +22,17 @@ namespace eden
       eosio::check(elections.prepare_election(max_steps) != max_steps, "Nothing to do");
    }
 
-   void eden::electvote(uint64_t group_id, eosio::name voter, eosio::name candidate)
+   void eden::electvote(uint8_t round, eosio::name voter, eosio::name candidate)
    {
       eosio::require_auth(voter);
       elections elections(get_self());
-      elections.vote(group_id, voter, candidate);
+      elections.vote(round, voter, candidate);
    }
 
-   void eden::electadvance(uint64_t group)
+   void eden::electprocess(uint32_t max_steps)
    {
       elections elections(get_self());
-      elections.finish_group(group);
+      eosio::check(elections.finish_round(max_steps) != max_steps, "Nothing to do");
    }
+
 }  // namespace eden

@@ -4,6 +4,7 @@
 #include <eosio/bytes.hpp>
 #include <eosio/multi_index.hpp>
 #include <eosio/singleton.hpp>
+#include <globals.hpp>
 
 namespace eden
 {
@@ -29,16 +30,6 @@ namespace eden
    // versioned.  Just wait to update the contract until the
    // election is over.
 
-   struct round_info
-   {
-      uint8_t round_number;
-      uint16_t members;
-      uint32_t groups();
-      uint32_t large_groups();
-      uint32_t min_group_size();
-      uint32_t member_index_to_group(uint32_t idx);
-   };
-
    // Invariants:
    // a member can only have a vote record in one group at a time
    // When a member advances to the next round, the vote record for the previous round must be erased
@@ -51,7 +42,7 @@ namespace eden
       uint64_t primary_key() const { return member.value; }
       uint64_t by_index() const { return round << 16 | index; }
    };
-   EOSIO_REFLECT(vote, member, group_id, candidate);
+   EOSIO_REFLECT(vote, member, round, index, candidate);
    using vote_table_type = eosio::multi_index<
        "votes"_n,
        vote,
@@ -70,8 +61,18 @@ namespace eden
    {
       uint16_t num_participants;
       uint16_t num_groups;
-      uint8_t group_max_size() const { return (num_participants + num_groups - 1) / num_groups; }
-      uint16_t num_short_groups() const { return group_max_size() * num_groups - num_participants; }
+      constexpr uint8_t group_max_size() const
+      {
+         return (num_participants + num_groups - 1) / num_groups;
+      }
+      constexpr uint16_t num_short_groups() const
+      {
+         return group_max_size() * num_groups - num_participants;
+      }
+
+      constexpr uint32_t num_large_groups() const { return num_groups - num_short_groups(); }
+      constexpr uint32_t group_min_size() const { return group_max_size() - 1; }
+      uint32_t member_index_to_group(uint32_t idx) const;
       // invariants:
       // num_groups * group_max_size - num_short_groups = num_participants
       // group_max_size <= 12
@@ -94,6 +95,7 @@ namespace eden
       static constexpr result_type min() { return 0; }
       static constexpr result_type max() { return 0xFFFFFFFFu; }
       result_type operator()();
+      eosio::checksum256 seed() const;
       char inbuf[40];  // seed + 8 byte counter
       char outbuf[32];
       uint8_t index;
@@ -149,43 +151,36 @@ namespace eden
    };
    EOSIO_REFLECT(current_election_state_init_voters, next_member_idx, rng, last_processed)
 
-   // In this phase, the voters ids from the init phase are used to assign them to
-   // a first layer group.
-   struct current_election_state_group_voters
-   {
-      election_config config;
-      eosio::name last_processed = {};
-   };
-   EOSIO_REFLECT(current_election_state_group_voters, config, last_processed)
-
-   // Organize groups into a tree.  The tree structure is deterministically
-   // computed based on each node's level and index within the level.
-   struct current_election_state_build_groups
-   {
-      election_config config;
-      uint8_t level = 0;
-      uint16_t offset = 0;
-   };
-   EOSIO_REFLECT(current_election_state_build_groups, config, level, offset)
-
    struct current_election_state_active
    {
+      uint8_t round;
+      election_round_config config;
+      eosio::checksum256 saved_seed;
       eosio::block_timestamp round_end;
    };
-   EOSIO_REFLECT(current_election_state_active)
+   EOSIO_REFLECT(current_election_state_active, round, config, saved_seed, round_end)
 
    struct current_election_state_post_round
    {
-      uint64_t last_group;
+      election_rng rng;
+      uint8_t prev_round;
+      election_round_config prev_config;
+      uint16_t next_input_index;
+      uint16_t next_output_index;
    };
+   EOSIO_REFLECT(current_election_state_post_round,
+                 rng,
+                 prev_round,
+                 prev_config,
+                 next_input_index,
+                 next_output_index)
 
    using current_election_state = std::variant<current_election_state_pending_date,
                                                current_election_state_registration,
                                                current_election_state_seeding,
                                                current_election_state_init_voters,
-                                               current_election_state_group_voters,
-                                               current_election_state_build_groups,
-                                               current_election_state_active>;
+                                               current_election_state_active,
+                                               current_election_state_post_round>;
    using current_election_state_singleton =
        eosio::singleton<"elect.curr"_n, current_election_state>;
 
@@ -210,24 +205,20 @@ namespace eden
    {
      private:
       eosio::name contract;
-      group_table_type group_tb;
       vote_table_type vote_tb;
       current_election_state_singleton state_sing;
-      void check_active();
+      globals globals;
+      current_election_state_active check_active();
 
-      void add_voter(current_election_state_init_voters& state, eosio::name member);
-      void assign_voter_to_group(current_election_state_group_voters& state, const vote& v);
-      void build_group(current_election_state_build_groups& state, uint8_t level, uint16_t offset);
+      void add_voter(election_rng& rng, uint8_t round, uint16_t& next_index, eosio::name member);
       uint32_t randomize_voters(current_election_state_init_voters& state, uint32_t max_steps);
-      uint32_t group_voters(current_election_state_group_voters& state, uint32_t max_steps);
-      uint32_t build_groups(current_election_state_build_groups& state, uint32_t max_steps);
 
      public:
       explicit elections(eosio::name contract)
           : contract(contract),
-            group_tb(contract, default_scope),
             vote_tb(contract, default_scope),
-            state_sing(contract, default_scope)
+            state_sing(contract, default_scope),
+            globals(contract)
       {
       }
       void set_time(uint8_t day, const std::string& time);
@@ -245,9 +236,6 @@ namespace eden
       // to change, is it a problem that finishgroup cannot know that
       // a user doesn't intend to change his vote?
       void vote(uint8_t round, eosio::name voter, eosio::name candidate);
-      // \pre more than 2/3 of the group members vote for the same candidate
-      // OR the remaining votes + the votes for the candidate with the most votes <= 2/3 of the group.
-      void finish_group(uint64_t group_id);
    };
 
 }  // namespace eden

@@ -32,6 +32,13 @@ namespace eden
       return result;
    }
 
+   eosio::checksum256 election_rng::seed() const
+   {
+      std::array<uint8_t, 32> bytes;
+      memcpy(bytes.data(), inbuf, 32);
+      return eosio::checksum256(bytes);
+   }
+
    void election_seeder::update(eosio::input_stream& bytes)
    {
       eosio::check(bytes.remaining() >= 80, "Stream overrun");
@@ -151,12 +158,12 @@ namespace eden
 
    // Divide members into groups so that the members of each group
    // have a contiguous range of ids.
-   uint32_t round_info::member_index_to_group(uint32_t idx)
+   uint32_t election_round_config::member_index_to_group(uint32_t idx) const
    {
-      auto num_large = large_groups();
-      auto min_size = min_group_size();
+      auto num_large = num_large_groups();
+      auto min_size = group_min_size();
       auto members_in_large = (min_size + 1) * num_large;
-      if(idx < members_in_large)
+      if (idx < members_in_large)
       {
          return idx / (min_size + 1);
       }
@@ -169,57 +176,26 @@ namespace eden
    // Incremental implementation of shuffle
    // After adding all voters, each voter will have unique integer in [0, N) as
    // a group_id.
-   void elections::add_voter(current_election_state_init_voters& state, eosio::name member)
+   void elections::add_voter(election_rng& rng,
+                             uint8_t round,
+                             uint16_t& next_index,
+                             eosio::name member)
    {
-      std::uniform_int_distribution<uint16_t> dist(0, state.next_member_idx);
-      auto pos = dist(state.rng);
-      if (pos != state.next_member_idx)
+      std::uniform_int_distribution<uint16_t> dist(0, next_index);
+      auto pos = dist(rng);
+      if (pos != next_index)
       {
+         printf("pos: %d, next_index: %d\n", pos, next_index);
          auto group_idx = vote_tb.get_index<"bygroup"_n>();
-         const auto& old = group_idx.get(pos);
-         group_idx.modify(old, eosio::same_payer,
-                          [&](auto& row) { row.group_id = state.next_member_idx; });
+         const auto& old = group_idx.get((round << 16) | pos);
+         group_idx.modify(old, eosio::same_payer, [&](auto& row) { row.index = next_index; });
       }
       vote_tb.emplace(contract, [&](auto& row) {
          row.member = member;
-         row.group_id = pos;
+         row.round = round;
+         row.index = pos;
       });
-      ++state.next_member_idx;
-   }
-
-   static uint64_t get_group_id(uint64_t level, uint64_t offset)
-   {
-      return (level << 16) + offset + 1;
-   }
-
-   void elections::assign_voter_to_group(current_election_state_group_voters& state,
-                                         const struct vote& v)
-   {
-      vote_tb.modify(v, eosio::same_payer, [&](auto& row) {
-         row.group_id = get_group_id(0, row.group_id % state.config[0].num_groups);
-      });
-   }
-
-   void elections::build_group(current_election_state_build_groups& state,
-                               uint8_t level,
-                               uint16_t offset)
-   {
-      group_tb.emplace(contract, [&](auto& row) {
-         row.group_id = get_group_id(level, offset);
-         if (level + 1 < state.config.size())
-         {
-            row.next_group = get_group_id(level + 1, offset % state.config[level + 1].num_groups);
-         }
-         else
-         {
-            row.next_group = 0;
-         }
-         row.group_size = state.config[level].group_max_size();
-         if (offset > state.config[level].num_groups - state.config[level].num_short_groups())
-         {
-            --row.group_size;
-         }
-      });
+      ++next_index;
    }
 
    static eosio::time_point_sec get_election_time(uint32_t election_start_time,
@@ -254,7 +230,6 @@ namespace eden
       eosio::check(day < 7, "days out of range");
       eosio::check(hours < 24, "hours out of range");
       eosio::check(minutes < 60, "minutes out of range");
-      globals globals(contract);
       globals.set_election_start_time(((24 * day + hours) * 60 + minutes) * 60);
       if (!state_sing.exists())
       {
@@ -268,7 +243,6 @@ namespace eden
 
    void elections::set_default_election(eosio::time_point_sec origin_time)
    {
-      globals globals{contract};
       const auto& state = globals.get();
       state_sing.set(current_election_state_registration{get_election_time(
                          state.election_start_time, origin_time + eosio::days(180))},
@@ -280,7 +254,6 @@ namespace eden
    void elections::trigger_election()
    {
       eosio::time_point_sec now = eosio::current_time_point();
-      globals globals{contract};
       const auto& state = globals.get();
       if (state.election_start_time == 0xffffffff)
       {
@@ -375,40 +348,11 @@ namespace eden
             }
             else if (iter->election_sequence() == expected_sequence)
             {
-               add_voter(state, iter->account());
+               add_voter(state.rng, 0, state.next_member_idx, iter->account());
             }
          }
          state.last_processed = iter->account();
          ++iter;
-      }
-      return max_steps;
-   }
-
-   uint32_t elections::group_voters(current_election_state_group_voters& state, uint32_t max_steps)
-   {
-      auto iter = vote_tb.upper_bound(state.last_processed.value);
-      auto end = vote_tb.end();
-      for (; iter != end && max_steps > 0; --max_steps, ++iter)
-      {
-         assign_voter_to_group(state, *iter);
-         state.last_processed = iter->member;
-      }
-      return max_steps;
-   }
-
-   uint32_t elections::build_groups(current_election_state_build_groups& state, uint32_t max_steps)
-   {
-      for (; max_steps > 0 && state.level < state.config.size(); ++state.level)
-      {
-         for (; max_steps > 0 && state.offset < state.config[state.level].num_groups;
-              --max_steps, ++state.offset)
-         {
-            build_group(state, state.level, state.offset);
-         }
-         if (state.offset == state.config[state.level].num_groups)
-         {
-            state.offset = 0;
-         }
       }
       return max_steps;
    }
@@ -421,24 +365,11 @@ namespace eden
          max_steps = randomize_voters(*state, max_steps);
          if (max_steps > 0)
          {
-            state_variant =
-                current_election_state_group_voters{make_election_config(state->next_member_idx)};
-         }
-      }
-      if (auto* state = std::get_if<current_election_state_group_voters>(&state_variant))
-      {
-         max_steps = group_voters(*state, max_steps);
-         if (max_steps > 0)
-         {
-            state_variant = current_election_state_build_groups{std::move(state->config)};
-         }
-      }
-      if (auto* state = std::get_if<current_election_state_build_groups>(&state_variant))
-      {
-         max_steps = build_groups(*state, max_steps);
-         if (max_steps > 0)
-         {
-            state_variant = current_election_state_active{};
+            auto config = make_election_config(state->next_member_idx).front();
+            state_variant = current_election_state_active{
+                0, config, state->rng.seed(),
+                eosio::current_time_point() +
+                    eosio::seconds(globals.get().election_round_time_sec)};
             --max_steps;
          }
       }
@@ -446,110 +377,152 @@ namespace eden
       return max_steps;
    }
 
-   void elections::check_active()
+   current_election_state_active elections::check_active()
    {
       eosio::check(state_sing.exists(), "No election is running");
-      eosio::check(std::holds_alternative<current_election_state_active>(state_sing.get()),
+      auto state = state_sing.get();
+      eosio::check(std::holds_alternative<current_election_state_active>(state),
                    "The election is not ready for voting");
+      auto result = std::get<current_election_state_active>(state);
+      eosio::check(eosio::current_block_time() < result.round_end,
+                   "Voting period for this round has closed");
+      return result;
+   }
+
+   static eosio::checksum256 adjust_seed(const eosio::checksum256& seed)
+   {
+      char buf[36];
+      memcpy(buf, seed.extract_as_byte_array().data(), 32);
+      eosio::block_timestamp timestamp = eosio::current_block_time();
+      memcpy(buf + 32, &timestamp.slot, 4);
+      return eosio::sha256(buf, 36);
+   }
+
+   template <typename Idx, typename It>
+   static eosio::name finish_group(current_election_state_post_round& state,
+                                   Idx& group_idx,
+                                   It& iter,
+                                   uint8_t group_size)
+   {
+      // count votes
+      std::map<eosio::name, uint8_t> votes_by_candidate;
+      for (uint32_t i = 0; i < group_size; ++i)
+      {
+         if (iter->candidate != eosio::name())
+         {
+            ++votes_by_candidate[iter->candidate];
+         }
+         iter = group_idx.erase(iter);
+      }
+      auto best = std::max_element(
+          votes_by_candidate.begin(), votes_by_candidate.end(),
+          [](const auto& lhs, const auto& rhs) { return lhs.second < rhs.second; });
+      if (!votes_by_candidate.empty() && 3 * best->second > 2 * group_size)
+      {
+         return best->first;
+      }
+      else
+      {
+         return {};
+      }
    }
 
    uint32_t elections::finish_round(uint32_t max_steps)
    {
       auto state = state_sing.get();
-      if(auto* prev_round = std::get_if<current_election_state_active>(&state))
+      if (auto* prev_round = std::get_if<current_election_state_active>(&state))
       {
-         eosio::check(prev_round->round_end <= eosio::current_block_timestamp(), "Round has not finished yet");
-         state = current_election_state_post_round{0};
+         eosio::check(prev_round->round_end <= eosio::current_block_time(),
+                      "Round has not finished yet");
+         state =
+             current_election_state_post_round{election_rng{adjust_seed(prev_round->saved_seed)},
+                                               prev_round->round, prev_round->config, 0, 0};
       }
-      eosio::check(std::hold_alternative<current_election_state_post_round>(state), "No round to finish now");
-      auto data = std::get<current_election_state_post_round>(state);
-      group_tb.lower_bound(data.last_group);
-      state_sing.set(data, contract);
-   }
-   
-   void elections::vote(uint64_t group_id, eosio::name voter, eosio::name candidate)
-   {
-      eosio::require_auth(voter);
-      check_active();
-      auto check_member = [&](eosio::name member) -> const auto&
-      {
-         auto it = vote_tb.find(member.value);
-         if (it == vote_tb.end() || it->group_id != group_id)
-         {
-            eosio::check(false, member.to_string() + " is not a member of group " +
-                                    std::to_string(group_id));
-         }
-         return *it;
-      };
-      const auto& vote = check_member(voter);
-      check_member(candidate);
-      eosio::check(vote.candidate == eosio::name{}, voter.to_string() + " has already voted");
-      vote_tb.modify(vote, contract, [&](auto& row) { row.candidate = candidate; });
-   }
+      eosio::check(std::holds_alternative<current_election_state_post_round>(state),
+                   "No round to finish now");
+      auto& data = std::get<current_election_state_post_round>(state);
+      auto vote_idx = vote_tb.get_index<"bygroup"_n>();
+      auto group_start = vote_idx.lower_bound((data.prev_round << 16) | data.next_input_index);
+      auto end = vote_idx.end();
 
-   void elections::finish_group(uint8_t round, uint16_t group_id, vote_table_type::index_type::const_iterator)
-   {
-      check_active();
-      // count votes
-      auto group_idx = vote_tb.get_index<"bygroup"_n>();
-      auto iter = group_idx.lower_bound(group_id);
-      auto end = group_idx.end();
-      std::map<eosio::name, uint8_t> votes_by_candidate;
-      std::vector<eosio::name> group_members;
-      uint8_t total_votes = 0;
-      while (iter != end && iter->group_id == group_id)
+      std::vector<eosio::name> board;
+      eosio::name winner;
+      if (data.prev_config.num_groups == 1)
       {
-         if (iter->candidate != eosio::name())
-         {
-            ++votes_by_candidate[iter->candidate];
-            ++total_votes;
-         }
-         group_members.push_back(iter->member);
-         iter = group_idx.erase(iter);
+         board.reserve(12);
       }
-      const auto& group = group_tb.get(group_id, ("No group " + std::to_string(group_id)).c_str());
-      eosio::check(total_votes <= group.group_size,
-                   "Invariant failure: wrong number of vote records");
-      const uint8_t missing_votes = group.group_size - total_votes;
-      eosio::check(total_votes > 0, "No one has voted");
-      auto best = std::max_element(
-          votes_by_candidate.begin(), votes_by_candidate.end(),
-          [](const auto& lhs, const auto& rhs) { return lhs.second < rhs.second; });
-      if (3 * best->second > 2 * group.group_size)
+
+      for (; max_steps > 0 && group_start != end && group_start->round == data.prev_round;
+           --max_steps)
       {
-         // Either finalize the election or move to the next round
-         if (group.next_group == 0)
+         auto group_size = data.prev_config.group_min_size() +
+                           (data.next_input_index < data.prev_config.num_large_groups() *
+                                                        (data.prev_config.group_max_size()));
+         if (data.prev_config.num_groups == 1)
+         {
+            for (auto iter = group_start; iter != end; ++iter)
+            {
+               board.push_back(iter->member);
+            }
+         }
+         winner = finish_group(data, vote_idx, group_start, group_size);
+         if (winner != eosio::name() && data.prev_config.num_groups != 1)
+         {
+            add_voter(data.rng, data.prev_round + 1, data.next_output_index, winner);
+         }
+         data.next_input_index += group_size;
+      }
+
+      if (max_steps > 0)
+      {
+         if (data.prev_config.num_groups == 1)
          {
             election_state_singleton results(contract, default_scope);
             auto result = std::get<election_state_v0>(results.get());
-            result.lead_representative = best->first;
-            result.board = std::move(group_members);
+            result.lead_representative = winner;
+            result.board = std::move(board);
             set_default_election(result.last_election_time.to_time_point());
             results.set(result, contract);
          }
          else
          {
-            vote_tb.emplace(contract, [&](auto& row) {
-               row.member = best->first;
-               row.group_id = group.next_group;
-            });
+            auto config = make_election_config(data.next_output_index).front();
+            state = current_election_state_active{
+                static_cast<uint8_t>(data.prev_round + 1), config, data.rng.seed(),
+                eosio::current_time_point() +
+                    eosio::seconds(globals.get().election_round_time_sec)};
          }
+         --max_steps;
       }
-      else if (3 * (best->second + missing_votes) <= 2 * group.group_size)
-      {
-         // No consensus possible
-         const auto& next_group =
-             group_tb.get(group.next_group, "Oops.  The board cannot reach consensus.");
-         // TODO: is it correct to reduce the group size of the next layer?
-         // Doing so means that non-reporting vs. reporting consensus failure
-         // can affect the results of the next layer.
-         // Not doing so, means that it's harder and maybe impossible for later layers to reach consensus.
-         group_tb.modify(next_group, eosio::same_payer, [](auto& row) { --row.group_size; });
-      }
-      else
-      {
-         eosio::check(false, "Consensus is possible but has not been reached.  Need more votes.");
-      }
-      group_tb.erase(group);
+      state_sing.set(state, contract);
+      return max_steps;
    }
+
+   void elections::vote(uint8_t round, eosio::name voter, eosio::name candidate)
+   {
+      eosio::require_auth(voter);
+      const auto& state = check_active();
+      eosio::check(state.round == round, "Round " + std::to_string(static_cast<int>(round)) +
+                                             " is not running (in round " +
+                                             std::to_string(static_cast<int>(state.round)) + ")");
+      auto check_member = [&](eosio::name member) -> const auto&
+      {
+         auto it = vote_tb.find(member.value);
+         if (it == vote_tb.end() || it->round != round)
+         {
+            eosio::check(false, member.to_string() + " is not in round " +
+                                    std::to_string(static_cast<int>(round)));
+         }
+         return *it;
+      };
+      const auto& vote = check_member(voter);
+      const auto& cand = check_member(candidate);
+      eosio::check(
+          state.config.member_index_to_group(vote.index) ==
+              state.config.member_index_to_group(cand.index),
+          voter.to_string() + " and " + candidate.to_string() + " are not in the same group.");
+      eosio::check(vote.candidate == eosio::name{}, voter.to_string() + " has already voted");
+      vote_tb.modify(vote, contract, [&](auto& row) { row.candidate = candidate; });
+   }
+
 }  // namespace eden

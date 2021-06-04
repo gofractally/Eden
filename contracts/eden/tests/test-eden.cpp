@@ -792,10 +792,11 @@ TEST_CASE("election")
          break;
       }
    }
-   t.alice.act<actions::electvote>(1, "alice"_n, "alice"_n);
-   t.pip.act<actions::electvote>(1, "pip"_n, "alice"_n);
-   t.egeon.act<actions::electvote>(1, "egeon"_n, "alice"_n);
-   t.alice.act<actions::electadvance>(1);
+   t.alice.act<actions::electvote>(0, "alice"_n, "alice"_n);
+   t.pip.act<actions::electvote>(0, "pip"_n, "alice"_n);
+   t.egeon.act<actions::electvote>(0, "egeon"_n, "alice"_n);
+   t.chain.start_block(60 * 60 * 1000);
+   t.alice.act<actions::electprocess>(42);
 
    CHECK(get_table_size<eden::vote_table_type>() == 0);
    eden::election_state_singleton results("eden.gm"_n, eden::default_scope);
@@ -847,23 +848,29 @@ TEST_CASE("election with multiple rounds")
    auto get_current_groups = []() {
       std::map<uint64_t, std::vector<eosio::name>> groups;
       eden::vote_table_type vote_tb("eden.gm"_n, eden::default_scope);
+      eden::current_election_state_singleton state("eden.gm"_n, eden::default_scope);
+      auto config = std::get<eden::current_election_state_active>(state.get()).config;
       for (auto row : vote_tb.get_index<"bygroup"_n>())
       {
-         groups[row.group_id].push_back(row.member);
+         groups[config.member_index_to_group(row.index)].push_back(row.member);
       }
       return groups;
    };
 
+   uint8_t round = 0;
    auto generic_group_vote = [&](const auto& groups) {
       for (const auto& [group_id, members] : groups)
       {
          t.chain.start_block();
+         auto winner = *std::min_element(members.begin(), members.end());
          for (eosio::name member : members)
          {
-            t.chain.as(member).act<actions::electvote>(group_id, member, members[0]);
+            t.chain.as(member).act<actions::electvote>(round, member, winner);
          }
-         t.chain.as(members[0]).template act<actions::electadvance>(group_id);
       }
+      t.chain.start_block(60 * 60 * 1000);
+      t.alice.template act<actions::electprocess>(256);
+      ++round;
    };
 
    // With 200 members, there should be three rounds
@@ -881,6 +888,4 @@ TEST_CASE("election with multiple rounds")
    auto result = std::get<eden::election_state_v0>(results.get());
    // alice always wins at every level, because everyone votes for the member with the lowest name
    CHECK(result.lead_representative == "alice"_n);
-
-   CHECK(get_table_size<eden::group_table_type>() == 0);
 }
