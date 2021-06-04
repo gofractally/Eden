@@ -9,6 +9,13 @@
 #include <elf.h>
 #include <stdio.h>
 
+static constexpr bool show_parsed_lines = false;
+static constexpr bool show_parsed_abbrev = false;
+static constexpr bool show_parsed_dies = false;
+static constexpr bool show_wasm_loc_summary = false;
+static constexpr bool show_wasm_subp_summary = false;
+static constexpr bool show_generated_lines = false;
+static constexpr bool show_generated_dies = false;
 static constexpr uint64_t print_addr_adj = 0;
 
 namespace
@@ -450,9 +457,10 @@ namespace dwarf
                result.files.push_back(filename);
             }
             current->file_index = it->second;
-            // fprintf(stderr, "%08x [%08x,%08x) %s:%d\n", *state.sequence_begin,
-            //         current->begin_address, current->end_address,
-            //         result.files[current->file_index].c_str(), current->line);
+            if (show_parsed_lines)
+               fprintf(stderr, "%08x [%08x,%08x) %s:%d\n", *state.sequence_begin,
+                       current->begin_address, current->end_address,
+                       result.files[current->file_index].c_str(), current->line);
             if (*state.sequence_begin && *state.sequence_begin < 0xffff'ffff && current->line)
                result.locations.push_back(*current);
             current = {};
@@ -489,7 +497,8 @@ namespace dwarf
                   state.discriminator = eosio::varuint32_from_bin(extended);
                   break;
                default:
-                  // fprintf(stderr, "extended opcode %d\n", (int)extended_opcode);
+                  if (show_parsed_lines)
+                     fprintf(stderr, "extended opcode %d\n", (int)extended_opcode);
                   break;
             }
          }
@@ -539,10 +548,13 @@ namespace dwarf
                   state.isa = eosio::varuint32_from_bin(s);
                   break;
                default:
-                  // fprintf(stderr, "opcode %d\n", (int)opcode);
-                  // fprintf(stderr, "  args: %d\n", state.header.standard_opcode_lengths[opcode]);
-                  // for (uint8_t i = 0; i < state.header.standard_opcode_lengths[opcode]; ++i)
-                  //    eosio::varuint32_from_bin(s);
+                  if (show_parsed_lines)
+                  {
+                     fprintf(stderr, "opcode %d\n", (int)opcode);
+                     fprintf(stderr, "  args: %d\n", state.header.standard_opcode_lengths[opcode]);
+                  }
+                  for (uint8_t i = 0; i < state.header.standard_opcode_lengths[opcode]; ++i)
+                     eosio::varuint32_from_bin(s);
                   break;
             }
          }  // opcode < state.header.opcode_base
@@ -621,8 +633,9 @@ namespace dwarf
          if (!range)
             continue;
 
-         fprintf(stderr, "%016lx-%016lx %s:%d\n", range->first + print_addr_adj,
-                 range->second + print_addr_adj, info.files[loc.file_index].c_str(), loc.line);
+         if (show_generated_lines)
+            fprintf(stderr, "%016lx-%016lx %s:%d\n", range->first + print_addr_adj,
+                    range->second + print_addr_adj, info.files[loc.file_index].c_str(), loc.line);
          if (!address || range->first != *address)
          {
             if (address && range->first < *address)
@@ -725,8 +738,10 @@ namespace dwarf
                   break;
                decl.attrs.push_back(attr);
             }
-            // printf("%08x [%d]: tag: %d children: %d attrs: %d\n", decl.table_offset, decl.code,
-            //        decl.tag, decl.has_children, (int)decl.attrs.size());
+            if (show_parsed_abbrev)
+               fprintf(stderr, "%08x [%d]: tag: %s children: %d attrs: %d\n", decl.table_offset,
+                       decl.code, dw_tag_to_str(decl.tag).c_str(), decl.has_children,
+                       (int)decl.attrs.size());
             result.abbrev_decls.push_back(std::move(decl));
          }
       }
@@ -912,13 +927,15 @@ namespace dwarf
       auto code = eosio::varuint32_from_bin(s);
       if (!code)
       {
-         // fprintf(stderr, "0x%08x: %*sNULL\n", uint32_t(p - whole_s.pos), indent - 12, "");
+         if (show_parsed_dies)
+            fprintf(stderr, "0x%08x: %*sNULL\n", uint32_t(p - whole_s.pos), indent - 12, "");
          return nullptr;
       }
       const auto* abbrev = result.get_abbrev_decl(debug_abbrev_offset, code);
       eosio::check(abbrev, "Bad abbrev in .debug_info");
-      // fprintf(stderr, "0x%08x: %*s%s\n", uint32_t(p - whole_s.pos), indent - 12, "",
-      //         dw_tag_to_str(abbrev->tag).c_str());
+      if (show_parsed_dies)
+         fprintf(stderr, "0x%08x: %*s%s\n", uint32_t(p - whole_s.pos), indent - 12, "",
+                 dw_tag_to_str(abbrev->tag).c_str());
       return abbrev;
    }
 
@@ -935,14 +952,16 @@ namespace dwarf
       for (const auto& attr : abbrev.attrs)
       {
          auto value = parse_attr_value(result, attr.form, s);
-         // fprintf(stderr, "%*s%s %s: %s\n", indent + 2, "", dw_at_to_str(attr.name).c_str(),
-         //         dw_form_to_str(attr.form).c_str(), to_string(value).c_str());
+         if (show_parsed_dies)
+            fprintf(stderr, "%*s%s %s: %s\n", indent + 2, "", dw_at_to_str(attr.name).c_str(),
+                    dw_form_to_str(attr.form).c_str(), to_string(value).c_str());
          if (attr.name == dw_at_specification)
          {
             if (auto ref = get_ref(value))
             {
-               // fprintf(stderr, "%*sref: %08x, unit: %08x\n", indent + 4, "", uint32_t(*ref),
-               //         uint32_t(unit_s.pos - whole_s.pos));
+               if (show_parsed_dies)
+                  fprintf(stderr, "%*sref: %08x, unit: %08x\n", indent + 4, "", uint32_t(*ref),
+                          uint32_t(unit_s.pos - whole_s.pos));
                eosio::check(*ref < unit_s.remaining(), "DW_AT_specification out of range");
                eosio::input_stream ref_s{unit_s.pos + *ref, unit_s.end};
                auto ref_abbrev =
@@ -1200,12 +1219,14 @@ namespace dwarf
 
       eosio::vector_stream s{info_data};
       eosio::varuint32_to_bin(it->second, s);  // code
-      fprintf(stderr, "%*s%s\n", indent, "", dw_tag_to_str(die.tag).c_str());
+      if (show_generated_dies)
+         fprintf(stderr, "%*s%s\n", indent, "", dw_tag_to_str(die.tag).c_str());
 
       for (const auto& attr : die.attrs)
       {
-         fprintf(stderr, "%*s%s %s\n", indent + 2, "", dw_at_to_str(attr.attr).c_str(),
-                 dw_form_to_str(attr.form).c_str());
+         if (show_generated_dies)
+            fprintf(stderr, "%*s%s %s\n", indent + 2, "", dw_at_to_str(attr.attr).c_str(),
+                    dw_form_to_str(attr.form).c_str());
          std::visit(overloaded{
                         [&](uint8_t v) { eosio::to_bin(v, s); },
                         [&](uint64_t v) { eosio::to_bin(v, s); },
@@ -1244,9 +1265,11 @@ namespace dwarf
                                      child.end_address);
          if (!range)
             continue;
-         fprintf(stderr, "%*sDIE 0x%lx (%ld->%ld) inline %016lx-%016lx\n", indent, "",
-                 uint64_t(info_data.size()), uint64_t(parent), uint64_t(child_index),
-                 uint64_t(range->first) + print_addr_adj, uint64_t(range->second) + print_addr_adj);
+         if (show_generated_dies)
+            fprintf(stderr, "%*sDIE 0x%lx (%ld->%ld) inline %016lx-%016lx\n", indent, "",
+                    uint64_t(info_data.size()), uint64_t(parent), uint64_t(child_index),
+                    uint64_t(range->first) + print_addr_adj,
+                    uint64_t(range->second) + print_addr_adj);
 
          size_t sub_ref = 0;
          die_pattern die;
@@ -1317,14 +1340,17 @@ namespace dwarf
                                      sub.end_address);
          if (!range)
          {
-            // fprintf(stderr, "address lookup fail: %s %08x-%08x\n", sub.demangled_name.c_str(),
-            //         sub.begin_address, sub.end_address);
+            if (show_generated_dies)
+               fprintf(stderr, "address lookup fail: %s %08x-%08x\n", sub.demangled_name.c_str(),
+                       sub.begin_address, sub.end_address);
             continue;
          }
 
-         fprintf(stderr, "    DIE 0x%lx (%ld) subprogram %016lx-%016lx\n",
-                 uint64_t(info_data.size()), uint64_t(i), uint64_t(range->first) + print_addr_adj,
-                 uint64_t(range->second) + print_addr_adj);
+         if (show_generated_dies)
+            fprintf(stderr, "    DIE 0x%lx (%ld) subprogram %016lx-%016lx\n",
+                    uint64_t(info_data.size()), uint64_t(i),
+                    uint64_t(range->first) + print_addr_adj,
+                    uint64_t(range->second) + print_addr_adj);
 
          die.tag = dw_tag_subprogram;
          die.has_children = true;
@@ -1458,11 +1484,14 @@ namespace dwarf
 
       std::sort(result.locations.begin(), result.locations.end());
       std::sort(result.abbrev_decls.begin(), result.abbrev_decls.end());
-      // for (auto& loc : result.locations)
-      //    fprintf(stderr, "[%08x,%08x) %s:%d\n", loc.begin_address, loc.end_address,
-      //           result.files[loc.file_index].c_str(), loc.line);
-      // for (auto& p : result.subprograms)
-      //    fprintf(stderr, "[%08x,%08x) %s\n", p.begin_address, p.end_address, p.name.c_str());
+      if (show_wasm_loc_summary)
+         for (auto& loc : result.locations)
+            fprintf(stderr, "loc  [%08x,%08x) %s:%d\n", loc.begin_address, loc.end_address,
+                    result.files[loc.file_index].c_str(), loc.line);
+      if (show_wasm_subp_summary)
+         for (auto& p : result.subprograms)
+            fprintf(stderr, "subp [%08x,%08x) %6s %s\n", p.begin_address, p.end_address,
+                    p.parent ? "inline" : "", p.demangled_name.c_str());
       return result;
    }  // get_info_from_wasm
 
