@@ -496,8 +496,7 @@ TEST_CASE("induction")
               "alice"_n, 4, eosio::sha256(hash_data.data(), hash_data.size() - 1)),
           "Outdated endorsement");
 
-   auto endorse_all = [&]
-   {
+   auto endorse_all = [&] {
       t.alice.act<actions::inductendorse>("alice"_n, 4, induction_hash);
       t.pip.act<actions::inductendorse>("pip"_n, 4, induction_hash);
       t.egeon.act<actions::inductendorse>("egeon"_n, 4, induction_hash);
@@ -609,8 +608,7 @@ TEST_CASE("induction gc")
    }
 
    auto finish_induction = [&](uint64_t induction_id, eosio::name inviter, eosio::name invitee,
-                               const std::vector<eosio::name>& witnesses)
-   {
+                               const std::vector<eosio::name>& witnesses) {
       t.chain.as(invitee).act<token::actions::transfer>(invitee, "eden.gm"_n, s2a("10.0000 EOS"),
                                                         "memo");
 
@@ -773,4 +771,65 @@ TEST_CASE("deposit and spend")
    t.alice.act<actions::withdraw>("alice"_n, s2a("6.0000 EOS"));
    CHECK(get_eden_account("alice"_n) == std::nullopt);
    CHECK(get_token_balance("alice"_n) == s2a("1000.0000 EOS"));
+}
+
+TEST_CASE("accounting")
+{
+   eden_tester t;
+   t.genesis();
+   // should now have 30.0000 EOS, with a 90.0000 EOS deposit from alice
+   CHECK(get_token_balance("eden.gm"_n) == s2a("120.0000 EOS"));
+   expect(t.eden_gm.trace<actions::transfer>("eosio"_n, s2a("30.0001 EOS"), ""),
+          "insufficient balance");
+   t.eden_gm.act<actions::transfer>("eosio"_n, s2a("30.0000 EOS"), "");
+   CHECK(get_token_balance("eden.gm"_n) == s2a("90.0000 EOS"));
+   CHECK(get_token_balance("eosio"_n) == s2a("30.0000 EOS"));
+}
+
+TEST_CASE("account migration")
+{
+   eden_tester t;
+   t.genesis();
+   auto sum_accounts = [](eden::account_table_type& table) {
+      auto total = s2a("0.0000 EOS");
+      for (auto iter = table.begin(), end = table.end(); iter != end; ++iter)
+      {
+         CHECK(iter->balance().amount > 0);
+         total += iter->balance();
+      }
+      return total;
+   };
+
+   {
+      eden::account_table_type user_table{"eden.gm"_n, eden::default_scope};
+      eden::account_table_type system_table{"eden.gm"_n, "owned"_n.value};
+      CHECK(sum_accounts(user_table) + sum_accounts(system_table) ==
+            get_token_balance("eden.gm"_n));
+   }
+   t.eden_gm.act<actions::unmigrate>();
+   {
+      eden::account_table_type user_table{"eden.gm"_n, eden::default_scope};
+      eden::account_table_type system_table{"eden.gm"_n, "owned"_n.value};
+      CHECK(sum_accounts(system_table) == s2a("0.0000 EOS"));
+   }
+   expect(t.alice.trace<actions::donate>("alice"_n, s2a("0.4200 EOS")), "must be migrated");
+
+   while (true)
+   {
+      t.chain.start_block();
+      t.alice.act<token::actions::transfer>("alice"_n, "eden.gm"_n, s2a("15.0000 EOS"), "");
+      t.alice.act<actions::withdraw>("alice"_n, s2a("14.0000 EOS"));
+      auto trace = t.eden_gm.trace<actions::migrate>(1);
+      if (trace.except)
+      {
+         expect(trace, "Nothing to do");
+         break;
+      }
+   }
+   {
+      eden::account_table_type user_table{"eden.gm"_n, eden::default_scope};
+      eden::account_table_type system_table{"eden.gm"_n, "owned"_n.value};
+      CHECK(sum_accounts(user_table) + sum_accounts(system_table) ==
+            get_token_balance("eden.gm"_n));
+   }
 }

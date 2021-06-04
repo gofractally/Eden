@@ -14,5 +14,6 @@ namespace eden
       eosio::require_auth(get_self());
       migrations{get_self()}.clear_all();
       auctions{get_self()}.clear_all();
+      accounts{get_self(), "owned"_n}.clear_all();
    }
 }  // namespace eden
