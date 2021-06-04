@@ -9,6 +9,8 @@
 #include <elf.h>
 #include <stdio.h>
 
+static constexpr uint64_t print_addr_adj = 0;
+
 namespace
 {
    template <class... Ts>
@@ -51,6 +53,11 @@ namespace dwarf
    inline constexpr uint8_t dw_lne_hi_user = 0xff;
 
    inline constexpr uint16_t dw_lang_c_plus_plus = 0x0004;
+
+   inline constexpr uint8_t dw_inl_not_inlined = 0x00;
+   inline constexpr uint8_t dw_inl_inlined = 0x01;
+   inline constexpr uint8_t dw_inl_declared_not_inlined = 0x02;
+   inline constexpr uint8_t dw_inl_declared_inlined = 0x03;
 
 // clang-format off
 #define DW_ATS(a, b, x)                \
@@ -446,7 +453,7 @@ namespace dwarf
             // fprintf(stderr, "%08x [%08x,%08x) %s:%d\n", *state.sequence_begin,
             //         current->begin_address, current->end_address,
             //         result.files[current->file_index].c_str(), current->line);
-            if (*state.sequence_begin && *state.sequence_begin < 0xffff'ffff)
+            if (*state.sequence_begin && *state.sequence_begin < 0xffff'ffff && current->line)
                result.locations.push_back(*current);
             current = {};
          }
@@ -614,6 +621,8 @@ namespace dwarf
          if (!range)
             continue;
 
+         fprintf(stderr, "%016lx-%016lx %s:%d\n", range->first + print_addr_adj,
+                 range->second + print_addr_adj, info.files[loc.file_index].c_str(), loc.line);
          if (!address || range->first != *address)
          {
             if (address && range->first < *address)
@@ -1056,9 +1065,15 @@ namespace dwarf
                    .demangled_name = demangled_name,
                };
                result.subprograms.push_back(std::move(p));
+               parse_die_children(result, indent + 4, debug_abbrev_offset, *child, whole_s, unit_s,
+                                  s);
             }
+            else
+               skip_die_children(result, indent + 4, debug_abbrev_offset, *child, whole_s, unit_s,
+                                 s);
          }
-         parse_die_children(result, indent + 4, debug_abbrev_offset, *child, whole_s, unit_s, s);
+         else
+            parse_die_children(result, indent + 4, debug_abbrev_offset, *child, whole_s, unit_s, s);
       }
    }  // parse_die_children
 
@@ -1082,6 +1097,23 @@ namespace dwarf
       parse_die_children(result, indent + 4, debug_abbrev_offset, *root, whole_s, unit_s, s);
    }  // parse_debug_info_unit
 
+   size_t fill_parents(info& result, size_t parent, size_t pos)
+   {
+      auto& par = result.subprograms[parent];
+      while (true)
+      {
+         if (pos >= result.subprograms.size())
+            return pos;
+         auto& subp = result.subprograms[pos];
+         if (subp.begin_address >= par.end_address)
+            return pos;
+         eosio::check(subp.end_address <= par.end_address, "partial overlap in subprograms");
+         par.children.push_back(pos);
+         subp.parent = parent;
+         pos = fill_parents(result, pos, pos + 1);
+      }
+   }
+
    void parse_debug_info(info& result, eosio::input_stream s)
    {
       auto whole_s = s;
@@ -1093,11 +1125,29 @@ namespace dwarf
          parse_debug_info_unit(result, whole_s, unit_s, {s.pos, s.pos + unit_length});
          s.skip(unit_length);
       }
+      std::sort(result.subprograms.begin(), result.subprograms.end());
+      for (size_t pos = 0; pos < result.subprograms.size();)
+         pos = fill_parents(result, pos, pos + 1);
    }
+
+   Elf64_Word add_str(std::vector<char>& strings, const char* s)
+   {
+      if (!s || !*s)
+         return size_t(0);
+      auto result = strings.size();
+      strings.insert(strings.end(), s, s + strlen(s) + 1);
+      return result;
+   }
+
+   template <typename T>
+   struct fill_later
+   {
+      size_t* offset = nullptr;
+   };
 
    struct attr_form_value
    {
-      using value_type = std::variant<uint64_t, std::string>;
+      using value_type = std::variant<uint8_t, uint64_t, std::string, fill_later<uint64_t>>;
 
       uint32_t attr = 0;
       uint32_t form = 0;
@@ -1125,8 +1175,9 @@ namespace dwarf
       }
    };
 
-   void write_die(std::vector<char>& abbrev_data,
-                  std::vector<char>& info_inner,
+   void write_die(int indent,
+                  std::vector<char>& abbrev_data,
+                  std::vector<char>& info_data,
                   std::map<die_pattern, uint32_t>& codes,
                   const die_pattern& die)
    {
@@ -1147,34 +1198,98 @@ namespace dwarf
          eosio::varuint32_to_bin(0, s);
       }
 
-      eosio::vector_stream s{info_inner};
+      eosio::vector_stream s{info_data};
       eosio::varuint32_to_bin(it->second, s);  // code
+      fprintf(stderr, "%*s%s\n", indent, "", dw_tag_to_str(die.tag).c_str());
+
       for (const auto& attr : die.attrs)
       {
+         fprintf(stderr, "%*s%s %s\n", indent + 2, "", dw_at_to_str(attr.attr).c_str(),
+                 dw_form_to_str(attr.form).c_str());
          std::visit(overloaded{
-                        [&](uint64_t v) { eosio::to_bin(v, s); },               //
-                        [&](const std::string& str) { write_string(str, s); },  //
+                        [&](uint8_t v) { eosio::to_bin(v, s); },
+                        [&](uint64_t v) { eosio::to_bin(v, s); },
+                        [&](const std::string& str) { write_string(str, s); },
+                        [&](const fill_later<uint64_t>& v) {
+                           *v.offset = info_data.size();
+                           eosio::to_bin(uint64_t(0), s);
+                        },
                     },
                     attr.value);
       }
    }  // write_die
 
-   void write_dies(std::vector<char>& abbrev_data,
-                   std::vector<char>& info_data,
-                   const info& info,
-                   const std::vector<jit_fn_loc>& fn_locs,
-                   const std::vector<jit_instr_loc>& instr_locs,
-                   const void* code_start,
-                   size_t code_size)
+   struct sub_ref
    {
-      std::vector<char> info_inner;
+      uint64_t stream_pos;
+      uint64_t subprogram;
+   };
+
+   void write_inline_fns(int indent,
+                         const info& info,
+                         const std::vector<jit_fn_loc>& fn_locs,
+                         const std::vector<jit_instr_loc>& instr_locs,
+                         const void* code_start,
+                         size_t parent,
+                         std::vector<sub_ref>& sub_refs,
+                         std::vector<char>& abbrev_data,
+                         std::vector<char>& info_data,
+                         std::map<die_pattern, uint32_t>& codes)
+   {
+      auto& par = info.subprograms[parent];
+      for (auto child_index : par.children)
+      {
+         auto& child = info.subprograms[child_index];
+         auto range = get_addr_range(info, fn_locs, instr_locs, code_start, child.begin_address,
+                                     child.end_address);
+         if (!range)
+            continue;
+         fprintf(stderr, "%*sDIE 0x%lx (%ld->%ld) inline %016lx-%016lx\n", indent, "",
+                 uint64_t(info_data.size()), uint64_t(parent), uint64_t(child_index),
+                 uint64_t(range->first) + print_addr_adj, uint64_t(range->second) + print_addr_adj);
+
+         size_t sub_ref = 0;
+         die_pattern die;
+         die.tag = dw_tag_inlined_subroutine;
+         die.has_children = true;
+         die.attrs = {
+             {dw_at_abstract_origin, dw_form_ref8, fill_later<uint64_t>{&sub_ref}},
+             {dw_at_low_pc, dw_form_addr, uint64_t(range->first)},
+             {dw_at_high_pc, dw_form_addr, uint64_t(range->second)},
+         };
+         write_die(indent, abbrev_data, info_data, codes, die);
+         sub_refs.push_back({sub_ref, child_index});
+         write_inline_fns(indent + 4, info, fn_locs, instr_locs, code_start, child_index, sub_refs,
+                          abbrev_data, info_data, codes);
+      }
+      eosio::vector_stream info_s{info_data};
+      eosio::varuint32_to_bin(0, info_s);
+   }
+
+   void write_subprograms(uint16_t code_section,
+                          std::vector<char>& strings,
+                          std::vector<char>& abbrev_data,
+                          std::vector<char>& info_data,
+                          std::vector<char>& symbol_data,
+                          const info& info,
+                          const std::vector<jit_fn_loc>& fn_locs,
+                          const std::vector<jit_instr_loc>& instr_locs,
+                          const void* code_start,
+                          size_t code_size)
+   {
       std::map<die_pattern, uint32_t> codes;
       die_pattern die;
 
-      eosio::vector_stream inner_s{info_inner};
-      eosio::to_bin(uint16_t(compile_unit_version), inner_s);
-      eosio::to_bin(uint64_t(0), inner_s);  // debug_abbrev_offset
-      eosio::to_bin(uint8_t(8), inner_s);   // address_size
+      eosio::vector_stream info_s{info_data};
+      auto begin_pos = info_data.size();
+      eosio::to_bin(uint32_t(0xffff'ffff), info_s);
+      auto length_pos = info_data.size();
+      eosio::to_bin(uint64_t(0), info_s);
+      auto inner_pos = info_data.size();
+
+      eosio::to_bin(uint16_t(compile_unit_version), info_s);
+      eosio::to_bin(uint64_t(0), info_s);  // debug_abbrev_offset
+      eosio::to_bin(uint8_t(8), info_s);   // address_size
 
       die.tag = dw_tag_compile_unit;
       die.has_children = true;
@@ -1184,10 +1299,20 @@ namespace dwarf
           {dw_at_high_pc, dw_form_addr, uint64_t((char*)code_start + code_size)},
           {dw_at_stmt_list, dw_form_sec_offset, uint64_t(0)},
       };
-      write_die(abbrev_data, info_inner, codes, die);
+      write_die(0, abbrev_data, info_data, codes, die);
 
-      for (auto& sub : info.subprograms)
+      Elf64_Sym null_sym;
+      memset(&null_sym, 0, sizeof(null_sym));
+      symbol_data.insert(symbol_data.end(), (char*)(&null_sym), (char*)(&null_sym + 1));
+
+      std::vector<size_t> sub_positions(info.subprograms.size());
+      std::vector<sub_ref> sub_refs;
+
+      for (size_t i = 0; i < info.subprograms.size(); ++i)
       {
+         auto& sub = info.subprograms[i];
+         sub_positions[i] = info_data.size();
+
          auto range = get_addr_range(info, fn_locs, instr_locs, code_start, sub.begin_address,
                                      sub.end_address);
          if (!range)
@@ -1197,31 +1322,61 @@ namespace dwarf
             continue;
          }
 
+         fprintf(stderr, "    DIE 0x%lx (%ld) subprogram %016lx-%016lx\n",
+                 uint64_t(info_data.size()), uint64_t(i), uint64_t(range->first) + print_addr_adj,
+                 uint64_t(range->second) + print_addr_adj);
+
          die.tag = dw_tag_subprogram;
-         die.has_children = false;
-         die.attrs = {
-             {dw_at_low_pc, dw_form_addr, uint64_t(range->first)},
-             {dw_at_high_pc, dw_form_addr, uint64_t(range->second)},
-         };
+         die.has_children = true;
+         if (sub.parent)
+            die.attrs = {
+                {dw_at_inline, dw_form_data1, uint8_t(dw_inl_inlined)},
+                {dw_at_external, dw_form_flag, uint8_t(1)},
+            };
+         else
+            die.attrs = {
+                {dw_at_low_pc, dw_form_addr, uint64_t(range->first)},
+                {dw_at_high_pc, dw_form_addr, uint64_t(range->second)},
+            };
          if (sub.linkage_name)
             die.attrs.push_back({dw_at_linkage_name, dw_form_string, *sub.linkage_name});
          if (sub.name)
             die.attrs.push_back({dw_at_name, dw_form_string, *sub.name});
          else if (sub.linkage_name)
             die.attrs.push_back({dw_at_name, dw_form_string, sub.demangled_name});
-         write_die(abbrev_data, info_inner, codes, die);
+         write_die(4, abbrev_data, info_data, codes, die);
+         if (sub.parent)
+            eosio::varuint32_to_bin(0, info_s);
+         else
+            write_inline_fns(8, info, fn_locs, instr_locs, code_start, i, sub_refs, abbrev_data,
+                             info_data, codes);
+
+         Elf64_Sym sym = {
+             .st_name = 0,
+             .st_info = ELF64_ST_INFO(STB_GLOBAL, STT_FUNC),
+             .st_other = STV_DEFAULT,
+             .st_shndx = code_section,
+             .st_value = range->first,
+             .st_size = range->second - range->first,
+         };
+         if (sub.linkage_name)
+            sym.st_name = add_str(strings, sub.linkage_name->c_str());
+         else if (sub.name)
+            sym.st_name = add_str(strings, sub.name->c_str());
+         symbol_data.insert(symbol_data.end(), (char*)(&sym), (char*)(&sym + 1));
+      }  // for(sub)
+
+      for (auto& r : sub_refs)
+      {
+         uint64_t subprogram_offset = sub_positions[r.subprogram] - begin_pos;
+         memcpy(info_data.data() + r.stream_pos, &subprogram_offset, sizeof(subprogram_offset));
       }
 
-      eosio::varuint32_to_bin(0, inner_s);  // end children
-      eosio::varuint32_to_bin(0, inner_s);  // end module
-      info_data.resize(info_inner.size() + 12);
-      eosio::fixed_buf_stream outer_s{info_data.data(), info_data.size()};
-      eosio::to_bin(uint32_t(0xffff'ffff), outer_s);
-      eosio::to_bin(uint64_t(info_inner.size()), outer_s);
-      outer_s.write(info_inner.data(), info_inner.size());
-      eosio::check(outer_s.pos == outer_s.end,
-                   "generate_debug_info: calculated incorrect stream size");
-   }  // write_dies
+      eosio::varuint32_to_bin(0, info_s);  // end children
+      eosio::varuint32_to_bin(0, info_s);  // end module
+      uint64_t inner_size = info_data.size() - inner_pos;
+      memcpy(info_data.data() + length_pos, &inner_size, sizeof(inner_size));
+   }  // write_subprograms
 
    struct wasm_header
    {
@@ -1303,14 +1458,13 @@ namespace dwarf
 
       std::sort(result.locations.begin(), result.locations.end());
       std::sort(result.abbrev_decls.begin(), result.abbrev_decls.end());
-      std::sort(result.subprograms.begin(), result.subprograms.end());
       // for (auto& loc : result.locations)
       //    fprintf(stderr, "[%08x,%08x) %s:%d\n", loc.begin_address, loc.end_address,
       //           result.files[loc.file_index].c_str(), loc.line);
       // for (auto& p : result.subprograms)
       //    fprintf(stderr, "[%08x,%08x) %s\n", p.begin_address, p.end_address, p.name.c_str());
       return result;
-   }
+   }  // get_info_from_wasm
 
    const char* info::get_str(uint32_t offset) const
    {
@@ -1450,16 +1604,11 @@ namespace dwarf
       auto result = std::make_shared<debugger_registration>();
       std::vector<char> strings;
       strings.push_back(0);
-      auto add_str = [&](const char* s) {
-         if (!s || !*s)
-            return size_t(0);
-         auto result = strings.size();
-         strings.insert(strings.end(), s, s + strlen(s) + 1);
-         return result;
-      };
 
-      constexpr uint16_t num_sections = 6;
-      Elf64_Ehdr header{
+      constexpr uint16_t num_sections = 7;
+      constexpr uint16_t strtab_section = 1;
+      constexpr uint16_t code_section = 2;
+      Elf64_Ehdr elf_header{
           .e_ident = {ELFMAG0, ELFMAG1, ELFMAG2, ELFMAG3, ELFCLASS64, ELFDATA2LSB, EV_CURRENT,
                       ELFOSABI_LINUX, 0},
           .e_type = ET_EXEC,
@@ -1467,20 +1616,34 @@ namespace dwarf
           .e_version = EV_CURRENT,
           .e_entry = Elf64_Addr(entry),
           .e_phoff = 0,
-          .e_shoff = sizeof(header),
+          .e_shoff = 0,
           .e_flags = 0,
-          .e_ehsize = sizeof(header),
-          .e_phentsize = 0,
-          .e_phnum = 0,
+          .e_ehsize = sizeof(elf_header),
+          .e_phentsize = sizeof(Elf64_Phdr),
+          .e_phnum = 1,
           .e_shentsize = sizeof(Elf64_Shdr),
           .e_shnum = num_sections,
-          .e_shstrndx = 1,
+          .e_shstrndx = strtab_section,
       };
-      auto header_pos = result->write(header);
+      auto elf_header_pos = result->write(elf_header);
 
+      elf_header.e_phoff = result->symfile.size();
+      Elf64_Phdr program_header{
+          .p_type = PT_LOAD,
+          .p_flags = PF_X | PF_R,
+          .p_offset = 0,
+          .p_vaddr = (Elf64_Addr)code_start,
+          .p_paddr = 0,
+          .p_filesz = 0,
+          .p_memsz = code_size,
+          .p_align = 0,
+      };
+      auto program_header_pos = result->write(program_header);
+
+      elf_header.e_shoff = result->symfile.size();
       auto sec_header = [&](const char* name, Elf64_Word type, Elf64_Xword flags) {
          Elf64_Shdr header{
-             .sh_name = (Elf64_Word)add_str(name),
+             .sh_name = add_str(strings, name),
              .sh_type = type,
              .sh_flags = flags,
              .sh_addr = 0,
@@ -1497,11 +1660,12 @@ namespace dwarf
       auto [reserved_sec_header, reserved_sec_header_pos] = sec_header(0, 0, 0);
       auto [str_sec_header, str_sec_header_pos] = sec_header(".shstrtab", SHT_STRTAB, 0);
       auto [code_sec_header, code_sec_header_pos] =
-          sec_header("code", SHT_NOBITS, SHF_ALLOC | SHF_EXECINSTR);
+          sec_header(".text", SHT_NOBITS, SHF_ALLOC | SHF_EXECINSTR);
       auto [line_sec_header, line_sec_header_pos] = sec_header(".debug_line", SHT_PROGBITS, 0);
       auto [abbrev_sec_header, abbrev_sec_header_pos] =
           sec_header(".debug_abbrev", SHT_PROGBITS, 0);
       auto [info_sec_header, info_sec_header_pos] = sec_header(".debug_info", SHT_PROGBITS, 0);
+      auto [symbol_sec_header, symbol_sec_header_pos] = sec_header(".symtab", SHT_SYMTAB, 0);
 
       code_sec_header.sh_addr = Elf64_Addr(code_start);
       code_sec_header.sh_size = code_size;
@@ -1515,17 +1679,23 @@ namespace dwarf
 
       std::vector<char> abbrev_data;
       std::vector<char> info_data;
-      write_dies(abbrev_data, info_data, info, fn_locs, instr_locs, code_start, code_size);
+      std::vector<char> symbol_data;
+      symbol_sec_header.sh_link = strtab_section;
+      symbol_sec_header.sh_entsize = sizeof(Elf64_Sym);
+      write_subprograms(code_section, strings, abbrev_data, info_data, symbol_data, info, fn_locs,
+                        instr_locs, code_start, code_size);
 
       write_sec(line_sec_header, line_sec_header_pos,
                 generate_debug_line(info, fn_locs, instr_locs, code_start));
       write_sec(abbrev_sec_header, abbrev_sec_header_pos, abbrev_data);
       write_sec(info_sec_header, info_sec_header_pos, info_data);
+      write_sec(symbol_sec_header, symbol_sec_header_pos, symbol_data);
       write_sec(str_sec_header, str_sec_header_pos, strings);
+      result->write(elf_header_pos, elf_header);
 
       result->reg();
 
-      fprintf(stdout, "\n\n\n%p\n\n\n", entry);
+      fprintf(stderr, "\n\n\n%p\n\n\n", entry);
       // asm("int $3");
 
       return result;

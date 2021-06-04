@@ -42,11 +42,12 @@ namespace dwarf
       std::optional<std::string> linkage_name;
       std::optional<std::string> name;
       std::string demangled_name;
+      std::optional<uint32_t> parent;
+      std::vector<uint32_t> children;
 
-      friend bool operator<(const subprogram& a, const subprogram& b)
-      {
-         return a.begin_address < b.begin_address;
-      }
+      auto key() const { return std::pair{begin_address, ~end_address}; }
+
+      friend bool operator<(const subprogram& a, const subprogram& b) { return a.key() < b.key(); }
    };
 
    struct abbrev_attr
