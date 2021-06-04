@@ -1,13 +1,15 @@
+import { useQuery } from "react-query";
+
 import {
-    useFetchedData,
+    queryEndorsementsByInductionId,
+    queryInduction,
     useMemberByAccountName,
     useMemberListByAccountNames,
 } from "_app";
 import * as InductionTable from "_app/ui/table";
 
-import { getEndorsementsByInductionId, getInduction } from "../../api";
 import { getInductionRemainingTimeDays, getInductionStatus } from "../../utils";
-import { Endorsement, Induction } from "../../interfaces";
+import { Endorsement } from "../../interfaces";
 import { InductionStatusButton } from "./induction-status-button";
 
 interface Props {
@@ -54,17 +56,15 @@ const ENDORSER_INDUCTION_COLUMNS: InductionTable.Column[] = [
 
 const getTableData = (endorsements: Endorsement[]): InductionTable.Row[] => {
     return endorsements.map((endorsement) => {
-        const [induction] = useFetchedData<Induction>(
-            getInduction,
-            endorsement.induction_id
+        const { data: induction } = useQuery(
+            queryInduction(endorsement.induction_id)
+        );
+
+        const { data: allEndorsements } = useQuery(
+            queryEndorsementsByInductionId(endorsement.induction_id)
         );
 
         const { data: inviter } = useMemberByAccountName(endorsement.inviter);
-
-        const [allEndorsements] = useFetchedData<Endorsement[]>(
-            getEndorsementsByInductionId,
-            endorsement.induction_id
-        );
 
         const endorsersAccounts =
             allEndorsements

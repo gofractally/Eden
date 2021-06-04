@@ -2,23 +2,20 @@ import { GetServerSideProps } from "next";
 import { QueryClient, useQuery } from "react-query";
 import { dehydrate } from "react-query/hydration";
 
-import { CallToAction, Card, RawLayout, SingleColLayout } from "_app";
 import {
-    getMember,
-    MemberCard,
-    MemberCollections,
-    MemberHoloCard,
-} from "members";
-
-const QUERY_MEMBER_DATA = "query_member_data";
+    CallToAction,
+    Card,
+    queryMemberData,
+    RawLayout,
+    SingleColLayout,
+} from "_app";
+import { MemberCard, MemberCollections, MemberHoloCard } from "members";
 
 export const getServerSideProps: GetServerSideProps = async ({ params }) => {
     const account = params!.id as string;
 
     const queryClient = new QueryClient();
-    await queryClient.prefetchQuery([QUERY_MEMBER_DATA, account], () =>
-        getMember(account)
-    );
+    await queryClient.prefetchQuery(queryMemberData(account));
 
     return { props: { account, dehydratedState: dehydrate(queryClient) } };
 };
@@ -28,10 +25,10 @@ interface Props {
 }
 
 export const MemberPage = ({ account }: Props) => {
-    const { data: member, isLoading } = useQuery(
-        [QUERY_MEMBER_DATA, account],
-        () => getMember(account)
-    );
+    const { data: member, isLoading } = useQuery({
+        ...queryMemberData(account),
+        keepPreviousData: true,
+    });
 
     if (member) {
         return (
