@@ -299,6 +299,11 @@ namespace eden
          eosio::input_stream stream{btc_header.data};
          seeding->seed.update(stream);
       }
+      else if (auto* seeding = std::get_if<current_election_state_final>(&state))
+      {
+         eosio::input_stream stream{btc_header.data};
+         seeding->seed.update(stream);
+      }
       else
       {
          eosio::check(false, "Cannot seed election now");
@@ -365,11 +370,23 @@ namespace eden
          max_steps = randomize_voters(*state, max_steps);
          if (max_steps > 0)
          {
-            auto config = make_election_config(state->next_member_idx).front();
-            state_variant = current_election_state_active{
-                0, config, state->rng.seed(),
-                eosio::current_time_point() +
-                    eosio::seconds(globals.get().election_round_time_sec)};
+            eosio::check(state->next_member_idx > 0, "No voters");
+            auto configs = make_election_config(state->next_member_idx);
+            if (configs.size() == 1)
+            {
+               auto board = extract_board();
+               auto winner = board.front();
+               finish_election(std::move(board), winner);
+               --max_steps;
+               return max_steps;
+            }
+            else
+            {
+               state_variant = current_election_state_active{
+                   0, configs.front(), state->rng.seed(),
+                   eosio::current_time_point() +
+                       eosio::seconds(globals.get().election_round_time_sec)};
+            }
             --max_steps;
          }
       }
@@ -427,6 +444,30 @@ namespace eden
       }
    }
 
+   std::vector<eosio::name> elections::extract_board()
+   {
+      std::vector<eosio::name> result;
+      auto vote_idx = vote_tb.get_index<"bygroup"_n>();
+      for (auto iter = vote_idx.begin(), end = vote_idx.end(); iter != end;)
+      {
+         result.push_back(iter->member);
+         eosio::check(result.size() < 12, "Too many board members");
+         iter = vote_idx.erase(iter);
+      }
+      eosio::check(!result.empty(), "No board members");
+      return result;
+   }
+
+   void elections::finish_election(std::vector<eosio::name>&& board, eosio::name winner)
+   {
+      election_state_singleton results(contract, default_scope);
+      auto result = std::get<election_state_v0>(results.get());
+      result.lead_representative = winner;
+      result.board = std::move(board);
+      set_default_election(result.last_election_time.to_time_point());
+      results.set(result, contract);
+   }
+
    uint32_t elections::finish_round(uint32_t max_steps)
    {
       auto state = state_sing.get();
@@ -438,6 +479,20 @@ namespace eden
              current_election_state_post_round{election_rng{adjust_seed(prev_round->saved_seed)},
                                                prev_round->round, prev_round->config, 0, 0};
       }
+      else if (auto* final_round = std::get_if<current_election_state_final>(&state))
+      {
+         if (max_steps > 0 && final_round->seed.end_time <= eosio::current_block_time())
+         {
+            election_rng rng(final_round->seed.current);
+            auto board = extract_board();
+            std::uniform_int_distribution<uint32_t> dist(0, board.size() - 1);
+            auto winner = board[dist(rng)];
+
+            finish_election(std::move(board), winner);
+            --max_steps;
+         }
+         return max_steps;
+      }
       eosio::check(std::holds_alternative<current_election_state_post_round>(state),
                    "No round to finish now");
       auto& data = std::get<current_election_state_post_round>(state);
@@ -445,12 +500,7 @@ namespace eden
       auto group_start = vote_idx.lower_bound((data.prev_round << 16) | data.next_input_index);
       auto end = vote_idx.end();
 
-      std::vector<eosio::name> board;
       eosio::name winner;
-      if (data.prev_config.num_groups == 1)
-      {
-         board.reserve(12);
-      }
 
       for (; max_steps > 0 && group_start != end && group_start->round == data.prev_round;
            --max_steps)
@@ -458,13 +508,6 @@ namespace eden
          auto group_size = data.prev_config.group_min_size() +
                            (data.next_input_index < data.prev_config.num_large_groups() *
                                                         (data.prev_config.group_max_size()));
-         if (data.prev_config.num_groups == 1)
-         {
-            for (auto iter = group_start; iter != end; ++iter)
-            {
-               board.push_back(iter->member);
-            }
-         }
          winner = finish_group(data, vote_idx, group_start, group_size);
          if (winner != eosio::name() && data.prev_config.num_groups != 1)
          {
@@ -475,20 +518,17 @@ namespace eden
 
       if (max_steps > 0)
       {
-         if (data.prev_config.num_groups == 1)
+         auto config = make_election_config(data.next_output_index);
+         if (config.size() == 1)
          {
-            election_state_singleton results(contract, default_scope);
-            auto result = std::get<election_state_v0>(results.get());
-            result.lead_representative = winner;
-            result.board = std::move(board);
-            set_default_election(result.last_election_time.to_time_point());
-            results.set(result, contract);
+            auto now = eosio::current_time_point();
+            state = current_election_state_final{
+                {.start_time = now, .end_time = now + eosio::seconds(election_seeding_window)}};
          }
          else
          {
-            auto config = make_election_config(data.next_output_index).front();
             state = current_election_state_active{
-                static_cast<uint8_t>(data.prev_round + 1), config, data.rng.seed(),
+                static_cast<uint8_t>(data.prev_round + 1), config.front(), data.rng.seed(),
                 eosio::current_time_point() +
                     eosio::seconds(globals.get().election_round_time_sec)};
          }

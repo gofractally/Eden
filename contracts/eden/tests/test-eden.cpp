@@ -792,16 +792,18 @@ TEST_CASE("election")
          break;
       }
    }
+   /*
    t.alice.act<actions::electvote>(0, "alice"_n, "alice"_n);
    t.pip.act<actions::electvote>(0, "pip"_n, "alice"_n);
    t.egeon.act<actions::electvote>(0, "egeon"_n, "alice"_n);
    t.chain.start_block(60 * 60 * 1000);
    t.alice.act<actions::electprocess>(42);
-
+   */
    CHECK(get_table_size<eden::vote_table_type>() == 0);
    eden::election_state_singleton results("eden.gm"_n, eden::default_scope);
    auto result = std::get<eden::election_state_v0>(results.get());
-   CHECK(result.lead_representative == "alice"_n);
+   // This is likely to change as it depends on the exact random number algorithm and seed
+   CHECK(result.lead_representative == "egeon"_n);
    std::sort(result.board.begin(), result.board.end());
    CHECK(result.board == std::vector{"alice"_n, "egeon"_n, "pip"_n});
 }
@@ -869,7 +871,7 @@ TEST_CASE("election with multiple rounds")
          }
       }
       t.chain.start_block(60 * 60 * 1000);
-      t.alice.template act<actions::electprocess>(256);
+      t.alice.act<actions::electprocess>(256);
       ++round;
    };
 
@@ -881,11 +883,13 @@ TEST_CASE("election with multiple rounds")
    CHECK(get_table_size<eden::vote_table_type>() == 12);
    generic_group_vote(get_current_groups());
    CHECK(get_table_size<eden::vote_table_type>() == 3);
-   generic_group_vote(get_current_groups());
+   //generic_group_vote(get_current_groups());
+   t.chain.start_block(24 * 60 * 60 * 1000);
+   t.alice.act<actions::electprocess>(256);
    CHECK(get_table_size<eden::vote_table_type>() == 0);
 
    eden::election_state_singleton results("eden.gm"_n, eden::default_scope);
    auto result = std::get<eden::election_state_v0>(results.get());
-   // alice always wins at every level, because everyone votes for the member with the lowest name
-   CHECK(result.lead_representative == "alice"_n);
+   // alice wins at every level but the last, because everyone votes for the member with the lowest name
+   CHECK(std::find(result.board.begin(), result.board.end(), "alice"_n) != result.board.end());
 }

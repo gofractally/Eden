@@ -175,12 +175,19 @@ namespace eden
                  next_input_index,
                  next_output_index)
 
+   struct current_election_state_final
+   {
+      election_seeder seed;
+   };
+   EOSIO_REFLECT(current_election_state_final, seed)
+
    using current_election_state = std::variant<current_election_state_pending_date,
                                                current_election_state_registration,
                                                current_election_state_seeding,
                                                current_election_state_init_voters,
                                                current_election_state_active,
-                                               current_election_state_post_round>;
+                                               current_election_state_post_round,
+                                               current_election_state_final>;
    using current_election_state_singleton =
        eosio::singleton<"elect.curr"_n, current_election_state>;
 
@@ -212,6 +219,8 @@ namespace eden
 
       void add_voter(election_rng& rng, uint8_t round, uint16_t& next_index, eosio::name member);
       uint32_t randomize_voters(current_election_state_init_voters& state, uint32_t max_steps);
+      std::vector<eosio::name> extract_board();
+      void finish_election(std::vector<eosio::name>&& board, eosio::name winner);
 
      public:
       explicit elections(eosio::name contract)
