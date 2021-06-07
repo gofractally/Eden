@@ -11,6 +11,15 @@ import {
 } from "_app";
 import { MemberCard, MemberCollections, MemberHoloCard } from "members";
 
+/**
+ * We have an issue if the member is not found in the development environment
+ * due to dehydration with JSON not being able to serialize `undefined`:
+ * Error: Error serializing `.dehydratedState.queries[0].state.data`
+ * returned from `getServerSideProps` in "/members/[id]".
+ * Reason: `undefined` cannot be serialized as JSON. Please use `null`
+ * or omit this value.
+ * Let's track this here: https://github.com/tannerlinsley/react-query/issues/1978
+ */
 export const getServerSideProps: GetServerSideProps = async ({ params }) => {
     const account = params!.id as string;
 
