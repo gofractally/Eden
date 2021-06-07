@@ -12,8 +12,11 @@
 static constexpr bool show_parsed_lines = false;
 static constexpr bool show_parsed_abbrev = false;
 static constexpr bool show_parsed_dies = false;
+static constexpr bool show_wasm_fn_info = false;
 static constexpr bool show_wasm_loc_summary = false;
 static constexpr bool show_wasm_subp_summary = false;
+static constexpr bool show_fn_locs = false;
+static constexpr bool show_instr_locs = false;
 static constexpr bool show_generated_lines = false;
 static constexpr bool show_generated_dies = false;
 static constexpr uint64_t print_addr_adj = 0;
@@ -585,6 +588,19 @@ namespace dwarf
       }
    }
 
+   // wasm_addr is relative to beginning of file
+   std::optional<uint32_t> get_wasm_fn(const info& info, uint32_t wasm_addr)
+   {
+      auto it = std::upper_bound(info.wasm_fns.begin(), info.wasm_fns.end(), wasm_addr,
+                                 [](auto a, const auto& b) { return a < b.size_pos; });
+      if (it == info.wasm_fns.begin())
+         return {};
+      --it;
+      if (it->size_pos <= wasm_addr && wasm_addr < it->end_pos)
+         return &*it - &info.wasm_fns[0];
+      return {};
+   }
+
    std::optional<std::pair<uint64_t, uint64_t>> get_addr_range(
        const info& info,
        const std::vector<jit_fn_loc>& fn_locs,
@@ -1083,6 +1099,13 @@ namespace dwarf
                    .name = common.name,
                    .demangled_name = demangled_name,
                };
+               if (show_parsed_dies)
+               {
+                  fprintf(stderr, "%*sbegin_address  = %08x\n", indent + 6, "", p.begin_address);
+                  fprintf(stderr, "%*send_address    = %08x\n", indent + 6, "", p.end_address);
+                  fprintf(stderr, "%*sdemangled_name = %s\n", indent + 6, "",
+                          p.demangled_name.c_str());
+               }
                result.subprograms.push_back(std::move(p));
                parse_die_children(result, indent + 4, debug_abbrev_offset, *child, whole_s, unit_s,
                                   s);
@@ -1335,22 +1358,25 @@ namespace dwarf
       {
          auto& sub = info.subprograms[i];
          sub_positions[i] = info_data.size();
-
-         auto range = get_addr_range(info, fn_locs, instr_locs, code_start, sub.begin_address,
-                                     sub.end_address);
-         if (!range)
+         auto fn = get_wasm_fn(info, info.wasm_code_offset + sub.begin_address);
+         if (!fn || info.wasm_code_offset + sub.end_address > info.wasm_fns[*fn].end_pos)
          {
             if (show_generated_dies)
                fprintf(stderr, "address lookup fail: %s %08x-%08x\n", sub.demangled_name.c_str(),
-                       sub.begin_address, sub.end_address);
+                       info.wasm_code_offset + sub.begin_address,
+                       info.wasm_code_offset + sub.end_address);
             continue;
          }
-
+         if (sub.parent)
+            continue;
+         auto fn_begin = uint64_t((const char*)code_start + fn_locs[*fn].code_prologue);
+         auto fn_end = uint64_t((const char*)code_start + fn_locs[*fn].code_end);
          if (show_generated_dies)
-            fprintf(stderr, "    DIE 0x%lx (%ld) subprogram %016lx-%016lx\n",
+            fprintf(stderr, "    DIE 0x%lx (%ld) subprogram %08x-%08x %016lx-%016lx %s\n",
                     uint64_t(info_data.size()), uint64_t(i),
-                    uint64_t(range->first) + print_addr_adj,
-                    uint64_t(range->second) + print_addr_adj);
+                    info.wasm_code_offset + sub.begin_address,
+                    info.wasm_code_offset + sub.end_address, fn_begin + print_addr_adj,
+                    fn_end + print_addr_adj, sub.demangled_name.c_str());
 
          die.tag = dw_tag_subprogram;
          die.has_children = true;
@@ -1361,8 +1387,8 @@ namespace dwarf
             };
          else
             die.attrs = {
-                {dw_at_low_pc, dw_form_addr, uint64_t(range->first)},
-                {dw_at_high_pc, dw_form_addr, uint64_t(range->second)},
+                {dw_at_low_pc, dw_form_addr, fn_begin},
+                {dw_at_high_pc, dw_form_addr, fn_end},
             };
          if (sub.linkage_name)
             die.attrs.push_back({dw_at_linkage_name, dw_form_string, *sub.linkage_name});
@@ -1371,19 +1397,19 @@ namespace dwarf
          else if (sub.linkage_name)
             die.attrs.push_back({dw_at_name, dw_form_string, sub.demangled_name});
          write_die(4, abbrev_data, info_data, codes, die);
-         if (sub.parent)
-            eosio::varuint32_to_bin(0, info_s);
-         else
-            write_inline_fns(8, info, fn_locs, instr_locs, code_start, i, sub_refs, abbrev_data,
-                             info_data, codes);
+         // if (sub.parent)
+         eosio::varuint32_to_bin(0, info_s);
+         // else
+         //    write_inline_fns(8, info, fn_locs, instr_locs, code_start, i, sub_refs, abbrev_data,
+         //                     info_data, codes);
 
          Elf64_Sym sym = {
              .st_name = 0,
              .st_info = ELF64_ST_INFO(STB_GLOBAL, STT_FUNC),
              .st_other = STV_DEFAULT,
              .st_shndx = code_section,
-             .st_value = range->first,
-             .st_size = range->second - range->first,
+             .st_value = fn_begin,
+             .st_size = fn_end - fn_begin,
          };
          if (sub.linkage_name)
             sym.st_name = add_str(strings, sub.linkage_name->c_str());
@@ -1449,19 +1475,83 @@ namespace dwarf
                    "wasm file magic number does not match");
       eosio::check(header.version == eosio::vm::constants::version,
                    "wasm file version does not match");
+
       auto scan = [&](auto stream, auto f) {
          while (stream.remaining())
          {
             auto section_begin = stream.pos;
             auto section = eosio::from_bin<wasm_section>(stream);
-            if (section.id == eosio::vm::section_id::code_section)
-               result.wasm_code_offset = section_begin - file_begin;
-            else if (section.id == eosio::vm::section_id::custom_section)
-               f(section, eosio::from_bin<std::string>(section.data));
+            f(section_begin, section);
          }
       };
 
-      scan(stream, [&](auto& section, const auto& name) {
+      auto scan_custom = [&](auto stream, auto f) {
+         scan(stream, [&](auto section_begin, auto& section) {
+            if (section.id == eosio::vm::section_id::custom_section)
+               f(section, eosio::from_bin<std::string>(section.data));
+         });
+      };
+
+      scan(stream, [&](auto section_begin, auto& section) {
+         if (section.id == eosio::vm::section_id::code_section)
+         {
+            result.wasm_code_offset = section.data.pos - file_begin;
+            auto s = section.data;
+            auto count = eosio::varuint32_from_bin(s);
+            result.wasm_fns.resize(count);
+            for (uint32_t i = 0; i < count; ++i)
+            {
+               auto& fn = result.wasm_fns[i];
+               fn.size_pos = s.pos - file_begin;
+               auto size = eosio::varuint32_from_bin(s);
+               fn.locals_pos = s.pos - file_begin;
+               s.skip(size);
+               fn.end_pos = s.pos - file_begin;
+            }
+         }
+      });
+
+      if (show_wasm_fn_info)
+      {
+         scan(stream, [&](auto section_begin, auto& section) {
+            if (section.id != eosio::vm::section_id::code_section)
+               return;
+            eosio::input_stream s{section_begin, stream.end};
+            fprintf(stderr, "%08x %08x: code section id\n", uint32_t(s.pos - file_begin),
+                    uint32_t(s.pos - section_begin));
+            auto id = eosio::from_bin<uint8_t>(s);
+            fprintf(stderr, "         =%d\n", id);
+            fprintf(stderr, "%08x %08x: section size\n", uint32_t(s.pos - file_begin),
+                    uint32_t(s.pos - section_begin));
+            auto size = eosio::varuint32_from_bin(s);
+            fprintf(stderr, "         =%08x\n", size);
+            s.end = s.pos + size;
+            fprintf(stderr, "%08x %08x: count\n", uint32_t(s.pos - file_begin),
+                    uint32_t(s.pos - section_begin));
+            fprintf(stderr, "**** reset section_begin to here\n");
+            section_begin = s.pos;
+            fprintf(stderr, "%08x %08x: count\n", uint32_t(s.pos - file_begin),
+                    uint32_t(s.pos - section_begin));
+            auto count = eosio::varuint32_from_bin(s);
+            fprintf(stderr, "         count=%08x\n\n", count);
+            fprintf(stderr, "%08x %08x\n", uint32_t(s.pos - file_begin),
+                    uint32_t(s.pos - section_begin));
+            for (uint32_t i = 0; i < count; ++i)
+            {
+               fprintf(stderr, "[%04d] %08x %08x: function size\n", i, uint32_t(s.pos - file_begin),
+                       uint32_t(s.pos - section_begin));
+               auto size = eosio::varuint32_from_bin(s);
+               // fprintf(stderr, "                =%08x\n", size);
+               fprintf(stderr, "[%04d] %08x %08x: function body\n", i, uint32_t(s.pos - file_begin),
+                       uint32_t(s.pos - section_begin));
+               s.skip(size);
+               fprintf(stderr, "[%04d] %08x %08x: function end\n\n", i,
+                       uint32_t(s.pos - file_begin), uint32_t(s.pos - section_begin));
+            }
+         });
+      }
+
+      scan_custom(stream, [&](auto& section, const auto& name) {
          if (name == ".debug_line")
          {
             dwarf::parse_debug_line(result, files, section.data);
@@ -1477,7 +1567,8 @@ namespace dwarf
                          ".debug_str is malformed");
          }
       });
-      scan(stream, [&](auto& section, const auto& name) {
+
+      scan_custom(stream, [&](auto& section, const auto& name) {
          if (name == ".debug_info")
             dwarf::parse_debug_info(result, section.data);
       });
@@ -1490,8 +1581,10 @@ namespace dwarf
                     result.files[loc.file_index].c_str(), loc.line);
       if (show_wasm_subp_summary)
          for (auto& p : result.subprograms)
-            fprintf(stderr, "subp [%08x,%08x) %6s %s\n", p.begin_address, p.end_address,
-                    p.parent ? "inline" : "", p.demangled_name.c_str());
+            fprintf(stderr, "subp %d [%08x,%08x) size=%08x %6s %s\n",
+                    int(&p - &result.subprograms[0]), p.begin_address, p.end_address,
+                    p.end_address - p.begin_address, p.parent ? "inline" : "",
+                    p.demangled_name.c_str());
       return result;
    }  // get_info_from_wasm
 
@@ -1630,6 +1723,42 @@ namespace dwarf
        size_t code_size,
        const void* entry)
    {
+      eosio::check(fn_locs.size() == info.wasm_fns.size(), "number of functions doesn't match");
+
+      auto show_fn = [&](size_t fn) {
+         if (show_fn_locs && fn < fn_locs.size())
+         {
+            auto& w = info.wasm_fns[fn];
+            auto& l = fn_locs[fn];
+            fprintf(stderr,
+                    "fn %5ld: %016lx %016lx %016lx %016lx whole:%08x-%08x instr:%08x-%08x\n", fn,
+                    (long)code_start + l.code_prologue, (long)code_start + l.code_body,  //
+                    (long)code_start + l.code_epilogue, (long)code_start + l.code_end,   //
+                    w.size_pos, w.end_pos, l.wasm_begin, l.wasm_end);
+         }
+      };
+      auto show_instr = [&](const auto it) {
+         if (show_instr_locs && it != instr_locs.end())
+            fprintf(stderr, "          %016lx %08x\n", (long)code_start + it->code_offset,
+                    it->wasm_addr);
+      };
+
+      if (show_fn_locs || show_instr_locs)
+      {
+         size_t fn = 0;
+         auto instr = instr_locs.begin();
+         show_fn(fn);
+         while (instr != instr_locs.end())
+         {
+            while (fn < fn_locs.size() && instr->code_offset >= fn_locs[fn].code_end)
+               show_fn(++fn);
+            show_instr(instr);
+            ++instr;
+         }
+         while (fn < fn_locs.size())
+            show_fn(++fn);
+      }
+
       auto result = std::make_shared<debugger_registration>();
       std::vector<char> strings;
       strings.push_back(0);

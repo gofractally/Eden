@@ -5,25 +5,31 @@
 
 namespace dwarf
 {
+   // Location of jitted function
    struct jit_fn_loc
    {
+      // offsets relative to beginning of generated code
       uint32_t code_prologue = 0;
       uint32_t code_body = 0;
       uint32_t code_epilogue = 0;
       uint32_t code_end = 0;
 
+      // offsets relative to beginning of wasm file
       uint32_t wasm_begin = 0;
       uint32_t wasm_end = 0;
    };
 
+   // Location of jitted instruction
    struct jit_instr_loc
    {
-      uint32_t code_offset;
-      uint32_t wasm_addr;
+      uint32_t code_offset;  // Relative to beginning of generated code
+      uint32_t wasm_addr;    // Relative to beginning of wasm file
    };
 
+   // Location of line extracted from DWARF
    struct location
    {
+      // Addresses relative to code section content (after section id and section length)
       uint32_t begin_address = 0;
       uint32_t end_address = 0;
       uint32_t file_index = 0;
@@ -35,8 +41,10 @@ namespace dwarf
       }
    };
 
+   // Location of subprogram extracted from DWARF
    struct subprogram
    {
+      // Addresses relative to code section content (after id and section length)
       uint32_t begin_address;
       uint32_t end_address;
       std::optional<std::string> linkage_name;
@@ -56,6 +64,7 @@ namespace dwarf
       uint32_t form = 0;
    };
 
+   // Abbreviation extracted from DWARF
    struct abbrev_decl
    {
       uint32_t table_offset = 0;
@@ -71,14 +80,26 @@ namespace dwarf
       }
    };
 
+   // Position of function within wasm file
+   struct wasm_fn
+   {
+      // offsets relative to beginning of file
+      uint32_t size_pos = 0;
+      uint32_t locals_pos = 0;
+      uint32_t end_pos = 0;
+   };
+
    struct info
    {
+      // Offset of code section content (after id and section length) within wasm file
       uint32_t wasm_code_offset = 0;
+
       std::vector<char> strings;
       std::vector<std::string> files;
       std::vector<location> locations;        // sorted
       std::vector<abbrev_decl> abbrev_decls;  // sorted
       std::vector<subprogram> subprograms;    // sorted
+      std::vector<wasm_fn> wasm_fns;          // in wasm order
 
       const char* get_str(uint32_t offset) const;
       const location* get_location(uint32_t address) const;
