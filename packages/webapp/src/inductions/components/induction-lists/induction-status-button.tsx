@@ -83,7 +83,7 @@ export const InductionStatusButton = ({
             }
             break;
         case InductionStatus.PendingCeremonyVideo:
-            if (isInvitee) {
+            if (isInvitee || isSpectator) {
                 buttonType = "neutral";
                 buttonLabel = "Induction ceremony";
             } else {
