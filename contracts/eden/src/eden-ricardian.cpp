@@ -64,16 +64,16 @@ summary: Add video recording of invitee's induction ceremony to the record
 icon: https://ipfs.io/ipfs/QmToeuuNcTXgZPhGLShi9E18qFyQfr92b8fmjWS3roJwq5#aae9c37e262c08f73151a6d415df37d4317de36d76aabfaa1a6249cfdeaffeb2
 ---
 
-I witnessed the Eden induction ceremony for the individual represented by account {{account}} and hereby attach the IPFS CID of said video recording hereto.)";
+I witnessed the Eden induction ceremony for the invitee in Induction #{{id}} and hereby attach the IPFS CID of said video recording hereto.)";
 
 const char* eden::inductendorse_ricardian = R"(---
 spec_version: "0.2.0"
 title: Endorse Prospective Eden Member
-summary: Endorsement of {{nowrap account}} for induction into Eden community
+summary: Endorsement of invitee for induction into Eden community
 icon: https://ipfs.io/ipfs/QmToeuuNcTXgZPhGLShi9E18qFyQfr92b8fmjWS3roJwq5#aae9c37e262c08f73151a6d415df37d4317de36d76aabfaa1a6249cfdeaffeb2
 ---
 
-I witnessed the Eden induction ceremony for the individual represented by account {{account}}. I believe they understand the Peace Treaty and will abide by it. I have carefully reviewed the prospective member's profile information, including their name, profile statement, social links, and induction ceremony video recording, and I affirm their accuracy to the best of my knowledge. I hereby endorse the prospective Eden member represented by account {{account}} for induction into this Eden community in accordance with the Peace Treaty and Bylaws:
+I witnessed the Eden induction ceremony for the invitee in Induction #{{id}}. I believe they understand the Peace Treaty and will abide by it. I have carefully reviewed the prospective member's profile information, including their name, profile statement, social links, and induction ceremony video recording, and I affirm their accuracy to the best of my knowledge. I hereby endorse this prospective Eden member for induction into this Eden community in accordance with the Peace Treaty and Bylaws:
 
 ## Peace Treaty
 {{$clauses.peacetreaty}}

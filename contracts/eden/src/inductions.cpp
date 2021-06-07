@@ -406,6 +406,12 @@ namespace eden
       return endorser_idx.find(uint128_t{witness.value} << 64 | id) != endorser_idx.end();
    }
 
+   bool inductions::is_invitee(uint64_t id, eosio::name invitee) const
+   {
+      auto& induction = get_induction(id);
+      return induction.invitee() == invitee;
+   }
+
    bool inductions::has_induction(eosio::name invitee) const
    {
       auto invitee_idx = induction_tb.get_index<"byinvitee"_n>();

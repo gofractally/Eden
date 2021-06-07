@@ -1,10 +1,12 @@
 #include <accounts.hpp>
+#include <auctions.hpp>
 #include <eden-atomicassets.hpp>
 #include <eden.hpp>
 #include <elections.hpp>
 #include <globals.hpp>
 #include <inductions.hpp>
 #include <members.hpp>
+#include <migrations.hpp>
 
 namespace eden
 {
@@ -14,6 +16,8 @@ namespace eden
       accounts{get_self()}.clear_all();
       members{get_self()}.clear_all();
       inductions{get_self()}.clear_all();
+      auctions{get_self()}.clear_all();
+      migrations{get_self()}.clear_all();
       get_global_singleton(get_self()).remove();
    }
 
@@ -100,6 +104,8 @@ namespace eden
 
       eosio::check(community_symbol == auction_starting_bid.symbol,
                    "community symbol does not match auction starting bid");
+
+      migrations{get_self()}.init();
 
       globals{get_self(),
               {{.community = community,

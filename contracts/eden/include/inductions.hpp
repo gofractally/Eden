@@ -185,6 +185,7 @@ namespace eden
       void create_nft(const induction& induction_id);
 
       bool is_endorser(uint64_t id, eosio::name witness) const;
+      bool is_invitee(uint64_t id, eosio::name invitee) const;
 
       void create_nfts(const induction& induction, int32_t template_id);
       void mint_nft(int template_id, eosio::name new_asset_owner);

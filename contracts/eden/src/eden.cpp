@@ -1,7 +1,9 @@
 #include <accounts.hpp>
+#include <auctions.hpp>
 #include <eden.hpp>
 #include <inductions.hpp>
 #include <members.hpp>
+#include <migrations.hpp>
 
 EOSIO_ACTION_DISPATCHER(eden::actions)
 EOSIO_ABIGEN(
@@ -33,10 +35,12 @@ EOSIO_ABIGEN(
             "STRING_VEC"),
     actions(eden::actions),
     table("account"_n, eden::account_variant),
+    table("auction"_n, eden::auction_variant),
     table("endorsement"_n, eden::endorsement_variant),
     table("global"_n, eden::global_variant),
     table("induction"_n, eden::induction_variant),
     table("member"_n, eden::member_variant),
     table("memberstats"_n, eden::member_stats_variant),
+    table("migration"_n, eden::migration_variant),
     ricardian_clause("peacetreaty", eden::peacetreaty_clause),
     ricardian_clause("bylaws", eden::bylaws_clause))

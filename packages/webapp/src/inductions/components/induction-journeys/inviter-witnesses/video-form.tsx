@@ -1,8 +1,8 @@
-import React, { FormEvent, useEffect, useRef, useState } from "react";
+import React, { FormEvent, useEffect, useMemo, useRef, useState } from "react";
 
-import { ActionButton, Form, handleFileChange } from "_app";
-import { ipfsUrl } from "_app/utils/config-helpers";
+import { Button, Form, handleFileChange } from "_app";
 import { edenContractAccount, validUploadActions } from "config";
+import { ipfsUrl } from "_app/utils/config-helpers";
 
 export type VideoSubmissionPhase = "uploading" | "signing" | "finishing";
 interface Props {
@@ -39,13 +39,13 @@ export const InductionVideoForm = ({
         setIsLoading(false);
     };
 
-    const getVideoUrl = () => {
+    const videoUrl = useMemo(() => {
         if (uploadedVideo) {
             return URL.createObjectURL(uploadedVideo);
         } else {
             return ipfsUrl(video);
         }
-    };
+    }, [uploadedVideo, video]);
 
     const getSubmissionText = () => {
         switch (submissionPhase) {
@@ -82,18 +82,18 @@ export const InductionVideoForm = ({
                         )
                     }
                 />
-                {(video || uploadedVideo) && <VideoClip url={getVideoUrl()} />}
+                {(video || uploadedVideo) && <VideoClip url={videoUrl} />}
             </Form.LabeledSet>
 
             {onSubmit && (
                 <div className="pt-4">
-                    <ActionButton
+                    <Button
                         isSubmit
                         disabled={isLoading || !uploadedVideo}
                         isLoading={isLoading}
                     >
                         {getSubmissionText()}
-                    </ActionButton>
+                    </Button>
                 </div>
             )}
         </form>

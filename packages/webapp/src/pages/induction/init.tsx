@@ -1,3 +1,4 @@
+import React from "react";
 import {
     CallToAction,
     Card,
@@ -5,8 +6,8 @@ import {
     useCurrentMember,
     useUALAccount,
 } from "_app";
+import { GetAnInviteCTA, InductionInviteFormContainer } from "inductions";
 import { MemberStatus } from "members";
-import { GetAnInviteCTA, InitInduction } from "inductions";
 
 export const InitInductionPage = () => {
     const [ualAccount, _, ualShowModal] = useUALAccount();
@@ -35,7 +36,7 @@ export const InitInductionPage = () => {
             return <GetAnInviteCTA />;
         }
 
-        return <InitInduction ualAccount={ualAccount} />;
+        return <InductionInviteFormContainer ualAccount={ualAccount} />;
     };
 
     return (

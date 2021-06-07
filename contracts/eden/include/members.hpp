@@ -58,7 +58,6 @@ namespace eden
    struct member
    {
       member() = default;
-      member(const member&) = delete;
       member_variant value;
       EDEN_FORWARD_MEMBERS(value, account, name, status, nft_template_id, election_sequence);
       EDEN_FORWARD_FUNCTIONS(value, primary_key)

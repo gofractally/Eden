@@ -8,11 +8,14 @@ add_executable(eden
    src/actions/elect.cpp
    src/actions/notify_assets.cpp
    src/actions/bylaws.cpp
+   src/actions/migrate.cpp
    src/eden.cpp
    src/accounts.cpp
    src/globals.cpp
    src/inductions.cpp
    src/members.cpp
+   src/auctions.cpp
+   src/migrations.cpp
    src/atomicassets.cpp
    src/elections.cpp
    src/bylaws.cpp

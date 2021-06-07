@@ -1,6 +1,6 @@
 import { FormEvent, useState } from "react";
 
-import { useFormFields, Form, ActionButton } from "_app";
+import { useFormFields, Form, Button } from "_app";
 
 interface Props {
     onSubmit: (data: InitInductionFormData) => Promise<void>;
@@ -18,7 +18,7 @@ const initialForm: InitInductionFormData = {
     witness2: "",
 };
 
-export const InitInductionForm = ({ onSubmit }: Props) => {
+export const InductionInviteForm = ({ onSubmit }: Props) => {
     const [isLoading, setIsLoading] = useState(false);
 
     const [fields, setFields] = useFormFields({ ...initialForm });
@@ -77,9 +77,9 @@ export const InitInductionForm = ({ onSubmit }: Props) => {
                 />
             </Form.LabeledSet>
             <div className="pt-4">
-                <ActionButton isSubmit disabled={isLoading}>
+                <Button isSubmit disabled={isLoading}>
                     {isLoading ? "Submitting..." : "Submit"}
-                </ActionButton>
+                </Button>
             </div>
         </form>
     );

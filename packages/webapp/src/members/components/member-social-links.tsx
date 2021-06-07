@@ -10,6 +10,61 @@ interface Props {
     member: MemberData;
 }
 
+export const MemberSocialLinks = ({ member }: Props) => (
+    <div
+        className="grid gap-y-2 sm:justify-between mt-5 text-sm"
+        style={{ gridTemplateColumns: "repeat(auto-fill, 12.5rem)" }}
+    >
+        <SocialButton
+            handle={member.account}
+            icon={EosCommunityIcon}
+            href={explorerAccountUrl(member.account)}
+        />
+        {member.socialHandles.eosCommunity && (
+            <SocialButton
+                handle={member.socialHandles.eosCommunity}
+                icon={IoChatbubblesOutline}
+                href={`https://eoscommunity.org/u/${member.socialHandles.eosCommunity}`}
+            />
+        )}
+        {member.socialHandles.blog && (
+            <SocialButton
+                handle="Blog"
+                icon={HiOutlineLink}
+                href={urlify(member.socialHandles.blog)}
+            />
+        )}
+        {member.socialHandles.twitter && (
+            <SocialButton
+                handle={member.socialHandles.twitter}
+                icon={FaTwitter}
+                href={`https://twitter.com/${member.socialHandles.twitter}`}
+            />
+        )}
+        {member.socialHandles.telegram && (
+            <SocialButton
+                handle={member.socialHandles.telegram}
+                icon={FaTelegram}
+                href={`https://t.me/${member.socialHandles.telegram}`}
+            />
+        )}
+        {member.socialHandles.linkedin && (
+            <SocialButton
+                handle={member.socialHandles.linkedin}
+                icon={FaLinkedin}
+                href={`https://www.linkedin.com/in/${member.socialHandles.linkedin}`}
+            />
+        )}
+        {member.socialHandles.facebook && (
+            <SocialButton
+                handle={member.socialHandles.facebook}
+                icon={FaFacebook}
+                href={`https://facebook.com/${member.socialHandles.facebook}`}
+            />
+        )}
+    </div>
+);
+
 const urlify = (address: string) => {
     let domainBeginIndex = 0;
 
@@ -20,75 +75,6 @@ const urlify = (address: string) => {
 
     return `//${address.substring(domainBeginIndex)}`;
 };
-
-export const MemberSocialLinks = ({ member }: Props) => (
-    <div
-        className="grid gap-y-2 sm:justify-between mt-5 text-sm"
-        style={{ gridTemplateColumns: "repeat(auto-fill, 12.5rem)" }}
-    >
-        <SocialButton
-            handle={member.account}
-            icon={EosCommunityIcon}
-            color="black"
-            size={5}
-            href={explorerAccountUrl(member.account)}
-        />
-        {member.socialHandles.eosCommunity && (
-            <SocialButton
-                handle={member.socialHandles.eosCommunity}
-                icon={IoChatbubblesOutline}
-                color="black"
-                size={5}
-                href={`https://eoscommunity.org/u/${member.socialHandles.eosCommunity}`}
-            />
-        )}
-        {member.socialHandles.blog && (
-            <SocialButton
-                handle="Blog"
-                icon={HiOutlineLink}
-                color="black"
-                size={5}
-                href={urlify(member.socialHandles.blog)}
-            />
-        )}
-        {member.socialHandles.twitter && (
-            <SocialButton
-                handle={member.socialHandles.twitter}
-                icon={FaTwitter}
-                color="black"
-                size={5}
-                href={`https://twitter.com/${member.socialHandles.twitter}`}
-            />
-        )}
-        {member.socialHandles.telegram && (
-            <SocialButton
-                handle={member.socialHandles.telegram}
-                icon={FaTelegram}
-                color="black"
-                size={5}
-                href={`https://t.me/${member.socialHandles.telegram}`}
-            />
-        )}
-        {member.socialHandles.linkedin && (
-            <SocialButton
-                handle={member.socialHandles.linkedin}
-                icon={FaLinkedin}
-                color="black"
-                size={5}
-                href={`https://www.linkedin.com/in/${member.socialHandles.linkedin}`}
-            />
-        )}
-        {member.socialHandles.facebook && (
-            <SocialButton
-                handle={member.socialHandles.facebook}
-                icon={FaFacebook}
-                color="black"
-                size={5}
-                href={`https://facebook.com/${member.socialHandles.facebook}`}
-            />
-        )}
-    </div>
-);
 
 const EosCommunityIcon = (props: any) =>
     GenIcon({

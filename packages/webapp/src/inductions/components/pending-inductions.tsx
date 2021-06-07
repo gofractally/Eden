@@ -1,4 +1,5 @@
-import { Endorsement, Induction } from "../interfaces";
+import { Endorsement, Induction } from "inductions/interfaces";
+
 import {
     EndorserInductions,
     InviteeInductions,

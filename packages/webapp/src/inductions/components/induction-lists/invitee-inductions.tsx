@@ -1,9 +1,4 @@
-import dayjs from "dayjs";
-
 import {
-    ActionButton,
-    ActionButtonSize,
-    ActionButtonType,
     useFetchedData,
     useMemberByAccountName,
     useMemberListByAccountNames,
@@ -12,7 +7,8 @@ import * as InductionTable from "_app/ui/table";
 
 import { getEndorsementsByInductionId } from "../../api";
 import { getInductionRemainingTimeDays, getInductionStatus } from "../../utils";
-import { Endorsement, Induction, InductionStatus } from "../../interfaces";
+import { Endorsement, Induction } from "../../interfaces";
+import { InductionStatusButton } from "./induction-status-button";
 
 interface Props {
     inductions: Induction[];
@@ -49,18 +45,18 @@ const INVITEE_INDUCTION_COLUMNS: InductionTable.Column[] = [
 ];
 
 const getTableData = (inductions: Induction[]): InductionTable.Row[] => {
-    return inductions.map((ind) => {
+    return inductions.map((induction) => {
         const [allEndorsements] = useFetchedData<Endorsement[]>(
             getEndorsementsByInductionId,
-            ind.id
+            induction.id
         );
 
-        const { data: inviter } = useMemberByAccountName(ind.inviter);
+        const { data: inviter } = useMemberByAccountName(induction.inviter);
 
         const endorsersAccounts =
             allEndorsements
                 ?.map((end: Endorsement): string => end.endorser)
-                .filter((end: string) => end !== ind.inviter) || [];
+                .filter((end: string) => end !== induction.inviter) || [];
 
         const endorsersMembers = useMemberListByAccountNames(endorsersAccounts);
 
@@ -72,92 +68,20 @@ const getTableData = (inductions: Induction[]): InductionTable.Row[] => {
                 )
                 .join(", ") || "";
 
-        const isFullyEndorsed =
-            allEndorsements &&
-            allEndorsements.filter((endorsement) => endorsement.endorsed)
-                .length === allEndorsements.length;
-
-        const remainingTime = getInductionRemainingTimeDays(ind);
+        const remainingTime = getInductionRemainingTimeDays(induction);
 
         return {
-            key: ind.id,
-            inviter: inviter ? inviter.name : ind.inviter,
+            key: induction.id,
+            inviter: inviter ? inviter.name : induction.inviter,
             witnesses: endorsers,
             time_remaining: remainingTime,
             status: (
-                <InviteeInductionStatus
-                    induction={ind}
-                    isFullyEndorsed={isFullyEndorsed}
+                <InductionStatusButton
+                    induction={induction}
+                    status={getInductionStatus(induction, allEndorsements)}
+                    isInvitee
                 />
             ),
         };
     });
-};
-
-interface InviteeInductionStatusProps {
-    induction: Induction;
-    isFullyEndorsed?: boolean;
-}
-const InviteeInductionStatus = ({
-    induction,
-    isFullyEndorsed,
-}: InviteeInductionStatusProps) => {
-    const status = getInductionStatus(induction);
-    switch (status) {
-        case InductionStatus.expired:
-            return (
-                <ActionButton
-                    type={ActionButtonType.DISABLED}
-                    size={ActionButtonSize.S}
-                    fullWidth
-                    disabled
-                >
-                    Expired
-                </ActionButton>
-            );
-        case InductionStatus.waitingForProfile:
-            return (
-                <ActionButton
-                    type={ActionButtonType.INDUCTION_STATUS_PROFILE}
-                    size={ActionButtonSize.S}
-                    fullWidth
-                    href={`/induction/${induction.id}`}
-                >
-                    Create my profile
-                </ActionButton>
-            );
-        case InductionStatus.waitingForVideo:
-            return (
-                <ActionButton
-                    type={ActionButtonType.NEUTRAL}
-                    size={ActionButtonSize.S}
-                    fullWidth
-                    href={`/induction/${induction.id}`}
-                >
-                    Induction ceremony
-                </ActionButton>
-            );
-        case InductionStatus.waitingForEndorsement:
-            return isFullyEndorsed ? (
-                <ActionButton
-                    href={`/induction/${induction.id}`}
-                    type={ActionButtonType.INDUCTION_STATUS_ACTION}
-                    size={ActionButtonSize.S}
-                    fullWidth
-                >
-                    Donate & complete
-                </ActionButton>
-            ) : (
-                <ActionButton
-                    href={`/induction/${induction.id}`}
-                    type={ActionButtonType.NEUTRAL}
-                    size={ActionButtonSize.S}
-                    fullWidth
-                >
-                    Pending endorsements
-                </ActionButton>
-            );
-        default:
-            return <>Error</>;
-    }
 };
