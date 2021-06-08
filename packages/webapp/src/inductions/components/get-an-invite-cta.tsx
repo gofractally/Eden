@@ -1,28 +1,24 @@
-import React from "react";
-import { ActionButton, ActionButtonSize } from "_app";
-import {
-    InductionJourneyContainer,
-    InductionRole,
-} from "./induction-journey-container";
+import { Button } from "_app";
+import { InductionStepsContainer, InductionStepInvitee } from "inductions";
 
 export const GetAnInviteCTA = () => {
     return (
-        <InductionJourneyContainer role={InductionRole.INVITEE} step={1}>
+        <InductionStepsContainer step={InductionStepInvitee.GetInvite}>
             <>
                 <p className="mb-10 text-2xl font-medium title-font text-gray-900">
                     Ready to join Eden? The membership process begins with an
                     invitation. Reach out to a current member to get yours!
                     We'll guide you through the rest.
                 </p>
-                <ActionButton
+                <Button
                     href="https://www.notion.so/edenos/Getting-an-Invite-2d38947d5be94dcb84dfa1ae48894802"
-                    size={ActionButtonSize.L}
+                    size="lg"
                     target="_blank"
                     isExternal
                 >
                     Learn more
-                </ActionButton>
+                </Button>
             </>
-        </InductionJourneyContainer>
+        </InductionStepsContainer>
     );
 };

@@ -1,6 +1,7 @@
-import React from "react";
+import { InductionStep } from "inductions";
 
 export type Step = {
+    key: InductionStep;
     title: string;
     text: string;
 };
@@ -95,12 +96,13 @@ const PendingStepPath = ({ last }: StepPath) => (
 export const Steps = ({
     steps,
     currentStep,
-    isComplete = false,
+    isComplete = false, // marks the last step as complete
 }: {
     steps: Step[];
-    currentStep: number;
+    currentStep: InductionStep;
     isComplete?: boolean;
 }) => {
+    const currentStepIndex = steps.findIndex((s) => s.key === currentStep);
     return (
         <section className="text-gray-600 body-font">
             <div className="container p-5 mx-auto flex flex-wrap">
@@ -109,11 +111,13 @@ export const Steps = ({
                         {steps.map((s, i) => {
                             return (
                                 <SingleStep
-                                    key={`step-1-${s.title}`}
+                                    key={`step-${s.key}`}
                                     step={s}
                                     last={i === steps.length - 1}
-                                    current={i === currentStep - 1}
-                                    complete={isComplete || i < currentStep - 1}
+                                    current={s.key === currentStep}
+                                    complete={
+                                        isComplete || i < currentStepIndex
+                                    }
                                 />
                             );
                         })}

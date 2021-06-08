@@ -33,6 +33,7 @@ function(add_libs suffix)
         -Wl,--stack-first
         -Wl,--entry,apply
         -Wl,-z,stack-size=8192
+        -Wl,--no-merge-data-segments
         -nostdlib
     )
     target_sources(eosio-contract-base${suffix} PRIVATE eosiolib.cpp)

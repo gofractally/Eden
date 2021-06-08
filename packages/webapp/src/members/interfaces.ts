@@ -39,3 +39,9 @@ export interface EdenMember {
     status: MemberStatus;
     nft_template_id: number;
 }
+
+export interface MemberStats {
+    active_members: number;
+    pending_members: number;
+    completed_waiting_inductions: number;
+}

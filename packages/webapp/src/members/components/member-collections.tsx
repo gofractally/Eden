@@ -38,23 +38,24 @@ export const MemberCollections = ({ account, templateId }: Props) => {
 
     return (
         <Card>
-            <Button
-                color="gray"
-                outline={tab !== "collection"}
-                disabled={tab === "collection"}
-                onClick={() => setTab("collection")}
-            >
-                Collection
-            </Button>
-            <Button
-                color="gray"
-                outline={tab !== "collectedBy"}
-                disabled={tab === "collectedBy"}
-                onClick={() => setTab("collectedBy")}
-                className="ml-4"
-            >
-                Collected By
-            </Button>
+            <div className="space-x-3">
+                <Button
+                    onClick={() => setTab("collection")}
+                    size="sm"
+                    type={tab === "collection" ? "primary" : "neutral"}
+                    disabled={tab === "collection"}
+                >
+                    Collection
+                </Button>
+                <Button
+                    onClick={() => setTab("collectedBy")}
+                    size="sm"
+                    type={tab === "collectedBy" ? "primary" : "neutral"}
+                    disabled={tab === "collectedBy"}
+                >
+                    Collected By
+                </Button>
+            </div>
             <hr className="m-2" />
             {isLoading ? "loading..." : <MembersGrid members={members || []} />}
         </Card>

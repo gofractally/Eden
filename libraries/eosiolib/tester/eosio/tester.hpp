@@ -159,6 +159,7 @@ namespace eosio
 
    std::ostream& operator<<(std::ostream& os, const block_timestamp& obj);
    std::ostream& operator<<(std::ostream& os, const name& obj);
+   std::ostream& operator<<(std::ostream& os, const asset& obj);
 
    class test_rodeos;
 

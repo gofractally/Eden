@@ -1,17 +1,14 @@
 import {
-    getInductionRemainingTimeDays,
-    getInductionStatus,
-} from "inductions/utils";
-import { getInduction } from "inductions/api";
-import {
-    ActionButton,
-    ActionButtonSize,
-    ActionButtonType,
     useFetchedData,
     useMemberByAccountName,
+    useMemberListByAccountNames,
 } from "_app";
 import * as InductionTable from "_app/ui/table";
-import { Endorsement, Induction, InductionStatus } from "../../interfaces";
+
+import { getEndorsementsByInductionId, getInduction } from "../../api";
+import { getInductionRemainingTimeDays, getInductionStatus } from "../../utils";
+import { Endorsement, Induction } from "../../interfaces";
+import { InductionStatusButton } from "./induction-status-button";
 
 interface Props {
     endorsements: Endorsement[];
@@ -39,8 +36,8 @@ const ENDORSER_INDUCTION_COLUMNS: InductionTable.Column[] = [
         label: "Invitee",
     },
     {
-        key: "inviter",
-        label: "Inviter",
+        key: "inviterAndWitnesses",
+        label: "Inviter & Witnesses",
         className: "hidden md:flex",
     },
     {
@@ -56,106 +53,67 @@ const ENDORSER_INDUCTION_COLUMNS: InductionTable.Column[] = [
 ];
 
 const getTableData = (endorsements: Endorsement[]): InductionTable.Row[] => {
-    return endorsements.map((end) => {
+    return endorsements.map((endorsement) => {
         const [induction] = useFetchedData<Induction>(
             getInduction,
-            end.induction_id
+            endorsement.induction_id
         );
 
-        const { data: inviter } = useMemberByAccountName(end.inviter);
+        const { data: inviter } = useMemberByAccountName(endorsement.inviter);
+
+        const [allEndorsements] = useFetchedData<Endorsement[]>(
+            getEndorsementsByInductionId,
+            endorsement.induction_id
+        );
+
+        const endorsersAccounts =
+            allEndorsements
+                ?.map(
+                    (endorsement: Endorsement): string => endorsement.endorser
+                )
+                .filter(
+                    (endorser: string) =>
+                        ![endorsement.inviter, endorsement.endorser].includes(
+                            endorser
+                        )
+                ) || [];
+
+        const endorsersMembers = useMemberListByAccountNames(endorsersAccounts);
+
+        const endorsers =
+            endorsersMembers
+                .map(
+                    (member, index) =>
+                        member.data?.name || endorsersAccounts[index]
+                )
+                .join(", ") || "";
+
+        const inviterName = inviter ? inviter.name : endorsement.inviter;
+        const inviterAndWitnesses =
+            inviterName + (endorsers ? ", " + endorsers : "");
 
         const remainingTime = getInductionRemainingTimeDays(induction);
 
         const invitee =
             induction && induction.new_member_profile.name
                 ? induction.new_member_profile.name
-                : end.invitee;
+                : endorsement.invitee;
 
         return {
-            key: `${end.induction_id}-${end.id}`,
+            key: `${endorsement.induction_id}-${endorsement.id}`,
             invitee,
-            inviter: inviter ? inviter.name : end.inviter,
+            inviterAndWitnesses,
             time_remaining: remainingTime,
             status: induction ? (
-                <EndorserInductionStatus
+                <InductionStatusButton
                     induction={induction}
-                    endorsement={end}
+                    status={getInductionStatus(induction)}
+                    canEndorse={!endorsement.endorsed}
+                    unknownEndorsements
                 />
             ) : (
                 "Unknown"
             ),
         };
     });
-};
-
-interface EndorserInductionStatusProps {
-    induction: Induction;
-    endorsement: Endorsement;
-}
-
-const EndorserInductionStatus = ({
-    induction,
-    endorsement,
-}: EndorserInductionStatusProps) => {
-    const status = getInductionStatus(induction);
-    switch (status) {
-        case InductionStatus.expired:
-            return (
-                <ActionButton
-                    type={ActionButtonType.DISABLED}
-                    size={ActionButtonSize.S}
-                    fullWidth
-                    disabled
-                >
-                    Expired
-                </ActionButton>
-            );
-        case InductionStatus.waitingForProfile:
-            return (
-                <ActionButton
-                    type={ActionButtonType.NEUTRAL}
-                    size={ActionButtonSize.S}
-                    fullWidth
-                    href={`/induction/${induction.id}`}
-                >
-                    Waiting for profile
-                </ActionButton>
-            );
-        case InductionStatus.waitingForVideo:
-            return (
-                <ActionButton
-                    type={ActionButtonType.INDUCTION_STATUS_CEREMONY}
-                    size={ActionButtonSize.S}
-                    fullWidth
-                    href={`/induction/${induction.id}`}
-                >
-                    Complete ceremony
-                </ActionButton>
-            );
-        case InductionStatus.waitingForEndorsement:
-            if (endorsement.endorsed) {
-                return (
-                    <ActionButton
-                        type={ActionButtonType.NEUTRAL}
-                        size={ActionButtonSize.S}
-                        fullWidth
-                        href={`/induction/${induction.id}`}
-                    >
-                        Pending completion
-                    </ActionButton>
-                );
-            }
-            return (
-                <ActionButton
-                    type={ActionButtonType.INDUCTION_STATUS_ACTION}
-                    size={ActionButtonSize.S}
-                    fullWidth
-                    href={`/induction/${induction.id}`}
-                >
-                    Review &amp; Endorse
-                </ActionButton>
-            );
-        default:
-            return <>Error</>;
-    }
 };

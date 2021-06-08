@@ -16,7 +16,8 @@ if (
     !process.env.NEXT_PUBLIC_APP_SHORT_NAME ||
     !process.env.NEXT_PUBLIC_APP_NAME ||
     !process.env.NEXT_PUBLIC_EDEN_CONTRACT_ACCOUNT ||
-    !process.env.NEXT_PUBLIC_APP_MINIMUM_DONATION_AMOUNT
+    !process.env.NEXT_PUBLIC_APP_MINIMUM_DONATION_AMOUNT ||
+    !process.env.NEXT_PUBLIC_ENABLED_WALLETS
 ) {
     throw new Error("Eden WebApp Environment Variables are not set");
 }
@@ -38,6 +39,7 @@ APP_SHORT_NAME="${process.env.NEXT_PUBLIC_APP_SHORT_NAME}"
 APP_NAME="${process.env.NEXT_PUBLIC_APP_NAME}"
 EDEN_CONTRACT_ACCOUNT="${process.env.NEXT_PUBLIC_EDEN_CONTRACT_ACCOUNT}"
 APP_MINIMUM_DONATION_AMOUNT="${process.env.NEXT_PUBLIC_APP_MINIMUM_DONATION_AMOUNT}"
+ENABLED_WALLETS="${process.env.NEXT_PUBLIC_ENABLED_WALLETS}"
 `);
 
 export const ipfsBaseUrl = "https://ipfs.io/ipfs"; //"https://ipfs.pink.gg/ipfs";
@@ -74,6 +76,10 @@ export const chainConfig = {
     chainId: process.env.NEXT_PUBLIC_EOS_CHAIN_ID,
     rpcEndpoints: [rpcEndpoint],
 };
+
+export const availableWallets = (
+    process.env.NEXT_PUBLIC_ENABLED_WALLETS || ""
+).split(",");
 
 interface ValidUploadActions {
     [contract: string]: {

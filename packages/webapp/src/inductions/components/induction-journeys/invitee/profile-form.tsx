@@ -1,18 +1,17 @@
-import React, { FormEvent, useState } from "react";
+import { FormEvent, useState } from "react";
 
-import { EdenNftSocialHandles } from "nfts";
 import {
     useFormFields,
     Form,
     Heading,
-    ActionButton,
+    Button,
     HelpLink,
     handleFileChange,
     Text,
 } from "_app";
 import { edenContractAccount, validUploadActions } from "config";
-
-import { NewMemberProfile } from "../interfaces";
+import { EdenNftSocialHandles } from "nfts";
+import { NewMemberProfile } from "inductions";
 
 interface Props {
     newMemberProfile: NewMemberProfile;
@@ -21,12 +20,6 @@ interface Props {
         newMemberProfile: NewMemberProfile,
         uploadedImage?: File
     ) => Promise<void>;
-}
-
-export interface InitInductionFormData {
-    invitee: string;
-    witness1: string;
-    witness2: string;
 }
 
 export const InductionProfileForm = ({
@@ -268,13 +261,13 @@ export const InductionProfileForm = ({
 
             {onSubmit && (
                 <div className="col-span-6 pt-4">
-                    <ActionButton
+                    <Button
                         isSubmit
                         isLoading={isLoading}
                         disabled={isLoading || !consentsToPublish}
                     >
                         {isLoading ? "Submitting..." : "Submit"}
-                    </ActionButton>
+                    </Button>
                 </div>
             )}
         </form>
