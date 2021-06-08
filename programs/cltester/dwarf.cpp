@@ -490,11 +490,11 @@ namespace dwarf
                default:
                   // fprintf(stderr, "opcode %d\n", (int)opcode);
                   // fprintf(stderr, "  args: %d\n", state.standard_opcode_lengths[opcode]);
-                  // for (uint8_t i = 0; i < state.standard_opcode_lengths[opcode]; ++i)
-                  //    eosio::varuint32_from_bin(s);
+                  for (uint8_t i = 0; i < header.standard_opcode_lengths[opcode]; ++i)
+                     eosio::varuint32_from_bin(s);
                   break;
             }
-         }  // opcode < state.opcode_base
+         }  // opcode < header.opcode_base
          else
          {
             state.address += (opcode - header.opcode_base) / header.line_range;
@@ -959,10 +959,9 @@ namespace dwarf
       auto scan = [&](auto stream, auto f) {
          while (stream.remaining())
          {
-            auto section_begin = stream.pos;
             auto section = eosio::from_bin<wasm_section>(stream);
             if (section.id == eosio::vm::section_id::code_section)
-               result.code_offset = section_begin - file_begin;
+               result.code_offset = section.data.pos - file_begin;
             else if (section.id == eosio::vm::section_id::custom_section)
                f(section, eosio::from_bin<std::string>(section.data));
          }

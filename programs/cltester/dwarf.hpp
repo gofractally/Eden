@@ -1,9 +1,13 @@
+#pragma once
+
 #include <eosio/stream.hpp>
 
 namespace dwarf
 {
+   // Location of line extracted from DWARF
    struct location
    {
+      // Addresses relative to code section content (after section id and section length)
       uint32_t begin_address = 0;
       uint32_t end_address = 0;
       uint32_t file_index = 0;
@@ -15,8 +19,10 @@ namespace dwarf
       }
    };
 
+   // Location of subprogram extracted from DWARF
    struct subprogram
    {
+      // Addresses relative to code section content (after id and section length)
       uint32_t begin_address;
       uint32_t end_address;
       std::string name;
@@ -33,6 +39,7 @@ namespace dwarf
       uint32_t form = 0;
    };
 
+   // Abbreviation extracted from DWARF
    struct abbrev_decl
    {
       uint32_t table_offset = 0;
@@ -50,6 +57,7 @@ namespace dwarf
 
    struct info
    {
+      // Offset of code section content (after id and section length) within wasm file
       uint32_t code_offset = 0;
       std::vector<char> strings;
       std::vector<std::string> files;
