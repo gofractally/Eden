@@ -391,7 +391,6 @@ namespace dwarf
 
       for (int i = 1; i < obj.file_names.size(); ++i)
       {
-         // TODO: preserve dir, mod_time, filesize
          write_string(obj.file_names[i], s);
          s.write(0);  // dir
          s.write(0);  // mod_time
@@ -1269,49 +1268,6 @@ namespace dwarf
       uint64_t subprogram;
    };
 
-   void write_inline_fns(int indent,
-                         const info& info,
-                         const std::vector<jit_fn_loc>& fn_locs,
-                         const std::vector<jit_instr_loc>& instr_locs,
-                         const void* code_start,
-                         size_t parent,
-                         std::vector<sub_ref>& sub_refs,
-                         std::vector<char>& abbrev_data,
-                         std::vector<char>& info_data,
-                         std::map<die_pattern, uint32_t>& codes)
-   {
-      auto& par = info.subprograms[parent];
-      for (auto child_index : par.children)
-      {
-         auto& child = info.subprograms[child_index];
-         auto range = get_addr_range(info, fn_locs, instr_locs, code_start, child.begin_address,
-                                     child.end_address);
-         if (!range)
-            continue;
-         if (show_generated_dies)
-            fprintf(stderr, "%*sDIE 0x%lx (%ld->%ld) inline %016lx-%016lx\n", indent, "",
-                    uint64_t(info_data.size()), uint64_t(parent), uint64_t(child_index),
-                    uint64_t(range->first) + print_addr_adj,
-                    uint64_t(range->second) + print_addr_adj);
-
-         size_t sub_ref = 0;
-         die_pattern die;
-         die.tag = dw_tag_inlined_subroutine;
-         die.has_children = true;
-         die.attrs = {
-             {dw_at_abstract_origin, dw_form_ref8, fill_later<uint64_t>{&sub_ref}},
-             {dw_at_low_pc, dw_form_addr, uint64_t(range->first)},
-             {dw_at_high_pc, dw_form_addr, uint64_t(range->second)},
-         };
-         write_die(indent, abbrev_data, info_data, codes, die);
-         sub_refs.push_back({sub_ref, child_index});
-         write_inline_fns(indent + 4, info, fn_locs, instr_locs, code_start, child_index, sub_refs,
-                          abbrev_data, info_data, codes);
-      }
-      eosio::vector_stream info_s{info_data};
-      eosio::varuint32_to_bin(0, info_s);
-   }
-
    void write_subprograms(uint16_t code_section,
                           std::vector<char>& strings,
                           std::vector<char>& abbrev_data,
@@ -1379,7 +1335,7 @@ namespace dwarf
                     fn_end + print_addr_adj, sub.demangled_name.c_str());
 
          die.tag = dw_tag_subprogram;
-         die.has_children = true;
+         die.has_children = false;
          if (sub.parent)
             die.attrs = {
                 {dw_at_inline, dw_form_data1, uint8_t(dw_inl_inlined)},
@@ -1397,11 +1353,6 @@ namespace dwarf
          else if (sub.linkage_name)
             die.attrs.push_back({dw_at_name, dw_form_string, sub.demangled_name});
          write_die(4, abbrev_data, info_data, codes, die);
-         // if (sub.parent)
-         eosio::varuint32_to_bin(0, info_s);
-         // else
-         //    write_inline_fns(8, info, fn_locs, instr_locs, code_start, i, sub_refs, abbrev_data,
-         //                     info_data, codes);
 
          Elf64_Sym sym = {
              .st_name = 0,
@@ -1541,7 +1492,6 @@ namespace dwarf
                fprintf(stderr, "[%04d] %08x %08x: function size\n", i, uint32_t(s.pos - file_begin),
                        uint32_t(s.pos - section_begin));
                auto size = eosio::varuint32_from_bin(s);
-               // fprintf(stderr, "                =%08x\n", size);
                fprintf(stderr, "[%04d] %08x %08x: function body\n", i, uint32_t(s.pos - file_begin),
                        uint32_t(s.pos - section_begin));
                s.skip(size);
@@ -1669,10 +1619,7 @@ namespace dwarf
             __jit_debug_descriptor.first_entry = desc.next_entry;
          __jit_debug_descriptor.action_flag = jit_unregister_fn;
          __jit_debug_descriptor.relevant_entry = &desc;
-         fflush(stdout);
-         fprintf(stderr, "\n\nunregister...\n");
          __jit_debug_register_code();
-         fprintf(stderr, "\n\n");
       }
 
       void reg()
@@ -1687,10 +1634,7 @@ namespace dwarf
          __jit_debug_descriptor.action_flag = jit_register_fn;
          __jit_debug_descriptor.first_entry = &desc;
          __jit_debug_descriptor.relevant_entry = &desc;
-         fflush(stdout);
-         fprintf(stderr, "\n\nregister...\n");
          __jit_debug_register_code();
-         fprintf(stderr, "\n\n");
       }
 
       template <typename T>
@@ -1852,10 +1796,6 @@ namespace dwarf
       result->write(elf_header_pos, elf_header);
 
       result->reg();
-
-      fprintf(stderr, "\n\n\n%p\n\n\n", entry);
-      // asm("int $3");
-
       return result;
    }
 
