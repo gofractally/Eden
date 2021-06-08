@@ -1,6 +1,6 @@
 import { useQuery } from "react-query";
 
-import { SingleColLayout, Card, PaginationNav, membersStatsQuery } from "_app";
+import { SingleColLayout, PaginationNav } from "_app";
 import { getInductions } from "inductions";
 import { useEffect, useState } from "react";
 import { SpectatorInductions } from "inductions";
@@ -17,11 +17,15 @@ export const PendingInvitationsPage = () => {
 
     const lowerBound = !page.isUpper ? page.boundId : undefined;
     const upperBound = page.isUpper ? page.boundId : undefined;
-
     const inductions = useQuery(
         [QUERY_INDUCTIONS, lowerBound, upperBound],
-        () => getInductions(lowerBound, upperBound, PAGE_SIZE)
+        () => getInductions(lowerBound, upperBound, PAGE_SIZE + 1)
     );
+
+    const hasNextPage = inductions.data && inductions.data.length > PAGE_SIZE;
+    const displayedData = hasNextPage
+        ? inductions.data.slice(0, -1)
+        : inductions.data;
 
     useEffect(() => {
         if (inductions.data && inductions.data.length && !page.firstKey) {
@@ -34,13 +38,9 @@ export const PendingInvitationsPage = () => {
 
         if (increment > 0) {
             const lastItem = inductions.data[inductions.data.length - 1];
-            const boundId = (BigInt(lastItem.id) + 1n).toString();
-            console.info(lastItem.id, boundId);
-            setPage({ ...page, boundId, isUpper: false });
+            setPage({ ...page, boundId: lastItem.id, isUpper: false });
         } else {
-            const firstItem = inductions.data[0];
-            const boundId = (BigInt(firstItem.id) - 1n).toString();
-            console.info(firstItem.id, boundId);
+            const boundId = inductions.data[0].id;
             setPage({ ...page, boundId, isUpper: true });
         }
     };
@@ -51,10 +51,10 @@ export const PendingInvitationsPage = () => {
             {inductions.error && "Fail to load inductions"}
             {inductions.data && (
                 <div className="space-y-4">
-                    <SpectatorInductions inductions={inductions.data} />
+                    <SpectatorInductions inductions={displayedData} />
                     <PaginationNav
                         paginate={paginateInductions}
-                        hasNext={inductions.data.length >= PAGE_SIZE}
+                        hasNext={hasNextPage}
                         hasPrevious={inductions.data[0].id !== page.firstKey}
                     />
                 </div>
