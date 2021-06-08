@@ -1,11 +1,12 @@
+import { useQuery } from "react-query";
+
 import {
-    useFetchedData,
+    queryEndorsementsByInductionId,
     useMemberByAccountName,
     useMemberListByAccountNames,
 } from "_app";
 import * as InductionTable from "_app/ui/table";
 
-import { getEndorsementsByInductionId } from "../../api";
 import { getInductionRemainingTimeDays, getInductionStatus } from "../../utils";
 import { Endorsement, Induction } from "../../interfaces";
 import { InductionStatusButton } from "./induction-status-button";
@@ -50,9 +51,8 @@ const SPECTATOR_COLUMNS: InductionTable.Column[] = [
 
 const getTableData = (inductions: Induction[]): InductionTable.Row[] => {
     return inductions.map((induction) => {
-        const [allEndorsements] = useFetchedData<Endorsement[]>(
-            getEndorsementsByInductionId,
-            induction.id
+        const { data: allEndorsements } = useQuery(
+            queryEndorsementsByInductionId(induction.id)
         );
 
         const { data: inviter } = useMemberByAccountName(induction.inviter);
