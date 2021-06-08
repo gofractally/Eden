@@ -317,7 +317,7 @@ namespace eden
       state_sing.set(state, contract);
    }
 
-   void elections::start_election(const eosio::checksum256& seed)
+   void elections::start_election()
    {
       eosio::check(std::holds_alternative<current_election_state_seeding>(state_sing.get()),
                    "Election seed not set");

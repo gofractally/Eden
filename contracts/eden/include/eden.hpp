@@ -83,7 +83,7 @@ namespace eden
 
       void electseed(const eosio::bytes& btc_header);
 
-      void electinit(const eosio::checksum256& seed);
+      void electinit();
 
       void electprepare(uint32_t max_steps);
 
@@ -160,7 +160,7 @@ namespace eden
               induction_data_hash,
               ricardian_contract(inductendorse_ricardian)),
        action(electseed, btc_header),
-       action(electinit, seed),
+       action(electinit),
        action(electprepare, max_steps),
        action(electvote, round, voter, candidate),
        action(electprocess, max_steps),

@@ -9,11 +9,11 @@ namespace eden
       elections.seed(btc_header);
    }
 
-   void eden::electinit(const eosio::checksum256& seed)
+   void eden::electinit()
    {
       require_auth(get_self());
       elections elections(get_self());
-      elections.start_election(seed);
+      elections.start_election();
    }
 
    void eden::electprepare(uint32_t max_steps)

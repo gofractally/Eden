@@ -236,7 +236,7 @@ namespace eden
       void set_default_election(eosio::time_point_sec origin_time);
       void trigger_election();
       void seed(const eosio::bytes& btc_header);
-      void start_election(const eosio::checksum256& seed);
+      void start_election();
       uint32_t prepare_election(uint32_t max_steps);
       uint32_t finish_round(uint32_t max_steps);
       // \pre voter is a member of the group
