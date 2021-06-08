@@ -80,19 +80,9 @@ void eosio::vm::machine_code_writer<
    this->emit_error_handler(&on_unreachable);
 }
 
-struct jit_backtrace
-{
-   template <typename Host>
-   using context = eosio::vm::jit_execution_context<Host, true>;
-   template <typename Host, typename Options, typename DebugInfo>
-   using parser = debug_eos_vm::
-       capture_fn_parser<eosio::vm::machine_code_writer<context<Host>>, Options, DebugInfo>;
-   static constexpr bool is_jit = true;
-};
-
 using backend_t = eosio::vm::backend<  //
     rhf_t,
-    jit_backtrace,
+    debug_eos_vm::jit_capture_fn,
     eosio::vm::default_options,
     debug_eos_vm::debug_instr_map>;
 
