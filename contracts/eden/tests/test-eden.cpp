@@ -899,6 +899,8 @@ TEST_CASE("election with multiple rounds")
    auto test_accounts = make_names(num_accounts - 3);
    t.create_accounts(test_accounts);
 
+   t.chain.start_block(180ull * 24 * 60 * 60 * 1000);
+
    for (auto account : test_accounts)
    {
       t.chain.start_block();
@@ -906,7 +908,7 @@ TEST_CASE("election with multiple rounds")
       t.finish_induction(42, "alice"_n, account, {"pip"_n, "egeon"_n});
    }
 
-   t.chain.start_block(185ull * 24 * 60 * 60 * 1000);
+   t.chain.start_block(5ull * 24 * 60 * 60 * 1000);
    char buf[81] =
        "\4\0\0\0"
        "00000000000000000000000000000000"

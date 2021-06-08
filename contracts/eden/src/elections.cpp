@@ -185,7 +185,6 @@ namespace eden
       auto pos = dist(rng);
       if (pos != next_index)
       {
-         printf("pos: %d, next_index: %d\n", pos, next_index);
          auto group_idx = vote_tb.get_index<"bygroup"_n>();
          const auto& old = group_idx.get((round << 16) | pos);
          group_idx.modify(old, eosio::same_payer, [&](auto& row) { row.index = next_index; });
@@ -244,9 +243,16 @@ namespace eden
    void elections::set_default_election(eosio::time_point_sec origin_time)
    {
       const auto& state = globals.get();
-      state_sing.set(current_election_state_registration{get_election_time(
-                         state.election_start_time, origin_time + eosio::days(180))},
-                     contract);
+      member_stats_singleton stats{contract, default_scope};
+      uint16_t active_members =
+          stats.exists() ? std::get<member_stats_v0>(stats.get()).active_members : 0;
+      uint16_t new_threshold = active_members + (active_members + 9) / 10;
+      new_threshold = std::clamp(new_threshold, min_election_threshold, max_active_members);
+      state_sing.set(
+          current_election_state_registration{
+              get_election_time(state.election_start_time, origin_time + eosio::days(180)),
+              new_threshold},
+          contract);
    }
 
    // Schedules an election at the earliest possible time at least 30 days

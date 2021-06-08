@@ -1,6 +1,7 @@
 #include <accounts.hpp>
 #include <auctions.hpp>
 #include <eden.hpp>
+#include <elections.hpp>
 #include <inductions.hpp>
 #include <members.hpp>
 #include <migrations.hpp>
@@ -120,6 +121,18 @@ namespace eden
       }
 
       members.maybe_activate_contract();
+
+      current_election_state_singleton elect_state{get_self(), default_scope};
+      if (elect_state.exists())
+      {
+         auto state = elect_state.get();
+         if (auto* reg = std::get_if<current_election_state_registration>(&state);
+             reg && members.stats().active_members >= reg->election_threshold)
+         {
+            elections elections{get_self()};
+            elections.trigger_election();
+         }
+      }
    }
 
    void eden::gc(uint32_t limit)

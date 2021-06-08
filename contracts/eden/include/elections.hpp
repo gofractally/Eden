@@ -122,8 +122,10 @@ namespace eden
    struct current_election_state_registration
    {
       eosio::block_timestamp start_time;
+      uint16_t
+          election_threshold;  // The election may be moved forward if active membership reached this
    };
-   EOSIO_REFLECT(current_election_state_registration, start_time);
+   EOSIO_REFLECT(current_election_state_registration, start_time, election_threshold);
 
    struct election_seeder
    {
