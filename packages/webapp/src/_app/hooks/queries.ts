@@ -15,6 +15,7 @@ import {
     getCurrentInductions,
     getEndorsementsByInductionId,
     getInduction,
+    getInductions,
     getInductionWithEndorsements,
 } from "inductions/api";
 
@@ -51,6 +52,15 @@ export const queryMemberData = (account: string) => ({
 export const queryInduction = (inductionId: string) => ({
     queryKey: ["query_induction", inductionId],
     queryFn: () => getInduction(inductionId),
+});
+
+export const queryInductions = (
+    limit: number,
+    lowerBound?: string,
+    upperBound?: string
+) => ({
+    queryKey: ["query_inductions", lowerBound, upperBound, limit],
+    queryFn: () => getInductions(lowerBound, upperBound, limit),
 });
 
 export const queryCurrentInductions = (

@@ -1,11 +1,9 @@
 import { useQuery } from "react-query";
 
-import { SingleColLayout, PaginationNav } from "_app";
-import { getInductions } from "inductions";
+import { SingleColLayout, PaginationNav, queryInductions } from "_app";
 import { useEffect, useState } from "react";
 import { SpectatorInductions } from "inductions";
 
-const QUERY_INDUCTIONS = "query_inductions";
 const PAGE_SIZE = 10;
 
 export const PendingInvitationsPage = () => {
@@ -18,14 +16,16 @@ export const PendingInvitationsPage = () => {
     const lowerBound = !page.isUpper ? page.boundId : undefined;
     const upperBound = page.isUpper ? page.boundId : undefined;
     const inductions = useQuery(
-        [QUERY_INDUCTIONS, lowerBound, upperBound],
-        () => getInductions(lowerBound, upperBound, PAGE_SIZE + 1)
+        queryInductions(PAGE_SIZE + 1, lowerBound, upperBound)
     );
 
-    const hasNextPage = inductions.data && inductions.data.length > PAGE_SIZE;
-    const displayedData = hasNextPage
-        ? inductions.data.slice(0, -1)
-        : inductions.data;
+    const hasNextPage = Boolean(
+        inductions.data && inductions.data.length > PAGE_SIZE
+    );
+    const displayedData =
+        inductions.data && hasNextPage
+            ? inductions.data.slice(0, -1)
+            : inductions.data || [];
 
     useEffect(() => {
         if (inductions.data && inductions.data.length && !page.firstKey) {
