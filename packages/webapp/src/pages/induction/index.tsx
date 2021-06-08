@@ -4,8 +4,7 @@ import {
     Card,
     useFetchedData,
     useUALAccount,
-    ActionButton,
-    ActionButtonSize,
+    Button,
     useCurrentMember,
     useIsCommunityActive,
 } from "_app";
@@ -118,13 +117,9 @@ const InviteBanner = ({ canInvite, asCallToAction }: InviteBannerProps) => {
         return (
             <div className="flex items-center justify-center text-center flex-col md:flex-row-reverse md:justify-start mt-4 mb-6">
                 <div className="w-44 md:w-56 sm:mx-0 md:mx-4">
-                    <ActionButton
-                        href="/induction/init"
-                        size={ActionButtonSize.S}
-                        fullWidth
-                    >
+                    <Button href="/induction/init" size="sm" fullWidth>
                         Invite to Eden
-                    </ActionButton>
+                    </Button>
                 </div>
                 <div className="text-sm text-gray-700 w-3/4 md:w-auto mt-2 md:mt-0">
                     Invite your trusted contacts in the EOS community to Eden.

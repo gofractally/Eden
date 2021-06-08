@@ -42,6 +42,10 @@ namespace eden
 
       void withdraw(eosio::name owner, const eosio::asset& quantity);
 
+      void donate(eosio::name payer, const eosio::asset& quantity);
+
+      void transfer(eosio::name to, const eosio::asset& quantity, const std::string& memo);
+
       void genesis(std::string community,
                    eosio::symbol community_symbol,
                    eosio::asset minimum_donation,
@@ -76,6 +80,12 @@ namespace eden
 
       void gc(uint32_t limit);
 
+      // Update contract tables to the latest version of the contract, where necessary.
+      // New functionality may be unavailable until this is complete.
+      void migrate(uint32_t limit);
+      // For testing only.
+      void unmigrate();
+
       void notify_lognewtempl(int32_t template_id,
                               eosio::name authorized_creator,
                               eosio::name collection_name,
@@ -100,6 +110,8 @@ namespace eden
        eden,
        "eden.gm"_n,
        action(withdraw, owner, quantity, ricardian_contract(withdraw_ricardian)),
+       action(donate, owner, quantity),
+       action(transfer, to, quantity, memo),
        action(genesis,
               community,
               community_symbol,
@@ -131,6 +143,8 @@ namespace eden
        action(inductcancel, account, id, ricardian_contract(inductcancel_ricardian)),
        action(inducted, inductee, ricardian_contract(inducted_ricardian)),
        action(gc, limit, ricardian_contract(gc_ricardian)),
+       action(migrate, limit),
+       action(unmigrate),
        notify(token_contract, transfer),
        notify(atomic_assets_account, lognewtempl),
        notify(atomic_assets_account, logmint))

@@ -1,4 +1,3 @@
-export * from "./action-button";
 export * from "./button";
 export * from "./heading";
 export * from "./form";
@@ -10,6 +9,5 @@ export * from "./header-nav";
 export * from "./card";
 export * from "./footer";
 export * from "./table";
-export * from "./step";
 export * from "./call-to-action";
 export * from "./pagination-nav";

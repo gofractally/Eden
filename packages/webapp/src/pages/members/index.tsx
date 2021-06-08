@@ -5,7 +5,7 @@ import { QueryClient, useQuery } from "react-query";
 import { dehydrate } from "react-query/hydration";
 
 import { getMembers, MembersGrid, getNewMembers } from "members";
-import { SingleColLayout, Card, PaginationNav } from "_app";
+import { SingleColLayout, Card, PaginationNav, membersStatsQuery } from "_app";
 
 const QUERY_MEMBERS = "query_members";
 const MEMBERS_PAGE_SIZE = 16;
@@ -19,6 +19,7 @@ export const getServerSideProps: GetServerSideProps = async ({ query }) => {
     const newMembersPage = parseInt((query.newMembersPage as string) || "1");
 
     await Promise.all([
+        queryClient.prefetchQuery(membersStatsQuery),
         queryClient.prefetchQuery([QUERY_MEMBERS, membersPage], () =>
             getMembers(membersPage, MEMBERS_PAGE_SIZE)
         ),
@@ -45,6 +46,14 @@ export const MembersPage = (props: Props) => {
     const router = useRouter();
     const [membersPage, setMembersPage] = useState(props.membersPage);
     const [newMembersPage, setNewMembersPage] = useState(props.newMembersPage);
+
+    const { data: memberStats } = useQuery({
+        ...membersStatsQuery,
+        keepPreviousData: true,
+    });
+    const totalMembersPages =
+        memberStats &&
+        Math.ceil(memberStats.active_members / MEMBERS_PAGE_SIZE);
 
     const members = useQuery(
         [QUERY_MEMBERS, membersPage],
@@ -118,6 +127,8 @@ export const MembersPage = (props: Props) => {
                                     members.data.length >= MEMBERS_PAGE_SIZE
                                 }
                                 hasPrevious={membersPage > 1}
+                                pageNumber={membersPage}
+                                totalPages={totalMembersPages}
                             />
                         </>
                     )}

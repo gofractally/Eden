@@ -6,11 +6,14 @@ add_executable(eden
    src/actions/genesis.cpp
    src/actions/induct.cpp
    src/actions/notify_assets.cpp
+   src/actions/migrate.cpp
    src/eden.cpp
    src/accounts.cpp
    src/globals.cpp
    src/inductions.cpp
    src/members.cpp
+   src/auctions.cpp
+   src/migrations.cpp
    src/atomicassets.cpp
 )
 target_include_directories(eden PUBLIC include ../token/include PRIVATE ../../external/atomicassets-contract/include)
