@@ -1,14 +1,9 @@
-import { useQuery } from "react-query";
-
-import {
-    queryEndorsementsByInductionId,
-    useMemberListByAccountNames,
-} from "_app";
 import * as InductionTable from "_app/ui/table";
 
-import { getInductionRemainingTimeDays, getInductionStatus } from "../../utils";
-import { Endorsement, Induction } from "../../interfaces";
+import { getInductionRemainingTimeDays } from "../../utils";
+import { Induction, InductionRole } from "../../interfaces";
 import { InductionStatusButton } from "./induction-status-button";
+import { EndorsersNames } from "./endorsers-names";
 
 interface Props {
     inductions: Induction[];
@@ -46,44 +41,22 @@ const INVITER_INDUCTION_COLUMNS: InductionTable.Column[] = [
 
 const getTableData = (inductions: Induction[]): InductionTable.Row[] => {
     return inductions.map((induction) => {
-        const { data: allEndorsements } = useQuery(
-            queryEndorsementsByInductionId(induction.id)
-        );
-
-        const endorsersAccounts =
-            allEndorsements
-                ?.map(
-                    (endorsement: Endorsement): string => endorsement.endorser
-                )
-                .filter((endorser: string) => endorser !== induction.inviter) ||
-            [];
-
-        const endorsersMembers = useMemberListByAccountNames(endorsersAccounts);
-
-        const endorsers =
-            endorsersMembers
-                .map(
-                    (member, index) =>
-                        member.data?.name || endorsersAccounts[index]
-                )
-                .join(", ") || "";
-
         const remainingTime = getInductionRemainingTimeDays(induction);
-
-        const isEndorsed = allEndorsements?.find(
-            (endorsement) => endorsement.inviter === induction.inviter
-        )?.endorsed;
 
         return {
             key: induction.id,
             invitee: induction.new_member_profile.name || induction.invitee,
-            inviter_witnesses: endorsers,
+            inviter_witnesses: (
+                <EndorsersNames
+                    induction={induction}
+                    skipEndorser={induction.inviter}
+                />
+            ),
             time_remaining: remainingTime,
             status: (
                 <InductionStatusButton
                     induction={induction}
-                    status={getInductionStatus(induction, allEndorsements)}
-                    canEndorse={!isEndorsed}
+                    role={InductionRole.Inviter}
                 />
             ),
         };

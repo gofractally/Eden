@@ -7,7 +7,7 @@ import {
 } from "_app";
 import * as InductionTable from "_app/ui/table";
 
-import { getInductionRemainingTimeDays, getInductionStatus } from "../../utils";
+import { getInductionRemainingTimeDays } from "../../utils";
 import { Endorsement, Induction } from "../../interfaces";
 import { InductionStatusButton } from "./induction-status-button";
 
@@ -80,13 +80,7 @@ const getTableData = (inductions: Induction[]): InductionTable.Row[] => {
             inviter: inviter ? inviter.name : induction.inviter,
             witnesses: endorsers,
             time_remaining: remainingTime,
-            status: (
-                <InductionStatusButton
-                    induction={induction}
-                    status={getInductionStatus(induction, allEndorsements)}
-                    isSpectator
-                />
-            ),
+            status: <InductionStatusButton induction={induction} />,
         };
     });
 };
