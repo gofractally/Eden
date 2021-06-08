@@ -18,16 +18,12 @@
 #include <eosio/fixed_bytes.hpp>
 #include <eosio/ship_protocol.hpp>
 #include <eosio/to_bin.hpp>
+#include <eosio/vm/backend.hpp>
 #include "dwarf.hpp"
 
 #include <stdio.h>
 #include <chrono>
 #include <optional>
-
-// TODO
-#define private public
-#include <eosio/vm/backend.hpp>
-#undef private
 
 using namespace std::literals;
 
@@ -51,31 +47,29 @@ using rhf_t = eosio::vm::registered_host_functions<callbacks>;
 
 void backtrace();
 
-template <typename Context>
-struct trace_writer : public eosio::vm::machine_code_writer<Context>
+template <>
+void eosio::vm::machine_code_writer<
+    eosio::vm::jit_execution_context<callbacks, true>>::on_unreachable()
 {
-   using base = eosio::vm::machine_code_writer<Context>;
-   using base::machine_code_writer;
+   backtrace();
+   eosio::vm::throw_<wasm_interpreter_exception>("unreachable");
+}
 
-   void emit_unreachable()
-   {
-      auto icount = this->fixed_size_instr(16);
-      this->emit_error_handler(&on_unreachable);
-   }
-
-   static void on_unreachable()
-   {
-      backtrace();
-      base::on_unreachable();
-   }
-};
+template <>
+void eosio::vm::machine_code_writer<
+    eosio::vm::jit_execution_context<callbacks, true>>::emit_unreachable()
+{
+   auto icount = this->fixed_size_instr(16);
+   this->emit_error_handler(&on_unreachable);
+}
 
 struct jit_backtrace
 {
    template <typename Host>
    using context = eosio::vm::jit_execution_context<Host, true>;
    template <typename Host, typename Options, typename DebugInfo>
-   using parser = eosio::vm::binary_parser<trace_writer<context<Host>>, Options, DebugInfo>;
+   using parser =
+       eosio::vm::binary_parser<eosio::vm::machine_code_writer<context<Host>>, Options, DebugInfo>;
    static constexpr bool is_jit = true;
 };
 
@@ -133,7 +127,7 @@ namespace
    }
 
    template <typename C, typename F0, typename F1, typename G>
-   auto do_startup(C&& control, F0&&, F1&& f1, G&&)
+   auto do_startup(C&& control, F0&&, F1&& f1, G &&)
        -> std::enable_if_t<std::is_constructible_v<std::decay_t<decltype(*control)>,
                                                    eosio::chain::controller::config,
                                                    protocol_feature_set>>
