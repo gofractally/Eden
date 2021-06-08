@@ -4,12 +4,17 @@ import { useRouter } from "next/router";
 import { QueryClient, useQuery } from "react-query";
 import { dehydrate } from "react-query/hydration";
 
-import { getMembers, MembersGrid, getNewMembers } from "members";
-import { SingleColLayout, Card, PaginationNav, membersStatsQuery } from "_app";
+import {
+    SingleColLayout,
+    Card,
+    PaginationNav,
+    queryMembersStats,
+    queryMembers,
+    queryNewMembers,
+} from "_app";
+import { MembersGrid } from "members";
 
-const QUERY_MEMBERS = "query_members";
 const MEMBERS_PAGE_SIZE = 16;
-const QUERY_NEW_MEMBERS = "query_new_members";
 const NEW_MEMBERS_PAGE_SIZE = 8;
 
 export const getServerSideProps: GetServerSideProps = async ({ query }) => {
@@ -19,12 +24,10 @@ export const getServerSideProps: GetServerSideProps = async ({ query }) => {
     const newMembersPage = parseInt((query.newMembersPage as string) || "1");
 
     await Promise.all([
-        queryClient.prefetchQuery(membersStatsQuery),
-        queryClient.prefetchQuery([QUERY_MEMBERS, membersPage], () =>
-            getMembers(membersPage, MEMBERS_PAGE_SIZE)
-        ),
-        queryClient.prefetchQuery([QUERY_NEW_MEMBERS, newMembersPage], () =>
-            getNewMembers(newMembersPage, NEW_MEMBERS_PAGE_SIZE)
+        queryClient.prefetchQuery(queryMembersStats),
+        queryClient.prefetchQuery(queryMembers(membersPage, MEMBERS_PAGE_SIZE)),
+        queryClient.prefetchQuery(
+            queryNewMembers(newMembersPage, NEW_MEMBERS_PAGE_SIZE)
         ),
     ]);
 
@@ -48,24 +51,22 @@ export const MembersPage = (props: Props) => {
     const [newMembersPage, setNewMembersPage] = useState(props.newMembersPage);
 
     const { data: memberStats } = useQuery({
-        ...membersStatsQuery,
+        ...queryMembersStats,
         keepPreviousData: true,
     });
     const totalMembersPages =
         memberStats &&
         Math.ceil(memberStats.active_members / MEMBERS_PAGE_SIZE);
 
-    const members = useQuery(
-        [QUERY_MEMBERS, membersPage],
-        () => getMembers(membersPage, MEMBERS_PAGE_SIZE),
-        { keepPreviousData: true }
-    );
+    const members = useQuery({
+        ...queryMembers(membersPage, MEMBERS_PAGE_SIZE),
+        keepPreviousData: true,
+    });
 
-    const newMembers = useQuery(
-        [QUERY_NEW_MEMBERS, newMembersPage],
-        () => getNewMembers(newMembersPage, NEW_MEMBERS_PAGE_SIZE),
-        { keepPreviousData: true }
-    );
+    const newMembers = useQuery({
+        ...queryNewMembers(newMembersPage, NEW_MEMBERS_PAGE_SIZE),
+        keepPreviousData: true,
+    });
 
     const paginateMembers = (increment: number) => {
         setMembersPage(membersPage + increment);

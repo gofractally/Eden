@@ -4,6 +4,7 @@ import { useQueryClient } from "react-query";
 import {
     Heading,
     onError,
+    queryInductionWithEndorsements,
     Text,
     uploadIpfsFileWithTransaction,
     uploadToIpfs,
@@ -14,7 +15,6 @@ import { Induction } from "../../../interfaces";
 import { getInductionRemainingTimeDays } from "../../../utils";
 import { setInductionVideoTransaction } from "../../../transactions";
 import { InductionVideoForm, VideoSubmissionPhase } from "./video-form";
-import { GET_INDUCTION_WITH_ENDORSEMENTS_QUERY } from "inductions/hooks";
 
 interface Props {
     induction: Induction;
@@ -54,10 +54,9 @@ export const InductionVideoFormContainer = ({
             setVideoSubmissionPhase("finishing");
             await uploadIpfsFileWithTransaction(signedTrx, videoHash);
 
-            queryClient.invalidateQueries([
-                GET_INDUCTION_WITH_ENDORSEMENTS_QUERY,
-                induction.id,
-            ]);
+            queryClient.invalidateQueries(
+                queryInductionWithEndorsements(induction.id).queryKey
+            );
 
             setSubmittedVideo(true);
         } catch (error) {
