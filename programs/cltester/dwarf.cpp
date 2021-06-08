@@ -371,6 +371,8 @@ namespace dwarf
          auto filesize = eosio::varuint32_from_bin(s);
          eosio::check(dir <= obj.include_directories.size(),
                       "invalid include_directory number in .debug_line");
+         // Assumes dir will be 0 for absolute paths. Not required by the spec,
+         // but it's what clang currently does.
          if (dir)
             str = obj.include_directories[dir] + "/" + str;
          obj.file_names.push_back(std::move(str));
@@ -406,7 +408,6 @@ namespace dwarf
 
    struct line_state
    {
-      line_header header;
       std::optional<uint32_t> sequence_begin;
       uint32_t address = 0;
       uint32_t file = 1;
@@ -421,14 +422,14 @@ namespace dwarf
       uint32_t discriminator = 0;
    };
 
-   void parse_debug_line_unit_header(line_state& state, eosio::input_stream& s)
+   void parse_debug_line_unit_header(line_header& header, eosio::input_stream& s)
    {
       auto version = eosio::from_bin<uint16_t>(s);
       eosio::check(version == lns_version, ".debug_line isn't from DWARF version 4");
       uint32_t header_length = eosio::from_bin<uint32_t>(s);
       eosio::check(header_length <= s.remaining(), "bad header_length in .debug_line");
       auto instructions_pos = s.pos + header_length;
-      from_bin(state.header, s);
+      from_bin(header, s);
       eosio::check(instructions_pos == s.pos, "mismatched header_length in .debug_line");
    }
 
@@ -436,13 +437,14 @@ namespace dwarf
                               std::map<std::string, uint32_t>& files,
                               eosio::input_stream s)
    {
-      line_state state;
-      parse_debug_line_unit_header(state, s);
-      eosio::check(state.header.minimum_instruction_length == 1,
+      line_header header;
+      parse_debug_line_unit_header(header, s);
+      eosio::check(header.minimum_instruction_length == 1,
                    "mismatched minimum_instruction_length in .debug_line");
-      eosio::check(state.header.maximum_operations_per_instruction == 1,
+      eosio::check(header.maximum_operations_per_instruction == 1,
                    "mismatched maximum_operations_per_instruction in .debug_line");
-      state.is_stmt = state.header.default_is_stmt;
+      line_state state;
+      state.is_stmt = header.default_is_stmt;
       auto initial_state = state;
 
       std::optional<location> current;
@@ -453,9 +455,9 @@ namespace dwarf
                          state.line != current->line))
          {
             current->end_address = state.address;
-            eosio::check(current->file_index < state.header.file_names.size(),
+            eosio::check(current->file_index < header.file_names.size(),
                          "invalid file index in .debug_line");
-            auto& filename = state.header.file_names[current->file_index];
+            auto& filename = header.file_names[current->file_index];
             auto it = files.find(filename);
             if (it == files.end())
             {
@@ -507,7 +509,7 @@ namespace dwarf
                   break;
             }
          }
-         else if (opcode < state.header.opcode_base)
+         else if (opcode < header.opcode_base)
          {
             switch (opcode)
             {
@@ -537,7 +539,7 @@ namespace dwarf
                   state.basic_block = true;
                   break;
                case dw_lns_const_add_pc:
-                  state.address += (255 - state.header.opcode_base) / state.header.line_range;
+                  state.address += (255 - header.opcode_base) / header.line_range;
                   break;
                case dw_lns_fixed_advance_pc:
                   state.address += eosio::from_bin<uint16_t>(s);
@@ -555,18 +557,17 @@ namespace dwarf
                   if (show_parsed_lines)
                   {
                      fprintf(stderr, "opcode %d\n", (int)opcode);
-                     fprintf(stderr, "  args: %d\n", state.header.standard_opcode_lengths[opcode]);
+                     fprintf(stderr, "  args: %d\n", header.standard_opcode_lengths[opcode]);
                   }
-                  for (uint8_t i = 0; i < state.header.standard_opcode_lengths[opcode]; ++i)
+                  for (uint8_t i = 0; i < header.standard_opcode_lengths[opcode]; ++i)
                      eosio::varuint32_from_bin(s);
                   break;
             }
-         }  // opcode < state.header.opcode_base
+         }  // opcode < header.opcode_base
          else
          {
-            state.address += (opcode - state.header.opcode_base) / state.header.line_range;
-            state.line += state.header.line_base +
-                          ((opcode - state.header.opcode_base) % state.header.line_range);
+            state.address += (opcode - header.opcode_base) / header.line_range;
+            state.line += header.line_base + ((opcode - header.opcode_base) % header.line_range);
             add_row();
             state.basic_block = false;
             state.prologue_end = false;
@@ -583,6 +584,8 @@ namespace dwarf
       while (s.remaining())
       {
          uint32_t unit_length = eosio::from_bin<uint32_t>(s);
+         eosio::check(unit_length < 0xffff'fff0,
+                      "unit_length values in reserved range in .debug_line not supported");
          eosio::check(unit_length <= s.remaining(), "bad unit_length in .debug_line");
          parse_debug_line_unit(result, files, {s.pos, s.pos + unit_length});
          s.skip(unit_length);
@@ -1167,6 +1170,8 @@ namespace dwarf
       {
          auto unit_s = s;
          uint32_t unit_length = eosio::from_bin<uint32_t>(s);
+         eosio::check(unit_length < 0xffff'fff0,
+                      "unit_length values in reserved range in .debug_info not supported");
          eosio::check(unit_length <= s.remaining(), "bad unit_length in .debug_info");
          parse_debug_info_unit(result, whole_s, unit_s, {s.pos, s.pos + unit_length});
          s.skip(unit_length);
