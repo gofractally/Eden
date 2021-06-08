@@ -796,11 +796,17 @@ struct callbacks
          backtrace();
          throw std::runtime_error("cb_alloc is out of range");
       }
+      // Note from Steven: eos-vm not saving top_frame and bottom_frame is an eos-vm bug. The
+      // backtrace was originally designed for profiling contracts, where reentering wasm is not
+      // possible. In addition, saving and restoring these variables is very tricky to do correctly
+      // in the face of asynchronous interrupts, so I didn't bother.
       auto top_frame = state.backend.get_context()._top_frame;
+      auto bottom_frame = state.backend.get_context()._bottom_frame;
       auto result = state.backend.get_context().execute(  //
           this, eosio::vm::jit_visitor(42), state.backend.get_module().tables[0].table[cb_alloc],
           cb_alloc_data, size);
       state.backend.get_context()._top_frame = top_frame;
+      state.backend.get_context()._bottom_frame = bottom_frame;
       if (!result || !result->is_a<eosio::vm::i32_const_t>())
       {
          backtrace();

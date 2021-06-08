@@ -1,5 +1,10 @@
+// Notes:
+// * Only supports DWARF version 4
+// * Only supports DWARF produced by clang 11 or 12 in 32-bit WASM mode
+
 #include "dwarf.hpp"
 
+#include <eosio/finally.hpp>
 #include <eosio/from_bin.hpp>
 #include <eosio/vm/constants.hpp>
 #include <eosio/vm/sections.hpp>
@@ -287,7 +292,6 @@ namespace dwarf
       std::vector<std::string> file_names;
 
       uint32_t address = 0;
-      uint32_t op_index = 0;
       uint32_t file = 1;
       uint32_t line = 1;
       uint32_t column = 0;
@@ -328,7 +332,7 @@ namespace dwarf
    void parse_debug_line_unit_header(line_state& state, eosio::input_stream& s)
    {
       auto version = eosio::from_bin<uint16_t>(s);
-      eosio::check(version == lns_version, "bad version in .debug_line");
+      eosio::check(version == lns_version, ".debug_line isn't from DWARF version 4");
       uint32_t header_length = eosio::from_bin<uint32_t>(s);
       eosio::check(header_length <= s.remaining(), "bad header_length in .debug_line");
       auto instructions_pos = s.pos + header_length;
@@ -354,7 +358,7 @@ namespace dwarf
          auto dir = eosio::varuint32_from_bin(s);
          auto mod_time = eosio::varuint32_from_bin(s);
          auto filesize = eosio::varuint32_from_bin(s);
-         eosio::check(dir <= state.file_names.size(),
+         eosio::check(dir <= state.include_directories.size(),
                       "invalid include_directory number in .debug_line");
          if (dir)
             str = state.include_directories[dir] + "/" + str;
@@ -424,7 +428,6 @@ namespace dwarf
                   break;
                case dw_lne_set_address:
                   state.address = eosio::from_bin<uint32_t>(extended);
-                  state.op_index = 0;
                   break;
                case dw_lne_set_discriminator:
                   state.discriminator = eosio::varuint32_from_bin(extended);
@@ -468,7 +471,6 @@ namespace dwarf
                   break;
                case dw_lns_fixed_advance_pc:
                   state.address += eosio::from_bin<uint16_t>(s);
-                  state.op_index = 0;
                   break;
                case dw_lns_set_prologue_end:
                   state.prologue_end = true;
@@ -536,7 +538,10 @@ namespace dwarf
                attr.name = eosio::varuint32_from_bin(s);
                attr.form = eosio::varuint32_from_bin(s);
                if (!attr.name)
+               {
+                  eosio::check(!attr.form, "incorrectly terminated abbreviation");
                   break;
+               }
                decl.attrs.push_back(attr);
             }
             // printf("%08x [%d]: tag: %d children: %d attrs: %d\n", decl.table_offset, decl.code,
@@ -653,7 +658,7 @@ namespace dwarf
    attr_value parse_attr_value(info& result, uint32_t form, eosio::input_stream& s)
    {
       auto vardata = [&](size_t size) {
-         eosio::check(size < s.remaining(), "variable-length overrun in dwarf entry");
+         eosio::check(size <= s.remaining(), "variable-length overrun in dwarf entry");
          eosio::input_stream result{s.pos, s.pos + size};
          s.skip(size);
          return result;
@@ -773,10 +778,10 @@ namespace dwarf
    std::string demangle(const std::string& name)
    {
       auto result = abi::__cxa_demangle(name.c_str(), nullptr, nullptr, nullptr);
+      auto fin = eosio::finally{[&] { free(result); }};
       if (result)
       {
          std::string x = result;
-         free(result);
          return x;
       }
       return name;
@@ -889,14 +894,14 @@ namespace dwarf
    {
       uint32_t indent = 12;
       auto version = eosio::from_bin<uint16_t>(s);
-      eosio::check(version == compile_unit_version, "bad version in .debug_info");
+      eosio::check(version == compile_unit_version, ".debug_info isn't from DWARF version 4");
       auto debug_abbrev_offset = eosio::from_bin<uint32_t>(s);
       auto address_size = eosio::from_bin<uint8_t>(s);
       eosio::check(address_size == 4, "mismatched address_size in .debug_info");
 
       auto* root = get_die_abbrev(result, indent, debug_abbrev_offset, whole_s, s);
       eosio::check(root && root->tag == dw_tag_compile_unit,
-                   "missing DW_TAG_type_unit in .debug_info");
+                   "missing DW_TAG_compile_unit in .debug_info");
       parse_die_attrs(result, indent + 4, debug_abbrev_offset, *root, whole_s, unit_s, s,
                       [&](auto&&...) {});
       parse_die_children(result, indent + 4, debug_abbrev_offset, *root, whole_s, unit_s, s);

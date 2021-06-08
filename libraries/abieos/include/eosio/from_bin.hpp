@@ -75,41 +75,38 @@ namespace eosio
    }
 
    // signed leb128 encoding
-   template <typename S>
-   int64_t sleb64_from_bin(S& stream)
+   template <typename Signed, typename S>
+   Signed sleb_from_bin(S& stream)
    {
-      uint64_t result = 0;
+      using Unsigned = std::make_unsigned_t<Signed>;
+      Unsigned result = 0;
       int shift = 0;
       uint8_t b = 0;
       do
       {
-         check(shift < 70, convert_stream_error(stream_error::invalid_varuint_encoding));
+         check(shift < sizeof(Unsigned) * 8,
+               convert_stream_error(stream_error::invalid_varuint_encoding));
          from_bin(b, stream);
-         result |= uint64_t(b & 0x7f) << shift;
+         result |= Unsigned(b & 0x7f) << shift;
          shift += 7;
       } while (b & 0x80);
-      if (shift < 64 && (b & 0x40))
-         result |= -(uint64_t(1) << shift);
+      if (shift < sizeof(Unsigned) * 8 && (b & 0x40))
+         result |= -(Unsigned(1) << shift);
       return result;
    }
 
    // signed leb128 encoding
    template <typename S>
-   int32_t sleb32_from_bin(S& stream)
+   int64_t sleb64_from_bin(S& stream)
    {
-      uint32_t result = 0;
-      int shift = 0;
-      uint8_t b = 0;
-      do
-      {
-         check(shift < 35, convert_stream_error(stream_error::invalid_varuint_encoding));
-         from_bin(b, stream);
-         result |= uint32_t(b & 0x7f) << shift;
-         shift += 7;
-      } while (b & 0x80);
-      if (shift < 32 && (b & 0x40))
-         result |= -(uint32_t(1) << shift);
-      return result;
+      return sleb_from_bin<int64_t>(stream);
+   }
+
+   // signed leb128 encoding
+   template <typename S>
+   int64_t sleb32_from_bin(S& stream)
+   {
+      return sleb_from_bin<int32_t>(stream);
    }
 
    template <typename T, typename S>
