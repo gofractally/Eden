@@ -55,14 +55,6 @@ void eosio::vm::machine_code_writer<
    eosio::vm::throw_<wasm_interpreter_exception>("unreachable");
 }
 
-template <>
-void eosio::vm::machine_code_writer<
-    eosio::vm::jit_execution_context<callbacks, true>>::emit_unreachable()
-{
-   auto icount = this->fixed_size_instr(16);
-   this->emit_error_handler(&on_unreachable);
-}
-
 struct jit_backtrace
 {
    template <typename Host>
