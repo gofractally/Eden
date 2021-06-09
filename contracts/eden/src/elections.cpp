@@ -352,12 +352,12 @@ namespace eden
       {
          if (iter->status() == member_status::active_member)
          {
-            if (iter->election_sequence() < expected_sequence)
+            if (iter->election_participation_status() == no_donation)
             {
                iter = members.erase(iter);
                continue;
             }
-            else if (iter->election_sequence() == expected_sequence)
+            else if (iter->election_participation_status() == in_election)
             {
                add_voter(state.rng, 0, state.next_member_idx, iter->account());
             }
@@ -421,19 +421,32 @@ namespace eden
       return eosio::sha256(buf, 36);
    }
 
+   struct group_result
+   {
+      eosio::name winner;
+      std::vector<eosio::name> voted;
+      std::vector<eosio::name> missing;
+   };
+
    template <typename Idx, typename It>
-   static eosio::name finish_group(current_election_state_post_round& state,
-                                   Idx& group_idx,
-                                   It& iter,
-                                   uint8_t group_size)
+   static group_result finish_group(current_election_state_post_round& state,
+                                    Idx& group_idx,
+                                    It& iter,
+                                    uint8_t group_size)
    {
       // count votes
+      group_result result;
       std::map<eosio::name, uint8_t> votes_by_candidate;
       for (uint32_t i = 0; i < group_size; ++i)
       {
          if (iter->candidate != eosio::name())
          {
             ++votes_by_candidate[iter->candidate];
+            result.voted.push_back(iter->member);
+         }
+         else
+         {
+            result.missing.push_back(iter->member);
          }
          iter = group_idx.erase(iter);
       }
@@ -442,12 +455,9 @@ namespace eden
           [](const auto& lhs, const auto& rhs) { return lhs.second < rhs.second; });
       if (!votes_by_candidate.empty() && 3 * best->second > 2 * group_size)
       {
-         return best->first;
+         result.winner = best->first;
       }
-      else
-      {
-         return {};
-      }
+      return result;
    }
 
    std::vector<eosio::name> elections::extract_board()
@@ -506,7 +516,7 @@ namespace eden
       auto group_start = vote_idx.lower_bound((data.prev_round << 16) | data.next_input_index);
       auto end = vote_idx.end();
 
-      eosio::name winner;
+      members members{contract};
 
       for (; max_steps > 0 && group_start != end && group_start->round == data.prev_round;
            --max_steps)
@@ -514,10 +524,25 @@ namespace eden
          auto group_size = data.prev_config.group_min_size() +
                            (data.next_input_index < data.prev_config.num_large_groups() *
                                                         (data.prev_config.group_max_size()));
-         winner = finish_group(data, vote_idx, group_start, group_size);
-         if (winner != eosio::name() && data.prev_config.num_groups != 1)
+         auto result = finish_group(data, vote_idx, group_start, group_size);
+         if (result.winner != eosio::name())
          {
-            add_voter(data.rng, data.prev_round + 1, data.next_output_index, winner);
+            add_voter(data.rng, data.prev_round + 1, data.next_output_index, result.winner);
+         }
+         for (eosio::name voter : result.voted)
+         {
+            if (voter != result.winner)
+            {
+               members.set_rank(voter, data.prev_round);
+            }
+         }
+         for (eosio::name voter : result.missing)
+         {
+            if (voter != result.winner)
+            {
+               // FIXME: what exactly is the penalty for not voting?
+               members.set_rank(voter, data.prev_round);
+            }
          }
          data.next_input_index += group_size;
       }

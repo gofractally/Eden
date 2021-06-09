@@ -91,16 +91,32 @@ namespace eden
       ++stats.active_members;
       member_stats.set(stats, eosio::same_payer);
       check_pending_member(account);
-      election_state_singleton election_state(contract, default_scope);
-      auto election_sequence =
-          std::get<election_state_v0>(election_state.get_or_default()).election_sequence;
+      current_election_state_singleton election_state(contract, default_scope);
+      auto status = (election_state.exists() && election_state.get().index() >= 2) ? next_election
+                                                                                   : in_election;
       const auto& member = get_member(account);
       member_tb.modify(member, eosio::same_payer, [&](auto& row) {
          row.value = member_v1{{.account = row.account(),
                                 .name = name,
                                 .status = member_status::active_member,
                                 .nft_template_id = row.nft_template_id(),
-                                .election_sequence = election_sequence}};
+                                .election_participation_status = in_election}};
+      });
+   }
+
+   void members::set_rank(eosio::name member, uint8_t rank)
+   {
+      member_tb.modify(member_tb.get(member.value), contract, [rank](auto& row) {
+         row.value = std::visit([](auto& v) { return member_v1{v}; }, row.value);
+         row.election_rank() = rank;
+         if (row.election_participation_status() == next_election)
+         {
+            row.election_participation_status() = in_election;
+         }
+         else
+         {
+            row.election_participation_status() = no_donation;
+         }
       });
    }
 
@@ -110,15 +126,7 @@ namespace eden
       auto election_sequence =
           std::get<election_state_v0>(election_state.get_or_default()).election_sequence;
       const auto& member = get_member(account);
-      if (member.election_sequence() + 1 < election_sequence)
-      {
-         // TODO: Do we allow members to renew after their membership lapses
-         // or do they need to go through a new induction?
-         // If we do allow it, how long do we retain the old records?
-         eosio::check(false, "Membership has expired");
-      }
-      else if (member.election_sequence() + 1 > election_sequence ||
-               current_election_state_singleton(contract, default_scope).exists())
+      if (member.election_participation_status() != no_donation)
       {
          eosio::check(false, "Cannot donate at this time");
       }
@@ -127,7 +135,7 @@ namespace eden
                                 .name = row.name(),
                                 .status = member_status::active_member,
                                 .nft_template_id = row.nft_template_id(),
-                                .election_sequence = row.election_sequence() + 1}};
+                                .election_participation_status = in_election}};
       });
    }
 

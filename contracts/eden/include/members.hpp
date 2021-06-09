@@ -16,13 +16,24 @@ namespace eden
       active_member = 1
    };
 
+   using election_participation_status_type = uint8_t;
+   enum election_participation_status : election_participation_status_type
+   {
+      no_donation,
+      next_election,
+      in_election,
+      not_in_election
+   };
+
    struct member_v0
    {
       eosio::name account;
       std::string name;
       member_status_type status;
       uint64_t nft_template_id;
-      uint64_t election_sequence = 0;  // Only reflected in v1
+      // Only reflected in v1
+      election_participation_status_type election_participation_status = in_election;
+      uint8_t election_rank = 0;
 
       uint64_t primary_key() const { return account.value; }
    };
@@ -51,7 +62,7 @@ namespace eden
    struct member_v1 : member_v0
    {
    };
-   EOSIO_REFLECT(member_v1, base member_v0, election_sequence);
+   EOSIO_REFLECT(member_v1, base member_v0, election_participation_status, election_rank);
 
    using member_variant = std::variant<member_v0, member_v1>;
 
@@ -59,7 +70,13 @@ namespace eden
    {
       member() = default;
       member_variant value;
-      EDEN_FORWARD_MEMBERS(value, account, name, status, nft_template_id, election_sequence);
+      EDEN_FORWARD_MEMBERS(value,
+                           account,
+                           name,
+                           status,
+                           nft_template_id,
+                           election_participation_status,
+                           election_rank);
       EDEN_FORWARD_FUNCTIONS(value, primary_key)
    };
    EOSIO_REFLECT(member, value)
@@ -73,6 +90,11 @@ namespace eden
       uint16_t completed_waiting_inductions;
    };
    EOSIO_REFLECT(member_stats_v0, active_members, pending_members, completed_waiting_inductions);
+
+   struct member_stats_v1
+   {
+      std::vector<uint16_t> ranks;
+   };
 
    using member_stats_variant = std::variant<member_stats_v0>;
    using member_stats_singleton = eosio::singleton<"memberstats"_n, member_stats_variant>;
@@ -105,6 +127,7 @@ namespace eden
       void deposit(eosio::name account, const eosio::asset& quantity);
       void set_nft(eosio::name account, int32_t nft_template_id);
       void set_active(eosio::name account, const std::string& name);
+      void set_rank(eosio::name account, uint8_t rank);
       void renew(eosio::name account);
       // Activates the contract if all genesis members are active
       void maybe_activate_contract();
