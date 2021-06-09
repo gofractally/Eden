@@ -2,6 +2,7 @@
 
 #undef LIKELY
 #undef UNLIKELY
+#define EOSIO_EOS_VM_JIT_RUNTIME_ENABLED
 
 #include <eosio/chain/types.hpp>
 
@@ -59,8 +60,9 @@ using rhf_t = eosio::vm::registered_host_functions<callbacks>;
 
 void backtrace();
 
+DEBUG_PARSE_CODE_SECTION(eosio::chain::eos_vm_host_functions_t, eosio::vm::default_options)
 using debug_contract_backend = eosio::vm::backend<eosio::chain::eos_vm_host_functions_t,
-                                                  debug_eos_vm::jit_capture_fn,
+                                                  eosio::vm::jit_profile,
                                                   eosio::vm::default_options,
                                                   debug_eos_vm::debug_instr_map>;
 
@@ -72,9 +74,10 @@ void eosio::vm::machine_code_writer<
    eosio::vm::throw_<wasm_interpreter_exception>("unreachable");
 }
 
+DEBUG_PARSE_CODE_SECTION(rhf_t, eosio::vm::default_options)
 using backend_t = eosio::vm::backend<  //
     rhf_t,
-    debug_eos_vm::jit_capture_fn,
+    eosio::vm::jit_profile,
     eosio::vm::default_options,
     debug_eos_vm::debug_instr_map>;
 

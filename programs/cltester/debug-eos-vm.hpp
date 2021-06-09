@@ -1,181 +1,9 @@
 #pragma once
-
-#define EOSIO_EOS_VM_JIT_RUNTIME_ENABLED
-
-// TODO
-#define private public
 #include <eosio/vm/backend.hpp>
-#undef private
-
 #include "dwarf.hpp"
 
 namespace debug_eos_vm
 {
-   // TODO: This can be dropped if binary_parser gains additional imap.* calls
-   template <typename Writer, typename Options, typename DebugInfo>
-   struct capture_fn_parser : eosio::vm::binary_parser<Writer, Options, DebugInfo>
-   {
-      using base = eosio::vm::binary_parser<Writer, Options, DebugInfo>;
-
-      using base::base;
-
-      inline eosio::vm::module& parse_module(eosio::vm::wasm_code& code,
-                                             eosio::vm::module& mod,
-                                             DebugInfo& debug)
-      {
-         eosio::vm::wasm_code_ptr cp(code.data(), code.size());
-         parse_module(cp, code.size(), mod, debug);
-         return mod;
-      }
-
-      inline eosio::vm::module& parse_module2(eosio::vm::wasm_code_ptr& code_ptr,
-                                              size_t sz,
-                                              eosio::vm::module& mod,
-                                              DebugInfo& debug)
-      {
-         parse_module(code_ptr, sz, mod, debug);
-         return mod;
-      }
-
-      void parse_module(eosio::vm::wasm_code_ptr& code_ptr,
-                        size_t sz,
-                        eosio::vm::module& mod,
-                        DebugInfo& debug)
-      {
-         this->_mod = &mod;
-         EOS_VM_ASSERT(this->parse_magic(code_ptr) == eosio::vm::constants::magic,
-                       eosio::vm::wasm_parse_exception, "magic number did not match");
-         EOS_VM_ASSERT(this->parse_version(code_ptr) == eosio::vm::constants::version,
-                       eosio::vm::wasm_parse_exception, "version number did not match");
-         uint8_t highest_section_id = 0;
-         for (;;)
-         {
-            if (code_ptr.offset() == sz)
-               break;
-            auto id = this->parse_section_id(code_ptr);
-            auto len = this->parse_section_payload_len(code_ptr);
-
-            EOS_VM_ASSERT(id == 0 || id > highest_section_id, eosio::vm::wasm_parse_exception,
-                          "section out of order");
-            highest_section_id = std::max(highest_section_id, id);
-
-            auto section_guard = code_ptr.scoped_consume_items(len);
-
-            switch (id)
-            {
-               case eosio::vm::section_id::custom_section:
-                  this->parse_custom(code_ptr);
-                  break;
-               case eosio::vm::section_id::type_section:
-                  this->template parse_section<eosio::vm::section_id::type_section>(code_ptr,
-                                                                                    mod.types);
-                  break;
-               case eosio::vm::section_id::import_section:
-                  this->template parse_section<eosio::vm::section_id::import_section>(code_ptr,
-                                                                                      mod.imports);
-                  break;
-               case eosio::vm::section_id::function_section:
-                  this->template parse_section<eosio::vm::section_id::function_section>(
-                      code_ptr, mod.functions);
-                  mod.normalize_types();
-                  break;
-               case eosio::vm::section_id::table_section:
-                  this->template parse_section<eosio::vm::section_id::table_section>(code_ptr,
-                                                                                     mod.tables);
-                  break;
-               case eosio::vm::section_id::memory_section:
-                  this->template parse_section<eosio::vm::section_id::memory_section>(code_ptr,
-                                                                                      mod.memories);
-                  break;
-               case eosio::vm::section_id::global_section:
-                  this->template parse_section<eosio::vm::section_id::global_section>(code_ptr,
-                                                                                      mod.globals);
-                  break;
-               case eosio::vm::section_id::export_section:
-                  this->template parse_section<eosio::vm::section_id::export_section>(code_ptr,
-                                                                                      mod.exports);
-                  this->validate_exports();
-                  break;
-               case eosio::vm::section_id::start_section:
-                  this->template parse_section<eosio::vm::section_id::start_section>(code_ptr,
-                                                                                     mod.start);
-                  break;
-               case eosio::vm::section_id::element_section:
-                  this->template parse_section<eosio::vm::section_id::element_section>(
-                      code_ptr, mod.elements);
-                  break;
-               case eosio::vm::section_id::code_section:
-                  this->template parse_section<eosio::vm::section_id::code_section>(code_ptr,
-                                                                                    mod.code);
-                  break;
-               case eosio::vm::section_id::data_section:
-                  this->template parse_section<eosio::vm::section_id::data_section>(code_ptr,
-                                                                                    mod.data);
-                  break;
-               default:
-                  EOS_VM_ASSERT(false, eosio::vm::wasm_parse_exception, "error invalid section id");
-            }
-         }
-         EOS_VM_ASSERT(this->_mod->code.size() == this->_mod->functions.size(),
-                       eosio::vm::wasm_parse_exception,
-                       "code section must have the same size as the function section");
-
-         debug.set(std::move(this->imap));
-         debug.relocate(this->_allocator.get_code_start());
-      }  // parse_module
-
-      using base::parse_section;
-
-      template <uint8_t id>
-      inline void parse_section(
-          eosio::vm::wasm_code_ptr& code,
-          eosio::vm::guarded_vector<
-              typename std::enable_if_t<id == eosio::vm::section_id::code_section,
-                                        eosio::vm::function_body>>& elems)
-      {
-         const void* code_start = code.raw() - code.offset();
-         this->parse_section_impl(
-             code, elems, eosio::vm::detail::get_max_function_section_elements(this->_options),
-             [&](eosio::vm::wasm_code_ptr& code, eosio::vm::function_body& fb, std::size_t idx) {
-                this->parse_function_body(code, fb, idx);
-             });
-         EOS_VM_ASSERT(elems.size() == this->_mod->functions.size(),
-                       eosio::vm::wasm_parse_exception,
-                       "code section must have the same size as the function section");
-         Writer code_writer(this->_allocator, code.bounds() - code.offset(), *this->_mod);
-         this->imap.on_code_start(code_writer.get_base_addr(), code_start);
-         for (size_t i = 0; i < this->_function_bodies.size(); i++)
-         {
-            eosio::vm::function_body& fb = this->_mod->code[i];
-            eosio::vm::func_type& ft = this->_mod->types.at(this->_mod->functions.at(i));
-            typename base::local_types_t local_types(ft, fb.locals);
-            this->imap.on_function_start(code_writer.get_addr(),
-                                         this->_function_bodies[i].first.raw());
-            code_writer.emit_prologue(ft, fb.locals, i);
-            this->imap.on_function_body(code_writer.get_addr());
-            this->parse_function_body_code(this->_function_bodies[i].first, fb.size,
-                                           this->_function_bodies[i].second, code_writer, ft,
-                                           local_types);
-            this->imap.on_function_epilogue(code_writer.get_addr());
-            code_writer.emit_epilogue(ft, fb.locals, i);
-            this->imap.on_function_end(code_writer.get_addr(),
-                                       this->_function_bodies[i].first.bnds);
-            code_writer.finalize(fb);
-         }
-         this->imap.on_code_end(code_writer.get_addr(), code.raw());
-      }
-   };  // capture_fn_parser
-
-   struct jit_capture_fn
-   {
-      template <typename Host>
-      using context = eosio::vm::jit_execution_context<Host, true>;
-      template <typename Host, typename Options, typename DebugInfo>
-      using parser =
-          capture_fn_parser<eosio::vm::machine_code_writer<context<Host>>, Options, DebugInfo>;
-      static constexpr bool is_jit = true;
-   };
-
    struct debug_instr_map
    {
       using builder = debug_instr_map;
@@ -304,6 +132,45 @@ namespace debug_eos_vm
          return offset_to_addr[lower].wasm_addr;
       }
    };  // debug_instr_map
+
+// Macro because member functions can't be partially specialized
+#define DEBUG_PARSE_CODE_SECTION(Host, Options)                                                   \
+   template <>                                                                                    \
+   template <>                                                                                    \
+   void eosio::vm::binary_parser<                                                                 \
+       eosio::vm::machine_code_writer<eosio::vm::jit_execution_context<Host, true>>, Options,     \
+       debug_eos_vm::debug_instr_map>::                                                           \
+       parse_section<eosio::vm::section_id::code_section>(                                        \
+           eosio::vm::wasm_code_ptr & code,                                                       \
+           eosio::vm::guarded_vector<eosio::vm::function_body> & elems)                           \
+   {                                                                                              \
+      const void* code_start = code.raw() - code.offset();                                        \
+      parse_section_impl(code, elems,                                                             \
+                         eosio::vm::detail::get_max_function_section_elements(_options),          \
+                         [&](eosio::vm::wasm_code_ptr& code, eosio::vm::function_body& fb,        \
+                             std::size_t idx) { parse_function_body(code, fb, idx); });           \
+      EOS_VM_ASSERT(elems.size() == _mod->functions.size(), eosio::vm::wasm_parse_exception,      \
+                    "code section must have the same size as the function section");              \
+      eosio::vm::machine_code_writer<eosio::vm::jit_execution_context<Host, true>> code_writer(   \
+          _allocator, code.bounds() - code.offset(), *_mod);                                      \
+      imap.on_code_start(code_writer.get_base_addr(), code_start);                                \
+      for (size_t i = 0; i < _function_bodies.size(); i++)                                        \
+      {                                                                                           \
+         eosio::vm::function_body& fb = _mod->code[i];                                            \
+         eosio::vm::func_type& ft = _mod->types.at(_mod->functions.at(i));                        \
+         local_types_t local_types(ft, fb.locals);                                                \
+         imap.on_function_start(code_writer.get_addr(), _function_bodies[i].first.raw());         \
+         code_writer.emit_prologue(ft, fb.locals, i);                                             \
+         imap.on_function_body(code_writer.get_addr());                                           \
+         parse_function_body_code(_function_bodies[i].first, fb.size, _function_bodies[i].second, \
+                                  code_writer, ft, local_types);                                  \
+         imap.on_function_epilogue(code_writer.get_addr());                                       \
+         code_writer.emit_epilogue(ft, fb.locals, i);                                             \
+         imap.on_function_end(code_writer.get_addr(), _function_bodies[i].first.bnds);            \
+         code_writer.finalize(fb);                                                                \
+      }                                                                                           \
+      imap.on_code_end(code_writer.get_addr(), code.raw());                                       \
+   }
 
    template <typename Backend>
    std::shared_ptr<dwarf::debugger_registration> enable_debug(std::vector<uint8_t>& code,
