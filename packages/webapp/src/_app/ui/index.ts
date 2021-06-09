@@ -11,3 +11,4 @@ export * from "./footer";
 export * from "./table";
 export * from "./call-to-action";
 export * from "./pagination-nav";
+export * from "./loaders";

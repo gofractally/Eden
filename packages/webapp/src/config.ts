@@ -112,3 +112,7 @@ export const ipfsConfig = {
 export const jobKeys = {
     gc: process.env.JOBS_AUTH_GC || "",
 };
+
+export const eosPrivateKeys = {
+    gcJob: process.env.EOS_PRIVATE_KEY_GC_JOB || "",
+};
