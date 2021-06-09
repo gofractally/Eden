@@ -1,4 +1,4 @@
-add_executable(cltester main.cpp)
+add_executable(cltester main.cpp dwarf.cpp)
 target_link_libraries(cltester abieos state_history rodeos_lib chain)
 set_target_properties(cltester PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${ROOT_BINARY_DIR})
 add_custom_command(TARGET cltester POST_BUILD

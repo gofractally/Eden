@@ -19,6 +19,7 @@
 #include <eosio/ship_protocol.hpp>
 #include <eosio/to_bin.hpp>
 #include <eosio/vm/backend.hpp>
+#include "dwarf.hpp"
 
 #include <stdio.h>
 #include <chrono>
@@ -43,7 +44,34 @@ using eosio::vm::span;
 
 struct callbacks;
 using rhf_t = eosio::vm::registered_host_functions<callbacks>;
-using backend_t = eosio::vm::backend<rhf_t, eosio::vm::jit>;
+
+void backtrace();
+
+template <>
+void eosio::vm::machine_code_writer<
+    eosio::vm::jit_execution_context<callbacks, true>>::on_unreachable()
+{
+   backtrace();
+   eosio::vm::throw_<wasm_interpreter_exception>("unreachable");
+}
+
+struct jit_backtrace
+{
+   template <typename Host>
+   using context = eosio::vm::jit_execution_context<Host, true>;
+   template <typename Host, typename Options, typename DebugInfo>
+   using parser =
+       eosio::vm::binary_parser<eosio::vm::machine_code_writer<context<Host>>, Options, DebugInfo>;
+   static constexpr bool is_jit = true;
+};
+
+using backend_t = eosio::vm::backend<  //
+    rhf_t,
+    jit_backtrace,
+    eosio::vm::default_options,
+    eosio::vm::profile_instr_map>;
+
+inline constexpr int max_backtrace_frames = 512;
 
 inline constexpr int block_interval_ms = 500;
 inline constexpr int block_interval_us = block_interval_ms * 1000;
@@ -91,7 +119,7 @@ namespace
    }
 
    template <typename C, typename F0, typename F1, typename G>
-   auto do_startup(C&& control, F0&&, F1&& f1, G&&)
+   auto do_startup(C&& control, F0&&, F1&& f1, G &&)
        -> std::enable_if_t<std::is_constructible_v<std::decay_t<decltype(*control)>,
                                                    eosio::chain::controller::config,
                                                    protocol_feature_set>>
@@ -536,6 +564,7 @@ struct file
 struct state
 {
    const char* wasm;
+   dwarf::info& dwarf_info;
    eosio::vm::wasm_allocator& wa;
    backend_t& backend;
    std::vector<std::string> args;
@@ -642,6 +671,7 @@ FC_REFLECT(push_trx_args, (transaction)(context_free_data)(signatures)(keys))
       return selected().IDX.previous_secondary(iterator, primary);                                \
    }
 
+// clang-format off
 #define DB_WRAPPERS_FLOAT_SECONDARY(IDX, TYPE)                                                 \
    int db_##IDX##_find_secondary(uint64_t code, uint64_t scope, uint64_t table,                \
                                  const TYPE& secondary, uint64_t& primary)                     \
@@ -681,10 +711,38 @@ FC_REFLECT(push_trx_args, (transaction)(context_free_data)(signatures)(keys))
    {                                                                                           \
       return selected().IDX.previous_secondary(iterator, primary);                             \
    }
+// clang-format on
 
 struct callbacks
 {
    ::state& state;
+   static callbacks* single;  // TODO: remove
+
+   callbacks(::state& state) : state{state} { single = this; }
+   ~callbacks() { single = nullptr; }
+
+   void backtrace()
+   {
+      void* data[max_backtrace_frames];
+      int count =
+          state.backend.get_context().backtrace(data, sizeof(data) / sizeof(data[0]), nullptr);
+      for (int i = 0; i < count; ++i)
+      {
+         auto& di = state.dwarf_info;
+         auto file_offset = state.backend.get_debug().translate(data[i]);
+         if (file_offset == 0xffff'ffff)
+            continue;
+         const auto* loc = di.get_location(file_offset - di.code_offset);
+         const auto* sub = di.get_subprogram(file_offset - di.code_offset);
+         if (loc)
+            fprintf(stderr, "%s:%d", di.files[loc->file_index].c_str(), loc->line);
+         else
+            fprintf(stderr, "<wasm address 0x%08x>", file_offset - di.code_offset);
+         if (sub)
+            fprintf(stderr, ": %s", sub->name.c_str());
+         fprintf(stderr, "\n");
+      }
+   }
 
    void check_bounds(void* data, size_t size)
    {
@@ -720,12 +778,26 @@ struct callbacks
       // todo: verify cb_alloc isn't in imports
       if (state.backend.get_module().tables.size() < 0 ||
           state.backend.get_module().tables[0].table.size() < cb_alloc)
+      {
+         backtrace();
          throw std::runtime_error("cb_alloc is out of range");
+      }
+      // Note from Steven: eos-vm not saving top_frame and bottom_frame is an eos-vm bug. The
+      // backtrace was originally designed for profiling contracts, where reentering wasm is not
+      // possible. In addition, saving and restoring these variables is very tricky to do correctly
+      // in the face of asynchronous interrupts, so I didn't bother.
+      auto top_frame = state.backend.get_context()._top_frame;
+      auto bottom_frame = state.backend.get_context()._bottom_frame;
       auto result = state.backend.get_context().execute(  //
           this, eosio::vm::jit_visitor(42), state.backend.get_module().tables[0].table[cb_alloc],
           cb_alloc_data, size);
+      state.backend.get_context()._top_frame = top_frame;
+      state.backend.get_context()._bottom_frame = bottom_frame;
       if (!result || !result->is_a<eosio::vm::i32_const_t>())
+      {
+         backtrace();
          throw std::runtime_error("cb_alloc returned incorrect type");
+      }
       char* begin = state.wa.get_base_ptr<char>() + result->to_ui32();
       check_bounds(begin, size);
       return begin;
@@ -742,14 +814,25 @@ struct callbacks
       memcpy(alloc(cb_alloc_data, cb_alloc, data.size), data.data, data.size);
    }
 
-   void tester_abort() { throw std::runtime_error("called tester_abort"); }
+   void tester_abort()
+   {
+      backtrace();
+      throw std::runtime_error("called tester_abort");
+   }
 
-   void eosio_exit(int32_t) { throw std::runtime_error("called eosio_exit"); }
+   void eosio_exit(int32_t)
+   {
+      backtrace();
+      throw std::runtime_error("called eosio_exit");
+   }
 
    void eosio_assert_message(bool condition, span<const char> msg)
    {
       if (!condition)
+      {
+         backtrace();
          throw ::assert_exception(span_str(msg));
+      }
    }
 
    void prints_l(span<const char> str) { std::cout.write(str.data(), str.size()); }
@@ -1376,6 +1459,14 @@ struct callbacks
    }
 };  // callbacks
 
+callbacks* callbacks::single = nullptr;  // TODO: remove
+
+void backtrace()
+{
+   if (callbacks::single)
+      callbacks::single->backtrace();
+}
+
 #define DB_REGISTER_SECONDARY(IDX)                                                         \
    rhf_t::add<&callbacks::db_##IDX##_find_secondary>("env", "db_" #IDX "_find_secondary"); \
    rhf_t::add<&callbacks::db_##IDX##_find_primary>("env", "db_" #IDX "_find_primary");     \
@@ -1450,7 +1541,8 @@ static void run(const char* wasm, const std::vector<std::string>& args)
    eosio::vm::wasm_allocator wa;
    auto code = eosio::vm::read_wasm(wasm);
    backend_t backend(code, nullptr);
-   ::state state{wasm, wa, backend, args};
+   auto dwarf_info = dwarf::get_info_from_wasm({(const char*)code.data(), code.size()});
+   ::state state{wasm, dwarf_info, wa, backend, args};
    callbacks cb{state};
    state.files.emplace_back(stdin, false);
    state.files.emplace_back(stdout, false);
@@ -1463,8 +1555,7 @@ static void run(const char* wasm, const std::vector<std::string>& args)
    backend(cb, "env", "_start");
 }
 
-const char usage[] =
-    "usage: cltester [-h or --help] [-v or --verbose] file.wasm [args for wasm]\n";
+const char usage[] = "usage: cltester [-h or --help] [-v or --verbose] file.wasm [args for wasm]\n";
 
 int main(int argc, char* argv[])
 {
