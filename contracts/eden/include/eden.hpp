@@ -17,7 +17,7 @@ namespace eden
    extern const char* inductinit_ricardian;
    extern const char* inductprofil_ricardian;
    extern const char* inductvideo_ricardian;
-   extern const char* inductendorse_ricardian;
+   extern const char* inductendors_ricardian;
    extern const char* inductdonate_ricardian;
    extern const char* inductcancel_ricardian;
    extern const char* gc_ricardian;
@@ -70,7 +70,7 @@ namespace eden
 
       void inductvideo(eosio::name account, uint64_t id, std::string video);
 
-      void inductendorse(eosio::name account, uint64_t id, eosio::checksum256 induction_data_hash);
+      void inductendors(eosio::name account, uint64_t id, eosio::checksum256 induction_data_hash);
 
       void inductdonate(eosio::name payer, uint64_t id, const eosio::asset& quantity);
 
@@ -134,11 +134,11 @@ namespace eden
               ricardian_contract(inductinit_ricardian)),
        action(inductprofil, id, new_member_profile, ricardian_contract(inductprofil_ricardian)),
        action(inductvideo, account, id, video, ricardian_contract(inductvideo_ricardian)),
-       action(inductendorse,
+       action(inductendors,
               account,
               id,
               induction_data_hash,
-              ricardian_contract(inductendorse_ricardian)),
+              ricardian_contract(inductendors_ricardian)),
        action(inductdonate, payer, id, quantity, ricardian_contract(inductdonate_ricardian)),
        action(inductcancel, account, id, ricardian_contract(inductcancel_ricardian)),
        action(inducted, inductee, ricardian_contract(inducted_ricardian)),

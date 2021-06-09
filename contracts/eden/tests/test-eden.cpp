@@ -456,7 +456,7 @@ TEST_CASE("induction")
    // cannot endorse before video and profile are set
    auto blank_hash_data =
        eosio::convert_to_bin(std::tuple(std::string{}, eden::new_member_profile{}));
-   expect(t.alice.trace<actions::inductendorse>(
+   expect(t.alice.trace<actions::inductendors>(
               "alice"_n, 4, eosio::sha256(blank_hash_data.data(), blank_hash_data.size())),
           "not set");
 
@@ -488,22 +488,22 @@ TEST_CASE("induction")
 
    auto hash_data = eosio::convert_to_bin(std::tuple(bertie_video, bertie_profile));
    auto induction_hash = eosio::sha256(hash_data.data(), hash_data.size());
-   expect(t.bertie.trace<actions::inductendorse>("alice"_n, 4, induction_hash),
+   expect(t.bertie.trace<actions::inductendors>("alice"_n, 4, induction_hash),
           "missing authority of alice");
-   expect(t.bertie.trace<actions::inductendorse>("bertie"_n, 4, induction_hash),
+   expect(t.bertie.trace<actions::inductendors>("bertie"_n, 4, induction_hash),
           "Induction can only be endorsed by inviter or a witness");
-   expect(t.alice.trace<actions::inductendorse>(
+   expect(t.alice.trace<actions::inductendors>(
               "alice"_n, 4, eosio::sha256(hash_data.data(), hash_data.size() - 1)),
           "Outdated endorsement");
 
    auto endorse_all = [&] {
-      t.alice.act<actions::inductendorse>("alice"_n, 4, induction_hash);
-      t.pip.act<actions::inductendorse>("pip"_n, 4, induction_hash);
-      t.egeon.act<actions::inductendorse>("egeon"_n, 4, induction_hash);
+      t.alice.act<actions::inductendors>("alice"_n, 4, induction_hash);
+      t.pip.act<actions::inductendors>("pip"_n, 4, induction_hash);
+      t.egeon.act<actions::inductendors>("egeon"_n, 4, induction_hash);
    };
    endorse_all();
    t.chain.start_block();
-   expect(t.alice.trace<actions::inductendorse>("alice"_n, 4, induction_hash), "Already endorsed");
+   expect(t.alice.trace<actions::inductendors>("alice"_n, 4, induction_hash), "Already endorsed");
 
    // changing the profile resets endorsements
    t.bertie.act<actions::inductprofil>(4, bertie_profile);
@@ -623,10 +623,10 @@ TEST_CASE("induction gc")
       auto hash_data = eosio::convert_to_bin(std::tuple(video, profile));
       auto induction_hash = eosio::sha256(hash_data.data(), hash_data.size());
 
-      t.chain.as(inviter).act<actions::inductendorse>(inviter, induction_id, induction_hash);
+      t.chain.as(inviter).act<actions::inductendors>(inviter, induction_id, induction_hash);
       for (auto witness : witnesses)
       {
-         t.chain.as(witness).act<actions::inductendorse>(witness, induction_id, induction_hash);
+         t.chain.as(witness).act<actions::inductendors>(witness, induction_id, induction_hash);
       }
       t.chain.as(invitee).act<actions::inductdonate>(invitee, induction_id, s2a("10.0000 EOS"));
       CHECK(get_eden_membership(invitee).status() == eden::member_status::active_member);

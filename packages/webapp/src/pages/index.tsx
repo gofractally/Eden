@@ -7,14 +7,14 @@ import {
     Card,
     Heading,
     Link,
-    membersStatsQuery,
+    queryMembersStats,
     RawLayout,
     Text,
 } from "_app";
 
 export const getServerSideProps: GetServerSideProps = async () => {
     const queryClient = new QueryClient();
-    await queryClient.prefetchQuery(membersStatsQuery);
+    await queryClient.prefetchQuery(queryMembersStats);
     return {
         props: {
             dehydratedState: dehydrate(queryClient),
@@ -24,7 +24,7 @@ export const getServerSideProps: GetServerSideProps = async () => {
 
 export const Index = () => {
     const { data: memberStats } = useQuery({
-        ...membersStatsQuery,
+        ...queryMembersStats,
         keepPreviousData: true,
     });
 

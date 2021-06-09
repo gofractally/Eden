@@ -1,14 +1,10 @@
-import {
-    useFetchedData,
-    useMemberByAccountName,
-    useMemberListByAccountNames,
-} from "_app";
+import { useMemberByAccountName } from "_app";
 import * as InductionTable from "_app/ui/table";
 
-import { getEndorsementsByInductionId } from "../../api";
-import { getInductionRemainingTimeDays, getInductionStatus } from "../../utils";
-import { Endorsement, Induction } from "../../interfaces";
+import { getInductionRemainingTimeDays } from "../../utils";
+import { Induction, InductionRole } from "../../interfaces";
 import { InductionStatusButton } from "./induction-status-button";
+import { AccountName, EndorsersNames } from "./induction-names";
 
 interface Props {
     inductions: Induction[];
@@ -45,43 +41,21 @@ const INVITEE_INDUCTION_COLUMNS: InductionTable.Column[] = [
 ];
 
 const getTableData = (inductions: Induction[]): InductionTable.Row[] => {
-    return inductions.map((induction) => {
-        const [allEndorsements] = useFetchedData<Endorsement[]>(
-            getEndorsementsByInductionId,
-            induction.id
-        );
-
-        const { data: inviter } = useMemberByAccountName(induction.inviter);
-
-        const endorsersAccounts =
-            allEndorsements
-                ?.map((end: Endorsement): string => end.endorser)
-                .filter((end: string) => end !== induction.inviter) || [];
-
-        const endorsersMembers = useMemberListByAccountNames(endorsersAccounts);
-
-        const endorsers =
-            endorsersMembers
-                .map(
-                    (member, index) =>
-                        member.data?.name || endorsersAccounts[index]
-                )
-                .join(", ") || "";
-
-        const remainingTime = getInductionRemainingTimeDays(induction);
-
-        return {
-            key: induction.id,
-            inviter: inviter ? inviter.name : induction.inviter,
-            witnesses: endorsers,
-            time_remaining: remainingTime,
-            status: (
-                <InductionStatusButton
-                    induction={induction}
-                    status={getInductionStatus(induction, allEndorsements)}
-                    isInvitee
-                />
-            ),
-        };
-    });
+    return inductions.map((induction) => ({
+        key: induction.id,
+        inviter: <AccountName account={induction.inviter} />,
+        witnesses: (
+            <EndorsersNames
+                induction={induction}
+                skipEndorser={induction.inviter}
+            />
+        ),
+        time_remaining: getInductionRemainingTimeDays(induction),
+        status: (
+            <InductionStatusButton
+                induction={induction}
+                role={InductionRole.Invitee}
+            />
+        ),
+    }));
 };

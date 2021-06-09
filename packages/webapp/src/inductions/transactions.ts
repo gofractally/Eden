@@ -133,7 +133,7 @@ export const submitEndorsementTransaction = async (
         actions: [
             {
                 account: edenContractAccount,
-                name: "inductendorse",
+                name: "inductendors",
                 authorization: [
                     {
                         actor: authorizerAccount,
