@@ -1,7 +1,9 @@
 #include <accounts.hpp>
+#include <auctions.hpp>
 #include <eden.hpp>
 #include <inductions.hpp>
 #include <members.hpp>
+#include <migrations.hpp>
 
 namespace eden
 {
@@ -59,9 +61,7 @@ namespace eden
       inductions.update_video(induction, video);
    }
 
-   void eden::inductendorse(eosio::name account,
-                            uint64_t id,
-                            eosio::checksum256 induction_data_hash)
+   void eden::inductendors(eosio::name account, uint64_t id, eosio::checksum256 induction_data_hash)
    {
       require_auth(account);
       inductions inductions{get_self()};
@@ -80,12 +80,23 @@ namespace eden
 
       globals globals{get_self()};
       inductions inductions{get_self()};
-      accounts accounts{get_self()};
+      accounts user_accounts{get_self()};
+      accounts internal_accounts{get_self(), "owned"_n};
 
       const auto& induction = inductions.get_induction(id);
       eosio::check(payer == induction.invitee(), "only inductee may donate using this action");
       eosio::check(quantity == globals.get().minimum_donation, "incorrect donation");
-      accounts.sub_balance(payer, quantity);
+      user_accounts.sub_balance(payer, quantity);
+      migrations migrations{get_self()};
+      if (auto migration = migrations.get<migrate_account_v0>())
+      {
+         migration->adjust_balance(payer, -quantity);
+         migrations.set(*migration);
+      }
+      else if (migrations.is_completed<migrate_account_v0>())
+      {
+         internal_accounts.add_balance("master"_n, quantity);
+      }
       inductions.create_nft(induction);
    }
 
@@ -113,7 +124,13 @@ namespace eden
    {
       inductions inductions{get_self()};
       std::vector<eosio::name> removed_members;
-      eosio::check(inductions.gc(limit, removed_members) != limit, "Nothing to do.");
+      auto remaining = inductions.gc(limit, removed_members);
+      if (remaining)
+      {
+         auctions auctions{get_self()};
+         remaining = auctions.finish_auctions(remaining);
+      }
+      eosio::check(remaining != limit, "Nothing to do.");
       if (!removed_members.empty())
       {
          members members(get_self());

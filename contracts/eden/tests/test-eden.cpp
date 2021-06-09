@@ -65,7 +65,7 @@ void eden_setup(test_chain& t)
 
 auto get_token_balance(eosio::name owner)
 {
-   return token::contract::get_balance("eosio.token"_n, "alice"_n, symbol_code{"EOS"});
+   return token::contract::get_balance("eosio.token"_n, owner, symbol_code{"EOS"});
 }
 
 auto get_eden_account(eosio::name owner)
@@ -319,7 +319,7 @@ TEST_CASE("genesis expiration")
    t.eden_gm.act<actions::genesis>("Eden", eosio::symbol("EOS", 4), s2a("10.0000 EOS"),
                                    std::vector{"alice"_n, "pip"_n, "egeon"_n, "bertie"_n},
                                    "QmTYqoPYf7DiVebTnvwwFdTgsYXg2RnuPrt8uddjfW2kHS",
-                                   attribute_map{}, s2a("1.0000 EOS"), 7 * 24 * 60 * 60, "");
+                                   attribute_map{}, s2a("1.0000 EOS"), 14 * 24 * 60 * 60, "");
 
    CHECK(get_eden_membership("alice"_n).status() == eden::member_status::pending_membership);
    CHECK(get_eden_membership("pip"_n).status() == eden::member_status::pending_membership);
@@ -456,7 +456,7 @@ TEST_CASE("induction")
    // cannot endorse before video and profile are set
    auto blank_hash_data =
        eosio::convert_to_bin(std::tuple(std::string{}, eden::new_member_profile{}));
-   expect(t.alice.trace<actions::inductendorse>(
+   expect(t.alice.trace<actions::inductendors>(
               "alice"_n, 4, eosio::sha256(blank_hash_data.data(), blank_hash_data.size())),
           "not set");
 
@@ -488,23 +488,22 @@ TEST_CASE("induction")
 
    auto hash_data = eosio::convert_to_bin(std::tuple(bertie_video, bertie_profile));
    auto induction_hash = eosio::sha256(hash_data.data(), hash_data.size());
-   expect(t.bertie.trace<actions::inductendorse>("alice"_n, 4, induction_hash),
+   expect(t.bertie.trace<actions::inductendors>("alice"_n, 4, induction_hash),
           "missing authority of alice");
-   expect(t.bertie.trace<actions::inductendorse>("bertie"_n, 4, induction_hash),
+   expect(t.bertie.trace<actions::inductendors>("bertie"_n, 4, induction_hash),
           "Induction can only be endorsed by inviter or a witness");
-   expect(t.alice.trace<actions::inductendorse>(
+   expect(t.alice.trace<actions::inductendors>(
               "alice"_n, 4, eosio::sha256(hash_data.data(), hash_data.size() - 1)),
           "Outdated endorsement");
 
-   auto endorse_all = [&]
-   {
-      t.alice.act<actions::inductendorse>("alice"_n, 4, induction_hash);
-      t.pip.act<actions::inductendorse>("pip"_n, 4, induction_hash);
-      t.egeon.act<actions::inductendorse>("egeon"_n, 4, induction_hash);
+   auto endorse_all = [&] {
+      t.alice.act<actions::inductendors>("alice"_n, 4, induction_hash);
+      t.pip.act<actions::inductendors>("pip"_n, 4, induction_hash);
+      t.egeon.act<actions::inductendors>("egeon"_n, 4, induction_hash);
    };
    endorse_all();
    t.chain.start_block();
-   expect(t.alice.trace<actions::inductendorse>("alice"_n, 4, induction_hash), "Already endorsed");
+   expect(t.alice.trace<actions::inductendors>("alice"_n, 4, induction_hash), "Already endorsed");
 
    // changing the profile resets endorsements
    t.bertie.act<actions::inductprofil>(4, bertie_profile);
@@ -537,6 +536,54 @@ TEST_CASE("auction")
    t.eden_gm.act<atomicmarket::actions::auctclaimsel>(1);
 }
 
+TEST_CASE("auction batch claim")
+{
+   eden_tester t;
+   t.genesis();
+   t.ahab.act<token::actions::transfer>("ahab"_n, eden::atomic_market_account, s2a("10.0000 EOS"),
+                                        "deposit");
+   t.ahab.act<atomicmarket::actions::auctionbid>("ahab"_n, 1, s2a("10.0000 EOS"), eosio::name{});
+   t.chain.start_block(7 * 24 * 60 * 60 * 1000);
+   t.chain.start_block();
+   t.ahab.act<atomicmarket::actions::auctclaimbuy>(1);
+   auto old_balance = get_token_balance("eden.gm"_n);
+   t.eden_gm.act<actions::gc>(42);
+   auto new_balance = get_token_balance("eden.gm"_n);
+   // 0.5 EOS left deposited in atomicmarket
+   // 0.1 EOS to each of the maker and taker marketplaces
+   CHECK(new_balance - old_balance == s2a("9.3000 EOS"));
+}
+
+TEST_CASE("auction migration")
+{
+   eden_tester t;
+   t.genesis();
+   t.eden_gm.act<actions::unmigrate>();
+   t.ahab.act<token::actions::transfer>("ahab"_n, eden::atomic_market_account, s2a("10.0000 EOS"),
+                                        "deposit");
+   t.ahab.act<atomicmarket::actions::auctionbid>("ahab"_n, 1, s2a("10.0000 EOS"), eosio::name{});
+   t.chain.start_block(7 * 24 * 60 * 60 * 1000);
+   t.chain.start_block();
+   t.ahab.act<atomicmarket::actions::auctclaimbuy>(1);
+   auto old_balance = get_token_balance("eden.gm"_n);
+   expect(t.eden_gm.trace<actions::gc>(42), "Nothing to do");
+   while (true)
+   {
+      t.chain.start_block();
+      auto trace = t.eden_gm.trace<actions::migrate>(1);
+      if (trace.except)
+      {
+         expect(trace, "Nothing to do");
+         break;
+      }
+   }
+   t.eden_gm.act<actions::gc>(42);
+   auto new_balance = get_token_balance("eden.gm"_n);
+   // 0.5 EOS left deposited in atomicmarket
+   // 0.1 EOS to each of the maker and taker marketplaces
+   CHECK(new_balance - old_balance == s2a("9.3000 EOS"));
+}
+
 TEST_CASE("induction gc")
 {
    eden_tester t;
@@ -561,8 +608,7 @@ TEST_CASE("induction gc")
    }
 
    auto finish_induction = [&](uint64_t induction_id, eosio::name inviter, eosio::name invitee,
-                               const std::vector<eosio::name>& witnesses)
-   {
+                               const std::vector<eosio::name>& witnesses) {
       t.chain.as(invitee).act<token::actions::transfer>(invitee, "eden.gm"_n, s2a("10.0000 EOS"),
                                                         "memo");
 
@@ -577,10 +623,10 @@ TEST_CASE("induction gc")
       auto hash_data = eosio::convert_to_bin(std::tuple(video, profile));
       auto induction_hash = eosio::sha256(hash_data.data(), hash_data.size());
 
-      t.chain.as(inviter).act<actions::inductendorse>(inviter, induction_id, induction_hash);
+      t.chain.as(inviter).act<actions::inductendors>(inviter, induction_id, induction_hash);
       for (auto witness : witnesses)
       {
-         t.chain.as(witness).act<actions::inductendorse>(witness, induction_id, induction_hash);
+         t.chain.as(witness).act<actions::inductendors>(witness, induction_id, induction_hash);
       }
       t.chain.as(invitee).act<actions::inductdonate>(invitee, induction_id, s2a("10.0000 EOS"));
       CHECK(get_eden_membership(invitee).status() == eden::member_status::active_member);
@@ -598,6 +644,10 @@ TEST_CASE("induction gc")
    }
    CHECK(members("eden.gm"_n).stats().active_members == 37);
    CHECK(members("eden.gm"_n).stats().pending_members == 0);
+
+   // clear the auctions
+   t.chain.start_block(8 * 24 * 60 * 60 * 1000);
+   t.alice.act<actions::gc>(64);
 
    for (std::size_t i = 0; i <= 2; ++i)
    {
@@ -636,6 +686,10 @@ TEST_CASE("induction gc")
    CHECK(get_table_size<eden::induction_gc_table_type>() > 0);
 
    t.ahab.act<actions::gc>(32);  // ahab is not a member, but gc needs no permissions
+
+   // clear the auctions
+   t.chain.start_block(8 * 24 * 60 * 60 * 1000);
+   t.alice.act<actions::gc>(64);
 
    CHECK(get_table_size<eden::induction_table_type>() == 0);
    CHECK(get_table_size<eden::endorsement_table_type>() == 0);
@@ -717,4 +771,65 @@ TEST_CASE("deposit and spend")
    t.alice.act<actions::withdraw>("alice"_n, s2a("6.0000 EOS"));
    CHECK(get_eden_account("alice"_n) == std::nullopt);
    CHECK(get_token_balance("alice"_n) == s2a("1000.0000 EOS"));
+}
+
+TEST_CASE("accounting")
+{
+   eden_tester t;
+   t.genesis();
+   // should now have 30.0000 EOS, with a 90.0000 EOS deposit from alice
+   CHECK(get_token_balance("eden.gm"_n) == s2a("120.0000 EOS"));
+   expect(t.eden_gm.trace<actions::transfer>("eosio"_n, s2a("30.0001 EOS"), ""),
+          "insufficient balance");
+   t.eden_gm.act<actions::transfer>("eosio"_n, s2a("30.0000 EOS"), "");
+   CHECK(get_token_balance("eden.gm"_n) == s2a("90.0000 EOS"));
+   CHECK(get_token_balance("eosio"_n) == s2a("30.0000 EOS"));
+}
+
+TEST_CASE("account migration")
+{
+   eden_tester t;
+   t.genesis();
+   auto sum_accounts = [](eden::account_table_type& table) {
+      auto total = s2a("0.0000 EOS");
+      for (auto iter = table.begin(), end = table.end(); iter != end; ++iter)
+      {
+         CHECK(iter->balance().amount > 0);
+         total += iter->balance();
+      }
+      return total;
+   };
+
+   {
+      eden::account_table_type user_table{"eden.gm"_n, eden::default_scope};
+      eden::account_table_type system_table{"eden.gm"_n, "owned"_n.value};
+      CHECK(sum_accounts(user_table) + sum_accounts(system_table) ==
+            get_token_balance("eden.gm"_n));
+   }
+   t.eden_gm.act<actions::unmigrate>();
+   {
+      eden::account_table_type user_table{"eden.gm"_n, eden::default_scope};
+      eden::account_table_type system_table{"eden.gm"_n, "owned"_n.value};
+      CHECK(sum_accounts(system_table) == s2a("0.0000 EOS"));
+   }
+   expect(t.alice.trace<actions::donate>("alice"_n, s2a("0.4200 EOS")), "must be migrated");
+
+   while (true)
+   {
+      t.chain.start_block();
+      t.alice.act<token::actions::transfer>("alice"_n, "eden.gm"_n, s2a("15.0000 EOS"), "");
+      t.alice.act<actions::withdraw>("alice"_n, s2a("14.0000 EOS"));
+      auto trace = t.eden_gm.trace<actions::migrate>(1);
+      if (trace.except)
+      {
+         expect(trace, "Nothing to do");
+         break;
+      }
+   }
+   {
+      eden::account_table_type user_table{"eden.gm"_n, eden::default_scope};
+      eden::account_table_type system_table{"eden.gm"_n, "owned"_n.value};
+      CHECK(sum_accounts(user_table) + sum_accounts(system_table) ==
+            get_token_balance("eden.gm"_n));
+   }
 }

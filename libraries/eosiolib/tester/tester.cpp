@@ -244,6 +244,11 @@ std::ostream& eosio::operator<<(std::ostream& os, const name& obj)
    return os << obj.to_string();
 }
 
+std::ostream& eosio::operator<<(std::ostream& os, const asset& obj)
+{
+   return os << obj.to_string();
+}
+
 const eosio::public_key eosio::test_chain::default_pub_key =
     public_key_from_string("EOS6MRyAjQq8ud7hVNYcfnVPJqcVpscN5So8BhtHuGYqET5GDW5CV");
 const eosio::private_key eosio::test_chain::default_priv_key =

@@ -66,7 +66,7 @@ icon: https://ipfs.io/ipfs/QmToeuuNcTXgZPhGLShi9E18qFyQfr92b8fmjWS3roJwq5#aae9c3
 
 I witnessed the Eden induction ceremony for the invitee in Induction #{{id}} and hereby attach the IPFS CID of said video recording hereto.)";
 
-const char* eden::inductendorse_ricardian = R"(---
+const char* eden::inductendors_ricardian = R"(---
 spec_version: "0.2.0"
 title: Endorse Prospective Eden Member
 summary: Endorsement of invitee for induction into Eden community
