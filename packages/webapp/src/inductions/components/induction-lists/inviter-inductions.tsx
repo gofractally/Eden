@@ -3,7 +3,7 @@ import * as InductionTable from "_app/ui/table";
 import { getInductionRemainingTimeDays } from "../../utils";
 import { Induction, InductionRole } from "../../interfaces";
 import { InductionStatusButton } from "./induction-status-button";
-import { EndorsersNames } from "./endorsers-names";
+import { EndorsersNames } from "./induction-names";
 
 interface Props {
     inductions: Induction[];
@@ -40,25 +40,21 @@ const INVITER_INDUCTION_COLUMNS: InductionTable.Column[] = [
 ];
 
 const getTableData = (inductions: Induction[]): InductionTable.Row[] => {
-    return inductions.map((induction) => {
-        const remainingTime = getInductionRemainingTimeDays(induction);
-
-        return {
-            key: induction.id,
-            invitee: induction.new_member_profile.name || induction.invitee,
-            inviter_witnesses: (
-                <EndorsersNames
-                    induction={induction}
-                    skipEndorser={induction.inviter}
-                />
-            ),
-            time_remaining: remainingTime,
-            status: (
-                <InductionStatusButton
-                    induction={induction}
-                    role={InductionRole.Inviter}
-                />
-            ),
-        };
-    });
+    return inductions.map((induction) => ({
+        key: induction.id,
+        invitee: induction.new_member_profile.name || induction.invitee,
+        inviter_witnesses: (
+            <EndorsersNames
+                induction={induction}
+                skipEndorser={induction.inviter}
+            />
+        ),
+        time_remaining: getInductionRemainingTimeDays(induction),
+        status: (
+            <InductionStatusButton
+                induction={induction}
+                role={InductionRole.Inviter}
+            />
+        ),
+    }));
 };

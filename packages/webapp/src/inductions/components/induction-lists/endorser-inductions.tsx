@@ -6,7 +6,7 @@ import * as InductionTable from "_app/ui/table";
 import { getInductionRemainingTimeDays } from "../../utils";
 import { Endorsement, Induction, InductionRole } from "../../interfaces";
 import { InductionStatusButton } from "./induction-status-button";
-import { EndorsersNames } from "./endorsers-names";
+import { EndorsersNames } from "./induction-names";
 
 interface Props {
     endorsements: Endorsement[];
@@ -67,7 +67,6 @@ const getTableData = (
         const induction = inductions.find(
             (induction) => induction.id === endorsement.induction_id
         );
-        const remainingTime = getInductionRemainingTimeDays(induction);
 
         const invitee =
             induction && induction.new_member_profile.name
@@ -85,7 +84,7 @@ const getTableData = (
             ) : (
                 "Unknown"
             ),
-            time_remaining: remainingTime,
+            time_remaining: getInductionRemainingTimeDays(induction),
             status: induction ? (
                 <InductionStatusButton
                     induction={induction}
