@@ -4,19 +4,14 @@
 #undef UNLIKELY
 #define EOSIO_EOS_VM_JIT_RUNTIME_ENABLED
 
-#include <eosio/chain/types.hpp>
-
-// TODO
-#define private public
-#include <eosio/chain/wasm_interface_private.hpp>
-#include <eosio/chain/webassembly/runtime_interface.hpp>
-#undef private
-
 #include <eosio/chain/apply_context.hpp>
 #include <eosio/chain/controller.hpp>
 #include <eosio/chain/generated_transaction_object.hpp>
 #include <eosio/chain/transaction_context.hpp>
+#include <eosio/chain/types.hpp>
+#include <eosio/chain/wasm_interface_private.hpp>
 #include <eosio/chain/webassembly/interface.hpp>
+#include <eosio/chain/webassembly/runtime_interface.hpp>
 #include <eosio/state_history/create_deltas.hpp>
 #include <eosio/state_history/serialization.hpp>
 #include <eosio/state_history/trace_converter.hpp>
