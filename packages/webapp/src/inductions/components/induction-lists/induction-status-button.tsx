@@ -1,31 +1,47 @@
+import { getInductionStatus } from "inductions/utils";
 import { useState } from "react";
 import { FaTrash } from "react-icons/fa";
+import { useQuery } from "react-query";
 
-import { ButtonType, Button, onError, useUALAccount } from "_app";
+import {
+    ButtonType,
+    Button,
+    onError,
+    useUALAccount,
+    queryEndorsementsByInductionId,
+} from "_app";
 
-import { Induction, InductionStatus } from "../../interfaces";
+import { Induction, InductionRole, InductionStatus } from "../../interfaces";
 import { cancelInductionTransaction } from "../../transactions";
 
 interface Props {
     induction: Induction;
-    status: InductionStatus;
-    canEndorse?: boolean;
-    isInvitee?: boolean;
-    isSpectator?: boolean;
-    unknownEndorsements?: boolean;
+    role?: InductionRole;
 }
 
-export const InductionStatusButton = ({
-    induction,
-    status,
-    canEndorse,
-    isInvitee,
-    isSpectator,
-    unknownEndorsements,
-}: Props) => {
+export const InductionStatusButton = ({ induction, role }: Props) => {
     const [ualAccount] = useUALAccount();
     const [isLoading, setLoading] = useState(false);
     const [isCanceled, setCanceled] = useState(false);
+
+    const { data: endorsements } = useQuery(
+        queryEndorsementsByInductionId(induction.id)
+    );
+
+    const status = getInductionStatus(induction, endorsements);
+
+    const canCancel =
+        role === InductionRole.Endorser ||
+        role === InductionRole.Invitee ||
+        role === InductionRole.Inviter;
+
+    const canEndorse =
+        ualAccount &&
+        endorsements?.some(
+            (endorsement) =>
+                endorsement.endorser === ualAccount.accountName &&
+                !endorsement.endorsed
+        );
 
     const cancelInduction = async () => {
         try {
@@ -54,9 +70,7 @@ export const InductionStatusButton = ({
     if (isCanceled) {
         return <div className="w-full text-center text-red-500">Canceled</div>;
     } else if (status === InductionStatus.Expired) {
-        return isSpectator ? (
-            <div className="w-full text-center text-gray-400">Expired</div>
-        ) : (
+        return canCancel ? (
             <Button
                 type="danger"
                 size="sm"
@@ -67,6 +81,8 @@ export const InductionStatusButton = ({
                 <FaTrash className="mr-2" />
                 Expired
             </Button>
+        ) : (
+            <div className="w-full text-center text-gray-400">Expired</div>
         );
     }
 
@@ -74,7 +90,7 @@ export const InductionStatusButton = ({
     let buttonLabel = "";
     switch (status) {
         case InductionStatus.PendingProfile:
-            if (isInvitee) {
+            if (role === InductionRole.Invitee) {
                 buttonType = "inductionStatusCeremony";
                 buttonLabel = "Create my profile";
             } else {
@@ -83,12 +99,15 @@ export const InductionStatusButton = ({
             }
             break;
         case InductionStatus.PendingCeremonyVideo:
-            if (isInvitee || isSpectator) {
-                buttonType = "neutral";
-                buttonLabel = "Induction ceremony";
-            } else {
+            if (
+                role === InductionRole.Inviter ||
+                role === InductionRole.Endorser
+            ) {
                 buttonType = "inductionStatusCeremony";
                 buttonLabel = "Complete ceremony";
+            } else {
+                buttonType = "neutral";
+                buttonLabel = "Induction ceremony";
             }
             break;
         case InductionStatus.PendingEndorsement:
@@ -97,13 +116,11 @@ export const InductionStatusButton = ({
                 buttonLabel = "Review & endorse";
             } else {
                 buttonType = "neutral";
-                buttonLabel = unknownEndorsements
-                    ? "Pending completion"
-                    : "Pending endorsements";
+                buttonLabel = "Pending endorsements";
             }
             break;
         case InductionStatus.PendingDonation:
-            if (isInvitee) {
+            if (role === InductionRole.Invitee) {
                 buttonType = "inductionStatusAction";
                 buttonLabel = "Donate & complete";
             } else {
@@ -125,7 +142,7 @@ export const InductionStatusButton = ({
             >
                 {buttonLabel}
             </Button>
-            {!isSpectator && (
+            {canCancel && (
                 <Button
                     type="dangerOutline"
                     size="sm"
