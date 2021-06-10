@@ -158,7 +158,7 @@ struct file;
 struct test_chain;
 struct test_rodeos;
 
-struct cached_debugging_module
+struct debugging_module
 {
    std::unique_ptr<debug_contract_backend> module;
    std::shared_ptr<dwarf::debugger_registration> reg;
@@ -173,7 +173,7 @@ struct state
    std::vector<std::string> args;
    std::map<fc::sha256, fc::sha256> substitutions;
    std::map<fc::sha256, std::vector<uint8_t>> codes;
-   std::map<fc::sha256, std::shared_ptr<cached_debugging_module>> cached_modules;
+   std::map<fc::sha256, debugging_module> cached_modules;
    std::vector<file> files;
    std::vector<std::unique_ptr<test_chain>> chains;
    std::vector<std::unique_ptr<test_rodeos>> rodeoses;
@@ -255,23 +255,6 @@ struct test_chain_ref
    test_chain_ref& operator=(const test_chain_ref&);
 };
 
-struct debugging_module : eosio::chain::wasm_instantiated_module_interface
-{
-   std::shared_ptr<cached_debugging_module> cached;
-
-   debugging_module(std::shared_ptr<cached_debugging_module> cached) : cached{std::move(cached)} {}
-
-   void apply(eosio::chain::apply_context& context) override
-   {
-      cached->module->set_wasm_allocator(&context.control.get_wasm_allocator());
-      eosio::chain::webassembly::interface iface(context);
-      cached->module->initialize(&iface);
-      cached->module->call(iface, "env", "apply", context.get_receiver().to_uint64_t(),
-                           context.get_action().account.to_uint64_t(),
-                           context.get_action().name.to_uint64_t());
-   }
-};
-
 struct test_chain
 {
    eosio::chain::private_key_type producer_key{
@@ -349,10 +332,6 @@ struct test_chain
       iface.substitute_apply = [this](const eosio::chain::digest_type& code_hash, uint8_t vm_type,
                                       uint8_t vm_version, eosio::chain::apply_context& context) {
          return substitute_apply(code_hash, vm_type, vm_version, context);
-      };
-      iface.substitute_module = [this](const eosio::chain::digest_type& code_hash, uint8_t vm_type,
-                                       uint8_t vm_version) {
-         return substitute_module(code_hash, vm_type, vm_version);
       };
    }
 
@@ -438,22 +417,22 @@ struct test_chain
          return false;
       if (auto it = state.substitutions.find(code_hash); it != state.substitutions.end())
       {
-         control->get_wasm_interface().apply(it->second, 0, 0, context);
+         auto& module = *get_debugging_module(it->second).module;
+         module.set_wasm_allocator(&context.control.get_wasm_allocator());
+         eosio::chain::webassembly::interface iface(context);
+         module.initialize(&iface);
+         module.call(iface, "env", "apply", context.get_receiver().to_uint64_t(),
+                     context.get_action().account.to_uint64_t(),
+                     context.get_action().name.to_uint64_t());
          return true;
       }
       return false;
    }
 
-   std::unique_ptr<eosio::chain::wasm_instantiated_module_interface> substitute_module(
-       const eosio::chain::digest_type& code_hash,
-       uint8_t vm_type,
-       uint8_t vm_version)
+   debugging_module& get_debugging_module(const eosio::chain::digest_type& code_hash)
    {
-      if (vm_type || vm_version)
-         return nullptr;
-
       if (auto it = state.cached_modules.find(code_hash); it != state.cached_modules.end())
-         return std::make_unique<debugging_module>(it->second);
+         return it->second;
 
       if (auto it = state.codes.find(code_hash); it != state.codes.end())
       {
@@ -471,10 +450,8 @@ struct test_chain
             auto bkend = std::make_unique<debug_contract_backend>(code, size, nullptr);
             eosio::chain::eos_vm_host_functions_t::resolve(bkend->get_module());
             auto reg = debug_eos_vm::enable_debug(it->second, *bkend, dwarf_info, "apply");
-            auto cached = std::make_shared<cached_debugging_module>(
-                cached_debugging_module{std::move(bkend), std::move(reg)});
-            state.cached_modules[code_hash] = cached;
-            return std::make_unique<debugging_module>(cached);
+            return state.cached_modules[code_hash] =
+                       debugging_module{std::move(bkend), std::move(reg)};
          }
          catch (eosio::vm::exception& e)
          {
@@ -482,7 +459,7 @@ struct test_chain
                                "Error building eos-vm interp: ${e}", ("e", e.what()));
          }
       }
-      return nullptr;
+      throw std::runtime_error{"missing code for substituted module"};
    }
 };  // test_chain
 
