@@ -21,7 +21,7 @@ jobs:
             - name: GC Job
               run: |
                   curl -i --fail-with-body --request POST               \
-                  --url 'https://eden-prod.vercel.app/api/jobs/gc'       \
+                  --url 'https://eden-prod.vercel.app/api/jobs/gc'      \
                   --header 'Content-Type: application/json'             \
                   --header 'x-job-key: ${{ secrets.PRD_JOBS_AUTH_GC }}' \
                   -d '{"limit": ${{ github.event.inputs.limit || 250 }}}'
