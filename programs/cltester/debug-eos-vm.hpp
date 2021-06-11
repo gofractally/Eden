@@ -109,7 +109,6 @@ namespace debug_eos_vm
 
       void relocate(const void* new_base) { code_begin = new_base; }
 
-      // Cannot use most of the standard library as the STL is not async-signal-safe
       std::uint32_t translate(const void* pc) const
       {
          std::size_t diff = (reinterpret_cast<const char*>(pc) -
