@@ -1608,7 +1608,7 @@ namespace dwarf
 
 extern "C"
 {
-   void __attribute__((noinline, optnone)) __jit_debug_register_code(){};
+   void __attribute__((noinline)) __jit_debug_register_code() { asm(""); };
    dwarf::jit_descriptor __jit_debug_descriptor;
 }
 
