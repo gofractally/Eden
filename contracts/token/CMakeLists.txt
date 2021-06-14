@@ -22,8 +22,9 @@ add_custom_command(TARGET token-abigen POST_BUILD
     COMMAND cp -a ${ROOT_BINARY_DIR}/token.abi ${ROOT_BINARY_DIR}/clsdk/contracts
 )
 
-configure_file(include/token/token.hpp ${ROOT_BINARY_DIR}/clsdk/contracts/token/token.hpp COPYONLY)
-configure_file(include/token/token_ricardian.hpp ${ROOT_BINARY_DIR}/clsdk/contracts/token/token_ricardian.hpp COPYONLY)
+configure_file(include/token/token.hpp ${ROOT_BINARY_DIR}/clsdk/contracts/token/include/token/token.hpp COPYONLY)
+configure_file(include/token/token_ricardian.hpp ${ROOT_BINARY_DIR}/clsdk/contracts/token/include/token/token_ricardian.hpp COPYONLY)
+configure_file(src/token.cpp ${ROOT_BINARY_DIR}/clsdk/contracts/token/src/token.cpp COPYONLY)
 
 add_executable(test-token tests/test-token.cpp)
 target_include_directories(test-token PUBLIC include)

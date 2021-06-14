@@ -51,7 +51,7 @@ function(add_libs suffix)
     add_library(eosio-contract-base${suffix} INTERFACE)
     target_link_libraries(eosio-contract-base${suffix} INTERFACE eosio-core${suffix})
     target_include_directories(eosio-contract-base${suffix} INTERFACE
-        ${clsdk_DIR}/contracts
+        ${clsdk_DIR}/contracts/token/include
         ${clsdk_DIR}/eosiolib/contracts/include
     )
     target_compile_options(eosio-contract-base${suffix} INTERFACE -DCOMPILING_CONTRACT)
@@ -90,7 +90,7 @@ function(add_libs suffix)
     add_library(eosio-contract-abigen${suffix} INTERFACE)
     target_compile_options(eosio-contract-abigen${suffix} INTERFACE -DCOMPILING_ABIGEN)
     target_include_directories(eosio-contract-abigen${suffix} INTERFACE
-        ${clsdk_DIR}/contracts
+        ${clsdk_DIR}/contracts/token/include
         ${clsdk_DIR}/eosiolib/contracts/include
     )
     target_link_libraries(eosio-contract-abigen${suffix} INTERFACE
@@ -105,7 +105,7 @@ function(add_libs suffix)
     )
     target_include_directories(cltestlib${suffix} INTERFACE
         ${clsdk_DIR}/catch2/include
-        ${clsdk_DIR}/contracts
+        ${clsdk_DIR}/contracts/token/include
         ${clsdk_DIR}/eosiolib/contracts/include
         ${clsdk_DIR}/eosiolib/tester/include
     )
