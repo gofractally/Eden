@@ -9,9 +9,7 @@
 #include <eosio/chain/generated_transaction_object.hpp>
 #include <eosio/chain/transaction_context.hpp>
 #include <eosio/chain/types.hpp>
-#include <eosio/chain/wasm_interface_private.hpp>
 #include <eosio/chain/webassembly/interface.hpp>
-#include <eosio/chain/webassembly/runtime_interface.hpp>
 #include <eosio/state_history/create_deltas.hpp>
 #include <eosio/state_history/serialization.hpp>
 #include <eosio/state_history/trace_converter.hpp>
@@ -436,14 +434,10 @@ struct test_chain
 
       if (auto it = state.codes.find(code_hash); it != state.codes.end())
       {
-         IR::Module module;
          auto dwarf_info =
              dwarf::get_info_from_wasm({(const char*)it->second.data(), it->second.size()});
          auto size = dwarf::wasm_exclude_custom({(const char*)it->second.data(), it->second.size()})
                          .remaining();
-         Serialization::MemoryInputStream stream(it->second.data(), size);
-         WASM::scoped_skip_checks no_check;
-         WASM::serialize(stream, module);
          try
          {
             eosio::vm::wasm_code_ptr code(it->second.data(), size);

@@ -634,7 +634,7 @@ namespace dwarf
                            const void* code_start,
                            S& s)
    {
-      std::optional<uint64_t> address = 0;
+      uint64_t address = 0;
       uint32_t file = 1;
       uint32_t line = 1;
 
@@ -656,9 +656,9 @@ namespace dwarf
          if (show_generated_lines)
             fprintf(stderr, "%016lx-%016lx %s:%d\n", range->first + print_addr_adj,
                     range->second + print_addr_adj, info.files[loc.file_index].c_str(), loc.line);
-         if (!address || range->first != *address)
+         if (range->first != address)
          {
-            if (address && range->first < *address)
+            if (range->first < address)
             {
                extended([&](auto& s) {
                   eosio::to_bin(uint8_t(dw_lne_end_sequence), s);
@@ -699,12 +699,9 @@ namespace dwarf
          }
       }  // for(loc)
 
-      if (address)
-      {
-         extended([&](auto& s) {  //
-            eosio::to_bin(uint8_t(dw_lne_end_sequence), s);
-         });
-      }
+      extended([&](auto& s) {  //
+         eosio::to_bin(uint8_t(dw_lne_end_sequence), s);
+      });
    }  // write_line_program
 
    std::vector<char> generate_debug_line(const info& info,
@@ -1190,15 +1187,9 @@ namespace dwarf
       return result;
    }
 
-   template <typename T>
-   struct fill_later
-   {
-      size_t* offset = nullptr;
-   };
-
    struct attr_form_value
    {
-      using value_type = std::variant<uint8_t, uint64_t, std::string, fill_later<uint64_t>>;
+      using value_type = std::variant<uint8_t, uint64_t, std::string>;
 
       uint32_t attr = 0;
       uint32_t form = 0;
@@ -1218,7 +1209,7 @@ namespace dwarf
       bool has_children = false;
       std::vector<attr_form_value> attrs;
 
-      auto key() const { return std::tuple{tag, has_children, attrs}; }
+      auto key() const { return std::tie(tag, has_children, attrs); }
 
       friend bool operator<(const die_pattern& a, const die_pattern& b)
       {
@@ -1263,10 +1254,6 @@ namespace dwarf
                         [&](uint8_t v) { eosio::to_bin(v, s); },
                         [&](uint64_t v) { eosio::to_bin(v, s); },
                         [&](const std::string& str) { write_string(str, s); },
-                        [&](const fill_later<uint64_t>& v) {
-                           *v.offset = info_data.size();
-                           eosio::to_bin(uint64_t(0), s);
-                        },
                     },
                     attr.value);
       }
@@ -1346,16 +1333,10 @@ namespace dwarf
 
          die.tag = dw_tag_subprogram;
          die.has_children = false;
-         if (sub.parent)
-            die.attrs = {
-                {dw_at_inline, dw_form_data1, uint8_t(dw_inl_inlined)},
-                {dw_at_external, dw_form_flag, uint8_t(1)},
-            };
-         else
-            die.attrs = {
-                {dw_at_low_pc, dw_form_addr, fn_begin},
-                {dw_at_high_pc, dw_form_addr, fn_end},
-            };
+         die.attrs = {
+             {dw_at_low_pc, dw_form_addr, fn_begin},
+             {dw_at_high_pc, dw_form_addr, fn_end},
+         };
          if (sub.linkage_name)
             die.attrs.push_back({dw_at_linkage_name, dw_form_string, *sub.linkage_name});
          if (sub.name)
@@ -1414,13 +1395,23 @@ namespace dwarf
                    "wasm file magic number does not match");
       eosio::check(header.version == eosio::vm::constants::version,
                    "wasm file version does not match");
+      const char* found = nullptr;
       while (stream.remaining())
       {
          auto section_begin = stream.pos;
          auto section = eosio::from_bin<wasm_section>(stream);
          if (section.id == eosio::vm::section_id::custom_section)
-            return {begin, section_begin};
+         {
+            if (!found)
+               found = section_begin;
+         }
+         else
+         {
+            eosio::check(!found, "custom sections before non-custom sections not supported");
+         }
       }
+      if (found)
+         return {begin, found};
       return {begin, stream.pos};
    }
 
