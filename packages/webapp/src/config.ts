@@ -20,7 +20,8 @@ if (
     !process.env.NEXT_PUBLIC_APP_MINIMUM_DONATION_AMOUNT ||
     !process.env.NEXT_PUBLIC_ENABLED_WALLETS ||
     !process.env.NEXT_PUBLIC_BOX_UPLOAD_IPFS ||
-    !process.env.NEXT_PUBLIC_BOX_ADDRESS
+    !process.env.NEXT_PUBLIC_BOX_ADDRESS ||
+    !process.env.NEXT_PUBLIC_ZOOM_CLIENT_ID
 ) {
     throw new Error("Eden WebApp Environment Variables are not set");
 }
@@ -50,6 +51,7 @@ APP_MINIMUM_DONATION_AMOUNT="${
 ENABLED_WALLETS="${process.env.NEXT_PUBLIC_ENABLED_WALLETS}"
 BOX_UPLOAD_IPFS="${process.env.NEXT_PUBLIC_BOX_UPLOAD_IPFS}"
 BOX_ADDRESS="${process.env.NEXT_PUBLIC_BOX_ADDRESS}"
+ZOOM_CLIENT_ID="${process.env.NEXT_PUBLIC_ZOOM_CLIENT_ID}"
 `);
 
 console.info(`>>> Dev Configs:
@@ -118,7 +120,9 @@ if (
     typeof window === "undefined" &&
     (!process.env.IPFS_PINATA_API ||
         !process.env.IPFS_PINATA_JWT ||
-        !process.env.JOBS_AUTH_GC)
+        !process.env.JOBS_AUTH_GC ||
+        !process.env.EOS_PRIVATE_KEY_GC_JOB ||
+        !process.env.ZOOM_CLIENT_SECRET)
 ) {
     throw new Error("Missing Config Secrets are not set");
 }
@@ -139,3 +143,8 @@ export const eosPrivateKeys = {
 // DEV CONFIGS
 export const devUseFixtureData =
     process.env.NEXT_PUBLIC_DEV_USE_FIXTURE_DATA === "true";
+
+export const zoom = {
+    clientKey: process.env.NEXT_PUBLIC_ZOOM_CLIENT_ID || "",
+    clientSecret: process.env.ZOOM_CLIENT_SECRET || "",
+};
