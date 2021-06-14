@@ -11,14 +11,20 @@ function(add_abieos suffix)
 
     if(IS_WASM)
         target_link_libraries(abieos${suffix} PUBLIC wasm-base${suffix})
-        set_target_properties(abieos${suffix} PROPERTIES ARCHIVE_OUTPUT_DIRECTORY ${ROOT_BINARY_DIR}/clsdk/lib-wasm)
     endif()
 endfunction()
 
 add_abieos("")
 
 if(IS_WASM)
-    add_abieos(-debug)
+    add_abieos("-debug")
+    add_abieos("-clsdk")
+    add_abieos("-debug-clsdk")
+
+    set_target_properties(abieos-clsdk PROPERTIES ARCHIVE_OUTPUT_DIRECTORY ${ROOT_BINARY_DIR}/clsdk/lib-wasm)
+    set_target_properties(abieos-clsdk PROPERTIES ARCHIVE_OUTPUT_NAME abieos)
+    set_target_properties(abieos-debug-clsdk PROPERTIES ARCHIVE_OUTPUT_DIRECTORY ${ROOT_BINARY_DIR}/clsdk/lib-wasm)
+    set_target_properties(abieos-debug-clsdk PROPERTIES ARCHIVE_OUTPUT_NAME abieos-debug)
 
     copy_headers(include/eosio abieos/include/eosio)
     configure_file(include/eosio/fpconv.license ${ROOT_BINARY_DIR}/clsdk/licenses/LICENSE.fpconv COPYONLY)

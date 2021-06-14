@@ -3,15 +3,17 @@ function(add_token suffix)
     target_include_directories(token${suffix} PUBLIC include)
     target_link_libraries(token${suffix} eosio-contract-simple-malloc${suffix})
     set_target_properties(token${suffix} PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${ROOT_BINARY_DIR})
-
-    add_custom_command(TARGET token${suffix} POST_BUILD
-        COMMAND mkdir -p ${ROOT_BINARY_DIR}/clsdk/contracts
-        COMMAND cp -a $<TARGET_FILE:token${suffix}> ${ROOT_BINARY_DIR}/clsdk/contracts
-    )
 endfunction()
-
 add_token("")
 add_token("-debug")
+
+function(clsdk_token suffix)
+    add_token("${suffix}-clsdk")
+    set_target_properties(token${suffix}-clsdk PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${ROOT_BINARY_DIR}/clsdk/contracts)
+    set_target_properties(token${suffix}-clsdk PROPERTIES OUTPUT_NAME token${suffix})
+endfunction()
+clsdk_token("")
+clsdk_token("-debug")
 
 add_executable(token-abigen src/token.cpp)
 target_include_directories(token-abigen PUBLIC include)
