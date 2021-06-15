@@ -1,16 +1,30 @@
 enable_testing()
 
-add_library(abieos
-    include/eosio/fpconv.c
-    src/abi.cpp
-    src/crypto.cpp
-)
-target_link_libraries(abieos PUBLIC rapidjson)
-target_include_directories(abieos PUBLIC include)
+function(add_abieos suffix)
+    add_library(abieos${suffix}
+        include/eosio/fpconv.c
+        src/abi.cpp
+        src/crypto.cpp
+    )
+    target_link_libraries(abieos${suffix} PUBLIC rapidjson)
+    target_include_directories(abieos${suffix} PUBLIC include)
+
+    if(IS_WASM)
+        target_link_libraries(abieos${suffix} PUBLIC wasm-base${suffix})
+    endif()
+endfunction()
+
+add_abieos("")
 
 if(IS_WASM)
-    target_compile_options(abieos PUBLIC -fno-exceptions -D__eosio_cdt__)
-    set_target_properties(abieos PROPERTIES ARCHIVE_OUTPUT_DIRECTORY ${ROOT_BINARY_DIR}/clsdk/lib-wasm)
+    add_abieos("-debug")
+    add_abieos("-clsdk")
+    add_abieos("-debug-clsdk")
+
+    set_target_properties(abieos-clsdk PROPERTIES ARCHIVE_OUTPUT_DIRECTORY ${ROOT_BINARY_DIR}/clsdk/lib-wasm)
+    set_target_properties(abieos-clsdk PROPERTIES ARCHIVE_OUTPUT_NAME abieos)
+    set_target_properties(abieos-debug-clsdk PROPERTIES ARCHIVE_OUTPUT_DIRECTORY ${ROOT_BINARY_DIR}/clsdk/lib-wasm)
+    set_target_properties(abieos-debug-clsdk PROPERTIES ARCHIVE_OUTPUT_NAME abieos-debug)
 
     copy_headers(include/eosio abieos/include/eosio)
     configure_file(include/eosio/fpconv.license ${ROOT_BINARY_DIR}/clsdk/licenses/LICENSE.fpconv COPYONLY)

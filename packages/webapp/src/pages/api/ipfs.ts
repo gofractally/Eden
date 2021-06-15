@@ -19,10 +19,7 @@ export default async (req: NextApiRequest, res: NextApiResponse) => {
 const handlePostIpfs = async (req: NextApiRequest, res: NextApiResponse) => {
     const result = ipfsPostSchema.safeParse(req.body);
     if (!result.success) {
-        return handleErrors(
-            res,
-            new BadRequestError(result.error.flatten().formErrors)
-        );
+        return handleErrors(res, new BadRequestError(result.error.flatten()));
     }
 
     try {

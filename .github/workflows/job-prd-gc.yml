@@ -1,0 +1,27 @@
+name: job-prd-gc
+on:
+    schedule:
+        - cron: "0 0,6,12,18 * * *"
+    workflow_dispatch:
+        inputs:
+            reason:
+                description: "What is the reason for triggering it manually?"
+                required: true
+            limit:
+                description: "Limit Records to Collect"
+                required: false
+                default: 250
+
+jobs:
+    cron:
+        runs-on: ubuntu-latest
+        container: curlimages/curl:latest
+
+        steps:
+            - name: GC Job
+              run: |
+                  curl -i --fail-with-body --request POST               \
+                  --url 'https://eden-prod.vercel.app/api/jobs/gc'      \
+                  --header 'Content-Type: application/json'             \
+                  --header 'x-job-key: ${{ secrets.PRD_JOBS_AUTH_GC }}' \
+                  -d '{"limit": ${{ github.event.inputs.limit || 250 }}}'

@@ -35,9 +35,12 @@ export const getRow = async <T>(
 
 export const getTableRows = async <T = any>(
     table: string,
-    lowerBound: any,
+    lowerBound: any = "0",
+    upperBound: any = null,
     limit = 1
 ): Promise<T[]> => {
+    const reverse = Boolean(lowerBound === "0" && upperBound);
+
     const requestBody = {
         code: edenContractAccount,
         index_position: 1,
@@ -45,12 +48,12 @@ export const getTableRows = async <T = any>(
         key_type: "",
         limit: `${limit}`,
         lower_bound: lowerBound,
-        reverse: false,
+        upper_bound: upperBound,
+        reverse,
         scope: CONTRACT_SCOPE,
         show_payer: false,
         table: table,
         table_key: "",
-        upper_bound: null,
     };
 
     const response = await fetch(RPC_GET_TABLE_ROWS, {
@@ -65,7 +68,8 @@ export const getTableRows = async <T = any>(
         throw new Error("Invalid table results");
     }
 
-    return data.rows.map((row) => row[1]);
+    const rows = reverse ? data.rows.reverse() : data.rows;
+    return rows.map((row) => row[1]);
 };
 
 export const getTableIndexRows = async (
@@ -91,7 +95,7 @@ export const getTableIndexRows = async (
         key_type: keyType,
         limit: `${limit}`,
         lower_bound: lowerBound,
-        upper_bound: upperBound || null,
+        upper_bound: upperBound,
         reverse: false,
         scope: CONTRACT_SCOPE,
         show_payer: false,

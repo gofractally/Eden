@@ -62,9 +62,7 @@ namespace eden
       inductions.update_video(induction, video);
    }
 
-   void eden::inductendorse(eosio::name account,
-                            uint64_t id,
-                            eosio::checksum256 induction_data_hash)
+   void eden::inductendors(eosio::name account, uint64_t id, eosio::checksum256 induction_data_hash)
    {
       require_auth(account);
       inductions inductions{get_self()};

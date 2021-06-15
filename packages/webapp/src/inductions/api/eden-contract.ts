@@ -4,6 +4,7 @@ import {
     i128BoundsForAccount,
     getTableIndexRows,
     CONTRACT_ENDORSEMENT_TABLE,
+    getTableRows,
 } from "_app";
 
 import { Endorsement, Induction } from "../interfaces";
@@ -90,3 +91,15 @@ export const getCurrentInductions = async (
 
     return { inductions, endorsements };
 };
+
+export const getInductions = async (
+    lowerBound?: string,
+    upperBound?: string,
+    limit = 10
+): Promise<Induction[]> =>
+    getTableRows<Induction>(
+        CONTRACT_INDUCTION_TABLE,
+        lowerBound,
+        upperBound,
+        limit
+    );
