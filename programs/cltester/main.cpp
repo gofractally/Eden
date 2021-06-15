@@ -53,10 +53,15 @@ using rhf_t = eosio::vm::registered_host_functions<callbacks>;
 
 void backtrace();
 
-DEBUG_PARSE_CODE_SECTION(eosio::chain::eos_vm_host_functions_t, eosio::vm::default_options)
+struct vm_options
+{
+   static constexpr std::uint32_t max_call_depth = 1024;
+};
+
+DEBUG_PARSE_CODE_SECTION(eosio::chain::eos_vm_host_functions_t, vm_options)
 using debug_contract_backend = eosio::vm::backend<eosio::chain::eos_vm_host_functions_t,
                                                   eosio::vm::jit_profile,
-                                                  eosio::vm::default_options,
+                                                  vm_options,
                                                   debug_eos_vm::debug_instr_map>;
 
 template <>
@@ -67,11 +72,11 @@ void eosio::vm::machine_code_writer<
    eosio::vm::throw_<wasm_interpreter_exception>("unreachable");
 }
 
-DEBUG_PARSE_CODE_SECTION(rhf_t, eosio::vm::default_options)
+DEBUG_PARSE_CODE_SECTION(rhf_t, vm_options)
 using backend_t = eosio::vm::backend<  //
     rhf_t,
     eosio::vm::jit_profile,
-    eosio::vm::default_options,
+    vm_options,
     debug_eos_vm::debug_instr_map>;
 
 inline constexpr int max_backtrace_frames = 512;
