@@ -2,6 +2,7 @@
 
 #include <boost/algorithm/string.hpp>
 #include <debug-contract.hpp>
+#include <eosio/chain/transaction_context.hpp>
 
 namespace eosio
 {
@@ -61,9 +62,9 @@ namespace eosio
       cfg.add_options()(
           "subst", bpo::value<vector<string>>()->composing(),
           "contract.wasm:debug.wasm. Whenever contract.wasm needs to run, substitute debug.wasm in "
-          "its place and enable debugging support. This bypasses size limits and other constraints "
-          "on debug.wasm. nodeos still enforces constraints on contract.wasm. (may specify "
-          "multiple times)");
+          "its place and enable debugging support. This bypasses size limits, timer limits, and "
+          "other constraints on debug.wasm. nodeos still enforces constraints on contract.wasm. "
+          "(may specify multiple times)");
    }
 
    void debug_plugin::plugin_initialize(const variables_map& options)
@@ -87,6 +88,9 @@ namespace eosio
             iface.substitute_apply = [this](const eosio::chain::digest_type& code_hash,
                                             uint8_t vm_type, uint8_t vm_version,
                                             eosio::chain::apply_context& context) {
+               auto timer_pause =
+                   fc::make_scoped_exit([&]() { context.trx_context.resume_billing_timer(); });
+               context.trx_context.pause_billing_timer();
                return my->cache.substitute_apply(code_hash, vm_type, vm_version, context);
             };
          }
