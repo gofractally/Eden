@@ -24,11 +24,16 @@ if(IS_NATIVE)
         BUILD_ALWAYS 1
         TEST_EXCLUDE_FROM_MAIN 1
         EXCLUDE_FROM_ALL 1
-        BUILD_COMMAND cmake --build . -t eosio_chain -t appbase -j ${NUM_PROCS}
+        BUILD_COMMAND cmake --build . -t eosio_chain -t appbase -t nodeos -t cleos -t keosd -j ${NUM_PROCS}
         INSTALL_COMMAND sh -c "                                             \
             mkdir -p ${ROOT_BINARY_DIR}/eos &&                              \
+            mkdir -p ${ROOT_BINARY_DIR}/clsdk/bin &&                        \
             mkdir -p ${ROOT_BINARY_DIR}/clsdk/licenses &&                   \
             cp -p `find . -name '*.a'` ${ROOT_BINARY_DIR}/eos &&            \
+            cp -p programs/nodeos/nodeos                                    \
+                  programs/cleos/cleos                                      \
+                  programs/keosd/keosd                                      \
+                  ${ROOT_BINARY_DIR}/clsdk/bin &&                           \
             cp -a                                                           \
                 ${CMAKE_CURRENT_BINARY_DIR}/eos/licenses/eosio/LICENSE.*    \
                 ${ROOT_BINARY_DIR}/clsdk/licenses"
@@ -39,7 +44,11 @@ if(IS_NATIVE)
             -DCMAKE_INSTALL_LIBDIR=lib
             -DCMAKE_C_COMPILER_LAUNCHER=${CMAKE_C_COMPILER_LAUNCHER}
             -DCMAKE_CXX_COMPILER_LAUNCHER=${CMAKE_CXX_COMPILER_LAUNCHER}
+            -DEOSIO_ADDITIONAL_PLUGINS=${ROOT_SOURCE_DIR}/programs/debug_plugin
         BUILD_BYPRODUCTS
+            ${ROOT_BINARY_DIR}/clsdk/bin/cleos
+            ${ROOT_BINARY_DIR}/clsdk/bin/keosd
+            ${ROOT_BINARY_DIR}/clsdk/bin/nodeos
             ${CMAKE_BINARY_DIR}/eos/libappbase.a
             ${CMAKE_BINARY_DIR}/eos/libbuiltins.a
             ${CMAKE_BINARY_DIR}/eos/libchainbase.a
