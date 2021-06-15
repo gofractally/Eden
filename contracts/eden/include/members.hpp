@@ -91,12 +91,13 @@ namespace eden
    };
    EOSIO_REFLECT(member_stats_v0, active_members, pending_members, completed_waiting_inductions);
 
-   struct member_stats_v1
+   struct member_stats_v1 : member_stats_v0
    {
       std::vector<uint16_t> ranks;
    };
+   EOSIO_REFLECT(member_stats_v1, base member_stats_v0, ranks)
 
-   using member_stats_variant = std::variant<member_stats_v0>;
+   using member_stats_variant = std::variant<member_stats_v0, member_stats_v1>;
    using member_stats_singleton = eosio::singleton<"memberstats"_n, member_stats_variant>;
 
    class members
@@ -127,11 +128,12 @@ namespace eden
       void deposit(eosio::name account, const eosio::asset& quantity);
       void set_nft(eosio::name account, int32_t nft_template_id);
       void set_active(eosio::name account, const std::string& name);
+      void clear_ranks();
       void set_rank(eosio::name account, uint8_t rank);
       void renew(eosio::name account);
       // Activates the contract if all genesis members are active
       void maybe_activate_contract();
-      member_stats_v0 stats();
+      member_stats_v1 stats();
 
       // this method is used only for administrative purposes,
       // it should never be used outside genesis or test environments

@@ -28,7 +28,7 @@ namespace eden
 
    void members::create(eosio::name account)
    {
-      auto stats = std::get<member_stats_v0>(member_stats.get_or_default());
+      auto stats = this->stats();
       ++stats.pending_members;
       eosio::check(stats.pending_members != 0, "Integer overflow");
       member_stats.set(stats, contract);
@@ -41,7 +41,7 @@ namespace eden
 
    member_table_type::const_iterator members::erase(member_table_type::const_iterator iter)
    {
-      auto stats = std::get<member_stats_v0>(member_stats.get());
+      auto stats = this->stats();
       switch (iter->status())
       {
          case member_status::pending_membership:
@@ -66,7 +66,7 @@ namespace eden
       if (member.status() == member_status::pending_membership)
       {
          member_tb.erase(member);
-         auto stats = std::get<member_stats_v0>(member_stats.get_or_default());
+         auto stats = this->stats();
          eosio::check(stats.pending_members != 0, "Integer overflow");
          --stats.pending_members;
          member_stats.set(stats, contract);
@@ -83,7 +83,7 @@ namespace eden
 
    void members::set_active(eosio::name account, const std::string& name)
    {
-      auto stats = std::get<member_stats_v0>(member_stats.get());
+      auto stats = this->stats();
       eosio::check(stats.pending_members > 0, "Invariant failure: no pending members");
       eosio::check(stats.active_members < max_active_members,
                    "Invariant failure: active members too high");
@@ -118,6 +118,20 @@ namespace eden
             row.election_participation_status() = no_donation;
          }
       });
+      auto stats = this->stats();
+      if (stats.ranks.size() <= rank)
+      {
+         stats.ranks.resize(rank + 1);
+      }
+      ++stats.ranks[rank];
+      member_stats.set(stats, contract);
+   }
+
+   void members::clear_ranks()
+   {
+      auto stats = this->stats();
+      stats.ranks.clear();
+      member_stats.set(stats, contract);
    }
 
    void members::renew(eosio::name account)
@@ -139,7 +153,11 @@ namespace eden
       });
    }
 
-   struct member_stats_v0 members::stats() { return std::get<member_stats_v0>(member_stats.get()); }
+   struct member_stats_v1 members::stats()
+   {
+      return std::visit([](const auto& stats) { return member_stats_v1{stats}; },
+                        member_stats.get_or_default());
+   }
 
    void members::maybe_activate_contract()
    {

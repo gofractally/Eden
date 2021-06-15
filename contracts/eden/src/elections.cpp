@@ -245,7 +245,8 @@ namespace eden
       const auto& state = globals.get();
       member_stats_singleton stats{contract, default_scope};
       uint16_t active_members =
-          stats.exists() ? std::get<member_stats_v0>(stats.get()).active_members : 0;
+          stats.exists() ? std::visit([](const auto& s) { return s.active_members; }, stats.get())
+                         : 0;
       uint16_t new_threshold = active_members + (active_members + 9) / 10;
       new_threshold = std::clamp(new_threshold, min_election_threshold, max_active_members);
       state_sing.set(
@@ -333,6 +334,11 @@ namespace eden
       ++state_value.election_sequence;
       state_value.last_election_time = election_start_time;
       state.set(state_value, contract);
+
+      {
+         members members(contract);
+         members.clear_ranks();
+      }
 
       bylaws bylaws(contract);
       bylaws.new_board();
@@ -481,6 +487,16 @@ namespace eden
       result.lead_representative = winner;
       result.board = std::move(board);
       set_default_election(result.last_election_time.to_time_point());
+      members members{contract};
+      uint8_t round = members.stats().ranks.size();
+      for (auto board_member : result.board)
+      {
+         if (board_member != winner)
+         {
+            members.set_rank(board_member, round);
+         }
+      }
+      members.set_rank(winner, round + 1);
       results.set(result, contract);
    }
 

@@ -388,8 +388,8 @@ TEST_CASE("genesis expiration")
    t.eden_gm.act<actions::genesis>("Eden", eosio::symbol("EOS", 4), s2a("10.0000 EOS"),
                                    std::vector{"alice"_n, "pip"_n, "egeon"_n, "bertie"_n},
                                    "QmTYqoPYf7DiVebTnvwwFdTgsYXg2RnuPrt8uddjfW2kHS",
-                                   attribute_map{}, s2a("1.0000 EOS"), 14 * 24 * 60 * 60, 6, "15:30",
-                                   "");
+                                   attribute_map{}, s2a("1.0000 EOS"), 14 * 24 * 60 * 60, 6,
+                                   "15:30", "");
 
    CHECK(get_eden_membership("alice"_n).status() == eden::member_status::pending_membership);
    CHECK(get_eden_membership("pip"_n).status() == eden::member_status::pending_membership);
@@ -931,7 +931,7 @@ TEST_CASE("election with multiple rounds")
          break;
       }
    }
-      
+
    auto get_current_groups = []() {
       std::map<uint64_t, std::vector<eosio::name>> groups;
       eden::vote_table_type vote_tb("eden.gm"_n, eden::default_scope);
@@ -968,7 +968,17 @@ TEST_CASE("election with multiple rounds")
    CHECK(get_table_size<eden::vote_table_type>() == 12);
    generic_group_vote(get_current_groups());
    CHECK(get_table_size<eden::vote_table_type>() == 3);
-   //generic_group_vote(get_current_groups());
+   {
+      char buf[81] =
+          "\4\0\0\0"
+          "00000000000000000000000000000000"
+          "00000000000000000000000000000000"
+          "\x70\xf0\x00\x5f"
+          "\x00\x00\x00\x00"
+          "\x00\x00\x00\x00";
+      t.eden_gm.act<actions::electseed>(eosio::bytes{std::vector(buf, buf + sizeof(buf) - 1)});
+   }
+   t.chain.start_block((15 * 60 + 30) * 60 * 1000);
    t.chain.start_block(24 * 60 * 60 * 1000);
    t.alice.act<actions::electprocess>(256);
    CHECK(get_table_size<eden::vote_table_type>() == 0);
@@ -977,8 +987,11 @@ TEST_CASE("election with multiple rounds")
    auto result = std::get<eden::election_state_v0>(results.get());
    // alice wins at every level but the last, because everyone votes for the member with the lowest name
    CHECK(std::find(result.board.begin(), result.board.end(), "alice"_n) != result.board.end());
+
+   CHECK(members("eden.gm"_n).stats().ranks ==
+         std::vector<uint16_t>{200 - 48, 48 - 12, 12 - 3, 3 - 1, 1});
 }
-       
+
 TEST_CASE("accounting")
 {
    eden_tester t;
