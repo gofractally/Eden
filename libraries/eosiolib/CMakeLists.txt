@@ -20,12 +20,12 @@ function(add_libs suffix)
 
     add_library(eosio-core${suffix})
     target_link_libraries(eosio-core${suffix} PUBLIC wasm-base${suffix} abieos${suffix} boost)
-    target_include_directories(eosio-core${suffix} PUBLIC core)
+    target_include_directories(eosio-core${suffix} PUBLIC core/include)
     target_sources(eosio-core${suffix} PRIVATE crypto.cpp)
 
     add_library(eosio-contract-base${suffix})
     target_link_libraries(eosio-contract-base${suffix} PUBLIC eosio-core${suffix})
-    target_include_directories(eosio-contract-base${suffix} PUBLIC contracts)
+    target_include_directories(eosio-contract-base${suffix} PUBLIC contracts/include)
     target_compile_options(eosio-contract-base${suffix} INTERFACE -DCOMPILING_CONTRACT)
     target_link_options(eosio-contract-base${suffix} PUBLIC
         -Wl,--stack-first
@@ -66,7 +66,7 @@ function(add_libs suffix)
         tester/wasi_polyfill/__wasi_proc_exit.cpp
     )
     target_compile_options(eosio-contract-abigen${suffix} PUBLIC -DCOMPILING_ABIGEN)
-    target_include_directories(eosio-contract-abigen${suffix} PUBLIC contracts)
+    target_include_directories(eosio-contract-abigen${suffix} PUBLIC contracts/include)
     target_link_libraries(eosio-contract-abigen${suffix} PUBLIC
         boost
         eosio-core${suffix}
@@ -110,7 +110,7 @@ function(add_libs suffix)
         ${WASI_SDK_PREFIX}/lib/clang/11.0.0/lib/wasi/libclang_rt.builtins-wasm32.a
         ${WASI_SDK_PREFIX}/share/wasi-sysroot/lib/wasm32-wasi/crt1.o
     )
-    target_include_directories(cltestlib${suffix} PUBLIC contracts tester)
+    target_include_directories(cltestlib${suffix} PUBLIC contracts/include tester/include)
     target_link_options(cltestlib${suffix} INTERFACE -Wl,--export-table)
     target_link_options(cltestlib${suffix} PUBLIC
         -Wl,--entry,_start
@@ -130,10 +130,10 @@ foreach(suffix "" "-debug")
     endforeach()
 endforeach()
 
-copy_headers(contracts/eosio eosiolib/contracts/include/eosio)
-copy_headers(core eosiolib/core/include)
-copy_headers(core/eosio eosiolib/core/include/eosio)
-copy_headers(tester/eosio eosiolib/tester/include/eosio)
+copy_headers(contracts/include/eosio eosiolib/contracts/include/eosio)
+copy_headers(core/include eosiolib/core/include)
+copy_headers(core/include/eosio eosiolib/core/include/eosio)
+copy_headers(tester/include/eosio eosiolib/tester/include/eosio)
 file(COPY contracts/wasi-polyfill DESTINATION ${ROOT_BINARY_DIR}/clsdk/eosiolib/contracts)
 file(COPY tester/wasi_polyfill DESTINATION ${ROOT_BINARY_DIR}/clsdk/eosiolib/tester)
 configure_file(crypto.cpp ${ROOT_BINARY_DIR}/clsdk/eosiolib/crypto.cpp COPYONLY)
