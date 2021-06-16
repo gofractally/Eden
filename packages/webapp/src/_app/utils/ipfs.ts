@@ -14,16 +14,76 @@ export const validateCID = (str: string) => {
     }
 };
 
-const IPFS_CLIENT = ipfsHttpClient({ url: ipfsApiBaseUrl });
-export const uploadToIpfs = async (file: File) => {
-    const uploadResponse = await IPFS_CLIENT.add(file, {
-        progress: (p: any) => console.log(`uploading to ipfs progress: ${p}`),
+const fetchWithTimeout = async (
+    url: string,
+    options?: RequestInit & { timeout?: number }
+) => {
+    const { timeout = 8000 } = options || {};
+
+    const controller = new AbortController();
+    const id = setTimeout(() => controller.abort(), timeout);
+
+    const response = await fetch(url, {
+        ...options,
+        signal: controller.signal,
     });
-    console.log(uploadResponse);
+    clearTimeout(id);
+
+    return response;
+};
+
+// const IPFS_CLIENT = ipfsHttpClient({ url: ipfsApiBaseUrl });
+import IpfsCore from "ipfs-core";
+// const IPFS = require("ipfs-core");
+let node: IpfsCore.IPFS | undefined = undefined;
+if (typeof window !== "undefined" && !node) {
+    IpfsCore.create().then(async (n) => {
+        node = n;
+
+        const x = await fetchWithTimeout(
+            `https://gateway.ipfs.io/ipfs/QmSxcGZJbEtm1USUVf7ZPXv1W1PzH6UAreAH5kXakkDXg2`
+        );
+        console.info("got ipfs", x.status, x.statusText);
+    });
+}
+
+export const uploadToIpfs = async (file: File) => {
+    if (!node) {
+        throw new Error("Local IPFS Node is not started");
+    }
+    // const uploadResponse = await IPFS_CLIENT.add(file, {
+    //     progress: (p: any) => console.log(`uploading to ipfs progress: ${p}`),
+    // });
+    // console.log(uploadResponse);
+    const { cid } = await node.add(file);
+
+    for (let retries = 1; 0 <= 9; retries++) {
+        await new Promise((resolve) =>
+            setTimeout(resolve, (1 + retries) * 1000)
+        );
+
+        try {
+            const uploadedFile = await fetchWithTimeout(
+                `https://gateway.ipfs.io/ipfs/${cid.toString()}`
+            );
+            if (uploadedFile.ok) {
+                break;
+            }
+        } catch (e) {
+            console.info("ipfs upload request failed", e);
+        }
+
+        if (retries === 9) {
+            throw new Error("fail to upload file to IPFS nodes");
+        }
+    }
 
     const fileBytes = new Uint8Array(await file.arrayBuffer());
     const fileHash = await IpfsHash.of(fileBytes);
-    if (uploadResponse.path !== fileHash) {
+
+    console.info(cid.toString(), node.id(), fileHash);
+    // if (uploadResponse.path !== fileHash) {
+    if (cid.toString() !== fileHash) {
         throw new Error("uploaded cid does not match the local hash");
     }
     return fileHash;

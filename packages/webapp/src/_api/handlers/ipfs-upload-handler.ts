@@ -112,7 +112,7 @@ const pinIpfsCid = async (cid: string) => {
     return pinResults;
 };
 
-const IPFS_CONFIRMATION_RETRIES = 5;
+const IPFS_CONFIRMATION_RETRIES = 9;
 const confirmIpfsPin = async (requestId: string) => {
     for (let retries = 1; retries <= IPFS_CONFIRMATION_RETRIES; retries++) {
         await new Promise((resolve) =>
