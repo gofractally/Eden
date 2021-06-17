@@ -18,6 +18,10 @@ if(BUILD_NATIVE)
     file(APPEND ${CMAKE_BINARY_DIR}/CTestTestfile.cmake "subdirs(\"native\")\n")
 endif()
 
+if(DEFINED WASI_SDK_PREFIX OR DEFINED ENV{EMSDK})
+    add_subdirectory(external/boost)
+endif()
+
 if(DEFINED WASI_SDK_PREFIX)
     set(EDEN_ATOMIC_ASSETS_ACCOUNT atomicassets CACHE STRING "The account holding the atomicassets contract")
     set(EDEN_ATOMIC_MARKET_ACCOUNT atomicmarket CACHE STRING "The account holding the atomicmarket contract")
@@ -43,6 +47,7 @@ if(DEFINED WASI_SDK_PREFIX)
             -DFORCE_COLORED_OUTPUT=${FORCE_COLORED_OUTPUT}
             -DCMAKE_C_COMPILER_LAUNCHER=${CMAKE_C_COMPILER_LAUNCHER}
             -DCMAKE_CXX_COMPILER_LAUNCHER=${CMAKE_CXX_COMPILER_LAUNCHER}
+            -DBOOST_EXTRACTED=${BOOST_EXTRACTED}
     )
     file(APPEND ${CMAKE_BINARY_DIR}/CTestTestfile.cmake "subdirs(\"wasm\")\n")
     ExternalProject_Add_StepTargets(wasm test)
