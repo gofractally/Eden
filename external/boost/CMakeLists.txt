@@ -18,9 +18,9 @@ if(NOT EXISTS ${BOOST_ARCHIVE})
 endif()
 
 if(NOT EXISTS ${BOOST_EXTRACTED})
-    message("Extracting ${BOOST_ARCHIVE}")
+    message("Bootstrapping ${BOOST_ARCHIVE}")
     execute_process(
         WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
-        COMMAND bash -c "tar xf ${BOOST_ARCHIVE} && cd ${BOOST_EXTRACTED} && patch -p0 <${CMAKE_CURRENT_SOURCE_DIR}/boost.patch"
+        COMMAND bash -c "tar xf ${BOOST_ARCHIVE} && cd ${BOOST_EXTRACTED} && patch -p0 <${CMAKE_CURRENT_SOURCE_DIR}/boost.patch && ./bootstrap.sh"
     )
 endif()

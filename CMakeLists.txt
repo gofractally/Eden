@@ -55,6 +55,23 @@ else()
     message(WARNING "WASI_SDK_PREFIX isn't defined; skipping wasm")
 endif()
 
+if(DEFINED ENV{EMSDK})
+    ExternalProject_Add(emscripten
+        SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/emscripten
+        BINARY_DIR emscripten
+        CMAKE_COMMAND emcmake
+        CMAKE_ARGS cmake
+        INSTALL_COMMAND ""
+        BUILD_ALWAYS 1
+        TEST_EXCLUDE_FROM_MAIN 1
+        CMAKE_ARGS
+            -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
+            -DBOOST_EXTRACTED=${BOOST_EXTRACTED}
+    )
+    file(APPEND ${CMAKE_BINARY_DIR}/CTestTestfile.cmake "subdirs(\"emscripten\")\n")
+    ExternalProject_Add_StepTargets(emscripten test)
+endif()
+
 ########## TS PACKAGES ####################
 if(NOT DEFINED SKIP_TS OR NOT SKIP_TS)
     add_custom_target(yarn ALL
