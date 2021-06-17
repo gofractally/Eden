@@ -1,6 +1,6 @@
 #pragma once
+#include <debug_eos_vm/dwarf.hpp>
 #include <eosio/vm/backend.hpp>
-#include "dwarf.hpp"
 
 namespace debug_eos_vm
 {

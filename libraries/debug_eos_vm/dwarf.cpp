@@ -2,7 +2,7 @@
 // * Only supports DWARF version 4
 // * Only supports DWARF produced by clang 11 or 12 in 32-bit WASM mode
 
-#include "dwarf.hpp"
+#include <debug_eos_vm/dwarf.hpp>
 
 #include <eosio/finally.hpp>
 #include <eosio/from_bin.hpp>
