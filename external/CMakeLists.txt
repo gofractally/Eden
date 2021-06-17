@@ -44,7 +44,7 @@ if(IS_NATIVE)
             -DCMAKE_INSTALL_LIBDIR=lib
             -DCMAKE_C_COMPILER_LAUNCHER=${CMAKE_C_COMPILER_LAUNCHER}
             -DCMAKE_CXX_COMPILER_LAUNCHER=${CMAKE_CXX_COMPILER_LAUNCHER}
-            -DEOSIO_ADDITIONAL_PLUGINS=${ROOT_SOURCE_DIR}/programs/debug_plugin
+            -DEOSIO_ADDITIONAL_PLUGINS=${ROOT_SOURCE_DIR}/plugins/debug_plugin
         BUILD_BYPRODUCTS
             ${ROOT_BINARY_DIR}/clsdk/bin/cleos
             ${ROOT_BINARY_DIR}/clsdk/bin/keosd
