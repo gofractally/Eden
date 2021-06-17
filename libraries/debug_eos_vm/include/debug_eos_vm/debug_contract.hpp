@@ -1,9 +1,8 @@
 #pragma once
 
+#include <debug_eos_vm/debug_eos_vm.hpp>
 #include <eosio/chain/apply_context.hpp>
 #include <eosio/chain/webassembly/interface.hpp>
-
-#include "debug-eos-vm.hpp"
 
 namespace debug_contract
 {

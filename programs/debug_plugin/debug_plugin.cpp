@@ -1,7 +1,7 @@
 #include "debug_plugin.hpp"
 
 #include <boost/algorithm/string.hpp>
-#include <debug-contract.hpp>
+#include <debug_eos_vm/debug_contract.hpp>
 #include <eosio/chain/transaction_context.hpp>
 
 namespace eosio

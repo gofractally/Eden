@@ -1,7 +1,6 @@
 #define EOSIO_EOS_VM_JIT_RUNTIME_ENABLED
 
-#include "debug-contract.hpp"
-
+#include <debug_eos_vm/debug_contract.hpp>
 #include <eosio/chain/controller.hpp>
 #include <eosio/chain/generated_transaction_object.hpp>
 #include <eosio/chain/transaction_context.hpp>
