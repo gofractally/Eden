@@ -18,11 +18,84 @@ endif()
 
 set(DEP_PREFIX ${CMAKE_BINARY_DIR}/deps)
 
-# Dependancy builds are done generation time so cmake's find_* commands can find them
+set(DEP_URL https://github.com/eoscommunity/Eden/releases/download/deps)
+set(GMP_ARCHIVE gmp-6.2.1.tar.zst)
+set(GMP_EXTRACTED gmp-6.2.1)
+set(OPENSSL_ARCHIVE openssl-1.1.1k.tar.gz)
+set(OPENSSL_EXTRACTED openssl-1.1.1k)
+
+function(download url archive)
+    if(NOT EXISTS ${archive})
+        message("Downloading ${url}")
+        file(DOWNLOAD ${url} ${archive}
+            STATUS download_status
+            TIMEOUT 60
+            SHOW_PROGRESS
+            TLS_VERIFY ON)
+        list(POP_BACK download_status BOOST_DOWNLOAD_STATUS_MSG)
+        if(NOT download_status EQUAL 0)
+            file(REMOVE ${archive})
+            message(FATAL_ERROR "Download ${url} failed. ${BOOST_DOWNLOAD_STATUS_MSG}")
+        endif()
+    endif()
+endfunction()
+
+download(${DEP_URL}/${GMP_ARCHIVE} ${DEP_PREFIX}/${GMP_ARCHIVE})
+download(${DEP_URL}/${OPENSSL_ARCHIVE} ${DEP_PREFIX}/${OPENSSL_ARCHIVE})
+
+# Dependancy builds are done at generation time so cmake's find_* commands can find them
+if(NOT EXISTS ${DEP_PREFIX}/lib/libgmp.so)
+    message("building gmp")
+    execute_process(
+        WORKING_DIRECTORY ${DEP_PREFIX}
+        COMMAND bash -c "\
+               rm -rf ${GMP_EXTRACTED}                                                         \
+            && tar xf ${GMP_ARCHIVE}                                                           \
+            && cd ${GMP_EXTRACTED}                                                             \
+            && emconfigure ./configure --prefix=${DEP_PREFIX} --host none --disable-assembly   \
+            && emmake make -j                                                                  \
+            && emmake make -j install                                                          \
+            && ln -sf libgmp.a ../lib/libgmp.so                                                \
+        "
+    )
+endif()
+
+if(NOT EXISTS ${DEP_PREFIX}/lib/libgmp.a)
+    message("building openssl")
+    execute_process(
+        WORKING_DIRECTORY ${DEP_PREFIX}
+        COMMAND bash -c "\
+               rm -rf ${OPENSSL_EXTRACTED}                                                          \
+            && tar xf ${OPENSSL_ARCHIVE}                                                            \
+            && cd ${OPENSSL_EXTRACTED}                                                              \
+            && emconfigure bash -c                                                                  \
+               \"CROSS_COMPILE= ./config --prefix=${DEP_PREFIX} no-asm no-afalgeng no-shared\"      \
+            && make -j build_libs                                                                   \
+            && make install_dev                                                                     \
+        "
+    )
+endif()
+
 if(NOT EXISTS ${DEP_PREFIX}/include/boost)
     message("building boost")
     execute_process(
         WORKING_DIRECTORY ${BOOST_EXTRACTED}
-        COMMAND ./b2 --prefix=${DEP_PREFIX} --build-dir=${DEP_PREFIX}/build-boost toolset=emscripten variant=release runtime-link=static link=static --with-chrono --with-date_time --with-filesystem --with-iostreams --with-program_options --with-system --with-test install
+        COMMAND "\
+            ./b2                                    \
+            --prefix=${DEP_PREFIX}                  \
+            --build-dir=${DEP_PREFIX}/build-boost   \
+            toolset=emscripten                      \
+            variant=release                         \
+            runtime-link=static                     \
+            link=static                             \
+            --with-chrono                           \
+            --with-date_time                        \
+            --with-filesystem                       \
+            --with-iostreams                        \
+            --with-program_options                  \
+            --with-system                           \
+            --with-test                             \
+            install                                 \
+        "
     )
 endif()
