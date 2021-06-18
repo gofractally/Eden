@@ -22,7 +22,7 @@ const CommunityStatsCard = ({memberStats}: CommunityStatusProps) => {
             <Heading size={2} className="mb-2">
                 Community Stats
             </Heading>
-            <Link href="/induction/pending-invitations" className="font-medium">
+            <Link href="/members" className="font-medium">
                 {memberStats.active_members} active member
                 {memberStats.active_members !== 1 && "s"}
             </Link>
@@ -66,7 +66,7 @@ export const Index = () => {
                 <div className="col-span-1 lg:col-span-2 space-y-4">
                     <Card>
                         <Heading size={2} className="lg:px-8 xl:px-8 py-4 pt-0">Welcome to Eden</Heading>
-                        <div className="grid grid-cols-1 xl:grid-cols-2 gap-4 md:gap-16 lg:px-8 text-gray-800">
+                        <div className="grid grid-cols-1 xl:grid-cols-2 gap-4 xl:gap-16 lg:px-8 text-gray-800">
                             <div className="col-span-1 xl:grid-cols-2 space-y-2 md:space-y-4">
                                 <Text>
                                     A team of people can be more powerful than the sum
