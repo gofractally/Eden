@@ -12,6 +12,33 @@ import {
     Text,
 } from "_app";
 
+interface CommunityStatusProps {
+    memberStats: any
+}
+
+const CommunityStatsCard = ({memberStats}: CommunityStatusProps) => {
+    return memberStats && (
+        <Card title="Community Stats" titleSize={1} className="h-full space-y-8 text-center p-8 lg:p-12 lg:py-24 xl:p-16 text-md lg:text-xl">
+            <p>
+                <Link href="/induction/pending-invitations">
+                    <strong>
+                        {memberStats.active_members} active member
+                        {memberStats.active_members !== 1 && "s"}
+                    </strong>
+                </Link>
+            </p>
+            <p>
+                <Link href="/induction/pending-invitations">
+                        <strong>
+                            {memberStats.pending_members} pending
+                        invitation
+                        {memberStats.pending_members !== 1 && "s"}
+                    </strong>
+                </Link>
+            </p>
+        </Card>
+)}
+
 export const getServerSideProps: GetServerSideProps = async () => {
     const queryClient = new QueryClient();
     await queryClient.prefetchQuery(queryMembersStats);
@@ -40,59 +67,50 @@ export const Index = () => {
                 independence of its members, thereby securing life, liberty,
                 property, and justice for all.
             </CallToAction>
-            <Card>
-                <div className="grid grid-cols-2 gap-4 md:gap-16 lg:gap-24 lg:px-24 xl:px-56 text-gray-800">
-                    <div className="col-span-2 md:col-span-1 space-y-4">
-                        <Heading size={2}>Welcome to Eden</Heading>
-                        <Text>
-                            A team of people can be more powerful than the sum
-                            of its members, but all teams need a means to reach
-                            consensus, or they will fall apart. Unfortunately,
-                            traditional democratic processes end up empowering
-                            politicians and disempowering the people who
-                            participate.
-                        </Text>
-                        {memberStats && (
-                            <Text>
-                                The community has{" "}
-                                <strong>
-                                    {memberStats.active_members} active member
-                                    {memberStats.active_members !== 1 && "s"}
-                                </strong>{" "}
-                                and{" "}
-                                <strong>
-                                    {memberStats.pending_members} pending
-                                    invitation
-                                    {memberStats.pending_members !== 1 && "s"}
-                                </strong>
-                                .
-                            </Text>
-                        )}
-                    </div>
-                    <div className="col-span-2 md:col-span-1 space-y-4">
-                        <Text>
-                            EdenOS is a revolutionary new democratic process
-                            that protects and enhances the independence and
-                            power of those who join. When you join the Eden
-                            community, you gain access to a group of people
-                            working together to empower you and your family to
-                            make a bigger impact in the world.
-                        </Text>
-                        <Text>
-                            To learn more about Eden and how you can get
-                            involved, visit{" "}
-                            <Link
-                                href="http://eden.eoscommunity.org"
-                                target="_blank"
-                                isExternal
-                            >
-                                eden.eoscommunity.org
-                            </Link>
-                            .
-                        </Text>
-                    </div>
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-0 lg:gap-5 text-gray-800">
+                <div className="col-span-1 lg:col-span-2 space-y-4">
+                    <Card>
+                        <Heading size={2} className="lg:px-8 xl:px-8 py-4 pt-0">Welcome to Eden</Heading>
+                        <div className="grid grid-cols-1 xl:grid-cols-2 gap-4 md:gap-16 lg:px-8 text-gray-800">
+                            <div className="col-span-1 xl:grid-cols-2 space-y-2 md:space-y-4">
+                                <Text>
+                                    A team of people can be more powerful than the sum
+                                    of its members, but all teams need a means to reach
+                                    consensus, or they will fall apart. Unfortunately,
+                                    traditional democratic processes end up empowering
+                                    politicians and disempowering the people who
+                                    participate.
+                                </Text>
+                            </div>
+                            <div className="col-span-1 xl:grid-cols-2 space-y-2 md:space-y-4">
+                                <Text>
+                                    EdenOS is a revolutionary new democratic process
+                                    that protects and enhances the independence and
+                                    power of those who join. When you join the Eden
+                                    community, you gain access to a group of people
+                                    working together to empower you and your family to
+                                    make a bigger impact in the world.
+                                </Text>
+                                <Text>
+                                    To learn more about Eden and how you can get
+                                    involved, visit{" "}
+                                    <Link
+                                        href="http://eden.eoscommunity.org"
+                                        target="_blank"
+                                        isExternal
+                                    >
+                                        eden.eoscommunity.org
+                                    </Link>
+                                    .
+                                </Text>
+                            </div>
+                        </div>
+                    </Card>
                 </div>
-            </Card>
+                <aside className="col-span-1 space-y-4 pb-5">
+                    <CommunityStatsCard memberStats={memberStats} />
+                </aside>
+            </div>
         </RawLayout>
     );
 };
