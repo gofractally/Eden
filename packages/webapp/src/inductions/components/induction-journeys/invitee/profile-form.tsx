@@ -198,7 +198,7 @@ export const InductionProfileForm = ({
                 />
             </Form.LabeledSet>
             <Form.LabeledSet
-                label="Personal blog URL"
+                label="Personal website"
                 htmlFor="blog"
                 className="col-span-6 md:col-span-3 lg:col-span-6 xl:col-span-3"
             >
