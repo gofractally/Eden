@@ -18,24 +18,19 @@ interface CommunityStatusProps {
 
 const CommunityStatsCard = ({memberStats}: CommunityStatusProps) => {
     return memberStats && (
-        <Card title="Community Stats" titleSize={1} className="h-full space-y-8 text-center p-8 lg:p-12 lg:py-24 xl:p-16 text-md lg:text-xl">
-            <p>
-                <Link href="/induction/pending-invitations">
-                    <strong>
-                        {memberStats.active_members} active member
-                        {memberStats.active_members !== 1 && "s"}
-                    </strong>
+        <Card className="flex flex-col justify-center items-center h-full space-y-8 p-8 lg:p-12 lg:py-24 xl:p-16 text-md lg:text-xl">
+            <Heading size={2} className="mb-2">
+                Community Stats
+            </Heading>
+                <Link href="/induction/pending-invitations" className="font-medium">
+                    {memberStats.active_members} active member
+                    {memberStats.active_members !== 1 && "s"}
                 </Link>
-            </p>
-            <p>
-                <Link href="/induction/pending-invitations">
-                        <strong>
-                            {memberStats.pending_members} pending
+                <Link href="/induction/pending-invitations" className="font-medium">
+                    {memberStats.pending_members} pending
                         invitation
-                        {memberStats.pending_members !== 1 && "s"}
-                    </strong>
+                    {memberStats.pending_members !== 1 && "s"}
                 </Link>
-            </p>
         </Card>
 )}
 
