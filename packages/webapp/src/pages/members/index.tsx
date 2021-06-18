@@ -11,7 +11,6 @@ import {
     queryMembersStats,
     queryMembers,
     queryNewMembers,
-    Link,
 } from "_app";
 import { MembersGrid } from "members";
 
@@ -113,9 +112,6 @@ export const MembersPage = (props: Props) => {
                             />
                         </>
                     )}
-                    <Link href="/induction/pending-invitations">
-                        See Pending Invitations to Eden
-                    </Link>
                 </Card>
                 <Card title="All Members" titleSize={2}>
                     {members.isLoading && "Loading members..."}
