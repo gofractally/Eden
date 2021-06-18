@@ -22,8 +22,10 @@ export const InductionPage = () => {
                 </CallToAction>
             )}
             { isCommunityActive && (
-                <Link href="/induction/pending-invitations" className="block w-full my-8 text-center">
-                    See Pending Invitations to Eden
+                <Link href="/induction/pending-invitations" className="block w-full my-8 text-center" >
+                    <span className="text-gray-400">
+                        See all pending community invitations.
+                    </span>
                 </Link>
             )}
         </SingleColLayout>
