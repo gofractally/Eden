@@ -22,15 +22,15 @@ const CommunityStatsCard = ({memberStats}: CommunityStatusProps) => {
             <Heading size={2} className="mb-2">
                 Community Stats
             </Heading>
-                <Link href="/induction/pending-invitations" className="font-medium">
-                    {memberStats.active_members} active member
-                    {memberStats.active_members !== 1 && "s"}
-                </Link>
-                <Link href="/induction/pending-invitations" className="font-medium">
-                    {memberStats.pending_members} pending
-                        invitation
-                    {memberStats.pending_members !== 1 && "s"}
-                </Link>
+            <Link href="/induction/pending-invitations" className="font-medium">
+                {memberStats.active_members} active member
+                {memberStats.active_members !== 1 && "s"}
+            </Link>
+            <Link href="/induction/pending-invitations" className="font-medium">
+                {memberStats.pending_members} pending
+                    invitation
+                {memberStats.pending_members !== 1 && "s"}
+            </Link>
         </Card>
 )}
 
