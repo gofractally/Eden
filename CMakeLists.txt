@@ -60,13 +60,16 @@ if(DEFINED ENV{EMSDK})
         SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/emscripten
         BINARY_DIR emscripten
         CMAKE_COMMAND emcmake
-        CMAKE_ARGS cmake
         INSTALL_COMMAND ""
         BUILD_ALWAYS 1
         TEST_EXCLUDE_FROM_MAIN 1
         CMAKE_ARGS
+            cmake
             -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
+            -DCMAKE_FIND_ROOT_PATH=${CMAKE_CURRENT_BINARY_DIR}/emscripten/deps
             -DBOOST_EXTRACTED=${BOOST_EXTRACTED}
+            -DCMAKE_C_COMPILER_LAUNCHER=${CMAKE_C_COMPILER_LAUNCHER}
+            -DCMAKE_CXX_COMPILER_LAUNCHER=${CMAKE_CXX_COMPILER_LAUNCHER}
     )
     file(APPEND ${CMAKE_BINARY_DIR}/CTestTestfile.cmake "subdirs(\"emscripten\")\n")
     ExternalProject_Add_StepTargets(emscripten test)

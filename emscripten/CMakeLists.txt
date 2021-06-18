@@ -60,7 +60,7 @@ if(NOT EXISTS ${DEP_PREFIX}/lib/libgmp.so)
     )
 endif()
 
-if(NOT EXISTS ${DEP_PREFIX}/lib/libgmp.a)
+if(NOT EXISTS ${DEP_PREFIX}/lib/libssl.a)
     message("building openssl")
     execute_process(
         WORKING_DIRECTORY ${DEP_PREFIX}
@@ -80,7 +80,7 @@ if(NOT EXISTS ${DEP_PREFIX}/include/boost)
     message("building boost")
     execute_process(
         WORKING_DIRECTORY ${BOOST_EXTRACTED}
-        COMMAND "\
+        COMMAND bash -c "\
             ./b2                                    \
             --prefix=${DEP_PREFIX}                  \
             --build-dir=${DEP_PREFIX}/build-boost   \
@@ -99,3 +99,15 @@ if(NOT EXISTS ${DEP_PREFIX}/include/boost)
         "
     )
 endif()
+
+set(Boost_USE_STATIC_RUNTIME ON)
+set(ECC_IMPL secp256k1)
+set(SKIP_FC_TESTS YES)
+option(ENABLE_TOOLS "enable building of tools" OFF)
+
+add_subdirectory(../external/eos/libraries/builtins builtins)
+add_subdirectory(../external/eos/libraries/chain chain)
+add_subdirectory(../external/eos/libraries/chainbase chainbase)
+add_subdirectory(../external/eos/libraries/eos-vm eos-vm)
+add_subdirectory(../external/eos/libraries/fc fc)
+add_subdirectory(../external/eos/libraries/version version)
