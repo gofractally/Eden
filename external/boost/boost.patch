@@ -54,3 +54,23 @@
     !defined(BOOST_TEST_DISABLE_ALT_STACK)
  #    define BOOST_TEST_USE_ALT_STACK
  #  endif
+--- ../operations.cpp   2021-06-18 20:10:10.380000000 -0400
++++ ./libs/filesystem/src/operations.cpp        2021-06-18 20:10:14.310000000 -0400
+@@ -1663,7 +1663,7 @@
+ BOOST_FILESYSTEM_DECL
+ path current_path(error_code* ec)
+ {
+-# if defined(__wasm)
++# if defined(xxxx__wasm)
+   emit_error(BOOST_ERROR_NOT_SUPPORTED, ec, "boost::filesystem::current_path");
+   return path();
+ # elif defined(BOOST_POSIX_API)
+@@ -1734,7 +1734,7 @@
+ BOOST_FILESYSTEM_DECL
+ void current_path(const path& p, system::error_code* ec)
+ {
+-# if defined(UNDER_CE) || defined(__wasm)
++# if defined(UNDER_CE) || defined(xxxx__wasm)
+   emit_error(BOOST_ERROR_NOT_SUPPORTED, p, ec, "boost::filesystem::current_path");
+ # else
+   error(!BOOST_SET_CURRENT_DIRECTORY(p.c_str()) ? BOOST_ERRNO : 0,

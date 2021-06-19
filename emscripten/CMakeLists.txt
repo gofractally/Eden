@@ -1,7 +1,6 @@
 cmake_minimum_required(VERSION 3.16.3)
 cmake_policy(VERSION 3.16)
 project(emscripten)
-enable_testing()
 
 set(IS_EMSCRIPTEN YES)
 get_filename_component(ROOT_SOURCE_DIR ${CMAKE_SOURCE_DIR}/.. ABSOLUTE)
@@ -23,6 +22,8 @@ set(GMP_ARCHIVE gmp-6.2.1.tar.zst)
 set(GMP_EXTRACTED gmp-6.2.1)
 set(OPENSSL_ARCHIVE openssl-1.1.1k.tar.gz)
 set(OPENSSL_EXTRACTED openssl-1.1.1k)
+set(ZLIB_ARCHIVE zlib-1.2.11.tar.gz)
+set(ZLIB_EXTRACTED zlib-1.2.11)
 
 function(download url archive)
     if(NOT EXISTS ${archive})
@@ -40,11 +41,26 @@ function(download url archive)
     endif()
 endfunction()
 
-download(${DEP_URL}/${GMP_ARCHIVE} ${DEP_PREFIX}/${GMP_ARCHIVE})
-download(${DEP_URL}/${OPENSSL_ARCHIVE} ${DEP_PREFIX}/${OPENSSL_ARCHIVE})
-
 # Dependancy builds are done at generation time so cmake's find_* commands can find them
+
+if(NOT EXISTS ${DEP_PREFIX}/lib/libz.a)
+    download(${DEP_URL}/${ZLIB_ARCHIVE} ${DEP_PREFIX}/${ZLIB_ARCHIVE})
+    message("building zlib")
+    execute_process(
+        WORKING_DIRECTORY ${DEP_PREFIX}
+        COMMAND bash -c "\
+               rm -rf ${ZLIB_EXTRACTED}                                     \
+            && tar xf ${ZLIB_ARCHIVE}                                       \
+            && cd ${ZLIB_EXTRACTED}                                         \
+            && emconfigure ./configure --prefix=${DEP_PREFIX} --static      \
+            && emmake make -j                                               \
+            && emmake make -j install                                       \
+        "
+    )
+endif()
+
 if(NOT EXISTS ${DEP_PREFIX}/lib/libgmp.so)
+    download(${DEP_URL}/${GMP_ARCHIVE} ${DEP_PREFIX}/${GMP_ARCHIVE})
     message("building gmp")
     execute_process(
         WORKING_DIRECTORY ${DEP_PREFIX}
@@ -61,6 +77,7 @@ if(NOT EXISTS ${DEP_PREFIX}/lib/libgmp.so)
 endif()
 
 if(NOT EXISTS ${DEP_PREFIX}/lib/libssl.a)
+    download(${DEP_URL}/${OPENSSL_ARCHIVE} ${DEP_PREFIX}/${OPENSSL_ARCHIVE})
     message("building openssl")
     execute_process(
         WORKING_DIRECTORY ${DEP_PREFIX}
@@ -81,6 +98,8 @@ if(NOT EXISTS ${DEP_PREFIX}/include/boost)
     execute_process(
         WORKING_DIRECTORY ${BOOST_EXTRACTED}
         COMMAND bash -c "\
+            ZLIB_LIBRARY_PATH=${DEP_PREFIX}/lib     \
+            ZLIB_INCLUDE=${DEP_PREFIX}/include      \
             ./b2                                    \
             --prefix=${DEP_PREFIX}                  \
             --build-dir=${DEP_PREFIX}/build-boost   \
@@ -104,6 +123,10 @@ set(Boost_USE_STATIC_RUNTIME ON)
 set(ECC_IMPL secp256k1)
 set(SKIP_FC_TESTS YES)
 option(ENABLE_TOOLS "enable building of tools" OFF)
+set(EOSIO_ROOT_KEY "EOS6MRyAjQq8ud7hVNYcfnVPJqcVpscN5So8BhtHuGYqET5GDW5CV")
+
+add_compile_options(-fexceptions)
+add_link_options(-fexceptions)
 
 add_subdirectory(../external/eos/libraries/builtins builtins)
 add_subdirectory(../external/eos/libraries/chain chain)
@@ -111,3 +134,19 @@ add_subdirectory(../external/eos/libraries/chainbase chainbase)
 add_subdirectory(../external/eos/libraries/eos-vm eos-vm)
 add_subdirectory(../external/eos/libraries/fc fc)
 add_subdirectory(../external/eos/libraries/version version)
+add_subdirectory(../external/eos/libraries/wasm-jit wasm-jit)
+add_subdirectory(../libraries/cltestlib cltestlib)
+
+add_library(chain INTERFACE)
+target_link_libraries(chain INTERFACE eosio_chain)
+
+add_executable(t test.cpp)
+target_link_options(t PRIVATE -L${DEP_PREFIX}/lib)
+target_link_libraries(t cltestlib)
+target_link_options(t PRIVATE
+    "SHELL:-s DISABLE_EXCEPTION_CATCHING=0"
+    "SHELL:-s EXIT_RUNTIME=1"
+    "SHELL:-s ALLOW_MEMORY_GROWTH=1"
+    "SHELL:-s DEMANGLE_SUPPORT=1"
+)
+set_target_properties(t PROPERTIES SUFFIX .html)
