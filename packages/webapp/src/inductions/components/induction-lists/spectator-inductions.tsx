@@ -13,7 +13,7 @@ export const SpectatorInductions = ({ inductions }: Props) => (
     <InductionTable.Table
         columns={SPECTATOR_COLUMNS}
         data={getTableData(inductions)}
-        tableHeader="Global Pending Invitations to Eden"
+        tableHeader="Pending community invitations"
     />
 );
 
