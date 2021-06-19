@@ -21,10 +21,13 @@ export const InductionPage = () => {
                     Welcome to Eden. Sign in using your wallet.
                 </CallToAction>
             )}
-            { isCommunityActive && (
-                <Link href="/induction/pending-invitations" className="block w-full my-8 text-center" >
+            {isCommunityActive && (
+                <Link
+                    href="/induction/pending-invitations"
+                    className="block w-full my-8 text-center"
+                >
                     <span className="text-gray-400">
-                        See all pending community invitations.
+                        See all pending community invitations
                     </span>
                 </Link>
             )}
