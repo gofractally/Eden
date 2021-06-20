@@ -146,12 +146,18 @@ target_link_libraries(t cltestlib)
 target_link_options(t PRIVATE
     -gsource-map
     --source-map-base ./
-    --pre-js ${CMAKE_CURRENT_SOURCE_DIR}/test-pre.js
-    "SHELL:-s DISABLE_EXCEPTION_CATCHING=0"
-    "SHELL:-s EXIT_RUNTIME=0"
-    "SHELL:-s ALLOW_MEMORY_GROWTH=1"
-    "SHELL:-s DEMANGLE_SUPPORT=1"
-    "SHELL:-s PROXY_TO_PTHREAD=1"
-    "SHELL:-s STACK_OVERFLOW_CHECK=0"
+    #--pre-js ${CMAKE_CURRENT_SOURCE_DIR}/test-pre.js
+    -flto
+    --embind
+    -sMODULARIZE=1
+    -sEXPORT_NAME="createCLTester"
+    -sDISABLE_EXCEPTION_CATCHING=0
+    -sEXIT_RUNTIME=0
+    -sALLOW_MEMORY_GROWTH=1
+    -sDEMANGLE_SUPPORT=1
+    #-sPROXY_TO_PTHREAD=1
+    -sSTACK_OVERFLOW_CHECK=0
+    #-sASSERTIONS=1
+    -Wno-pthreads-mem-growth
 )
-set_target_properties(t PROPERTIES SUFFIX .html)
+#set_target_properties(t PROPERTIES SUFFIX .html)
