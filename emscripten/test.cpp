@@ -51,6 +51,14 @@ EM_JS(void, init_js, (), {
    {
       constructor(index) { this.index = index; }
       destroy() { return Module.withPromise(p => Module._schedule_destroy_chain(p, this.index)); }
+      startBlock(ms)
+      {
+         return Module.withPromise(p => Module._schedule_start_block(p, this.index, ms));
+      }
+      finishBlock()
+      {
+         return Module.withPromise(p => Module._schedule_finish_block(p, this.index));
+      }
    };
    Module.Chain = Chain;
    Module.createChain = () =>
@@ -96,6 +104,11 @@ void run_in_background(uint32_t promise, F f)
          send_error(promise, "unknown exception");
       }
    });
+}
+
+void ret(uint32_t promise)
+{
+   MAIN_THREAD_ASYNC_EM_ASM({ Module.resolvePromise($0, undefined); }, promise);
 }
 
 struct test_chain : cltestlib::test_chain
@@ -151,7 +164,25 @@ extern "C" void EMSCRIPTEN_KEEPALIVE schedule_destroy_chain(uint32_t promise, ui
    run_in_background(promise, [=] {
       assert_chain(index);
       chains[index] = nullptr;
-      MAIN_THREAD_ASYNC_EM_ASM({ Module.resolvePromise($0, undefined); }, promise);
+      ret(promise);
+   });
+}
+
+extern "C" void EMSCRIPTEN_KEEPALIVE schedule_start_block(uint32_t promise,
+                                                          uint32_t index,
+                                                          double skip_miliseconds)
+{
+   run_in_background(promise, [=] {
+      assert_chain(index).start_block(skip_miliseconds);
+      ret(promise);
+   });
+}
+
+extern "C" void EMSCRIPTEN_KEEPALIVE schedule_finish_block(uint32_t promise, uint32_t index)
+{
+   run_in_background(promise, [=] {
+      assert_chain(index).finish_block();
+      ret(promise);
    });
 }
 

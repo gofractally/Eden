@@ -161,3 +161,5 @@ target_link_options(t PRIVATE
     -Wno-pthreads-mem-growth
 )
 #set_target_properties(t PROPERTIES SUFFIX .html)
+
+configure_file(test.html ${CMAKE_CURRENT_BINARY_DIR}/test.html COPYONLY)

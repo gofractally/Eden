@@ -1,0 +1,25 @@
+<html>
+    <head>
+      <link rel="stylesheet" href="xterm.css" />
+      <script src="xterm.js"></script>
+    </head>
+    <body>
+      <div id="terminal"></div>
+      <script type="text/javascript" src="t.js"></script>
+      <script type="text/javascript">
+        'use strict';
+        let term = new Terminal({cols:100});
+        term.open(document.getElementById('terminal'));
+        (async () => {
+            let t = await createCLTester({
+                printErr(s) {term.write(s+'\r\n');}
+            });
+            let c = await t.createChain();
+            while(true) {
+              await c.startBlock(60_000);
+            }
+            await c.destroy();
+        })();
+      </script>
+    </body>
+  </html>
