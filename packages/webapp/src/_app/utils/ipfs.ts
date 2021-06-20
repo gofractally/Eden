@@ -39,11 +39,6 @@ let node: IpfsCore.IPFS | undefined = undefined;
 if (typeof window !== "undefined" && !node) {
     IpfsCore.create().then(async (n) => {
         node = n;
-
-        const x = await fetchWithTimeout(
-            `https://gateway.ipfs.io/ipfs/QmSxcGZJbEtm1USUVf7ZPXv1W1PzH6UAreAH5kXakkDXg2`
-        );
-        console.info("got ipfs", x.status, x.statusText);
     });
 }
 
@@ -55,7 +50,11 @@ export const uploadToIpfs = async (file: File) => {
     //     progress: (p: any) => console.log(`uploading to ipfs progress: ${p}`),
     // });
     // console.log(uploadResponse);
-    const { cid } = await node.add(file);
+    const { cid } = await node.add(file, {
+        progress: (p: any) => {
+            console.info("adding file progress", p);
+        },
+    });
 
     for (let retries = 1; 0 <= 9; retries++) {
         await new Promise((resolve) =>
