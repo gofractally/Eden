@@ -1,0 +1,1 @@
+Module['printErr'] = Module['print']

@@ -125,8 +125,8 @@ set(SKIP_FC_TESTS YES)
 option(ENABLE_TOOLS "enable building of tools" OFF)
 set(EOSIO_ROOT_KEY "EOS6MRyAjQq8ud7hVNYcfnVPJqcVpscN5So8BhtHuGYqET5GDW5CV")
 
-add_compile_options(-fexceptions)
-add_link_options(-fexceptions)
+add_compile_options(-fexceptions -pthread)
+add_link_options(-fexceptions -pthread)
 
 add_subdirectory(../external/eos/libraries/builtins builtins)
 add_subdirectory(../external/eos/libraries/chain chain)
@@ -144,9 +144,14 @@ add_executable(t test.cpp)
 target_link_options(t PRIVATE -L${DEP_PREFIX}/lib)
 target_link_libraries(t cltestlib)
 target_link_options(t PRIVATE
+    -gsource-map
+    --source-map-base ./
+    --pre-js ${CMAKE_CURRENT_SOURCE_DIR}/test-pre.js
     "SHELL:-s DISABLE_EXCEPTION_CATCHING=0"
-    "SHELL:-s EXIT_RUNTIME=1"
+    "SHELL:-s EXIT_RUNTIME=0"
     "SHELL:-s ALLOW_MEMORY_GROWTH=1"
     "SHELL:-s DEMANGLE_SUPPORT=1"
+    "SHELL:-s PROXY_TO_PTHREAD=1"
+    "SHELL:-s STACK_OVERFLOW_CHECK=0"
 )
 set_target_properties(t PROPERTIES SUFFIX .html)
