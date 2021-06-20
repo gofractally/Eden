@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 
 import { appName, availableWallets, chainConfig } from "config";
-import { anchor, scatter, ledger } from "./config";
+import { anchor, scatter, ledger, wombat } from "./config";
 
 const authenticators: any[] = [];
 if (availableWallets.includes("ANCHOR")) {
@@ -12,6 +12,9 @@ if (availableWallets.includes("SCATTER")) {
 }
 if (availableWallets.includes("LEDGER")) {
     authenticators.push(ledger);
+}
+if (availableWallets.includes("WOMBAT")) {
+    authenticators.push(wombat);
 }
 
 export const EdenUALProvider: React.FC = ({ children }) => {

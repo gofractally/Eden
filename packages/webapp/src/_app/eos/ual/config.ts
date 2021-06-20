@@ -2,6 +2,7 @@ import { chainConfig, shortAppName } from "config";
 import { Anchor } from "ual-anchor";
 import { Scatter } from "ual-scatter";
 import { Ledger } from "ual-ledger";
+import { Wombat } from "ual-wombat";
 
 export const anchor = new Anchor([chainConfig], {
     // Required: The app name, required by anchor-link. Short string identifying the app
@@ -25,3 +26,5 @@ export const anchor = new Anchor([chainConfig], {
 export const scatter = new Scatter([chainConfig], { appName: shortAppName });
 
 export const ledger = new Ledger([chainConfig]);
+
+export const wombat = new Wombat([chainConfig], { appName: shortAppName });
