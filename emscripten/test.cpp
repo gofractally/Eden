@@ -3,7 +3,9 @@
 #include <boost/asio/post.hpp>
 #include <boost/asio/thread_pool.hpp>
 #include <cltestlib/cltestlib.hpp>
+#include <eosio/chain/resource_limits.hpp>
 #include <fc/exception/exception.hpp>
+#include <fc/io/json.hpp>
 
 // JS function calls come in on the main thread then execute in the background thread. This
 // * Stops chainlib from hitting browser restrictions that only apply to the main thread
@@ -19,7 +21,13 @@ EM_JS(void, init_js, (), {
    Module.eatString = s =>
    {
       let result = UTF8ToString(s);
-      free(s);
+      _free(s);
+      return result;
+   };
+   Module.eatBuffer = (data, size) =>
+   {
+      let result = new Uint8Array(GROWABLE_HEAP_U8().subarray(data, data + size));
+      _free(data);
       return result;
    };
    Module.createPromise = () =>
@@ -59,6 +67,14 @@ EM_JS(void, init_js, (), {
       {
          return Module.withPromise(p => Module._schedule_finish_block(p, this.index));
       }
+      get_info()  // eosjs JsonRpc
+      {
+         return Module.withPromise(p => Module._schedule_get_info(p, this.index));
+      }
+      getRawAbi(account)  // eosjs JsonRpc
+      {
+         return Module.withPromise(p => Module._schedule_get_raw_abi(p, this.index, account));
+      }
    };
    Module.Chain = Chain;
    Module.createChain = () =>
@@ -76,6 +92,35 @@ void send_error(uint32_t promise, const char* e)
    MAIN_THREAD_ASYNC_EM_ASM(
        {  //
           Module.removePromise($0).reject(new Error(Module.eatString($1)));
+       },
+       promise, copy);
+}
+
+void ret(uint32_t promise)
+{
+   MAIN_THREAD_ASYNC_EM_ASM({ Module.resolvePromise($0, undefined); }, promise);
+}
+
+void ret(uint32_t promise, const char* s)
+{
+   auto copy = strdup(s);
+   if (!copy)
+      throw std::bad_alloc();
+   MAIN_THREAD_ASYNC_EM_ASM(
+       {  //
+          Module.resolvePromise($0, Module.eatString($1));
+       },
+       promise, copy);
+}
+
+void ret_json(uint32_t promise, const char* s)
+{
+   auto copy = strdup(s);
+   if (!copy)
+      throw std::bad_alloc();
+   MAIN_THREAD_ASYNC_EM_ASM(
+       {  //
+          Module.resolvePromise($0, JSON.parse(Module.eatString($1)));
        },
        promise, copy);
 }
@@ -104,11 +149,6 @@ void run_in_background(uint32_t promise, F f)
          send_error(promise, "unknown exception");
       }
    });
-}
-
-void ret(uint32_t promise)
-{
-   MAIN_THREAD_ASYNC_EM_ASM({ Module.resolvePromise($0, undefined); }, promise);
 }
 
 struct test_chain : cltestlib::test_chain
@@ -182,6 +222,73 @@ extern "C" void EMSCRIPTEN_KEEPALIVE schedule_finish_block(uint32_t promise, uin
 {
    run_in_background(promise, [=] {
       assert_chain(index).finish_block();
+      ret(promise);
+   });
+}
+
+struct get_info_results
+{
+   eosio::chain::chain_id_type chain_id;
+   uint32_t head_block_num = 0;
+   uint32_t last_irreversible_block_num = 0;
+   eosio::chain::block_id_type last_irreversible_block_id;
+   eosio::chain::block_id_type head_block_id;
+   fc::time_point head_block_time;
+   eosio::chain::name head_block_producer;
+   uint64_t virtual_block_cpu_limit = 0;
+   uint64_t virtual_block_net_limit = 0;
+   uint64_t block_cpu_limit = 0;
+   uint64_t block_net_limit = 0;
+   uint32_t fork_db_head_block_num = 0;
+   eosio::chain::block_id_type fork_db_head_block_id;
+};
+FC_REFLECT(get_info_results,
+           (chain_id)(head_block_num)(last_irreversible_block_num)(last_irreversible_block_id)(
+               head_block_id)(head_block_time)(head_block_producer)(virtual_block_cpu_limit)(
+               virtual_block_net_limit)(block_cpu_limit)(block_net_limit)(fork_db_head_block_num)(
+               fork_db_head_block_id))
+
+extern "C" void EMSCRIPTEN_KEEPALIVE schedule_get_info(uint32_t promise, uint32_t index)
+{
+   run_in_background(promise, [=] {
+      auto& chain = assert_chain(index);
+      auto& control = *chain.control;
+      const auto& rm = control.get_resource_limits_manager();
+      get_info_results results{
+          control.get_chain_id(),
+          control.head_block_num(),
+          control.last_irreversible_block_num(),
+          control.last_irreversible_block_id(),
+          control.head_block_id(),
+          control.head_block_time(),
+          control.head_block_producer(),
+          rm.get_virtual_block_cpu_limit(),
+          rm.get_virtual_block_net_limit(),
+          rm.get_block_cpu_limit(),
+          rm.get_block_net_limit(),
+          control.fork_db_pending_head_block_num(),
+          control.fork_db_pending_head_block_id(),
+      };
+      ret_json(promise, fc::json::to_string(results, fc::time_point::maximum()).c_str());
+   });
+}
+
+extern "C" void EMSCRIPTEN_KEEPALIVE schedule_get_raw_abi(uint32_t promise,
+                                                          uint32_t index,
+                                                          const std::string& account)
+{
+   run_in_background(promise, [=] {
+      const auto& chain = assert_chain(index);
+      const auto& abi = chain.control->get_account(eosio::chain::name(account)).abi;
+      char* copy = (char*)malloc(abi.size());
+      if (!copy)
+         throw std::bad_alloc();
+      memcpy(copy, abi.data(), abi.size());
+      MAIN_THREAD_ASYNC_EM_ASM(
+          {  //
+             Module.removePromise($0).accept(Module.eatBuffer($1, $2));
+          },
+          promise, copy, abi.size());
       ret(promise);
    });
 }
