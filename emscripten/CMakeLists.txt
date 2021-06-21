@@ -140,13 +140,12 @@ add_subdirectory(../libraries/cltestlib cltestlib)
 add_library(chain INTERFACE)
 target_link_libraries(chain INTERFACE eosio_chain)
 
-add_executable(t test.cpp)
-target_link_options(t PRIVATE -L${DEP_PREFIX}/lib)
-target_link_libraries(t cltestlib)
-target_link_options(t PRIVATE
+add_executable(cltester test.cpp)
+target_link_options(cltester PRIVATE -L${DEP_PREFIX}/lib)
+target_link_libraries(cltester cltestlib)
+target_link_options(cltester PRIVATE
     -gsource-map
     --source-map-base ./
-    #--pre-js ${CMAKE_CURRENT_SOURCE_DIR}/test-pre.js
     -flto
     --embind
     -sMODULARIZE=1
@@ -155,11 +154,21 @@ target_link_options(t PRIVATE
     -sEXIT_RUNTIME=0
     -sALLOW_MEMORY_GROWTH=1
     -sDEMANGLE_SUPPORT=1
-    #-sPROXY_TO_PTHREAD=1
     -sSTACK_OVERFLOW_CHECK=0
     #-sASSERTIONS=1
     -Wno-pthreads-mem-growth
 )
-#set_target_properties(t PROPERTIES SUFFIX .html)
+add_custom_command(TARGET cltester
+    POST_BUILD
+    COMMAND mkdir -p ${CMAKE_CURRENT_SOURCE_DIR}/node_modules
+    COMMAND ln -sf ${CMAKE_CURRENT_SOURCE_DIR}/node_modules .
+    COMMAND ln -sf ${CMAKE_CURRENT_SOURCE_DIR}/package.json .
+    COMMAND ln -sf ${CMAKE_CURRENT_SOURCE_DIR}/src .
+    COMMAND ln -sf ${CMAKE_CURRENT_SOURCE_DIR}/webpack.config.js .
+    COMMAND ln -sf ${CMAKE_CURRENT_SOURCE_DIR}/yarn.lock .
+    COMMAND ln -sf ${CMAKE_CURRENT_SOURCE_DIR}/test.html .
+    COMMAND yarn
+    COMMAND npx webpack
+)
 
 configure_file(test.html ${CMAKE_CURRENT_BINARY_DIR}/test.html COPYONLY)
