@@ -31,20 +31,12 @@ function simpleAuth(key = defaultPubKey) {
     };
 }
 
-function createAccount(name) {
+function createAccount(name, owner = simpleAuth(), active = simpleAuth()) {
     return {
         account: 'eosio',
         name: 'newaccount',
-        authorization: [{
-            actor: 'eosio',
-            permission: 'active',
-        }],
-        data: {
-            creator: 'eosio',
-            name: 'bob',
-            owner: simpleAuth(),
-            active: simpleAuth(),
-        },
+        authorization: [{ actor: 'eosio', permission: 'active' }],
+        data: { creator: 'eosio', name, owner, active },
     };
 }
 
@@ -53,7 +45,10 @@ function createAccount(name) {
         await (async () => {
             let t = await createCLTester(testerOptions);
             let c = await t.createChain();
+            await c.finishBlock();
             writeTerm(JSON.stringify(await c.get_info(), null, 4) + '\n');
+            writeTerm(JSON.stringify(await c.get_block(1), null, 4) + '\n');
+            writeTerm(JSON.stringify(await c.get_block(2), null, 4) + '\n');
             let api = new Api({ rpc: c, signatureProvider: defaultSignatureProvider });
             await api.transact({
                 actions: [

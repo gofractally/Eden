@@ -3,15 +3,27 @@
 #include <boost/asio/post.hpp>
 #include <boost/asio/thread_pool.hpp>
 #include <cltestlib/cltestlib.hpp>
+#include <eosio/chain/abi_serializer.hpp>
 #include <eosio/chain/resource_limits.hpp>
 #include <fc/exception/exception.hpp>
 #include <fc/io/json.hpp>
 
+using eosio::chain::abi_def;
+using eosio::chain::abi_serializer;
+using eosio::chain::account_object;
+using eosio::chain::block_id_type;
+using eosio::chain::builtin_protocol_feature_t;
+using eosio::chain::by_name;
+using eosio::chain::chain_id_type;
+using eosio::chain::controller;
+using eosio::chain::genesis_state;
+using eosio::chain::name;
+using eosio::chain::signed_block_ptr;
+using eosio::chain::unknown_block_exception;
+
 // JS function calls come in on the main thread then execute in the background thread. This
 // * Stops chainlib from hitting browser restrictions that only apply to the main thread
 // * Stops long chainlib operations from blocking the main thread
-//
-// The JS interface wraps this up with promises
 boost::asio::thread_pool background(1);
 
 // clang-format off
@@ -71,9 +83,18 @@ EM_JS(void, init_js, (), {
       {
          return Module.withPromise(p => Module._schedule_get_info(p, this.index));
       }
-      getRawAbi(account)  // eosjs JsonRpc
+      get_block(b)  // eosjs JsonRpc
       {
-         return Module.withPromise(p => Module._schedule_get_raw_abi(p, this.index, account));
+         return Module.withPromise(p => ccall("schedule_get_block", null,
+                                               [ "number", "number", "string" ],
+                                               [ p, this.index, b + "" ]));
+      }
+      async getRawAbi(account)  // eosjs JsonRpc
+      {
+         const abi = await Module.withPromise(p => ccall("schedule_get_raw_abi", null,
+                                                          [ "number", "number", "string" ],
+                                                          [ p, this.index, account + "" ]));
+         return {accountName : account, abi};
       }
    };
    Module.Chain = Chain;
@@ -125,6 +146,19 @@ void ret_json(uint32_t promise, const char* s)
        promise, copy);
 }
 
+void ret_blob(uint32_t promise, const void* data, size_t size)
+{
+   char* copy = (char*)malloc(size);
+   if (!copy)
+      throw std::bad_alloc();
+   memcpy(copy, data, size);
+   MAIN_THREAD_ASYNC_EM_ASM(
+       {  //
+          Module.removePromise($0).resolve(Module.eatBuffer($1, $2));
+       },
+       promise, copy, size);
+}
+
 template <typename F>
 void run_in_background(uint32_t promise, F f)
 {
@@ -157,23 +191,23 @@ struct test_chain : cltestlib::test_chain
 
    test_chain()
    {
-      eosio::chain::controller::config cfg;
+      controller::config cfg;
       cfg.blocks_dir = dir.path() / "blocks";
       cfg.state_dir = dir.path() / "state";
       cfg.contracts_console = true;
       cfg.state_size = 200 * 1024 * 1024;
       cfg.state_guard_size = 0;
 
-      eosio::chain::genesis_state genesis;
+      genesis_state genesis;
       genesis.initial_timestamp = fc::time_point::from_iso_string("2020-01-01T00:00:00.000");
 
-      control = std::make_unique<eosio::chain::controller>(
-          cfg, cltestlib::make_protocol_feature_set(), genesis.compute_chain_id());
+      control = std::make_unique<controller>(cfg, cltestlib::make_protocol_feature_set(),
+                                             genesis.compute_chain_id());
       control->add_indices();
       control->startup([] { return false; }, genesis);
       control->start_block(control->head_block_time() + fc::microseconds(block_interval_us), 0,
                            {*control->get_protocol_feature_manager().get_builtin_digest(
-                               eosio::chain::builtin_protocol_feature_t::preactivate_feature)});
+                               builtin_protocol_feature_t::preactivate_feature)});
    }
 };
 
@@ -228,19 +262,19 @@ extern "C" void EMSCRIPTEN_KEEPALIVE schedule_finish_block(uint32_t promise, uin
 
 struct get_info_results
 {
-   eosio::chain::chain_id_type chain_id;
+   chain_id_type chain_id;
    uint32_t head_block_num = 0;
    uint32_t last_irreversible_block_num = 0;
-   eosio::chain::block_id_type last_irreversible_block_id;
-   eosio::chain::block_id_type head_block_id;
+   block_id_type last_irreversible_block_id;
+   block_id_type head_block_id;
    fc::time_point head_block_time;
-   eosio::chain::name head_block_producer;
+   name head_block_producer;
    uint64_t virtual_block_cpu_limit = 0;
    uint64_t virtual_block_net_limit = 0;
    uint64_t block_cpu_limit = 0;
    uint64_t block_net_limit = 0;
    uint32_t fork_db_head_block_num = 0;
-   eosio::chain::block_id_type fork_db_head_block_id;
+   block_id_type fork_db_head_block_id;
 };
 FC_REFLECT(get_info_results,
            (chain_id)(head_block_num)(last_irreversible_block_num)(last_irreversible_block_id)(
@@ -273,23 +307,55 @@ extern "C" void EMSCRIPTEN_KEEPALIVE schedule_get_info(uint32_t promise, uint32_
    });
 }
 
+extern "C" void EMSCRIPTEN_KEEPALIVE schedule_get_block(uint32_t promise,
+                                                        uint32_t index,
+                                                        const char* block_num_or_id)
+{
+   run_in_background(promise, [=] {
+      auto& chain = assert_chain(index);
+      auto& control = *chain.control;
+      signed_block_ptr block;
+      try
+      {
+         block = control.fetch_block_by_number(fc::to_uint64(block_num_or_id));
+      }
+      catch (...)
+      {
+         block = control.fetch_block_by_id(fc::variant(block_num_or_id).as<block_id_type>());
+      }
+      EOS_ASSERT(block, unknown_block_exception, "Could not find block: ${block}",
+                 ("block", block_num_or_id));
+      fc::variant pretty_output;
+      auto yield = abi_serializer::create_yield_function(fc::microseconds::maximum());
+      abi_serializer::to_variant(
+          *block, pretty_output,
+          [&](name account) -> fc::optional<abi_serializer> {
+             if (const auto* accnt = control.db().find<account_object, by_name>(account))
+             {
+                abi_def abi;
+                if (abi_serializer::to_abi(accnt->abi, abi))
+                   return abi_serializer(abi, yield);
+             }
+             return {};
+          },
+          yield);
+      uint32_t ref_block_prefix = block->id()._hash[1];
+      auto result = fc::mutable_variant_object(pretty_output.get_object())  //
+          ("id", block->id())                                               //
+          ("block_num", block->block_num())                                 //
+          ("ref_block_prefix", ref_block_prefix);
+      ret_json(promise, fc::json::to_string(result, fc::time_point::maximum()).c_str());
+   });
+}
+
 extern "C" void EMSCRIPTEN_KEEPALIVE schedule_get_raw_abi(uint32_t promise,
                                                           uint32_t index,
-                                                          const std::string& account)
+                                                          const char* account)
 {
    run_in_background(promise, [=] {
       const auto& chain = assert_chain(index);
-      const auto& abi = chain.control->get_account(eosio::chain::name(account)).abi;
-      char* copy = (char*)malloc(abi.size());
-      if (!copy)
-         throw std::bad_alloc();
-      memcpy(copy, abi.data(), abi.size());
-      MAIN_THREAD_ASYNC_EM_ASM(
-          {  //
-             Module.removePromise($0).accept(Module.eatBuffer($1, $2));
-          },
-          promise, copy, abi.size());
-      ret(promise);
+      const auto& abi = chain.control->get_account(name(account)).abi;
+      ret_blob(promise, abi.data(), abi.size());
    });
 }
 
