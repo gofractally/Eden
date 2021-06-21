@@ -4,6 +4,7 @@
   "main": "index.js",
   "license": "MIT",
   "devDependencies": {
+    "buffer": "^6.0.3",
     "copy-webpack-plugin": "^9.0.0",
     "eosjs": "^22.0.0",
     "webpack": "5",

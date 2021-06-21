@@ -4,10 +4,14 @@
 #include <boost/asio/thread_pool.hpp>
 #include <cltestlib/cltestlib.hpp>
 #include <eosio/chain/abi_serializer.hpp>
+#include <eosio/chain/authorization_manager.hpp>
 #include <eosio/chain/resource_limits.hpp>
 #include <fc/exception/exception.hpp>
 #include <fc/io/json.hpp>
 
+using namespace std::literals;
+
+using boost::container::flat_set;
 using eosio::chain::abi_def;
 using eosio::chain::abi_serializer;
 using eosio::chain::account_object;
@@ -18,7 +22,10 @@ using eosio::chain::chain_id_type;
 using eosio::chain::controller;
 using eosio::chain::genesis_state;
 using eosio::chain::name;
+using eosio::chain::public_key_type;
 using eosio::chain::signed_block_ptr;
+using eosio::chain::transaction;
+using eosio::chain::transaction_type_exception;
 using eosio::chain::unknown_block_exception;
 
 // JS function calls come in on the main thread then execute in the background thread. This
@@ -95,6 +102,14 @@ EM_JS(void, init_js, (), {
                                                           [ "number", "number", "string" ],
                                                           [ p, this.index, account + "" ]));
          return {accountName : account, abi};
+      }
+      async getRequiredKeys(params)  // eosjs JsonRpc
+      {
+         const json = JSON.stringify(
+             {transaction : params.transaction, available_keys : params.availableKeys});
+         return await Module.withPromise(p => ccall("schedule_get_required_keys", null,
+                                                     [ "number", "number", "string" ],
+                                                     [ p, this.index, json ]));
       }
    };
    Module.Chain = Chain;
@@ -307,6 +322,20 @@ extern "C" void EMSCRIPTEN_KEEPALIVE schedule_get_info(uint32_t promise, uint32_
    });
 }
 
+template <typename Y>
+auto make_resolver(controller& control, Y& yield)
+{
+   return [&](name account) -> fc::optional<abi_serializer> {
+      if (const auto* accnt = control.db().find<account_object, by_name>(account))
+      {
+         abi_def abi;
+         if (abi_serializer::to_abi(accnt->abi, abi))
+            return abi_serializer(abi, yield);
+      }
+      return {};
+   };
+}
+
 extern "C" void EMSCRIPTEN_KEEPALIVE schedule_get_block(uint32_t promise,
                                                         uint32_t index,
                                                         const char* block_num_or_id)
@@ -327,18 +356,7 @@ extern "C" void EMSCRIPTEN_KEEPALIVE schedule_get_block(uint32_t promise,
                  ("block", block_num_or_id));
       fc::variant pretty_output;
       auto yield = abi_serializer::create_yield_function(fc::microseconds::maximum());
-      abi_serializer::to_variant(
-          *block, pretty_output,
-          [&](name account) -> fc::optional<abi_serializer> {
-             if (const auto* accnt = control.db().find<account_object, by_name>(account))
-             {
-                abi_def abi;
-                if (abi_serializer::to_abi(accnt->abi, abi))
-                   return abi_serializer(abi, yield);
-             }
-             return {};
-          },
-          yield);
+      abi_serializer::to_variant(*block, pretty_output, make_resolver(control, yield), yield);
       uint32_t ref_block_prefix = block->id()._hash[1];
       auto result = fc::mutable_variant_object(pretty_output.get_object())  //
           ("id", block->id())                                               //
@@ -356,6 +374,49 @@ extern "C" void EMSCRIPTEN_KEEPALIVE schedule_get_raw_abi(uint32_t promise,
       const auto& chain = assert_chain(index);
       const auto& abi = chain.control->get_account(name(account)).abi;
       ret_blob(promise, abi.data(), abi.size());
+   });
+}
+
+struct get_required_keys_params
+{
+   fc::variant transaction;
+   flat_set<public_key_type> available_keys;
+};
+FC_REFLECT(get_required_keys_params, (transaction)(available_keys))
+
+extern "C" void EMSCRIPTEN_KEEPALIVE schedule_get_required_keys(uint32_t promise,
+                                                                uint32_t index,
+                                                                const char* json)
+{
+   run_in_background(promise, [=] {
+      const auto& chain = assert_chain(index);
+      auto params = fc::json::from_string(json).as<get_required_keys_params>();
+      transaction trx;
+      auto yield = abi_serializer::create_yield_function(fc::microseconds::maximum());
+      auto resolver = make_resolver(*chain.control, yield);
+      try
+      {
+         abi_serializer::from_variant(params.transaction, trx, resolver, yield);
+      }
+      EOS_RETHROW_EXCEPTIONS(transaction_type_exception, "Invalid transaction")
+      auto required_keys = chain.control->get_authorization_manager().get_required_keys(
+          trx, params.available_keys, fc::seconds(trx.delay_sec));
+      std::string result = "[";
+      bool need_comma = false;
+      for (auto& key : required_keys)
+      {
+         auto str =
+             fc::crypto::config::public_key_base_prefix + "_"s +
+             key._storage.visit(
+                 fc::crypto::base58str_visitor<decltype(key._storage),
+                                               fc::crypto::config::public_key_prefix, -1>({}));
+         if (need_comma)
+            result += ",";
+         result += "\"" + str + "\"";
+      }
+      result += "]";
+      ret_json(promise, result.c_str());
+      return result;
    });
 }
 
