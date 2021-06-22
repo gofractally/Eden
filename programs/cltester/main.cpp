@@ -1,8 +1,7 @@
 #define EOSIO_EOS_VM_JIT_RUNTIME_ENABLED
 
+#include <cltestlib/cltestlib.hpp>
 #include <debug_eos_vm/debug_contract.hpp>
-#include <eosio/chain/controller.hpp>
-#include <eosio/chain/generated_transaction_object.hpp>
 #include <eosio/chain/transaction_context.hpp>
 #include <eosio/chain/types.hpp>
 #include <eosio/state_history/create_deltas.hpp>
@@ -33,7 +32,6 @@ using eosio::convert_to_bin;
 using eosio::chain::block_state_ptr;
 using eosio::chain::builtin_protocol_feature_t;
 using eosio::chain::digest_type;
-using eosio::chain::protocol_feature_exception;
 using eosio::chain::protocol_feature_set;
 using eosio::chain::signed_transaction;
 using eosio::chain::transaction_trace_ptr;
@@ -76,8 +74,6 @@ using backend_t = eosio::vm::backend<  //
 
 inline constexpr int max_backtrace_frames = 512;
 
-inline constexpr int block_interval_ms = 500;
-inline constexpr int block_interval_us = block_interval_ms * 1000;
 inline constexpr uint32_t billed_cpu_time_use = 2000;
 
 inline constexpr int32_t polyfill_root_dir_fd = 3;
@@ -195,39 +191,6 @@ struct intrinsic_context
    }
 };
 
-protocol_feature_set make_protocol_feature_set()
-{
-   protocol_feature_set pfs;
-   std::map<builtin_protocol_feature_t, std::optional<digest_type>> visited_builtins;
-
-   std::function<digest_type(builtin_protocol_feature_t)> add_builtins =
-       [&pfs, &visited_builtins,
-        &add_builtins](builtin_protocol_feature_t codename) -> digest_type {
-      auto res = visited_builtins.emplace(codename, std::optional<digest_type>());
-      if (!res.second)
-      {
-         EOS_ASSERT(res.first->second, protocol_feature_exception,
-                    "invariant failure: cycle found in builtin protocol feature dependencies");
-         return *res.first->second;
-      }
-
-      auto f = protocol_feature_set::make_default_builtin_protocol_feature(
-          codename, [&add_builtins](builtin_protocol_feature_t d) { return add_builtins(d); });
-
-      const auto& pf = pfs.add_feature(f);
-      res.first->second = pf.feature_digest;
-
-      return pf.feature_digest;
-   };
-
-   for (const auto& p : eosio::chain::builtin_protocol_feature_codenames)
-   {
-      add_builtins(p.first);
-   }
-
-   return pfs;
-}
-
 template <typename T>
 using wasm_ptr = eosio::vm::argument_proxy<T*>;
 
@@ -245,15 +208,10 @@ struct test_chain_ref
    test_chain_ref& operator=(const test_chain_ref&);
 };
 
-struct test_chain
+struct test_chain : cltestlib::test_chain
 {
-   eosio::chain::private_key_type producer_key{
-       "5KQwrPbwdL6PhXujxW37FSSQZ1JiwsST4cqQzDeyXtP79zkvFD3"s};
-
    ::state& state;
    fc::temp_directory dir;
-   std::unique_ptr<eosio::chain::controller::config> cfg;
-   std::unique_ptr<eosio::chain::controller> control;
    std::optional<scoped_connection> applied_transaction_connection;
    std::optional<scoped_connection> accepted_block_connection;
    eosio::state_history::trace_converter trace_converter;
@@ -287,13 +245,13 @@ struct test_chain
          }
          snapshot_file.emplace(snapshot, std::ios::in | std::ios::binary);
          snapshot_reader = std::make_shared<eosio::chain::istream_snapshot_reader>(*snapshot_file);
-         control = std::make_unique<eosio::chain::controller>(*cfg, make_protocol_feature_set(),
-                                                              *chain_id);
+         control = std::make_unique<eosio::chain::controller>(
+             *cfg, cltestlib::make_protocol_feature_set(), *chain_id);
       }
       else
       {
-         control = std::make_unique<eosio::chain::controller>(*cfg, make_protocol_feature_set(),
-                                                              genesis.compute_chain_id());
+         control = std::make_unique<eosio::chain::controller>(
+             *cfg, cltestlib::make_protocol_feature_set(), genesis.compute_chain_id());
       }
 
       control->add_indices();
@@ -360,7 +318,7 @@ struct test_chain
       history[control->head_block_num()] = fc::raw::pack(state_result{message});
    }
 
-   void mutating() { intr_ctx.reset(); }
+   void mutating() override { intr_ctx.reset(); }
 
    auto& get_apply_context()
    {
@@ -370,32 +328,6 @@ struct test_chain
          intr_ctx = std::make_unique<intrinsic_context>(*control);
       }
       return *intr_ctx->apply_context;
-   }
-
-   void start_block(int64_t skip_miliseconds = 0)
-   {
-      mutating();
-      if (control->is_building_block())
-         finish_block();
-      control->start_block(control->head_block_time() +
-                               fc::microseconds(skip_miliseconds * 1000ll + block_interval_us),
-                           0);
-   }
-
-   void start_if_needed()
-   {
-      mutating();
-      if (!control->is_building_block())
-         control->start_block(control->head_block_time() + fc::microseconds(block_interval_us), 0);
-   }
-
-   void finish_block()
-   {
-      start_if_needed();
-      ilog("finish block ${n}", ("n", control->head_block_num()));
-      control->finalize_block(
-          [&](eosio::chain::digest_type d) { return std::vector{producer_key.sign(d)}; });
-      control->commit_block();
    }
 };  // test_chain
 
@@ -588,15 +520,6 @@ struct file
       owns = false;
    }
 };
-
-struct push_trx_args
-{
-   eosio::chain::bytes transaction;
-   std::vector<eosio::chain::bytes> context_free_data;
-   std::vector<eosio::chain::signature_type> signatures;
-   std::vector<eosio::chain::private_key_type> keys;
-};
-FC_REFLECT(push_trx_args, (transaction)(context_free_data)(signatures)(keys))
 
 #define DB_WRAPPERS_SIMPLE_SECONDARY(IDX, TYPE)                                                  \
    int32_t db_##IDX##_find_secondary(uint64_t code, uint64_t scope, uint64_t table,              \
@@ -1158,25 +1081,9 @@ struct callbacks
                                 uint32_t cb_alloc_data,
                                 uint32_t cb_alloc)
    {
-      auto args = unpack<push_trx_args>(args_packed);
-      auto transaction = unpack<eosio::chain::transaction>(args.transaction);
-      signed_transaction signed_trx{std::move(transaction), std::move(args.signatures),
-                                    std::move(args.context_free_data)};
       auto& chain = assert_chain(chain_index);
-      chain.start_if_needed();
-      for (auto& key : args.keys)
-         signed_trx.sign(key, chain.control->get_chain_id());
-      auto ptrx = std::make_shared<eosio::chain::packed_transaction>(
-          std::move(signed_trx), eosio::chain::packed_transaction::compression_type::none);
-      auto fut = eosio::chain::transaction_metadata::start_recover_keys(
-          ptrx, chain.control->get_thread_pool(), chain.control->get_chain_id(),
-          fc::microseconds::maximum());
-      auto start_time = std::chrono::steady_clock::now();
-      auto result =
-          chain.control->push_transaction(fut.get(), fc::time_point::maximum(), 2000, true, 2000);
-      auto us = std::chrono::duration_cast<std::chrono::microseconds>(
-          std::chrono::steady_clock::now() - start_time);
-      ilog("chainlib transaction took ${u} us", ("u", us.count()));
+      auto args = unpack<cltestlib::push_trx_args>(args_packed);
+      auto result = chain.push_transaction(billed_cpu_time_use, std::move(args));
       // ilog("${r}", ("r", fc::json::to_pretty_string(result)));
       set_data(cb_alloc_data, cb_alloc,
                convert_to_bin(chain_types::transaction_trace{convert(*result)}));
@@ -1185,15 +1092,8 @@ struct callbacks
    bool tester_exec_deferred(uint32_t chain_index, uint32_t cb_alloc_data, uint32_t cb_alloc)
    {
       auto& chain = assert_chain(chain_index);
-      chain.start_if_needed();
-      const auto& idx =
-          chain.control->db()
-              .get_index<eosio::chain::generated_transaction_multi_index, eosio::chain::by_delay>();
-      auto itr = idx.begin();
-      if (itr != idx.end() && itr->delay_until <= chain.control->pending_block_time())
+      if (auto trace = chain.exec_deferred(billed_cpu_time_use))
       {
-         auto trace = chain.control->push_scheduled_transaction(
-             itr->trx_id, fc::time_point::maximum(), billed_cpu_time_use, true);
          set_data(cb_alloc_data, cb_alloc,
                   convert_to_bin(chain_types::transaction_trace{convert(*trace)}));
          return true;
@@ -1327,7 +1227,7 @@ struct callbacks
       auto& chain = *r.chain.chain;
       chain.start_if_needed();
 
-      auto args = unpack<push_trx_args>(packed_args);
+      auto args = unpack<cltestlib::push_trx_args>(packed_args);
       auto transaction = unpack<eosio::chain::transaction>(args.transaction);
       signed_transaction signed_trx{std::move(transaction), std::move(args.signatures),
                                     std::move(args.context_free_data)};

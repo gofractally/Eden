@@ -18,6 +18,10 @@ if(BUILD_NATIVE)
     file(APPEND ${CMAKE_BINARY_DIR}/CTestTestfile.cmake "subdirs(\"native\")\n")
 endif()
 
+if(DEFINED WASI_SDK_PREFIX OR DEFINED ENV{EMSDK})
+    add_subdirectory(external/boost)
+endif()
+
 if(DEFINED WASI_SDK_PREFIX)
     set(EDEN_ATOMIC_ASSETS_ACCOUNT atomicassets CACHE STRING "The account holding the atomicassets contract")
     set(EDEN_ATOMIC_MARKET_ACCOUNT atomicmarket CACHE STRING "The account holding the atomicmarket contract")
@@ -43,11 +47,32 @@ if(DEFINED WASI_SDK_PREFIX)
             -DFORCE_COLORED_OUTPUT=${FORCE_COLORED_OUTPUT}
             -DCMAKE_C_COMPILER_LAUNCHER=${CMAKE_C_COMPILER_LAUNCHER}
             -DCMAKE_CXX_COMPILER_LAUNCHER=${CMAKE_CXX_COMPILER_LAUNCHER}
+            -DBOOST_EXTRACTED=${BOOST_EXTRACTED}
     )
     file(APPEND ${CMAKE_BINARY_DIR}/CTestTestfile.cmake "subdirs(\"wasm\")\n")
     ExternalProject_Add_StepTargets(wasm test)
 else()
     message(WARNING "WASI_SDK_PREFIX isn't defined; skipping wasm")
+endif()
+
+if(DEFINED ENV{EMSDK})
+    ExternalProject_Add(emscripten
+        SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/emscripten
+        BINARY_DIR emscripten
+        CMAKE_COMMAND emcmake
+        INSTALL_COMMAND ""
+        BUILD_ALWAYS 1
+        TEST_EXCLUDE_FROM_MAIN 1
+        CMAKE_ARGS
+            cmake
+            -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
+            -DCMAKE_FIND_ROOT_PATH=${CMAKE_CURRENT_BINARY_DIR}/emscripten/deps
+            -DBOOST_EXTRACTED=${BOOST_EXTRACTED}
+            -DCMAKE_C_COMPILER_LAUNCHER=${CMAKE_C_COMPILER_LAUNCHER}
+            -DCMAKE_CXX_COMPILER_LAUNCHER=${CMAKE_CXX_COMPILER_LAUNCHER}
+    )
+    file(APPEND ${CMAKE_BINARY_DIR}/CTestTestfile.cmake "subdirs(\"emscripten\")\n")
+    ExternalProject_Add_StepTargets(emscripten test)
 endif()
 
 ########## TS PACKAGES ####################
