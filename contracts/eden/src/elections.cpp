@@ -399,6 +399,16 @@ namespace eden
    uint32_t elections::prepare_election(uint32_t max_steps)
    {
       auto state_variant = state_sing.get();
+      if (auto* state = std::get_if<current_election_state_seeding>(&state_variant))
+      {
+         if (max_steps == 0)
+         {
+            return max_steps;
+         }
+         start_election();
+         state_variant = state_sing.get();
+         --max_steps;
+      }
       if (auto* state = std::get_if<current_election_state_init_voters>(&state_variant))
       {
          // This needs to happen before any members have their ranks adjusted

@@ -864,7 +864,6 @@ TEST_CASE("election")
        "\x00\x00\x00\x00";
    t.eden_gm.act<actions::electseed>(eosio::bytes{std::vector(buf, buf + sizeof(buf) - 1)});
    t.chain.start_block((15 * 60 + 30) * 60 * 1000);
-   t.eden_gm.act<actions::electinit>();
    while (true)
    {
       t.chain.start_block();
@@ -920,7 +919,6 @@ TEST_CASE("election with multiple rounds")
    t.chain.start_block((15 * 60 + 30) * 60 * 1000);
 
    // set up the election
-   t.eden_gm.act<actions::electinit>();
    while (true)
    {
       t.chain.start_block();

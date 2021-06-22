@@ -82,11 +82,7 @@ namespace eden
       void inducted(eosio::name inductee);
 
       void electseed(const eosio::bytes& btc_header);
-
-      void electinit();
-
       void electprepare(uint32_t max_steps);
-
       void electvote(uint8_t round, eosio::name voter, eosio::name candidate);
       void electprocess(uint32_t max_steps);
 
@@ -95,8 +91,6 @@ namespace eden
       void bylawspropose(eosio::name proposer, const std::string& bylaws);
       void bylawsapprove(eosio::name approver, const eosio::checksum256& bylaws_hash);
       void bylawsratify(eosio::name approver, const eosio::checksum256& bylaws_hash);
-
-      void electadvance(uint64_t group);
 
       void gc(uint32_t limit);
 
@@ -162,7 +156,6 @@ namespace eden
               induction_data_hash,
               ricardian_contract(inductendors_ricardian)),
        action(electseed, btc_header),
-       action(electinit),
        action(electprepare, max_steps),
        action(electvote, round, voter, candidate),
        action(electprocess, max_steps),
