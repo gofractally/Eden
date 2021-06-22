@@ -1,3 +1,4 @@
+#include <accounts.hpp>
 #include <bylaws.hpp>
 #include <elections.hpp>
 #include <eosio/crypto.hpp>
@@ -217,6 +218,24 @@ namespace eden
       return base_time + advance.count();
    }
 
+   std::optional<eosio::block_timestamp> elections::get_next_election_time()
+   {
+      if (!state_sing.exists())
+      {
+         return {};
+      }
+      auto state = state_sing.get();
+      if (auto* r = std::get_if<current_election_state_registration>(&state))
+      {
+         return r->start_time;
+      }
+      else if (auto* s = std::get_if<current_election_state_seeding>(&state))
+      {
+         return s->seed.end_time;
+      }
+      return {};
+   }
+
    void elections::set_time(uint8_t day, const std::string& time)
    {
       auto get_digit = [](char ch) {
@@ -329,6 +348,9 @@ namespace eden
       state_sing.set(current_election_state_init_voters{0, election_rng{old_state.seed.current}},
                      contract);
 
+      // Must happen after the election is started
+      setup_distribution(contract, old_state.seed.end_time);
+
       election_state_singleton state(contract, default_scope);
       auto state_value = std::get<election_state_v0>(state.get_or_default());
       ++state_value.election_sequence;
@@ -379,6 +401,12 @@ namespace eden
       auto state_variant = state_sing.get();
       if (auto* state = std::get_if<current_election_state_init_voters>(&state_variant))
       {
+         // This needs to happen before any members have their ranks adjusted
+         max_steps = distribute_monthly(contract, max_steps);
+         if (max_steps == 0)
+         {
+            return max_steps;
+         }
          max_steps = randomize_voters(*state, max_steps);
          if (max_steps > 0)
          {
@@ -498,6 +526,8 @@ namespace eden
       }
       members.set_rank(winner, round + 1);
       results.set(result, contract);
+
+      process_election_distribution(contract);
    }
 
    uint32_t elections::finish_round(uint32_t max_steps)

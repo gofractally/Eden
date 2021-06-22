@@ -90,6 +90,8 @@ namespace eden
       void electvote(uint8_t round, eosio::name voter, eosio::name candidate);
       void electprocess(uint32_t max_steps);
 
+      void distribute(uint32_t max_steps);
+
       void bylawspropose(eosio::name proposer, const std::string& bylaws);
       void bylawsapprove(eosio::name approver, const eosio::checksum256& bylaws_hash);
       void bylawsratify(eosio::name approver, const eosio::checksum256& bylaws_hash);
@@ -164,6 +166,7 @@ namespace eden
        action(electprepare, max_steps),
        action(electvote, round, voter, candidate),
        action(electprocess, max_steps),
+       action(distribute, max_steps),
        action(inductdonate, payer, id, quantity, ricardian_contract(inductdonate_ricardian)),
        action(inductcancel, account, id, ricardian_contract(inductcancel_ricardian)),
        action(inducted, inductee, ricardian_contract(inducted_ricardian)),

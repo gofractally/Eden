@@ -990,6 +990,51 @@ TEST_CASE("election with multiple rounds")
 
    CHECK(members("eden.gm"_n).stats().ranks ==
          std::vector<uint16_t>{200 - 48, 48 - 12, 12 - 3, 3 - 1, 1});
+
+   // Check post-election budget distribution
+   std::vector<eosio::block_timestamp> times;
+   {
+      eden::distribution_table_type dist{"eden.gm"_n, eden::default_scope};
+      for (auto item : dist)
+      {
+         times.push_back(item.distribution_time());
+      }
+   }
+   t.alice.act<actions::distribute>(250);
+   auto get_total = [&] {
+      eosio::asset total = s2a("0.0000 EOS");
+      for (auto t : times)
+      {
+         for (uint8_t i = 0; i < 10; ++i)
+         {
+            eden::account_table_type account_tb{"eden.gm"_n, eden::make_account_scope(t, i).value};
+            for (auto item : account_tb)
+            {
+               total += item.balance();
+            }
+         }
+      }
+      return total;
+   };
+   CHECK(get_total() == s2a("100.0000 EOS"));
+   // Skip forward to the next distribution
+   t.chain.start_block(30ull * 24 * 60 * 60 * 1000);
+   t.alice.act<actions::distribute>(250);
+   CHECK(get_total() == s2a("195.0000 EOS"));
+   // Skip into the next election
+   t.chain.start_block(180ull * 24 * 60 * 60 * 1000);
+   t.alice.act<actions::distribute>(1);
+   {
+      eden::distribution_table_type dist{"eden.gm"_n, eden::default_scope};
+      for (auto item : dist)
+      {
+         times.push_back(item.distribution_time());
+      }
+      std::sort(times.begin(), times.end());
+      times.erase(std::unique(times.begin(), times.end()), times.end());
+   }
+   t.alice.act<actions::distribute>(5000);
+   CHECK(get_total() == s2a("607.9808 EOS"));
 }
 
 TEST_CASE("accounting")

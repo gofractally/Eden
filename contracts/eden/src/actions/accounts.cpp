@@ -93,4 +93,10 @@ namespace eden
       accounts{get_self()}.sub_balance(owner, quantity);
       accounts{get_self(), "owned"_n}.add_balance("master"_n, quantity);
    }
+
+   void eden::distribute(uint32_t max_steps)
+   {
+      eosio::check(distribute_monthly(get_self(), max_steps) != max_steps, "Nothing to do");
+   }
+
 }  // namespace eden

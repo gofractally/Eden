@@ -116,6 +116,8 @@ namespace eden
       members members{get_self()};
       inductions inductions{get_self()};
 
+      init_pools(get_self());
+
       elections elections{get_self()};
       elections.set_time(election_day, election_time);
 

@@ -232,6 +232,7 @@ namespace eden
             globals(contract)
       {
       }
+      std::optional<eosio::block_timestamp> get_next_election_time();
       void set_time(uint8_t day, const std::string& time);
       void set_default_election(eosio::time_point_sec origin_time);
       void trigger_election();
