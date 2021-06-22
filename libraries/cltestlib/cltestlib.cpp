@@ -69,26 +69,34 @@ namespace cltestlib
       control->commit_block();
    }
 
+   eosio::chain::transaction_trace_ptr test_chain::push_transaction(
+       uint32_t billed_cpu_time_us,
+       std::shared_ptr<eosio::chain::packed_transaction> ptrx)
+   {
+      start_if_needed();
+      auto start_time = std::chrono::steady_clock::now();
+      auto fut = eosio::chain::transaction_metadata::start_recover_keys(
+          ptrx, control->get_thread_pool(), control->get_chain_id(), fc::microseconds::maximum());
+      auto result = control->push_transaction(fut.get(), fc::time_point::maximum(),
+                                              billed_cpu_time_us, true, billed_cpu_time_us);
+      auto us = std::chrono::duration_cast<std::chrono::microseconds>(
+          std::chrono::steady_clock::now() - start_time);
+      ilog("chainlib transaction took ${u} us, billed ${b} us",
+           ("u", us.count())("b", billed_cpu_time_us));
+      return result;
+   }
+
    eosio::chain::transaction_trace_ptr test_chain::push_transaction(uint32_t billed_cpu_time_us,
                                                                     push_trx_args&& args)
    {
       auto transaction = fc::raw::unpack<eosio::chain::transaction>(args.transaction);
       eosio::chain::signed_transaction signed_trx{
           std::move(transaction), std::move(args.signatures), std::move(args.context_free_data)};
-      start_if_needed();
       for (auto& key : args.keys)
          signed_trx.sign(key, control->get_chain_id());
       auto ptrx = std::make_shared<eosio::chain::packed_transaction>(
           std::move(signed_trx), eosio::chain::packed_transaction::compression_type::none);
-      auto fut = eosio::chain::transaction_metadata::start_recover_keys(
-          ptrx, control->get_thread_pool(), control->get_chain_id(), fc::microseconds::maximum());
-      auto start_time = std::chrono::steady_clock::now();
-      auto result = control->push_transaction(fut.get(), fc::time_point::maximum(),
-                                              billed_cpu_time_us, true, billed_cpu_time_us);
-      auto us = std::chrono::duration_cast<std::chrono::microseconds>(
-          std::chrono::steady_clock::now() - start_time);
-      ilog("chainlib transaction took ${u} us", ("u", us.count()));
-      return result;
+      return push_transaction(billed_cpu_time_us, std::move(ptrx));
    }
 
    eosio::chain::transaction_trace_ptr test_chain::exec_deferred(uint32_t billed_cpu_time_us)

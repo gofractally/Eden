@@ -50,15 +50,16 @@ function createAccount(name, owner = simpleAuth(), active = simpleAuth()) {
             writeTerm(JSON.stringify(await c.get_block(1), null, 4) + '\n');
             writeTerm(JSON.stringify(await c.get_block(2), null, 4) + '\n');
             let api = new Api({ rpc: c, signatureProvider: defaultSignatureProvider });
-            await api.transact({
+            writeTerm(JSON.stringify(await api.transact({
                 actions: [
                     createAccount('alice'),
                     createAccount('bob'),
                     createAccount('sue'),
                 ]
-            }, { useLastIrreversible: true, expireSeconds: 1 });
-            while (true)
-                await c.finishBlock();
+            }, { useLastIrreversible: true, expireSeconds: 1 }), null, 4) + '\n');
+            await c.finishBlock();
+            // while (true)
+            //     await c.finishBlock();
         })();
     } catch (e) {
         writeTerm(e + '\n');

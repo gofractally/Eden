@@ -27,6 +27,9 @@ namespace cltestlib
       void start_block(int64_t skip_miliseconds = 0);
       void start_if_needed();
       void finish_block();
+      eosio::chain::transaction_trace_ptr push_transaction(
+          uint32_t billed_cpu_time_us,
+          std::shared_ptr<eosio::chain::packed_transaction> ptrx);
       eosio::chain::transaction_trace_ptr push_transaction(uint32_t billed_cpu_time_us,
                                                            push_trx_args&& args);
       eosio::chain::transaction_trace_ptr exec_deferred(uint32_t billed_cpu_time_us);
