@@ -3,7 +3,7 @@ import cors from "cors";
 import { json as bpJson, urlencoded as bpUrlencoded } from "body-parser";
 
 import routes from "./routes";
-import { serverConfig } from "./config";
+import { serverConfig, env } from "./config";
 import logger, { setupExpressLogger } from "./logger";
 
 // rest of the code remains same
@@ -22,4 +22,5 @@ app.listen(serverConfig.port, () => {
     logger.info(
         `Server running at http://${serverConfig.host}:${serverConfig.port}`
     );
+    logger.info(`Environment=${env}`);
 });
