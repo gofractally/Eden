@@ -37,6 +37,7 @@ namespace eden
       uint32_t election_start_time = 0xffffffffu;  // seconds from the start of Sunday
       uint32_t election_round_time_sec =
           60 * 60;  // each round lasts 1 hour (TODO: + time to report results)
+      eosio::asset election_donation;
       auto upgrade() const { return *this; }
    };
    EOSIO_REFLECT(global_data_v1, base global_data_v0, election_start_time);
@@ -63,5 +64,6 @@ namespace eden
       eosio::symbol default_token() const { return data.minimum_donation.symbol; }
       void set_stage(contract_stage stage);
       void set_election_start_time(uint32_t time);
+      void set_election_donation(eosio::asset amount);
    };
 }  // namespace eden

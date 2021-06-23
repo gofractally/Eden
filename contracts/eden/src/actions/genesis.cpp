@@ -95,6 +95,7 @@ namespace eden
                       uint32_t auction_duration,
                       uint8_t election_day,
                       const std::string& election_time,
+                      const eosio::asset& election_donation,
                       eosio::ignore<std::string> memo)
    {
       require_auth(get_self());
@@ -112,7 +113,8 @@ namespace eden
                 .minimum_donation = minimum_donation,
                 .auction_starting_bid = auction_starting_bid,
                 .auction_duration = auction_duration,
-                .stage = contract_stage::genesis}}};
+                .stage = contract_stage::genesis},
+               .election_donation = election_donation}};
       members members{get_self()};
       inductions inductions{get_self()};
 

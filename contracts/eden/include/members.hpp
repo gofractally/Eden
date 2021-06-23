@@ -57,8 +57,6 @@ namespace eden
    // - A member who does not make a donation before the election starts (induction
    //   donations do count) will be deactivated.
    //
-   // A member is part of the election iff election_sequence == election_info.election_sequence - 1
-   // A an active member can donate if election_sequence == election_info.election_sequence - 1 and there is not a current election.
    struct member_v1 : member_v0
    {
    };
@@ -130,7 +128,7 @@ namespace eden
       void set_active(eosio::name account, const std::string& name);
       void clear_ranks();
       void set_rank(eosio::name account, uint8_t rank);
-      void renew(eosio::name account);
+      void election_opt(const member& member, bool participating);
       // Activates the contract if all genesis members are active
       void maybe_activate_contract();
       member_stats_v1 stats();

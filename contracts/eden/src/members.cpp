@@ -134,22 +134,17 @@ namespace eden
       member_stats.set(stats, contract);
    }
 
-   void members::renew(eosio::name account)
+   void members::election_opt(const member& member, bool participating)
    {
-      election_state_singleton election_state(contract, default_scope);
-      auto election_sequence =
-          std::get<election_state_v0>(election_state.get_or_default()).election_sequence;
-      const auto& member = get_member(account);
-      if (member.election_participation_status() != no_donation)
-      {
-         eosio::check(false, "Cannot donate at this time");
-      }
+      check_active_member(member.account());
       member_tb.modify(member, eosio::same_payer, [&](auto& row) {
-         row.value = member_v1{{.account = row.account(),
-                                .name = row.name(),
-                                .status = member_status::active_member,
-                                .nft_template_id = row.nft_template_id(),
-                                .election_participation_status = in_election}};
+         row.value = member_v1{
+             {.account = row.account(),
+              .name = row.name(),
+              .status = row.status(),
+              .nft_template_id = row.nft_template_id(),
+              .election_participation_status = participating ? in_election : not_in_election,
+              .election_rank = row.election_rank()}};
       });
    }
 

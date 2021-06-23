@@ -47,4 +47,10 @@ namespace eden
       data.election_start_time = start_time;
       get_global_singleton(contract).set(data, eosio::same_payer);
    }
+
+   void globals::set_election_donation(eosio::asset amount)
+   {
+      data.election_donation = amount;
+      get_global_singleton(contract).set(data, eosio::same_payer);
+   }
 }  // namespace eden
