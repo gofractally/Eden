@@ -1,4 +1,4 @@
-name: webapp
+name: box
 
 on:
     push:
@@ -8,48 +8,41 @@ on:
     pull_request:
         types: [assigned, opened, synchronize, reopened, labeled]
         paths:
-            - "docker/eden-webapp.Dockerfile"
+            - "docker/eden-box.Dockerfile"
             - ".eslintignore"
             - ".eslintrc.js"
             - ".prettierrc.json"
             - "lerna.json"
-            - "packages/webapp"
+            - "packages/box"
             - "package.json"
             - "tsconfig.build.json"
             - "tsconfig.json"
             - "yarn.lock"
 
 jobs:
-    webapp-e2e:
-        name: WebApp E2E Tests
+    box-e2e:
+        name: Eden Box E2E Tests
         runs-on: ubuntu-latest
 
         steps:
             - name: ✅ Checkout code
               uses: actions/checkout@v2
 
-            - name: 🛠 Build and Start WebApp
+            - name: 🛠 Build and Start Box
               run: |
                   yarn
-                  yarn build --stream
-                  yarn start --stream &
+                  cd packages/box
+                  yarn build
+                  yarn start &
 
             - name: 🧪 Run E2E
+              # TODO: add real E2E tests... for now it's just a shameless curl ping
               run: |
-                  yarn test --stream
+                  curl localhost:3032
 
-            - name: 🎥 Upload Cypress Results
-              uses: actions/upload-artifact@v2
-              if: always()
-              with:
-                  name: Cypress E2E Videos and Screenshots
-                  path: |
-                      packages/webapp/cypress/screenshots
-                      packages/webapp/cypress/videos
-
-    webapp-build:
-        needs: webapp-e2e
-        name: Build Eden Community WebApp
+    box-build:
+        needs: box-e2e
+        name: Build Eden Box
         runs-on: ubuntu-latest
 
         steps:
@@ -60,7 +53,7 @@ jobs:
               id: prep
               run: |
                   REGISTRY="ghcr.io"
-                  IMAGE="${REGISTRY}/${{ github.repository_owner }}/eden-webapp"
+                  IMAGE="${REGISTRY}/${{ github.repository_owner }}/eden-box"
                   TAGS="${IMAGE}:${{ github.sha }}"
                   if [[ $GITHUB_REF == ref/head/master ]]; then
                     TAGS="${TAGS},${IMAGE}:latest"
@@ -85,5 +78,5 @@ jobs:
               uses: docker/build-push-action@v2
               with:
                   # push: true # TODO: follow up on this... https://github.community/t/403-error-on-container-registry-push-from-github-action/173071/5
-                  file: docker/eden-webapp.Dockerfile
+                  file: docker/eden-box.Dockerfile
                   tags: ${{ steps.prep.outputs.tags }}
