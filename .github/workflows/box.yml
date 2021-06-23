@@ -8,7 +8,7 @@ on:
     pull_request:
         types: [assigned, opened, synchronize, reopened, labeled]
         paths:
-            # - "docker/eden-webapp.Dockerfile"
+            - "docker/eden-box.Dockerfile"
             - ".eslintignore"
             - ".eslintrc.js"
             - ".prettierrc.json"
