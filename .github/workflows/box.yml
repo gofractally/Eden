@@ -1,0 +1,41 @@
+name: box
+
+on:
+    push:
+        branches:
+            - main
+            - "test/*"
+    pull_request:
+        types: [assigned, opened, synchronize, reopened, labeled]
+        paths:
+            # - "docker/eden-webapp.Dockerfile"
+            - ".eslintignore"
+            - ".eslintrc.js"
+            - ".prettierrc.json"
+            - "lerna.json"
+            - "packages/box"
+            - "package.json"
+            - "tsconfig.build.json"
+            - "tsconfig.json"
+            - "yarn.lock"
+
+jobs:
+    box-build:
+        name: Build Eden Box
+        runs-on: ubuntu-latest
+
+        steps:
+            - name: ✅ Checkout code
+              uses: actions/checkout@v2
+
+            - name: 🛠 Build and Start Box
+              run: |
+                  yarn
+                  cd packages/box
+                  yarn build
+                  yarn start &
+
+            - name: 🧪 Run E2E
+              # TODO: add real E2E tests... for now it's just a shameless curl ping
+              run: |
+                  curl localhost:3032
