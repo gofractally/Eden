@@ -6,6 +6,21 @@
 
 namespace eden
 {
+   void eden::electconfig(uint8_t election_day,
+                          const std::string& election_time,
+                          const eosio::asset& election_donation)
+   {
+      eosio::require_auth(get_self());
+
+      elections elections{get_self()};
+      elections.set_time(election_day, election_time);
+
+      globals globals{get_self()};
+      eosio::check(election_donation.symbol == globals.default_token(),
+                   "Wrong token for election donation");
+      globals.set_election_donation(election_donation);
+   }
+
    void eden::electdonate(eosio::name payer, const eosio::asset& quantity)
    {
       eosio::require_auth(payer);

@@ -77,9 +77,13 @@ namespace eden
       if (record == account_tb.end())
       {
          // TODO: create another global
-         eosio::check(
-             account_tb.get_scope() != default_scope || quantity >= globals.get().minimum_donation,
-             "insufficient deposit to open an account");
+         auto minimum_donation = globals.get().minimum_donation;
+         if (globals.get().election_donation.symbol != eosio::symbol())
+         {
+            minimum_donation = std::min(minimum_donation, globals.get().election_donation);
+         }
+         eosio::check(account_tb.get_scope() != default_scope || quantity >= minimum_donation,
+                      "insufficient deposit to open an account");
          account_tb.emplace(
              contract, [&](auto& a) { a.value = account_v0{.owner = owner, .balance = quantity}; });
       }

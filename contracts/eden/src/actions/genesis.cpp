@@ -106,6 +106,9 @@ namespace eden
       eosio::check(community_symbol == auction_starting_bid.symbol,
                    "community symbol does not match auction starting bid");
 
+      eosio::check(community_symbol == election_donation.symbol,
+                   "community symbol does not match election donation");
+
       migrations{get_self()}.init();
 
       globals{get_self(),
