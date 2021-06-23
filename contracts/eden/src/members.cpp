@@ -137,6 +137,14 @@ namespace eden
    void members::election_opt(const member& member, bool participating)
    {
       check_active_member(member.account());
+
+      elections elections{contract};
+      auto election_time = elections.get_next_election_time();
+      eosio::check(
+          election_time && eosio::current_time_point() + eosio::seconds(election_seeding_window) <
+                               election_time->to_time_point(),
+          "Registration has closed");
+
       member_tb.modify(member, eosio::same_payer, [&](auto& row) {
          row.value = member_v1{
              {.account = row.account(),
