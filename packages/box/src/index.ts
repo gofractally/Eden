@@ -4,21 +4,22 @@ import { json as bpJson, urlencoded as bpUrlencoded } from "body-parser";
 
 import routes from "./routes";
 import { serverConfig } from "./config";
+import logger, { setupExpressLogger } from "./logger";
 
 // rest of the code remains same
 const app = express();
 app.locals.name = serverConfig.appName;
 app.locals.version = serverConfig.appVersion;
 
+setupExpressLogger(app);
 app.use(cors());
-
 app.use(bpJson());
 app.use(bpUrlencoded({ extended: true }));
 
 app.use("/", routes);
 
 app.listen(serverConfig.port, () => {
-    console.info(
+    logger.info(
         `Server running at http://${serverConfig.host}:${serverConfig.port}`
     );
 });

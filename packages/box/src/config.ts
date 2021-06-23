@@ -1,5 +1,7 @@
 import * as packageJson from "../package.json";
 
+export const env = process.env.NODE_ENV || "development";
+
 export const serverConfig = {
     appName: process.env.APP_NAME || packageJson.name,
     appVersion: packageJson.version,
