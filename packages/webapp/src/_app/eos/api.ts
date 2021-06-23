@@ -7,6 +7,7 @@ export const CONTRACT_SCOPE = "0";
 export const CONTRACT_GLOBAL_TABLE = "global";
 export const CONTRACT_MEMBER_TABLE = "member";
 export const CONTRACT_MEMBERSTATS_TABLE = "memberstats";
+export const CONTRACT_ACCOUNT_TABLE = "account";
 export const CONTRACT_INDUCTION_TABLE = "induction";
 export const CONTRACT_ENDORSEMENT_TABLE = "endorsement";
 
@@ -18,10 +19,15 @@ interface TableResponse<T> {
 
 export const getRow = async <T>(
     table: string,
-    keyName?: string,
-    keyValue?: string
+    keyName?: string, // move these into options obj
+    keyValue?: string,
+    options?: any,
 ): Promise<T | undefined> => {
-    const rows = await getTableRows(table, keyValue);
+    const rows = options && options.scope ?
+        await getTableRows(table, options.scope, keyValue)
+        : await getTableRows(table, undefined, keyValue); // FIX THIS
+    console.info('getRow() --> rows:')
+    console.info(rows)
     if (!rows.length) {
         return undefined;
     }
@@ -35,11 +41,15 @@ export const getRow = async <T>(
 
 export const getTableRows = async <T = any>(
     table: string,
+    scope: string = CONTRACT_SCOPE,
     lowerBound: any = "0",
     upperBound: any = null,
     limit = 1
 ): Promise<T[]> => {
+    console.info('getTableRows()')
     const reverse = Boolean(lowerBound === "0" && upperBound);
+
+    console.info(`Requesting table[${table}], scope[${scope}]`)
 
     const requestBody = {
         code: edenContractAccount,
@@ -50,11 +60,13 @@ export const getTableRows = async <T = any>(
         lower_bound: lowerBound,
         upper_bound: upperBound,
         reverse,
-        scope: CONTRACT_SCOPE,
+        scope,
         show_payer: false,
         table: table,
         table_key: "",
     };
+    console.info('requestBody:')
+    console.info(requestBody)
 
     const response = await fetch(RPC_GET_TABLE_ROWS, {
         method: "POST",

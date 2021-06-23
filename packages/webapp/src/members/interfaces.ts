@@ -45,3 +45,9 @@ export interface MemberStats {
     pending_members: number;
     completed_waiting_inductions: number;
 }
+
+export interface FinancialStats {
+    active_members: number;
+    pending_members: number;
+    completed_waiting_inductions: number;
+}

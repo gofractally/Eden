@@ -8,8 +8,11 @@ import {
     Heading,
     Link,
     queryMembersStats,
+    queryTreasuryStats,
     RawLayout,
     Text,
+    Asset,
+    assetToString,
 } from "_app";
 
 export const getServerSideProps: GetServerSideProps = async () => {
@@ -25,6 +28,11 @@ export const getServerSideProps: GetServerSideProps = async () => {
 export const Index = () => {
     const { data: memberStats } = useQuery({
         ...queryMembersStats,
+        keepPreviousData: true,
+    });
+
+    const { data: treasuryBalance } = useQuery({
+        ...queryTreasuryStats,
         keepPreviousData: true,
     });
 
@@ -82,38 +90,44 @@ export const Index = () => {
                     </Card>
                 </div>
                 <aside className="col-span-1 space-y-4 pb-5">
-                    <CommunityStatsCard memberStats={memberStats} />
+                    {treasuryBalance && (
+                        <CommunityStatsCard
+                            communityStats={memberStats}
+                            treasuryBalance={treasuryBalance}
+                        />
+                    )}
                 </aside>
             </div>
         </RawLayout>
     );
 };
 
-interface CommunityStatusProps {
-    memberStats: any;
+interface CommunityStatsProps {
+    communityStats: any;
+    treasuryBalance: Asset;
 }
 
-const CommunityStatsCard = ({ memberStats }: CommunityStatusProps) => {
-    return (
-        memberStats && (
-            <Card className="flex flex-col justify-center items-center h-full space-y-8 text-md lg:text-xl">
-                <Heading size={2} className="mb-2">
-                    Community Stats
-                </Heading>
-                <Link href="/members" className="font-medium">
-                    {memberStats.active_members} active member
-                    {memberStats.active_members !== 1 && "s"}
-                </Link>
-                <Link
-                    href="/induction/pending-invitations"
-                    className="font-medium"
-                >
-                    {memberStats.pending_members} pending invitation
-                    {memberStats.pending_members !== 1 && "s"}
-                </Link>
-            </Card>
-        )
+const CommunityStatsCard = ({
+    communityStats,
+    treasuryBalance,
+}: CommunityStatsProps) =>
+    communityStats && (
+        <Card className="flex flex-col justify-center items-center h-full space-y-8 text-md lg:text-xl">
+            <Heading size={2} className="mb-2">
+                Community Stats
+            </Heading>
+            <Text className="font-medium" size="md">
+                {`Treasury: ${assetToString(treasuryBalance, 4)}`}
+            </Text>
+            <Link href="/members" className="font-medium">
+                {communityStats.active_members} active member
+                {communityStats.active_members !== 1 && "s"}
+            </Link>
+            <Link href="/induction/pending-invitations" className="font-medium">
+                {communityStats.pending_members} pending invitation
+                {communityStats.pending_members !== 1 && "s"}
+            </Link>
+        </Card>
     );
-};
 
 export default Index;
