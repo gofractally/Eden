@@ -49,7 +49,6 @@ export const errorHandler = morgan(errorResponseFormat, {
 });
 
 export const setupExpressLogger = (app: Express) => {
-    // app.use(morgan(env === "development" ? "dev" : "tiny"));
     app.use(successHandler);
     app.use(errorHandler);
 };
