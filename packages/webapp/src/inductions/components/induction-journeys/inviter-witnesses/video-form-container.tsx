@@ -52,7 +52,11 @@ export const InductionVideoFormContainer = ({
             console.info("inductvideo trx", signedTrx);
 
             setVideoSubmissionPhase("finishing");
-            await uploadIpfsFileWithTransaction(signedTrx, videoHash);
+            await uploadIpfsFileWithTransaction(
+                signedTrx,
+                videoHash,
+                videoFile
+            );
 
             queryClient.invalidateQueries(
                 queryInductionWithEndorsements(induction.id).queryKey

@@ -3,5 +3,8 @@
     "compilerOptions": {
         "resolveJsonModule": true,
         "strict": true
+    },
+    "ts-node": {
+        "files": true
     }
 }
