@@ -152,6 +152,7 @@ namespace eden
       members members{contract};
       std::vector<accounts> accounts_by_rank;
       accounts accounts{contract, make_account_scope(dist.distribution_time, 0)};
+      distribution_point_table_type points{contract, default_scope};
       accounts_by_rank.reserve(dist.rank_distribution.size());
       auto& table = members.get_table();
       auto iter = table.upper_bound(dist.last_processed.value);
@@ -163,8 +164,14 @@ namespace eden
                       "Invariant failure: rank too high");
          while (accounts_by_rank.size() < iter->election_rank())
          {
-            accounts_by_rank.emplace_back(
-                contract, make_account_scope(dist.distribution_time, accounts_by_rank.size() + 1));
+            distribution_point_v0 point{dist.distribution_time,
+                                        static_cast<uint8_t>(accounts_by_rank.size() + 1)};
+            accounts_by_rank.emplace_back(contract,
+                                          make_account_scope(dist.distribution_time, point.rank));
+            if (points.find(point.primary_key()) == points.end())
+            {
+               points.emplace(contract, [&](auto& row) { row.value = point; });
+            }
          }
          for (uint8_t rank = 0; rank < iter->election_rank(); ++rank)
          {
@@ -250,15 +257,7 @@ namespace eden
          accounts.clear_all();
          iter = distribution_point_tb.erase(iter);
       }
-      pool_table_type pool_tb{contract, default_scope};
-      for (auto iter = pool_tb.begin(), end = pool_tb.end(); iter != end;)
-      {
-         iter = pool_tb.erase(iter);
-      }
-      distribution_table_type distribution_tb{contract, default_scope};
-      for (auto iter = distribution_tb.begin(), end = distribution_tb.end(); iter != end;)
-      {
-         iter = distribution_tb.erase(iter);
-      }
+      clear_table(pool_table_type{contract, default_scope});
+      clear_table(distribution_table_type{contract, default_scope});
    }
 }  // namespace eden

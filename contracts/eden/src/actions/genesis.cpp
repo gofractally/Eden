@@ -20,6 +20,7 @@ namespace eden
       auctions{get_self()}.clear_all();
       migrations{get_self()}.clear_all();
       distributions{get_self()}.clear_all();
+      elections{get_self()}.clear_all();
       get_global_singleton(get_self()).remove();
    }
 

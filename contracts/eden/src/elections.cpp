@@ -651,4 +651,11 @@ namespace eden
       vote_tb.modify(vote, contract, [&](auto& row) { row.candidate = candidate; });
    }
 
+   void elections::clear_all()
+   {
+      clear_table(vote_tb);
+      state_sing.remove();
+      election_state_singleton{contract, default_scope}.remove();
+   }
+
 }  // namespace eden

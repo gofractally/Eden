@@ -242,6 +242,7 @@ namespace eden
       uint32_t finish_round(uint32_t max_steps);
       // \pre voter and candidate are members of the same group
       void vote(uint8_t round, eosio::name voter, eosio::name candidate);
+      void clear_all();
    };
 
 }  // namespace eden
