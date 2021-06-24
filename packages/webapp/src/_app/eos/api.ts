@@ -1,4 +1,5 @@
 import { edenContractAccount, rpcEndpoint } from "config";
+import { TableQueryOptions } from "./interfaces";
 
 const RPC_URL = `${rpcEndpoint.protocol}://${rpcEndpoint.host}:${rpcEndpoint.port}`;
 export const RPC_GET_TABLE_ROWS = `${RPC_URL}/v1/chain/get_table_rows`;
@@ -17,22 +18,33 @@ interface TableResponse<T> {
     next_key: string;
 }
 
+const TABLE_PARAM_DEFAULTS = {
+    scope: CONTRACT_SCOPE,
+    lowerBound: "0",
+    upperBound: null,
+    limit: 1,
+};
+
+const getTableParamsWithDefault = (options: any): TableQueryOptions =>
+    Object.assign({}, TABLE_PARAM_DEFAULTS, options);
+
 export const getRow = async <T>(
     table: string,
-    keyName?: string, // move these into options obj
-    keyValue?: string,
-    options?: any,
+    options?: TableQueryOptions
 ): Promise<T | undefined> => {
-    const rows = options && options.scope ?
-        await getTableRows(table, options.scope, keyValue)
-        : await getTableRows(table, undefined, keyValue); // FIX THIS
-    console.info('getRow() --> rows:')
-    console.info(rows)
+    options = getTableParamsWithDefault(options);
+    const rows = await getTableRows(table, options);
+
     if (!rows.length) {
         return undefined;
     }
 
-    if (keyName && keyValue && `${rows[0][keyName]}` !== `${keyValue}`) {
+    if (
+        options &&
+        options.keyName &&
+        options.keyValue &&
+        `${rows[0][options.keyName]}` !== `${options.keyValue}`
+    ) {
         return undefined;
     }
 
@@ -41,32 +53,25 @@ export const getRow = async <T>(
 
 export const getTableRows = async <T = any>(
     table: string,
-    scope: string = CONTRACT_SCOPE,
-    lowerBound: any = "0",
-    upperBound: any = null,
-    limit = 1
+    options: TableQueryOptions
 ): Promise<T[]> => {
-    console.info('getTableRows()')
-    const reverse = Boolean(lowerBound === "0" && upperBound);
-
-    console.info(`Requesting table[${table}], scope[${scope}]`)
+    options = getTableParamsWithDefault(options);
+    const reverse = Boolean(options.lowerBound === "0" && options.upperBound);
 
     const requestBody = {
         code: edenContractAccount,
         index_position: 1,
         json: true,
         key_type: "",
-        limit: `${limit}`,
-        lower_bound: lowerBound,
-        upper_bound: upperBound,
+        limit: `${options.limit}`,
+        lower_bound: options.lowerBound,
+        upper_bound: options.upperBound,
         reverse,
-        scope,
+        scope: options.scope,
         show_payer: false,
         table: table,
         table_key: "",
     };
-    console.info('requestBody:')
-    console.info(requestBody)
 
     const response = await fetch(RPC_GET_TABLE_ROWS, {
         method: "POST",
