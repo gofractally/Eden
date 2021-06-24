@@ -30,6 +30,7 @@ export const getRow = async <T>(
     options?: TableQueryOptions
 ): Promise<T | undefined> => {
     options = { ...TABLE_PARAM_DEFAULTS, ...options };
+    options.lowerBound = options.keyValue;
     const rows = await getTableRows(table, options);
 
     if (!rows.length) {
