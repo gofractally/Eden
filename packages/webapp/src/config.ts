@@ -90,7 +90,7 @@ interface ValidUploadActions {
 export const validUploadActions: ValidUploadActions = {
     [edenContractAccount]: {
         inductprofil: { maxSize: 1_000_000 },
-        inductvideo: { maxSize: 100_000_000 },
+        inductvideo: { maxSize: 1_400_000_000 },
     },
 };
 
