@@ -1,5 +1,6 @@
 #include <accounts.hpp>
 #include <boot/boot.hpp>
+#include <distributions.hpp>
 #include <eden-atomicassets.hpp>
 #include <eden-atomicmarket.hpp>
 #include <eden.hpp>

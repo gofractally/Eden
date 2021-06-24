@@ -1,4 +1,5 @@
 #include <accounts.hpp>
+#include <distributions.hpp>
 #include <eden.hpp>
 #include <migrations.hpp>
 #include <token/token.hpp>
