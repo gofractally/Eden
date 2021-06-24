@@ -25,14 +25,11 @@ const TABLE_PARAM_DEFAULTS = {
     limit: 1,
 };
 
-const getTableParamsWithDefault = (options: any): TableQueryOptions =>
-    Object.assign({}, TABLE_PARAM_DEFAULTS, options);
-
 export const getRow = async <T>(
     table: string,
     options?: TableQueryOptions
 ): Promise<T | undefined> => {
-    options = getTableParamsWithDefault(options);
+    options = { ...TABLE_PARAM_DEFAULTS, ...options };
     const rows = await getTableRows(table, options);
 
     if (!rows.length) {
@@ -55,7 +52,7 @@ export const getTableRows = async <T = any>(
     table: string,
     options: TableQueryOptions
 ): Promise<T[]> => {
-    options = getTableParamsWithDefault(options);
+    options = { ...TABLE_PARAM_DEFAULTS, ...options };
     const reverse = Boolean(options.lowerBound === "0" && options.upperBound);
 
     const requestBody = {
