@@ -7,11 +7,7 @@ export interface Asset {
 export const assetFromString = (asset: string): Asset => {
     const re = /^[0-9]+\.[0-9]+ [A-Z,a-z]{1,5}$/;
     if (asset.match(re) === null) {
-        return {
-            symbol: "ERR",
-            quantity: 0.0,
-            precision: 2,
-        };
+        throw new Error(`Invalid Asset value: ${asset}`);
     }
     const [quantityString, symbol] = asset.split(" ");
     const [integer, decimals] = quantityString.split(".");
