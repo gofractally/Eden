@@ -240,13 +240,7 @@ namespace eden
       void start_election();
       uint32_t prepare_election(uint32_t max_steps);
       uint32_t finish_round(uint32_t max_steps);
-      // \pre voter is a member of the group
-      // \pre voter has not yet reported his vote in this group
-      // Don't report your vote until your group has reached consensus.
-      // You won't be able to change it.
-      // TODO: will this lead to insta-locking votes?  If we allow it
-      // to change, is it a problem that finishgroup cannot know that
-      // a user doesn't intend to change his vote?
+      // \pre voter and candidate are members of the same group
       void vote(uint8_t round, eosio::name voter, eosio::name candidate);
    };
 

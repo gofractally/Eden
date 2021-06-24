@@ -648,7 +648,6 @@ namespace eden
           state.config.member_index_to_group(vote.index) ==
               state.config.member_index_to_group(cand.index),
           voter.to_string() + " and " + candidate.to_string() + " are not in the same group.");
-      eosio::check(vote.candidate == eosio::name{}, voter.to_string() + " has already voted");
       vote_tb.modify(vote, contract, [&](auto& row) { row.candidate = candidate; });
    }
 
