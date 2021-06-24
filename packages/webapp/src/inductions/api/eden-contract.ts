@@ -35,11 +35,10 @@ export const getInductionWithEndorsements = async (
 export const getInduction = async (
     inductionId: string
 ): Promise<Induction | undefined> => {
-    const induction = await getRow<Induction>(
-        CONTRACT_INDUCTION_TABLE,
-        "id",
-        inductionId
-    );
+    const induction = await getRow<Induction>(CONTRACT_INDUCTION_TABLE, {
+        keyName: "id",
+        keyValue: inductionId,
+    });
     if (induction) {
         console.info("retrieved induction", induction);
         return induction;
@@ -97,9 +96,8 @@ export const getInductions = async (
     upperBound?: string,
     limit = 10
 ): Promise<Induction[]> =>
-    getTableRows<Induction>(
-        CONTRACT_INDUCTION_TABLE,
+    getTableRows<Induction>(CONTRACT_INDUCTION_TABLE, {
         lowerBound,
         upperBound,
-        limit
-    );
+        limit,
+    });

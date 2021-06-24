@@ -92,7 +92,7 @@ export const Index = () => {
                 <aside className="col-span-1 space-y-4 pb-5">
                     {treasuryBalance && (
                         <CommunityStatsCard
-                            communityStats={memberStats}
+                            memberStats={memberStats}
                             treasuryBalance={treasuryBalance}
                         />
                     )}
@@ -103,16 +103,16 @@ export const Index = () => {
 };
 
 interface CommunityStatsProps {
-    communityStats: any;
+    memberStats: any;
     treasuryBalance: Asset;
 }
 
 const CommunityStatsCard = ({
-    communityStats,
+    memberStats,
     treasuryBalance,
 }: CommunityStatsProps) =>
-    communityStats && (
-        <Card className="flex flex-col justify-center items-center h-full space-y-8 text-md lg:text-xl">
+    memberStats && (
+        <Card className="flex flex-col justify-center items-center h-full space-y-4 text-md lg:text-lg">
             <Heading size={2} className="mb-2">
                 Community Stats
             </Heading>
@@ -120,12 +120,12 @@ const CommunityStatsCard = ({
                 {`Treasury: ${assetToString(treasuryBalance, 4)}`}
             </Text>
             <Link href="/members" className="font-medium">
-                {communityStats.active_members} active member
-                {communityStats.active_members !== 1 && "s"}
+                {memberStats.active_members} active member
+                {memberStats.active_members !== 1 && "s"}
             </Link>
             <Link href="/induction/pending-invitations" className="font-medium">
-                {communityStats.pending_members} pending invitation
-                {communityStats.pending_members !== 1 && "s"}
+                {memberStats.pending_members} pending invitation
+                {memberStats.pending_members !== 1 && "s"}
             </Link>
         </Card>
     );
