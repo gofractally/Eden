@@ -523,6 +523,14 @@ TEST_CASE("induction")
    CHECK(get_eden_membership("bertie"_n).status() == eden::member_status::active_member);
 }
 
+TEST_CASE("resignation")
+{
+   eden_tester t;
+   t.genesis();
+   t.alice.act<actions::resign>("alice"_n);
+   CHECK(members{"eden.gm"_n}.is_new_member("alice"_n));
+}
+
 TEST_CASE("auction")
 {
    eden_tester t;

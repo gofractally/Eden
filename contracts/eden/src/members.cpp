@@ -38,6 +38,34 @@ namespace eden
       });
    }
 
+   member_table_type::const_iterator members::erase(member_table_type::const_iterator iter)
+   {
+      auto stats = this->stats();
+      switch (iter->status())
+      {
+         case member_status::pending_membership:
+            eosio::check(stats.pending_members != 0, "Integer overflow");
+            --stats.pending_members;
+            break;
+         case member_status::active_member:
+            eosio::check(stats.active_members != 0, "Integer overflow");
+            --stats.active_members;
+            break;
+         default:
+            eosio::check(false, "Invariant failure: unknown member status");
+            break;
+      }
+      member_stats.set(stats, contract);
+      return member_tb.erase(iter);
+   }
+
+   void members::remove(eosio::name account)
+   {
+      auto iter = member_tb.find(account.value);
+      eosio::check(iter != member_tb.end(), "Unknown member");
+      erase(iter);
+   }
+
    void members::remove_if_pending(eosio::name account)
    {
       const auto& member = member_tb.get(account.value);
