@@ -104,11 +104,12 @@ namespace eden
       });
    }
 
-   void members::set_rank(eosio::name member, uint8_t rank)
+   void members::set_rank(eosio::name member, uint8_t rank, eosio::name representative)
    {
-      member_tb.modify(member_tb.get(member.value), contract, [rank](auto& row) {
+      member_tb.modify(member_tb.get(member.value), contract, [&](auto& row) {
          row.value = std::visit([](auto& v) { return member_v1{v}; }, row.value);
          row.election_rank() = rank;
+         row.representative() = representative;
          if (row.election_participation_status() == next_election)
          {
             row.election_participation_status() = in_election;

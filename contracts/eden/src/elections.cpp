@@ -543,10 +543,10 @@ namespace eden
       {
          if (board_member != winner)
          {
-            members.set_rank(board_member, round);
+            members.set_rank(board_member, round, winner);
          }
       }
-      members.set_rank(winner, round + 1);
+      members.set_rank(winner, round + 1, winner);
       results.set(result, contract);
 
       process_election_distribution(contract);
@@ -601,7 +601,7 @@ namespace eden
          {
             if (voter != result.winner)
             {
-               members.set_rank(voter, data.prev_round);
+               members.set_rank(voter, data.prev_round, result.winner);
             }
          }
          for (eosio::name voter : result.missing)
@@ -609,7 +609,7 @@ namespace eden
             if (voter != result.winner)
             {
                // FIXME: what exactly is the penalty for not voting?
-               members.set_rank(voter, data.prev_round);
+               members.set_rank(voter, data.prev_round, result.winner);
             }
          }
          data.next_input_index += group_size;

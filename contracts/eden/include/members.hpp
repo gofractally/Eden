@@ -34,6 +34,7 @@ namespace eden
       // Only reflected in v1
       election_participation_status_type election_participation_status = in_election;
       uint8_t election_rank = 0;
+      eosio::name representative;
 
       uint64_t primary_key() const { return account.value; }
    };
@@ -60,7 +61,11 @@ namespace eden
    struct member_v1 : member_v0
    {
    };
-   EOSIO_REFLECT(member_v1, base member_v0, election_participation_status, election_rank);
+   EOSIO_REFLECT(member_v1,
+                 base member_v0,
+                 election_participation_status,
+                 election_rank,
+                 representative);
 
    using member_variant = std::variant<member_v0, member_v1>;
 
@@ -74,7 +79,8 @@ namespace eden
                            status,
                            nft_template_id,
                            election_participation_status,
-                           election_rank);
+                           election_rank,
+                           representative);
       EDEN_FORWARD_FUNCTIONS(value, primary_key)
    };
    EOSIO_REFLECT(member, value)
@@ -127,7 +133,7 @@ namespace eden
       void set_nft(eosio::name account, int32_t nft_template_id);
       void set_active(eosio::name account, const std::string& name);
       void clear_ranks();
-      void set_rank(eosio::name account, uint8_t rank);
+      void set_rank(eosio::name account, uint8_t rank, eosio::name representative);
       void election_opt(const member& member, bool participating);
       // Activates the contract if all genesis members are active
       void maybe_activate_contract();
