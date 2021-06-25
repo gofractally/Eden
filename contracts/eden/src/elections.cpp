@@ -236,6 +236,21 @@ namespace eden
       return {};
    }
 
+   void elections::set_next_election_time(eosio::time_point election_time)
+   {
+      auto lock_time = eosio::current_time_point() + eosio::days(30);
+      eosio::check(election_time >= lock_time, "New election time is too close");
+      if (state_sing.exists())
+      {
+         auto state = state_sing.get();
+         eosio::check(
+             std::holds_alternative<current_election_state_registration>(state) &&
+                 std::get<current_election_state_registration>(state).start_time >= lock_time,
+             "Election cannot be rescheduled");
+      }
+      state_sing.set(current_election_state_registration{election_time}, contract);
+   }
+
    void elections::set_time(uint8_t day, const std::string& time)
    {
       auto get_digit = [](char ch) {

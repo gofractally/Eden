@@ -82,6 +82,8 @@ namespace eden
 
       void inducted(eosio::name inductee);
 
+      void electsettime(eosio::time_point_sec election_time);
+
       void electconfig(uint8_t election_day,
                        const std::string& election_time,
                        const eosio::asset& election_donation);
@@ -164,6 +166,7 @@ namespace eden
               id,
               induction_data_hash,
               ricardian_contract(inductendors_ricardian)),
+       action(electsettime, election_time),
        action(electconfig, day, time, donation),
        action(electdonate, payer, quantity),
        action(electopt, member, participating),

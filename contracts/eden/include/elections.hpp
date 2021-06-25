@@ -234,6 +234,7 @@ namespace eden
       void set_time(uint8_t day, const std::string& time);
       void set_default_election(eosio::time_point_sec origin_time);
       void trigger_election();
+      void set_next_election_time(eosio::time_point election_time);
       void seed(const eosio::bytes& btc_header);
       void start_election();
       uint32_t prepare_election(uint32_t max_steps);

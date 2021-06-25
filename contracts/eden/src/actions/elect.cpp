@@ -6,6 +6,12 @@
 
 namespace eden
 {
+   void eden::electsettime(eosio::time_point_sec election_time)
+   {
+      eosio::require_auth(get_self());
+      elections{get_self()}.set_next_election_time(election_time);
+   }
+
    void eden::electconfig(uint8_t election_day,
                           const std::string& election_time,
                           const eosio::asset& election_donation)
