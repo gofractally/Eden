@@ -10,13 +10,11 @@ namespace eden
 {
    struct election_state_v0
    {
-      uint64_t election_sequence = 0;  // incremented when an election starts
       eosio::name lead_representative;
       std::vector<eosio::name> board;
       eosio::block_timestamp last_election_time;
    };
    EOSIO_REFLECT(election_state_v0,
-                 election_sequence,
                  lead_representative,
                  board,
                  last_election_time);

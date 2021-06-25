@@ -353,7 +353,6 @@ namespace eden
 
       election_state_singleton state(contract, default_scope);
       auto state_value = std::get<election_state_v0>(state.get_or_default());
-      ++state_value.election_sequence;
       state_value.last_election_time = election_start_time;
       state.set(state_value, contract);
 
@@ -370,8 +369,6 @@ namespace eden
                                         uint32_t max_steps)
    {
       election_state_singleton sequence_state(contract, default_scope);
-      auto expected_sequence =
-          std::get<election_state_v0>(sequence_state.get()).election_sequence - 1;
       members members(contract);
       const auto& member_tb = members.get_table();
       auto iter = member_tb.upper_bound(state.last_processed.value);

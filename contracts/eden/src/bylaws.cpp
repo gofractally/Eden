@@ -51,8 +51,8 @@ namespace eden
       if (next_state == ratified)
       {
          eosio::check(
-             state.election_sequence == 0 || pos->time().to_time_point() + eosio::days(90) <=
-                                                 state.last_election_time.to_time_point(),
+             pos->time().to_time_point() + eosio::days(90) <=
+                 state.last_election_time.to_time_point(),
              "Bylaws can only be approved if they were proposed at least 90 days before the last "
              "election.");
       }
