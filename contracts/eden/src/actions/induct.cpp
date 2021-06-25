@@ -67,10 +67,13 @@ namespace eden
       inductions inductions{get_self()};
       const auto& induction = inductions.get_induction(id);
 
-      members{get_self()}.check_pending_member(induction.invitee());
+      members members{get_self()};
+      members.check_pending_member(induction.invitee());
 
       eosio::check(inductions.is_endorser(id, account),
                    "Induction can only be endorsed by inviter or a witness");
+      // The endorser might have resigned
+      members.check_active_member(account);
       inductions.endorse(induction, account, induction_data_hash);
    }
 
@@ -171,6 +174,14 @@ namespace eden
             members.maybe_activate_contract();
          }
       }
+   }
+
+   void eden::resign(eosio::name account)
+   {
+      eosio::require_auth(account);
+      members members{get_self()};
+      members.check_active_member(account);
+      members.remove(account);
    }
 
 }  // namespace eden
