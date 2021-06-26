@@ -27,7 +27,7 @@ const TABLE_PARAM_DEFAULTS = {
 
 export const getRow = async <T>(
     table: string,
-    options?: TableQueryOptions
+    options?: { keyName?: string; keyValue?: string } & TableQueryOptions
 ): Promise<T | undefined> => {
     options = { ...TABLE_PARAM_DEFAULTS, ...options };
     options.lowerBound = options.keyValue;

@@ -26,12 +26,19 @@ export const getServerSideProps: GetServerSideProps = async () => {
 };
 
 export const Index = () => {
-    const { data: memberStats } = useQuery({
+    const {
+        isError: isMemberDataFetchError,
+        error: memberStatsError,
+        data: memberStats,
+    } = useQuery({
         ...queryMembersStats,
         keepPreviousData: true,
     });
 
-    const { data: treasuryBalance } = useQuery({
+    const {
+        isError: isTreasuryDataFetchError,
+        data: treasuryBalance,
+    } = useQuery({
         ...queryTreasuryStats,
         keepPreviousData: true,
     });
@@ -90,7 +97,9 @@ export const Index = () => {
                     </Card>
                 </div>
                 <aside className="col-span-1 space-y-4 pb-5">
-                    {treasuryBalance && (
+                    {isMemberDataFetchError || isTreasuryDataFetchError ? (
+                        <Text>Error fetching data...</Text>
+                    ) : (
                         <CommunityStatsCard
                             memberStats={memberStats}
                             treasuryBalance={treasuryBalance}
@@ -104,14 +113,14 @@ export const Index = () => {
 
 interface CommunityStatsProps {
     memberStats: any;
-    treasuryBalance: Asset;
+    treasuryBalance: Asset | undefined;
 }
 
 const CommunityStatsCard = ({
     memberStats,
     treasuryBalance,
 }: CommunityStatsProps) =>
-    memberStats && (
+    memberStats && treasuryBalance ? (
         <Card className="flex flex-col justify-center items-center h-full space-y-4 text-md lg:text-lg">
             <Heading size={2} className="mb-2">
                 Community Stats
@@ -128,6 +137,6 @@ const CommunityStatsCard = ({
                 {memberStats.pending_members !== 1 && "s"}
             </Link>
         </Card>
-    );
+    ) : null;
 
 export default Index;

@@ -23,5 +23,6 @@ export const getTreasuryStats = async () => {
         scope: "owned",
         keyName: "master",
     });
+
     return assetFromString(balance);
 };
