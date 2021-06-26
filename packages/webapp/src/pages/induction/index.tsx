@@ -1,39 +1,35 @@
-import { Link, SingleColLayout, useFetchedData, useUALAccount } from "_app";
+import {
+    SingleColLayout,
+    CallToAction,
+    useUALAccount,
+    useIsCommunityActive,
+    Link,
+} from "_app";
 
-import { Donation, PendingInductions } from "inductions";
-import { getEdenMember, MemberStatus, EdenMember } from "members";
+import { InductionsContainer } from "inductions";
 
 export const InductionPage = () => {
-    const [ualAccount] = useUALAccount();
-    const [edenMember, isLoading] = useFetchedData<EdenMember>(
-        getEdenMember,
-        ualAccount?.accountName
-    );
-
-    const isActiveMember =
-        edenMember && edenMember.status === MemberStatus.ActiveMember;
+    const [ualAccount, _, ualShowModal] = useUALAccount();
+    const { data: isCommunityActive } = useIsCommunityActive();
 
     return (
-        <SingleColLayout title="Induction">
-            {!ualAccount ? (
-                <div>Please login using yout wallet.</div>
-            ) : isLoading ? (
-                <p>Loading...</p>
-            ) : edenMember ? (
-                <>
-                    {isActiveMember && (
-                        <p className="mb-4">
-                            Hello, fellow eden member! Your account is{" "}
-                            <strong>active</strong>!
-                            <Link href="/induction/init" className="ml-2">
-                                Would you like to start an induction ceremony?
-                            </Link>
-                        </p>
-                    )}
-                    <PendingInductions isActive={isActiveMember} />
-                </>
+        <SingleColLayout title="Membership">
+            {ualAccount ? (
+                <InductionsContainer ualAccount={ualAccount} />
             ) : (
-                <Donation />
+                <CallToAction buttonLabel="Sign in" onClick={ualShowModal}>
+                    Welcome to Eden. Sign in using your wallet.
+                </CallToAction>
+            )}
+            {isCommunityActive && (
+                <Link
+                    href="/induction/pending-invitations"
+                    className="block w-full my-8 text-center"
+                >
+                    <span className="text-gray-400">
+                        See all pending community invitations
+                    </span>
+                </Link>
             )}
         </SingleColLayout>
     );

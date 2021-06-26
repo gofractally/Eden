@@ -1,7 +1,8 @@
 #include <eosio/name.hpp>
 #include <memory>
 
-extern "C" void prints_l(const char* cstr, uint32_t len);
+[[clang::import_name("prints_l")]] extern "C" void prints_l(const char* cstr, uint32_t len);
+
 extern "C" void prints(const char* cstr)
 {
    prints_l(cstr, strlen(cstr));

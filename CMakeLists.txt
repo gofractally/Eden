@@ -21,22 +21,23 @@ endif()
 if(DEFINED WASI_SDK_PREFIX)
     set(EDEN_ATOMIC_ASSETS_ACCOUNT atomicassets CACHE STRING "The account holding the atomicassets contract")
     set(EDEN_ATOMIC_MARKET_ACCOUNT atomicmarket CACHE STRING "The account holding the atomicmarket contract")
-    set(EDEN_COLLECTION_NAME eden CACHE STRING "The atomicassets collection to use for NTFS")
-    set(EDEN_SCHEMA_NAME eden CACHE STRING "The atomicassets schema to use for NFTS")
+    set(EDEN_SCHEMA_NAME members CACHE STRING "The atomicassets schema to use for NFTS")
 
     ExternalProject_Add(wasm
         SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/wasm
+        DEPENDS cltester # for abi generation
         BINARY_DIR wasm
         INSTALL_COMMAND ""
         BUILD_ALWAYS 1
         TEST_EXCLUDE_FROM_MAIN 1
         CMAKE_ARGS
-            -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
+            -DCMAKE_BUILD_TYPE=
             -DCMAKE_TOOLCHAIN_FILE=${CMAKE_CURRENT_SOURCE_DIR}/wasm/toolchain.cmake
             -DWASI_SDK_PREFIX=${WASI_SDK_PREFIX}
+            -DWASM_CLANG_PREFIX=${WASM_CLANG_PREFIX}
+            -DWASM_CLANG_SUFFIX=${WASM_CLANG_SUFFIX}
             -DEDEN_ATOMIC_ASSETS_ACCOUNT=${EDEN_ATOMIC_ASSETS_ACCOUNT}
             -DEDEN_ATOMIC_MARKET_ACCOUNT=${EDEN_ATOMIC_MARKET_ACCOUNT}
-            -DEDEN_COLLECTION_NAME=${EDEN_COLLECTION_NAME}
             -DEDEN_SCHEMA_NAME=${EDEN_SCHEMA_NAME}
             -DCMAKE_SYSROOT=${WASI_SDK_PREFIX}/share/wasi-sysroot
             -DFORCE_COLORED_OUTPUT=${FORCE_COLORED_OUTPUT}

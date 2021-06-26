@@ -133,7 +133,7 @@ export const submitEndorsementTransaction = async (
         actions: [
             {
                 account: edenContractAccount,
-                name: "inductendorse",
+                name: "inductendors",
                 authorization: [
                     {
                         actor: authorizerAccount,
@@ -144,6 +144,76 @@ export const submitEndorsementTransaction = async (
                     account: authorizerAccount,
                     id: induction.id,
                     induction_data_hash: inductionDataHash,
+                },
+            },
+        ],
+    };
+};
+
+export const donateAndCompleteInductionTransaction = (
+    authorizerAccount: string,
+    induction: Induction
+) => {
+    const quantity = assetToString(
+        minimumDonationAmount,
+        minimumDonationAmount.precision
+    );
+
+    return {
+        actions: [
+            {
+                account: "eosio.token",
+                name: "transfer",
+                authorization: [
+                    {
+                        actor: authorizerAccount,
+                        permission: "active",
+                    },
+                ],
+                data: {
+                    from: authorizerAccount,
+                    to: edenContractAccount,
+                    quantity,
+                    memo: "induction-donation",
+                },
+            },
+            {
+                account: edenContractAccount,
+                name: "inductdonate",
+                authorization: [
+                    {
+                        actor: authorizerAccount,
+                        permission: "active",
+                    },
+                ],
+                data: {
+                    payer: authorizerAccount,
+                    id: induction.id,
+                    quantity,
+                },
+            },
+        ],
+    };
+};
+
+export const cancelInductionTransaction = (
+    authorizerAccount: string,
+    id: string
+) => {
+    return {
+        actions: [
+            {
+                account: edenContractAccount,
+                name: "inductcancel",
+                authorization: [
+                    {
+                        actor: authorizerAccount,
+                        permission: "active",
+                    },
+                ],
+                data: {
+                    account: authorizerAccount,
+                    id,
                 },
             },
         ],

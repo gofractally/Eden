@@ -1,8 +1,8 @@
+import { atomicAssets, edenContractAccount } from "config";
 import {
     getAccountCollection,
     getAuctions,
     getOwners,
-    getSalesForTemplates,
     getTemplate,
     getTemplates,
 } from "nfts/api";
@@ -12,13 +12,14 @@ import {
     EdenNftSocialHandles,
     TemplateData,
 } from "nfts/interfaces";
+
 import { MemberData } from "../interfaces";
 import { getEdenMember } from "./eden-contract";
 
 export const getMember = async (
-    edenAccount: string
+    account: string
 ): Promise<MemberData | undefined> => {
-    const member = await getEdenMember(edenAccount);
+    const member = await getEdenMember(account);
     if (member && member.nft_template_id > 0) {
         const template = await getTemplate(`${member.nft_template_id}`);
         return template ? convertAtomicTemplateToMember(template) : undefined;
@@ -36,17 +37,18 @@ export const getMembers = async (
     return data.map(convertAtomicTemplateToMember);
 };
 
-export const getNewMembers = async (): Promise<MemberData[]> => {
-    const data = await getAuctions();
+export const getNewMembers = async (
+    page?: number,
+    limit?: number
+): Promise<MemberData[]> => {
+    const data = await getAuctions(edenContractAccount, undefined, page, limit);
     return data.map(convertAtomicAssetToMemberWithSalesData);
 };
 
-export const getCollection = async (
-    edenAccount: string
-): Promise<MemberData[]> => {
-    const assets = await getAccountCollection(edenAccount);
+export const getCollection = async (account: string): Promise<MemberData[]> => {
+    const assets = await getAccountCollection(account);
     const members: MemberData[] = assets.map(convertAtomicAssetToMember);
-    const assetsOnAuction = await getAuctions(edenAccount);
+    const assetsOnAuction = await getAuctions(account);
     assetsOnAuction
         .map(convertAtomicAssetToMemberWithSalesData)
         .forEach((asset) => members.push(asset));
@@ -55,17 +57,36 @@ export const getCollection = async (
 
 export const getCollectedBy = async (
     templateId: number
-): Promise<MemberData[]> => {
-    const edenAccs: string[] = await getOwners(templateId);
+): Promise<{ members: MemberData[]; unknownOwners: string[] }> => {
+    const [owners, auctions] = await Promise.all([
+        getOwners(templateId),
+        getAuctions(undefined, [`${templateId}`]),
+    ]);
 
-    // TODO: very expensive lookups here, we need to revisit
+    const auctionsOwners = auctions
+        .filter((auction) => auction.seller !== edenContractAccount)
+        .map((auction) => auction.seller);
+
+    // the real eden owners are the current owners + pending auctions by current owners
+    const edenAccs = owners.concat(auctionsOwners);
+
+    // TODO: revisit very expensive lookups here, we need to revisit
     // maybe not, since each card will not be minted more than 20 times...
     // so a given template will have a MAXIMUM number of 20 owners.
     // even though, it would generate 20 api calls... not good.
     const collectedMembers = edenAccs.map(getMember);
-    const members = await Promise.all(collectedMembers);
+    const membersData = await Promise.all(collectedMembers);
 
-    return members.filter((member) => member !== undefined) as MemberData[];
+    const members = membersData.filter(
+        (member) => member !== undefined
+    ) as MemberData[];
+    const unknownOwners = edenAccs.filter(
+        (acc) =>
+            acc !== atomicAssets.marketContract &&
+            !members.find((member) => member.account === acc)
+    );
+
+    return { members, unknownOwners };
 };
 
 const convertAtomicTemplateToMember = (data: TemplateData): MemberData => ({
@@ -73,9 +94,10 @@ const convertAtomicTemplateToMember = (data: TemplateData): MemberData => ({
     createdAt: parseInt(data.created_at_time),
     name: data.immutable_data.name,
     image: data.immutable_data.img,
-    edenAccount: data.immutable_data.edenacc,
+    account: data.immutable_data.account,
     bio: data.immutable_data.bio,
-    inductionVideo: data.immutable_data.inductionvid,
+    attributions: data.immutable_data.attributions || "",
+    inductionVideo: data.immutable_data.video,
     socialHandles: parseSocial(data.immutable_data.social || "{}"),
 });
 
@@ -92,7 +114,6 @@ const convertAtomicAssetToMemberWithSalesData = (
     data: AuctionableTemplateData
 ): MemberData => {
     const member = convertAtomicTemplateToMember(data);
-    console.info(data);
     member.assetData = {
         assetId: data.assetId,
         templateMint: data.templateMint,

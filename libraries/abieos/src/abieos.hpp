@@ -560,13 +560,6 @@ namespace abieos
 
    using eosio::abi_def;
 
-   ABIEOS_NODISCARD inline bool check_abi_version(const std::string& s, std::string& error)
-   {
-      if (s.substr(0, 13) != "eosio::abi/1.")
-         return set_error(error, "unsupported abi version");
-      return true;
-   }
-
    ///////////////////////////////////////////////////////////////////////////////
    // json_to_jvalue
    ///////////////////////////////////////////////////////////////////////////////

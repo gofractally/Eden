@@ -57,24 +57,24 @@ jobs:
                   git submodule update --init --recursive
                   mkdir build
                   cd build
-                  cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_CXX_COMPILER_LAUNCHER=ccache -DCMAKE_C_COMPILER_LAUNCHER=ccache -DSKIP_TS=Yes -DEDEN_ATOMIC_ASSETS_ACCOUNT=atomicassets -DEDEN_ATOMIC_MARKET_ACCOUNT=atomicmarket -DEDEN_COLLECTION_NAME=edenmembers1 -DEDEN_SCHEMA_NAME=edenmembers1 ..
+                  cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_CXX_COMPILER_LAUNCHER=ccache -DCMAKE_C_COMPILER_LAUNCHER=ccache -DSKIP_TS=Yes -DEDEN_ATOMIC_ASSETS_ACCOUNT=atomicassets -DEDEN_ATOMIC_MARKET_ACCOUNT=atomicmarket -DEDEN_SCHEMA_NAME=members ..
                   make -j$(nproc)
 
-                  echo =====
-                  ccache -s
-                  echo =====
-
-                  cp eden.wasm eden-wax.wasm
-                  cmake -DEDEN_ATOMIC_ASSETS_ACCOUNT=atomicassets -DEDEN_ATOMIC_MARKET_ACCOUNT=atomicmarket -DEDEN_COLLECTION_NAME=edenmembers1 -DEDEN_SCHEMA_NAME=edenmembers1 -DCMAKE_BUILD_TYPE=Release -DCMAKE_CXX_COMPILER_LAUNCHER=ccache -DCMAKE_C_COMPILER_LAUNCHER=ccache -DSKIP_TS=Yes ..
-                  touch ../contracts/eden/include/constants.hpp
-                  make -j$(nproc) wasm
+                  tar czf clsdk-ubuntu-20-04.tar.gz clsdk
 
                   echo =====
                   ccache -s
                   echo =====
 
             - name: 🧪 Run tests with CTest
-              run: cd build && ctest -j$(nproc)
+              run: cd build && ctest -j$(nproc) -V
+
+            - name: 📃 Upload clsdk
+              uses: actions/upload-artifact@v2
+              with:
+                  name: clsdk
+                  path: |
+                      build/clsdk-ubuntu-20-04.tar.gz
 
             - name: 📃 Upload Eden Smart Contract
               uses: actions/upload-artifact@v2
@@ -83,4 +83,3 @@ jobs:
                   path: |
                       build/eden.abi
                       build/eden.wasm
-                      build/eden-wax.wasm

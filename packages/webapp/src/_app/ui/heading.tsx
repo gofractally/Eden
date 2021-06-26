@@ -17,7 +17,7 @@ export const Heading = ({ children, size, className }: Props) => {
             break;
         case 3:
             element = "h3";
-            textSize = "text-xl";
+            textSize = "text-lg sm:text-xl";
             break;
         case 4:
             element = "h4";
@@ -29,7 +29,7 @@ export const Heading = ({ children, size, className }: Props) => {
             textSize = "text-3xl";
     }
 
-    const headingClassName = `${textSize} font-medium text-gray-900 ${
+    const headingClassName = `${textSize} font-medium text-gray-800 ${
         className || ""
     }`;
 

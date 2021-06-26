@@ -10,6 +10,21 @@
 
 namespace eden
 {
+   // Ricardian contracts live in eden-ricardian.cpp
+   extern const char* withdraw_ricardian;
+   extern const char* genesis_ricardian;
+   extern const char* clearall_ricardian;
+   extern const char* inductinit_ricardian;
+   extern const char* inductprofil_ricardian;
+   extern const char* inductvideo_ricardian;
+   extern const char* inductendors_ricardian;
+   extern const char* inductdonate_ricardian;
+   extern const char* inductcancel_ricardian;
+   extern const char* gc_ricardian;
+   extern const char* inducted_ricardian;
+   extern const char* peacetreaty_clause;
+   extern const char* bylaws_clause;
+
    class eden : public eosio::contract
    {
      public:
@@ -25,14 +40,24 @@ namespace eden
                            const eosio::asset& quantity,
                            std::string memo);
 
+      void withdraw(eosio::name owner, const eosio::asset& quantity);
+
+      void donate(eosio::name payer, const eosio::asset& quantity);
+
+      void transfer(eosio::name to, const eosio::asset& quantity, const std::string& memo);
+
       void genesis(std::string community,
                    eosio::symbol community_symbol,
                    eosio::asset minimum_donation,
                    std::vector<eosio::name> initial_members,
                    std::string genesis_video,
+                   atomicassets::attribute_map collection_attributes,
                    eosio::asset auction_starting_bid,
                    uint32_t auction_duration,
                    eosio::ignore<std::string> memo);
+
+      void addtogenesis(eosio::name new_genesis_member, eosio::time_point expiration);
+      void gensetexpire(uint64_t induction_id, eosio::time_point new_expiration);
 
       void clearall();
 
@@ -45,11 +70,23 @@ namespace eden
 
       void inductvideo(eosio::name account, uint64_t id, std::string video);
 
-      void inductendorse(eosio::name account, uint64_t id, eosio::checksum256 induction_data_hash);
+      void inductendors(eosio::name account, uint64_t id, eosio::checksum256 induction_data_hash);
+
+      void inductdonate(eosio::name payer, uint64_t id, const eosio::asset& quantity);
 
       void inductcancel(eosio::name account, uint64_t id);
 
       void inducted(eosio::name inductee);
+
+      void resign(eosio::name member);
+
+      void gc(uint32_t limit);
+
+      // Update contract tables to the latest version of the contract, where necessary.
+      // New functionality may be unavailable until this is complete.
+      void migrate(uint32_t limit);
+      // For testing only.
+      void unmigrate();
 
       void notify_lognewtempl(int32_t template_id,
                               eosio::name authorized_creator,
@@ -71,17 +108,47 @@ namespace eden
                           eosio::ignore<std::vector<eosio::asset>>);
    };
 
-   EOSIO_ACTIONS(eden,
-                 "eden"_n,
-                 clearall,
-                 genesis,
-                 inductinit,
-                 inductprofil,
-                 inductvideo,
-                 inductendorse,
-                 inducted,
-                 inductcancel,
-                 notify(token_contract, transfer),
-                 notify(atomic_assets_account, lognewtempl),
-                 notify(atomic_assets_account, logmint))
+   EOSIO_ACTIONS(
+       eden,
+       "eden.gm"_n,
+       action(withdraw, owner, quantity, ricardian_contract(withdraw_ricardian)),
+       action(donate, owner, quantity),
+       action(transfer, to, quantity, memo),
+       action(genesis,
+              community,
+              community_symbol,
+              minimum_donation,
+              initial_members,
+              genesis_video,
+              collection_attributes,
+              auction_starting_bid,
+              auction_duration,
+              memo,
+              ricardian_contract(genesis_ricardian)),
+       action(addtogenesis, account, expiration),
+       action(gensetexpire, id, new_expiration),
+       action(clearall, ricardian_contract(clearall_ricardian)),
+       action(inductinit,
+              id,
+              inviter,
+              invitee,
+              witnesses,
+              ricardian_contract(inductinit_ricardian)),
+       action(inductprofil, id, new_member_profile, ricardian_contract(inductprofil_ricardian)),
+       action(inductvideo, account, id, video, ricardian_contract(inductvideo_ricardian)),
+       action(inductendors,
+              account,
+              id,
+              induction_data_hash,
+              ricardian_contract(inductendors_ricardian)),
+       action(inductdonate, payer, id, quantity, ricardian_contract(inductdonate_ricardian)),
+       action(inductcancel, account, id, ricardian_contract(inductcancel_ricardian)),
+       action(inducted, inductee, ricardian_contract(inducted_ricardian)),
+       action(resign, account),
+       action(gc, limit, ricardian_contract(gc_ricardian)),
+       action(migrate, limit),
+       action(unmigrate),
+       notify(token_contract, transfer),
+       notify(atomic_assets_account, lognewtempl),
+       notify(atomic_assets_account, logmint))
 }  // namespace eden

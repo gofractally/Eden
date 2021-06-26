@@ -5,24 +5,18 @@ interface Props {
     handle: string;
     href: string;
     icon: IconType;
-    color?: string;
     className?: string;
 }
 
-const BASE_CLASS = "hover:underline items-center flex space-x-2";
+const BUTTON_BASE_CLASS =
+    "hover:underline space-x-3 p-1 flex-grow flex flex-wrap text-black-500";
+const ICON_CLASS = "w-5 h-5 inline-flex";
 
-export const SocialButton = ({
-    handle,
-    color,
-    icon,
-    href,
-    className,
-}: Props) => {
-    const buttonColor = `text-${color || "gray"}-500`;
-    const buttonClass = `${className || ""} ${buttonColor} ` + BASE_CLASS;
+export const SocialButton = ({ handle, icon, href, className }: Props) => {
+    const buttonClass = `${className || ""} ${BUTTON_BASE_CLASS}`;
 
     const formattedIcon = React.createElement(icon, {
-        className: "w-6 h-6 inline-flex",
+        className: ICON_CLASS,
     });
 
     return (

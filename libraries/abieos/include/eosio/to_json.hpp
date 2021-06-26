@@ -3,8 +3,6 @@
 #include <rapidjson/encodings.h>
 #include <cmath>
 #include <limits>
-#include <optional>
-#include <variant>
 #include "for_each_field.hpp"
 #include "fpconv.h"
 #include "stream.hpp"
@@ -65,6 +63,26 @@ namespace eosio
             else if (*begin == '\\')
             {
                stream.write("\\\\", 2);
+            }
+            else if (*begin == '\b')
+            {
+               stream.write("\\b", 2);
+            }
+            else if (*begin == '\f')
+            {
+               stream.write("\\f", 2);
+            }
+            else if (*begin == '\n')
+            {
+               stream.write("\\n", 2);
+            }
+            else if (*begin == '\r')
+            {
+               stream.write("\\r", 2);
+            }
+            else if (*begin == '\t')
+            {
+               stream.write("\\t", 2);
             }
             else
             {
@@ -233,17 +251,6 @@ template <typename S> void to_json(__int128 value, S& stream) { return int_to_js
       write_newline(stream);
       stream.write(']');
    }
-
-   template <typename>
-   struct is_std_optional : std::false_type
-   {
-   };
-
-   template <typename T>
-   struct is_std_optional<std::optional<T>> : std::true_type
-   {
-      using value_type = T;
-   };
 
    template <typename T, typename S>
    void to_json(const T& t, S& stream)

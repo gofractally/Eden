@@ -397,10 +397,10 @@ namespace eosio
       return string_to_utc_microseconds(result, s, end, true);
    }
 
-   [[nodiscard]] inline bool string_to_symbol_code(uint64_t& result,
-                                                   const char*& pos,
-                                                   const char* end,
-                                                   bool require_end)
+   [[nodiscard]] inline constexpr bool string_to_symbol_code(uint64_t& result,
+                                                             const char*& pos,
+                                                             const char* end,
+                                                             bool require_end)
    {
       while (pos != end && *pos == ' ')
          ++pos;
@@ -415,9 +415,9 @@ namespace eosio
       return i && (pos == end || !require_end);
    }
 
-   [[nodiscard]] inline bool string_to_symbol_code(uint64_t& result,
-                                                   const char* pos,
-                                                   const char* end)
+   [[nodiscard]] inline constexpr bool string_to_symbol_code(uint64_t& result,
+                                                             const char* pos,
+                                                             const char* end)
    {
       return string_to_symbol_code(result, pos, end, true);
    }
@@ -473,11 +473,11 @@ namespace eosio
       return std::to_string(v & 0xff) + "," + eosio::symbol_code_to_string(v >> 8);
    }
 
-   [[nodiscard]] inline bool string_to_asset(int64_t& amount,
-                                             uint64_t& symbol,
-                                             const char*& s,
-                                             const char* end,
-                                             bool expect_end)
+   [[nodiscard]] inline constexpr bool string_to_asset(int64_t& amount,
+                                                       uint64_t& symbol,
+                                                       const char*& s,
+                                                       const char* end,
+                                                       bool expect_end)
    {
       // todo: check overflow
       while (s != end && *s == ' ')  //
@@ -504,7 +504,7 @@ namespace eosio
       if (negative)
          uamount = -uamount;
       amount = uamount;
-      uint64_t code;
+      uint64_t code = 0;
       if (!eosio::string_to_symbol_code(code, s, end, expect_end))
          return false;
       symbol = (code << 8) | precision;

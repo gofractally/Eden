@@ -28,9 +28,13 @@ namespace eden
                  auction_duration,
                  stage)
 
-   using global_singleton = eosio::singleton<"global"_n, std::variant<global_data_v0>>;
+   using global_variant = std::variant<global_data_v0>;
+   using global_singleton = eosio::singleton<"global"_n, global_variant>;
 
    global_singleton& get_global_singleton(eosio::name contract);
+
+   // For use in tester only
+   void tester_clear_global_singleton();
 
    struct globals
    {

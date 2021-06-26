@@ -1,96 +1,77 @@
-import { useState } from "react";
 import { useRouter } from "next/router";
 
-import { RawLayout, SingleColLayout, useFetchedData } from "_app";
 import {
-    getInduction,
-    Induction,
-    InductionStepEndorsement,
-    InductionStepProfile,
-    InductionStepVideo,
-    InductionStatus,
+    CallToAction,
+    Card,
+    RawLayout,
+    SingleColLayout,
+    useIsCommunityActive,
+    useUALAccount,
+} from "_app";
+import {
     getInductionStatus,
-    Endorsement,
+    InductionJourneyContainer,
+    InductionStatus,
+    useGetInductionWithEndorsements,
 } from "inductions";
 
-export const InductionPage = () => {
+export const InductionDetailsPage = () => {
     const router = useRouter();
     const inductionId = router.query.id;
-    const [reviewStep, setReviewStep] = useState<
-        "profile" | "video" | undefined
-    >();
 
-    const [inductionEndorsements, isLoading] = useFetchedData<{
-        induction: Induction;
-        endorsements: Endorsement[];
-    }>(getInduction, inductionId);
+    // refetches inductions query on sign in (in case previously cleared on sign out)
+    useUALAccount(); // see https://github.com/eoscommunity/Eden/pull/239
 
-    const induction = inductionEndorsements
-        ? inductionEndorsements.induction
-        : undefined;
+    const { isLoading: isLoadingCommunityState } = useIsCommunityActive();
 
-    const endorsements = inductionEndorsements
-        ? inductionEndorsements.endorsements
-        : [];
+    const {
+        data,
+        isLoading: isLoadingEndorsements,
+    } = useGetInductionWithEndorsements(inductionId as string);
 
-    const status = getInductionStatus(induction);
+    const isLoading = isLoadingEndorsements || isLoadingCommunityState;
 
-    const renderInductionStep = () => {
-        if (!induction) return "";
+    const induction = data?.induction;
+    const endorsements = data?.endorsements || [];
 
-        if (reviewStep === "profile") {
-            return <InductionStepProfile induction={induction} isReviewing />;
-        }
+    const status = getInductionStatus(induction, endorsements);
 
-        if (reviewStep === "video") {
-            return (
-                <InductionStepVideo
-                    induction={induction}
-                    endorsements={endorsements}
-                    isReviewing
-                />
-            );
-        }
+    const notFound =
+        status === InductionStatus.Invalid ||
+        status === InductionStatus.Expired;
 
-        switch (status) {
-            case InductionStatus.waitingForProfile:
-                return <InductionStepProfile induction={induction} />;
-            case InductionStatus.waitingForVideo:
-                return (
-                    <InductionStepVideo
+    if (!isLoading && notFound) {
+        return (
+            <RawLayout title="Invite not found">
+                <CallToAction
+                    href="/induction"
+                    buttonLabel="Membership Dashboard"
+                >
+                    Hmmm... this invitation couldn't be found. The invitee may
+                    have already been inducted, or their invitation could have
+                    expired.
+                </CallToAction>
+            </RawLayout>
+        );
+    }
+
+    return (
+        <SingleColLayout
+            title={isLoading ? "Loading" : `Induction #${inductionId}`}
+        >
+            {isLoading ? (
+                <Card title="Loading...">...</Card>
+            ) : (
+                induction && (
+                    <InductionJourneyContainer
                         induction={induction}
                         endorsements={endorsements}
+                        status={status}
                     />
-                );
-            case InductionStatus.waitingForEndorsement:
-                return (
-                    <InductionStepEndorsement
-                        induction={induction}
-                        endorsements={endorsements}
-                        setReviewStep={setReviewStep}
-                    />
-                );
-            default:
-                return "";
-        }
-    };
-
-    return isLoading ? (
-        <p>Loading Induction...</p>
-    ) : status === InductionStatus.invalid ? (
-        <RawLayout title="Induction not found">
-            <div className="text-center max-w p-8">
-                <p>
-                    Perhaps this induction was completed successfully or, in the
-                    worst case scenario, it was expired after 7 days.
-                </p>
-            </div>
-        </RawLayout>
-    ) : (
-        <SingleColLayout title={`Induction #${inductionId}`}>
-            {renderInductionStep()}
+                )
+            )}
         </SingleColLayout>
     );
 };
 
-export default InductionPage;
+export default InductionDetailsPage;

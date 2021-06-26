@@ -16,8 +16,9 @@ namespace eden
       std::string img;
       std::string bio;
       std::string social;
+      std::string attributions;  // may be empty
    };
-   EOSIO_REFLECT(new_member_profile, name, img, bio, social)
+   EOSIO_REFLECT(new_member_profile, name, img, bio, social, attributions)
 
    struct induction_v0
    {
@@ -43,11 +44,13 @@ namespace eden
                  video,
                  new_member_profile)
 
+   using induction_variant = std::variant<induction_v0>;
+
    struct induction
    {
       induction() = default;
       induction(const induction&) = delete;
-      std::variant<induction_v0> value;
+      induction_variant value;
       EDEN_FORWARD_MEMBERS(value,
                            id,
                            inviter,
@@ -91,9 +94,11 @@ namespace eden
    };
    EOSIO_REFLECT(endorsement_v0, id, inviter, invitee, endorser, induction_id, endorsed)
 
+   using endorsement_variant = std::variant<endorsement_v0>;
+
    struct endorsement
    {
-      std::variant<endorsement_v0> value;
+      endorsement_variant value;
       EDEN_FORWARD_MEMBERS(value, id, inviter, invitee, endorser, induction_id, endorsed)
       EDEN_FORWARD_FUNCTIONS(value, primary_key, get_endorser_key, induction_id_key)
    };
@@ -121,6 +126,16 @@ namespace eden
    EOSIO_REFLECT(endorsed_induction, invitee, induction_id);
    using endorsed_induction_table_type = eosio::multi_index<"endind"_n, endorsed_induction>;
 
+   // Tracks invitees who had a large number of pending invitations that
+   // need to be cleaned up.
+   struct induction_gc
+   {
+      eosio::name invitee;
+      uint64_t primary_key() const { return invitee.value; }
+   };
+   EOSIO_REFLECT(induction_gc, invitee);
+   using induction_gc_table_type = eosio::multi_index<"inductgc"_n, induction_gc>;
+
    class inductions
    {
      private:
@@ -130,13 +145,14 @@ namespace eden
       globals globals;
 
       void check_new_induction(eosio::name invitee, eosio::name inviter) const;
+      bool is_valid_induction(const induction& induction) const;
       void check_valid_induction(const induction& induction) const;
       void validate_profile(const new_member_profile& new_member_profile) const;
       void validate_video(const std::string& video) const;
       void check_valid_endorsers(eosio::name inviter,
                                  const std::vector<eosio::name>& witnesses) const;
+      void check_is_fully_endorsed(uint64_t induction_id) const;
       void reset_endorsements(uint64_t induction_id);
-      void maybe_create_nft(const induction& induction_id);
 
      public:
       inductions(eosio::name contract)
@@ -147,13 +163,17 @@ namespace eden
       {
       }
 
+      const induction_table_type& get_table() { return induction_tb; }
       const induction& get_induction(uint64_t id) const;
       const induction& get_endorsed_induction(eosio::name invitee) const;
+      bool has_induction(eosio::name invitee) const;
 
       void initialize_induction(uint64_t id,
                                 eosio::name inviter,
                                 eosio::name invitee,
                                 const std::vector<eosio::name>& witnesses);
+
+      void update_expiration(const induction& induction, eosio::time_point new_expiration);
 
       void update_profile(const induction& induction, const new_member_profile& new_member_profile);
 
@@ -162,12 +182,20 @@ namespace eden
       void endorse(const induction& induction,
                    eosio::name account,
                    eosio::checksum256 induction_data_hash);
+      void create_nft(const induction& induction_id);
 
       bool is_endorser(uint64_t id, eosio::name witness) const;
+      bool is_invitee(uint64_t id, eosio::name invitee) const;
 
       void create_nfts(const induction& induction, int32_t template_id);
+      void mint_nft(int template_id, eosio::name new_asset_owner);
       void start_auction(const induction& induction, uint64_t asset_id);
       void erase_induction(const induction& induction);
+      uint32_t erase_expired(uint32_t limit, std::vector<eosio::name>& removed_members);
+      uint32_t erase_by_inductee(eosio::name inductee, uint32_t limit);
+      void erase_endorser(eosio::name endorser);
+      uint32_t gc(uint32_t limit, std::vector<eosio::name>& removed_members);
+      void queue_gc(eosio::name inductee);
       void create_induction(uint64_t id,
                             eosio::name inviter,
                             eosio::name invitee,
@@ -177,7 +205,9 @@ namespace eden
       void create_endorsement(eosio::name inviter,
                               eosio::name invitee,
                               eosio::name endorser,
-                              uint64_t induction_id);
+                              uint64_t induction_id,
+                              bool endorsed = false);
+      void add_endorsement(const induction& induction, eosio::name endorser, bool endorsed);
 
       // Should only be used during genesis
       void endorse_all(const induction& induction);

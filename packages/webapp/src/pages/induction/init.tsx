@@ -1,29 +1,47 @@
-import { SingleColLayout, useFetchedData, useUALAccount } from "_app";
-import { EdenMember, getEdenMember, MemberStatus } from "members";
-import { InitInduction } from "inductions";
+import React from "react";
+import {
+    CallToAction,
+    Card,
+    SingleColLayout,
+    useCurrentMember,
+    useUALAccount,
+} from "_app";
+import { GetAnInviteCTA, InductionInviteFormContainer } from "inductions";
+import { MemberStatus } from "members";
 
 export const InitInductionPage = () => {
-    const [ualAccount] = useUALAccount();
-    const [edenMember, isLoading] = useFetchedData<EdenMember>(
-        getEdenMember,
-        ualAccount?.accountName
-    );
+    const [ualAccount, _, ualShowModal] = useUALAccount();
+    const { data: member, isLoading } = useCurrentMember();
+
+    const getPageTitle = () => {
+        if (!ualAccount) return "Sign in";
+        if (member?.status !== MemberStatus.ActiveMember) return "Membership";
+        return "Invite";
+    };
+
+    const renderContents = () => {
+        if (!ualAccount) {
+            return (
+                <CallToAction buttonLabel="Sign in" onClick={ualShowModal}>
+                    Welcome to Eden. Sign in using your wallet.
+                </CallToAction>
+            );
+        }
+
+        if (isLoading) {
+            return <Card title="Loading...">...</Card>;
+        }
+
+        if (member?.status !== MemberStatus.ActiveMember) {
+            return <GetAnInviteCTA />;
+        }
+
+        return <InductionInviteFormContainer ualAccount={ualAccount} />;
+    };
 
     return (
-        <SingleColLayout title="Induction">
-            {!ualAccount ? (
-                <div>Please login using yout wallet.</div>
-            ) : isLoading ? (
-                <div>Loading...</div>
-            ) : !edenMember ||
-              edenMember.status !== MemberStatus.ActiveMember ? (
-                <p className="text-red-500">
-                    Your account is not active. You cannot initialize any
-                    induction.
-                </p>
-            ) : (
-                <InitInduction ualAccount={ualAccount} />
-            )}
+        <SingleColLayout title={getPageTitle()}>
+            {renderContents()}
         </SingleColLayout>
     );
 };

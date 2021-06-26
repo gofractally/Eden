@@ -19,17 +19,21 @@ namespace eden
    struct member_v0
    {
       eosio::name account;
+      std::string name;
       member_status_type status;
       uint64_t nft_template_id;
 
       uint64_t primary_key() const { return account.value; }
    };
-   EOSIO_REFLECT(member_v0, account, status, nft_template_id)
+   EOSIO_REFLECT(member_v0, account, name, status, nft_template_id)
+
+   using member_variant = std::variant<member_v0>;
 
    struct member
    {
-      std::variant<member_v0> value;
-      EDEN_FORWARD_MEMBERS(value, account, status, nft_template_id);
+      member() = default;
+      member_variant value;
+      EDEN_FORWARD_MEMBERS(value, account, name, status, nft_template_id);
       EDEN_FORWARD_FUNCTIONS(value, primary_key)
    };
    EOSIO_REFLECT(member, value)
@@ -44,7 +48,8 @@ namespace eden
    };
    EOSIO_REFLECT(member_stats_v0, active_members, pending_members, completed_waiting_inductions);
 
-   using member_stats_singleton = eosio::singleton<"memberstats"_n, std::variant<member_stats_v0>>;
+   using member_stats_variant = std::variant<member_stats_v0>;
+   using member_stats_singleton = eosio::singleton<"memberstats"_n, member_stats_variant>;
 
    class members
    {
@@ -53,8 +58,6 @@ namespace eden
       member_table_type member_tb;
       globals globals;
       member_stats_singleton member_stats;
-
-      bool is_new_member(eosio::name account) const;
 
      public:
       members(eosio::name contract)
@@ -65,12 +68,20 @@ namespace eden
       {
       }
 
+      const member& get_member(eosio::name account);
+      const member_table_type& get_table() const { return member_tb; }
       void create(eosio::name account);
+      member_table_type::const_iterator erase(member_table_type::const_iterator iter);
+      void remove(eosio::name account);
+      void remove_if_pending(eosio::name account);
+      bool is_new_member(eosio::name account) const;
       void check_active_member(eosio::name account);
       void check_pending_member(eosio::name account);
       void deposit(eosio::name account, const eosio::asset& quantity);
       void set_nft(eosio::name account, int32_t nft_template_id);
-      void set_active(eosio::name account);
+      void set_active(eosio::name account, const std::string& name);
+      // Activates the contract if all genesis members are active
+      void maybe_activate_contract();
       member_stats_v0 stats();
 
       // this method is used only for administrative purposes,

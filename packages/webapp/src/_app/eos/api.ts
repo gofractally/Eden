@@ -4,26 +4,43 @@ const RPC_URL = `${rpcEndpoint.protocol}://${rpcEndpoint.host}:${rpcEndpoint.por
 export const RPC_GET_TABLE_ROWS = `${RPC_URL}/v1/chain/get_table_rows`;
 
 export const CONTRACT_SCOPE = "0";
+export const CONTRACT_GLOBAL_TABLE = "global";
 export const CONTRACT_MEMBER_TABLE = "member";
+export const CONTRACT_MEMBERSTATS_TABLE = "memberstats";
 export const CONTRACT_INDUCTION_TABLE = "induction";
 export const CONTRACT_ENDORSEMENT_TABLE = "endorsement";
 
+interface TableResponse<T> {
+    rows: [string, T][];
+    more: boolean;
+    next_key: string;
+}
+
 export const getRow = async <T>(
     table: string,
-    keyName: string,
-    keyValue: string
+    keyName?: string,
+    keyValue?: string
 ): Promise<T | undefined> => {
     const rows = await getTableRows(table, keyValue);
-    return rows.length > 0 && `${rows[0][keyName]}` === keyValue
-        ? rows[0]
-        : undefined;
+    if (!rows.length) {
+        return undefined;
+    }
+
+    if (keyName && keyValue && `${rows[0][keyName]}` !== `${keyValue}`) {
+        return undefined;
+    }
+
+    return rows[0];
 };
 
-export const getTableRows = async (
+export const getTableRows = async <T = any>(
     table: string,
-    lowerBound: any,
+    lowerBound: any = "0",
+    upperBound: any = null,
     limit = 1
-): Promise<any[]> => {
+): Promise<T[]> => {
+    const reverse = Boolean(lowerBound === "0" && upperBound);
+
     const requestBody = {
         code: edenContractAccount,
         index_position: 1,
@@ -31,12 +48,12 @@ export const getTableRows = async (
         key_type: "",
         limit: `${limit}`,
         lower_bound: lowerBound,
-        reverse: false,
+        upper_bound: upperBound,
+        reverse,
         scope: CONTRACT_SCOPE,
         show_payer: false,
         table: table,
         table_key: "",
-        upper_bound: null,
     };
 
     const response = await fetch(RPC_GET_TABLE_ROWS, {
@@ -44,14 +61,15 @@ export const getTableRows = async (
         body: JSON.stringify(requestBody),
     });
 
-    const data = await response.json();
+    const data = (await response.json()) as TableResponse<T>;
     console.info(`fetched table ${edenContractAccount}.${table} rows`, data);
 
     if (!data || !data.rows) {
         throw new Error("Invalid table results");
     }
 
-    return data.rows;
+    const rows = reverse ? data.rows.reverse() : data.rows;
+    return rows.map((row) => row[1]);
 };
 
 export const getTableIndexRows = async (
@@ -77,7 +95,7 @@ export const getTableIndexRows = async (
         key_type: keyType,
         limit: `${limit}`,
         lower_bound: lowerBound,
-        upper_bound: upperBound || null,
+        upper_bound: upperBound,
         reverse: false,
         scope: CONTRACT_SCOPE,
         show_payer: false,
@@ -99,5 +117,5 @@ export const getTableIndexRows = async (
         throw new Error("Invalid table results");
     }
 
-    return data.rows;
+    return data.rows.map((row: any) => row[1]);
 };
