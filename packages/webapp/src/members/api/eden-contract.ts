@@ -7,7 +7,7 @@ import {
 } from "_app";
 
 import { EdenMember, MemberStats } from "../interfaces";
-import { TableQueryOptions } from "../../_app/eos/interfaces";
+import { TreasuryStats } from "../../pages/interfaces";
 
 export const getEdenMember = (account: string) =>
     getRow<EdenMember>(CONTRACT_MEMBER_TABLE, {
@@ -19,10 +19,13 @@ export const getMembersStats = async () =>
     getRow<MemberStats>(CONTRACT_MEMBERSTATS_TABLE);
 
 export const getTreasuryStats = async () => {
-    const { balance } = await getRow<any>(CONTRACT_ACCOUNT_TABLE, {
+    const data = await getRow<TreasuryStats>(CONTRACT_ACCOUNT_TABLE, {
         scope: "owned",
         keyName: "master",
     });
+    if (!data || !data.balance) {
+        throw new Error("Error fetching treasury stats");
+    }
 
-    return assetFromString(balance);
+    return assetFromString(data.balance);
 };
