@@ -60,6 +60,13 @@ namespace eden
       return member_tb.erase(iter);
    }
 
+   void members::remove(eosio::name account)
+   {
+      auto iter = member_tb.find(account.value);
+      eosio::check(iter != member_tb.end(), "Unknown member");
+      erase(iter);
+   }
+
    void members::remove_if_pending(eosio::name account)
    {
       const auto& member = member_tb.get(account.value);

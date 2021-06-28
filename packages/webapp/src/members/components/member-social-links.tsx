@@ -29,7 +29,7 @@ export const MemberSocialLinks = ({ member }: Props) => (
         )}
         {member.socialHandles.blog && (
             <SocialButton
-                handle="Blog"
+                handle="Website"
                 icon={HiOutlineLink}
                 href={urlify(member.socialHandles.blog)}
             />

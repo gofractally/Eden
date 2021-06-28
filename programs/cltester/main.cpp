@@ -1,15 +1,10 @@
-#include "debug-eos-vm.hpp"
-
-#undef LIKELY
-#undef UNLIKELY
 #define EOSIO_EOS_VM_JIT_RUNTIME_ENABLED
 
-#include <eosio/chain/apply_context.hpp>
+#include <debug_eos_vm/debug_contract.hpp>
 #include <eosio/chain/controller.hpp>
 #include <eosio/chain/generated_transaction_object.hpp>
 #include <eosio/chain/transaction_context.hpp>
 #include <eosio/chain/types.hpp>
-#include <eosio/chain/webassembly/interface.hpp>
 #include <eosio/state_history/create_deltas.hpp>
 #include <eosio/state_history/serialization.hpp>
 #include <eosio/state_history/trace_converter.hpp>
@@ -161,12 +156,6 @@ struct file;
 struct test_chain;
 struct test_rodeos;
 
-struct debugging_module
-{
-   std::unique_ptr<debug_contract_backend> module;
-   std::shared_ptr<dwarf::debugger_registration> reg;
-};
-
 struct state
 {
    const char* wasm;
@@ -174,9 +163,7 @@ struct state
    eosio::vm::wasm_allocator& wa;
    backend_t& backend;
    std::vector<std::string> args;
-   std::map<fc::sha256, fc::sha256> substitutions;
-   std::map<fc::sha256, std::vector<uint8_t>> codes;
-   std::map<fc::sha256, debugging_module> cached_modules;
+   debug_contract::substitution_cache<debug_contract_backend> cache;
    std::vector<file> files;
    std::vector<std::unique_ptr<test_chain>> chains;
    std::vector<std::unique_ptr<test_rodeos>> rodeoses;
@@ -334,7 +321,7 @@ struct test_chain
       auto& iface = control->get_wasm_interface();
       iface.substitute_apply = [this](const eosio::chain::digest_type& code_hash, uint8_t vm_type,
                                       uint8_t vm_version, eosio::chain::apply_context& context) {
-         return substitute_apply(code_hash, vm_type, vm_version, context);
+         return this->state.cache.substitute_apply(code_hash, vm_type, vm_version, context);
       };
    }
 
@@ -409,56 +396,6 @@ struct test_chain
       control->finalize_block(
           [&](eosio::chain::digest_type d) { return std::vector{producer_key.sign(d)}; });
       control->commit_block();
-   }
-
-   bool substitute_apply(const eosio::chain::digest_type& code_hash,
-                         uint8_t vm_type,
-                         uint8_t vm_version,
-                         eosio::chain::apply_context& context)
-   {
-      if (vm_type || vm_version)
-         return false;
-      if (auto it = state.substitutions.find(code_hash); it != state.substitutions.end())
-      {
-         auto& module = *get_debugging_module(it->second).module;
-         module.set_wasm_allocator(&context.control.get_wasm_allocator());
-         eosio::chain::webassembly::interface iface(context);
-         module.initialize(&iface);
-         module.call(iface, "env", "apply", context.get_receiver().to_uint64_t(),
-                     context.get_action().account.to_uint64_t(),
-                     context.get_action().name.to_uint64_t());
-         return true;
-      }
-      return false;
-   }
-
-   debugging_module& get_debugging_module(const eosio::chain::digest_type& code_hash)
-   {
-      if (auto it = state.cached_modules.find(code_hash); it != state.cached_modules.end())
-         return it->second;
-
-      if (auto it = state.codes.find(code_hash); it != state.codes.end())
-      {
-         auto dwarf_info =
-             dwarf::get_info_from_wasm({(const char*)it->second.data(), it->second.size()});
-         auto size = dwarf::wasm_exclude_custom({(const char*)it->second.data(), it->second.size()})
-                         .remaining();
-         try
-         {
-            eosio::vm::wasm_code_ptr code(it->second.data(), size);
-            auto bkend = std::make_unique<debug_contract_backend>(code, size, nullptr);
-            eosio::chain::eos_vm_host_functions_t::resolve(bkend->get_module());
-            auto reg = debug_eos_vm::enable_debug(it->second, *bkend, dwarf_info, "apply");
-            return state.cached_modules[code_hash] =
-                       debugging_module{std::move(bkend), std::move(reg)};
-         }
-         catch (eosio::vm::exception& e)
-         {
-            FC_THROW_EXCEPTION(eosio::chain::wasm_execution_error,
-                               "Error building eos-vm interp: ${e}", ("e", e.what()));
-         }
-      }
-      throw std::runtime_error{"missing code for substituted module"};
    }
 };  // test_chain
 
@@ -1640,8 +1577,8 @@ void fill_substitutions(::state& state, const std::map<std::string, std::string>
       }
       auto ahash = fc::sha256::hash((const char*)acode.data(), acode.size());
       auto bhash = fc::sha256::hash((const char*)bcode.data(), bcode.size());
-      state.substitutions[ahash] = bhash;
-      state.codes[bhash] = std::move(bcode);
+      state.cache.substitutions[ahash] = bhash;
+      state.cache.codes[bhash] = std::move(bcode);
    }
 }
 

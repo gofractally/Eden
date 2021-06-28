@@ -82,6 +82,8 @@ namespace eden
 
       void inducted(eosio::name inductee);
 
+      void resign(eosio::name member);
+
       void electsettime(eosio::time_point_sec election_time);
 
       void electconfig(uint8_t election_day,
@@ -178,6 +180,7 @@ namespace eden
        action(inductdonate, payer, id, quantity, ricardian_contract(inductdonate_ricardian)),
        action(inductcancel, account, id, ricardian_contract(inductcancel_ricardian)),
        action(inducted, inductee, ricardian_contract(inducted_ricardian)),
+       action(resign, account),
        action(gc, limit, ricardian_contract(gc_ricardian)),
        action(migrate, limit),
        action(unmigrate),
