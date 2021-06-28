@@ -868,7 +868,7 @@ TEST_CASE("election")
        "\4\0\0\0"
        "00000000000000000000000000000000"
        "00000000000000000000000000000000"
-       "\x70\xa0\x00\x5f"
+       "\x60\x92\x00\x5f"
        "\x00\x00\x00\x00"
        "\x00\x00\x00\x00";
    t.eden_gm.act<actions::electseed>(eosio::bytes{std::vector(buf, buf + sizeof(buf) - 1)});
@@ -894,7 +894,7 @@ TEST_CASE("election")
    eden::election_state_singleton results("eden.gm"_n, eden::default_scope);
    auto result = std::get<eden::election_state_v0>(results.get());
    // This is likely to change as it depends on the exact random number algorithm and seed
-   CHECK(result.lead_representative == "egeon"_n);
+   CHECK(result.lead_representative == "pip"_n);
    std::sort(result.board.begin(), result.board.end());
    CHECK(result.board == std::vector{"alice"_n, "egeon"_n, "pip"_n});
 }
@@ -921,7 +921,7 @@ TEST_CASE("election with multiple rounds")
        "\4\0\0\0"
        "00000000000000000000000000000000"
        "00000000000000000000000000000000"
-       "\x70\xa0\x00\x5f"
+       "\x60\x92\x00\x5f"
        "\x00\x00\x00\x00"
        "\x00\x00\x00\x00";
    t.eden_gm.act<actions::electseed>(eosio::bytes{std::vector(buf, buf + sizeof(buf) - 1)});
@@ -962,7 +962,7 @@ TEST_CASE("election with multiple rounds")
             t.chain.as(member).act<actions::electvote>(round, member, winner);
          }
       }
-      t.chain.start_block(60 * 60 * 1000);
+      t.chain.start_block(2 * 60 * 60 * 1000);
       t.alice.act<actions::electprocess>(256);
       ++round;
    };
@@ -980,7 +980,7 @@ TEST_CASE("election with multiple rounds")
           "\4\0\0\0"
           "00000000000000000000000000000000"
           "00000000000000000000000000000000"
-          "\x70\xf0\x00\x5f"
+          "\x70\x00\x01\x5f"
           "\x00\x00\x00\x00"
           "\x00\x00\x00\x00";
       t.eden_gm.act<actions::electseed>(eosio::bytes{std::vector(buf, buf + sizeof(buf) - 1)});
