@@ -2,13 +2,13 @@ import { Router } from "express";
 
 import {
     infoHandler,
-    trxUploadConfigHandler,
-    trxUploadHandler,
+    ipfsUploadConfigHandler,
+    ipfsUploadHandler,
 } from "./handlers";
 
 const router: Router = Router();
 
 router.get("/", infoHandler);
-router.post("/v1/trx-upload", trxUploadConfigHandler, trxUploadHandler);
+router.post("/v1/ipfs-upload", ipfsUploadConfigHandler, ipfsUploadHandler);
 
 export default router;

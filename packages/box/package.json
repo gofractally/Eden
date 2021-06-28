@@ -14,6 +14,7 @@
         "test": "yarn run build"
     },
     "dependencies": {
+        "@edenos/common": "^0.1.0",
         "axios": "^0.21.1",
         "body-parser": "^1.19.0",
         "cids": "^1.1.6",

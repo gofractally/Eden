@@ -1,0 +1,30 @@
+{
+    "name": "@edenos/common",
+    "description": "Eden Common Lib",
+    "version": "0.1.0",
+    "license": "MIT",
+    "main": "dist/index",
+    "types": "dist/index",
+    "scripts": {
+        "build": "yarn run clean && yarn run compile",
+        "clean": "rimraf -rf ./dist",
+        "compile": "tsc -p tsconfig.build.json",
+        "prepublishOnly": "yarn run build",
+        "lint": "eslint --ext .js,.ts src",
+        "test": "yarn run build"
+    },
+    "dependencies": {
+        "cids": "^1.1.6",
+        "dayjs": "^1.10.4",
+        "eosjs": "^21.0.3",
+        "hash.js": "^1.1.7",
+        "ipfs-http-client": "^50.0.0",
+        "ipfs-only-hash": "^4.0.0",
+        "zod": "^3.0.0-beta.1"
+    },
+    "devDependencies": {
+        "rimraf": "^3.0.2",
+        "tsconfig-paths": "^3.9.0",
+        "typescript": "^4.2.3"
+    }
+}

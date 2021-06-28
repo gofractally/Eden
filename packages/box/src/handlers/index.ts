@@ -1,2 +1,2 @@
 export * from "./info";
-export * from "./trx-upload";
+export * from "./ipfs-upload";

@@ -1,3 +1,5 @@
+import { ValidUploadActions } from "@edenos/common";
+
 import * as packageJson from "../package.json";
 import logger from "./logger";
 
@@ -34,5 +36,19 @@ export const ipfsConfig = {
     pinataJwt: process.env.IPFS_PINATA_JWT || "<pinata-jwt-here>",
 };
 console.info({ ...ipfsConfig, pinataJwt: "<secret>" });
+
+export const validUploadActions: ValidUploadActions = {
+    [edenContractAccount]: {
+        inductprofil: {
+            maxSize: 1_000_000,
+            cidField: "new_member_profile.img",
+        },
+        inductvideo: { maxSize: 1_400_000_000, cidField: "video" },
+    },
+};
+logger.info(
+    "Supported EOS IPFS Upload Actions\n" +
+        JSON.stringify(validUploadActions, undefined, 2)
+);
 
 logger.info("<== Env Configs Loaded!");
