@@ -30,7 +30,9 @@ export const getRow = async <T>(
     keyName?: string,
     keyValue?: string
 ): Promise<T | undefined> => {
-    const options: TableQueryOptions = keyValue ? { lowerBound: keyValue } : {};
+    const options: TableQueryOptions | undefined = keyValue
+        ? { lowerBound: keyValue }
+        : undefined;
     const rows = await getTableRows(table, options);
 
     if (!rows.length) {
@@ -46,7 +48,7 @@ export const getRow = async <T>(
 
 export const getTableRows = async <T = any>(
     table: string,
-    options: TableQueryOptions
+    options?: TableQueryOptions
 ): Promise<T[]> => {
     options = { ...TABLE_PARAM_DEFAULTS, ...options };
     const reverse = Boolean(options.lowerBound === "0" && options.upperBound);
