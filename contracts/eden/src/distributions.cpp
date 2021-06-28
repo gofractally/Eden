@@ -54,6 +54,7 @@ namespace eden
    bool setup_distribution(eosio::name contract, eosio::block_timestamp init)
    {
       distribution_table_type distribution_tb{contract, default_scope};
+      distribution_point_table_type distribution_point_tb{contract, default_scope};
       auto iter = distribution_tb.end();
       if (iter == distribution_tb.begin())
       {
@@ -109,6 +110,9 @@ namespace eden
          {
             contract, make_account_scope(distribution_time, 0)
          };
+         distribution_point_tb.emplace(contract, [&](auto& row) {
+            row.value = distribution_point_v0{.distribution_time = distribution_time, .rank = 0};
+         });
          for (const auto& pool : pool_tb)
          {
             auto account = accounts.get_account(pool.name());

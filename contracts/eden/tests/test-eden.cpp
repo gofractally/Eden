@@ -243,7 +243,7 @@ struct eden_tester
       CHECK(get_eden_membership(invitee).status() == eden::member_status::active_member);
    };
 
-   void electseed(eosio::time_point_sec block_time)
+   void electseed(eosio::time_point_sec block_time, const char* expected = nullptr)
    {
       // This isn't a valid bitcoin block, but it meets the requirements that we actually check.
       char buf[80] =
@@ -255,7 +255,20 @@ struct eden_tester
           "\x00\x00\x00";
       uint32_t time = block_time.sec_since_epoch();
       memcpy(buf + 68, &time, 4);
-      eden_gm.act<actions::electseed>(eosio::bytes{std::vector(buf, buf + sizeof(buf))});
+      expect(eden_gm.trace<actions::electseed>(eosio::bytes{std::vector(buf, buf + sizeof(buf))}),
+             expected);
+   }
+
+   void skip_to(std::string time)
+   {
+      uint64_t value;
+      eosio::check(eosio::string_to_utc_microseconds(value, time.data(), time.data() + time.size()),
+                   "bad time");
+      eosio::time_point tp{eosio::microseconds(value)};
+      chain.finish_block();
+      auto head_tp = chain.get_head_block_info().timestamp.to_time_point();
+      auto skip = (tp - head_tp).count() / 1000 - 500;
+      chain.start_block(skip);
    }
 };
 
@@ -877,9 +890,12 @@ TEST_CASE("election")
       auto current = std::get<eden::current_election_state_registration>(state.get());
       CHECK(eosio::convert_to_json(current.start_time) == "\"2020-07-04T15:30:00.000\"");
    }
-   t.chain.start_block(185ull * 24 * 60 * 60 * 1000);
+   t.skip_to("2020-07-03T15:29:59.500");
+   t.electseed(eosio::time_point_sec(0x5f009260u), "Cannot start seeding yet");
+   t.chain.start_block();
    t.electseed(eosio::time_point_sec(0x5f009260u));
-   t.chain.start_block((15 * 60 + 30) * 60 * 1000);
+   t.skip_to("2020-07-04T14:29:59.500");
+   expect(t.alice.trace<actions::electprepare>(1), "Seeding window is still open");
    while (true)
    {
       t.chain.start_block();
@@ -914,7 +930,7 @@ TEST_CASE("election with multiple rounds")
    auto test_accounts = make_names(num_accounts - 3);
    t.create_accounts(test_accounts);
 
-   t.chain.start_block(180ull * 24 * 60 * 60 * 1000);
+   t.skip_to("2020-07-01T15:30:00.000");
 
    for (auto account : test_accounts)
    {
@@ -923,9 +939,9 @@ TEST_CASE("election with multiple rounds")
       t.finish_induction(42, "alice"_n, account, {"pip"_n, "egeon"_n});
    }
 
-   t.chain.start_block(5ull * 24 * 60 * 60 * 1000);
+   t.skip_to("2020-07-03T15:30:00.000");
    t.electseed(eosio::time_point_sec(0x5f009260));
-   t.chain.start_block((15 * 60 + 30) * 60 * 1000);
+   t.skip_to("2020-07-04T14:29:59.500");
 
    // set up the election
    while (true)
@@ -990,26 +1006,17 @@ TEST_CASE("election with multiple rounds")
          std::vector<uint16_t>{200 - 48, 48 - 12, 12 - 3, 3 - 1, 1});
 
    // Check post-election budget distribution
-   std::vector<eosio::block_timestamp> times;
-   {
-      eden::distribution_table_type dist{"eden.gm"_n, eden::default_scope};
-      for (auto item : dist)
-      {
-         times.push_back(item.distribution_time());
-      }
-   }
    t.alice.act<actions::distribute>(250);
    auto get_total = [&] {
       eosio::asset total = s2a("0.0000 EOS");
-      for (auto t : times)
+      eden::distribution_point_table_type distributions{"eden.gm"_n, eden::default_scope};
+      for (auto t : distributions)
       {
-         for (uint8_t i = 0; i < 10; ++i)
+         eden::account_table_type account_tb{
+             "eden.gm"_n, eden::make_account_scope(t.distribution_time(), t.rank()).value};
+         for (auto item : account_tb)
          {
-            eden::account_table_type account_tb{"eden.gm"_n, eden::make_account_scope(t, i).value};
-            for (auto item : account_tb)
-            {
-               total += item.balance();
-            }
+            total += item.balance();
          }
       }
       return total;
@@ -1020,17 +1027,8 @@ TEST_CASE("election with multiple rounds")
    t.alice.act<actions::distribute>(250);
    CHECK(get_total() == s2a("195.0000 EOS"));
    // Skip into the next election
-   t.chain.start_block(180ull * 24 * 60 * 60 * 1000);
+   t.skip_to("2021-01-05T15:30:00.000");
    t.alice.act<actions::distribute>(1);
-   {
-      eden::distribution_table_type dist{"eden.gm"_n, eden::default_scope};
-      for (auto item : dist)
-      {
-         times.push_back(item.distribution_time());
-      }
-      std::sort(times.begin(), times.end());
-      times.erase(std::unique(times.begin(), times.end()), times.end());
-   }
    t.alice.act<actions::distribute>(5000);
    CHECK(get_total() == s2a("607.9808 EOS"));
 }
