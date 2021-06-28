@@ -242,6 +242,21 @@ struct eden_tester
       chain.as(invitee).act<actions::inductdonate>(invitee, induction_id, s2a("10.0000 EOS"));
       CHECK(get_eden_membership(invitee).status() == eden::member_status::active_member);
    };
+
+   void electseed(eosio::time_point_sec block_time)
+   {
+      // This isn't a valid bitcoin block, but it meets the requirements that we actually check.
+      char buf[80] =
+          "\4\0\0\0"
+          "00000000000000000000000000000000"
+          "00000000000000000000000000000000"
+          "\x00\x00\x00\x00"
+          "\x00\x00\x00\x00"
+          "\x00\x00\x00";
+      uint32_t time = block_time.sec_since_epoch();
+      memcpy(buf + 68, &time, 4);
+      eden_gm.act<actions::electseed>(eosio::bytes{std::vector(buf, buf + sizeof(buf))});
+   }
 };
 
 TEST_CASE("genesis NFT pre-setup")
@@ -863,15 +878,7 @@ TEST_CASE("election")
       CHECK(eosio::convert_to_json(current.start_time) == "\"2020-07-04T15:30:00.000\"");
    }
    t.chain.start_block(185ull * 24 * 60 * 60 * 1000);
-   // This isn't a valid bitcoin block, but it meets the requirements that we actually check.
-   char buf[81] =
-       "\4\0\0\0"
-       "00000000000000000000000000000000"
-       "00000000000000000000000000000000"
-       "\x60\x92\x00\x5f"
-       "\x00\x00\x00\x00"
-       "\x00\x00\x00\x00";
-   t.eden_gm.act<actions::electseed>(eosio::bytes{std::vector(buf, buf + sizeof(buf) - 1)});
+   t.electseed(eosio::time_point_sec(0x5f009260u));
    t.chain.start_block((15 * 60 + 30) * 60 * 1000);
    while (true)
    {
@@ -917,14 +924,7 @@ TEST_CASE("election with multiple rounds")
    }
 
    t.chain.start_block(5ull * 24 * 60 * 60 * 1000);
-   char buf[81] =
-       "\4\0\0\0"
-       "00000000000000000000000000000000"
-       "00000000000000000000000000000000"
-       "\x60\x92\x00\x5f"
-       "\x00\x00\x00\x00"
-       "\x00\x00\x00\x00";
-   t.eden_gm.act<actions::electseed>(eosio::bytes{std::vector(buf, buf + sizeof(buf) - 1)});
+   t.electseed(eosio::time_point_sec(0x5f009260));
    t.chain.start_block((15 * 60 + 30) * 60 * 1000);
 
    // set up the election
@@ -975,16 +975,7 @@ TEST_CASE("election with multiple rounds")
    CHECK(get_table_size<eden::vote_table_type>() == 12);
    generic_group_vote(get_current_groups());
    CHECK(get_table_size<eden::vote_table_type>() == 3);
-   {
-      char buf[81] =
-          "\4\0\0\0"
-          "00000000000000000000000000000000"
-          "00000000000000000000000000000000"
-          "\x70\x00\x01\x5f"
-          "\x00\x00\x00\x00"
-          "\x00\x00\x00\x00";
-      t.eden_gm.act<actions::electseed>(eosio::bytes{std::vector(buf, buf + sizeof(buf) - 1)});
-   }
+   t.electseed(eosio::time_point_sec(0x5f010070));
    t.chain.start_block((15 * 60 + 30) * 60 * 1000);
    t.chain.start_block(24 * 60 * 60 * 1000);
    t.alice.act<actions::electprocess>(256);
