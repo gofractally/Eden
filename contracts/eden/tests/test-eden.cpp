@@ -94,6 +94,16 @@ auto get_table_size()
    return std::distance(tb.begin(), tb.end());
 }
 
+template <typename T>
+void dump_table()
+{
+   T tb("eden.gm"_n, eden::default_scope);
+   for (const auto& record : tb)
+   {
+      std::cout << eosio::convert_to_json(record) << std::endl;
+   }
+}
+
 std::vector<eosio::name> make_names(std::size_t count)
 {
    std::vector<eosio::name> result;
@@ -264,11 +274,85 @@ struct eden_tester
       uint64_t value;
       eosio::check(eosio::string_to_utc_microseconds(value, time.data(), time.data() + time.size()),
                    "bad time");
-      eosio::time_point tp{eosio::microseconds(value)};
+      skip_to(eosio::time_point{eosio::microseconds(value)});
+   }
+   void skip_to(eosio::time_point tp)
+   {
       chain.finish_block();
       auto head_tp = chain.get_head_block_info().timestamp.to_time_point();
       auto skip = (tp - head_tp).count() / 1000 - 500;
       chain.start_block(skip);
+   }
+
+   void setup_election()
+   {
+      while (true)
+      {
+         auto trace = alice.trace<actions::electprepare>(10000);
+         if (trace.except)
+         {
+            expect(trace, "Nothing to do");
+            break;
+         }
+         chain.start_block();
+      }
+   }
+
+   eosio::block_timestamp next_election_time() const
+   {
+      return *eden::elections{"eden.gm"_n}.get_next_election_time();
+   }
+
+   auto get_current_groups() const
+   {
+      std::map<uint64_t, std::vector<eosio::name>> groups;
+      eden::vote_table_type vote_tb("eden.gm"_n, eden::default_scope);
+      eden::current_election_state_singleton state("eden.gm"_n, eden::default_scope);
+      auto config = std::get<eden::current_election_state_active>(state.get()).config;
+      for (auto row : vote_tb.get_index<"bygroup"_n>())
+      {
+         groups[config.member_index_to_group(row.index)].push_back(row.member);
+      }
+      return groups;
+   };
+
+   void generic_group_vote(const auto& groups, uint8_t round)
+   {
+      for (const auto& [group_id, members] : groups)
+      {
+         chain.start_block();
+         auto winner = *std::min_element(members.begin(), members.end());
+         for (eosio::name member : members)
+         {
+            chain.as(member).act<actions::electvote>(round, member, winner);
+         }
+      }
+      chain.start_block(2 * 60 * 60 * 1000);
+      alice.act<actions::electprocess>(256);
+   };
+
+   void run_election()
+   {
+      skip_to(next_election_time().to_time_point() - eosio::days(1));
+      electseed(next_election_time().to_time_point() - eosio::days(1));
+      skip_to(next_election_time().to_time_point() - eosio::hours(1));
+
+      setup_election();
+
+      uint8_t round = 0;
+
+      while (get_table_size<eden::vote_table_type>() > 11)
+      {
+         generic_group_vote(get_current_groups(), round++);
+      }
+
+      if (get_table_size<eden::vote_table_type>() != 0)
+      {
+         chain.start_block();
+         electseed(chain.get_head_block_info().timestamp.to_time_point());
+         chain.start_block(24 * 60 * 60 * 1000);
+         alice.act<actions::electprocess>(256);
+      }
    }
 };
 
@@ -896,23 +980,8 @@ TEST_CASE("election")
    t.electseed(eosio::time_point_sec(0x5f009260u));
    t.skip_to("2020-07-04T14:29:59.500");
    expect(t.alice.trace<actions::electprepare>(1), "Seeding window is still open");
-   while (true)
-   {
-      t.chain.start_block();
-      auto trace = t.alice.trace<actions::electprepare>(1);
-      if (trace.except)
-      {
-         expect(trace, "Nothing to do");
-         break;
-      }
-   }
-   /*
-   t.alice.act<actions::electvote>(0, "alice"_n, "alice"_n);
-   t.pip.act<actions::electvote>(0, "pip"_n, "alice"_n);
-   t.egeon.act<actions::electvote>(0, "egeon"_n, "alice"_n);
-   t.chain.start_block(60 * 60 * 1000);
-   t.alice.act<actions::electprocess>(42);
-   */
+   t.chain.start_block();
+   t.setup_election();
    CHECK(get_table_size<eden::vote_table_type>() == 0);
    eden::election_state_singleton results("eden.gm"_n, eden::default_scope);
    auto result = std::get<eden::election_state_v0>(results.get());
@@ -941,55 +1010,18 @@ TEST_CASE("election with multiple rounds")
 
    t.skip_to("2020-07-03T15:30:00.000");
    t.electseed(eosio::time_point_sec(0x5f009260));
-   t.skip_to("2020-07-04T14:29:59.500");
-
-   // set up the election
-   while (true)
-   {
-      t.chain.start_block();
-      auto trace = t.alice.trace<actions::electprepare>(10000);
-      if (trace.except)
-      {
-         expect(trace, "Nothing to do");
-         break;
-      }
-   }
-
-   auto get_current_groups = []() {
-      std::map<uint64_t, std::vector<eosio::name>> groups;
-      eden::vote_table_type vote_tb("eden.gm"_n, eden::default_scope);
-      eden::current_election_state_singleton state("eden.gm"_n, eden::default_scope);
-      auto config = std::get<eden::current_election_state_active>(state.get()).config;
-      for (auto row : vote_tb.get_index<"bygroup"_n>())
-      {
-         groups[config.member_index_to_group(row.index)].push_back(row.member);
-      }
-      return groups;
-   };
+   t.skip_to("2020-07-04T14:30:00.000");
+   t.setup_election();
 
    uint8_t round = 0;
-   auto generic_group_vote = [&](const auto& groups) {
-      for (const auto& [group_id, members] : groups)
-      {
-         t.chain.start_block();
-         auto winner = *std::min_element(members.begin(), members.end());
-         for (eosio::name member : members)
-         {
-            t.chain.as(member).act<actions::electvote>(round, member, winner);
-         }
-      }
-      t.chain.start_block(2 * 60 * 60 * 1000);
-      t.alice.act<actions::electprocess>(256);
-      ++round;
-   };
 
    // With 200 members, there should be three rounds
    CHECK(get_table_size<eden::vote_table_type>() == 200);
-   generic_group_vote(get_current_groups());
+   t.generic_group_vote(t.get_current_groups(), round++);
    CHECK(get_table_size<eden::vote_table_type>() == 48);
-   generic_group_vote(get_current_groups());
+   t.generic_group_vote(t.get_current_groups(), round++);
    CHECK(get_table_size<eden::vote_table_type>() == 12);
-   generic_group_vote(get_current_groups());
+   t.generic_group_vote(t.get_current_groups(), round++);
    CHECK(get_table_size<eden::vote_table_type>() == 3);
    t.electseed(eosio::time_point_sec(0x5f010070));
    t.chain.start_block((15 * 60 + 30) * 60 * 1000);
@@ -1004,8 +1036,15 @@ TEST_CASE("election with multiple rounds")
 
    CHECK(members("eden.gm"_n).stats().ranks ==
          std::vector<uint16_t>{200 - 48, 48 - 12, 12 - 3, 3 - 1, 1});
+}
 
-   // Check post-election budget distribution
+TEST_CASE("budget distribution")
+{
+   eden_tester t;
+   t.genesis();
+   t.run_election();
+
+   t.skip_to("2020-07-04T15:30:00.0000");
    t.alice.act<actions::distribute>(250);
    auto get_total = [&] {
       eosio::asset total = s2a("0.0000 EOS");
@@ -1021,18 +1060,18 @@ TEST_CASE("election with multiple rounds")
       }
       return total;
    };
-   CHECK(get_total() == s2a("100.0000 EOS"));
+   CHECK(get_total() == s2a("1.5000 EOS"));
    // Skip forward to the next distribution
    t.skip_to("2020-08-03T15:29:59.500");
    expect(t.alice.trace<actions::distribute>(250), "Nothing to do");
    t.chain.start_block();
    t.alice.act<actions::distribute>(250);
-   CHECK(get_total() == s2a("195.0000 EOS"));
+   CHECK(get_total() == s2a("2.9250 EOS"));
    // Skip into the next election
    t.skip_to("2021-01-02T15:30:00.000");
    t.alice.act<actions::distribute>(1);
    t.alice.act<actions::distribute>(5000);
-   CHECK(get_total() == s2a("607.9808 EOS"));
+   CHECK(get_total() == s2a("9.1194 EOS"));
 }
 
 TEST_CASE("accounting")
