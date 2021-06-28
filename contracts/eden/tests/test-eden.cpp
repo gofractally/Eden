@@ -1023,11 +1023,13 @@ TEST_CASE("election with multiple rounds")
    };
    CHECK(get_total() == s2a("100.0000 EOS"));
    // Skip forward to the next distribution
-   t.chain.start_block(30ull * 24 * 60 * 60 * 1000);
+   t.skip_to("2020-08-03T15:29:59.500");
+   expect(t.alice.trace<actions::distribute>(250), "Nothing to do");
+   t.chain.start_block();
    t.alice.act<actions::distribute>(250);
    CHECK(get_total() == s2a("195.0000 EOS"));
    // Skip into the next election
-   t.skip_to("2021-01-05T15:30:00.000");
+   t.skip_to("2021-01-02T15:30:00.000");
    t.alice.act<actions::distribute>(1);
    t.alice.act<actions::distribute>(5000);
    CHECK(get_total() == s2a("607.9808 EOS"));
