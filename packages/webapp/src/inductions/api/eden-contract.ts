@@ -35,10 +35,11 @@ export const getInductionWithEndorsements = async (
 export const getInduction = async (
     inductionId: string
 ): Promise<Induction | undefined> => {
-    const induction = await getRow<Induction>(CONTRACT_INDUCTION_TABLE, {
-        keyName: "id",
-        keyValue: inductionId,
-    });
+    const induction = await getRow<Induction>(
+        CONTRACT_INDUCTION_TABLE,
+        "id",
+        inductionId
+    );
     if (induction) {
         console.info("retrieved induction", induction);
         return induction;

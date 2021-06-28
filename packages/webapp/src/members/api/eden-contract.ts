@@ -3,6 +3,7 @@ import {
     CONTRACT_MEMBERSTATS_TABLE,
     CONTRACT_ACCOUNT_TABLE,
     getRow,
+    getTableRows,
     assetFromString,
 } from "_app";
 
@@ -10,22 +11,20 @@ import { EdenMember, MemberStats } from "../interfaces";
 import { TreasuryStats } from "../../pages/interfaces";
 
 export const getEdenMember = (account: string) =>
-    getRow<EdenMember>(CONTRACT_MEMBER_TABLE, {
-        keyName: "account",
-        keyValue: account,
-    });
+    getRow<EdenMember>(CONTRACT_MEMBER_TABLE, "account", account);
 
 export const getMembersStats = async () =>
     getRow<MemberStats>(CONTRACT_MEMBERSTATS_TABLE);
 
 export const getTreasuryStats = async () => {
-    const data = await getRow<TreasuryStats>(CONTRACT_ACCOUNT_TABLE, {
+    const rows = await getTableRows(CONTRACT_ACCOUNT_TABLE, {
         scope: "owned",
-        keyName: "master",
+        lowerBound: "master",
     });
-    if (!data || !data.balance) {
-        throw new Error("Error fetching treasury stats");
+
+    if (!rows.length) {
+        return undefined;
     }
 
-    return assetFromString(data.balance);
+    return assetFromString(rows[0].balance);
 };

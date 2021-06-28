@@ -27,22 +27,17 @@ const TABLE_PARAM_DEFAULTS = {
 
 export const getRow = async <T>(
     table: string,
-    options?: { keyName?: string; keyValue?: string } & TableQueryOptions
+    keyName?: string,
+    keyValue?: string
 ): Promise<T | undefined> => {
-    options = { ...TABLE_PARAM_DEFAULTS, ...options };
-    options.lowerBound = options.keyValue;
+    const options: TableQueryOptions = keyValue ? { lowerBound: keyValue } : {};
     const rows = await getTableRows(table, options);
 
     if (!rows.length) {
         return undefined;
     }
 
-    if (
-        options &&
-        options.keyName &&
-        options.keyValue &&
-        `${rows[0][options.keyName]}` !== `${options.keyValue}`
-    ) {
+    if (keyName && keyValue && `${rows[0][keyName]}` !== `${keyValue}`) {
         return undefined;
     }
 
