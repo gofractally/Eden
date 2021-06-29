@@ -45,14 +45,16 @@ namespace eden
       }
       else if (migrations.is_completed<migrate_account_v0>())
       {
-         accounts{get_self(), "owned"_n}.add_balance("master"_n, quantity);
+         add_to_pool(get_self(), "master"_n, quantity);
       }
    }
 
    void eden::transfer(eosio::name to, const eosio::asset& quantity, const std::string& memo)
    {
       require_auth(get_self());
-      accounts{get_self(), "owned"_n}.sub_balance("master"_n, quantity);
+      accounts internal{get_self(), "owned"_n};
+      setup_distribution(get_self(), internal);
+      internal.sub_balance("master"_n, quantity);
       accounts{get_self(), "outgoing"_n}.add_balance(to, quantity);
       eosio::action{{get_self(), "active"_n},
                     token_contract,
@@ -92,7 +94,7 @@ namespace eden
       eosio::check(migrations{get_self()}.is_completed<migrate_account_v0>(),
                    "Tables must be migrated to enable donations");
       accounts{get_self()}.sub_balance(owner, quantity);
-      accounts{get_self(), "owned"_n}.add_balance("master"_n, quantity);
+      add_to_pool(get_self(), "master"_n, quantity);
    }
 
    void eden::distribute(uint32_t max_steps)

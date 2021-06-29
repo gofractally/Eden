@@ -1,5 +1,6 @@
 #include <accounts.hpp>
 #include <auctions.hpp>
+#include <distributions.hpp>
 #include <eden.hpp>
 #include <elections.hpp>
 #include <inductions.hpp>
@@ -99,7 +100,7 @@ namespace eden
       }
       else if (migrations.is_completed<migrate_account_v0>())
       {
-         internal_accounts.add_balance("master"_n, quantity);
+         add_to_pool(get_self(), "master"_n, quantity);
       }
       inductions.create_nft(induction);
    }
@@ -145,6 +146,11 @@ namespace eden
       {
          auctions auctions{get_self()};
          remaining = auctions.finish_auctions(remaining);
+      }
+      if (remaining)
+      {
+         distributions distributions{get_self()};
+         remaining = distributions.gc(remaining);
       }
       eosio::check(remaining != limit, "Nothing to do.");
       if (!removed_members.empty())
@@ -194,6 +200,8 @@ namespace eden
       eosio::require_auth(account);
       members members{get_self()};
       members.check_active_member(account);
+      distributions dist{get_self()};
+      dist.on_resign(members.get_member(account));
       members.remove(account);
    }
 

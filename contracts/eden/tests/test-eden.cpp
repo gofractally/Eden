@@ -1224,6 +1224,31 @@ TEST_CASE("budget distribution underflow")
    CHECK(t.get_budgets_by_period() == expected);
 }
 
+TEST_CASE("budget adjustment on resignation")
+{
+   eden_tester t;
+   t.genesis();
+   t.run_election();
+   t.set_balance(s2a("1000.0000 EOS"));
+   t.skip_to("2020-09-02T15:30:00.000");
+   // egeon is satoshi, and receives the whole budget
+   t.egeon.act<actions::resign>("egeon"_n);
+   std::map<eosio::block_timestamp, eosio::asset> expected{
+       {s2t("2020-07-04T15:30:00.000"), s2a("0.0000 EOS")},
+       {s2t("2020-08-03T15:30:00.000"), s2a("0.0000 EOS")},
+       {s2t("2020-09-02T15:30:00.000"), s2a("0.0000 EOS")}};
+   CHECK(t.get_budgets_by_period() == expected);
+   t.skip_to("2020-10-02T15:30:00.000");
+   t.distribute();
+   expected.insert({s2t("2020-10-02T15:30:00.000"), s2a("0.0000 EOS")});
+   CHECK(t.get_budgets_by_period() == expected);
+   t.eden_gm.act<actions::gc>(42);
+   expected.clear();
+   CHECK(t.get_budgets_by_period() == expected);
+   CHECK(accounts{"eden.gm"_n, "owned"_n}.get_account("master"_n)->balance() ==
+         s2a("1001.5000 EOS"));
+}
+
 TEST_CASE("accounting")
 {
    eden_tester t;

@@ -33,13 +33,12 @@ namespace eden
       globals globals{get_self()};
 
       accounts user_accounts{get_self()};
-      accounts internal_accounts{get_self(), "owned"_n};
 
       eosio::check(quantity == globals.get().election_donation, "incorrect donation");
       user_accounts.sub_balance(payer, quantity);
       migrations migrations{get_self()};
       eosio::check(migrations.is_completed<migrate_account_v0>(), "Please migrate tables first");
-      internal_accounts.add_balance("master"_n, quantity);
+      add_to_pool(get_self(), "master"_n, quantity);
 
       members members{get_self()};
       const auto& member = members.get_member(payer);

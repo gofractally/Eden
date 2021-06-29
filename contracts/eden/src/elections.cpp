@@ -333,8 +333,7 @@ namespace eden
              eosio::time_point(registration->start_time) - eosio::seconds(election_seeding_window);
          eosio::check(now >= seeding_start, "Cannot start seeding yet");
          state = current_election_state_seeding{
-             {.start_time = seeding_start,
-              .end_time = registration->start_time.to_time_point()}};
+             {.start_time = seeding_start, .end_time = registration->start_time.to_time_point()}};
       }
       if (auto* seeding = std::get_if<current_election_state_seeding>(&state))
       {
@@ -367,7 +366,6 @@ namespace eden
       // Must happen after the election is started
       setup_distribution(contract, election_start_time);
 
-            printf("%s:%d\n", __FILE__, __LINE__);
       election_state_singleton state(contract, default_scope);
       auto state_value = std::get<election_state_v0>(state.get_or_default());
       state_value.last_election_time = election_start_time;

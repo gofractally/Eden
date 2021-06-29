@@ -14,10 +14,7 @@ namespace eden
       std::vector<eosio::name> board;
       eosio::block_timestamp last_election_time;
    };
-   EOSIO_REFLECT(election_state_v0,
-                 lead_representative,
-                 board,
-                 last_election_time);
+   EOSIO_REFLECT(election_state_v0, lead_representative, board, last_election_time);
    using election_state_singleton =
        eosio::singleton<"elect.state"_n, std::variant<election_state_v0>>;
 

@@ -51,6 +51,10 @@ namespace eden
          case member_status::active_member:
             eosio::check(stats.active_members != 0, "Integer overflow");
             --stats.active_members;
+            if (iter->representative() != eosio::name())
+            {
+               --stats.ranks[iter->election_rank()];
+            }
             break;
          default:
             eosio::check(false, "Invariant failure: unknown member status");

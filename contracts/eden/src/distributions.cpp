@@ -2,6 +2,7 @@
 #include <distributions.hpp>
 #include <elections.hpp>
 #include <members.hpp>
+#include <numeric>
 
 namespace eden
 {
@@ -13,23 +14,33 @@ namespace eden
 
    static current_distribution make_distribution(eosio::name contract,
                                                  eosio::block_timestamp start_time,
-                                                 eosio::asset amount)
+                                                 eosio::asset& amount)
    {
       members members{contract};
       current_distribution result{start_time, eosio::name()};
       auto ranks = members.stats().ranks;
       auto per_rank = amount / (ranks.size() - 1);
       uint16_t total = 0;
-      eosio::asset remaining = amount;
       for (auto iter = ranks.end() - 1, end = ranks.begin(); iter != end; --iter)
       {
          total += *iter;
-         auto this_rank = per_rank / total;
-         remaining -= this_rank * total;
-         result.rank_distribution.push_back(this_rank);
+         if (total > 0)
+         {
+            auto this_rank = per_rank / total;
+            amount -= this_rank * total;
+            result.rank_distribution.push_back(this_rank);
+         }
+         else
+         {
+            //result.rank_distribution.push_back(per_rank);
+         }
       }
       std::reverse(result.rank_distribution.begin(), result.rank_distribution.end());
-      result.rank_distribution.back() += remaining;
+      if (ranks.back() != 0)
+      {
+         result.rank_distribution.back() += amount;
+         amount -= amount;
+      }
       return result;
    }
 
@@ -40,9 +51,13 @@ namespace eden
       {
          if (auto* dist = std::get_if<election_distribution>(&iter->value))
          {
+            auto amount = dist->amount;
             distribution_tb.modify(iter, contract, [&](auto& row) {
-               row.value = make_distribution(contract, dist->distribution_time, dist->amount);
+               row.value = make_distribution(contract, dist->distribution_time, amount);
             });
+            eosio::check(
+                amount.amount == 0,
+                "Invariant failure: post-election distribution should not be missing a satoshi");
          }
          else if (std::holds_alternative<next_distribution>(iter->value))
          {
@@ -137,16 +152,23 @@ namespace eden
          auto total = dist_account.get_account(contract);
          if (total)
          {
+            auto amount = total->balance();
             distribution_tb.modify(iter, contract, [&](auto& row) {
                if (next_election_time && *next_election_time > distribution_time)
                {
-                  row.value = make_distribution(contract, distribution_time, total->balance());
+                  row.value = make_distribution(contract, distribution_time, amount);
                }
                else
                {
-                  row.value = election_distribution{distribution_time, total->balance()};
+                  row.value = election_distribution{distribution_time, amount};
+                  amount -= amount;
                }
             });
+            if (amount.amount)
+            {
+               dist_account.sub_balance(contract, amount);
+               accounts.add_balance("master"_n, amount);
+            }
          }
          else
          {
@@ -240,6 +262,47 @@ namespace eden
          }
       }
       return max_steps;
+   }
+
+   void distributions::on_resign(const member& member)
+   {
+      distribution_point_table_type distribution_point_tb{contract, default_scope};
+      accounts owned_accounts{contract, "owned"_n};
+      setup_distribution(contract, owned_accounts);
+      for (auto iter = distribution_point_tb.begin(), end = distribution_point_tb.end();
+           iter != end; ++iter)
+      {
+         accounts accounts(contract, eosio::name(iter->primary_key()));
+         if (auto account = accounts.get_account(member.account()))
+         {
+            accounts.sub_balance(member.account(), account->balance());
+            owned_accounts.add_balance("master"_n, account->balance());
+         }
+      }
+      // handle distributions that are in progress
+      distribution_table_type distribution_tb{contract, default_scope};
+      for (auto iter = distribution_tb.begin(), end = distribution_tb.end(); iter != end; ++iter)
+      {
+         if (auto* dist = std::get_if<current_distribution>(&iter->value))
+         {
+            if (dist->last_processed < member.account() && member.election_rank() > 0)
+            {
+               eosio::check(member.election_rank() <= dist->rank_distribution.size(),
+                            "Invariant failure: rank too high");
+               auto amount =
+                   std::accumulate(dist->rank_distribution.begin() + 1,
+                                   dist->rank_distribution.begin() + member.election_rank(),
+                                   dist->rank_distribution.front());
+               accounts accounts(contract, make_account_scope(dist->distribution_time, 0));
+               accounts.sub_balance(contract, amount);
+               owned_accounts.add_balance("master"_n, amount);
+            }
+         }
+         else
+         {
+            break;
+         }
+      }
    }
 
    uint32_t distributions::gc(uint32_t max_steps)

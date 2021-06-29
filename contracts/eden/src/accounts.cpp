@@ -70,10 +70,6 @@ namespace eden
 
    void accounts::add_balance(eosio::name owner, const eosio::asset& quantity)
    {
-      if (account_tb.get_scope() == "owned"_n.value)
-      {
-         setup_distribution(contract, *this);
-      }
       auto record = account_tb.find(owner.value);
       if (record == account_tb.end())
       {
@@ -111,4 +107,12 @@ namespace eden
       while (accounts_itr != account_tb.end())
          account_tb.erase(accounts_itr++);
    }
+
+   void add_to_pool(eosio::name contract, eosio::name pool, eosio::asset amount)
+   {
+      accounts accounts{contract, "owned"_n};
+      setup_distribution(contract, accounts);
+      accounts.add_balance(pool, amount);
+   }
+
 }  // namespace eden

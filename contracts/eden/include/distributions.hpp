@@ -10,6 +10,8 @@
 
 namespace eden
 {
+   struct member;
+
    inline eosio::name make_account_scope(eosio::block_timestamp distribution_time, uint8_t rank)
    {
       return eosio::name{"dist"_n.value | (static_cast<uint64_t>(distribution_time.slot) << 12) |
@@ -69,7 +71,9 @@ namespace eden
    class accounts;
 
    bool setup_distribution(eosio::name contract, eosio::block_timestamp init = {});
-   bool setup_distribution(eosio::name contract, accounts& accounts, eosio::block_timestamp init = {});
+   bool setup_distribution(eosio::name contract,
+                           accounts& accounts,
+                           eosio::block_timestamp init = {});
    uint32_t distribute_monthly(eosio::name contract, uint32_t max_steps);
    void init_pools(eosio::name contract);
    void process_election_distribution(eosio::name contract);
@@ -99,6 +103,7 @@ namespace eden
 
      public:
       distributions(eosio::name contract) : contract(contract) {}
+      void on_resign(const member& member);
       uint32_t gc(uint32_t);
       void clear_all();
    };
