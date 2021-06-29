@@ -22,6 +22,24 @@ using user_context = test_chain::user_context;
 using eden::accounts;
 using eden::members;
 
+namespace eosio
+{
+   std::ostream& operator<<(std::ostream& os,
+                            const std::pair<const eosio::block_timestamp, eosio::asset>& p)
+   {
+      os << '{' << eosio::convert_to_json(p.first.to_time_point()) << ':' << p.second << '}';
+      return os;
+   }
+}  // namespace eosio
+
+eosio::time_point s2t(const std::string& time)
+{
+   uint64_t value;
+   eosio::check(eosio::string_to_utc_microseconds(value, time.data(), time.data() + time.size()),
+                "bad time");
+   return eosio::time_point{eosio::microseconds(value)};
+}
+
 void chain_setup(test_chain& t)
 {
    t.set_code("eosio"_n, "boot.wasm");
@@ -331,6 +349,23 @@ struct eden_tester
       alice.act<actions::electprocess>(256);
    };
 
+   void electdonate_all()
+   {
+      eden::member_table_type members_tb{"eden.gm"_n, eden::default_scope};
+      std::vector members(members_tb.begin(), members_tb.end());
+      for (auto member : members)
+      {
+         if (member.election_participation_status() == eden::no_donation)
+         {
+            chain.as(member.account())
+                .act<token::actions::transfer>(member.account(), "eden.gm"_n, s2a("2.0000 EOS"),
+                                               "memo");
+            chain.as(member.account())
+                .act<actions::electdonate>(member.account(), s2a("2.0000 EOS"));
+         }
+      }
+   }
+
    void run_election()
    {
       skip_to(next_election_time().to_time_point() - eosio::days(1));
@@ -391,6 +426,23 @@ struct eden_tester
          }
       }
       return total;
+   };
+
+   auto get_budgets_by_period() const
+   {
+      std::map<eosio::block_timestamp, eosio::asset> result;
+      eden::distribution_point_table_type distributions{"eden.gm"_n, eden::default_scope};
+      for (auto t : distributions)
+      {
+         auto [iter, _] = result.insert(std::pair(t.distribution_time(), s2a("0.0000 EOS")));
+         eden::account_table_type account_tb{
+             "eden.gm"_n, eden::make_account_scope(t.distribution_time(), t.rank()).value};
+         for (auto item : account_tb)
+         {
+            iter->second += item.balance();
+         }
+      }
+      return result;
    };
 };
 
@@ -935,7 +987,7 @@ TEST_CASE("deposit and spend")
    t.eden_gm.act<actions::genesis>(
        "Eden", eosio::symbol("EOS", 4), s2a("10.0000 EOS"),
        std::vector{"alice"_n, "pip"_n, "egeon"_n}, "QmTYqoPYf7DiVebTnvwwFdTgsYXg2RnuPrt8uddjfW2kHS",
-       attribute_map{}, s2a("1.0000 EOS"), 7 * 24 * 60 * 60, 6, "15:30", s2a("2.0000 EOS"), "");
+       attribute_map{}, s2a("1.0000 EOS"), 7 * 24 * 60 * 60, 6, "15:30", s2a("10.0000 EOS"), "");
    expect(t.alice.trace<token::actions::transfer>("alice"_n, "eden.gm"_n, s2a("10.0000 OTHER"),
                                                   "memo"),
           "token must be a valid 4,EOS");
@@ -1120,6 +1172,40 @@ TEST_CASE("budget distribution triggered by donation")
    t.eosio_token.act<token::actions::transfer>("eosio.token"_n, "eden.gm"_n, s2a("5.0000 EOS"),
                                                "memo");
    CHECK(t.get_total_budget() == s2a("20.0000 EOS"));
+}
+
+TEST_CASE("budget distribution minimum period")
+{
+   eden_tester t;
+   t.genesis();
+   t.run_election();
+   t.electdonate_all();
+   t.set_balance(s2a("100000.0000 EOS"));
+   t.eden_gm.act<actions::electsettime>(s2t("2020-09-02T15:30:01.000"));
+   t.run_election();
+   std::map<eosio::block_timestamp, eosio::asset> expected{
+       {s2t("2020-07-04T15:30:00.000"), s2a("1.5000 EOS")},
+       {s2t("2020-08-03T15:30:00.000"), s2a("5000.0000 EOS")},
+       {s2t("2020-09-02T15:30:00.000"), s2a("0.0018 EOS")},
+       {s2t("2020-09-02T15:30:01.000"), s2a("4749.9999 EOS")}};
+   CHECK(t.get_budgets_by_period() == expected);
+}
+
+TEST_CASE("budget distribution underflow")
+{
+   eden_tester t;
+   t.genesis();
+   t.run_election();
+   t.electdonate_all();
+   t.set_balance(s2a("1000.0000 EOS"));
+   t.eden_gm.act<actions::electsettime>(s2t("2020-09-02T15:30:01.000"));
+   t.run_election();
+   std::map<eosio::block_timestamp, eosio::asset> expected{
+       {s2t("2020-07-04T15:30:00.000"), s2a("1.5000 EOS")},
+       {s2t("2020-08-03T15:30:00.000"), s2a("50.0000 EOS")},
+       {s2t("2020-09-02T15:30:00.000"), s2a("0.0000 EOS")},
+       {s2t("2020-09-02T15:30:01.000"), s2a("47.5000 EOS")}};
+   CHECK(t.get_budgets_by_period() == expected);
 }
 
 TEST_CASE("accounting")

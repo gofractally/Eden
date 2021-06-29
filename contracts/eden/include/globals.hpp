@@ -40,7 +40,12 @@ namespace eden
       eosio::asset election_donation;
       auto upgrade() const { return *this; }
    };
-   EOSIO_REFLECT(global_data_v1, base global_data_v0, election_start_time);
+   EOSIO_REFLECT(global_data_v1,
+                 base global_data_v0,
+                 election_start_time,
+                 election_round_time_sec,
+                 election_break_time_sec,
+                 election_donation);
 
    using global_variant = std::variant<global_data_v0, global_data_v1>;
    using global_singleton = eosio::singleton<"global"_n, global_variant>;

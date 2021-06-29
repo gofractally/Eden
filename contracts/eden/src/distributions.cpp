@@ -76,7 +76,9 @@ namespace eden
       }
       --iter;
       bool result = false;
-      auto next_election_time = elections{contract}.get_next_election_time();
+      auto next_election_time = init != eosio::block_timestamp()
+                                    ? std::optional{init}
+                                    : elections{contract}.get_next_election_time();
       while (true)
       {
          eosio::block_timestamp distribution_time;
