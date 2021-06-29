@@ -354,6 +354,44 @@ struct eden_tester
          alice.act<actions::electprocess>(256);
       }
    }
+
+   void distribute(uint32_t batch_size = 256)
+   {
+      while (true)
+      {
+         auto trace = alice.trace<actions::distribute>(batch_size);
+         if (trace.except)
+         {
+            expect(trace, "Nothing to do");
+            break;
+         }
+         chain.start_block();
+      }
+   }
+
+   void set_balance(eosio::asset amount)
+   {
+      eden::account_table_type account_tb{"eden.gm"_n, "owned"_n.value};
+      eosio_token.act<token::actions::transfer>("eosio.token"_n, "eden.gm"_n,
+                                                amount - account_tb.get("master"_n.value).balance(),
+                                                "memo");
+   }
+
+   eosio::asset get_total_budget()
+   {
+      eosio::asset total = s2a("0.0000 EOS");
+      eden::distribution_point_table_type distributions{"eden.gm"_n, eden::default_scope};
+      for (auto t : distributions)
+      {
+         eden::account_table_type account_tb{
+             "eden.gm"_n, eden::make_account_scope(t.distribution_time(), t.rank()).value};
+         for (auto item : account_tb)
+         {
+            total += item.balance();
+         }
+      }
+      return total;
+   };
 };
 
 TEST_CASE("genesis NFT pre-setup")
@@ -1045,32 +1083,43 @@ TEST_CASE("budget distribution")
    t.run_election();
 
    t.alice.act<actions::distribute>(250);
-   auto get_total = [&] {
-      eosio::asset total = s2a("0.0000 EOS");
-      eden::distribution_point_table_type distributions{"eden.gm"_n, eden::default_scope};
-      for (auto t : distributions)
-      {
-         eden::account_table_type account_tb{
-             "eden.gm"_n, eden::make_account_scope(t.distribution_time(), t.rank()).value};
-         for (auto item : account_tb)
-         {
-            total += item.balance();
-         }
-      }
-      return total;
-   };
-   CHECK(get_total() == s2a("1.5000 EOS"));
+   CHECK(t.get_total_budget() == s2a("1.5000 EOS"));
    // Skip forward to the next distribution
    t.skip_to("2020-08-03T15:29:59.500");
    expect(t.alice.trace<actions::distribute>(250), "Nothing to do");
    t.chain.start_block();
    t.alice.act<actions::distribute>(250);
-   CHECK(get_total() == s2a("2.9250 EOS"));
+   CHECK(t.get_total_budget() == s2a("2.9250 EOS"));
    // Skip into the next election
    t.skip_to("2021-01-02T15:30:00.000");
    t.alice.act<actions::distribute>(1);
    t.alice.act<actions::distribute>(5000);
-   CHECK(get_total() == s2a("9.1194 EOS"));
+   CHECK(t.get_total_budget() == s2a("9.1194 EOS"));
+}
+
+TEST_CASE("budget distribution triggered by donation")
+{
+   eden_tester t;
+   t.genesis();
+   t.set_balance(s2a("100.0000 EOS"));
+   t.run_election();
+   t.distribute(1);
+   CHECK(t.get_total_budget() == s2a("5.0000 EOS"));
+   t.skip_to("2020-08-03T15:29:59.500");
+   t.set_balance(s2a("100.0000 EOS"));
+   t.chain.start_block();
+   CHECK(t.get_total_budget() == s2a("5.0000 EOS"));
+   t.eosio_token.act<token::actions::transfer>("eosio.token"_n, "eden.gm"_n, s2a("5.0000 EOS"),
+                                               "memo");
+   CHECK(t.get_total_budget() == s2a("10.0000 EOS"));
+   t.skip_to("2020-09-02T15:30:00.0000");
+   t.eosio_token.act<token::actions::transfer>("eosio.token"_n, "eden.gm"_n, s2a("5.0000 EOS"),
+                                               "memo");
+   CHECK(t.get_total_budget() == s2a("15.0000 EOS"));
+   t.skip_to("2020-10-02T15:30:00.0000");
+   t.eosio_token.act<token::actions::transfer>("eosio.token"_n, "eden.gm"_n, s2a("5.0000 EOS"),
+                                               "memo");
+   CHECK(t.get_total_budget() == s2a("20.0000 EOS"));
 }
 
 TEST_CASE("accounting")

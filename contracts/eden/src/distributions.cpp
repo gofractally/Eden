@@ -53,6 +53,12 @@ namespace eden
 
    bool setup_distribution(eosio::name contract, eosio::block_timestamp init)
    {
+      accounts accounts{contract, "owned"_n};
+      return setup_distribution(contract, accounts, init);
+   }
+
+   bool setup_distribution(eosio::name contract, accounts& accounts, eosio::block_timestamp init)
+   {
       distribution_table_type distribution_tb{contract, default_scope};
       distribution_point_table_type distribution_point_tb{contract, default_scope};
       auto iter = distribution_tb.end();
@@ -105,7 +111,6 @@ namespace eden
          {
             pool_tb.emplace(contract, [](auto& row) { row.value = pool_v0{"master"_n, 5}; });
          }
-         accounts accounts{contract, "owned"_n};
          class accounts dist_account
          {
             contract, make_account_scope(distribution_time, 0)

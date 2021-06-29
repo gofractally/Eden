@@ -70,11 +70,11 @@ namespace eden
 
    void accounts::add_balance(eosio::name owner, const eosio::asset& quantity)
    {
-      auto record = account_tb.find(owner.value);
       if (account_tb.get_scope() == "owned"_n.value)
       {
-         setup_distribution(contract);
+         setup_distribution(contract, *this);
       }
+      auto record = account_tb.find(owner.value);
       if (record == account_tb.end())
       {
          // TODO: create another global

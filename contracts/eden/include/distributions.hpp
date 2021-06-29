@@ -66,7 +66,10 @@ namespace eden
 
    using distribution_table_type = eosio::multi_index<"distribution"_n, distribution>;
 
+   class accounts;
+
    bool setup_distribution(eosio::name contract, eosio::block_timestamp init = {});
+   bool setup_distribution(eosio::name contract, accounts& accounts, eosio::block_timestamp init = {});
    uint32_t distribute_monthly(eosio::name contract, uint32_t max_steps);
    void init_pools(eosio::name contract);
    void process_election_distribution(eosio::name contract);
