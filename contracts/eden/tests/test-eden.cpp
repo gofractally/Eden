@@ -335,7 +335,7 @@ struct eden_tester
    {
       skip_to(next_election_time().to_time_point() - eosio::days(1));
       electseed(next_election_time().to_time_point() - eosio::days(1));
-      skip_to(next_election_time().to_time_point() - eosio::hours(1));
+      skip_to(next_election_time().to_time_point());
 
       setup_election();
 
@@ -978,7 +978,7 @@ TEST_CASE("election")
    t.electseed(eosio::time_point_sec(0x5f009260u), "Cannot start seeding yet");
    t.chain.start_block();
    t.electseed(eosio::time_point_sec(0x5f009260u));
-   t.skip_to("2020-07-04T14:29:59.500");
+   t.skip_to("2020-07-04T15:29:59.500");
    expect(t.alice.trace<actions::electprepare>(1), "Seeding window is still open");
    t.chain.start_block();
    t.setup_election();
@@ -1010,7 +1010,7 @@ TEST_CASE("election with multiple rounds")
 
    t.skip_to("2020-07-03T15:30:00.000");
    t.electseed(eosio::time_point_sec(0x5f009260));
-   t.skip_to("2020-07-04T14:30:00.000");
+   t.skip_to("2020-07-04T15:30:00.000");
    t.setup_election();
 
    uint8_t round = 0;
@@ -1044,7 +1044,6 @@ TEST_CASE("budget distribution")
    t.genesis();
    t.run_election();
 
-   t.skip_to("2020-07-04T15:30:00.0000");
    t.alice.act<actions::distribute>(250);
    auto get_total = [&] {
       eosio::asset total = s2a("0.0000 EOS");

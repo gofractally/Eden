@@ -231,8 +231,7 @@ namespace eden
       }
       else if (auto* s = std::get_if<current_election_state_seeding>(&state))
       {
-         return s->seed.end_time.to_time_point() +
-                eosio::seconds(globals.get().election_break_time_sec);
+         return s->seed.end_time.to_time_point();
       }
       return {};
    }
@@ -335,8 +334,7 @@ namespace eden
          eosio::check(now >= seeding_start, "Cannot start seeding yet");
          state = current_election_state_seeding{
              {.start_time = seeding_start,
-              .end_time = registration->start_time.to_time_point() -
-                          eosio::seconds(globals.get().election_break_time_sec)}};
+              .end_time = registration->start_time.to_time_point()}};
       }
       if (auto* seeding = std::get_if<current_election_state_seeding>(&state))
       {
@@ -360,8 +358,7 @@ namespace eden
       eosio::check(std::holds_alternative<current_election_state_seeding>(state_sing.get()),
                    "Election seed not set");
       auto old_state = std::get<current_election_state_seeding>(state_sing.get());
-      auto election_start_time = old_state.seed.end_time.to_time_point() +
-                                 eosio::seconds(globals.get().election_break_time_sec);
+      auto election_start_time = old_state.seed.end_time.to_time_point();
       eosio::check(eosio::current_block_time() >= old_state.seed.end_time,
                    "Seeding window is still open");
       state_sing.set(current_election_state_init_voters{0, election_rng{old_state.seed.current}},
