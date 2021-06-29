@@ -40,8 +40,8 @@ export const uploadIpfsFileWithTransaction = async (
     file: File
 ) => {
     const response = box.enableIpfsUpload
-        ? await uploadTrxWithFileToBox(request, file)
-        : await pinIpfsFileWithTransaction(request);
+        ? await uploadTrxWithFileToBox(signedTrx, file)
+        : await pinIpfsFileWithTransaction(signedTrx, cid);
 
     if (!response.ok) {
         console.error(response.status, response.statusText);
@@ -91,7 +91,7 @@ const uploadTrxWithFileToBox = (signedTrx: any, file: File) => {
     formData.append("data", JSON.stringify(data));
     formData.append("file", file, file.name);
 
-    return fetch(`${boxAddress}/v1/trx-upload`, {
+    return fetch(`${box.address}/v1/ipfs-upload`, {
         method: "POST",
         body: formData,
     });

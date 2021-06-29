@@ -38,7 +38,7 @@ export const parseActionIpfsCid = async (
     const cid = extractCidFromActionData(
         contract,
         action,
-        action.data,
+        actionData.data,
         validUploadActions
     );
     return { cid, action, contract };

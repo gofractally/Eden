@@ -47,7 +47,7 @@ export const ipfsUploadHandler = async (req: Request, res: Response) => {
             );
         }
 
-        return ipfsUpload(requestData, file, res);
+        return await ipfsUpload(requestData, file, res);
     } catch (error) {
         if (file) {
             fs.rm(file.path, () => {});
@@ -133,7 +133,11 @@ const uploadAndPinToIpfs = async (
         headers
     );
 
-    console.info("pinata upload result >>> ", uploadResult);
+    console.info(
+        "pinata upload result >>> ",
+        uploadResult.status,
+        uploadResult.data
+    );
 
     await fs.rm(file.path, () => {});
 };
