@@ -1,3 +1,5 @@
+import { ActionIpfsData, parseActionIpfsCid } from "@edenos/common";
+
 import { eosDefaultApi, eosJsonRpc } from "_app";
 import {
     edenContractAccount,
@@ -9,19 +11,17 @@ import {
 import { BadRequestError, InternalServerError } from "../error-handlers";
 import { IpfsPostRequest } from "../schemas";
 
-interface ActionIpfsData {
-    cid: string;
-    contract: string;
-    action: string;
-}
-
 export const ipfsUploadHandler = async (request: IpfsPostRequest) => {
     const signatures = request.eosTransaction.signatures;
     const serializedTransaction = Uint8Array.from(
         request.eosTransaction.serializedTransaction
     );
 
-    const actionIpfsData = await parseActionIpfsCid(serializedTransaction);
+    const actionIpfsData = await parseActionIpfsCid(
+        serializedTransaction,
+        validUploadActions,
+        eosDefaultApi
+    );
 
     if (request.cid !== actionIpfsData.cid) {
         throw new BadRequestError(
@@ -29,7 +29,7 @@ export const ipfsUploadHandler = async (request: IpfsPostRequest) => {
         );
     }
 
-    await validateActionFile(actionIpfsData);
+    await validateActionFileFromIpfs(actionIpfsData);
 
     try {
         const broadcastedTrx = await eosJsonRpc.send_transaction({
@@ -46,41 +46,6 @@ export const ipfsUploadHandler = async (request: IpfsPostRequest) => {
             `Fail to broadcast or pin file: ${error.message}`
         );
     }
-};
-
-const parseActionIpfsCid = async (
-    serializedTransaction: Uint8Array
-): Promise<ActionIpfsData> => {
-    const trx = eosDefaultApi.deserializeTransaction(serializedTransaction);
-
-    const serializedAction = trx.actions.find(
-        (action: any) =>
-            validUploadActions[action.account] &&
-            validUploadActions[action.account][action.name]
-    );
-
-    if (!serializedAction) {
-        throw new BadRequestError([
-            "contract action is not whitelisted for upload",
-        ]);
-    }
-
-    const actionData = (
-        await eosDefaultApi.deserializeActions([serializedAction])
-    )[0];
-
-    const contract = serializedAction.account;
-    const action = serializedAction.name;
-    let cid = "";
-    if (contract === edenContractAccount && action === "inductprofil") {
-        cid = actionData.data.new_member_profile.img as string;
-    } else if (contract === edenContractAccount && action === "inductvideo") {
-        cid = actionData.data.video as string;
-    } else {
-        throw new InternalServerError("Unknown how to parse action");
-    }
-
-    return { cid, action, contract };
 };
 
 const pinIpfsCid = async (cid: string) => {
@@ -143,7 +108,7 @@ const confirmIpfsPin = async (requestId: string) => {
     }
 };
 
-const validateActionFile = async (fileData: ActionIpfsData) => {
+const validateActionFileFromIpfs = async (fileData: ActionIpfsData) => {
     const validActionFile =
         validUploadActions[fileData.contract][fileData.action];
     const fileStats = await getIpfsFileStats(fileData.cid);

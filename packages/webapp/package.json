@@ -11,6 +11,7 @@
         "test-dev": "cypress open"
     },
     "dependencies": {
+        "@edenos/common": "^0.1.0",
         "cids": "^1.1.6",
         "dayjs": "^1.10.4",
         "eosjs": "^21.0.3",
