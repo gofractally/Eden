@@ -665,6 +665,23 @@ namespace eden
       vote_tb.modify(vote, contract, [&](auto& row) { row.candidate = candidate; });
    }
 
+   void elections::on_resign(eosio::name member)
+   {
+      eosio::check(
+          !state_sing.exists() ||
+              std::holds_alternative<current_election_state_pending_date>(state_sing.get()) ||
+              (std::holds_alternative<current_election_state_registration>(state_sing.get()) &&
+               std::get<current_election_state_registration>(state_sing.get()).start_time >
+                   eosio::current_block_time()),
+          "Cannot resign during an election");
+      election_state_singleton global_state{contract, default_scope};
+      if (global_state.exists() &&
+          member == std::get<election_state_v0>(global_state.get()).lead_representative)
+      {
+         trigger_election();
+      }
+   }
+
    void elections::clear_all()
    {
       clear_table(vote_tb);

@@ -236,6 +236,7 @@ namespace eden
       void start_election();
       uint32_t prepare_election(uint32_t max_steps);
       uint32_t finish_round(uint32_t max_steps);
+      void on_resign(eosio::name member);
       // \pre voter and candidate are members of the same group
       void vote(uint8_t round, eosio::name voter, eosio::name candidate);
       void clear_all();

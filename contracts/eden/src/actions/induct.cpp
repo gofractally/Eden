@@ -202,6 +202,8 @@ namespace eden
       members.check_active_member(account);
       distributions dist{get_self()};
       dist.on_resign(members.get_member(account));
+      elections elections{get_self()};
+      elections.on_resign(account);
       members.remove(account);
    }
 
