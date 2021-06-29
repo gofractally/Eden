@@ -1191,6 +1191,22 @@ TEST_CASE("budget distribution minimum period")
    CHECK(t.get_budgets_by_period() == expected);
 }
 
+TEST_CASE("budget distribution exact")
+{
+   eden_tester t;
+   t.genesis();
+   t.run_election();
+   t.electdonate_all();
+   t.set_balance(s2a("1000.0000 EOS"));
+   t.eden_gm.act<actions::electsettime>(s2t("2020-09-02T15:30:00.000"));
+   t.run_election();
+   std::map<eosio::block_timestamp, eosio::asset> expected{
+       {s2t("2020-07-04T15:30:00.000"), s2a("1.5000 EOS")},
+       {s2t("2020-08-03T15:30:00.000"), s2a("50.0000 EOS")},
+       {s2t("2020-09-02T15:30:00.000"), s2a("47.5000 EOS")}};
+   CHECK(t.get_budgets_by_period() == expected);
+}
+
 TEST_CASE("budget distribution underflow")
 {
    eden_tester t;
