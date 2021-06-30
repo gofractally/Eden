@@ -8,13 +8,11 @@ import {
     IpfsUploadRequest,
     BadRequestError,
     handleErrors,
-    ActionIpfsData,
     parseActionIpfsCid,
     validateActionFile,
 } from "@edenos/common";
 
-import { edenContractAccount, ipfsConfig, validUploadActions } from "../config";
-import logger from "../logger";
+import { ipfsConfig, validUploadActions } from "../config";
 import { eosJsonRpc, eosDefaultApi } from "../eos";
 
 export const ipfsUploadConfigHandler = multer({ dest: "tmp/" }).single("file");
@@ -33,7 +31,7 @@ export const ipfsUploadHandler = async (req: Request, res: Response) => {
         const parsedRequest = ipfsUploadRequest.safeParse(
             JSON.parse(body.data)
         );
-        if (!parsedRequest.success) {
+        if (parsedRequest.success !== true) {
             throw new BadRequestError(parsedRequest.error.flatten());
         }
 
@@ -73,7 +71,7 @@ const ipfsUpload = async (
         );
         await validateActionFile(actionIpfsData, file, validUploadActions);
     } catch (e) {
-        throw new BadRequestError(e);
+        throw new BadRequestError(e.message);
     }
 
     const broadcastedTrx = await eosJsonRpc.send_transaction({

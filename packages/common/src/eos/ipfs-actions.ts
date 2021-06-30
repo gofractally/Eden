@@ -70,7 +70,7 @@ export const extractCidFromActionData = (
         let cid = data;
         while (cidFields.length) {
             const cidField = cidFields.shift()!;
-            cid = data[cidField];
+            cid = cid[cidField];
         }
         return cid;
     } catch (e) {
