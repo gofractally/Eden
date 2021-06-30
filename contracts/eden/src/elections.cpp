@@ -408,7 +408,7 @@ namespace eden
                case recently_inducted:
                case not_in_election:
                {
-                  members.set_rank(iter->account(), 0, eosio::name());
+                  members.set_rank(iter->account(), 0, eosio::name(-1));
                   break;
                }
             }

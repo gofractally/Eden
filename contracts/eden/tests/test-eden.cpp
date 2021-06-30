@@ -1156,6 +1156,7 @@ TEST_CASE("mid-election induction")
    {
       CHECK(get_table_size<eden::member_table_type>() == 3);
    }
+   CHECK(eden::members{"eden.gm"_n}.stats().ranks == std::vector<uint16_t>{2, 1});
 }
 
 TEST_CASE("election with multiple rounds")

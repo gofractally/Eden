@@ -51,7 +51,7 @@ namespace eden
          case member_status::active_member:
             eosio::check(stats.active_members != 0, "Integer overflow");
             --stats.active_members;
-            if (iter->representative() != eosio::name())
+            if (iter->representative() != eosio::name(-1))
             {
                --stats.ranks[iter->election_rank()];
             }
@@ -145,11 +145,14 @@ namespace eden
          row.election_participation_status() = no_donation;
       });
       auto stats = this->stats();
-      if (stats.ranks.size() <= rank)
+      if (representative != eosio::name(-1))
       {
-         stats.ranks.resize(rank + 1);
+         if (stats.ranks.size() <= rank)
+         {
+            stats.ranks.resize(rank + 1);
+         }
+         ++stats.ranks[rank];
       }
-      ++stats.ranks[rank];
       member_stats.set(stats, contract);
    }
 

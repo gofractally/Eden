@@ -34,7 +34,7 @@ namespace eden
       // Only reflected in v1
       election_participation_status_type election_participation_status = in_election;
       uint8_t election_rank = 0;
-      eosio::name representative;
+      eosio::name representative{uint64_t(-1)};
 
       uint64_t primary_key() const { return account.value; }
    };
