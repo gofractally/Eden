@@ -81,7 +81,7 @@ export const extractCidFromActionData = (
 
 export const validateActionFile = async (
     fileData: ActionIpfsData,
-    file: Express.Multer.File,
+    file: { path: string; size: number },
     validUploadActions: ValidUploadActions
 ) => {
     const fileHash = await IpfsHash.of(fs.createReadStream(file.path));
