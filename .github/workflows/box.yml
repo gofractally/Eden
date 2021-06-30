@@ -31,8 +31,8 @@ jobs:
             - name: 🛠 Build and Start Box
               run: |
                   yarn
+                  yarn build --stream
                   cd packages/box
-                  yarn build
                   yarn start &
 
             - name: 🧪 Run E2E
