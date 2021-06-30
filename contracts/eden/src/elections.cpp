@@ -396,7 +396,18 @@ namespace eden
             {
                case no_donation:
                {
-                  // TODO: handle budget cleanup
+                  distributions distributions{contract};
+                  if (!state.last_closed_account)
+                  {
+                     state.last_closed_account = 0;
+                  }
+                  max_steps = distributions.on_election_kick(iter->account(),
+                                                             *state.last_closed_account, max_steps);
+                  if (max_steps == 0)
+                  {
+                     return max_steps;
+                  }
+                  state.last_closed_account = std::nullopt;
                   iter = members.erase(iter);
                   continue;
                }

@@ -264,6 +264,27 @@ namespace eden
       return max_steps;
    }
 
+   // Differences from on_resign
+   // - iterated (a user cannot block an election by building up too many accounts)
+   // - No pending distributions are possible at this stage of the election
+   uint32_t distributions::on_election_kick(eosio::name member, uint64_t& key, uint32_t max_steps)
+   {
+      distribution_point_table_type distribution_point_tb{contract, default_scope};
+      accounts owned_accounts{contract, "owned"_n};
+      for (auto iter = distribution_point_tb.upper_bound(key), end = distribution_point_tb.end();
+           max_steps > 0 && iter != end; ++iter, --max_steps)
+      {
+         accounts accounts(contract, eosio::name(iter->primary_key()));
+         key = iter->primary_key();
+         if (auto account = accounts.get_account(member))
+         {
+            accounts.sub_balance(member, account->balance());
+            owned_accounts.add_balance("master"_n, account->balance());
+         }
+      }
+      return max_steps;
+   }
+
    void distributions::on_resign(const member& member)
    {
       distribution_point_table_type distribution_point_tb{contract, default_scope};

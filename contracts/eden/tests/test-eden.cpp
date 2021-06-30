@@ -308,11 +308,11 @@ struct eden_tester
       chain.start_block(skip);
    }
 
-   void setup_election()
+   void setup_election(uint32_t batch_size = 10000)
    {
       while (true)
       {
-         auto trace = alice.trace<actions::electprepare>(10000);
+         auto trace = alice.trace<actions::electprepare>(batch_size);
          if (trace.except)
          {
             expect(trace, "Nothing to do");
@@ -355,6 +355,13 @@ struct eden_tester
       alice.act<actions::electprocess>(256);
    };
 
+   void electdonate(eosio::name member)
+   {
+      chain.as(member).act<token::actions::transfer>(member, "eden.gm"_n, s2a("2.0000 EOS"),
+                                                     "memo");
+      chain.as(member).act<actions::electdonate>(member, s2a("2.0000 EOS"));
+   }
+
    void electdonate_all()
    {
       eden::member_table_type members_tb{"eden.gm"_n, eden::default_scope};
@@ -377,7 +384,7 @@ struct eden_tester
       }
    }
 
-   void run_election(bool auto_donate = true)
+   void run_election(bool auto_donate = true, uint32_t batch_size = 10000)
    {
       if (auto_donate)
       {
@@ -387,7 +394,7 @@ struct eden_tester
       electseed(next_election_time().to_time_point() - eosio::days(1));
       skip_to(next_election_time().to_time_point());
 
-      setup_election();
+      setup_election(batch_size);
 
       uint8_t round = 0;
 
@@ -1325,6 +1332,24 @@ TEST_CASE("budget adjustment on resignation")
    CHECK(t.get_budgets_by_period() == expected);
    CHECK(accounts{"eden.gm"_n, "owned"_n}.get_account("master"_n)->balance() ==
          s2a("1001.8000 EOS"));
+}
+
+TEST_CASE("budget adjustment on kick")
+{
+   eden_tester t;
+   t.genesis();
+   t.run_election();
+   t.set_balance(s2a("1000.0000 EOS"));
+   t.eden_gm.act<actions::electsettime>(s2t("2020-09-02T15:30:00.000"));
+   // egeon is satoshi, and receives the whole budget
+   t.electdonate("pip"_n);
+   t.electdonate("alice"_n);
+   t.run_election(false, 1);
+   std::map<eosio::block_timestamp, eosio::asset> expected{
+       {s2t("2020-07-04T15:30:00.000"), s2a("0.0000 EOS")},
+       {s2t("2020-08-03T15:30:00.000"), s2a("0.0000 EOS")},
+       {s2t("2020-09-02T15:30:00.000"), s2a("47.6900 EOS")}};
+   CHECK(t.get_budgets_by_period() == expected);
 }
 
 TEST_CASE("accounting")
