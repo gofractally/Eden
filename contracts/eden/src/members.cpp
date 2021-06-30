@@ -103,15 +103,36 @@ namespace eden
       member_stats.set(stats, eosio::same_payer);
       check_pending_member(account);
       current_election_state_singleton election_state(contract, default_scope);
-      auto status = (election_state.exists() && election_state.get().index() >= 2) ? next_election
-                                                                                   : in_election;
+      auto status = no_donation;
+      if (election_state.exists())
+      {
+         auto state = election_state.get();
+         if (auto* reg = std::get_if<current_election_state_registration>(&state))
+         {
+            if (reg->start_time.to_time_point() <= eosio::current_time_point() + eosio::days(30))
+            {
+               status = recently_inducted;
+            }
+         }
+         else if (std::holds_alternative<current_election_state_seeding>(state))
+         {
+            status = recently_inducted;
+         }
+         else if (auto* init = std::get_if<current_election_state_init_voters>(&state))
+         {
+            if (init->last_processed < account)
+            {
+               status = recently_inducted;
+            }
+         }
+      }
       const auto& member = get_member(account);
       member_tb.modify(member, eosio::same_payer, [&](auto& row) {
          row.value = member_v1{{.account = row.account(),
                                 .name = name,
                                 .status = member_status::active_member,
                                 .nft_template_id = row.nft_template_id(),
-                                .election_participation_status = in_election}};
+                                .election_participation_status = status}};
       });
    }
 
@@ -121,14 +142,7 @@ namespace eden
          row.value = std::visit([](auto& v) { return member_v1{v}; }, row.value);
          row.election_rank() = rank;
          row.representative() = representative;
-         if (row.election_participation_status() == next_election)
-         {
-            row.election_participation_status() = in_election;
-         }
-         else
-         {
-            row.election_participation_status() = no_donation;
-         }
+         row.election_participation_status() = no_donation;
       });
       auto stats = this->stats();
       if (stats.ranks.size() <= rank)

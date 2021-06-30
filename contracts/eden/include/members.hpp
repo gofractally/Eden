@@ -20,9 +20,9 @@ namespace eden
    enum election_participation_status : election_participation_status_type
    {
       no_donation,
-      next_election,
       in_election,
-      not_in_election
+      not_in_election,
+      recently_inducted
    };
 
    struct member_v0

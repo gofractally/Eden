@@ -392,14 +392,25 @@ namespace eden
       {
          if (iter->status() == member_status::active_member)
          {
-            if (iter->election_participation_status() == no_donation)
+            switch (iter->election_participation_status())
             {
-               iter = members.erase(iter);
-               continue;
-            }
-            else if (iter->election_participation_status() == in_election)
-            {
-               add_voter(state.rng, 0, state.next_member_idx, iter->account());
+               case no_donation:
+               {
+                  // TODO: handle budget cleanup
+                  iter = members.erase(iter);
+                  continue;
+               }
+               case in_election:
+               {
+                  add_voter(state.rng, 0, state.next_member_idx, iter->account());
+                  break;
+               }
+               case recently_inducted:
+               case not_in_election:
+               {
+                  members.set_rank(iter->account(), 0, eosio::name());
+                  break;
+               }
             }
          }
          state.last_processed = iter->account();
