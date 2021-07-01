@@ -5,8 +5,10 @@ import { Induction, NewMemberProfile } from "inductions/interfaces";
 interface Props {
     induction: Induction;
     isReviewingProfile: boolean;
-    pendingProfile?: NewMemberProfile;
-    selectedProfilePhoto?: File;
+    pendingProfile: {
+        profileInfo?: NewMemberProfile;
+        selectedPhoto?: File;
+    };
     setProfilePreview: (
         profileData: NewMemberProfile,
         profilePhoto?: File
@@ -17,9 +19,9 @@ export const InductionProfileFormContainer = ({
     induction,
     isReviewingProfile,
     pendingProfile,
-    selectedProfilePhoto,
     setProfilePreview,
 }: Props) => {
+    const { profileInfo, selectedPhoto } = pendingProfile;
     return (
         <>
             <Heading size={1} className="mb-2">
@@ -29,11 +31,9 @@ export const InductionProfileFormContainer = ({
             </Heading>
             <InductionExpiresIn induction={induction} />
             <InductionProfileForm
-                newMemberProfile={
-                    pendingProfile || induction.new_member_profile
-                }
+                newMemberProfile={profileInfo || induction.new_member_profile}
                 onSubmit={setProfilePreview}
-                selectedProfilePhoto={selectedProfilePhoto}
+                selectedProfilePhoto={selectedPhoto}
             />
         </>
     );

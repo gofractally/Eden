@@ -139,33 +139,22 @@ const ProfileStep = ({
 }: ProfileStepProps) => {
     const { data: isCommunityActive } = useIsCommunityActive();
     const [showPreview, setShowPreview] = useState<Boolean>(false);
-    const [pendingProfile, setPendingProfile] = useState<
-        NewMemberProfile | undefined
-    >();
-    const [selectedProfilePhoto, setSelectedProfilePhoto] = useState<
-        File | undefined
-    >();
+    const [pendingProfile, setPendingProfile] = useState<{
+        profileInfo?: NewMemberProfile;
+        selectedPhoto?: File;
+    }>({});
 
-    const setProfilePreview = (
-        profileData: NewMemberProfile,
-        profilePhoto?: File
-    ) => {
-        setPendingProfile(profileData);
-        setSelectedProfilePhoto(profilePhoto);
+    const setProfilePreview = (profile: NewMemberProfile, photo?: File) => {
+        setPendingProfile({ profileInfo: profile, selectedPhoto: photo });
         setShowPreview(true);
     };
 
-    // Move form submission logic into a profile preview component that's now in charge of submitting the transaction
-    // The form container and form will now only be in charge of hydrating the form state (if present) and passing it up to this ProfileStep component
-    // This component will pass it down, in turn, to the preview component and back ot the ProfileForm if user toggles back to make changes
-
-    if (showPreview && pendingProfile) {
+    if (showPreview && pendingProfile.profileInfo) {
         return (
             <InductionProfilePreview
                 induction={induction}
                 setDidSubmitProfile={setDidSubmitProfile}
-                newMemberProfile={pendingProfile}
-                selectedProfilePhoto={selectedProfilePhoto}
+                pendingProfile={pendingProfile}
                 showProfileForm={() => setShowPreview(false)}
             />
         );
@@ -183,7 +172,6 @@ const ProfileStep = ({
                 induction={induction}
                 isReviewingProfile={isReviewingProfile} // isRevisitingProfile? isEditingProfile?
                 pendingProfile={pendingProfile}
-                selectedProfilePhoto={selectedProfilePhoto}
                 setProfilePreview={setProfilePreview}
             />
         </Container>
