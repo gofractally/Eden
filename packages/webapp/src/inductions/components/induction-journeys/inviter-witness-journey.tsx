@@ -122,7 +122,11 @@ const RecommendReview = ({
 );
 
 const SubmittedVideoStep = ({ induction }: { induction: Induction }) => {
-    const memberData = convertPendingProfileToMemberData(induction);
+    const memberData = convertPendingProfileToMemberData(
+        induction.new_member_profile,
+        induction.invitee,
+        induction.video
+    );
     return (
         <Container
             step={InductionStepInviter.VideoAndEndorse}
@@ -144,7 +148,11 @@ const VideoStep = ({
     isReviewingVideo,
     setSubmittedVideo,
 }: VideoStepProps) => {
-    const memberData = convertPendingProfileToMemberData(induction);
+    const memberData = convertPendingProfileToMemberData(
+        induction.new_member_profile,
+        induction.invitee,
+        induction.video
+    );
     return (
         <Container
             step={InductionStepInviter.VideoAndEndorse}
@@ -186,7 +194,11 @@ const PendingEndorsementStep = ({
     setIsReviewingVideo,
 }: PendingCompletionProps) => {
     const [ualAccount] = useUALAccount();
-    const memberData = convertPendingProfileToMemberData(induction);
+    const memberData = convertPendingProfileToMemberData(
+        induction.new_member_profile,
+        induction.invitee,
+        induction.video
+    );
     const userEndorsementIsPending =
         endorsements.find((e) => e.endorser === ualAccount?.accountName)
             ?.endorsed === 0;
@@ -228,7 +240,11 @@ const PendingDonationStep = ({
     setIsReviewingVideo,
 }: PendingCompletionProps) => {
     const { data: isCommunityActive } = useIsCommunityActive();
-    const memberData = convertPendingProfileToMemberData(induction);
+    const memberData = convertPendingProfileToMemberData(
+        induction.new_member_profile,
+        induction.invitee,
+        induction.video
+    );
     return (
         <Container
             step={
