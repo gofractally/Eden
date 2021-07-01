@@ -1,4 +1,5 @@
 import { Dispatch, FormEvent, SetStateAction, useMemo, useState } from "react";
+
 import {
     Button,
     Card,
@@ -23,14 +24,14 @@ interface Props {
         profileInfo?: NewMemberProfile;
         selectedPhoto?: File;
     };
-    showProfileForm: () => void;
+    editProfile: () => void;
 }
 
 export const InductionProfilePreview = ({
     induction,
     setDidSubmitProfile,
     pendingProfile,
-    showProfileForm,
+    editProfile,
 }: Props) => {
     const [isLoading, setIsLoading] = useState(false);
     const [consentsToPublish, setConsentsToPublish] = useState(false);
@@ -112,7 +113,7 @@ export const InductionProfilePreview = ({
                         </Text>
                     </div>
                     <div className="col-span-6 pt-4">
-                        <Button onClick={showProfileForm}>Make Changes</Button>
+                        <Button onClick={editProfile}>Make Changes</Button>
                     </div>
                     <div className="col-span-6 pt-4">
                         <Button
