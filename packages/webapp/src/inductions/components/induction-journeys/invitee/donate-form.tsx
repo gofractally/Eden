@@ -20,13 +20,13 @@ import { Induction } from "inductions/interfaces";
 interface Props {
     induction: Induction;
     isCommunityActive?: boolean;
-    setIsReviewingProfile: (isReviewing: boolean) => void;
+    setIsRevisitingProfile: (isRevisiting: boolean) => void;
 }
 
 export const InductionDonateForm = ({
     induction,
     isCommunityActive,
-    setIsReviewingProfile,
+    setIsRevisitingProfile,
 }: Props) => {
     const router = useRouter();
     const queryClient = useQueryClient();
@@ -75,7 +75,7 @@ export const InductionDonateForm = ({
             <Text>
                 This is your last chance to review your profile below for
                 completeness and accuracy. If anything needs to be corrected,{" "}
-                <Link onClick={() => setIsReviewingProfile(true)}>
+                <Link onClick={() => setIsRevisitingProfile(true)}>
                     click here
                 </Link>
                 .

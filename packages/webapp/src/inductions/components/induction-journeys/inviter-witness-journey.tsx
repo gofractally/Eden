@@ -33,19 +33,19 @@ export const InviterWitnessJourney = ({
     inductionStatus,
 }: Props) => {
     const [submittedVideo, setSubmittedVideo] = useState(false);
-    const [isReviewingVideo, setIsReviewingVideo] = useState(false);
+    const [isRevisitingVideo, setIsRevisitingVideo] = useState(false);
 
     if (submittedVideo) {
         // not possible in Genesis mode
         return <SubmittedVideoStep induction={induction} />;
     }
 
-    if (isReviewingVideo) {
+    if (isRevisitingVideo) {
         // not possible in Genesis mode
         return (
             <VideoStep
                 induction={induction}
-                isReviewingVideo={isReviewingVideo}
+                isRevisitingVideo={isRevisitingVideo}
                 setSubmittedVideo={setSubmittedVideo}
             />
         );
@@ -58,7 +58,7 @@ export const InviterWitnessJourney = ({
             return (
                 <VideoStep
                     induction={induction}
-                    isReviewingVideo={isReviewingVideo}
+                    isRevisitingVideo={isRevisitingVideo}
                     setSubmittedVideo={setSubmittedVideo}
                 />
             );
@@ -67,7 +67,7 @@ export const InviterWitnessJourney = ({
                 <PendingEndorsementStep
                     induction={induction}
                     endorsements={endorsements}
-                    setIsReviewingVideo={setIsReviewingVideo}
+                    setIsRevisitingVideo={setIsRevisitingVideo}
                 />
             );
         case InductionStatus.PendingDonation:
@@ -75,7 +75,7 @@ export const InviterWitnessJourney = ({
                 <PendingDonationStep
                     induction={induction}
                     endorsements={endorsements}
-                    setIsReviewingVideo={setIsReviewingVideo}
+                    setIsRevisitingVideo={setIsRevisitingVideo}
                 />
             );
         default:
@@ -101,9 +101,9 @@ const Container = ({ step, memberPreview, children }: ContainerProps) => (
 );
 
 const RecommendReview = ({
-    setIsReviewingVideo,
+    setIsRevisitingVideo,
 }: {
-    setIsReviewingVideo: Dispatch<SetStateAction<boolean>>;
+    setIsRevisitingVideo: Dispatch<SetStateAction<boolean>>;
 }) => (
     <div className="mt-4 space-y-3">
         <Text>
@@ -114,7 +114,7 @@ const RecommendReview = ({
         </Text>
         <Text>
             If the induction video needs to be corrected,{" "}
-            <Link onClick={() => setIsReviewingVideo(true)}>click here</Link>.
+            <Link onClick={() => setIsRevisitingVideo(true)}>click here</Link>.
             Keep in mind that modifying the induction video will reset any
             endorsements.
         </Text>
@@ -139,13 +139,13 @@ const SubmittedVideoStep = ({ induction }: { induction: Induction }) => {
 
 interface VideoStepProps {
     induction: Induction;
-    isReviewingVideo: boolean;
+    isRevisitingVideo: boolean;
     setSubmittedVideo: Dispatch<SetStateAction<boolean>>;
 }
 
 const VideoStep = ({
     induction,
-    isReviewingVideo,
+    isRevisitingVideo,
     setSubmittedVideo,
 }: VideoStepProps) => {
     const memberData = convertPendingProfileToMemberData(
@@ -160,7 +160,7 @@ const VideoStep = ({
         >
             <InductionVideoFormContainer
                 induction={induction}
-                isReviewingVideo={isReviewingVideo}
+                isRevisitingVideo={isRevisitingVideo}
                 setSubmittedVideo={setSubmittedVideo}
             />
         </Container>
@@ -185,13 +185,13 @@ const PendingProfileStep = ({ induction }: { induction: Induction }) => {
 interface PendingCompletionProps {
     induction: Induction;
     endorsements: Endorsement[];
-    setIsReviewingVideo: Dispatch<SetStateAction<boolean>>;
+    setIsRevisitingVideo: Dispatch<SetStateAction<boolean>>;
 }
 
 const PendingEndorsementStep = ({
     induction,
     endorsements,
-    setIsReviewingVideo,
+    setIsRevisitingVideo,
 }: PendingCompletionProps) => {
     const [ualAccount] = useUALAccount();
     const memberData = convertPendingProfileToMemberData(
@@ -216,7 +216,7 @@ const PendingEndorsementStep = ({
             {userEndorsementIsPending ? (
                 <>
                     <RecommendReview
-                        setIsReviewingVideo={setIsReviewingVideo}
+                        setIsRevisitingVideo={setIsRevisitingVideo}
                     />
                     <InductionEndorsementForm induction={induction} />
                 </>
@@ -226,7 +226,7 @@ const PendingEndorsementStep = ({
                         Waiting for all witnesses to endorse. In the meantime:
                     </Text>
                     <RecommendReview
-                        setIsReviewingVideo={setIsReviewingVideo}
+                        setIsRevisitingVideo={setIsRevisitingVideo}
                     />
                 </>
             )}
@@ -237,7 +237,7 @@ const PendingEndorsementStep = ({
 const PendingDonationStep = ({
     induction,
     endorsements,
-    setIsReviewingVideo,
+    setIsRevisitingVideo,
 }: PendingCompletionProps) => {
     const { data: isCommunityActive } = useIsCommunityActive();
     const memberData = convertPendingProfileToMemberData(
@@ -268,7 +268,7 @@ const PendingDonationStep = ({
                         Eden NFTs will be minted and distributed.
                     </Text>
                     <RecommendReview
-                        setIsReviewingVideo={setIsReviewingVideo}
+                        setIsRevisitingVideo={setIsRevisitingVideo}
                     />
                 </>
             ) : (

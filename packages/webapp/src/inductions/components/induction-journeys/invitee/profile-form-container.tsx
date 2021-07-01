@@ -4,7 +4,7 @@ import { Induction, NewMemberProfile } from "inductions/interfaces";
 
 interface Props {
     induction: Induction;
-    isReviewingProfile: boolean;
+    isRevisitingProfile: boolean;
     pendingProfile: {
         profileInfo?: NewMemberProfile;
         selectedPhoto?: File;
@@ -17,7 +17,7 @@ interface Props {
 
 export const InductionProfileFormContainer = ({
     induction,
-    isReviewingProfile,
+    isRevisitingProfile,
     pendingProfile,
     setProfilePreview,
 }: Props) => {
@@ -25,7 +25,7 @@ export const InductionProfileFormContainer = ({
     return (
         <>
             <Heading size={1} className="mb-2">
-                {isReviewingProfile
+                {isRevisitingProfile
                     ? "Review your Eden profile"
                     : "Create your Eden profile"}
             </Heading>

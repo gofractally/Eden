@@ -18,13 +18,13 @@ import { InductionVideoForm, VideoSubmissionPhase } from "./video-form";
 
 interface Props {
     induction: Induction;
-    isReviewingVideo: boolean;
+    isRevisitingVideo: boolean;
     setSubmittedVideo: Dispatch<SetStateAction<boolean>>;
 }
 
 export const InductionVideoFormContainer = ({
     induction,
-    isReviewingVideo,
+    isRevisitingVideo,
     setSubmittedVideo,
 }: Props) => {
     const [ualAccount] = useUALAccount();
@@ -68,7 +68,7 @@ export const InductionVideoFormContainer = ({
     return (
         <>
             <Heading size={1} className="mb-2">
-                {isReviewingVideo
+                {isRevisitingVideo
                     ? "Review induction video"
                     : "Induction ceremony"}
             </Heading>
