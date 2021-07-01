@@ -1,5 +1,9 @@
 import { ActionIpfsData, parseActionIpfsCid } from "@edenos/common";
-import { BadRequestError, handleErrors } from "@edenos/common";
+import {
+    BadRequestError,
+    InternalServerError,
+    handleErrors,
+} from "@edenos/common";
 
 import { eosDefaultApi, eosJsonRpc } from "_app";
 import {
