@@ -38,8 +38,8 @@ export const ipfsUploadHandler = async (req: Request, res: Response) => {
         const requestData: IpfsUploadRequest = parsedRequest.data;
 
         if (!requestData.syncUpload) {
-            // We need to implement a background job mechanism to make sure the
-            // file can be upload asynchronously without blocking the client.
+            // TODO: We need to implement a background job mechanism to make sure
+            // the file can be upload asynchronously without blocking the client.
             throw new BadRequestError(
                 "Background upload jobs are not implemented yet for this Box"
             );

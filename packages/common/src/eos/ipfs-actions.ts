@@ -66,6 +66,10 @@ export const extractCidFromActionData = (
 
     try {
         // Extract the CID supporting dot notation fields, eg: new_member_profile.img
+        // This will set the current data object in the `cid` variable and drill into
+        // all the fields separated by dots (dot-notation) until it's the last field.
+        // i0: cid = action data, i1: cid = new_member_profile, i2 -> cid = img, done.
+        // Another way of reading it: data["new_member_profile"]["img"]
         const cidFields = validAction.cidField.split(".");
         let cid = data;
         while (cidFields.length) {
