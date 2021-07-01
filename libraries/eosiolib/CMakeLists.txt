@@ -116,6 +116,27 @@ function(add_libs suffix)
         -Wl,--entry,_start
         -nostdlib
     )
+
+    add_library(basic-polyfill${suffix})
+    target_sources(basic-polyfill${suffix} PRIVATE
+        tester/wasi_polyfill/__wasi_args_get.cpp
+        tester/wasi_polyfill/__wasi_args_sizes_get.cpp
+        tester/wasi_polyfill/__wasi_clock_time_get.cpp
+        tester/wasi_polyfill/__wasi_environ_get.cpp
+        tester/wasi_polyfill/__wasi_environ_sizes_get.cpp
+        tester/wasi_polyfill/__wasi_fd_close.cpp
+        tester/wasi_polyfill/__wasi_fd_fdstat_get.cpp
+        tester/wasi_polyfill/__wasi_fd_fdstat_set_flags.cpp
+        tester/wasi_polyfill/__wasi_fd_prestat_dir_name.cpp
+        tester/wasi_polyfill/__wasi_fd_prestat_get.cpp
+        tester/wasi_polyfill/__wasi_fd_read.cpp
+        tester/wasi_polyfill/__wasi_fd_seek.cpp
+        tester/wasi_polyfill/__wasi_fd_write.cpp
+        tester/wasi_polyfill/__wasi_path_open.cpp
+        tester/wasi_polyfill/__wasi_proc_exit.cpp
+        tester/wasi_polyfill/prints.cpp
+    )
+    target_link_libraries(basic-polyfill${suffix} PUBLIC wasm-base${suffix})
 endfunction(add_libs)
 
 add_libs("")

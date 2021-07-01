@@ -25,6 +25,10 @@ function(native_test N)
     )
 endfunction()
 
+function(native_and_wasm_test N)
+    native_test(${N})
+endfunction()
+
 add_subdirectory(../external external)
 add_subdirectory(../libraries libraries)
 add_subdirectory(../programs programs)
