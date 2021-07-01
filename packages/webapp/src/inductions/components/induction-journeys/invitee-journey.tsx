@@ -1,10 +1,10 @@
 import React, { Dispatch, SetStateAction, useState } from "react";
 
 import { Heading, Link, Text, useIsCommunityActive } from "_app";
-import { convertPendingProfileToMemberData } from "inductions";
 import { MemberData } from "members";
 
 import {
+    convertPendingProfileToMemberData,
     EndorsementsStatus,
     InductionExpiresIn,
     InductionStepGenesis,
@@ -138,6 +138,7 @@ const ProfileStep = ({
     setDidSubmitProfile,
 }: ProfileStepProps) => {
     const { data: isCommunityActive } = useIsCommunityActive();
+
     const [showPreview, setShowPreview] = useState<Boolean>(false);
     const [pendingProfile, setPendingProfile] = useState<{
         profileInfo?: NewMemberProfile;
@@ -155,7 +156,7 @@ const ProfileStep = ({
                 induction={induction}
                 setDidSubmitProfile={setDidSubmitProfile}
                 pendingProfile={pendingProfile}
-                showProfileForm={() => setShowPreview(false)}
+                editProfile={() => setShowPreview(false)}
             />
         );
     }
@@ -170,7 +171,7 @@ const ProfileStep = ({
         >
             <InductionProfileFormContainer
                 induction={induction}
-                isRevisitingProfile={isRevisitingProfile} // isRevisitingProfile? isEditingProfile?
+                isRevisitingProfile={isRevisitingProfile}
                 pendingProfile={pendingProfile}
                 setProfilePreview={setProfilePreview}
             />
