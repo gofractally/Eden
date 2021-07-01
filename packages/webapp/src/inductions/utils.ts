@@ -7,22 +7,25 @@ import {
     Induction,
     InductionRole,
     InductionStatus,
+    NewMemberProfile,
 } from "./interfaces";
 
 const INDUCTION_EXPIRATION_DAYS = 7;
 
 export const convertPendingProfileToMemberData = (
-    induction: Induction
+    profile: NewMemberProfile,
+    inviteeChainAccountName: string,
+    inductionVideo?: string
 ): MemberData => {
     return {
         templateId: 0,
-        name: induction.new_member_profile.name,
-        image: induction.new_member_profile.img,
-        account: induction.invitee,
-        bio: induction.new_member_profile.bio,
-        socialHandles: JSON.parse(induction.new_member_profile.social || "{}"),
-        inductionVideo: induction.video || "",
-        attributions: induction.new_member_profile.attributions || "",
+        name: profile.name,
+        image: profile.img,
+        account: inviteeChainAccountName,
+        bio: profile.bio,
+        socialHandles: JSON.parse(profile.social || "{}"),
+        inductionVideo: inductionVideo || "",
+        attributions: profile.attributions || "",
         createdAt: 0,
     };
 };

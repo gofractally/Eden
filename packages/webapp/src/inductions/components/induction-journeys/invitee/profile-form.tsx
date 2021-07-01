@@ -15,27 +15,23 @@ import { NewMemberProfile } from "inductions";
 
 interface Props {
     newMemberProfile: NewMemberProfile;
-    disabled?: boolean;
     onSubmit?: (
         newMemberProfile: NewMemberProfile,
-        uploadedImage?: File
-    ) => Promise<void>;
+        selectedProfilePhoto?: File
+    ) => void;
+    selectedProfilePhoto?: File;
 }
 
 export const InductionProfileForm = ({
     newMemberProfile,
-    disabled,
     onSubmit,
+    selectedProfilePhoto,
 }: Props) => {
-    const [isLoading, setIsLoading] = useState(false);
-    const [consentsToPublish, setConsentsToPublish] = useState(false);
-
-    const [uploadedImage, setUploadedImage] = useState<File | undefined>(
-        undefined
+    const [selectedImage, setSelectedImage] = useState<File | undefined>(
+        selectedProfilePhoto
     );
 
     const [fields, setFields] = useFormFields({ ...newMemberProfile });
-
     const [socialFields, setSocialFields] = useFormFields(
         convertNewMemberProfileSocial(newMemberProfile.social)
     );
@@ -46,7 +42,7 @@ export const InductionProfileForm = ({
     const onChangeSocialFields = (e: React.ChangeEvent<HTMLInputElement>) =>
         setSocialFields(e);
 
-    const submitTransaction = async (e: FormEvent) => {
+    const prepareData = (e: FormEvent) => {
         e.preventDefault();
         if (!onSubmit) return;
 
@@ -56,16 +52,14 @@ export const InductionProfileForm = ({
             if (!socialHandles[key]) delete socialHandles[key];
         });
 
-        setIsLoading(true);
-        await onSubmit(
+        onSubmit(
             { ...fields, social: JSON.stringify(socialHandles) },
-            uploadedImage
+            selectedImage
         );
-        setIsLoading(false);
     };
 
     return (
-        <form onSubmit={submitTransaction} className="grid grid-cols-6 gap-4">
+        <form onSubmit={prepareData} className="grid grid-cols-6 gap-4">
             <Form.LabeledSet
                 label="Your name"
                 htmlFor="name"
@@ -75,7 +69,6 @@ export const InductionProfileForm = ({
                     id="name"
                     type="text"
                     required
-                    disabled={isLoading || disabled}
                     value={fields.name}
                     onChange={onChangeFields}
                 />
@@ -99,15 +92,15 @@ export const InductionProfileForm = ({
                             validUploadActions[edenContractAccount][
                                 "inductprofil"
                             ].maxSize,
-                            setUploadedImage
+                            setSelectedImage
                         )
                     }
                 />
-                {uploadedImage || fields.img ? (
+                {selectedImage || fields.img ? (
                     <img
                         src={
-                            uploadedImage
-                                ? URL.createObjectURL(uploadedImage)
+                            selectedImage
+                                ? URL.createObjectURL(selectedImage)
                                 : `https://ipfs.io/ipfs/${fields.img}`
                         }
                         alt="profile pic"
@@ -130,7 +123,6 @@ export const InductionProfileForm = ({
                 <Form.Input
                     id="attributions"
                     type="text"
-                    disabled={isLoading || disabled}
                     value={fields.attributions}
                     onChange={onChangeFields}
                 />
@@ -144,7 +136,6 @@ export const InductionProfileForm = ({
                 <Form.TextArea
                     id="bio"
                     required
-                    disabled={isLoading || disabled}
                     value={fields.bio}
                     onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) =>
                         setFields(e)
@@ -163,7 +154,6 @@ export const InductionProfileForm = ({
                 <Form.Input
                     id="eosCommunity"
                     type="text"
-                    disabled={isLoading || disabled}
                     value={socialFields.eosCommunity}
                     onChange={onChangeSocialFields}
                     placeholder="YourUsername"
@@ -177,7 +167,6 @@ export const InductionProfileForm = ({
                 <Form.Input
                     id="twitter"
                     type="text"
-                    disabled={isLoading || disabled}
                     value={socialFields.twitter}
                     onChange={onChangeSocialFields}
                     placeholder="YourHandle"
@@ -191,7 +180,6 @@ export const InductionProfileForm = ({
                 <Form.Input
                     id="telegram"
                     type="text"
-                    disabled={isLoading || disabled}
                     value={socialFields.telegram}
                     onChange={onChangeSocialFields}
                     placeholder="YourHandle"
@@ -205,7 +193,6 @@ export const InductionProfileForm = ({
                 <Form.Input
                     id="blog"
                     type="text"
-                    disabled={isLoading || disabled}
                     value={socialFields.blog}
                     onChange={onChangeSocialFields}
                     placeholder="yoursite.com"
@@ -219,7 +206,6 @@ export const InductionProfileForm = ({
                 <Form.Input
                     id="linkedin"
                     type="text"
-                    disabled={isLoading || disabled}
                     value={socialFields.linkedin}
                     onChange={onChangeSocialFields}
                     placeholder="YourHandle"
@@ -233,21 +219,11 @@ export const InductionProfileForm = ({
                 <Form.Input
                     id="facebook"
                     type="text"
-                    disabled={isLoading || disabled}
                     value={socialFields.facebook}
                     onChange={onChangeSocialFields}
                     placeholder="YourUsername"
                 />
             </Form.LabeledSet>
-
-            <div className="col-span-6 p-3 border rounded-md">
-                <Form.Checkbox
-                    id="reviewed"
-                    label="I understand and acknowledge that I am publishing the profile information above permanently and irrevocably to an immutable, public blockchain. When I submit this form, it cannot be undone."
-                    value={Number(consentsToPublish)}
-                    onChange={() => setConsentsToPublish(!consentsToPublish)}
-                />
-            </div>
 
             <div className="col-span-6">
                 <Text>
@@ -261,13 +237,7 @@ export const InductionProfileForm = ({
 
             {onSubmit && (
                 <div className="col-span-6 pt-4">
-                    <Button
-                        isSubmit
-                        isLoading={isLoading}
-                        disabled={isLoading || !consentsToPublish}
-                    >
-                        {isLoading ? "Submitting..." : "Submit"}
-                    </Button>
+                    <Button isSubmit>Preview My Profile</Button>
                 </div>
             )}
         </form>
