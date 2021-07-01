@@ -100,6 +100,17 @@ namespace eden
 
       void distribute(uint32_t max_steps);
 
+      void fundtransfer(eosio::name from,
+                        eosio::block_timestamp distribution_time,
+                        uint8_t rank,
+                        eosio::name to,
+                        eosio::asset amount,
+                        const std::string& memo);
+      void usertransfer(eosio::name from,
+                        eosio::name to,
+                        eosio::asset amount,
+                        const std::string& memo);
+
       void bylawspropose(eosio::name proposer, const std::string& bylaws);
       void bylawsapprove(eosio::name approver, const eosio::checksum256& bylaws_hash);
       void bylawsratify(eosio::name approver, const eosio::checksum256& bylaws_hash);
@@ -138,6 +149,8 @@ namespace eden
        action(withdraw, owner, quantity, ricardian_contract(withdraw_ricardian)),
        action(donate, owner, quantity),
        action(transfer, to, quantity, memo),
+       action(fundtransfer, from, distribution_time, rank, to, amount, memo),
+       action(usertransfer, from, to, amount, memo),
        action(genesis,
               community,
               community_symbol,

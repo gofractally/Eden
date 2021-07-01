@@ -1,6 +1,7 @@
 #include <accounts.hpp>
 #include <distributions.hpp>
 #include <eden.hpp>
+#include <members.hpp>
 #include <migrations.hpp>
 #include <token/token.hpp>
 
@@ -100,6 +101,41 @@ namespace eden
    void eden::distribute(uint32_t max_steps)
    {
       eosio::check(distribute_monthly(get_self(), max_steps) != max_steps, "Nothing to do");
+   }
+
+   void eden::fundtransfer(eosio::name from,
+                           eosio::block_timestamp distribution_time,
+                           uint8_t rank,
+                           eosio::name to,
+                           eosio::asset amount,
+                           const std::string& memo)
+   {
+      eosio::check(amount.amount > 0, "amount must be positive");
+      eosio::check(memo.size() <= 256, "Memo has more than 256 bytes");
+      eosio::require_auth(from);
+      members members{get_self()};
+      members.check_active_member(from);
+      members.check_active_member(to);
+      accounts distribution_accounts{get_self(), make_account_scope(distribution_time, rank)};
+      accounts accounts{get_self()};
+      distribution_accounts.sub_balance(from, amount);
+      accounts.add_balance(to, amount);
+   }
+
+   void eden::usertransfer(eosio::name from,
+                           eosio::name to,
+                           eosio::asset amount,
+                           const std::string& memo)
+   {
+      eosio::check(amount.amount > 0, "amount must be positive");
+      eosio::check(memo.size() <= 256, "Memo has more than 256 bytes");
+      eosio::require_auth(from);
+      members members{get_self()};
+      members.check_active_member(from);
+      members.check_active_member(to);
+      accounts accounts{get_self()};
+      accounts.sub_balance(from, amount);
+      accounts.add_balance(to, amount);
    }
 
 }  // namespace eden
