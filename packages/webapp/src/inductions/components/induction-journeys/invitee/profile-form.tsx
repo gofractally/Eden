@@ -84,7 +84,11 @@ export const InductionProfileForm = ({
                 <Form.FileInput
                     id="imgFile"
                     accept="image/*"
-                    label="select an image file"
+                    label={
+                        selectedImage || fields.img
+                            ? "select a different image"
+                            : "select an image file"
+                    }
                     onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
                         handleFileChange(
                             e,
@@ -179,6 +183,7 @@ export const InductionProfileForm = ({
             >
                 <Form.Input
                     id="telegram"
+                    required
                     type="text"
                     value={socialFields.telegram}
                     onChange={onChangeSocialFields}
@@ -224,16 +229,6 @@ export const InductionProfileForm = ({
                     placeholder="YourUsername"
                 />
             </Form.LabeledSet>
-
-            <div className="col-span-6">
-                <Text>
-                    <span className="italic font-medium">Don't worry!</span>{" "}
-                    Even though you are committing your information to the
-                    blockchain right now, you will be able to review your
-                    profile and make changes to it all the way up until you
-                    complete your donation.
-                </Text>
-            </div>
 
             {onSubmit && (
                 <div className="col-span-6 pt-4">
