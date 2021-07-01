@@ -1,4 +1,4 @@
-import { Dispatch, FormEvent, SetStateAction, useState } from "react";
+import { Dispatch, FormEvent, SetStateAction, useMemo, useState } from "react";
 import {
     Button,
     Card,
@@ -70,8 +70,7 @@ export const InductionProfilePreview = ({
         setIsLoading(false);
     };
 
-    const prepareMemberCard = () => {
-        // TODO: memoize
+    const memberCardData = useMemo(() => {
         let pendingProfile = profileInfo;
         if (selectedPhoto) {
             const img = URL.createObjectURL(selectedPhoto);
@@ -81,11 +80,11 @@ export const InductionProfilePreview = ({
             pendingProfile!,
             induction.invitee
         );
-    };
+    }, [induction.invitee, profileInfo, selectedPhoto]);
 
     return (
         <>
-            <MemberCardPreview memberData={prepareMemberCard()} />
+            <MemberCardPreview memberData={memberCardData} />
             <Card>
                 <form
                     onSubmit={submitInductionProfileTransaction}
