@@ -5,65 +5,78 @@ import { GenIcon } from "react-icons/lib";
 
 import { explorerAccountUrl, SocialButton } from "_app";
 import { MemberData } from "../interfaces";
+import {
+    getFacebookHandle,
+    getLinkedinHandle,
+    getTelegramHandle,
+    getTwitterHandle,
+} from "../helpers/social-links";
 
 interface Props {
     member: MemberData;
 }
 
-export const MemberSocialLinks = ({ member }: Props) => (
-    <div
-        className="grid gap-y-2 sm:justify-between mt-5 text-sm"
-        style={{ gridTemplateColumns: "repeat(auto-fill, 12.5rem)" }}
-    >
-        <SocialButton
-            handle={member.account}
-            icon={EosCommunityIcon}
-            href={explorerAccountUrl(member.account)}
-        />
-        {member.socialHandles.eosCommunity && (
+export const MemberSocialLinks = ({ member }: Props) => {
+    member.socialHandles.linkedin = "https://test.com/bob/carol/edenmember44";
+    const linkedinHandle = getLinkedinHandle(member.socialHandles.linkedin);
+    const facebookHandle = getFacebookHandle(member.socialHandles.facebook);
+    const twitterHandle = getTwitterHandle(member.socialHandles.twitter);
+    const telegramHandle = getTelegramHandle(member.socialHandles.telegram);
+    return (
+        <div
+            className="grid gap-y-2 sm:justify-between mt-5 text-sm"
+            style={{ gridTemplateColumns: "repeat(auto-fill, 12.5rem)" }}
+        >
             <SocialButton
-                handle={member.socialHandles.eosCommunity}
-                icon={IoChatbubblesOutline}
-                href={`https://eoscommunity.org/u/${member.socialHandles.eosCommunity}`}
+                handle={member.account}
+                icon={EosCommunityIcon}
+                href={explorerAccountUrl(member.account)}
             />
-        )}
-        {member.socialHandles.blog && (
-            <SocialButton
-                handle="Website"
-                icon={HiOutlineLink}
-                href={urlify(member.socialHandles.blog)}
-            />
-        )}
-        {member.socialHandles.twitter && (
-            <SocialButton
-                handle={member.socialHandles.twitter}
-                icon={FaTwitter}
-                href={`https://twitter.com/${member.socialHandles.twitter}`}
-            />
-        )}
-        {member.socialHandles.telegram && (
-            <SocialButton
-                handle={member.socialHandles.telegram}
-                icon={FaTelegram}
-                href={`https://t.me/${member.socialHandles.telegram}`}
-            />
-        )}
-        {member.socialHandles.linkedin && (
-            <SocialButton
-                handle={member.socialHandles.linkedin}
-                icon={FaLinkedin}
-                href={`https://www.linkedin.com/in/${member.socialHandles.linkedin}`}
-            />
-        )}
-        {member.socialHandles.facebook && (
-            <SocialButton
-                handle={member.socialHandles.facebook}
-                icon={FaFacebook}
-                href={`https://facebook.com/${member.socialHandles.facebook}`}
-            />
-        )}
-    </div>
-);
+            {member.socialHandles.eosCommunity && (
+                <SocialButton
+                    handle={member.socialHandles.eosCommunity}
+                    icon={IoChatbubblesOutline}
+                    href={`https://eoscommunity.org/u/${member.socialHandles.eosCommunity}`}
+                />
+            )}
+            {member.socialHandles.blog && (
+                <SocialButton
+                    handle="Website"
+                    icon={HiOutlineLink}
+                    href={urlify(member.socialHandles.blog)}
+                />
+            )}
+            {twitterHandle && (
+                <SocialButton
+                    handle={`@${twitterHandle}`}
+                    icon={FaTwitter}
+                    href={`https://twitter.com/${twitterHandle}`}
+                />
+            )}
+            {telegramHandle && (
+                <SocialButton
+                    handle={`@${telegramHandle}`}
+                    icon={FaTelegram}
+                    href={`https://t.me/${telegramHandle}`}
+                />
+            )}
+            {linkedinHandle && (
+                <SocialButton
+                    handle={linkedinHandle}
+                    icon={FaLinkedin}
+                    href={`https://www.linkedin.com/in/${linkedinHandle}`}
+                />
+            )}
+            {facebookHandle && (
+                <SocialButton
+                    handle={facebookHandle}
+                    icon={FaFacebook}
+                    href={`https://facebook.com/${facebookHandle}`}
+                />
+            )}
+        </div>
+    );
+};
 
 const urlify = (address: string) => {
     let domainBeginIndex = 0;
