@@ -19,44 +19,47 @@ import { Induction, NewMemberProfile } from "inductions/interfaces";
 interface Props {
     induction: Induction;
     setDidSubmitProfile: Dispatch<SetStateAction<boolean>>;
-    newMemberProfile: NewMemberProfile;
-    selectedProfilePhoto?: File;
+    pendingProfile: {
+        profileInfo?: NewMemberProfile;
+        selectedPhoto?: File;
+    };
     showProfileForm: () => void;
 }
 
 export const InductionProfilePreview = ({
     induction,
     setDidSubmitProfile,
-    newMemberProfile,
-    selectedProfilePhoto,
+    pendingProfile,
     showProfileForm,
 }: Props) => {
     const [isLoading, setIsLoading] = useState(false);
     const [consentsToPublish, setConsentsToPublish] = useState(false);
     const [ualAccount] = useUALAccount();
+    const { profileInfo, selectedPhoto } = pendingProfile;
 
     const submitInductionProfileTransaction = async (e: FormEvent) => {
         e.preventDefault();
         setIsLoading(true);
         try {
-            const img = selectedProfilePhoto
-                ? await uploadToIpfs(selectedProfilePhoto)
-                : newMemberProfile.img;
+            if (!profileInfo) throw new Error("Profile data is missing.");
+            const img = selectedPhoto
+                ? await uploadToIpfs(selectedPhoto)
+                : profileInfo.img;
 
             const authorizerAccount = ualAccount.accountName;
             const transaction = setInductionProfileTransaction(
                 authorizerAccount,
                 induction.id,
-                { ...newMemberProfile, img }
+                { ...profileInfo, img }
             );
             console.info(transaction);
 
             const signedTrx = await ualAccount.signTransaction(transaction, {
-                broadcast: !selectedProfilePhoto,
+                broadcast: !selectedPhoto,
             });
             console.info("inductprofil trx", signedTrx);
 
-            if (selectedProfilePhoto) {
+            if (selectedPhoto) {
                 await uploadIpfsFileWithTransaction(signedTrx, img);
             }
 
@@ -69,14 +72,13 @@ export const InductionProfilePreview = ({
 
     const prepareMemberCard = () => {
         // TODO: memoize
-        let pendingProfile = newMemberProfile;
-        if (selectedProfilePhoto) {
-            const img = URL.createObjectURL(selectedProfilePhoto);
-            console.log(img);
-            pendingProfile = { ...newMemberProfile, img };
+        let pendingProfile = profileInfo;
+        if (selectedPhoto) {
+            const img = URL.createObjectURL(selectedPhoto);
+            pendingProfile = { ...profileInfo!, img };
         }
         return convertPendingProfileToMemberData(
-            pendingProfile,
+            pendingProfile!,
             induction.invitee
         );
     };
