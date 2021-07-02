@@ -39,8 +39,6 @@ export const initializeInductionTransaction = (
     witnesses: string[]
 ) => {
     const id = primaryKeyFromAccountInstant(authorizerAccount);
-    console.info("initializeInductionTransaction().invitee:");
-    console.info(invitee);
     return {
         id,
         transaction: {
