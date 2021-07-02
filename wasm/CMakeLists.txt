@@ -62,9 +62,104 @@ endfunction()
 add_clsdk_base_lib("")
 add_clsdk_base_lib("-debug")
 
+set(DEP_URL https://github.com/eoscommunity/Eden/releases/download/deps)
+set(GMP_ARCHIVE gmp-6.2.1.tar.zst)
+set(GMP_EXTRACTED gmp-6.2.1)
+set(OPENSSL_ARCHIVE openssl-1.1.1k.tar.gz)
+set(OPENSSL_EXTRACTED openssl-1.1.1k)
+set(ZLIB_ARCHIVE zlib-1.2.11.tar.gz)
+set(ZLIB_EXTRACTED zlib-1.2.11)
+set(DEP_PREFIX ${CMAKE_BINARY_DIR}/deps)
+
+function(download url archive)
+    if(NOT EXISTS ${archive})
+        message("Downloading ${url}")
+        file(DOWNLOAD ${url} ${archive}
+            STATUS download_status
+            TIMEOUT 60
+            SHOW_PROGRESS
+            TLS_VERIFY ON)
+        list(POP_BACK download_status BOOST_DOWNLOAD_STATUS_MSG)
+        if(NOT download_status EQUAL 0)
+            file(REMOVE ${archive})
+            message(FATAL_ERROR "Download ${url} failed. ${BOOST_DOWNLOAD_STATUS_MSG}")
+        endif()
+    endif()
+endfunction()
+
+# These builds are done at generation time so cmake's find_* commands can find them
+
+if(NOT EXISTS ${DEP_PREFIX}/lib/libz.a)
+    download(${DEP_URL}/${ZLIB_ARCHIVE} ${DEP_PREFIX}/${ZLIB_ARCHIVE})
+    message("building zlib")
+    execute_process(
+        WORKING_DIRECTORY ${DEP_PREFIX}
+        COMMAND bash -c "\
+               rm -rf ${ZLIB_EXTRACTED}                                         \
+            && tar xf ${ZLIB_ARCHIVE}                                           \
+            && cd ${ZLIB_EXTRACTED}                                             \
+            && export CC=${CMAKE_C_COMPILER}                                    \
+            && export CXX=${CMAKE_CXX_COMPILER}                                 \
+            && export AR=${CMAKE_AR}                                            \
+            && export RANLIB=${CMAKE_RANLIB}                                    \
+            && export CFLAGS=\"--sysroot=${CMAKE_SYSROOT}\"                     \
+            && ./configure --prefix=${DEP_PREFIX} --static                      \
+            && make -j                                                          \
+            && make -j install                                                  \
+        "
+    )
+endif()
+
+if(NOT EXISTS ${DEP_PREFIX}/lib/libgmp.a)
+    download(${DEP_URL}/${GMP_ARCHIVE} ${DEP_PREFIX}/${GMP_ARCHIVE})
+    message("building gmp")
+    execute_process(
+        WORKING_DIRECTORY ${DEP_PREFIX}
+        COMMAND bash -c "\
+               rm -rf ${GMP_EXTRACTED}                                                      \
+            && tar xf ${GMP_ARCHIVE}                                                        \
+            && cd ${GMP_EXTRACTED}                                                          \
+            && ./configure                                                                  \
+                CC=${CMAKE_C_COMPILER}                                                      \
+                CFLAGS=\"--sysroot=${CMAKE_SYSROOT} -D_WASI_EMULATED_SIGNAL\"               \
+                LDFLAGS=-lwasi-emulated-signal                                              \
+                --prefix=${DEP_PREFIX}                                                      \
+                --host none                                                                 \
+                --disable-assembly   \                                                      \
+            && make -j                                                                      \
+            && make -j install                                                              \
+        "
+    )
+endif()
+
+if(NOT EXISTS ${DEP_PREFIX}/lib/libssl.a)
+    download(${DEP_URL}/${OPENSSL_ARCHIVE} ${DEP_PREFIX}/${OPENSSL_ARCHIVE})
+    message("building openssl")
+    set(OPENSSL_BUILD_FLAGS "--sysroot=${CMAKE_SYSROOT} -D_WASI_EMULATED_SIGNAL -DNO_SYSLOG -DOPENSSL_NO_SECURE_MEMORY")
+    execute_process(
+        WORKING_DIRECTORY ${DEP_PREFIX}
+        COMMAND bash -c "\
+               rm -rf ${OPENSSL_EXTRACTED}                                                  \
+            && tar xf ${OPENSSL_ARCHIVE}                                                    \
+            && cd ${OPENSSL_EXTRACTED}                                                      \
+            && ./Configure linux-generic32                                                  \
+                --prefix=${DEP_PREFIX}                                                      \
+                no-afalgeng no-asm no-dso no-shared no-sock no-tests no-threads no-ui       \
+                CC=${CMAKE_C_COMPILER}                                                      \
+                CXX=${CMAKE_CXX_COMPILER}                                                   \
+                AR=${CMAKE_AR}                                                              \
+                RANLIB=${CMAKE_RANLIB}                                                      \
+                CFLAGS=\"${OPENSSL_BUILD_FLAGS}\"                                           \
+                CXXFLAGS=\"${OPENSSL_BUILD_FLAGS}\"                                         \
+            && make -j install_dev install_engines                                          \
+        "
+    )
+endif()
+
 add_subdirectory(../contracts contracts)
-add_subdirectory(../libraries libraries)
 add_subdirectory(../external external)
+add_subdirectory(../libraries libraries)
+add_subdirectory(../programs programs)
 add_subdirectory(boost)
 add_subdirectory(atomicassets)
 add_subdirectory(atomicmarket)
