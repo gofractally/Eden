@@ -16,6 +16,8 @@ export const InductionInviteFormContainer = ({ ualAccount }: Props) => {
     const [initializedInductionId, setInitializedInductionId] = useState("");
 
     const submitTransaction = async (newInduction: any) => {
+        console.info("inductioninvite.submitTransation()");
+        console.info(newInduction);
         try {
             const authorizerAccount = ualAccount.accountName;
             const {
@@ -26,6 +28,7 @@ export const InductionInviteFormContainer = ({ ualAccount }: Props) => {
                 newInduction.invitee,
                 [newInduction.witness1, newInduction.witness2]
             );
+            console.info("submiTransaction:transaction:");
             console.info(transaction);
             const signedTrx = await ualAccount.signTransaction(transaction, {
                 broadcast: true,
