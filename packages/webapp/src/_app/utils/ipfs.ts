@@ -23,7 +23,7 @@ export const uploadToIpfs = async (file: File) => {
     if (!box.enableIpfsUpload) {
         const uploadResponse = await IPFS_CLIENT.add(file, {
             progress: (p: any) =>
-                console.log(`uploading to ipfs progress: ${p}`),
+                console.log(`uploading to ipfs progress >>> ${p}`),
         });
         console.info("Uploaded File to IPFS Response:", uploadResponse);
         if (uploadResponse.path !== fileHash) {
