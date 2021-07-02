@@ -1,4 +1,5 @@
 import { FormEvent, useState } from "react";
+import { useForm } from "react-hook-form";
 
 import {
     useFormFields,
@@ -26,6 +27,19 @@ interface Props {
     selectedProfilePhoto?: File;
 }
 
+type FormValues = {
+    name: string;
+    imgFile: any;
+    attributions: string;
+    bio: string;
+    eosCommunity: string;
+    twitter: string;
+    telegram: string;
+    blog: string;
+    linkedin: string;
+    facebook: string;
+};
+
 export const InductionProfileForm = ({
     newMemberProfile,
     onSubmit,
@@ -35,50 +49,62 @@ export const InductionProfileForm = ({
         selectedProfilePhoto
     );
 
-    const [fields, setFields] = useFormFields({ ...newMemberProfile });
-    const [socialFields, setSocialFields] = useFormFields(
-        convertNewMemberProfileSocial(newMemberProfile.social)
-    );
-    const [isFormFieldValid, setIsFormFieldValid] = useState({
-        twitter: true,
-        telegram: true,
-        linkedin: true,
-        facebook: true,
-    });
-    const [formErrors, setFormErrors] = useState({});
+    const {
+        register,
+        handleSubmit,
+        watch,
+        formState: { errors },
+    } = useForm<FormValues>();
+
+    // const [fields, setFields] = useFormFields({ ...newMemberProfile });
+    // const [socialFields, setSocialFields] = useFormFields(
+    //     convertNewMemberProfileSocial(newMemberProfile.social)
+    // );
+    // const [isFormFieldValid, setIsFormFieldValid] = useState({
+    //     twitter: true,
+    //     telegram: true,
+    //     linkedin: true,
+    //     facebook: true,
+    // });
+    // const [formErrors, setFormErrors] = useState({});
 
     const onChangeFields = (e: React.ChangeEvent<HTMLInputElement>) =>
         setFields(e);
 
-    setIsFormFieldValid({
-        twitter: isValidTwitterHandle(socialFields.twitter),
-        telegram: isValidTelegramHandle(socialFields.telegram),
-        linkedin: isValidLinkedinHandle(socialFields.linkedin),
-        facebook: isValidFacebookHandle(socialFields.facebook),
-    });
+    // setIsFormFieldValid({
+    //     twitter: isValidTwitterHandle(socialFields.twitter),
+    //     telegram: isValidTelegramHandle(socialFields.telegram),
+    //     linkedin: isValidLinkedinHandle(socialFields.linkedin),
+    //     facebook: isValidFacebookHandle(socialFields.facebook),
+    // });
 
-    const onChangeSocialFields = (e: React.ChangeEvent<HTMLInputElement>) => {
-        setSocialFields(e);
-    };
+    // const onChangeSocialFields = (e: React.ChangeEvent<HTMLInputElement>) => {
+    //     setSocialFields(e);
+    // };
 
     const prepareData = (e: FormEvent) => {
         e.preventDefault();
         if (!onSubmit) return;
 
-        const socialHandles = { ...socialFields };
-        Object.keys(socialHandles).forEach((keyString) => {
-            const key = keyString as keyof EdenNftSocialHandles;
-            if (!socialHandles[key]) delete socialHandles[key];
-        });
+        // const socialHandles = { ...socialFields };
+        // Object.keys(socialHandles).forEach((keyString) => {
+        //     const key = keyString as keyof EdenNftSocialHandles;
+        //     if (!socialHandles[key]) delete socialHandles[key];
+        // });
 
-        onSubmit(
-            { ...fields, social: JSON.stringify(socialHandles) },
-            selectedImage
-        );
+        console.info("would call onSubmit()");
+        // onSubmit(
+        //     { ...fields, social: JSON.stringify(socialHandles) },
+        //     selectedImage
+        // );
     };
 
+    console.info(errors);
     return (
-        <form onSubmit={prepareData} className="grid grid-cols-6 gap-4">
+        <form
+            onSubmit={handleSubmit(prepareData)}
+            className="grid grid-cols-6 gap-4"
+        >
             <Form.LabeledSet
                 label="Your name"
                 htmlFor="name"
@@ -86,14 +112,14 @@ export const InductionProfileForm = ({
             >
                 <Form.Input
                     id="name"
-                    type="text"
-                    required
-                    value={fields.name}
-                    onChange={onChangeFields}
+                    {...register("name", { required: "Name is required" })}
                 />
+                {errors.name && (
+                    <Text className="text-red-600">{errors.name.message}</Text>
+                )}
             </Form.LabeledSet>
 
-            <Form.LabeledSet label="" htmlFor="imgFile" className="col-span-6">
+            {/* <Form.LabeledSet label="" htmlFor="imgFile" className="col-span-6">
                 <div className="flex items-center mb-1 space-x-1">
                     <p className="text-sm font-medium text-gray-700">
                         Profile image
@@ -136,19 +162,14 @@ export const InductionProfileForm = ({
                         className="rounded-full h-24 w-24 my-2 mx-auto"
                     />
                 )}
-            </Form.LabeledSet>
+            </Form.LabeledSet> */}
 
             <Form.LabeledSet
                 label="Credit for profile image goes to (optional)"
                 htmlFor="attributions"
                 className="col-span-6"
             >
-                <Form.Input
-                    id="attributions"
-                    type="text"
-                    value={fields.attributions}
-                    onChange={onChangeFields}
-                />
+                <Form.Input id="attributions" {...register("attributions")} />
             </Form.LabeledSet>
 
             <Form.LabeledSet
@@ -158,12 +179,11 @@ export const InductionProfileForm = ({
             >
                 <Form.TextArea
                     id="bio"
-                    required
-                    value={fields.bio}
-                    onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) =>
-                        setFields(e)
-                    }
+                    {...register("bio", { required: "Bio is required" })}
                 />
+                {errors.bio && (
+                    <Text className="text-red-600">{errors.bio.message}</Text>
+                )}
             </Form.LabeledSet>
 
             <Heading size={3} className="col-span-6">
@@ -176,9 +196,7 @@ export const InductionProfileForm = ({
             >
                 <Form.Input
                     id="eosCommunity"
-                    type="text"
-                    value={socialFields.eosCommunity}
-                    onChange={onChangeSocialFields}
+                    {...register("eosCommunity")}
                     placeholder="YourUsername"
                 />
             </Form.LabeledSet>
@@ -189,16 +207,9 @@ export const InductionProfileForm = ({
             >
                 <Form.Input
                     id="twitter"
-                    type="text"
-                    value={socialFields.twitter}
-                    onChange={onChangeSocialFields}
+                    {...register("twitter")}
                     placeholder="YourHandle"
                 />
-                {!isFormFieldValid["twitter"] && (
-                    <Text className="bg-red-600">
-                        Please enter Twitter handle without @ symbol
-                    </Text>
-                )}
             </Form.LabeledSet>
             <Form.LabeledSet
                 label="Telegram handle"
@@ -207,15 +218,14 @@ export const InductionProfileForm = ({
             >
                 <Form.Input
                     id="telegram"
-                    required
-                    type="text"
-                    value={socialFields.telegram}
-                    onChange={onChangeSocialFields}
+                    {...register("telegram", {
+                        required: "Telegram name is required",
+                    })}
                     placeholder="YourHandle"
                 />
-                {!isFormFieldValid["telegram"] && (
-                    <Text className="bg-red-600">
-                        Please enter Telegram handle without @ symbol
+                {errors.telegram && (
+                    <Text className="text-red-600">
+                        {errors.telegram.message}{" "}
                     </Text>
                 )}
             </Form.LabeledSet>
@@ -226,9 +236,7 @@ export const InductionProfileForm = ({
             >
                 <Form.Input
                     id="blog"
-                    type="text"
-                    value={socialFields.blog}
-                    onChange={onChangeSocialFields}
+                    {...register("blog")}
                     placeholder="yoursite.com"
                 />
             </Form.LabeledSet>
@@ -239,16 +247,9 @@ export const InductionProfileForm = ({
             >
                 <Form.Input
                     id="linkedin"
-                    type="text"
-                    value={socialFields.linkedin}
-                    onChange={onChangeSocialFields}
+                    {...register("linkedin")}
                     placeholder="YourHandle"
                 />
-                {!isFormFieldValid["linkedin"] && (
-                    <Text className="bg-red-600">
-                        Please enter only LinkedIn, not entire url
-                    </Text>
-                )}
             </Form.LabeledSet>
             <Form.LabeledSet
                 label="Facebook username"
@@ -257,16 +258,9 @@ export const InductionProfileForm = ({
             >
                 <Form.Input
                     id="facebook"
-                    type="text"
-                    value={socialFields.facebook}
-                    onChange={onChangeSocialFields}
+                    {...register("facebook")}
                     placeholder="YourUsername"
                 />
-                {!isFormFieldValid["facebook"] && (
-                    <Text className="bg-red-600">
-                        Please enter only Facebook, not entire url
-                    </Text>
-                )}
             </Form.LabeledSet>
 
             {onSubmit && (
