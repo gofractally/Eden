@@ -2,6 +2,7 @@
 #include <distributions.hpp>
 #include <elections.hpp>
 #include <eosio/crypto.hpp>
+#include <eosio/ship_protocol.hpp>
 #include <eosio/system.hpp>
 #include <members.hpp>
 
@@ -553,6 +554,29 @@ namespace eden
       return result;
    }
 
+   void elections::set_board_permission(const std::vector<eosio::name>& board)
+   {
+      eosio::ship_protocol::authority auth{.threshold = board.size() * 2 / 3 + 1};
+      for (eosio::name member : board)
+      {
+         auth.accounts.push_back({{member, "active"_n}, 1});
+      }
+      std::sort(auth.accounts.begin(), auth.accounts.end(), [](const auto& lhs, const auto& rhs) {
+         return lhs.permission.actor < rhs.permission.actor;
+      });
+      eosio::action{{contract, "active"_n},
+                    "eosio"_n,
+                    "updateauth"_n,
+                    std::tuple(contract, "board.major"_n, "active"_n, auth)}
+          .send();
+      auth.threshold = board.size() + 1 - auth.threshold;
+      eosio::action{{contract, "active"_n},
+                    "eosio"_n,
+                    "updateauth"_n,
+                    std::tuple(contract, "board.minor"_n, "active"_n, auth)}
+          .send();
+   }
+
    void elections::finish_election(std::vector<eosio::name>&& board, eosio::name winner)
    {
       election_state_singleton results(contract, default_scope);
@@ -573,6 +597,7 @@ namespace eden
       results.set(result, contract);
 
       process_election_distribution(contract);
+      set_board_permission(result.board);
    }
 
    uint32_t elections::finish_round(uint32_t max_steps)

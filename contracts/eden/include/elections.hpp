@@ -223,6 +223,7 @@ namespace eden
       uint32_t randomize_voters(current_election_state_init_voters& state, uint32_t max_steps);
       std::vector<eosio::name> extract_board();
       void finish_election(std::vector<eosio::name>&& board, eosio::name winner);
+      void set_board_permission(const std::vector<eosio::name>& board);
 
      public:
       explicit elections(eosio::name contract)
