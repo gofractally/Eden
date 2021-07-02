@@ -8,6 +8,10 @@ import {
     HelpLink,
     handleFileChange,
     Text,
+    isValidFacebookHandle,
+    isValidTwitterHandle,
+    isValidTelegramHandle,
+    isValidLinkedinHandle,
 } from "_app";
 import { edenContractAccount, validUploadActions } from "config";
 import { EdenNftSocialHandles } from "nfts";
@@ -35,12 +39,27 @@ export const InductionProfileForm = ({
     const [socialFields, setSocialFields] = useFormFields(
         convertNewMemberProfileSocial(newMemberProfile.social)
     );
+    const [isFormFieldValid, setIsFormFieldValid] = useState({
+        twitter: true,
+        telegram: true,
+        linkedin: true,
+        facebook: true,
+    });
+    const [formErrors, setFormErrors] = useState({});
 
     const onChangeFields = (e: React.ChangeEvent<HTMLInputElement>) =>
         setFields(e);
 
-    const onChangeSocialFields = (e: React.ChangeEvent<HTMLInputElement>) =>
+    setIsFormFieldValid({
+        twitter: isValidTwitterHandle(socialFields.twitter),
+        telegram: isValidTelegramHandle(socialFields.telegram),
+        linkedin: isValidLinkedinHandle(socialFields.linkedin),
+        facebook: isValidFacebookHandle(socialFields.facebook),
+    });
+
+    const onChangeSocialFields = (e: React.ChangeEvent<HTMLInputElement>) => {
         setSocialFields(e);
+    };
 
     const prepareData = (e: FormEvent) => {
         e.preventDefault();
@@ -175,6 +194,11 @@ export const InductionProfileForm = ({
                     onChange={onChangeSocialFields}
                     placeholder="YourHandle"
                 />
+                {!isFormFieldValid["twitter"] && (
+                    <Text className="bg-red-600">
+                        Please enter Twitter handle without @ symbol
+                    </Text>
+                )}
             </Form.LabeledSet>
             <Form.LabeledSet
                 label="Telegram handle"
@@ -189,6 +213,11 @@ export const InductionProfileForm = ({
                     onChange={onChangeSocialFields}
                     placeholder="YourHandle"
                 />
+                {!isFormFieldValid["telegram"] && (
+                    <Text className="bg-red-600">
+                        Please enter Telegram handle without @ symbol
+                    </Text>
+                )}
             </Form.LabeledSet>
             <Form.LabeledSet
                 label="Personal website"
@@ -215,6 +244,11 @@ export const InductionProfileForm = ({
                     onChange={onChangeSocialFields}
                     placeholder="YourHandle"
                 />
+                {!isFormFieldValid["linkedin"] && (
+                    <Text className="bg-red-600">
+                        Please enter only LinkedIn, not entire url
+                    </Text>
+                )}
             </Form.LabeledSet>
             <Form.LabeledSet
                 label="Facebook username"
@@ -228,6 +262,11 @@ export const InductionProfileForm = ({
                     onChange={onChangeSocialFields}
                     placeholder="YourUsername"
                 />
+                {!isFormFieldValid["facebook"] && (
+                    <Text className="bg-red-600">
+                        Please enter only Facebook, not entire url
+                    </Text>
+                )}
             </Form.LabeledSet>
 
             {onSubmit && (
