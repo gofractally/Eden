@@ -34,17 +34,6 @@ export const InductionProfilePreview = ({
     editProfile,
 }: Props) => {
     const [isLoading, setIsLoading] = useState(false);
-
-    const defaultAffirmations = {
-        image: false,
-        statement: false,
-        links: false,
-        handles: false,
-        consent: false,
-    };
-    const [affirmations, setAffirmations] = useState<
-        typeof defaultAffirmations
-    >(defaultAffirmations);
     const [ualAccount] = useUALAccount();
     const { profileInfo, selectedPhoto } = pendingProfile;
 
@@ -93,14 +82,6 @@ export const InductionProfilePreview = ({
         );
     }, [induction.invitee, profileInfo, selectedPhoto]);
 
-    const setAffirmation = (e: FormEvent) => {
-        const key = e.currentTarget.id as keyof typeof defaultAffirmations;
-        setAffirmations((prev) => ({
-            ...prev,
-            [key]: !prev[key],
-        }));
-    };
-
     return (
         <>
             <MemberCardPreview cardTitle="" memberData={memberCardData} />
@@ -111,59 +92,60 @@ export const InductionProfilePreview = ({
                 >
                     <div className="col-span-6">
                         <Text>
-                            Review your profile above for accuracy and
-                            compliance.
+                            Review your profile above as per the check boxes
+                            below. This is your first Eden community NFT and
+                            will be used by your fellow members to get to know
+                            you so please do your best to get it right.
                         </Text>
                     </div>
                     <div className="col-span-6 lg:col-span-3 p-3 border rounded">
                         <Form.Checkbox
                             id="image"
-                            label="My face is clearly visible and takes up most of the frame. I am not wearing a mask or sunglasses, and my likeness is otherwise unobstructed."
-                            onChange={setAffirmation}
-                            checked={affirmations["image"]}
+                            label="My face is clearly visible and is large enough that I can be easily identified as me. I'm not wearing a mask or sunglasses."
+                            disabled={isLoading}
+                            required
                         />
                     </div>
                     <div className="col-span-6 lg:col-span-3 p-3 border rounded">
                         <Form.Checkbox
                             id="statement"
-                            label="My profile statement is accurate and complete to the best of my knowledge. I have reviewed it for spelling and grammar mistakes."
-                            onChange={setAffirmation}
-                            checked={affirmations["statement"]}
+                            label="My profile statement is accurate and complete to the best of my knowledge."
+                            disabled={isLoading}
+                            required
                         />
                     </div>
                     <div className="col-span-6 lg:col-span-3 p-3 border rounded">
                         <Form.Checkbox
                             id="links"
                             label="I have clicked/tapped on each social link above and affirm that all links are working properly."
-                            onChange={setAffirmation}
-                            checked={affirmations["links"]}
+                            disabled={isLoading}
+                            required
                         />
                     </div>
                     <div className="col-span-6 lg:col-span-3 p-3 border rounded">
                         <Form.Checkbox
                             id="handles"
                             label="All social handles I have provided belong to me."
-                            onChange={setAffirmation}
-                            checked={affirmations["handles"]}
+                            disabled={isLoading}
+                            required
                         />
                     </div>
-                    <div className="col-span-6 p-3 border rounded-md">
+                    <div className="col-span-6 p-3 border rounded">
                         <Form.Checkbox
                             id="consent"
-                            label="I understand and acknowledge that by submitting my profile, I am publishing my information permanently and irrevocably to an immutable, public blockchain."
-                            onChange={setAffirmation}
-                            checked={affirmations["consent"]}
+                            label="I understand and acknowledge that by submitting my profile I am publishing my information permanently and irrevocably to an immutable, public blockchain."
+                            disabled={isLoading}
+                            required
                         />
                     </div>
                     <div className="flex col-span-6 pt-4 space-x-4 justify-center sm:justify-start">
-                        <Button onClick={editProfile}>Make Changes</Button>
+                        <Button onClick={editProfile} type="neutral">
+                            Make Changes
+                        </Button>
                         <Button
                             isSubmit
                             isLoading={isLoading}
-                            disabled={
-                                isLoading ||
-                                Object.values(affirmations).some((val) => !val)
-                            }
+                            disabled={isLoading}
                         >
                             {isLoading ? "Submitting..." : "Submit Profile"}
                         </Button>
