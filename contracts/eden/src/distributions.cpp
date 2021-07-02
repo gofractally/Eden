@@ -31,10 +31,6 @@ namespace eden
             used += this_rank * total;
             result.rank_distribution.push_back(this_rank);
          }
-         else
-         {
-            //result.rank_distribution.push_back(per_rank);
-         }
       }
       std::reverse(result.rank_distribution.begin(), result.rank_distribution.end());
       if (ranks.back() != 0)
@@ -360,8 +356,6 @@ namespace eden
          }
       }
    }
-
-   uint32_t distributions::gc(uint32_t max_steps) { return max_steps; }
 
    void distributions::clear_all()
    {

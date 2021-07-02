@@ -1338,9 +1338,6 @@ TEST_CASE("budget adjustment on resignation")
    t.skip_to("2020-10-02T15:30:00.000");
    t.distribute();
    CHECK(t.get_budgets_by_period() == expected);
-   t.eden_gm.act<actions::gc>(42);
-   expected.clear();
-   CHECK(t.get_budgets_by_period() == expected);
    CHECK(accounts{"eden.gm"_n, "owned"_n}.get_account("master"_n)->balance() ==
          s2a("1001.8000 EOS"));
 }

@@ -120,7 +120,6 @@ namespace eden
       distributions(eosio::name contract) : contract(contract) {}
       uint32_t on_election_kick(eosio::name member, uint64_t& key, uint32_t max_steps);
       void on_resign(const member& member);
-      uint32_t gc(uint32_t);
       void clear_all();
    };
 }  // namespace eden
