@@ -9,14 +9,11 @@ import {
     HelpLink,
     handleFileChange,
     Text,
-    isValidFacebookHandle,
-    isValidTwitterHandle,
-    isValidTelegramHandle,
-    isValidLinkedinHandle,
 } from "_app";
 import { edenContractAccount, validUploadActions } from "config";
 import { EdenNftSocialHandles } from "nfts";
 import { NewMemberProfile } from "inductions";
+import { getValidSocialLink } from "_app/utils/social-links";
 
 interface Props {
     newMemberProfile: NewMemberProfile;
@@ -45,21 +42,38 @@ export const InductionProfileForm = ({
     onSubmit,
     selectedProfilePhoto,
 }: Props) => {
-    const [selectedImage, setSelectedImage] = useState<File | undefined>(
-        selectedProfilePhoto
-    );
+    // const [selectedImage, setSelectedImage] = useState<File | undefined>(
+    //     selectedProfilePhoto
+    // );
 
+    const socialFieldsAlreadyEntered = convertNewMemberProfileSocial(
+        newMemberProfile.social
+    );
+    console.info("root.socialFieldsAlreadyEnetered:");
+    console.info(socialFieldsAlreadyEntered);
     const {
         register,
         handleSubmit,
         watch,
         formState: { errors },
     } = useForm<FormValues>();
+    // console.info("watch():");
+    // console.info(watch());
+    // {
+    //     defaultValues: {
+    //         name: newMemberProfile.name,
+    //         attributions: newMemberProfile.attributions,
+    //         bio: newMemberProfile.bio,
+    //         eosCommunity: socialFieldsAlreadyEntered.eosCommunity,
+    //         twitter: socialFieldsAlreadyEntered.twitter,
+    //         telegram: socialFieldsAlreadyEntered.telegram,
+    //         blog: socialFieldsAlreadyEntered.blog,
+    //         linkedin: socialFieldsAlreadyEntered.linkedin,
+    //         facebook: socialFieldsAlreadyEntered.facebook,
+    //     },
+    // });
 
     // const [fields, setFields] = useFormFields({ ...newMemberProfile });
-    // const [socialFields, setSocialFields] = useFormFields(
-    //     convertNewMemberProfileSocial(newMemberProfile.social)
-    // );
     // const [isFormFieldValid, setIsFormFieldValid] = useState({
     //     twitter: true,
     //     telegram: true,
@@ -68,8 +82,8 @@ export const InductionProfileForm = ({
     // });
     // const [formErrors, setFormErrors] = useState({});
 
-    const onChangeFields = (e: React.ChangeEvent<HTMLInputElement>) =>
-        setFields(e);
+    // const onChangeFields = (e: React.ChangeEvent<HTMLInputElement>) =>
+    //     setFields(e);
 
     // setIsFormFieldValid({
     //     twitter: isValidTwitterHandle(socialFields.twitter),
@@ -82,23 +96,39 @@ export const InductionProfileForm = ({
     //     setSocialFields(e);
     // };
 
-    const prepareData = (e: FormEvent) => {
-        e.preventDefault();
+    const prepareData = (data: any) => {
+        console.info("prepareData().top");
+        console.info(data);
         if (!onSubmit) return;
 
-        // const socialHandles = { ...socialFields };
-        // Object.keys(socialHandles).forEach((keyString) => {
-        //     const key = keyString as keyof EdenNftSocialHandles;
-        //     if (!socialHandles[key]) delete socialHandles[key];
-        // });
+        // console.info("prepareData().socialFieldsAlreadyEnetered:");
+        // console.info(socialFieldsAlreadyEntered);
+        // const socialHandles = { ...socialFieldsAlreadyEntered };
+        // console.info('socialHandles:')
+        // console.info(socialHandles)
+        const socialHandles: EdenNftSocialHandles = {};
+        Object.keys(socialFieldsAlreadyEntered).forEach((keyString) => {
+            const key = keyString as keyof EdenNftSocialHandles;
+            console.info(`prepareData.key[${key}]`);
+            if (data[key]) {
+                socialHandles[key] = getValidSocialLink(data[key]);
+                console.info(`socialHandles[${key}] = [${socialHandles[key]}]`);
+            }
+            //delete data[key];
+        });
+        console.info("data.after:");
+        console.info(data);
 
-        console.info("would call onSubmit()");
-        // onSubmit(
-        //     { ...fields, social: JSON.stringify(socialHandles) },
-        //     selectedImage
-        // );
+        console.info("would call onSubmit().socialHandles:");
+        console.info(socialHandles);
+        console.info({ ...data, social: JSON.stringify(socialHandles) });
+        onSubmit(
+            { ...data, social: JSON.stringify(socialHandles) }
+            // selectedImage
+        );
     };
 
+    console.info("errors:");
     console.info(errors);
     return (
         <form
@@ -112,10 +142,12 @@ export const InductionProfileForm = ({
             >
                 <Form.Input
                     id="name"
-                    {...register("name", { required: "Name is required" })}
+                    {...register("name", { required: true })}
                 />
                 {errors.name && (
-                    <Text className="text-red-600">{errors.name.message}</Text>
+                    <Text className="text-red-600">
+                        Name is required{errors.name.message}
+                    </Text>
                 )}
             </Form.LabeledSet>
 
@@ -128,9 +160,10 @@ export const InductionProfileForm = ({
                 </div>
                 <Form.FileInput
                     id="imgFile"
+                    {...register("imgFile")}
                     accept="image/*"
                     label={
-                        selectedImage || fields.img
+                        selectedImage || newMemberProfile.img
                             ? "select a different image"
                             : "select an image file"
                     }
@@ -145,12 +178,12 @@ export const InductionProfileForm = ({
                         )
                     }
                 />
-                {selectedImage || fields.img ? (
+                {selectedImage || newMemberProfile.img ? (
                     <img
                         src={
                             selectedImage
                                 ? URL.createObjectURL(selectedImage)
-                                : `https://ipfs.io/ipfs/${fields.img}`
+                                : `https://ipfs.io/ipfs/${selectedImage}`
                         }
                         alt="profile pic"
                         className="object-cover rounded-full h-24 w-24 mt-4 mx-auto"
