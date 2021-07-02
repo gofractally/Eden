@@ -17,7 +17,6 @@ interface Props {
 }
 
 export const MemberSocialLinks = ({ member }: Props) => {
-    member.socialHandles.linkedin = "https://test.com/bob/carol/edenmember44";
     const linkedinHandle = getLinkedinHandle(member.socialHandles.linkedin);
     const facebookHandle = getFacebookHandle(member.socialHandles.facebook);
     const twitterHandle = getTwitterHandle(member.socialHandles.twitter);
