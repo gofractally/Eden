@@ -106,6 +106,9 @@ const RecommendReview = ({
     setIsRevisitingVideo: Dispatch<SetStateAction<boolean>>;
 }) => (
     <div className="mt-4 space-y-3">
+        <Heading size={2} className="mb-2">
+            Review profile
+        </Heading>
         <Text>
             Carefully review the prospective member profile information below.
             Make sure that all social handles and links are accurate and
@@ -214,12 +217,10 @@ const PendingEndorsementStep = ({
             <InductionExpiresIn induction={induction} />
             <EndorsementsStatus endorsements={endorsements} />
             {userEndorsementIsPending ? (
-                <>
-                    <RecommendReview
-                        setIsRevisitingVideo={setIsRevisitingVideo}
-                    />
-                    <InductionEndorsementForm induction={induction} />
-                </>
+                <InductionEndorsementForm
+                    induction={induction}
+                    setIsRevisitingVideo={setIsRevisitingVideo}
+                />
             ) : (
                 <>
                     <Text>
