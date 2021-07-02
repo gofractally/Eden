@@ -1,6 +1,6 @@
 {
     "name": "eden",
-    "private": true,
+    "private": false,
     "workspaces": [
         "packages/*"
     ],
