@@ -32,13 +32,15 @@ export type ButtonType =
     | "dangerOutline"
     | "inductionStatusProfile"
     | "inductionStatusCeremony"
-    | "inductionStatusAction";
+    | "inductionStatusAction"
+    | "link";
 const TYPES: { [key in ButtonType]: string } = {
     primary: "bg-blue-500 border-blue-500 text-white hover:bg-blue-600",
     disabled: "border-gray-400 bg-gray-300 text-gray-500",
     neutral: "bg-gray-50 text-gray-800 hover:bg-gray-200",
     danger: "bg-red-500 text-white hover:bg-red-600",
     dangerOutline: "text-gray-500 hover:text-red-500 border-none",
+    link: "border-transparent text-blue-500 hover:text-yellow-500",
     inductionStatusProfile:
         "bg-blue-500 border-blue-500 text-white hover:bg-blue-600",
     inductionStatusCeremony:
