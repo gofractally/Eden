@@ -81,7 +81,12 @@ namespace eosio
       void reverse() { std::reverse(data, pos); }
    };
 
-   struct vector_stream
+   struct stream_base
+   {
+      static constexpr bool time_point_include_z = false;
+   };
+
+   struct vector_stream : stream_base
    {
       std::vector<char>& data;
       vector_stream(std::vector<char>& data) : data(data) {}
@@ -99,7 +104,7 @@ namespace eosio
       }
    };
 
-   struct fixed_buf_stream
+   struct fixed_buf_stream : stream_base
    {
       char* pos;
       char* end;
@@ -132,7 +137,7 @@ namespace eosio
       }
    };
 
-   struct size_stream
+   struct size_stream : stream_base
    {
       size_t size = 0;
 

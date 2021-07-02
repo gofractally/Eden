@@ -103,8 +103,11 @@ namespace eosio
    void from_json(time_point& obj, S& stream)
    {
       auto s = stream.get_string();
+      auto pos = s.data();
+      auto end = pos + s.size();
       uint64_t utc_microseconds;
-      if (!eosio::string_to_utc_microseconds(utc_microseconds, s.data(), s.data() + s.size()))
+      if (!eosio::string_to_utc_microseconds(utc_microseconds, pos, end, false) ||
+          !(pos == end || pos + 1 == end && *pos == 'Z'))
       {
          check(false, convert_json_error(eosio::from_json_error::expected_time_point));
       }
@@ -114,7 +117,10 @@ namespace eosio
    template <typename S>
    void to_json(const time_point& obj, S& stream)
    {
-      return to_json(eosio::microseconds_to_str(obj.elapsed._count), stream);
+      if constexpr (S::time_point_include_z)
+         return to_json(eosio::microseconds_to_str(obj.elapsed._count) + "Z", stream);
+      else
+         return to_json(eosio::microseconds_to_str(obj.elapsed._count), stream);
    }
 
    /**
