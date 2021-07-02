@@ -332,7 +332,7 @@ namespace eden
                                    make_account_scope(dist->distribution_time, 0).value);
                if (account_iter != member_idx.end())
                {
-                  eosio::check(account_iter->balance() <= amount, "insufficient balance");
+                  eosio::check(amount <= account_iter->balance(), "insufficient balance");
                   if (account_iter->balance() == amount)
                   {
                      member_idx.erase(account_iter);

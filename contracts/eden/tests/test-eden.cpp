@@ -1342,6 +1342,36 @@ TEST_CASE("budget adjustment on resignation")
          s2a("1001.8000 EOS"));
 }
 
+TEST_CASE("multi budget adjustment on resignation")
+{
+   eden_tester t;
+   t.genesis();
+   auto members = make_names(100);
+   t.create_accounts(members);
+   for (auto a : members)
+   {
+      t.chain.start_block();
+      t.induct(a);
+   }
+   t.run_election();
+   t.set_balance(s2a("10000.0000 EOS"));
+   t.skip_to("2020-09-02T15:30:00.000");
+   auto lead_representative =
+       std::get<eden::election_state_v0>(
+           eden::election_state_singleton{"eden.gm"_n, eden::default_scope}.get())
+           .lead_representative;
+   t.chain.as(lead_representative).act<actions::resign>(lead_representative);
+   std::map<eosio::block_timestamp, eosio::asset> expected{
+       {s2t("2020-07-04T15:30:00.000"), s2a("36.2560 EOS")},
+       {s2t("2020-08-03T15:30:00.000"), s2a("293.3316 EOS")},
+       {s2t("2020-09-02T15:30:00.000"), s2a("278.6656 EOS")}};
+   CHECK(t.get_budgets_by_period() == expected);
+   t.skip_to("2020-10-02T15:30:00.000");
+   t.distribute();
+   expected.insert({s2t("2020-10-02T15:30:00.000"), s2a("10.5028 EOS")});
+   CHECK(t.get_budgets_by_period() == expected);
+}
+
 TEST_CASE("budget adjustment on kick")
 {
    eden_tester t;
