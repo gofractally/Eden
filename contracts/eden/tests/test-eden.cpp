@@ -437,15 +437,10 @@ struct eden_tester
    eosio::asset get_total_budget()
    {
       eosio::asset total = s2a("0.0000 EOS");
-      eden::distribution_point_table_type distributions{"eden.gm"_n, eden::default_scope};
-      for (auto t : distributions)
+      eden::distribution_account_table_type distributions{"eden.gm"_n, eden::default_scope};
+      for (auto item : distributions)
       {
-         eden::account_table_type account_tb{
-             "eden.gm"_n, eden::make_account_scope(t.distribution_time(), t.rank()).value};
-         for (auto item : account_tb)
-         {
-            total += item.balance();
-         }
+         total += item.balance();
       }
       return total;
    };
@@ -453,16 +448,11 @@ struct eden_tester
    auto get_budgets_by_period() const
    {
       std::map<eosio::block_timestamp, eosio::asset> result;
-      eden::distribution_point_table_type distributions{"eden.gm"_n, eden::default_scope};
+      eden::distribution_account_table_type distributions{"eden.gm"_n, eden::default_scope};
       for (auto t : distributions)
       {
          auto [iter, _] = result.insert(std::pair(t.distribution_time(), s2a("0.0000 EOS")));
-         eden::account_table_type account_tb{
-             "eden.gm"_n, eden::make_account_scope(t.distribution_time(), t.rank()).value};
-         for (auto item : account_tb)
-         {
-            iter->second += item.balance();
-         }
+         iter->second += t.balance();
       }
       return result;
    };
@@ -1330,7 +1320,6 @@ TEST_CASE("budget distribution underflow")
    std::map<eosio::block_timestamp, eosio::asset> expected{
        {s2t("2020-07-04T15:30:00.000"), s2a("1.8000 EOS")},
        {s2t("2020-08-03T15:30:00.000"), s2a("50.0000 EOS")},
-       {s2t("2020-09-02T15:30:00.000"), s2a("0.0000 EOS")},
        {s2t("2020-09-02T15:30:01.000"), s2a("47.5000 EOS")}};
    CHECK(t.get_budgets_by_period() == expected);
 }
@@ -1344,14 +1333,10 @@ TEST_CASE("budget adjustment on resignation")
    t.skip_to("2020-09-02T15:30:00.000");
    // egeon is satoshi, and receives the whole budget
    t.egeon.act<actions::resign>("egeon"_n);
-   std::map<eosio::block_timestamp, eosio::asset> expected{
-       {s2t("2020-07-04T15:30:00.000"), s2a("0.0000 EOS")},
-       {s2t("2020-08-03T15:30:00.000"), s2a("0.0000 EOS")},
-       {s2t("2020-09-02T15:30:00.000"), s2a("0.0000 EOS")}};
+   std::map<eosio::block_timestamp, eosio::asset> expected{};
    CHECK(t.get_budgets_by_period() == expected);
    t.skip_to("2020-10-02T15:30:00.000");
    t.distribute();
-   expected.insert({s2t("2020-10-02T15:30:00.000"), s2a("0.0000 EOS")});
    CHECK(t.get_budgets_by_period() == expected);
    t.eden_gm.act<actions::gc>(42);
    expected.clear();
@@ -1372,8 +1357,6 @@ TEST_CASE("budget adjustment on kick")
    t.electdonate("alice"_n);
    t.run_election(false, 1);
    std::map<eosio::block_timestamp, eosio::asset> expected{
-       {s2t("2020-07-04T15:30:00.000"), s2a("0.0000 EOS")},
-       {s2t("2020-08-03T15:30:00.000"), s2a("0.0000 EOS")},
        {s2t("2020-09-02T15:30:00.000"), s2a("47.6900 EOS")}};
    CHECK(t.get_budgets_by_period() == expected);
 }

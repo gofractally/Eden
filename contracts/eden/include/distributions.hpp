@@ -78,23 +78,38 @@ namespace eden
    void init_pools(eosio::name contract);
    void process_election_distribution(eosio::name contract);
 
-   struct distribution_point_v0
+   struct distribution_account_v0
    {
+      uint64_t id;
+      eosio::name owner;
       eosio::block_timestamp distribution_time;
       uint8_t rank;
-      uint64_t primary_key() const { return make_account_scope(distribution_time, rank).value; }
+      eosio::asset balance;
+      uint64_t primary_key() const { return id; }
+      uint128_t by_owner() const
+      {
+         return (uint128_t(owner.value) << 64) | make_account_scope(distribution_time, rank).value;
+      }
+      uint64_t by_time() const { return make_account_scope(distribution_time, rank).value; }
    };
-   EOSIO_REFLECT(distribution_point_v0, distribution_time, rank)
-   using distribution_point_variant = std::variant<distribution_point_v0>;
-
-   struct distribution_point
+   EOSIO_REFLECT(distribution_account_v0, id, owner, distribution_time, rank, balance);
+   using distribution_account_variant = std::variant<distribution_account_v0>;
+   struct distribution_account
    {
-      distribution_point_variant value;
-      EDEN_FORWARD_MEMBERS(value, distribution_time, rank)
-      EDEN_FORWARD_FUNCTIONS(value, primary_key)
+      distribution_account_variant value;
+      EDEN_FORWARD_MEMBERS(value, id, owner, distribution_time, rank, balance);
+      EDEN_FORWARD_FUNCTIONS(value, primary_key, by_owner, by_time)
    };
-   EOSIO_REFLECT(distribution_point, value)
-   using distribution_point_table_type = eosio::multi_index<"distpoint"_n, distribution_point>;
+   EOSIO_REFLECT(distribution_account, value)
+   using distribution_account_table_type = eosio::multi_index<
+       "distrib"_n,
+       distribution_account,
+       eosio::indexed_by<
+           "byowner"_n,
+           eosio::const_mem_fun<distribution_account, uint128_t, &distribution_account::by_owner>>,
+       eosio::indexed_by<
+           "bytime"_n,
+           eosio::const_mem_fun<distribution_account, uint64_t, &distribution_account::by_time>>>;
 
    class distributions
    {

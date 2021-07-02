@@ -20,6 +20,7 @@ namespace eden
       current_distribution result{start_time, eosio::name()};
       auto ranks = members.stats().ranks;
       auto per_rank = amount / (ranks.size() - 1);
+      eosio::asset used{0, amount.symbol};
       uint16_t total = 0;
       for (auto iter = ranks.end() - 1, end = ranks.begin(); iter != end; --iter)
       {
@@ -27,7 +28,7 @@ namespace eden
          if (total > 0)
          {
             auto this_rank = per_rank / total;
-            amount -= this_rank * total;
+            used += this_rank * total;
             result.rank_distribution.push_back(this_rank);
          }
          else
@@ -38,8 +39,11 @@ namespace eden
       std::reverse(result.rank_distribution.begin(), result.rank_distribution.end());
       if (ranks.back() != 0)
       {
-         result.rank_distribution.back() += amount;
-         amount -= amount;
+         result.rank_distribution.back() += (amount - used);
+      }
+      else
+      {
+         amount = used;
       }
       return result;
    }
@@ -52,11 +56,12 @@ namespace eden
          if (auto* dist = std::get_if<election_distribution>(&iter->value))
          {
             auto amount = dist->amount;
+            auto old = amount;
             distribution_tb.modify(iter, contract, [&](auto& row) {
                row.value = make_distribution(contract, dist->distribution_time, amount);
             });
             eosio::check(
-                amount.amount == 0,
+                amount == old,
                 "Invariant failure: post-election distribution should not be missing a satoshi");
          }
          else if (std::holds_alternative<next_distribution>(iter->value))
@@ -75,7 +80,6 @@ namespace eden
    bool setup_distribution(eosio::name contract, accounts& accounts, eosio::block_timestamp init)
    {
       distribution_table_type distribution_tb{contract, default_scope};
-      distribution_point_table_type distribution_point_tb{contract, default_scope};
       auto iter = distribution_tb.end();
       if (iter == distribution_tb.begin())
       {
@@ -94,6 +98,7 @@ namespace eden
       auto next_election_time = init != eosio::block_timestamp()
                                     ? std::optional{init}
                                     : elections{contract}.get_next_election_time();
+      distribution_account_table_type dist_accounts{contract, default_scope};
       while (true)
       {
          eosio::block_timestamp distribution_time;
@@ -128,13 +133,7 @@ namespace eden
          {
             pool_tb.emplace(contract, [](auto& row) { row.value = pool_v0{"master"_n, 5}; });
          }
-         class accounts dist_account
-         {
-            contract, make_account_scope(distribution_time, 0)
-         };
-         distribution_point_tb.emplace(contract, [&](auto& row) {
-            row.value = distribution_point_v0{.distribution_time = distribution_time, .rank = 0};
-         });
+         eosio::asset total = {};
          for (const auto& pool : pool_tb)
          {
             auto account = accounts.get_account(pool.name());
@@ -146,29 +145,40 @@ namespace eden
                                                 account->balance().symbol)
                                  : (pool.monthly_distribution_pct() * account->balance() / 100);
                accounts.sub_balance(pool.name(), amount);
-               dist_account.add_balance(contract, amount);
-            }
-         }
-         auto total = dist_account.get_account(contract);
-         if (total)
-         {
-            auto amount = total->balance();
-            distribution_tb.modify(iter, contract, [&](auto& row) {
-               if (next_election_time && *next_election_time > distribution_time)
+               if (!total.amount)
                {
-                  row.value = make_distribution(contract, distribution_time, amount);
+                  total = amount;
                }
                else
                {
-                  row.value = election_distribution{distribution_time, amount};
-                  amount -= amount;
+                  total += amount;
+               }
+            }
+         }
+         if (total.amount)
+         {
+            auto used = total;
+            distribution_tb.modify(iter, contract, [&](auto& row) {
+               if (next_election_time && *next_election_time > distribution_time)
+               {
+                  row.value = make_distribution(contract, distribution_time, used);
+               }
+               else
+               {
+                  row.value = election_distribution{distribution_time, total};
                }
             });
-            if (amount.amount)
+            if (used != total)
             {
-               dist_account.sub_balance(contract, amount);
-               accounts.add_balance("master"_n, amount);
+               accounts.add_balance("master"_n, total - used);
             }
+            dist_accounts.emplace(contract, [&](auto& row) {
+               row.value = distribution_account_v0{.id = dist_accounts.available_primary_key(),
+                                                   .owner = contract,
+                                                   .distribution_time = distribution_time,
+                                                   .rank = 0,
+                                                   .balance = used};
+            });
          }
          else
          {
@@ -183,10 +193,10 @@ namespace eden
    uint32_t distribute_monthly(eosio::name contract, uint32_t max_steps, current_distribution& dist)
    {
       members members{contract};
-      std::vector<accounts> accounts_by_rank;
-      accounts accounts{contract, make_account_scope(dist.distribution_time, 0)};
-      distribution_point_table_type points{contract, default_scope};
-      accounts_by_rank.reserve(dist.rank_distribution.size());
+      distribution_account_table_type dist_accounts_tb{contract, default_scope};
+      auto dist_idx = dist_accounts_tb.get_index<"byowner"_n>();
+      auto dist_iter = dist_idx.find((uint128_t(contract.value) << 64) |
+                                     make_account_scope(dist.distribution_time, 0).value);
       auto& table = members.get_table();
       auto iter = table.upper_bound(dist.last_processed.value);
       auto end = table.end();
@@ -195,24 +205,35 @@ namespace eden
          auto member = *iter;
          eosio::check(iter->election_rank() <= dist.rank_distribution.size(),
                       "Invariant failure: rank too high");
-         while (accounts_by_rank.size() < iter->election_rank())
-         {
-            distribution_point_v0 point{dist.distribution_time,
-                                        static_cast<uint8_t>(accounts_by_rank.size() + 1)};
-            accounts_by_rank.emplace_back(contract,
-                                          make_account_scope(dist.distribution_time, point.rank));
-            if (points.find(point.primary_key()) == points.end())
-            {
-               points.emplace(contract, [&](auto& row) { row.value = point; });
-            }
-         }
          for (uint8_t rank = 0; rank < iter->election_rank(); ++rank)
          {
             auto amount = dist.rank_distribution[rank];
-            accounts_by_rank[rank].add_balance(iter->account(), amount);
-            accounts.sub_balance(contract, amount);
+            dist_accounts_tb.emplace(contract, [&](auto& row) {
+               row.value = distribution_account_v0{.id = dist_accounts_tb.available_primary_key(),
+                                                   .owner = iter->account(),
+                                                   .distribution_time = dist.distribution_time,
+                                                   .rank = static_cast<uint8_t>(rank + 1),
+                                                   .balance = amount};
+            });
+            if (dist_iter != dist_idx.end())
+            {
+               dist_accounts_tb.modify(*dist_iter, contract,
+                                       [&](auto& row) { row.balance() -= amount; });
+            }
+            else
+            {
+               eosio::check(amount.amount == 0, "Overdrawn balance");
+            }
          }
          dist.last_processed = iter->account();
+      }
+      if (dist_iter != dist_idx.end())
+      {
+         eosio::check(dist_iter->balance().amount >= 0, "Overdrawn balance");
+         if (dist_iter->balance().amount == 0)
+         {
+            dist_accounts_tb.erase(*dist_iter);
+         }
       }
       return max_steps;
    }
@@ -269,36 +290,31 @@ namespace eden
    // - No pending distributions are possible at this stage of the election
    uint32_t distributions::on_election_kick(eosio::name member, uint64_t& key, uint32_t max_steps)
    {
-      distribution_point_table_type distribution_point_tb{contract, default_scope};
       accounts owned_accounts{contract, "owned"_n};
-      for (auto iter = distribution_point_tb.upper_bound(key), end = distribution_point_tb.end();
-           max_steps > 0 && iter != end; ++iter, --max_steps)
+      distribution_account_table_type distribution_account_tb{contract, default_scope};
+      auto member_idx = distribution_account_tb.get_index<"byowner"_n>();
+      for (auto iter = member_idx.lower_bound(uint128_t(member.value) << 64),
+                end = member_idx.end();
+           max_steps > 0 && iter != end && iter->owner() == member; --max_steps)
       {
-         accounts accounts(contract, eosio::name(iter->primary_key()));
-         key = iter->primary_key();
-         if (auto account = accounts.get_account(member))
-         {
-            accounts.sub_balance(member, account->balance());
-            owned_accounts.add_balance("master"_n, account->balance());
-         }
+         owned_accounts.add_balance("master"_n, iter->balance());
+         iter = member_idx.erase(iter);
       }
       return max_steps;
    }
 
    void distributions::on_resign(const member& member)
    {
-      distribution_point_table_type distribution_point_tb{contract, default_scope};
       accounts owned_accounts{contract, "owned"_n};
       setup_distribution(contract, owned_accounts);
-      for (auto iter = distribution_point_tb.begin(), end = distribution_point_tb.end();
-           iter != end; ++iter)
+      distribution_account_table_type distribution_account_tb{contract, default_scope};
+      auto member_idx = distribution_account_tb.get_index<"byowner"_n>();
+      for (auto iter = member_idx.lower_bound(uint128_t(member.account().value) << 64),
+                end = member_idx.end();
+           iter != end && iter->owner() == member.account();)
       {
-         accounts accounts(contract, eosio::name(iter->primary_key()));
-         if (auto account = accounts.get_account(member.account()))
-         {
-            accounts.sub_balance(member.account(), account->balance());
-            owned_accounts.add_balance("master"_n, account->balance());
-         }
+         owned_accounts.add_balance("master"_n, iter->balance());
+         iter = member_idx.erase(iter);
       }
       // handle distributions that are in progress
       distribution_table_type distribution_tb{contract, default_scope};
@@ -315,7 +331,26 @@ namespace eden
                                    dist->rank_distribution.begin() + member.election_rank(),
                                    dist->rank_distribution.front());
                accounts accounts(contract, make_account_scope(dist->distribution_time, 0));
-               accounts.sub_balance(contract, amount);
+               auto account_iter =
+                   member_idx.find((uint128_t(contract.value) << 64) |
+                                   make_account_scope(dist->distribution_time, 0).value);
+               if (account_iter != member_idx.end())
+               {
+                  eosio::check(account_iter->balance() <= amount, "insufficient balance");
+                  if (account_iter->balance() == amount)
+                  {
+                     member_idx.erase(account_iter);
+                  }
+                  else
+                  {
+                     member_idx.modify(account_iter, contract,
+                                       [&](auto& row) { row.balance() -= amount; });
+                  }
+               }
+               else
+               {
+                  eosio::check(amount.amount == 0, "insufficient balance");
+               }
                owned_accounts.add_balance("master"_n, amount);
             }
          }
@@ -326,32 +361,11 @@ namespace eden
       }
    }
 
-   uint32_t distributions::gc(uint32_t max_steps)
-   {
-      distribution_point_table_type distribution_point_tb{contract, default_scope};
-      for (auto iter = distribution_point_tb.begin(), end = distribution_point_tb.end();
-           max_steps > 0 && iter != end; --max_steps)
-      {
-         account_table_type account_tb{contract, iter->primary_key()};
-         if (account_tb.begin() != account_tb.end())
-         {
-            break;
-         }
-         iter = distribution_point_tb.erase(iter);
-      }
-      return max_steps;
-   }
+   uint32_t distributions::gc(uint32_t max_steps) { return max_steps; }
 
    void distributions::clear_all()
    {
-      distribution_point_table_type distribution_point_tb{contract, default_scope};
-      for (auto iter = distribution_point_tb.begin(), end = distribution_point_tb.end();
-           iter != end;)
-      {
-         accounts accounts(contract, eosio::name(iter->primary_key()));
-         accounts.clear_all();
-         iter = distribution_point_tb.erase(iter);
-      }
+      clear_table(distribution_account_table_type{contract, default_scope});
       clear_table(pool_table_type{contract, default_scope});
       clear_table(distribution_table_type{contract, default_scope});
    }
