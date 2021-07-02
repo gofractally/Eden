@@ -22,6 +22,7 @@
         "react": "~17",
         "react-cool-dimensions": "^2.0.3",
         "react-dom": "~17",
+        "react-hook-form": "^7.10.0",
         "react-hot-toast": "^1.0.2",
         "react-icons": "^4.2.0",
         "react-query": "^3.15.2",
