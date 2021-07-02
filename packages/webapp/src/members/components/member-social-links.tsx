@@ -3,14 +3,15 @@ import { FaFacebook, FaLinkedin, FaTelegram, FaTwitter } from "react-icons/fa";
 import { IoChatbubblesOutline } from "react-icons/io5";
 import { GenIcon } from "react-icons/lib";
 
-import { explorerAccountUrl, SocialButton } from "_app";
-import { MemberData } from "../interfaces";
 import {
+    explorerAccountUrl,
+    SocialButton,
     getFacebookHandle,
     getLinkedinHandle,
     getTelegramHandle,
     getTwitterHandle,
-} from "../helpers/social-links";
+} from "_app";
+import { MemberData } from "../interfaces";
 
 interface Props {
     member: MemberData;
