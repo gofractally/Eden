@@ -1,4 +1,4 @@
-import { Heading, Link, useMemberListByAccountNames } from "_app";
+import { Link, useMemberListByAccountNames } from "_app";
 import { Endorsement } from "inductions/interfaces";
 
 export const EndorsementsStatus = ({
@@ -29,22 +29,17 @@ export const EndorsementsStatus = ({
         );
 
     return (
-        <>
-            <Heading size={3} className="mb-2">
-                Endorsement status:
-            </Heading>
-            <ul className="mb-4 ml-2">
-                {endorsements.map((endorser) => (
-                    <li key={endorser.id}>
-                        {getEndorserStatus(endorser)}{" "}
-                        <Link href={`/members/${endorser.endorser}`}>
-                            <span className="text-gray-800 hover:underline">
-                                {getEndorserName(endorser)}
-                            </span>
-                        </Link>
-                    </li>
-                ))}
-            </ul>
-        </>
+        <ul className="mb-4 ml-2">
+            {endorsements.map((endorser) => (
+                <li key={endorser.id}>
+                    {getEndorserStatus(endorser)}{" "}
+                    <Link href={`/members/${endorser.endorser}`}>
+                        <span className="text-gray-800 hover:underline">
+                            {getEndorserName(endorser)}
+                        </span>
+                    </Link>
+                </li>
+            ))}
+        </ul>
     );
 };
