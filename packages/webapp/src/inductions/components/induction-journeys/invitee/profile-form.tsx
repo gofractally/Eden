@@ -128,6 +128,7 @@ export const InductionProfileForm = ({
         );
     };
 
+    console.info(watch());
     console.info("errors:");
     console.info(errors);
     return (
@@ -151,7 +152,7 @@ export const InductionProfileForm = ({
                 )}
             </Form.LabeledSet>
 
-            {/* <Form.LabeledSet label="" htmlFor="imgFile" className="col-span-6">
+            <Form.LabeledSet label="" htmlFor="imgFile" className="col-span-6">
                 <div className="flex items-center mb-1 space-x-1">
                     <p className="text-sm font-medium text-gray-700">
                         Profile image
@@ -195,7 +196,7 @@ export const InductionProfileForm = ({
                         className="rounded-full h-24 w-24 my-2 mx-auto"
                     />
                 )}
-            </Form.LabeledSet> */}
+            </Form.LabeledSet>
 
             <Form.LabeledSet
                 label="Credit for profile image goes to (optional)"
