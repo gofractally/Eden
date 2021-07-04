@@ -5,6 +5,7 @@
 #include <deque>
 #include <list>
 #include <map>
+#include <memory>
 #include <optional>
 #include <set>
 #include <string>
@@ -60,6 +61,17 @@ namespace eosio
 
    template <typename T>
    struct is_std_optional<std::optional<T>> : std::true_type
+   {
+      using value_type = T;
+   };
+
+   template <typename T>
+   struct is_std_unique_ptr : std::false_type
+   {
+   };
+
+   template <typename T>
+   struct is_std_unique_ptr<std::unique_ptr<T>> : std::true_type
    {
       using value_type = T;
    };

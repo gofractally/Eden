@@ -100,6 +100,7 @@ namespace eden_chain
          blocks.push_back(std::make_unique<block_with_id>(block));
          return result;
       }
-   };  // block_log
+   };
+   EOSIO_REFLECT(block_log, blocks)
 
 }  // namespace eden_chain

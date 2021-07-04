@@ -130,6 +130,8 @@ namespace eosio
          write(src, Size);
       }
 
+      void write(const std::string& s) { write(s.c_str(), s.size()); }
+
       template <typename T>
       void write_raw(const T& v)
       {
@@ -150,6 +152,8 @@ namespace eosio
       {
          size += Size;
       }
+
+      void write(const std::string& s) { write(s.c_str(), s.size()); }
 
       template <typename T>
       void write_raw(const T& v)
