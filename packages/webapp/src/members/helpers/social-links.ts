@@ -1,28 +1,22 @@
-export const getTwitterHandle = (
-    profileTwitter: string | undefined
-): string | undefined => stripLeadingAtSymbol(profileTwitter);
+export const getValidSocialLink = (link: string | undefined) => {
+    if (!link) return link;
 
-export const getTelegramHandle = (
-    profileTelegram: string | undefined
-): string | undefined => stripLeadingAtSymbol(profileTelegram);
+    if (link.endsWith("/")) link = link.slice(0, link.length - 1);
 
-export const getFacebookHandle = (
-    profileFacebook: string | undefined
-): string | undefined => getStringAfterTrailingSlash(profileFacebook);
-export const getLinkedinHandle = (
-    profileTelegram: string | undefined
-): string | undefined => getStringAfterTrailingSlash(profileTelegram);
+    if (containsSlashes(link)) link = getStringAfterTrailingSlash(link);
 
-export const stripLeadingAtSymbol = (
-    str: string | undefined
-): string | undefined => {
-    if (str && str.startsWith("@")) {
-        return str.slice(1);
-    }
-
-    return str;
+    return stripLeadingAtSymbol(link);
 };
 
-export const getStringAfterTrailingSlash = (
+const startsWithAtSymbol = (str: string | undefined) =>
+    str && str.startsWith("@");
+
+const stripLeadingAtSymbol = (str: string | undefined): string | undefined =>
+    str && startsWithAtSymbol(str) ? str.slice(1) : str;
+
+const containsSlashes = (str: string | undefined) =>
+    str && str.indexOf("/") >= 0;
+
+const getStringAfterTrailingSlash = (
     str: string | undefined
 ): string | undefined => str && str.slice(str.lastIndexOf("/") + 1);

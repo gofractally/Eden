@@ -5,22 +5,17 @@ import { GenIcon } from "react-icons/lib";
 
 import { explorerAccountUrl, SocialButton } from "_app";
 import { MemberData } from "../interfaces";
-import {
-    getFacebookHandle,
-    getLinkedinHandle,
-    getTelegramHandle,
-    getTwitterHandle,
-} from "../helpers/social-links";
+import { getValidSocialLink } from "../helpers/social-links";
 
 interface Props {
     member: MemberData;
 }
 
 export const MemberSocialLinks = ({ member }: Props) => {
-    const linkedinHandle = getLinkedinHandle(member.socialHandles.linkedin);
-    const facebookHandle = getFacebookHandle(member.socialHandles.facebook);
-    const twitterHandle = getTwitterHandle(member.socialHandles.twitter);
-    const telegramHandle = getTelegramHandle(member.socialHandles.telegram);
+    const linkedinHandle = getValidSocialLink(member.socialHandles.linkedin);
+    const facebookHandle = getValidSocialLink(member.socialHandles.facebook);
+    const twitterHandle = getValidSocialLink(member.socialHandles.twitter);
+    const telegramHandle = getValidSocialLink(member.socialHandles.telegram);
     return (
         <div
             className="grid gap-y-2 sm:justify-between mt-5 text-sm"
