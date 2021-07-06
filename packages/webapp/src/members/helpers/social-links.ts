@@ -8,11 +8,8 @@ export const getValidSocialLink = (link: string | undefined) => {
     return stripLeadingAtSymbol(link);
 };
 
-const startsWithAtSymbol = (str: string | undefined) =>
-    str && str.startsWith("@");
-
 const stripLeadingAtSymbol = (str: string | undefined): string | undefined =>
-    str && startsWithAtSymbol(str) ? str.slice(1) : str;
+    str && str.startsWith("@") ? str.slice(1) : str;
 
 const getStringAfterTrailingSlash = (
     str: string | undefined
