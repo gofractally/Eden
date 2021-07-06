@@ -56,6 +56,7 @@ export const InductionProfileForm = ({
 
     const schema = yup.object().shape({
         name: yup.string().required(),
+        bio: yup.string().required(),
         imgFile: yup
             .mixed()
             .required("Profile pic required")
@@ -164,14 +165,9 @@ export const InductionProfileForm = ({
                 htmlFor="name"
                 className="col-span-6"
             >
-                <Form.Input
-                    id="name"
-                    {...register("name", { required: true })}
-                />
+                <Form.Input id="name" {...register("name")} />
                 {errors.name && (
-                    <Text className="text-red-600">
-                        Name is required{errors.name.message}
-                    </Text>
+                    <Text className="text-red-600">{errors.name.message}</Text>
                 )}
             </Form.LabeledSet>
 
@@ -179,62 +175,57 @@ export const InductionProfileForm = ({
                 name="imgFile"
                 control={control}
                 defaultValue=""
-                render={({ field }) => {
-                    console.info("Controller.render.field:");
-                    console.info(field);
-                    return (
-                        <Form.LabeledSet
-                            label=""
-                            htmlFor="imgFile"
-                            className="col-span-6"
-                        >
-                            <div className="flex items-center mb-1 space-x-1">
-                                <p className="text-sm font-medium text-gray-700">
-                                    Profile image
-                                </p>
-                                <HelpLink href="https://www.notion.so/edenos/Upload-Profile-Photo-c15a7a050d3c411faca21a3cd3d2f0a3" />
-                            </div>
-                            <Form.FileInput
-                                id="imgFile"
-                                {...field}
-                                onChange={(e) => {
-                                    console.info("e:");
-                                    console.info(e);
-                                    console.info(
-                                        `FileInput.onChange() -> setSelectedImage([${field.value}])`
-                                    );
-                                    setSelectedImage(field.value);
-                                    console.info("calling field.onChange(e)");
-                                    field.onChange(e);
-                                }}
-                                label={
-                                    selectedImage || field.value
-                                        ? "select a different image"
-                                        : "select an image file"
+                render={({ field }) => (
+                    <Form.LabeledSet
+                        label=""
+                        htmlFor="imgFile"
+                        className="col-span-6"
+                    >
+                        <div className="flex items-center mb-1 space-x-1">
+                            <p className="text-sm font-medium text-gray-700">
+                                Profile image
+                            </p>
+                            <HelpLink href="https://www.notion.so/edenos/Upload-Profile-Photo-c15a7a050d3c411faca21a3cd3d2f0a3" />
+                        </div>
+                        <Form.FileInput
+                            id="imgFile"
+                            {...field}
+                            onChange={(e) => {
+                                console.info("e.target.files[0]:");
+                                console.info(e.target.files[0]);
+                                setSelectedImage(e.target.files[0]);
+                                // field.onChange(e.target.files[0]);
+                            }}
+                            label={
+                                selectedImage || field.value
+                                    ? "select a different image"
+                                    : "select an image file"
+                            }
+                        />
+                        {errors.imgFile && (
+                            <Text className="text-red-600">
+                                {errors.imgFile.message}
+                            </Text>
+                        )}
+                        {selectedImage || field.value ? (
+                            <img
+                                src={
+                                    selectedImage
+                                        ? URL.createObjectURL(selectedImage)
+                                        : `https://ipfs.io/ipfs/${field.value}`
                                 }
+                                alt="profile pic"
+                                className="object-cover rounded-full h-24 w-24 mt-4 mx-auto"
                             />
-                            {selectedImage || field.value ? (
-                                <img
-                                    src={
-                                        field.value &&
-                                        URL.createObjectURL(field.value)
-                                        // selectedImage
-                                        //     ? URL.createObjectURL(selectedImage)
-                                        //     : `https://ipfs.io/ipfs/${field.value}`
-                                    }
-                                    alt="profile pic"
-                                    className="object-cover rounded-full h-24 w-24 mt-4 mx-auto"
-                                />
-                            ) : (
-                                <img
-                                    src="/images/blank-profile-picture.svg"
-                                    alt="blank profile pic"
-                                    className="rounded-full h-24 w-24 my-2 mx-auto"
-                                />
-                            )}
-                        </Form.LabeledSet>
-                    );
-                }}
+                        ) : (
+                            <img
+                                src="/images/blank-profile-picture.svg"
+                                alt="blank profile pic"
+                                className="rounded-full h-24 w-24 my-2 mx-auto"
+                            />
+                        )}
+                    </Form.LabeledSet>
+                )}
             />
 
             <Form.LabeledSet
@@ -250,10 +241,7 @@ export const InductionProfileForm = ({
                 htmlFor="bio"
                 className="col-span-6"
             >
-                <Form.TextArea
-                    id="bio"
-                    {...register("bio", { required: "Bio is required" })}
-                />
+                <Form.TextArea id="bio" {...register("bio")} />
                 {errors.bio && (
                     <Text className="text-red-600">{errors.bio.message}</Text>
                 )}
