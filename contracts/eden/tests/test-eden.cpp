@@ -216,8 +216,8 @@ struct eden_tester
       eden_gm.act<actions::genesis>("Eden", eosio::symbol("EOS", 4), s2a("10.0000 EOS"),
                                     std::vector{"alice"_n, "pip"_n, "egeon"_n},
                                     "QmTYqoPYf7DiVebTnvwwFdTgsYXg2RnuPrt8uddjfW2kHS",
-                                    attribute_map{}, s2a("1.0000 EOS"), 7 * 24 * 60 * 60, 6,
-                                    "15:30", s2a("2.0000 EOS"), "");
+                                    attribute_map{}, s2a("1.0000 EOS"), 7 * 24 * 60 * 60, "", 6,
+                                    "15:30", s2a("2.0000 EOS"));
 
       alice.act<actions::inductprofil>(1, alice_profile);
       pip.act<actions::inductprofil>(2, pip_profile);
@@ -492,7 +492,7 @@ TEST_CASE("genesis NFT pre-setup")
    t.eden_gm.act<actions::genesis>(
        "Eden", eosio::symbol("EOS", 4), s2a("10.0000 EOS"),
        std::vector{"alice"_n, "pip"_n, "egeon"_n}, "QmTYqoPYf7DiVebTnvwwFdTgsYXg2RnuPrt8uddjfW2kHS",
-       attribute_map{}, s2a("1.0000 EOS"), 7 * 24 * 60 * 60, 6, "15:30", s2a("2.0000 EOS"), "");
+       attribute_map{}, s2a("1.0000 EOS"), 7 * 24 * 60 * 60, "", 6, "15:30", s2a("2.0000 EOS"));
 }
 
 TEST_CASE("genesis NFT pre-setup with incorrect schema")
@@ -509,7 +509,7 @@ TEST_CASE("genesis NFT pre-setup with incorrect schema")
    auto trace = t.eden_gm.trace<actions::genesis>(
        "Eden", eosio::symbol("EOS", 4), s2a("10.0000 EOS"),
        std::vector{"alice"_n, "pip"_n, "egeon"_n}, "QmTYqoPYf7DiVebTnvwwFdTgsYXg2RnuPrt8uddjfW2kHS",
-       attribute_map{}, s2a("1.0000 EOS"), 7 * 24 * 60 * 60, 6, "15:30", s2a("2.0000 EOS"), "");
+       attribute_map{}, s2a("1.0000 EOS"), 7 * 24 * 60 * 60, "", 6, "15:30", s2a("2.0000 EOS"));
    expect(trace, "there already is an attribute with the same name");
 }
 
@@ -531,7 +531,7 @@ TEST_CASE("genesis NFT pre-setup with compatible schema")
    t.eden_gm.act<actions::genesis>(
        "Eden", eosio::symbol("EOS", 4), s2a("10.0000 EOS"),
        std::vector{"alice"_n, "pip"_n, "egeon"_n}, "QmTYqoPYf7DiVebTnvwwFdTgsYXg2RnuPrt8uddjfW2kHS",
-       attribute_map{}, s2a("1.0000 EOS"), 7 * 24 * 60 * 60, 6, "15:30", s2a("2.0000 EOS"), "");
+       attribute_map{}, s2a("1.0000 EOS"), 7 * 24 * 60 * 60, "", 6, "15:30", s2a("2.0000 EOS"));
 }
 
 TEST_CASE("genesis")
@@ -540,7 +540,7 @@ TEST_CASE("genesis")
    t.eden_gm.act<actions::genesis>(
        "Eden", eosio::symbol("EOS", 4), s2a("10.0000 EOS"),
        std::vector{"alice"_n, "pip"_n, "egeon"_n}, "QmTYqoPYf7DiVebTnvwwFdTgsYXg2RnuPrt8uddjfW2kHS",
-       attribute_map{}, s2a("1.0000 EOS"), 7 * 24 * 60 * 60, 6, "15:30", s2a("2.0000 EOS"), "");
+       attribute_map{}, s2a("1.0000 EOS"), 7 * 24 * 60 * 60, "", 6, "15:30", s2a("2.0000 EOS"));
 
    CHECK(get_eden_membership("alice"_n).status() == eden::member_status::pending_membership);
    CHECK(get_eden_membership("pip"_n).status() == eden::member_status::pending_membership);
@@ -621,8 +621,8 @@ TEST_CASE("genesis expiration")
    t.eden_gm.act<actions::genesis>("Eden", eosio::symbol("EOS", 4), s2a("10.0000 EOS"),
                                    std::vector{"alice"_n, "pip"_n, "egeon"_n, "bertie"_n},
                                    "QmTYqoPYf7DiVebTnvwwFdTgsYXg2RnuPrt8uddjfW2kHS",
-                                   attribute_map{}, s2a("1.0000 EOS"), 14 * 24 * 60 * 60, 6,
-                                   "15:30", s2a("2.0000 EOS"), "");
+                                   attribute_map{}, s2a("1.0000 EOS"), 14 * 24 * 60 * 60, "", 6,
+                                   "15:30", s2a("2.0000 EOS"));
 
    CHECK(get_eden_membership("alice"_n).status() == eden::member_status::pending_membership);
    CHECK(get_eden_membership("pip"_n).status() == eden::member_status::pending_membership);
@@ -684,7 +684,7 @@ TEST_CASE("genesis replacement")
    t.eden_gm.act<actions::genesis>(
        "Eden", eosio::symbol("EOS", 4), s2a("10.0000 EOS"),
        std::vector{"alice"_n, "pip"_n, "egeon"_n}, "QmTYqoPYf7DiVebTnvwwFdTgsYXg2RnuPrt8uddjfW2kHS",
-       attribute_map{}, s2a("1.0000 EOS"), 7 * 24 * 60 * 60, 6, "15:30", s2a("2.0000 EOS"), "");
+       attribute_map{}, s2a("1.0000 EOS"), 7 * 24 * 60 * 60, "", 6, "15:30", s2a("2.0000 EOS"));
 
    CHECK(get_eden_membership("alice"_n).status() == eden::member_status::pending_membership);
    CHECK(get_eden_membership("pip"_n).status() == eden::member_status::pending_membership);
@@ -1028,7 +1028,7 @@ TEST_CASE("deposit and spend")
    t.eden_gm.act<actions::genesis>(
        "Eden", eosio::symbol("EOS", 4), s2a("10.0000 EOS"),
        std::vector{"alice"_n, "pip"_n, "egeon"_n}, "QmTYqoPYf7DiVebTnvwwFdTgsYXg2RnuPrt8uddjfW2kHS",
-       attribute_map{}, s2a("1.0000 EOS"), 7 * 24 * 60 * 60, 6, "15:30", s2a("10.0000 EOS"), "");
+       attribute_map{}, s2a("1.0000 EOS"), 7 * 24 * 60 * 60, "", 6, "15:30", s2a("10.0000 EOS"));
    expect(t.alice.trace<token::actions::transfer>("alice"_n, "eden.gm"_n, s2a("10.0000 OTHER"),
                                                   "memo"),
           "token must be a valid 4,EOS");

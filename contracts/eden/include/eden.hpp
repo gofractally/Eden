@@ -55,10 +55,10 @@ namespace eden
                    atomicassets::attribute_map collection_attributes,
                    eosio::asset auction_starting_bid,
                    uint32_t auction_duration,
+                   const std::string& memo,
                    uint8_t election_day,
                    const std::string& election_time,
-                   const eosio::asset& election_donation,
-                   eosio::ignore<std::string> memo);
+                   const eosio::asset& election_donation);
 
       void addtogenesis(eosio::name new_genesis_member, eosio::time_point expiration);
       void gensetexpire(uint64_t induction_id, eosio::time_point new_expiration);
@@ -159,10 +159,10 @@ namespace eden
               collection_attributes,
               auction_starting_bid,
               auction_duration,
+              memo,
               election_day,
               election_time,
               election_donation,
-              memo,
               ricardian_contract(genesis_ricardian)),
        action(addtogenesis, account, expiration),
        action(gensetexpire, id, new_expiration),

@@ -96,10 +96,10 @@ namespace eden
                       atomicassets::attribute_map collection_attributes,
                       eosio::asset auction_starting_bid,
                       uint32_t auction_duration,
+                      const std::string& memo,
                       uint8_t election_day,
                       const std::string& election_time,
-                      const eosio::asset& election_donation,
-                      eosio::ignore<std::string> memo)
+                      const eosio::asset& election_donation)
    {
       require_auth(get_self());
 
