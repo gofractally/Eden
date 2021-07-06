@@ -54,6 +54,9 @@ export const InductionProfileForm = ({
     // console.info("root.socialFieldsAlreadyEnetered:");
     // console.info(socialFieldsAlreadyEntered);
 
+    console.info("render.top; newMemberProfile:");
+    console.info(newMemberProfile);
+
     const schema = yup.object().shape({
         name: yup
             .string()
@@ -66,8 +69,6 @@ export const InductionProfileForm = ({
         telegram: yup.string().required(),
     });
 
-    // console.info("watch():");
-    // console.info(watch());
     const {
         register,
         handleSubmit,
@@ -145,7 +146,6 @@ export const InductionProfileForm = ({
         );
     };
 
-    console.info(watch());
     console.info("errors:");
     console.info(errors);
     const onError = (errors: any, e: any) => {
@@ -154,11 +154,7 @@ export const InductionProfileForm = ({
     };
     return (
         <form
-            onSubmit={(values) => {
-                console.info("onsubmit.value:");
-                console.info(values);
-                handleSubmit(prepareData, onError)(values);
-            }}
+            onSubmit={handleSubmit(prepareData, onError)}
             className="grid grid-cols-6 gap-4"
         >
             <Form.LabeledSet
