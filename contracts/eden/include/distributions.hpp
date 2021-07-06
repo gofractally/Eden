@@ -12,10 +12,12 @@ namespace eden
 {
    struct member;
 
-   inline eosio::name make_account_scope(eosio::block_timestamp distribution_time, uint8_t rank)
+   inline uint128_t distribution_account_key(eosio::name owner,
+                                             eosio::block_timestamp distribution_time,
+                                             uint8_t rank)
    {
-      return eosio::name{"dist"_n.value | (static_cast<uint64_t>(distribution_time.slot) << 12) |
-                         (rank << 4)};
+      return (static_cast<uint128_t>(owner.value) << 64) |
+             (static_cast<uint64_t>(distribution_time.slot) << 32) | rank;
    }
 
    struct pool_v0
@@ -88,9 +90,8 @@ namespace eden
       uint64_t primary_key() const { return id; }
       uint128_t by_owner() const
       {
-         return (uint128_t(owner.value) << 64) | make_account_scope(distribution_time, rank).value;
+         return distribution_account_key(owner, distribution_time, rank);
       }
-      uint64_t by_time() const { return make_account_scope(distribution_time, rank).value; }
    };
    EOSIO_REFLECT(distribution_account_v0, id, owner, distribution_time, rank, balance);
    using distribution_account_variant = std::variant<distribution_account_v0>;
@@ -98,7 +99,7 @@ namespace eden
    {
       distribution_account_variant value;
       EDEN_FORWARD_MEMBERS(value, id, owner, distribution_time, rank, balance);
-      EDEN_FORWARD_FUNCTIONS(value, primary_key, by_owner, by_time)
+      EDEN_FORWARD_FUNCTIONS(value, primary_key, by_owner)
    };
    EOSIO_REFLECT(distribution_account, value)
    using distribution_account_table_type = eosio::multi_index<
@@ -106,10 +107,7 @@ namespace eden
        distribution_account,
        eosio::indexed_by<
            "byowner"_n,
-           eosio::const_mem_fun<distribution_account, uint128_t, &distribution_account::by_owner>>,
-       eosio::indexed_by<
-           "bytime"_n,
-           eosio::const_mem_fun<distribution_account, uint64_t, &distribution_account::by_time>>>;
+           eosio::const_mem_fun<distribution_account, uint128_t, &distribution_account::by_owner>>>;
 
    class distributions
    {

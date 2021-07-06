@@ -119,7 +119,7 @@ namespace eden
       distribution_account_table_type distribution_accounts{get_self(), default_scope};
       accounts accounts{get_self()};
       const auto& row = distribution_accounts.get_index<"byowner"_n>().get(
-          (uint128_t(from.value) << 64) | make_account_scope(distribution_time, rank).value);
+          distribution_account_key(from, distribution_time, rank));
       eosio::check(row.balance() >= amount, "insufficient balance");
       distribution_accounts.modify(row, get_self(), [&](auto& row) { row.balance() -= amount; });
       accounts.add_balance(to, amount);

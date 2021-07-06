@@ -191,8 +191,7 @@ namespace eden
       members members{contract};
       distribution_account_table_type dist_accounts_tb{contract, default_scope};
       auto dist_idx = dist_accounts_tb.get_index<"byowner"_n>();
-      auto dist_iter = dist_idx.find((uint128_t(contract.value) << 64) |
-                                     make_account_scope(dist.distribution_time, 0).value);
+      auto dist_iter = dist_idx.find(distribution_account_key(contract, dist.distribution_time, 0));
       auto& table = members.get_table();
       auto iter = table.upper_bound(dist.last_processed.value);
       auto end = table.end();
@@ -326,10 +325,8 @@ namespace eden
                    std::accumulate(dist->rank_distribution.begin() + 1,
                                    dist->rank_distribution.begin() + member.election_rank(),
                                    dist->rank_distribution.front());
-               accounts accounts(contract, make_account_scope(dist->distribution_time, 0));
                auto account_iter =
-                   member_idx.find((uint128_t(contract.value) << 64) |
-                                   make_account_scope(dist->distribution_time, 0).value);
+                   member_idx.find(distribution_account_key(contract, dist->distribution_time, 0));
                if (account_iter != member_idx.end())
                {
                   eosio::check(amount <= account_iter->balance(), "insufficient balance");
