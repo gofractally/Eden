@@ -48,33 +48,22 @@ export const InductionProfileForm = ({
         selectedProfilePhoto
     );
 
-    const socialFieldsAlreadyEntered = convertNewMemberProfileSocial(
-        newMemberProfile.social
-    );
-    console.info("root.socialFieldsAlreadyEnetered:");
-    console.info(socialFieldsAlreadyEntered);
+    // const socialFieldsAlreadyEntered = convertNewMemberProfileSocial(
+    //     newMemberProfile.social
+    // );
+    // console.info("root.socialFieldsAlreadyEnetered:");
+    // console.info(socialFieldsAlreadyEntered);
 
     const schema = yup.object().shape({
-        name: yup.string().required(),
+        name: yup
+            .string()
+            .required()
+            .test("one thing", "One error message", (value) => {
+                console.info(`name.one thing.value[${value}]`);
+                return true;
+            }),
         bio: yup.string().required(),
-        imgFile: yup
-            .mixed()
-            .required("Profile pic required")
-            .test(
-                "fileSize",
-                "The file is too large",
-                (value) =>
-                    value &&
-                    value.length &&
-                    value[0].size <=
-                        validUploadActions[edenContractAccount]["inductprofil"]
-                            .maxSize
-            )
-            .test(
-                "type",
-                "Must be an image",
-                (value) => value && value.type && value.type.match(`image.*`)
-            ),
+        telegram: yup.string().required(),
     });
 
     // console.info("watch():");
@@ -87,17 +76,18 @@ export const InductionProfileForm = ({
         formState: { errors },
     } = useForm<FormValues>({
         resolver: yupResolver(schema),
-        defaultValues: {
-            name: newMemberProfile.name,
-            attributions: newMemberProfile.attributions,
-            bio: newMemberProfile.bio,
-            eosCommunity: socialFieldsAlreadyEntered.eosCommunity,
-            twitter: socialFieldsAlreadyEntered.twitter,
-            telegram: socialFieldsAlreadyEntered.telegram,
-            blog: socialFieldsAlreadyEntered.blog,
-            linkedin: socialFieldsAlreadyEntered.linkedin,
-            facebook: socialFieldsAlreadyEntered.facebook,
-        },
+        // defaultValues: {
+        // name: newMemberProfile.name,
+        // name: "FUCK",
+        // attributions: newMemberProfile.attributions,
+        // bio: newMemberProfile.bio,
+        // eosCommunity: socialFieldsAlreadyEntered.eosCommunity,
+        // twitter: socialFieldsAlreadyEntered.twitter,
+        // telegram: socialFieldsAlreadyEntered.telegram,
+        // blog: socialFieldsAlreadyEntered.blog,
+        // linkedin: socialFieldsAlreadyEntered.linkedin,
+        // facebook: socialFieldsAlreadyEntered.facebook,
+        // },
     });
 
     // const [fields, setFields] = useFormFields({ ...newMemberProfile });
@@ -134,15 +124,15 @@ export const InductionProfileForm = ({
         // console.info('socialHandles:')
         // console.info(socialHandles)
         const socialHandles: EdenNftSocialHandles = {};
-        Object.keys(socialFieldsAlreadyEntered).forEach((keyString) => {
-            const key = keyString as keyof EdenNftSocialHandles;
-            console.info(`prepareData.key[${key}]`);
-            if (data[key]) {
-                socialHandles[key] = getValidSocialLink(data[key]);
-                console.info(`socialHandles[${key}] = [${socialHandles[key]}]`);
-            }
-            //delete data[key];
-        });
+        // Object.keys(socialFieldsAlreadyEntered).forEach((keyString) => {
+        //     const key = keyString as keyof EdenNftSocialHandles;
+        //     console.info(`prepareData.key[${key}]`);
+        //     if (data[key]) {
+        //         socialHandles[key] = getValidSocialLink(data[key]);
+        //         console.info(`socialHandles[${key}] = [${socialHandles[key]}]`);
+        //     }
+        //     //delete data[key];
+        // });
         console.info("data.after:");
         console.info(data);
 
@@ -158,9 +148,17 @@ export const InductionProfileForm = ({
     console.info(watch());
     console.info("errors:");
     console.info(errors);
+    const onError = (errors: any, e: any) => {
+        console.info("onError.errors:");
+        console.error(errors, e);
+    };
     return (
         <form
-            onSubmit={handleSubmit(prepareData)}
+            onSubmit={(values) => {
+                console.info("onsubmit.value:");
+                console.info(values);
+                handleSubmit(prepareData, onError)(values);
+            }}
             className="grid grid-cols-6 gap-4"
         >
             <Form.LabeledSet
@@ -168,7 +166,11 @@ export const InductionProfileForm = ({
                 htmlFor="name"
                 className="col-span-6"
             >
-                <Form.Input id="name" {...register("name")} />
+                <Form.Input
+                    id="name"
+                    {...register("name")}
+                    defaultValue={newMemberProfile.name}
+                />
                 {errors.name && (
                     <Text className="text-red-600">{errors.name.message}</Text>
                 )}
@@ -207,7 +209,6 @@ export const InductionProfileForm = ({
                                     ].maxSize,
                                     setSelectedImage
                                 );
-                                // field.onChange(e);
                             }}
                             label={
                                 selectedImage || field.value
@@ -246,7 +247,11 @@ export const InductionProfileForm = ({
                 htmlFor="attributions"
                 className="col-span-6"
             >
-                <Form.Input id="attributions" {...register("attributions")} />
+                <Form.Input
+                    id="attributions"
+                    {...register("attributions")}
+                    defaultValue={newMemberProfile.attributions}
+                />
             </Form.LabeledSet>
 
             <Form.LabeledSet
@@ -254,7 +259,11 @@ export const InductionProfileForm = ({
                 htmlFor="bio"
                 className="col-span-6"
             >
-                <Form.TextArea id="bio" {...register("bio")} />
+                <Form.TextArea
+                    id="bio"
+                    {...register("bio")}
+                    defaultValue={newMemberProfile.bio}
+                />
                 {errors.bio && (
                     <Text className="text-red-600">{errors.bio.message}</Text>
                 )}
@@ -271,6 +280,7 @@ export const InductionProfileForm = ({
                 <Form.Input
                     id="eosCommunity"
                     {...register("eosCommunity")}
+                    // defaultValue={socialFieldsAlreadyEntered.eosCommunity}
                     placeholder="YourUsername"
                 />
             </Form.LabeledSet>
@@ -282,6 +292,7 @@ export const InductionProfileForm = ({
                 <Form.Input
                     id="twitter"
                     {...register("twitter")}
+                    // defaultValue={socialFieldsAlreadyEntered.twitter}
                     placeholder="YourHandle"
                 />
             </Form.LabeledSet>
@@ -292,9 +303,8 @@ export const InductionProfileForm = ({
             >
                 <Form.Input
                     id="telegram"
-                    {...register("telegram", {
-                        required: "Telegram name is required",
-                    })}
+                    {...register("telegram")}
+                    // defaultValue={socialFieldsAlreadyEntered.telegram},
                     placeholder="YourHandle"
                 />
                 {errors.telegram && (
@@ -311,6 +321,7 @@ export const InductionProfileForm = ({
                 <Form.Input
                     id="blog"
                     {...register("blog")}
+                    // defaultValue={socialFieldsAlreadyEntered.blog},
                     placeholder="yoursite.com"
                 />
             </Form.LabeledSet>
@@ -322,6 +333,7 @@ export const InductionProfileForm = ({
                 <Form.Input
                     id="linkedin"
                     {...register("linkedin")}
+                    // defaultValue={socialFieldsAlreadyEntered.linkedin},
                     placeholder="YourHandle"
                 />
             </Form.LabeledSet>
@@ -333,6 +345,7 @@ export const InductionProfileForm = ({
                 <Form.Input
                     id="facebook"
                     {...register("facebook")}
+                    // defaultValue={socialFieldsAlreadyEntered.facebook},
                     placeholder="YourUsername"
                 />
             </Form.LabeledSet>

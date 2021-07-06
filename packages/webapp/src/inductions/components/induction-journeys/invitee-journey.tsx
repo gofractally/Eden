@@ -146,6 +146,10 @@ const ProfileStep = ({
     }>({});
 
     const setProfilePreview = (profile: NewMemberProfile, photo?: File) => {
+        console.info("setProfilePreview().top --> profile:");
+        console.info(profile);
+        console.info("photo:");
+        console.info(photo);
         setPendingProfile({ profileInfo: profile, selectedPhoto: photo });
         setShowPreview(true);
     };
