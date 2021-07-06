@@ -103,7 +103,7 @@ namespace eden
    };
    EOSIO_REFLECT(distribution_account, value)
    using distribution_account_table_type = eosio::multi_index<
-       "distrib"_n,
+       "distaccount"_n,
        distribution_account,
        eosio::indexed_by<
            "byowner"_n,
