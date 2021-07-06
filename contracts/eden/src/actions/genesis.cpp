@@ -1,5 +1,6 @@
 #include <accounts.hpp>
 #include <auctions.hpp>
+#include <bylaws.hpp>
 #include <distributions.hpp>
 #include <eden-atomicassets.hpp>
 #include <eden.hpp>
@@ -22,6 +23,7 @@ namespace eden
       distributions{get_self()}.clear_all();
       elections{get_self()}.clear_all();
       get_global_singleton(get_self()).remove();
+      bylaws{get_self()}.clear_all();
    }
 
    void eden::gensetexpire(uint64_t induction_id, eosio::time_point new_expiration)

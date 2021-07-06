@@ -102,4 +102,9 @@ namespace eden
          bylaws_tb.modify(pos, contract, [](auto& row) { row.approvals().clear(); });
       }
    }
+
+   void bylaws::clear_all()
+   {
+      clear_table(bylaws_tb);
+   }
 }  // namespace eden
