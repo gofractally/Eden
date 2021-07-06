@@ -65,12 +65,15 @@ export const InductionProfileForm = ({
                 "The file is too large",
                 (value) =>
                     value &&
+                    value.length &&
                     value[0].size <=
                         validUploadActions[edenContractAccount]["inductprofil"]
                             .maxSize
             )
-            .test("type", "Must be an image", (value) =>
-                value.type.match(`image.*`)
+            .test(
+                "type",
+                "Must be an image",
+                (value) => value && value.type && value.type.match(`image.*`)
             ),
     });
 
@@ -190,11 +193,21 @@ export const InductionProfileForm = ({
                         <Form.FileInput
                             id="imgFile"
                             {...field}
-                            onChange={(e) => {
-                                console.info("e.target.files[0]:");
-                                console.info(e.target.files[0]);
-                                setSelectedImage(e.target.files[0]);
-                                // field.onChange(e.target.files[0]);
+                            onChange={(
+                                e: React.ChangeEvent<HTMLInputElement>
+                            ) => {
+                                // console.info("e.target.files[0]:");
+                                // console.info(e.target.files[0]);
+                                // setSelectedImage(e.target.files[0]);
+                                handleFileChange(
+                                    e,
+                                    "image",
+                                    validUploadActions[edenContractAccount][
+                                        "inductprofil"
+                                    ].maxSize,
+                                    setSelectedImage
+                                );
+                                // field.onChange(e);
                             }}
                             label={
                                 selectedImage || field.value
