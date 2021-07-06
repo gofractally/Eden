@@ -1,5 +1,6 @@
 import { FormEvent, useState } from "react";
-import { useForm } from "react-hook-form";
+import { useForm, Controller } from "react-hook-form";
+import { yupResolver } from "@hookform/resolvers/yup";
 
 import {
     useFormFields,
@@ -14,6 +15,7 @@ import { edenContractAccount, validUploadActions } from "config";
 import { EdenNftSocialHandles } from "nfts";
 import { NewMemberProfile } from "inductions";
 import { getValidSocialLink } from "_app/utils/social-links";
+import * as yup from "yup";
 
 interface Props {
     newMemberProfile: NewMemberProfile;
@@ -42,36 +44,57 @@ export const InductionProfileForm = ({
     onSubmit,
     selectedProfilePhoto,
 }: Props) => {
-    // const [selectedImage, setSelectedImage] = useState<File | undefined>(
-    //     selectedProfilePhoto
-    // );
+    const [selectedImage, setSelectedImage] = useState<File | undefined>(
+        selectedProfilePhoto
+    );
 
     const socialFieldsAlreadyEntered = convertNewMemberProfileSocial(
         newMemberProfile.social
     );
     console.info("root.socialFieldsAlreadyEnetered:");
     console.info(socialFieldsAlreadyEntered);
+
+    const schema = yup.object().shape({
+        name: yup.string().required(),
+        imgFile: yup
+            .mixed()
+            .required("Profile pic required")
+            .test(
+                "fileSize",
+                "The file is too large",
+                (value) =>
+                    value &&
+                    value[0].size <=
+                        validUploadActions[edenContractAccount]["inductprofil"]
+                            .maxSize
+            )
+            .test("type", "Must be an image", (value) =>
+                value.type.match(`image.*`)
+            ),
+    });
+
+    // console.info("watch():");
+    // console.info(watch());
     const {
         register,
         handleSubmit,
         watch,
+        control,
         formState: { errors },
-    } = useForm<FormValues>();
-    // console.info("watch():");
-    // console.info(watch());
-    // {
-    //     defaultValues: {
-    //         name: newMemberProfile.name,
-    //         attributions: newMemberProfile.attributions,
-    //         bio: newMemberProfile.bio,
-    //         eosCommunity: socialFieldsAlreadyEntered.eosCommunity,
-    //         twitter: socialFieldsAlreadyEntered.twitter,
-    //         telegram: socialFieldsAlreadyEntered.telegram,
-    //         blog: socialFieldsAlreadyEntered.blog,
-    //         linkedin: socialFieldsAlreadyEntered.linkedin,
-    //         facebook: socialFieldsAlreadyEntered.facebook,
-    //     },
-    // });
+    } = useForm<FormValues>({
+        resolver: yupResolver(schema),
+        defaultValues: {
+            name: newMemberProfile.name,
+            attributions: newMemberProfile.attributions,
+            bio: newMemberProfile.bio,
+            eosCommunity: socialFieldsAlreadyEntered.eosCommunity,
+            twitter: socialFieldsAlreadyEntered.twitter,
+            telegram: socialFieldsAlreadyEntered.telegram,
+            blog: socialFieldsAlreadyEntered.blog,
+            linkedin: socialFieldsAlreadyEntered.linkedin,
+            facebook: socialFieldsAlreadyEntered.facebook,
+        },
+    });
 
     // const [fields, setFields] = useFormFields({ ...newMemberProfile });
     // const [isFormFieldValid, setIsFormFieldValid] = useState({
@@ -123,8 +146,8 @@ export const InductionProfileForm = ({
         console.info(socialHandles);
         console.info({ ...data, social: JSON.stringify(socialHandles) });
         onSubmit(
-            { ...data, social: JSON.stringify(socialHandles) }
-            // selectedImage
+            { ...data, social: JSON.stringify(socialHandles) },
+            selectedImage
         );
     };
 
@@ -152,51 +175,67 @@ export const InductionProfileForm = ({
                 )}
             </Form.LabeledSet>
 
-            <Form.LabeledSet label="" htmlFor="imgFile" className="col-span-6">
-                <div className="flex items-center mb-1 space-x-1">
-                    <p className="text-sm font-medium text-gray-700">
-                        Profile image
-                    </p>
-                    <HelpLink href="https://www.notion.so/edenos/Upload-Profile-Photo-c15a7a050d3c411faca21a3cd3d2f0a3" />
-                </div>
-                <Form.FileInput
-                    id="imgFile"
-                    {...register("imgFile")}
-                    accept="image/*"
-                    label={
-                        selectedImage || newMemberProfile.img
-                            ? "select a different image"
-                            : "select an image file"
-                    }
-                    onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-                        handleFileChange(
-                            e,
-                            "image",
-                            validUploadActions[edenContractAccount][
-                                "inductprofil"
-                            ].maxSize,
-                            setSelectedImage
-                        )
-                    }
-                />
-                {selectedImage || newMemberProfile.img ? (
-                    <img
-                        src={
-                            selectedImage
-                                ? URL.createObjectURL(selectedImage)
-                                : `https://ipfs.io/ipfs/${selectedImage}`
-                        }
-                        alt="profile pic"
-                        className="object-cover rounded-full h-24 w-24 mt-4 mx-auto"
-                    />
-                ) : (
-                    <img
-                        src="/images/blank-profile-picture.svg"
-                        alt="blank profile pic"
-                        className="rounded-full h-24 w-24 my-2 mx-auto"
-                    />
-                )}
-            </Form.LabeledSet>
+            <Controller
+                name="imgFile"
+                control={control}
+                defaultValue=""
+                render={({ field }) => {
+                    console.info("Controller.render.field:");
+                    console.info(field);
+                    return (
+                        <Form.LabeledSet
+                            label=""
+                            htmlFor="imgFile"
+                            className="col-span-6"
+                        >
+                            <div className="flex items-center mb-1 space-x-1">
+                                <p className="text-sm font-medium text-gray-700">
+                                    Profile image
+                                </p>
+                                <HelpLink href="https://www.notion.so/edenos/Upload-Profile-Photo-c15a7a050d3c411faca21a3cd3d2f0a3" />
+                            </div>
+                            <Form.FileInput
+                                id="imgFile"
+                                {...field}
+                                onChange={(e) => {
+                                    console.info("e:");
+                                    console.info(e);
+                                    console.info(
+                                        `FileInput.onChange() -> setSelectedImage([${field.value}])`
+                                    );
+                                    setSelectedImage(field.value);
+                                    console.info("calling field.onChange(e)");
+                                    field.onChange(e);
+                                }}
+                                label={
+                                    selectedImage || field.value
+                                        ? "select a different image"
+                                        : "select an image file"
+                                }
+                            />
+                            {selectedImage || field.value ? (
+                                <img
+                                    src={
+                                        field.value &&
+                                        URL.createObjectURL(field.value)
+                                        // selectedImage
+                                        //     ? URL.createObjectURL(selectedImage)
+                                        //     : `https://ipfs.io/ipfs/${field.value}`
+                                    }
+                                    alt="profile pic"
+                                    className="object-cover rounded-full h-24 w-24 mt-4 mx-auto"
+                                />
+                            ) : (
+                                <img
+                                    src="/images/blank-profile-picture.svg"
+                                    alt="blank profile pic"
+                                    className="rounded-full h-24 w-24 my-2 mx-auto"
+                                />
+                            )}
+                        </Form.LabeledSet>
+                    );
+                }}
+            />
 
             <Form.LabeledSet
                 label="Credit for profile image goes to (optional)"

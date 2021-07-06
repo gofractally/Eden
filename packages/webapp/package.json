@@ -11,6 +11,7 @@
         "test-dev": "cypress open"
     },
     "dependencies": {
+        "@hookform/resolvers": "^2.6.0",
         "cids": "^1.1.6",
         "dayjs": "^1.10.4",
         "eosjs": "^21.0.3",
@@ -30,6 +31,7 @@
         "ual-ledger": "^0.3.0",
         "ual-reactjs-renderer": "^0.3.1",
         "ual-scatter": "^0.3.0",
+        "yup": "^0.32.9",
         "zod": "^3.0.0-beta.1"
     },
     "devDependencies": {
