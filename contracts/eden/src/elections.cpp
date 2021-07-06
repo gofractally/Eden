@@ -409,6 +409,7 @@ namespace eden
                      return max_steps;
                   }
                   state.last_closed_account = std::nullopt;
+                  remove_from_board(iter->account());
                   iter = members.erase(iter);
                   continue;
                }
@@ -557,6 +558,10 @@ namespace eden
    void elections::set_board_permission(const std::vector<eosio::name>& board)
    {
       eosio::ship_protocol::authority auth{.threshold = board.size() * 2 / 3 + 1};
+      if (board.empty())
+      {
+         auth.accounts.push_back({{contract, "active"_n}, 1});
+      }
       for (eosio::name member : board)
       {
          auth.accounts.push_back({{member, "active"_n}, 1});
@@ -569,7 +574,7 @@ namespace eden
                     "updateauth"_n,
                     std::tuple(contract, "board.major"_n, "active"_n, auth)}
           .send();
-      auth.threshold = board.size() + 1 - auth.threshold;
+      auth.threshold = auth.accounts.size() + 1 - auth.threshold;
       eosio::action{{contract, "active"_n},
                     "eosio"_n,
                     "updateauth"_n,
@@ -720,6 +725,29 @@ namespace eden
       vote_tb.modify(vote, contract, [&](auto& row) { row.candidate = candidate; });
    }
 
+   bool elections::remove_from_board(eosio::name member)
+   {
+      election_state_singleton global_state{contract, default_scope};
+      if (!global_state.exists())
+      {
+         return false;
+      }
+      auto value = std::get<election_state_v0>(global_state.get());
+      auto pos = std::find(value.board.begin(), value.board.end(), member);
+      if (pos != value.board.end())
+      {
+         value.board.erase(pos);
+         global_state.set(value, contract);
+         set_board_permission(value.board);
+      }
+      if (member == value.lead_representative)
+      {
+         value.lead_representative = eosio::name();
+         return true;
+      }
+      return false;
+   }
+
    void elections::on_resign(eosio::name member)
    {
       eosio::check(
@@ -729,9 +757,7 @@ namespace eden
                std::get<current_election_state_registration>(state_sing.get()).start_time >
                    eosio::current_block_time()),
           "Cannot resign during an election");
-      election_state_singleton global_state{contract, default_scope};
-      if (global_state.exists() &&
-          member == std::get<election_state_v0>(global_state.get()).lead_representative)
+      if (remove_from_board(member))
       {
          trigger_election();
       }

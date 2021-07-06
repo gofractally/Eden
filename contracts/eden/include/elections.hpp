@@ -209,6 +209,7 @@ namespace eden
       std::vector<eosio::name> extract_board();
       void finish_election(std::vector<eosio::name>&& board, eosio::name winner);
       void set_board_permission(const std::vector<eosio::name>& board);
+      bool remove_from_board(eosio::name member);
 
      public:
       explicit elections(eosio::name contract)

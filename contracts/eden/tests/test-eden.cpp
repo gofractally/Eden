@@ -277,6 +277,17 @@ struct eden_tester
       finish_induction(42, "alice"_n, account, {"pip"_n, "egeon"_n});
    }
 
+   void induct_n(std::size_t count)
+   {
+      auto members = make_names(count);
+      create_accounts(members);
+      for (auto a : members)
+      {
+         chain.start_block();
+         induct(a);
+      }
+   }
+
    void electseed(eosio::time_point_sec block_time, const char* expected = nullptr)
    {
       // This isn't a valid bitcoin block, but it meets the requirements that we actually check.
@@ -821,6 +832,17 @@ TEST_CASE("resignation")
    t.genesis();
    t.alice.act<actions::resign>("alice"_n);
    CHECK(members{"eden.gm"_n}.is_new_member("alice"_n));
+}
+
+TEST_CASE("board resignation")
+{
+   eden_tester t;
+   t.genesis();
+   t.run_election();
+   t.induct_n(4);
+   t.alice.act<actions::resign>("alice"_n);
+   t.egeon.act<actions::resign>("egeon"_n);
+   t.pip.act<actions::resign>("pip"_n);
 }
 
 TEST_CASE("auction")
