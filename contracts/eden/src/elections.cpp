@@ -8,11 +8,11 @@
 
 namespace eden
 {
-   election_rng::election_rng(const eosio::checksum256& seed)
+   election_rng::election_rng(const eosio::checksum256& seed) : buf(72)
    {
       auto a = seed.extract_as_byte_array();
-      memcpy(inbuf, a.data(), a.size());
-      memset(inbuf + 32, 0, 8);
+      memcpy(buf.data(), a.data(), a.size());
+      memset(buf.data() + 32, 0, 8);
       index = 32;
    }
 
@@ -20,16 +20,17 @@ namespace eden
    {
       if (index >= 32)
       {
-         auto a = eosio::sha256(inbuf, sizeof(inbuf)).extract_as_byte_array();
-         memcpy(outbuf, a.data(), a.size());
+         auto a =
+             eosio::sha256(reinterpret_cast<const char*>(buf.data()), 40).extract_as_byte_array();
+         memcpy(buf.data() + 40, a.data(), a.size());
          uint64_t counter;
-         memcpy(&counter, inbuf + 32, sizeof(counter));
+         memcpy(&counter, buf.data() + 32, sizeof(counter));
          ++counter;
-         memcpy(inbuf + 32, &counter, sizeof(counter));
+         memcpy(buf.data() + 32, &counter, sizeof(counter));
          index = 0;
       }
       result_type result;
-      memcpy(&result, outbuf + index, sizeof(result_type));
+      memcpy(&result, buf.data() + 40 + index, sizeof(result_type));
       index += sizeof(result_type);
       return result;
    }
@@ -37,7 +38,7 @@ namespace eden
    eosio::checksum256 election_rng::seed() const
    {
       std::array<uint8_t, 32> bytes;
-      memcpy(bytes.data(), inbuf, 32);
+      memcpy(bytes.data(), buf.data(), 32);
       return eosio::checksum256(bytes);
    }
 

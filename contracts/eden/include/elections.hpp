@@ -15,8 +15,8 @@ namespace eden
       eosio::block_timestamp last_election_time;
    };
    EOSIO_REFLECT(election_state_v0, lead_representative, board, last_election_time);
-   using election_state_singleton =
-       eosio::singleton<"elect.state"_n, std::variant<election_state_v0>>;
+   using election_state_variant = std::variant<election_state_v0>;
+   using election_state_singleton = eosio::singleton<"elect.state"_n, election_state_variant>;
 
    // Invariants:
    // a member can only have a vote record in one group at a time
@@ -82,11 +82,10 @@ namespace eden
       static constexpr result_type max() { return 0xFFFFFFFFu; }
       result_type operator()();
       eosio::checksum256 seed() const;
-      char inbuf[40];  // seed + 8 byte counter
-      char outbuf[32];
+      std::vector<uint8_t> buf;
       uint8_t index;
    };
-   EOSIO_REFLECT(election_rng, inbuf, outbuf, index)
+   EOSIO_REFLECT(election_rng, buf, index)
 
    // election states:
    //
