@@ -429,9 +429,16 @@ struct eden_tester
    void set_balance(eosio::asset amount)
    {
       eden::account_table_type account_tb{"eden.gm"_n, "owned"_n.value};
-      eosio_token.act<token::actions::transfer>("eosio.token"_n, "eden.gm"_n,
-                                                amount - account_tb.get("master"_n.value).balance(),
-                                                "memo");
+      auto balance = account_tb.get("master"_n.value).balance();
+      if (balance < amount)
+      {
+         eosio_token.act<token::actions::transfer>("eosio.token"_n, "eden.gm"_n, amount - balance,
+                                                   "memo");
+      }
+      else if (balance > amount)
+      {
+         eden_gm.act<actions::transfer>("eosio.token"_n, balance - amount, "memo");
+      }
    }
 
    eosio::asset get_total_budget()
@@ -1321,6 +1328,27 @@ TEST_CASE("budget distribution underflow")
        {s2t("2020-07-04T15:30:00.000"), s2a("1.8000 EOS")},
        {s2t("2020-08-03T15:30:00.000"), s2a("50.0000 EOS")},
        {s2t("2020-09-02T15:30:01.000"), s2a("47.5000 EOS")}};
+   CHECK(t.get_budgets_by_period() == expected);
+}
+
+TEST_CASE("budget distribution min")
+{
+   eden_tester t;
+   t.genesis();
+   auto members = make_names(100);
+   t.create_accounts(members);
+   for (auto a : members)
+   {
+      t.chain.start_block();
+      t.induct(a);
+   }
+   t.run_election();
+   t.set_balance(s2a("0.0020 EOS"));
+   t.skip_to("2020-08-03T15:30:00.000");
+   t.distribute();
+   std::map<eosio::block_timestamp, eosio::asset> expected{
+       {s2t("2020-07-04T15:30:00.000"), s2a("61.8000 EOS")},
+       {s2t("2020-08-03T15:30:00.000"), s2a("0.0001 EOS")}};
    CHECK(t.get_budgets_by_period() == expected);
 }
 
