@@ -19,13 +19,6 @@ namespace eden
        eosio::singleton<"elect.state"_n, std::variant<election_state_v0>>;
 
    // Invariants:
-   // to initiate an election, all election tables must be empty.
-   // when an election is finished they must be cleared
-   // Note: this means that election tables do not need to be
-   // versioned.  Just wait to update the contract until the
-   // election is over.
-
-   // Invariants:
    // a member can only have a vote record in one group at a time
    // When a member advances to the next round, the vote record for the previous round must be erased
    struct vote
@@ -48,8 +41,6 @@ namespace eden
    // ensure that every member is in a group
    // ensure that no member is in more than one group
    // Ensure that groups have a consistent size <= 12
-   // how to handle non-participation?
-   // How is an election triggered?
 
    // decide election group size:
    struct election_round_config
@@ -203,12 +194,6 @@ namespace eden
    // \post config.front().num_participants() == num_participants (unless num_participants < 1)
    // \post config[i].num_groups == config[i+1].num_participants
    election_config make_election_config(uint16_t num_participants);
-
-   // Is the full election schedule determined up front, or can the schedule for
-   // later rounds depend on whether groups from earlier rounds failed to
-   // reach consensus?
-   // If it isn't determined up front, does that introduce the possibility of
-   // intentional consensus failure to manipulate the overall results?
 
    class elections
    {

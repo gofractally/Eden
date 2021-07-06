@@ -40,23 +40,9 @@ namespace eden
    };
    EOSIO_REFLECT(member_v0, account, name, status, nft_template_id)
 
-   // What do we need to know?
-   // - Whether a member has donated (before or after the election?  must be before minting NFTs).
-   // - A donation is required for regularly scheduled elections.
-   // - Are donations and NFTs relevent for special elections?
-   // - Whether a member was active at the start of the election.
-   // - When do we mint new NFTs?
-   //   - On donation (like for induction)
-   //   - At the end of the election (bulk processing or triggered by the member?)
-   //   - During the election, as soon as his rank is determined.
-   // - What if a member is kicked during an election?  Should we just ban this?
-   //
    // - A member can donate at any time after the end of a scheduled election and before
    //   the start of the next scheduled election.
-   // - A member who is inducted is eligible to vote in the first election that starts
-   //   after his induction.
-   // - A member who does not make a donation before the election starts (induction
-   //   donations do count) will be deactivated.
+   // - A member who does not make a donation before the election starts will be deactivated.
    //
    struct member_v1 : member_v0
    {
