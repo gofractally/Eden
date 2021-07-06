@@ -3,6 +3,7 @@ export * from "./heading";
 export * from "./form";
 export * from "./help-link";
 export * from "./link";
+export * from "./opens-in-new-tab-icon";
 export * from "./social-button";
 export * from "./text";
 export * from "./header-nav";

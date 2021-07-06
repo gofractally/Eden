@@ -9,6 +9,7 @@ import {
     Heading,
     ipfsUrl,
     onError,
+    OpensInNewTabIcon,
     queryInductionWithEndorsements,
     Text,
     useUALAccount,
@@ -109,6 +110,7 @@ export const InductionEndorsementForm = ({
                         >
                             <FaPlayCircle className="mr-2" />
                             Review video
+                            <OpensInNewTabIcon />
                         </Button>
                         <Button
                             type="link"
