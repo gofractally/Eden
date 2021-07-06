@@ -86,7 +86,6 @@ namespace eden
       globals globals{get_self()};
       inductions inductions{get_self()};
       accounts user_accounts{get_self()};
-      accounts internal_accounts{get_self(), "owned"_n};
 
       const auto& induction = inductions.get_induction(id);
       eosio::check(payer == induction.invitee(), "only inductee may donate using this action");

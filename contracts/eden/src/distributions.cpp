@@ -197,7 +197,6 @@ namespace eden
       auto end = table.end();
       for (; max_steps > 0 && iter != end; ++iter, --max_steps)
       {
-         auto member = *iter;
          eosio::check(iter->election_rank() <= dist.rank_distribution.size(),
                       "Invariant failure: rank too high");
          for (uint8_t rank = 0; rank < iter->election_rank(); ++rank)
