@@ -312,7 +312,7 @@ struct eden_tester
    {
       while (true)
       {
-         auto trace = alice.trace<actions::electprepare>(batch_size);
+         auto trace = alice.trace<actions::electprocess>(batch_size);
          if (trace.except)
          {
             expect(trace, "Nothing to do");
@@ -1089,7 +1089,7 @@ TEST_CASE("election")
    t.chain.start_block();
    t.electseed(eosio::time_point_sec(0x5f009260u));
    t.skip_to("2020-07-04T15:29:59.500");
-   expect(t.alice.trace<actions::electprepare>(1), "Seeding window is still open");
+   expect(t.alice.trace<actions::electprocess>(1), "Seeding window is still open");
    t.chain.start_block();
    t.setup_election();
    CHECK(get_table_size<eden::vote_table_type>() == 0);
@@ -1133,12 +1133,12 @@ TEST_CASE("mid-election induction")
    t.skip_to("2020-07-04T15:30:00.000");
    for (int i = 0;; ++i)
    {
-      DYNAMIC_SECTION("electprepare" << i)
+      DYNAMIC_SECTION("electprocess" << i)
       {
          has_bertie = true;
          t.induct("bertie"_n);
       }
-      auto trace = t.eden_gm.trace<actions::electprepare>(1);
+      auto trace = t.eden_gm.trace<actions::electprocess>(1);
       if (trace.except)
       {
          expect(trace, "Nothing to do");

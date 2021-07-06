@@ -74,12 +74,6 @@ namespace eden
       elections.seed(btc_header);
    }
 
-   void eden::electprepare(uint32_t max_steps)
-   {
-      elections elections(get_self());
-      eosio::check(elections.prepare_election(max_steps) != max_steps, "Nothing to do");
-   }
-
    void eden::electvote(uint8_t round, eosio::name voter, eosio::name candidate)
    {
       eosio::require_auth(voter);
@@ -90,7 +84,9 @@ namespace eden
    void eden::electprocess(uint32_t max_steps)
    {
       elections elections(get_self());
-      eosio::check(elections.finish_round(max_steps) != max_steps, "Nothing to do");
+      auto remaining = elections.prepare_election(max_steps);
+      remaining = elections.finish_round(remaining);
+      eosio::check(remaining != max_steps, "Nothing to do");
    }
 
 }  // namespace eden

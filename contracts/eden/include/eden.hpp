@@ -94,7 +94,6 @@ namespace eden
       void electopt(eosio::name member, bool participating);
 
       void electseed(const eosio::bytes& btc_header);
-      void electprepare(uint32_t max_steps);
       void electvote(uint8_t round, eosio::name voter, eosio::name candidate);
       void electprocess(uint32_t max_steps);
 
@@ -186,7 +185,6 @@ namespace eden
        action(electdonate, payer, quantity),
        action(electopt, member, participating),
        action(electseed, btc_header),
-       action(electprepare, max_steps),
        action(electvote, round, voter, candidate),
        action(electprocess, max_steps),
        action(distribute, max_steps),

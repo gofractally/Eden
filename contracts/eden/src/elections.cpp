@@ -602,11 +602,17 @@ namespace eden
 
    uint32_t elections::finish_round(uint32_t max_steps)
    {
+      if (!state_sing.exists())
+      {
+         return max_steps;
+      }
       auto state = state_sing.get();
       if (auto* prev_round = std::get_if<current_election_state_active>(&state))
       {
-         eosio::check(prev_round->round_end <= eosio::current_block_time(),
-                      "Round has not finished yet");
+         if (eosio::current_block_time() < prev_round->round_end)
+         {
+            return max_steps;
+         }
          state =
              current_election_state_post_round{election_rng{adjust_seed(prev_round->saved_seed)},
                                                prev_round->round, prev_round->config, 0, 0};
@@ -625,8 +631,10 @@ namespace eden
          }
          return max_steps;
       }
-      eosio::check(std::holds_alternative<current_election_state_post_round>(state),
-                   "No round to finish now");
+      if (!std::holds_alternative<current_election_state_post_round>(state))
+      {
+         return max_steps;
+      }
       auto& data = std::get<current_election_state_post_round>(state);
       auto vote_idx = vote_tb.get_index<"bygroup"_n>();
       auto group_start = vote_idx.lower_bound((data.prev_round << 16) | data.next_input_index);
