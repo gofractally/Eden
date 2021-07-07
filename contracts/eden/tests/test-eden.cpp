@@ -1438,6 +1438,51 @@ TEST_CASE("budget adjustment on kick")
    CHECK(t.get_budgets_by_period() == expected);
 }
 
+TEST_CASE("bylaws")
+{
+   eden_tester t;
+   t.genesis();
+   t.induct_n(3);
+   t.run_election();
+   auto state = std::get<eden::election_state_v0>(
+       eden::election_state_singleton{"eden.gm"_n, eden::default_scope}.get());
+   std::string bylaws = "xxx";
+   auto bylaws_hash = eosio::sha256(bylaws.data(), bylaws.size());
+   t.chain.as(state.lead_representative)
+       .act<actions::bylawspropose>(state.lead_representative, bylaws);
+
+   int i = 0;
+   SECTION("basic")
+   {
+      for (auto board_member : state.board)
+      {
+         if (i++ == 5)
+            break;
+         t.chain.as(board_member).act<actions::bylawsapprove>(board_member, bylaws_hash);
+      }
+   }
+
+   // Make sure that resigned members are not counted towards the limit
+   SECTION("resign")
+   {
+      for (auto board_member : state.board)
+      {
+         if (board_member != state.lead_representative)
+         {
+            if (i++ >= 2)
+            {
+               t.chain.as(board_member).act<actions::bylawsapprove>(board_member, bylaws_hash);
+            }
+            else
+            {
+               t.chain.as(board_member).act<actions::bylawsapprove>(board_member, bylaws_hash);
+               t.chain.as(board_member).act<actions::resign>(board_member);
+            }
+         }
+      }
+   }
+}
+
 TEST_CASE("accounting")
 {
    eden_tester t;

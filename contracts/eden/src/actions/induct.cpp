@@ -1,5 +1,6 @@
 #include <accounts.hpp>
 #include <auctions.hpp>
+#include <bylaws.hpp>
 #include <distributions.hpp>
 #include <eden.hpp>
 #include <elections.hpp>
@@ -199,6 +200,8 @@ namespace eden
       elections elections{get_self()};
       elections.on_resign(account);
       members.remove(account);
+      bylaws bylaws{get_self()};
+      bylaws.on_resign(account);
    }
 
 }  // namespace eden

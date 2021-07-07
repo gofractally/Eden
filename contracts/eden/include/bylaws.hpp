@@ -59,6 +59,7 @@ namespace eden
       // - The proposed bylaws are cleared outright
       // - Approvals on the pending bylaws are cleared
       void new_board();
+      void on_resign(eosio::name member);
 
       void clear_all();
    };

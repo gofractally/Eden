@@ -41,7 +41,9 @@ namespace eden
                    "bylaws hash does not match " + current_state.to_string() + " bylaws");
       election_state_singleton state_sing(contract, default_scope);
       auto state = std::get<election_state_v0>(state_sing.get());
-      eosio::check(!current_election_state_singleton(contract, default_scope).exists(),
+      elections elections{contract};
+      auto next_election_time = elections.get_next_election_time();
+      eosio::check(next_election_time && eosio::current_block_time() < *next_election_time,
                    "Bylaws cannot be approved while an election is running");
       eosio::check(std::find(pos->approvals().begin(), pos->approvals().end(), approver) ==
                        pos->approvals().end(),
@@ -56,7 +58,7 @@ namespace eden
              "Bylaws can only be approved if they were proposed at least 90 days before the last "
              "election.");
       }
-      if (pos->approvals().size() > state.board.size() * 2 / 3)
+      if (pos->approvals().size() >= state.board.size() * 2 / 3)
       {
          auto set_next_state = [&](auto& row) {
             row.value = bylaws_v0{
@@ -103,8 +105,23 @@ namespace eden
       }
    }
 
-   void bylaws::clear_all()
+   void bylaws::on_resign(eosio::name member)
    {
-      clear_table(bylaws_tb);
+      for (auto key : {proposed, pending})
+      {
+         auto pos = bylaws_tb.find(key.value);
+         if (pos != bylaws_tb.end())
+         {
+            auto approval_iter =
+                std::find(pos->approvals().begin(), pos->approvals().end(), member);
+            if (approval_iter != pos->approvals().end())
+            {
+               bylaws_tb.modify(pos, contract,
+                                [&](auto& row) { row.approvals().erase(approval_iter); });
+            }
+         }
+      }
    }
+
+   void bylaws::clear_all() { clear_table(bylaws_tb); }
 }  // namespace eden
