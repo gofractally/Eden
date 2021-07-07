@@ -104,6 +104,24 @@ namespace eosio
       }
    };
 
+   struct string_stream : stream_base
+   {
+      std::string& data;
+      string_stream(std::string& data) : data(data) {}
+
+      void write(char c) { data.push_back(c); }
+      void write(const void* src, std::size_t sz)
+      {
+         auto s = reinterpret_cast<const char*>(src);
+         data.insert(data.end(), s, s + sz);
+      }
+      template <typename T>
+      void write_raw(const T& v)
+      {
+         write(&v, sizeof(v));
+      }
+   };
+
    struct fixed_buf_stream : stream_base
    {
       char* pos;
