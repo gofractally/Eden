@@ -182,20 +182,24 @@ namespace clchain
       std::string_view current_value;
       char current_puncuator = 0;
 
-      gql_stream(eosio::input_stream input) : input{input} { get_next(); }
+      gql_stream(eosio::input_stream input) : input{input} { skip(); }
       gql_stream(const gql_stream&) = default;
       gql_stream& operator=(const gql_stream&) = default;
 
-      token_type get_next()
+      void skip()
       {
          if (current_type == error)
-            return error;
+            return;
          current_puncuator = 0;
          current_value = {};
          while (true)
          {
+            auto begin = input.pos;
             if (!input.remaining())
-               return (current_type = eof);
+            {
+               current_type = eof;
+               return;
+            }
             switch (input.pos[0])
             {
                case '\n':
@@ -224,13 +228,17 @@ namespace clchain
                case '}':
                   current_puncuator = input.pos[0];
                   ++input.pos;
-                  return (current_type = punctuator);
+                  current_value = {begin, size_t(input.pos - begin)};
+                  current_type = punctuator;
+                  return;
                case '.':
                   if (input.remaining() >= 3 && input.pos[1] == '.' && input.pos[2] == '.')
                   {
                      current_puncuator = '.';
                      input.pos += 3;
-                     return (current_type = punctuator);
+                     current_value = {begin, size_t(input.pos - begin)};
+                     current_type = punctuator;
+                     return;
                   }
                   break;
                default:;
@@ -238,19 +246,21 @@ namespace clchain
 
             if (input.pos[0] == '_' || std::isalpha((unsigned char)input.pos[0]))
             {
-               auto begin = input.pos;
                while (input.remaining() &&
                       (input.pos[0] == '_' || std::isalnum((unsigned char)input.pos[0])))
                   ++input.pos;
                current_value = {begin, size_t(input.pos - begin)};
-               return (current_type = name);
+               current_type = name;
+               return;
             }
             else
             {
-               return (current_type = error);
+               current_value = {begin, size_t(input.pos - begin)};
+               current_type = error;
+               return;
             }
          }  // while (true)
-      }     // get_next()
+      }     // skip()
    };       // gql_stream
 
    template <typename T, typename OS, typename E>
@@ -259,6 +269,31 @@ namespace clchain
    {
       eosio::to_json(value, output_stream);
       return true;
+   }
+
+   template <typename E>
+   bool gql_skip_selection_set(gql_stream& input_stream, const E& error)
+   {
+      if (input_stream.current_puncuator != '{')
+         return true;
+      input_stream.skip();
+      while (true)
+      {
+         if (input_stream.current_type == gql_stream::eof)
+            return error("expected }");
+         else if (input_stream.current_puncuator == '{')
+         {
+            if (!gql_skip_selection_set(input_stream, error))
+               return false;
+         }
+         else if (input_stream.current_puncuator == '}')
+         {
+            input_stream.skip();
+            return true;
+         }
+         else
+            input_stream.skip();
+      }
    }
 
    template <typename T, typename OS, typename E>
@@ -275,10 +310,11 @@ namespace clchain
             output_stream.write(',');
          write_newline(output_stream);
          first = false;
-         // TODO: fix input_stream handling
-         if (!gql_query(v, input_stream, output_stream, error))
+         auto copy = input_stream;
+         if (!gql_query(v, copy, output_stream, error))
             return false;
       }
+      gql_skip_selection_set(input_stream, error);
       if (!first)
       {
          decrease_indent(output_stream);
@@ -296,20 +332,30 @@ namespace clchain
    {
       if (input_stream.current_puncuator != '{')
          return error("expected {");
-      input_stream.get_next();
+      input_stream.skip();
       bool first = true;
       output_stream.write('{');
       while (input_stream.current_type == gql_stream::name)
       {
          bool found = false;
          bool have_error = false;
+         auto alias = input_stream.current_value;
+         auto field_name = alias;
+         input_stream.skip();
+         if (input_stream.current_puncuator == ':')
+         {
+            input_stream.skip();
+            if (input_stream.current_type != gql_stream::name)
+               return error("expected name after :");
+            field_name = input_stream.current_value;
+            input_stream.skip();
+         }
          eosio::for_each_field<T>([&](std::string_view name, auto&& member) {
             if (found)
                return;
-            if (name == input_stream.current_value)
+            if (name == field_name)
             {
                found = true;
-               input_stream.get_next();
                if (first)
                {
                   increase_indent(output_stream);
@@ -318,7 +364,7 @@ namespace clchain
                else
                   output_stream.write(',');
                write_newline(output_stream);
-               to_json(name, output_stream);
+               to_json(alias, output_stream);
                write_colon(output_stream);
                if (!gql_query(member(&value), input_stream, output_stream, error))
                   have_error = true;
@@ -331,7 +377,7 @@ namespace clchain
       }
       if (input_stream.current_puncuator != '}')
          return error("expected }");
-      input_stream.get_next();
+      input_stream.skip();
       if (!first)
       {
          decrease_indent(output_stream);
@@ -341,6 +387,23 @@ namespace clchain
       return true;
    }
 
+   template <typename T, typename OS, typename E>
+   bool gql_query_root(const T& value, gql_stream& input_stream, OS& output_stream, const E& error)
+   {
+      if (input_stream.current_type == gql_stream::name)
+      {
+         if (input_stream.current_value == "query")
+            input_stream.skip();
+         else
+            return error("expected query");
+      }
+      if (!gql_query(value, input_stream, output_stream, error))
+         return false;
+      if (input_stream.current_type == gql_stream::eof)
+         return true;
+      return error("expected end of input");
+   }
+
    template <typename T>
    std::string format_gql_query(const T& value, std::string_view query)
    {
@@ -348,7 +411,7 @@ namespace clchain
       std::string result;
       eosio::pretty_stream<eosio::string_stream> output_stream(result);
       std::string error;
-      if (!gql_query(value, input_stream, output_stream, [&](const auto& e) {
+      if (!gql_query_root(value, input_stream, output_stream, [&](const auto& e) {
              error = e;
              return false;
           }))
