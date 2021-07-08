@@ -13,7 +13,6 @@ interface Props {
 }
 
 /**
- *
  * For docs and props, see https://reactcommunity.org/react-modal/.
  */
 export const Modal = ({
