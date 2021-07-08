@@ -14,10 +14,66 @@
 
 namespace eosio
 {
+   template <class T>
+   using remove_cvref_t = std::remove_cv_t<std::remove_reference_t<T>>;
+
    template <typename... Ts>
    struct type_list
    {
+      static constexpr int size = sizeof...(Ts);
    };
+
+   template <typename... Ts>
+   std::tuple<Ts...> tuple_from_type_list_impl(type_list<Ts...>&&);
+   template <typename T>
+   using tuple_from_type_list = decltype(tuple_from_type_list_impl(std::declval<T>()));
+
+   template <typename T>
+   struct member_fn;
+
+   template <typename R, typename T, typename... Args>
+   struct member_fn<R (T::*)(Args...)>
+   {
+      static constexpr bool is_const = false;
+      using type = R (T::*)(Args...);
+      using class_type = T;
+      using return_type = R;
+      using arg_types = type_list<Args...>;
+   };
+
+   template <typename R, typename T, typename... Args>
+   struct member_fn<R (T::*)(Args...) const>
+   {
+      static constexpr bool is_const = true;
+      using type = R (T::*)(Args...) const;
+      using class_type = T;
+      using return_type = R;
+      using arg_types = type_list<Args...>;
+   };
+
+   template <typename T>
+   struct is_non_const_member_fn
+   {
+      constexpr operator bool()
+      {
+         if constexpr (std::is_member_function_pointer_v<T>)
+            return !eosio::member_fn<T>::is_const;
+         else
+            return false;
+      }
+   };
+
+   template <typename F>
+   void for_each_named_type(F&& f, type_list<>)
+   {
+   }
+
+   template <typename F, typename Arg, typename... Args, typename... Names>
+   void for_each_named_type(F&& f, type_list<Arg, Args...>, const char* name, Names... names)
+   {
+      f((remove_cvref_t<Arg>*)nullptr, name);
+      for_each_named_type(f, type_list<Args...>{}, names...);
+   }
 
    template <typename T>
    struct is_serializable_container : std::false_type

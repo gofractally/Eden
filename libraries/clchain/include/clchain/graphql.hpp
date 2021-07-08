@@ -1,6 +1,7 @@
 #pragma once
 
 #include <cctype>
+#include <charconv>
 #include <eosio/bytes.hpp>
 #include <eosio/fixed_bytes.hpp>
 #include <eosio/for_each_field.hpp>
@@ -73,7 +74,7 @@ namespace clchain
    template <typename Raw>
    std::string generate_gql_partial_name(Raw*)
    {
-      using T = std::remove_cvref_t<Raw>;
+      using T = eosio::remove_cvref_t<Raw>;
       if constexpr (std::is_same_v<T, bool>)
          return "Boolean";
       else if constexpr (std::is_integral_v<T>)
@@ -102,9 +103,11 @@ namespace clchain
    template <typename Raw>
    std::string generate_gql_whole_name(Raw*, bool is_optional)
    {
-      using T = std::remove_cvref_t<Raw>;
+      using T = eosio::remove_cvref_t<Raw>;
       if constexpr (eosio::is_std_optional<T>())
          return generate_gql_whole_name((typename T::value_type*)nullptr, true);
+      else if constexpr (std::is_pointer<T>())
+         return generate_gql_whole_name((T) nullptr, true);
       else if constexpr (eosio::is_std_unique_ptr<T>())
          return generate_gql_whole_name((typename T::element_type*)nullptr, true);
       else if (is_optional)
@@ -116,9 +119,11 @@ namespace clchain
    template <typename Raw, typename S>
    void fill_gql_schema(Raw*, S& stream, std::set<std::type_index>& defined_types)
    {
-      using T = std::remove_cvref_t<Raw>;
+      using T = eosio::remove_cvref_t<Raw>;
       if constexpr (eosio::is_std_optional<T>())
          fill_gql_schema((typename T::value_type*)nullptr, stream, defined_types);
+      else if constexpr (std::is_pointer<T>())
+         fill_gql_schema((T) nullptr, stream, defined_types);
       else if constexpr (eosio::is_std_unique_ptr<T>())
          fill_gql_schema((typename T::element_type*)nullptr, stream, defined_types);
       else if constexpr (eosio::is_serializable_container<T>())
@@ -128,8 +133,21 @@ namespace clchain
          if (defined_types.insert(typeid(T)).second)
          {
             eosio::for_each_field<T>([&](const char*, auto member) {
-               fill_gql_schema((std::remove_cvref_t<decltype(member((T*)nullptr))>*)nullptr, stream,
-                               defined_types);
+               fill_gql_schema((eosio::remove_cvref_t<decltype(member((T*)nullptr))>*)nullptr,
+                               stream, defined_types);
+            });
+            eosio::for_each_method<T>([&](const char* name, auto member, auto... arg_names) {
+               using mf = eosio::member_fn<decltype(member)>;
+               using ret = eosio::remove_cvref_t<typename mf::return_type>;
+               if constexpr (mf::is_const)
+               {
+                  eosio::for_each_named_type(
+                      [&](auto* p, const char*) {  //
+                         fill_gql_schema(p, stream, defined_types);
+                      },
+                      typename mf::arg_types{}, arg_names...);
+                  fill_gql_schema((ret*)nullptr, stream, defined_types);
+               }
             });
             stream.write_str("type ");
             stream.write_str(generate_gql_partial_name((Raw*)nullptr));
@@ -139,8 +157,35 @@ namespace clchain
                stream.write_str(name);
                stream.write_str(": ");
                stream.write_str(generate_gql_whole_name(
-                   (std::remove_cvref_t<decltype(member((T*)nullptr))>*)nullptr));
+                   (eosio::remove_cvref_t<decltype(member((T*)nullptr))>*)nullptr));
                stream.write_str("\n");
+            });
+            eosio::for_each_method<T>([&](const char* name, auto member, auto... arg_names) {
+               using mf = eosio::member_fn<decltype(member)>;
+               using ret = eosio::remove_cvref_t<typename mf::return_type>;
+               if constexpr (mf::is_const)
+               {
+                  stream.write_str("    ");
+                  stream.write_str(name);
+                  if constexpr (mf::arg_types::size)
+                  {
+                     stream.write_str("(");
+                     bool first = true;
+                     eosio::for_each_named_type(
+                         [&](auto* p, const char* name) {
+                            if (!first)
+                               stream.write_str(", ");
+                            stream.write_str(name);
+                            stream.write_str(": ");
+                            stream.write_str(generate_gql_whole_name(p));
+                            first = false;
+                         },
+                         typename mf::arg_types{}, arg_names...);
+                     stream.write_str("): ");
+                  }
+                  stream.write_str(generate_gql_whole_name((ret*)nullptr));
+                  stream.write_str("\n");
+               }
             });
             stream.write_str("}\n");
          }
@@ -175,6 +220,9 @@ namespace clchain
          error,
          punctuator,
          name,
+         string,
+         integer,
+         floating,
       };
 
       eosio::input_stream input;
@@ -241,6 +289,23 @@ namespace clchain
                      return;
                   }
                   break;
+               case '"':
+                  ++input.pos;
+                  while (input.remaining() && input.pos[0] != '"')
+                  {
+                     auto ch = *input.pos++;
+                     if (ch == '\\')
+                     {
+                        if (!input.remaining())
+                           return;
+                        ++input.pos;
+                     }
+                  }
+                  if (!input.remaining())
+                     return;
+                  ++input.pos;
+                  current_value = {begin, size_t(input.pos - begin)};
+                  current_type = string;
                default:;
             }  // switch (input.pos[0])
 
@@ -253,6 +318,58 @@ namespace clchain
                current_type = name;
                return;
             }
+            else if (input.pos[0] == '-' || std::isdigit((unsigned char)input.pos[0]))
+            {
+               current_type = integer;
+               if (input.pos[0] == '-')
+               {
+                  ++input.pos;
+                  if (!input.remaining() || !std::isdigit((unsigned char)input.pos[0]))
+                  {
+                     current_type = error;
+                     return;
+                  }
+               }
+               if (input.pos[0] == '0')
+                  ++input.pos;
+               else
+                  while (input.remaining() && std::isdigit((unsigned char)input.pos[0]))
+                     ++input.pos;
+               if (input.remaining() && input.pos[0] == '.')
+               {
+                  ++input.pos;
+                  current_type = floating;
+                  if (!input.remaining() || !std::isdigit((unsigned char)input.pos[0]))
+                  {
+                     current_type = error;
+                     return;
+                  }
+                  while (input.remaining() && std::isdigit((unsigned char)input.pos[0]))
+                     ++input.pos;
+               }
+               if (input.remaining() && (input.pos[0] == 'e' || input.pos[0] == 'E'))
+               {
+                  ++input.pos;
+                  current_type = floating;
+                  if (input.remaining() && input.pos[0] == '-')
+                     ++input.pos;
+                  if (!input.remaining() || !std::isdigit((unsigned char)input.pos[0]))
+                  {
+                     current_type = error;
+                     return;
+                  }
+                  while (input.remaining() && std::isdigit((unsigned char)input.pos[0]))
+                     ++input.pos;
+               }
+               if (input.remaining() &&
+                   (input.pos[0] == '_' || std::isalnum((unsigned char)input.pos[0])))
+               {
+                  current_type = error;
+                  return;
+               }
+               current_value = {begin, size_t(input.pos - begin)};
+               return;
+            }  // numbers
             else
             {
                current_value = {begin, size_t(input.pos - begin)};
@@ -263,12 +380,58 @@ namespace clchain
       }     // skip()
    };       // gql_stream
 
-   template <typename T, typename OS, typename E>
-   auto gql_query(const T& value, gql_stream& input_stream, OS& output_stream, const E& error)
-       -> std::enable_if_t<std::is_arithmetic_v<T> || std::is_same_v<T, std::string>, bool>
+   template <typename T, typename E>
+   auto gql_parse_arg(T& arg, gql_stream& input_stream, const E& error)
+       -> std::enable_if_t<std::is_arithmetic_v<T> || std::is_same_v<T, bool>, bool>
    {
-      eosio::to_json(value, output_stream);
-      return true;
+      if constexpr (std::is_same_v<T, bool>)
+      {
+         if (input_stream.current_value == "true")
+         {
+            input_stream.skip();
+            arg = true;
+            return true;
+         }
+         else if (input_stream.current_value == "false")
+         {
+            input_stream.skip();
+            arg = false;
+            return true;
+         }
+         else
+            return error("expected Boolean");
+      }
+      else
+      {
+         if (input_stream.current_type != gql_stream::integer &&
+             input_stream.current_type != gql_stream::floating &&
+             input_stream.current_type != gql_stream::string)
+            return error("expected number or stringified number");
+         auto begin = input_stream.current_value.data();
+         auto end = begin + input_stream.current_value.size();
+         auto result = std::from_chars<T>(begin, end, arg);
+         if (result.ec == std::errc{} && result.ptr == end)
+         {
+            input_stream.skip();
+            return true;
+         }
+         if (result.ec == std::errc::result_out_of_range)
+            return error("number is out of range");
+         return error("expected number or stringified number");
+      }
+   }
+
+   template <int i, typename... Args, typename E>
+   bool gql_parse_args(std::tuple<Args...>& args, gql_stream& input_stream, const E& error)
+   {
+      if constexpr (i == sizeof...(Args))
+         return true;
+      else
+      {
+         if (!gql_parse_arg(std::get<i>(args), input_stream, error))
+            return false;
+         return gql_parse_args<i + 1>(args, input_stream, error);
+      }
    }
 
    template <typename E>
@@ -298,6 +461,27 @@ namespace clchain
 
    template <typename T, typename OS, typename E>
    auto gql_query(const T& value, gql_stream& input_stream, OS& output_stream, const E& error)
+       -> std::enable_if_t<std::is_arithmetic_v<T> || std::is_same_v<T, std::string>, bool>
+   {
+      eosio::to_json(value, output_stream);
+      return true;
+   }
+
+   template <typename T, typename OS, typename E>
+   auto gql_query(const T& value, gql_stream& input_stream, OS& output_stream, const E& error)
+       -> std::enable_if_t<eosio::is_std_optional<T>() || std::is_pointer<T>() ||
+                               eosio::is_std_unique_ptr<T>(),
+                           bool>
+
+   {
+      if (value)
+         return gql_query(*value, input_stream, output_stream, error);
+      output_stream.write_str("null");
+      return gql_skip_selection_set(input_stream, error);
+   }
+
+   template <typename T, typename OS, typename E>
+   auto gql_query(const T& value, gql_stream& input_stream, OS& output_stream, const E& error)
        -> std::enable_if_t<eosio::is_serializable_container<T>::value, bool>
    {
       output_stream.write('[');
@@ -314,7 +498,8 @@ namespace clchain
          if (!gql_query(v, copy, output_stream, error))
             return false;
       }
-      gql_skip_selection_set(input_stream, error);
+      if (!gql_skip_selection_set(input_stream, error))
+         return false;
       if (!first)
       {
          decrease_indent(output_stream);
@@ -324,12 +509,13 @@ namespace clchain
       return true;
    }
 
-   template <typename T, typename OS, typename E>
-   auto gql_query(const T& value, gql_stream& input_stream, OS& output_stream, const E& error)
-       -> std::enable_if_t<eosio::reflection::has_for_each_field_v<T> &&
-                               !has_get_gql_name<T>::value,
+   template <typename Raw, typename OS, typename E>
+   auto gql_query(const Raw& value, gql_stream& input_stream, OS& output_stream, const E& error)
+       -> std::enable_if_t<eosio::reflection::has_for_each_field_v<Raw> &&
+                               !has_get_gql_name<Raw>::value,
                            bool>
    {
+      using T = eosio::remove_cvref_t<Raw>;
       if (input_stream.current_puncuator != '{')
          return error("expected {");
       input_stream.skip();
@@ -338,7 +524,7 @@ namespace clchain
       while (input_stream.current_type == gql_stream::name)
       {
          bool found = false;
-         bool have_error = false;
+         bool ok = true;
          auto alias = input_stream.current_value;
          auto field_name = alias;
          input_stream.skip();
@@ -350,30 +536,61 @@ namespace clchain
             field_name = input_stream.current_value;
             input_stream.skip();
          }
-         eosio::for_each_field<T>([&](std::string_view name, auto&& member) {
-            if (found)
-               return;
-            if (name == field_name)
-            {
-               found = true;
-               if (first)
-               {
-                  increase_indent(output_stream);
-                  first = false;
-               }
-               else
-                  output_stream.write(',');
-               write_newline(output_stream);
-               to_json(alias, output_stream);
-               write_colon(output_stream);
-               if (!gql_query(member(&value), input_stream, output_stream, error))
-                  have_error = true;
-            }
-         });
-         if (have_error)
+         eosio_for_each_field(
+             (T*)nullptr, [&](std::string_view name, auto&& member, auto... arg_names) {
+                using member_type = decltype(member((T*)nullptr));
+                if constexpr (eosio::is_non_const_member_fn<member_type>())
+                   return;
+                else
+                {
+                   if (found)
+                      return;
+                   if (name == field_name)
+                   {
+                      found = true;
+                      if (first)
+                      {
+                         increase_indent(output_stream);
+                         first = false;
+                      }
+                      else
+                         output_stream.write(',');
+                      write_newline(output_stream);
+                      to_json(alias, output_stream);
+                      write_colon(output_stream);
+                      if constexpr (std::is_member_object_pointer_v<member_type>)
+                      {
+                         if (!gql_query(value.*member(&value), input_stream, output_stream, error))
+                            ok = false;
+                      }
+                      else
+                      {
+                         using mf = eosio::member_fn<member_type>;
+                         if (input_stream.current_puncuator != '(')
+                            return (ok = error("expected (")), void();
+                         input_stream.skip();
+                         eosio::tuple_from_type_list<typename mf::arg_types> args;
+                         if (!gql_parse_args<0>(args, input_stream, error))
+                            return (ok = false), void();
+                         if (input_stream.current_puncuator != ')')
+                            return (ok = error("expected )")), void();
+                         input_stream.skip();
+
+                         auto result = std::apply(
+                             [&](auto&&... args) {
+                                return (value.*member(&value))(std::move(args)...);
+                             },
+                             args);
+                         if (!gql_query(result, input_stream, output_stream, error))
+                            return (ok = false), void();
+                      }
+                   }
+                }
+             });
+         if (!ok)
             return false;
          if (!found)
-            return error((std::string)input_stream.current_value + " not found");
+            return error((std::string)field_name + " not found");
       }
       if (input_stream.current_puncuator != '}')
          return error("expected }");
