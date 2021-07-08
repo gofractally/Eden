@@ -3,6 +3,7 @@
 #include <eosio/bytes.hpp>
 #include <eosio/fixed_bytes.hpp>
 #include <eosio/name.hpp>
+#include <eosio/reflection2.hpp>
 #include <eosio/time.hpp>
 
 namespace eden_chain
@@ -74,7 +75,31 @@ namespace eden_chain
          duplicate,
          unlinkable,
       };
+
+      static constexpr const char* status_str[] = {
+          "appended",
+          "forked",
+          "duplicate",
+          "unlinkable",
+      };
+
       std::vector<std::unique_ptr<block_with_id>> blocks;
+
+      const block_with_id* blockByEosioNum(uint32_t num) const
+      {
+         auto it = std::lower_bound(blocks.begin(), blocks.end(), num, by_eosio_num);
+         if (it != blocks.end() && get_eosio_num(*it) == num)
+            return &**it;
+         return nullptr;
+      }
+
+      const block_with_id* block_before_eosio_num(uint32_t num) const
+      {
+         auto it = std::lower_bound(blocks.begin(), blocks.end(), num, by_eosio_num);
+         if (it != blocks.begin())
+            return &*it[-1];
+         return nullptr;
+      }
 
       status add_block(const block_with_id& block)
       {
@@ -101,6 +126,6 @@ namespace eden_chain
          return result;
       }
    };
-   EOSIO_REFLECT(block_log, blocks)
+   EOSIO_REFLECT2(block_log, blocks, method(blockByEosioNum, "num"))
 
 }  // namespace eden_chain

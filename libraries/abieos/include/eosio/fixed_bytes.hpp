@@ -5,6 +5,7 @@
 #include <cstring>
 #include <type_traits>
 #include "from_json.hpp"
+#include "hex.hpp"
 #include "operators.hpp"
 #include "reflection.hpp"
 #include "to_json.hpp"
@@ -288,4 +289,10 @@ namespace eosio
       eosio::to_json_hex((const char*)bytes.data(), bytes.size(), stream);
    }
 
+   template <typename T, std::size_t Size>
+   std::string to_string(const fixed_bytes<Size, T>& obj)
+   {
+      auto bytes = obj.extract_as_byte_array();
+      return hex(bytes.begin(), bytes.end());
+   }
 }  // namespace eosio
