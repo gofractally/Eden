@@ -60,7 +60,11 @@ export const InductionProfilePreview = ({
             console.info("inductprofil trx", signedTrx);
 
             if (selectedPhoto) {
-                await uploadIpfsFileWithTransaction(signedTrx, img);
+                await uploadIpfsFileWithTransaction(
+                    signedTrx,
+                    img,
+                    selectedPhoto
+                );
             }
 
             setDidSubmitProfile(true);

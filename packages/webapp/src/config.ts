@@ -1,3 +1,4 @@
+import { ValidUploadActions } from "@edenos/common";
 import { assetFromString } from "./_app/utils/asset";
 
 if (
@@ -17,7 +18,9 @@ if (
     !process.env.NEXT_PUBLIC_APP_NAME ||
     !process.env.NEXT_PUBLIC_EDEN_CONTRACT_ACCOUNT ||
     !process.env.NEXT_PUBLIC_APP_MINIMUM_DONATION_AMOUNT ||
-    !process.env.NEXT_PUBLIC_ENABLED_WALLETS
+    !process.env.NEXT_PUBLIC_ENABLED_WALLETS ||
+    !process.env.NEXT_PUBLIC_BOX_UPLOAD_IPFS ||
+    !process.env.NEXT_PUBLIC_BOX_ADDRESS
 ) {
     throw new Error("Eden WebApp Environment Variables are not set");
 }
@@ -40,10 +43,17 @@ APP_NAME="${process.env.NEXT_PUBLIC_APP_NAME}"
 EDEN_CONTRACT_ACCOUNT="${process.env.NEXT_PUBLIC_EDEN_CONTRACT_ACCOUNT}"
 APP_MINIMUM_DONATION_AMOUNT="${process.env.NEXT_PUBLIC_APP_MINIMUM_DONATION_AMOUNT}"
 ENABLED_WALLETS="${process.env.NEXT_PUBLIC_ENABLED_WALLETS}"
+BOX_UPLOAD_IPFS="${process.env.NEXT_PUBLIC_BOX_UPLOAD_IPFS}"
+BOX_ADDRESS="${process.env.NEXT_PUBLIC_BOX_ADDRESS}"
 `);
 
 export const ipfsBaseUrl = "https://ipfs.io/ipfs"; //"https://ipfs.pink.gg/ipfs";
 export const ipfsApiBaseUrl = "https://ipfs.infura.io:5001/api/v0";
+
+export const box = {
+    enableIpfsUpload: process.env.NEXT_PUBLIC_BOX_UPLOAD_IPFS === "true",
+    address: process.env.NEXT_PUBLIC_BOX_ADDRESS || "http://localhost:3032",
+};
 
 export const blockExplorerAccountBaseUrl =
     process.env.NEXT_PUBLIC_BLOCKEXPLORER_ACCOUNT_BASE_URL;
@@ -81,16 +91,13 @@ export const availableWallets = (
     process.env.NEXT_PUBLIC_ENABLED_WALLETS || ""
 ).split(",");
 
-interface ValidUploadActions {
-    [contract: string]: {
-        [action: string]: { maxSize: number };
-    };
-}
-
 export const validUploadActions: ValidUploadActions = {
     [edenContractAccount]: {
-        inductprofil: { maxSize: 1_000_000 },
-        inductvideo: { maxSize: 100_000_000 },
+        inductprofil: {
+            maxSize: 1_000_000,
+            cidField: "new_member_profile.img",
+        },
+        inductvideo: { maxSize: 1_400_000_000, cidField: "video" },
     },
 };
 
