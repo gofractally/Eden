@@ -97,6 +97,7 @@ namespace eosio
          auto s = reinterpret_cast<const char*>(src);
          data.insert(data.end(), s, s + sz);
       }
+      void write_str(std::string_view s) { write(s.data(), s.size()); }
       template <typename T>
       void write_raw(const T& v)
       {
@@ -115,6 +116,7 @@ namespace eosio
          auto s = reinterpret_cast<const char*>(src);
          data.insert(data.end(), s, s + sz);
       }
+      void write_str(std::string_view s) { write(s.data(), s.size()); }
       template <typename T>
       void write_raw(const T& v)
       {
@@ -142,13 +144,7 @@ namespace eosio
          pos += sz;
       }
 
-      template <int Size>
-      void write(const char (&src)[Size])
-      {
-         write(src, Size);
-      }
-
-      void write(const std::string& s) { write(s.c_str(), s.size()); }
+      void write_str(std::string_view s) { write(s.data(), s.size()); }
 
       template <typename T>
       void write_raw(const T& v)
@@ -165,13 +161,7 @@ namespace eosio
 
       void write(const void* src, std::size_t sz) { size += sz; }
 
-      template <int Size>
-      void write(const char (&src)[Size])
-      {
-         size += Size;
-      }
-
-      void write(const std::string& s) { write(s.c_str(), s.size()); }
+      void write_str(std::string_view s) { write(s.data(), s.size()); }
 
       template <typename T>
       void write_raw(const T& v)

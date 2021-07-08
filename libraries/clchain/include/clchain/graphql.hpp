@@ -131,18 +131,18 @@ namespace clchain
                fill_gql_schema((std::remove_cvref_t<decltype(member((T*)nullptr))>*)nullptr, stream,
                                defined_types);
             });
-            stream.write("type ");
-            stream.write(generate_gql_partial_name((Raw*)nullptr));
-            stream.write(" {\n");
+            stream.write_str("type ");
+            stream.write_str(generate_gql_partial_name((Raw*)nullptr));
+            stream.write_str(" {\n");
             eosio::for_each_field<T>([&](const char* name, auto member) {
-               stream.write("    ");
-               stream.write(name);
-               stream.write(": ");
-               stream.write(generate_gql_whole_name(
+               stream.write_str("    ");
+               stream.write_str(name);
+               stream.write_str(": ");
+               stream.write_str(generate_gql_whole_name(
                    (std::remove_cvref_t<decltype(member((T*)nullptr))>*)nullptr));
-               stream.write("\n");
+               stream.write_str("\n");
             });
-            stream.write("}\n");
+            stream.write_str("}\n");
          }
       }
    }
