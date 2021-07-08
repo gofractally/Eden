@@ -71,6 +71,8 @@ namespace eden
       const member& get_member(eosio::name account);
       const member_table_type& get_table() const { return member_tb; }
       void create(eosio::name account);
+      member_table_type::const_iterator erase(member_table_type::const_iterator iter);
+      void remove(eosio::name account);
       void remove_if_pending(eosio::name account);
       bool is_new_member(eosio::name account) const;
       void check_active_member(eosio::name account);

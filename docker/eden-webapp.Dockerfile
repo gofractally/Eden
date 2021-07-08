@@ -7,6 +7,7 @@ WORKDIR /app
 ENV PATH /app/node_modules/.bin:$PATH
 
 COPY package.json yarn.lock ./
+COPY ./packages/common/package.json ./packages/common/
 COPY ./packages/webapp/package.json ./packages/webapp/
 
 RUN yarn install --frozen-lockfile
@@ -15,10 +16,12 @@ RUN yarn install --frozen-lockfile
 FROM node:alpine AS builder
 WORKDIR /app
 
+COPY ./packages/common ./packages/common
 COPY ./packages/webapp ./packages/webapp
 COPY .eslintignore .eslintrc.js .prettierrc.json lerna.json package.json tsconfig.build.json tsconfig.json yarn.lock ./
 
 COPY --from=deps /app/node_modules ./node_modules
+COPY --from=deps /app/packages/common/node_modules ./packages/common/node_modules
 COPY --from=deps /app/packages/webapp/node_modules ./packages/webapp/node_modules
 
 RUN yarn build --stream

@@ -17,17 +17,15 @@ function(add_libs suffix)
         contracts/wasi-polyfill/__wasi_fd_seek.cpp
         contracts/wasi-polyfill/__wasi_fd_write.cpp
     )
-    set_target_properties(eosio-contracts-wasi-polyfill${suffix} PROPERTIES ARCHIVE_OUTPUT_DIRECTORY ${ROOT_BINARY_DIR}/clsdk/lib-wasm)
 
     add_library(eosio-core${suffix})
     target_link_libraries(eosio-core${suffix} PUBLIC wasm-base${suffix} abieos${suffix} boost)
-    target_include_directories(eosio-core${suffix} PUBLIC core)
+    target_include_directories(eosio-core${suffix} PUBLIC core/include)
     target_sources(eosio-core${suffix} PRIVATE crypto.cpp)
-    set_target_properties(eosio-core${suffix} PROPERTIES ARCHIVE_OUTPUT_DIRECTORY ${ROOT_BINARY_DIR}/clsdk/lib-wasm)
 
     add_library(eosio-contract-base${suffix})
     target_link_libraries(eosio-contract-base${suffix} PUBLIC eosio-core${suffix})
-    target_include_directories(eosio-contract-base${suffix} PUBLIC contracts)
+    target_include_directories(eosio-contract-base${suffix} PUBLIC contracts/include)
     target_compile_options(eosio-contract-base${suffix} INTERFACE -DCOMPILING_CONTRACT)
     target_link_options(eosio-contract-base${suffix} PUBLIC
         -Wl,--stack-first
@@ -37,7 +35,6 @@ function(add_libs suffix)
         -nostdlib
     )
     target_sources(eosio-contract-base${suffix} PRIVATE eosiolib.cpp)
-    set_target_properties(eosio-contract-base${suffix} PROPERTIES ARCHIVE_OUTPUT_DIRECTORY ${ROOT_BINARY_DIR}/clsdk/lib-wasm)
 
     # Contract with simple malloc/free
     add_library(eosio-contract-simple-malloc${suffix} INTERFACE)
@@ -69,13 +66,21 @@ function(add_libs suffix)
         tester/wasi_polyfill/__wasi_proc_exit.cpp
     )
     target_compile_options(eosio-contract-abigen${suffix} PUBLIC -DCOMPILING_ABIGEN)
-    target_include_directories(eosio-contract-abigen${suffix} PUBLIC contracts)
+    target_include_directories(eosio-contract-abigen${suffix} PUBLIC contracts/include)
     target_link_libraries(eosio-contract-abigen${suffix} PUBLIC
         boost
         eosio-core${suffix}
+        -lc++
+        -lc++abi
+        -lc
         eosio-contracts-wasi-polyfill${suffix}
+        ${WASI_SDK_PREFIX}/lib/clang/11.0.0/lib/wasi/libclang_rt.builtins-wasm32.a
+        ${WASI_SDK_PREFIX}/share/wasi-sysroot/lib/wasm32-wasi/crt1.o
     )
-    set_target_properties(eosio-contract-abigen${suffix} PROPERTIES ARCHIVE_OUTPUT_DIRECTORY ${ROOT_BINARY_DIR}/clsdk/lib-wasm)
+    target_link_options(eosio-contract-abigen${suffix} PUBLIC
+        -Wl,--entry,_start
+        -nostdlib
+    )
 
     add_library(cltestlib${suffix})
     target_sources(cltestlib${suffix} PRIVATE
@@ -97,20 +102,45 @@ function(add_libs suffix)
         tester/wasi_polyfill/__wasi_path_open.cpp
         tester/wasi_polyfill/__wasi_proc_exit.cpp
     )
-    target_link_libraries(cltestlib${suffix} PUBLIC boost eosio-core${suffix})
-    target_include_directories(cltestlib${suffix} PUBLIC contracts tester)
+    target_link_libraries(cltestlib${suffix} PUBLIC 
+        boost eosio-core${suffix}
+        -lc++
+        -lc++abi
+        -lc
+        ${WASI_SDK_PREFIX}/lib/clang/11.0.0/lib/wasi/libclang_rt.builtins-wasm32.a
+        ${WASI_SDK_PREFIX}/share/wasi-sysroot/lib/wasm32-wasi/crt1.o
+    )
+    target_include_directories(cltestlib${suffix} PUBLIC contracts/include tester/include)
     target_link_options(cltestlib${suffix} INTERFACE -Wl,--export-table)
-    set_target_properties(cltestlib${suffix} PROPERTIES ARCHIVE_OUTPUT_DIRECTORY ${ROOT_BINARY_DIR}/clsdk/lib-wasm)
-
-    copy_headers(contracts/eosio eosiolib/contracts/include/eosio)
-    copy_headers(core eosiolib/core/include)
-    copy_headers(core/eosio eosiolib/core/include/eosio)
-    copy_headers(tester/eosio eosiolib/tester/include/eosio)
-    configure_file(simple_malloc.cpp ${ROOT_BINARY_DIR}/clsdk/eosiolib/simple_malloc.cpp COPYONLY)
-    configure_file(sdk/clsdk-cmake-args ${ROOT_BINARY_DIR}/clsdk/bin/clsdk-cmake-args COPYONLY)
-    configure_file(sdk/toolchain.cmake ${ROOT_BINARY_DIR}/clsdk/toolchain.cmake COPYONLY)
-    configure_file(sdk/clsdk-config.cmake ${ROOT_BINARY_DIR}/clsdk/clsdk-config.cmake COPYONLY)
+    target_link_options(cltestlib${suffix} PUBLIC
+        -Wl,--entry,_start
+        -nostdlib
+    )
 endfunction(add_libs)
 
 add_libs("")
-add_libs(-debug)
+add_libs("-debug")
+add_libs("-clsdk")
+add_libs("-debug-clsdk")
+
+foreach(suffix "" "-debug")
+    foreach(lib eosio-contracts-wasi-polyfill eosio-core eosio-contract-base eosio-contract-abigen cltestlib)
+        set_target_properties(${lib}${suffix}-clsdk PROPERTIES ARCHIVE_OUTPUT_DIRECTORY ${ROOT_BINARY_DIR}/clsdk/lib-wasm)
+        set_target_properties(${lib}${suffix}-clsdk PROPERTIES ARCHIVE_OUTPUT_NAME ${lib}${suffix})
+    endforeach()
+endforeach()
+
+copy_headers(contracts/include/eosio eosiolib/contracts/include/eosio)
+copy_headers(core/include eosiolib/core/include)
+copy_headers(core/include/eosio eosiolib/core/include/eosio)
+copy_headers(tester/include/eosio eosiolib/tester/include/eosio)
+file(COPY contracts/wasi-polyfill DESTINATION ${ROOT_BINARY_DIR}/clsdk/eosiolib/contracts)
+file(COPY tester/wasi_polyfill DESTINATION ${ROOT_BINARY_DIR}/clsdk/eosiolib/tester)
+configure_file(crypto.cpp ${ROOT_BINARY_DIR}/clsdk/eosiolib/crypto.cpp COPYONLY)
+configure_file(eosiolib.cpp ${ROOT_BINARY_DIR}/clsdk/eosiolib/eosiolib.cpp COPYONLY)
+configure_file(simple_malloc.cpp ${ROOT_BINARY_DIR}/clsdk/eosiolib/simple_malloc.cpp COPYONLY)
+configure_file(tester/tester_intrinsics.cpp ${ROOT_BINARY_DIR}/clsdk/eosiolib/tester/tester_intrinsics.cpp COPYONLY)
+configure_file(tester/tester.cpp ${ROOT_BINARY_DIR}/clsdk/eosiolib/tester/tester.cpp COPYONLY)
+configure_file(sdk/clsdk-cmake-args ${ROOT_BINARY_DIR}/clsdk/bin/clsdk-cmake-args COPYONLY)
+configure_file(sdk/toolchain.cmake ${ROOT_BINARY_DIR}/clsdk/toolchain.cmake COPYONLY)
+configure_file(sdk/clsdk-config.cmake ${ROOT_BINARY_DIR}/clsdk/clsdk-config.cmake COPYONLY)

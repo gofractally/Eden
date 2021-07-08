@@ -1,6 +1,6 @@
 import type { NextApiRequest, NextApiResponse } from "next";
+import { BadRequestError, handleErrors } from "@edenos/common";
 
-import { BadRequestError, handleErrors } from "_api/error-handlers";
 import { ipfsPostSchema } from "_api/schemas";
 import { ipfsUploadHandler } from "_api/handlers";
 

@@ -6,6 +6,7 @@ import {
     getMember,
     getMembers,
     getMembersStats,
+    getTreasuryStats,
     getNewMembers,
 } from "members";
 import { getIsCommunityActive } from "_app/api";
@@ -18,6 +19,11 @@ import {
     getInductions,
     getInductionWithEndorsements,
 } from "inductions/api";
+
+export const queryTreasuryStats = {
+    queryKey: "query_treasury_stats",
+    queryFn: getTreasuryStats,
+};
 
 export const queryMembersStats = {
     queryKey: "query_member_stats",
