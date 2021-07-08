@@ -12,6 +12,7 @@ import {
     useUALAccount,
     onError,
     queryMemberByAccountName,
+    URL_PATHS,
 } from "_app";
 
 import { donateAndCompleteInductionTransaction } from "inductions";
@@ -58,7 +59,7 @@ export const InductionDonateForm = ({
             );
 
             // router goes to the newly created member page
-            router.push(`/members/${induction.invitee}`);
+            router.push(`${URL_PATHS.MEMBERS.href}/${induction.invitee}`);
             return;
         } catch (error) {
             onError(
