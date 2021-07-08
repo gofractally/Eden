@@ -1,4 +1,5 @@
 import { Link } from "_app/ui";
+import { URL_PATHS } from "_app/utils";
 
 export const Footer = () => (
     <footer className="border-t text-gray-600 body-font border-gray-200 bg-white">
@@ -20,7 +21,9 @@ export const Footer = () => (
                     </h2>
                     <nav className="list-none mb-10">
                         <li>
-                            <Link href="/members">The Community</Link>
+                            <Link href={URL_PATHS.MEMBERS.href}>
+                                The Community
+                            </Link>
                         </li>
                         <li>
                             <Link href="/induction">Membership Dashboard</Link>

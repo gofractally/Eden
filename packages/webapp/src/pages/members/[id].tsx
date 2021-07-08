@@ -8,6 +8,7 @@ import {
     queryMemberData,
     RawLayout,
     SingleColLayout,
+    URL_PATHS,
 } from "_app";
 import { MemberCard, MemberCollections, MemberHoloCard } from "members";
 
@@ -64,7 +65,10 @@ export const MemberPage = ({ account }: Props) => {
 
     return (
         <SingleColLayout title="Member not found">
-            <CallToAction href="/members" buttonLabel="Browse members">
+            <CallToAction
+                href={URL_PATHS.MEMBERS.href}
+                buttonLabel="Browse members"
+            >
                 This account is not an active Eden member.
             </CallToAction>
         </SingleColLayout>

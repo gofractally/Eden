@@ -13,6 +13,7 @@ import {
     Text,
     Asset,
     assetToString,
+    URL_PATHS,
 } from "_app";
 
 export const getServerSideProps: GetServerSideProps = async () => {
@@ -128,7 +129,7 @@ const CommunityStatsCard = ({
             <Text className="font-medium" size="md">
                 Treasury: {assetToString(treasuryBalance, 4)}
             </Text>
-            <Link href="/members" className="font-medium">
+            <Link href={URL_PATHS.MEMBERS.href} className="font-medium">
                 {memberStats.active_members} active member
                 {memberStats.active_members !== 1 && "s"}
             </Link>
