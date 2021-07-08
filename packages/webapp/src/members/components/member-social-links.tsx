@@ -30,7 +30,7 @@ export const MemberSocialLinks = ({ member }: Props) => {
                 <SocialButton
                     handle={member.socialHandles.eosCommunity}
                     icon={IoChatbubblesOutline}
-                    href={`https://eoscommunity.org/u/${member.socialHandles.eosCommunity}`}
+                    href={`https://forums.eoscommunity.org/u/${member.socialHandles.eosCommunity}`}
                 />
             )}
             {member.socialHandles.blog && (
