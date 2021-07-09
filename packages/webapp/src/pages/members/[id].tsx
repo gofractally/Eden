@@ -8,9 +8,9 @@ import {
     queryMemberData,
     RawLayout,
     SingleColLayout,
-    URL_PATHS,
 } from "_app";
 import { MemberCard, MemberCollections, MemberHoloCard } from "members";
+import { ROUTES } from "_app/config";
 
 /**
  * We have an issue if the member is not found in the development environment
@@ -66,7 +66,7 @@ export const MemberPage = ({ account }: Props) => {
     return (
         <SingleColLayout title="Member not found">
             <CallToAction
-                href={URL_PATHS.MEMBERS.href}
+                href={ROUTES.MEMBERS.href}
                 buttonLabel="Browse members"
             >
                 This account is not an active Eden member.

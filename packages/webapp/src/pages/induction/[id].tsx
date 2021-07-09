@@ -14,6 +14,7 @@ import {
     InductionStatus,
     useGetInductionWithEndorsements,
 } from "inductions";
+import { ROUTES } from "_app/config";
 
 export const InductionDetailsPage = () => {
     const router = useRouter();
@@ -44,7 +45,7 @@ export const InductionDetailsPage = () => {
         return (
             <RawLayout title="Invite not found">
                 <CallToAction
-                    href="/induction"
+                    href={ROUTES.INDUCTION.href}
                     buttonLabel="Membership Dashboard"
                 >
                     Hmmm... this invitation couldn't be found. The invitee may

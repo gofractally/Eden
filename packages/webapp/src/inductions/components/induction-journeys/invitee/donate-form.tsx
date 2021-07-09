@@ -12,11 +12,11 @@ import {
     useUALAccount,
     onError,
     queryMemberByAccountName,
-    URL_PATHS,
 } from "_app";
 
 import { donateAndCompleteInductionTransaction } from "inductions";
 import { Induction } from "inductions/interfaces";
+import { ROUTES } from "_app/config";
 
 interface Props {
     induction: Induction;
@@ -59,7 +59,7 @@ export const InductionDonateForm = ({
             );
 
             // router goes to the newly created member page
-            router.push(`${URL_PATHS.MEMBERS.href}/${induction.invitee}`);
+            router.push(`${ROUTES.MEMBERS.href}/${induction.invitee}`);
             return;
         } catch (error) {
             onError(
