@@ -43,7 +43,7 @@ export const validUploadActions: ValidUploadActions = {
             maxSize: 1_000_000,
             cidField: "new_member_profile.img",
         },
-        inductvideo: { maxSize: 1_500_000_000, cidField: "video" },
+        inductvideo: { maxSize: 100_000_000, cidField: "video" },
     },
 };
 logger.info(
