@@ -41,3 +41,9 @@ docker build -t eden/box -f docker/eden-box.Dockerfile .
 docker image tag eden/box ghcr.io/eoscommunity/eden-box:latest
 docker image push ghcr.io/eoscommunity/eden-box:latest
 ```
+
+## Deploying Edenbox
+
+Just go to your server docker panel and get the edenbox latest version: `ghcr.io/eoscommunity/eden-box:latest`
+
+All the published versions are listed here: https://github.com/eoscommunity/Eden/pkgs/container/eden-box/versions
