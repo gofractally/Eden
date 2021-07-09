@@ -421,17 +421,29 @@ namespace clchain
       }
    }
 
+   template <int i, typename... Args, typename E, typename... Arg_names>
+   bool gql_parse_args(std::tuple<Args...>& args,
+                       gql_stream& input_stream,
+                       const E& error,
+                       const char* arg_name,
+                       Arg_names... arg_names)
+   {
+      if (input_stream.current_type != gql_stream::name || input_stream.current_value != arg_name)
+         return error("expected " + std::string(arg_name) + " (argument order is enforced)");
+      input_stream.skip();
+      if (input_stream.current_puncuator != ':')
+         return error("expected :");
+      input_stream.skip();
+      if (!gql_parse_arg(std::get<i>(args), input_stream, error))
+         return false;
+      return gql_parse_args<i + 1>(args, input_stream, error);
+   }
+
    template <int i, typename... Args, typename E>
    bool gql_parse_args(std::tuple<Args...>& args, gql_stream& input_stream, const E& error)
    {
-      if constexpr (i == sizeof...(Args))
-         return true;
-      else
-      {
-         if (!gql_parse_arg(std::get<i>(args), input_stream, error))
-            return false;
-         return gql_parse_args<i + 1>(args, input_stream, error);
-      }
+      static_assert(i == sizeof...(Args), "mismatched arg names");
+      return true;
    }
 
    template <typename E>
@@ -570,7 +582,7 @@ namespace clchain
                             return (ok = error("expected (")), void();
                          input_stream.skip();
                          eosio::tuple_from_type_list<typename mf::arg_types> args;
-                         if (!gql_parse_args<0>(args, input_stream, error))
+                         if (!gql_parse_args<0>(args, input_stream, error, arg_names...))
                             return (ok = false), void();
                          if (input_stream.current_puncuator != ')')
                             return (ok = error("expected )")), void();
