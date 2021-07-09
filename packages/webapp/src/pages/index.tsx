@@ -13,8 +13,8 @@ import {
     Text,
     Asset,
     assetToString,
-    URL_PATHS,
 } from "_app";
+import { ROUTES } from "_app/config";
 
 export const getServerSideProps: GetServerSideProps = async () => {
     const queryClient = new QueryClient();
@@ -129,11 +129,14 @@ const CommunityStatsCard = ({
             <Text className="font-medium" size="md">
                 Treasury: {assetToString(treasuryBalance, 4)}
             </Text>
-            <Link href={URL_PATHS.MEMBERS.href} className="font-medium">
+            <Link href={ROUTES.MEMBERS.href} className="font-medium">
                 {memberStats.active_members} active member
                 {memberStats.active_members !== 1 && "s"}
             </Link>
-            <Link href="/induction/pending-invitations" className="font-medium">
+            <Link
+                href={`${ROUTES.INDUCTION.href}/pending-invitations`}
+                className="font-medium"
+            >
                 {memberStats.pending_members} pending invitation
                 {memberStats.pending_members !== 1 && "s"}
             </Link>

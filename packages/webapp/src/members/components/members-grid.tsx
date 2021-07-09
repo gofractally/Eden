@@ -2,9 +2,10 @@ import React from "react";
 import Link from "next/link";
 import dayjs from "dayjs";
 
-import { assetToString, ipfsUrl, URL_PATHS } from "_app";
+import { assetToString, ipfsUrl } from "_app";
 import { atomicAssets } from "config";
 import { MemberData } from "../interfaces";
+import { ROUTES } from "_app/config";
 
 interface Props {
     members: MemberData[];
@@ -49,7 +50,7 @@ export const MemberSquare = ({ member }: { member: MemberData }) => {
 
     if (member.account) {
         return (
-            <Link href={`${URL_PATHS.MEMBERS.href}/${member.account}`}>
+            <Link href={`${ROUTES.MEMBERS.href}/${member.account}`}>
                 <a>{memberCard}</a>
             </Link>
         );

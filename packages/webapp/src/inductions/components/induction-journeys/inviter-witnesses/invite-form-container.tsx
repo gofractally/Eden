@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Text, Link, onError, Heading, Button } from "_app";
+import { ROUTES } from "_app/config";
 import {
     InductionInviteForm,
     InductionStepInviter,
@@ -74,9 +75,9 @@ const InviteConfirmation = ({ inductionId }: { inductionId: string }) => (
                 blockchain account. Or you can share this direct link with them:
             </Text>
             <Text className="leading-normal break-all">
-                <Link href={`/induction/${inductionId}`}>
-                    {window.location.hostname}/induction/
-                    {inductionId}
+                <Link href={`${ROUTES.INDUCTION.href}/${inductionId}`}>
+                    {window.location.hostname}
+                    {ROUTES.INDUCTION.href}/{inductionId}
                 </Link>
             </Text>
             <Text className="leading-normal">
@@ -85,7 +86,7 @@ const InviteConfirmation = ({ inductionId }: { inductionId: string }) => (
                 this invitation expires, you will be able to issue another.
             </Text>
         </div>
-        <Button href="/induction" size="lg">
+        <Button href={ROUTES.INDUCTION.href} size="lg">
             See your invitations
         </Button>
     </>

@@ -10,6 +10,7 @@ import {
     useUALAccount,
     queryEndorsementsByInductionId,
 } from "_app";
+import { ROUTES } from "_app/config";
 
 import { Induction, InductionRole, InductionStatus } from "../../interfaces";
 import { cancelInductionTransaction } from "../../transactions";
@@ -137,7 +138,7 @@ export const InductionStatusButton = ({ induction, role }: Props) => {
             <Button
                 size="sm"
                 fullWidth
-                href={`/induction/${induction.id}`}
+                href={`${ROUTES.INDUCTION.href}/${induction.id}`}
                 type={buttonType}
             >
                 {buttonLabel}
