@@ -621,18 +621,49 @@ namespace clchain
       return error("expected end of input");
    }
 
-   template <typename T>
-   std::string format_gql_query(const T& value, std::string_view query)
+   template <typename Stream = eosio::string_stream, typename T>
+   std::string gql_query(const T& value, std::string_view query)
    {
       gql_stream input_stream{query};
       std::string result;
-      eosio::pretty_stream<eosio::string_stream> output_stream(result);
+      Stream output_stream(result);
+      output_stream.write('{');
+      increase_indent(output_stream);
+      write_newline(output_stream);
+      output_stream.write_str("\"data\": ");
       std::string error;
       if (!gql_query_root(value, input_stream, output_stream, [&](const auto& e) {
              error = e;
              return false;
           }))
-         return error;
+      {
+         result.clear();
+         Stream error_stream(result);
+         error_stream.write('{');
+         increase_indent(error_stream);
+         write_newline(error_stream);
+         error_stream.write_str("\"errors\": {");
+         increase_indent(error_stream);
+         write_newline(error_stream);
+         error_stream.write_str("\"message\": ");
+         eosio::to_json(error, error_stream);
+         decrease_indent(error_stream);
+         write_newline(error_stream);
+         error_stream.write('}');
+         decrease_indent(error_stream);
+         write_newline(error_stream);
+         error_stream.write('}');
+         return result;
+      }
+      decrease_indent(output_stream);
+      write_newline(output_stream);
+      output_stream.write('}');
       return result;
+   }
+
+   template <typename T>
+   std::string format_gql_query(const T& value, std::string_view query)
+   {
+      return gql_query<eosio::pretty_stream<eosio::string_stream>>(value, query);
    }
 }  // namespace clchain
