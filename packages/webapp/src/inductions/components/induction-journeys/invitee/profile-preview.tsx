@@ -56,6 +56,7 @@ export const InductionProfilePreview = ({
 
             const signedTrx = await ualAccount.signTransaction(transaction, {
                 broadcast: !selectedPhoto,
+                expireSeconds: 1200,
             });
             console.info("inductprofil trx", signedTrx);
 
