@@ -29,7 +29,7 @@ export const Heading = ({ children, size, className }: Props) => {
             textSize = "text-3xl";
     }
 
-    const headingClassName = `${textSize} font-medium text-gray-800 ${
+    const headingClassName = `${textSize} font-semibold text-gray-800 ${
         className || ""
     }`;
 
