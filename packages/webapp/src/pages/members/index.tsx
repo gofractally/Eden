@@ -92,53 +92,50 @@ export const MembersPage = (props: Props) => {
 
     return (
         <FluidLayout title="Community">
-            <div className="max-w-screen-xl mx-auto">
-                <div className="lg:mx-5 border border-t-0">
-                    <div className="p-2.5">
-                        <Heading size={1}>New Members</Heading>
-                        {newMembers.isLoading && "Loading new members..."}
-                        {newMembers.error && "Fail to load new members"}
-                    </div>
-                    {newMembers.data && (
-                        <>
-                            <MembersGrid
-                                members={newMembers.data}
-                                dataTestId="new-members-grid"
-                            />
-                            <PaginationNav
-                                paginate={paginateNewMembers}
-                                hasNext={
-                                    newMembers.data.length >=
-                                    NEW_MEMBERS_PAGE_SIZE
-                                }
-                                hasPrevious={newMembersPage > 1}
-                            />
-                        </>
-                    )}
-                    <div className="p-2.5">
-                        <Heading size={1}>All Members</Heading>
-                        {members.isLoading && "Loading members..."}
-                        {members.error && "Fail to load members"}
-                    </div>
-                    {members.data && (
-                        <>
-                            <MembersGrid
-                                members={members.data}
-                                dataTestId="members-grid"
-                            />
-                            <PaginationNav
-                                paginate={paginateMembers}
-                                hasNext={
-                                    members.data.length >= MEMBERS_PAGE_SIZE
-                                }
-                                hasPrevious={membersPage > 1}
-                                pageNumber={membersPage}
-                                totalPages={totalMembersPages}
-                            />
-                        </>
-                    )}
-                </div>
+            <div className="p-2.5">
+                <Heading size={1}>New Members</Heading>
+                {newMembers.isLoading && "Loading new members..."}
+                {newMembers.error && "Fail to load new members"}
             </div>
+            {newMembers.data && (
+                <>
+                    <div className="border-t border-b">
+                        <MembersGrid
+                            members={newMembers.data}
+                            dataTestId="new-members-grid"
+                        />
+                    </div>
+                    <PaginationNav
+                        paginate={paginateNewMembers}
+                        hasNext={
+                            newMembers.data.length >= NEW_MEMBERS_PAGE_SIZE
+                        }
+                        hasPrevious={newMembersPage > 1}
+                    />
+                </>
+            )}
+            <div className="p-2.5">
+                <Heading size={1}>All Members</Heading>
+                {members.isLoading && "Loading members..."}
+                {members.error && "Fail to load members"}
+            </div>
+            {members.data && (
+                <>
+                    <div className="border-t border-b">
+                        <MembersGrid
+                            members={members.data}
+                            dataTestId="members-grid"
+                        />
+                    </div>
+                    <PaginationNav
+                        paginate={paginateMembers}
+                        hasNext={members.data.length >= MEMBERS_PAGE_SIZE}
+                        hasPrevious={membersPage > 1}
+                        pageNumber={membersPage}
+                        totalPages={totalMembersPages}
+                    />
+                </>
+            )}
         </FluidLayout>
     );
 };

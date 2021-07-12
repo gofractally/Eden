@@ -21,7 +21,7 @@ const openInNewTab = (url: string) => {
 export const MembersGrid = ({ members, dataTestId }: Props) => {
     return (
         <div
-            className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-px border border-t-1 border-b-1 border-l-0 border-r-0"
+            className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-px"
             data-testid={dataTestId}
         >
             {(members.length &&
