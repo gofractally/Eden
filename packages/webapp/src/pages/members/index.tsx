@@ -105,13 +105,15 @@ export const MembersPage = (props: Props) => {
                             dataTestId="new-members-grid"
                         />
                     </div>
-                    <PaginationNav
-                        paginate={paginateNewMembers}
-                        hasNext={
-                            newMembers.data.length >= NEW_MEMBERS_PAGE_SIZE
-                        }
-                        hasPrevious={newMembersPage > 1}
-                    />
+                    <div className="p-2.5">
+                        <PaginationNav
+                            paginate={paginateNewMembers}
+                            hasNext={
+                                newMembers.data.length >= NEW_MEMBERS_PAGE_SIZE
+                            }
+                            hasPrevious={newMembersPage > 1}
+                        />
+                    </div>
                 </>
             )}
             <div className="p-2.5">
@@ -127,13 +129,15 @@ export const MembersPage = (props: Props) => {
                             dataTestId="members-grid"
                         />
                     </div>
-                    <PaginationNav
-                        paginate={paginateMembers}
-                        hasNext={members.data.length >= MEMBERS_PAGE_SIZE}
-                        hasPrevious={membersPage > 1}
-                        pageNumber={membersPage}
-                        totalPages={totalMembersPages}
-                    />
+                    <div className="p-2.5">
+                        <PaginationNav
+                            paginate={paginateMembers}
+                            hasNext={members.data.length >= MEMBERS_PAGE_SIZE}
+                            hasPrevious={membersPage > 1}
+                            pageNumber={membersPage}
+                            totalPages={totalMembersPages}
+                        />
+                    </div>
                 </>
             )}
         </FluidLayout>
