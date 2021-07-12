@@ -122,11 +122,11 @@ const CommunityStatsCard = ({
     treasuryBalance,
 }: CommunityStatsProps) =>
     memberStats && treasuryBalance ? (
-        <Card className="flex flex-col justify-center items-center h-full space-y-4 text-md lg:text-lg">
+        <Card className="flex flex-col justify-center items-center h-full space-y-4 lg:text-lg">
             <Heading size={2} className="mb-2">
                 Community Stats
             </Heading>
-            <Text className="font-medium" size="md">
+            <Text className="font-medium" size="inherit">
                 Treasury: {assetToString(treasuryBalance, 4)}
             </Text>
             <Link href={ROUTES.MEMBERS.href} className="font-medium">
