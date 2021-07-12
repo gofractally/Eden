@@ -1,17 +1,16 @@
 import React, { useEffect, useState } from "react";
 
-import { Button, Card } from "_app";
+import { Button, Heading } from "_app";
 
 import { getCollection, getCollectedBy } from "../api";
 import { MemberData } from "../interfaces";
 import { MembersGrid } from "./members-grid";
 
 interface Props {
-    account: string;
-    templateId: number;
+    member: MemberData;
 }
 
-export const MemberCollections = ({ account, templateId }: Props) => {
+export const MemberCollections = ({ member }: Props) => {
     const [tab, setTab] = useState<"collection" | "collectedBy">("collection");
     const [isLoading, setLoading] = useState(false);
     const [members, setMembers] = useState<MemberData[] | undefined>(undefined);
@@ -19,11 +18,11 @@ export const MemberCollections = ({ account, templateId }: Props) => {
     useEffect(() => {
         const loadMember = async () => {
             if (tab === "collection") {
-                const members = await getCollection(account);
+                const members = await getCollection(member.account);
                 setMembers(members);
             } else {
                 const { members, unknownOwners } = await getCollectedBy(
-                    templateId
+                    member.templateId
                 );
                 setMembers([
                     ...members,
@@ -34,31 +33,46 @@ export const MemberCollections = ({ account, templateId }: Props) => {
         };
         setLoading(true);
         loadMember();
-    }, [account, templateId, tab]);
+    }, [member, tab]);
 
     return (
-        <Card>
-            <div className="space-x-3">
-                <Button
-                    onClick={() => setTab("collection")}
-                    size="sm"
-                    type={tab === "collection" ? "primary" : "neutral"}
-                    disabled={tab === "collection"}
-                >
-                    Collection
-                </Button>
-                <Button
-                    onClick={() => setTab("collectedBy")}
-                    size="sm"
-                    type={tab === "collectedBy" ? "primary" : "neutral"}
-                    disabled={tab === "collectedBy"}
-                >
-                    Collected By
-                </Button>
+        <div className="divide-y">
+            <div className="p-2.5 pt-8 space-y-2">
+                <Heading size={1}>NFTs</Heading>
+                <div className="space-x-3">
+                    <Button
+                        onClick={() => setTab("collection")}
+                        size="sm"
+                        type={tab === "collection" ? "primary" : "neutral"}
+                        disabled={tab === "collection"}
+                    >
+                        NFT Collection
+                    </Button>
+                    <Button
+                        onClick={() => setTab("collectedBy")}
+                        size="sm"
+                        type={tab === "collectedBy" ? "primary" : "neutral"}
+                        disabled={tab === "collectedBy"}
+                    >
+                        NFT Collectors
+                    </Button>
+                </div>
+                {tab === "collection" ? (
+                    <p>
+                        <span className="font-medium">{member.name}</span>{" "}
+                        collects NFTs for the following Eden members:
+                    </p>
+                ) : (
+                    <p>
+                        The following Eden members or accounts collect one or
+                        more of{" "}
+                        <span className="font-medium">{member.name}'s</span>{" "}
+                        NFTs.
+                    </p>
+                )}
             </div>
-            <hr className="m-2" />
             {isLoading ? "loading..." : <MembersGrid members={members || []} />}
-        </Card>
+        </div>
     );
 };
 
