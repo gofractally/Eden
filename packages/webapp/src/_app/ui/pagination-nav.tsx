@@ -16,7 +16,7 @@ export const PaginationNav = ({
     pageNumber,
     totalPages,
 }: Props) => (
-    <div className="flex items-center justify-center mt-4 max-w-md mx-auto text-center space-x-4">
+    <div className="flex items-center justify-center py-4 max-w-md mx-auto text-center space-x-4">
         {hasPrevious && (
             <Button type="neutral" size="sm" onClick={() => paginate(-1)}>
                 Previous Page
