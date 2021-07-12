@@ -5,6 +5,7 @@
 #include <eden-atomicmarket.hpp>
 #include <eden.hpp>
 #include <elections.hpp>
+#include <encrypt.hpp>
 #include <eosio/tester.hpp>
 #include <members.hpp>
 #include <token/token.hpp>
@@ -109,6 +110,13 @@ template <typename T>
 auto get_table_size()
 {
    T tb("eden.gm"_n, eden::default_scope);
+   return std::distance(tb.begin(), tb.end());
+}
+
+template <typename T>
+auto get_table_size(eosio::name scope)
+{
+   T tb("eden.gm"_n, scope.value);
    return std::distance(tb.begin(), tb.end());
 }
 
@@ -1222,8 +1230,12 @@ TEST_CASE("election with multiple rounds")
        "alice"_n, 0, std::vector<eden::encrypted_key>{{}, {}, {}, {}}, eosio::bytes{});
    t.generic_group_vote(t.get_current_groups(), round++);
    CHECK(get_table_size<eden::vote_table_type>() == 48);
+   t.alice.act<actions::electmeeting>(
+       "alice"_n, 1, std::vector<eden::encrypted_key>{{}, {}, {}, {}}, eosio::bytes{});
    t.generic_group_vote(t.get_current_groups(), round++);
    CHECK(get_table_size<eden::vote_table_type>() == 12);
+   t.alice.act<actions::electmeeting>(
+       "alice"_n, 2, std::vector<eden::encrypted_key>{{}, {}, {}, {}}, eosio::bytes{});
    t.generic_group_vote(t.get_current_groups(), round++);
    CHECK(get_table_size<eden::vote_table_type>() == 3);
    t.electseed(eosio::time_point_sec(0x5f010070));
@@ -1231,6 +1243,7 @@ TEST_CASE("election with multiple rounds")
    t.chain.start_block(24 * 60 * 60 * 1000);
    t.alice.act<actions::electprocess>(256);
    CHECK(get_table_size<eden::vote_table_type>() == 0);
+   CHECK(get_table_size<eden::encrypted_data_table_type>("election"_n) == 0);
 
    eden::election_state_singleton results("eden.gm"_n, eden::default_scope);
    auto result = std::get<eden::election_state_v0>(results.get());
