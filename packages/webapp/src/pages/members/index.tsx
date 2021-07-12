@@ -5,8 +5,8 @@ import { QueryClient, useQuery } from "react-query";
 import { dehydrate } from "react-query/hydration";
 
 import {
-    SingleColLayout,
-    Card,
+    FluidLayout,
+    Heading,
     PaginationNav,
     queryMembersStats,
     queryMembers,
@@ -14,8 +14,8 @@ import {
 } from "_app";
 import { MembersGrid } from "members";
 
-const MEMBERS_PAGE_SIZE = 16;
-const NEW_MEMBERS_PAGE_SIZE = 8;
+const MEMBERS_PAGE_SIZE = 18;
+const NEW_MEMBERS_PAGE_SIZE = 12;
 
 export const getServerSideProps: GetServerSideProps = async ({ query }) => {
     const queryClient = new QueryClient();
@@ -91,11 +91,14 @@ export const MembersPage = (props: Props) => {
     };
 
     return (
-        <SingleColLayout>
-            <>
-                <Card title="New Members" titleSize={2}>
-                    {newMembers.isLoading && "Loading new members..."}
-                    {newMembers.error && "Fail to load new members"}
+        <FluidLayout title="Community">
+            <div className="max-w-screen-xl mx-auto">
+                <div className="lg:mx-5 border border-t-0">
+                    <div className="p-2.5">
+                        <Heading size={1}>New Members</Heading>
+                        {newMembers.isLoading && "Loading new members..."}
+                        {newMembers.error && "Fail to load new members"}
+                    </div>
                     {newMembers.data && (
                         <>
                             <MembersGrid
@@ -112,10 +115,11 @@ export const MembersPage = (props: Props) => {
                             />
                         </>
                     )}
-                </Card>
-                <Card title="All Members" titleSize={2}>
-                    {members.isLoading && "Loading members..."}
-                    {members.error && "Fail to load members"}
+                    <div className="p-2.5">
+                        <Heading size={1}>All Members</Heading>
+                        {members.isLoading && "Loading members..."}
+                        {members.error && "Fail to load members"}
+                    </div>
                     {members.data && (
                         <>
                             <MembersGrid
@@ -133,9 +137,9 @@ export const MembersPage = (props: Props) => {
                             />
                         </>
                     )}
-                </Card>
-            </>
-        </SingleColLayout>
+                </div>
+            </div>
+        </FluidLayout>
     );
 };
 
