@@ -18,7 +18,7 @@ export const FluidLayout = ({ children, title, hideBorders }: Props) => (
             <div className="max-w-screen-xl mx-auto">
                 <div
                     className={
-                        hideBorders ? "lg:mx-5" : "lg:mx-5 border border-t-0"
+                        hideBorders ? "" : "border-b xl:border-l xl:border-r"
                     }
                 >
                     {children}
