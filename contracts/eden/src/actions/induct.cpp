@@ -38,9 +38,15 @@ namespace eden
                             const std::vector<encrypted_key>& keys,
                             const eosio::bytes& data)
    {
+      require_auth(account);
+      globals{get_self()}.check_active();
+
       members members{get_self()};
       inductions inductions{get_self()};
-      members.check_keys(inductions.get_endorsers(id), keys);
+      eosio::check(inductions.is_endorser(id, account), "Cannot create this meeting");
+      auto participants = inductions.get_endorsers(id);
+      participants.push_back(inductions.get_induction(id).invitee());
+      members.check_keys(participants, keys);
       encrypt encrypt{get_self(), "induction"_n};
       encrypt.set(id, keys, data);
    }

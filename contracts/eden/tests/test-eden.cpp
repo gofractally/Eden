@@ -760,7 +760,15 @@ TEST_CASE("induction")
    eden_tester t;
    t.genesis();
 
+   for (auto member : {"alice"_n, "pip"_n, "egeon"_n})
+   {
+      t.chain.as(member).act<actions::setencpubkey>(member, eosio::public_key{});
+   }
    t.alice.act<actions::inductinit>(4, "alice"_n, "bertie"_n, std::vector{"pip"_n, "egeon"_n});
+   t.bertie.act<actions::setencpubkey>("bertie"_n, eosio::public_key{});
+   t.alice.act<actions::inductmeeting>("alice"_n, 4, std::vector<eden::encrypted_key>(4),
+                                       eosio::bytes{});
+   CHECK(get_table_size<eden::encrypted_data_table_type>("induction"_n) == 1);
    t.bertie.act<token::actions::transfer>("bertie"_n, "eden.gm"_n, s2a("10.0000 EOS"), "memo");
    CHECK(get_eden_membership("bertie"_n).status() == eden::member_status::pending_membership);
 
@@ -832,6 +840,7 @@ TEST_CASE("induction")
 
    t.bertie.act<actions::inductdonate>("bertie"_n, 4, s2a("10.0000 EOS"));
    CHECK(get_eden_membership("bertie"_n).status() == eden::member_status::active_member);
+   CHECK(get_table_size<eden::encrypted_data_table_type>("induction"_n) == 0);
 }
 
 TEST_CASE("resignation")
