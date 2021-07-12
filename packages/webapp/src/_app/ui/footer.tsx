@@ -2,7 +2,7 @@ import { Link } from "_app/ui";
 import { ROUTES } from "_app/config";
 
 export const Footer = () => (
-    <footer className="border-t text-gray-600 body-font border-gray-200 bg-white">
+    <footer className="border-t text-gray-600 body-font border-gray-200 bg-white mt-4">
         <div className="container px-4 py-8 mx-auto flex md:items-center lg:items-start md:flex-row md:flex-nowrap flex-wrap flex-col">
             <div className="w-64 m flex-shrink-0 mx-auto text-center md:text-left">
                 <a className="flex title-font font-medium items-center md:justify-start justify-center text-gray-900">
