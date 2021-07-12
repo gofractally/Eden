@@ -5,6 +5,7 @@ import { QueryClient, useQuery } from "react-query";
 import { dehydrate } from "react-query/hydration";
 
 import {
+    Container,
     FluidLayout,
     Heading,
     PaginationNav,
@@ -92,11 +93,11 @@ export const MembersPage = (props: Props) => {
 
     return (
         <FluidLayout title="Community">
-            <div className="p-2.5">
+            <Container>
                 <Heading size={1}>New Members</Heading>
                 {newMembers.isLoading && "Loading new members..."}
                 {newMembers.error && "Fail to load new members"}
-            </div>
+            </Container>
             {newMembers.data && (
                 <>
                     <div className="border-t border-b">
@@ -105,7 +106,7 @@ export const MembersPage = (props: Props) => {
                             dataTestId="new-members-grid"
                         />
                     </div>
-                    <div className="p-2.5">
+                    <Container>
                         <PaginationNav
                             paginate={paginateNewMembers}
                             hasNext={
@@ -113,14 +114,14 @@ export const MembersPage = (props: Props) => {
                             }
                             hasPrevious={newMembersPage > 1}
                         />
-                    </div>
+                    </Container>
                 </>
             )}
-            <div className="p-2.5">
+            <Container>
                 <Heading size={1}>All Members</Heading>
                 {members.isLoading && "Loading members..."}
                 {members.error && "Fail to load members"}
-            </div>
+            </Container>
             {members.data && (
                 <>
                     <div className="border-t border-b">
@@ -129,7 +130,7 @@ export const MembersPage = (props: Props) => {
                             dataTestId="members-grid"
                         />
                     </div>
-                    <div className="p-2.5">
+                    <Container>
                         <PaginationNav
                             paginate={paginateMembers}
                             hasNext={members.data.length >= MEMBERS_PAGE_SIZE}
@@ -137,7 +138,7 @@ export const MembersPage = (props: Props) => {
                             pageNumber={membersPage}
                             totalPages={totalMembersPages}
                         />
-                    </div>
+                    </Container>
                 </>
             )}
         </FluidLayout>

@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 
-import { Button, Heading } from "_app";
+import { Button, Container, Heading, LoadingCard } from "_app";
 
 import { getCollection, getCollectedBy } from "../api";
 import { MemberData } from "../interfaces";
@@ -37,7 +37,7 @@ export const MemberCollections = ({ member }: Props) => {
 
     return (
         <div className="divide-y">
-            <div className="p-2.5 pt-8 space-y-2">
+            <Container className="pt-8 space-y-2">
                 <Heading size={1}>NFTs</Heading>
                 <div className="space-x-3">
                     <Button
@@ -70,8 +70,12 @@ export const MemberCollections = ({ member }: Props) => {
                         NFTs.
                     </p>
                 )}
-            </div>
-            {isLoading ? "loading..." : <MembersGrid members={members || []} />}
+            </Container>
+            {isLoading ? (
+                <LoadingCard />
+            ) : (
+                <MembersGrid members={members || []} />
+            )}
         </div>
     );
 };
