@@ -33,6 +33,18 @@ namespace eden
       inductions{get_self()}.initialize_induction(id, inviter, invitee, witnesses);
    }
 
+   void eden::inductmeeting(eosio::name account,
+                            uint64_t id,
+                            const std::vector<encrypted_key>& keys,
+                            const eosio::bytes& data)
+   {
+      members members{get_self()};
+      inductions inductions{get_self()};
+      members.check_keys(inductions.get_endorsers(id), keys);
+      encrypt encrypt{get_self(), "induction"_n};
+      encrypt.set(id, keys, data);
+   }
+
    void eden::inductprofil(uint64_t id, new_member_profile new_member_profile)
    {
       inductions inductions{get_self()};

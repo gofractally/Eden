@@ -1,6 +1,7 @@
 #include <accounts.hpp>
 #include <eden.hpp>
 #include <elections.hpp>
+#include <encrypt.hpp>
 #include <members.hpp>
 #include <migrations.hpp>
 
@@ -72,6 +73,20 @@ namespace eden
    {
       elections elections{get_self()};
       elections.seed(btc_header);
+   }
+
+   void eden::electmeeting(eosio::name account,
+                           uint8_t round,
+                           const std::vector<encrypted_key>& keys,
+                           const eosio::bytes& data)
+   {
+      eosio::require_auth(account);
+      members members{get_self()};
+      elections elections{get_self()};
+      auto group_id = elections.get_group_id(account, round);
+      members.check_keys(elections.get_group_members(group_id), keys);
+      encrypt encrypt{get_self(), "election"_n};
+      encrypt.set(group_id, keys, data);
    }
 
    void eden::electvote(uint8_t round, eosio::name voter, eosio::name candidate)

@@ -1200,6 +1200,14 @@ TEST_CASE("election with multiple rounds")
       t.finish_induction(42, "alice"_n, account, {"pip"_n, "egeon"_n});
    }
    t.electdonate_all();
+   t.alice.act<actions::setencpubkey>("alice"_n, eosio::public_key{});
+   t.pip.act<actions::setencpubkey>("pip"_n, eosio::public_key{});
+   t.egeon.act<actions::setencpubkey>("egeon"_n, eosio::public_key{});
+   for (auto account : test_accounts)
+   {
+      t.chain.start_block();
+      t.chain.as(account).act<actions::setencpubkey>(account, eosio::public_key{});
+   }
 
    t.skip_to("2020-07-03T15:30:00.000");
    t.electseed(eosio::time_point_sec(0x5f009260));
@@ -1210,6 +1218,8 @@ TEST_CASE("election with multiple rounds")
 
    // With 200 members, there should be three rounds
    CHECK(get_table_size<eden::vote_table_type>() == 200);
+   t.alice.act<actions::electmeeting>(
+       "alice"_n, 0, std::vector<eden::encrypted_key>{{}, {}, {}, {}}, eosio::bytes{});
    t.generic_group_vote(t.get_current_groups(), round++);
    CHECK(get_table_size<eden::vote_table_type>() == 48);
    t.generic_group_vote(t.get_current_groups(), round++);

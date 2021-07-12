@@ -26,6 +26,35 @@ namespace eden
       return itr == member_tb.end();
    }
 
+   void members::check_keys(const std::vector<eosio::name>& accounts,
+                            const std::vector<encrypted_key>& keys)
+   {
+      // N.B. this doesn't catch duplicate keys.
+      // duplicate keys should never happen by accident, and
+      // intentional subversion is pointless as anyone who
+      // can decrypt the data can do whatever he wants with
+      // it already.
+      eosio::check(accounts.size() == keys.size(), "Wrong number of encyption keys");
+      for (auto account : accounts)
+      {
+         const auto& member = member_tb.get(account.value);
+         eosio::check(!!member.encryption_key(), "Encryption key not set");
+         auto iter = std::find_if(keys.begin(), keys.end(), [&](auto& k) {
+            return k.recipient_key == *member.encryption_key();
+         });
+         eosio::check(iter != keys.end(), "Wrong encryption key");
+      }
+   }
+
+   void members::set_key(eosio::name member, const eosio::public_key& key)
+   {
+      member_tb.modify(get_member(member), contract, [&](auto& row) {
+         auto next = std::visit([](auto& m) { return member_v1{m}; }, row.value);
+         next.encryption_key = key;
+         row.value = std::move(next);
+      });
+   }
+
    void members::create(eosio::name account)
    {
       auto stats = this->stats();

@@ -176,6 +176,21 @@ namespace eden
       }
    }
 
+   uint32_t election_round_config::group_to_first_member_index(uint32_t idx) const
+   {
+      auto num_large = num_large_groups();
+      auto min_size = group_min_size();
+      auto members_in_large = (min_size + 1) * num_large;
+      if (idx < num_large)
+      {
+         return idx * (min_size + 1);
+      }
+      else
+      {
+         return members_in_large + (idx - num_large) * min_size;
+      }
+   }
+
    // Incremental implementation of shuffle
    // After adding all voters, each voter will have unique integer in [0, N) as
    // a group_id.
@@ -647,6 +662,7 @@ namespace eden
       auto end = vote_idx.end();
 
       members members{contract};
+      encrypt encrypt{contract, "election"_n};
 
       for (; max_steps > 0 && group_start != end && group_start->round == data.prev_round;
            --max_steps)
@@ -654,6 +670,8 @@ namespace eden
          auto group_size = data.prev_config.group_min_size() +
                            (data.next_input_index < data.prev_config.num_large_groups() *
                                                         (data.prev_config.group_max_size()));
+         encrypt.erase((data.prev_round << 16) |
+                       data.prev_config.member_index_to_group(group_start->index));
          auto result = finish_group(data, vote_idx, group_start, group_size);
          if (result.winner != eosio::name())
          {
@@ -762,6 +780,32 @@ namespace eden
       {
          trigger_election();
       }
+   }
+
+   uint64_t elections::get_group_id(eosio::name voter, uint8_t round)
+   {
+      const auto& state = check_active();
+      eosio::check(round == state.round, "Wrong round");
+      const auto& vote = vote_tb.get(voter.value);
+      eosio::check(vote.round == state.round, "Invariant failure: round mismatch");
+      return static_cast<uint64_t>(round << 16) | state.config.member_index_to_group(vote.index);
+   }
+
+   std::vector<eosio::name> elections::get_group_members(uint64_t group_id)
+   {
+      const auto& state = check_active();
+      auto round = group_id >> 16;
+      auto group = group_id & 0xFFFFu;
+      auto vote_idx = vote_tb.get_index<"bygroup"_n>();
+      std::vector<eosio::name> result;
+      auto iter =
+          vote_idx.lower_bound((round << 16) | state.config.group_to_first_member_index(group));
+      auto end = vote_idx.end();
+      for (; iter != end && state.config.member_index_to_group(iter->index) == group; ++iter)
+      {
+         result.push_back(iter->member);
+      }
+      return result;
    }
 
    void elections::clear_all()

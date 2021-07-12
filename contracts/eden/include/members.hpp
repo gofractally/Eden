@@ -1,6 +1,7 @@
 #pragma once
 
 #include <constants.hpp>
+#include <encrypt.hpp>
 #include <eosio/asset.hpp>
 #include <eosio/eosio.hpp>
 #include <globals.hpp>
@@ -35,6 +36,7 @@ namespace eden
       election_participation_status_type election_participation_status = in_election;
       uint8_t election_rank = 0;
       eosio::name representative{uint64_t(-1)};
+      std::optional<eosio::public_key> encryption_key;
 
       uint64_t primary_key() const { return account.value; }
    };
@@ -51,7 +53,8 @@ namespace eden
                  base member_v0,
                  election_participation_status,
                  election_rank,
-                 representative);
+                 representative,
+                 encryption_key);
 
    using member_variant = std::variant<member_v0, member_v1>;
 
@@ -66,7 +69,8 @@ namespace eden
                            nft_template_id,
                            election_participation_status,
                            election_rank,
-                           representative);
+                           representative,
+                           encryption_key);
       EDEN_FORWARD_FUNCTIONS(value, primary_key)
    };
    EOSIO_REFLECT(member, value)
@@ -116,6 +120,9 @@ namespace eden
       bool is_new_member(eosio::name account) const;
       void check_active_member(eosio::name account);
       void check_pending_member(eosio::name account);
+      void check_keys(const std::vector<eosio::name>& accounts,
+                      const std::vector<encrypted_key>& keys);
+      void set_key(eosio::name member, const eosio::public_key& key);
       void deposit(eosio::name account, const eosio::asset& quantity);
       void set_nft(eosio::name account, int32_t nft_template_id);
       void set_active(eosio::name account, const std::string& name);
