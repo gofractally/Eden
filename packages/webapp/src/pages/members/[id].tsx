@@ -4,9 +4,9 @@ import { dehydrate } from "react-query/hydration";
 
 import {
     CallToAction,
-    Card,
+    FluidLayout,
+    LoadingCard,
     queryMemberData,
-    RawLayout,
     SingleColLayout,
 } from "_app";
 import { MemberCard, MemberCollections, MemberHoloCard } from "members";
@@ -42,25 +42,26 @@ export const MemberPage = ({ account }: Props) => {
 
     if (member) {
         return (
-            <RawLayout title={`${member.name}'s Profile`}>
-                <Card>
-                    <div className="flex items-center space-y-10 xl:space-y-0 xl:space-x-20 flex-col xl:flex-row">
+            <FluidLayout title={`${member.name}'s Profile`}>
+                <div className="p-2.5 space-y-2.5 border-b">
+                    <div className="flex items-center space-y-10 xl:space-y-0 xl:space-x-4 flex-col xl:flex-row">
                         <div className="max-w-2xl">
                             <MemberHoloCard member={member} />
                         </div>
                         <MemberCard member={member} />
                     </div>
-                </Card>
-                <MemberCollections
-                    account={member.account}
-                    templateId={member.templateId}
-                />
-            </RawLayout>
+                </div>
+                <MemberCollections member={member} />
+            </FluidLayout>
         );
     }
 
     if (isLoading) {
-        return <RawLayout>Loading profile...</RawLayout>;
+        return (
+            <SingleColLayout title="Loading member details...">
+                <LoadingCard />
+            </SingleColLayout>
+        );
     }
 
     return (
