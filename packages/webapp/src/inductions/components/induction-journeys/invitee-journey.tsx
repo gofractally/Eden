@@ -1,10 +1,10 @@
 import React, { Dispatch, SetStateAction, useState } from "react";
 
 import { Heading, Link, Text, useIsCommunityActive } from "_app";
-import { convertPendingProfileToMemberData } from "inductions";
 import { MemberData } from "members";
 
 import {
+    convertPendingProfileToMemberData,
     EndorsementsStatus,
     InductionExpiresIn,
     InductionStepGenesis,
@@ -13,11 +13,17 @@ import {
     MemberCardPreview,
     WaitingForVideo,
 } from "inductions";
-import { Endorsement, Induction, InductionStatus } from "inductions/interfaces";
+import {
+    Endorsement,
+    Induction,
+    InductionStatus,
+    NewMemberProfile,
+} from "inductions/interfaces";
 
 import {
     InductionDonateForm,
     InductionProfileFormContainer,
+    InductionProfilePreview,
     InductionProfileSubmitConfirmation,
 } from "./invitee";
 
@@ -32,19 +38,19 @@ export const InviteeJourney = ({
     induction,
     inductionStatus,
 }: Props) => {
-    const [submittedProfile, setSubmittedProfile] = useState(false);
-    const [isReviewingProfile, setIsReviewingProfile] = useState(false);
+    const [didSubmitProfile, setDidSubmitProfile] = useState(false);
+    const [isRevisitingProfile, setIsRevisitingProfile] = useState(false);
 
-    if (submittedProfile) {
+    if (didSubmitProfile) {
         return <SubmittedProfileStep />;
     }
 
-    if (isReviewingProfile) {
+    if (isRevisitingProfile) {
         return (
             <ProfileStep
                 induction={induction}
-                isReviewingProfile={isReviewingProfile}
-                setSubmittedProfile={setSubmittedProfile}
+                isRevisitingProfile={isRevisitingProfile}
+                setDidSubmitProfile={setDidSubmitProfile}
             />
         );
     }
@@ -54,15 +60,15 @@ export const InviteeJourney = ({
             return (
                 <ProfileStep
                     induction={induction}
-                    isReviewingProfile={isReviewingProfile}
-                    setSubmittedProfile={setSubmittedProfile}
+                    isRevisitingProfile={isRevisitingProfile}
+                    setDidSubmitProfile={setDidSubmitProfile}
                 />
             );
         case InductionStatus.PendingCeremonyVideo: // not possible in Genesis mode
             return (
                 <PendingCeremonyVideoStep
                     induction={induction}
-                    setIsReviewingProfile={setIsReviewingProfile}
+                    setIsRevisitingProfile={setIsRevisitingProfile}
                 />
             );
         case InductionStatus.PendingEndorsement: // not possible in Genesis mode
@@ -70,7 +76,7 @@ export const InviteeJourney = ({
                 <PendingEndorsementStep
                     induction={induction}
                     endorsements={endorsements}
-                    setIsReviewingProfile={setIsReviewingProfile}
+                    setIsRevisitingProfile={setIsRevisitingProfile}
                 />
             );
         case InductionStatus.PendingDonation:
@@ -78,7 +84,7 @@ export const InviteeJourney = ({
                 <PendingDonationStep
                     induction={induction}
                     endorsements={endorsements}
-                    setIsReviewingProfile={setIsReviewingProfile}
+                    setIsRevisitingProfile={setIsRevisitingProfile}
                 />
             );
         default:
@@ -122,16 +128,39 @@ const SubmittedProfileStep = () => {
 
 interface ProfileStepProps {
     induction: Induction;
-    isReviewingProfile: boolean;
-    setSubmittedProfile: Dispatch<SetStateAction<boolean>>;
+    isRevisitingProfile: boolean;
+    setDidSubmitProfile: Dispatch<SetStateAction<boolean>>;
 }
 
 const ProfileStep = ({
     induction,
-    isReviewingProfile,
-    setSubmittedProfile,
+    isRevisitingProfile,
+    setDidSubmitProfile,
 }: ProfileStepProps) => {
     const { data: isCommunityActive } = useIsCommunityActive();
+
+    const [showPreview, setShowPreview] = useState<Boolean>(false);
+    const [pendingProfile, setPendingProfile] = useState<{
+        profileInfo?: NewMemberProfile;
+        selectedPhoto?: File;
+    }>({});
+
+    const setProfilePreview = (profile: NewMemberProfile, photo?: File) => {
+        setPendingProfile({ profileInfo: profile, selectedPhoto: photo });
+        setShowPreview(true);
+    };
+
+    if (showPreview && pendingProfile.profileInfo) {
+        return (
+            <InductionProfilePreview
+                induction={induction}
+                setDidSubmitProfile={setDidSubmitProfile}
+                pendingProfile={pendingProfile}
+                editProfile={() => setShowPreview(false)}
+            />
+        );
+    }
+
     return (
         <Container
             step={
@@ -142,8 +171,9 @@ const ProfileStep = ({
         >
             <InductionProfileFormContainer
                 induction={induction}
-                isReviewingProfile={isReviewingProfile}
-                setSubmittedProfile={setSubmittedProfile}
+                isRevisitingProfile={isRevisitingProfile}
+                pendingProfile={pendingProfile}
+                setProfilePreview={setProfilePreview}
             />
         </Container>
     );
@@ -151,14 +181,18 @@ const ProfileStep = ({
 
 interface PendingCeremonyVideoStepProps {
     induction: Induction;
-    setIsReviewingProfile: Dispatch<SetStateAction<boolean>>;
+    setIsRevisitingProfile: Dispatch<SetStateAction<boolean>>;
 }
 
 const PendingCeremonyVideoStep = ({
     induction,
-    setIsReviewingProfile,
+    setIsRevisitingProfile,
 }: PendingCeremonyVideoStepProps) => {
-    const memberData = convertPendingProfileToMemberData(induction);
+    const memberData = convertPendingProfileToMemberData(
+        induction.new_member_profile,
+        induction.invitee,
+        induction.video
+    );
     return (
         <Container
             step={InductionStepInvitee.PendingVideoAndEndorsements}
@@ -167,7 +201,7 @@ const PendingCeremonyVideoStep = ({
             <WaitingForVideo induction={induction} />
             <Text className="my-3">
                 If anything needs to be corrected,{" "}
-                <Link onClick={() => setIsReviewingProfile(true)}>
+                <Link onClick={() => setIsRevisitingProfile(true)}>
                     click here to make those adjustments.
                 </Link>
             </Text>
@@ -178,15 +212,19 @@ const PendingCeremonyVideoStep = ({
 interface PendingCompletionStepProps {
     induction: Induction;
     endorsements: Endorsement[];
-    setIsReviewingProfile: Dispatch<SetStateAction<boolean>>;
+    setIsRevisitingProfile: Dispatch<SetStateAction<boolean>>;
 }
 
 const PendingEndorsementStep = ({
     induction,
     endorsements,
-    setIsReviewingProfile,
+    setIsRevisitingProfile,
 }: PendingCompletionStepProps) => {
-    const memberData = convertPendingProfileToMemberData(induction);
+    const memberData = convertPendingProfileToMemberData(
+        induction.new_member_profile,
+        induction.invitee,
+        induction.video
+    );
     return (
         <Container
             step={InductionStepInvitee.PendingVideoAndEndorsements}
@@ -202,7 +240,7 @@ const PendingEndorsementStep = ({
                 <Text>
                     Now is a good time to review your profile information below.
                     If anything needs to be corrected,{" "}
-                    <Link onClick={() => setIsReviewingProfile(true)}>
+                    <Link onClick={() => setIsRevisitingProfile(true)}>
                         click here to make those adjustments.
                     </Link>{" "}
                     Keep in mind that any modifications to your profile will
@@ -216,9 +254,13 @@ const PendingEndorsementStep = ({
 const PendingDonationStep = ({
     induction,
     endorsements,
-    setIsReviewingProfile,
+    setIsRevisitingProfile,
 }: PendingCompletionStepProps) => {
-    const memberData = convertPendingProfileToMemberData(induction);
+    const memberData = convertPendingProfileToMemberData(
+        induction.new_member_profile,
+        induction.invitee,
+        induction.video
+    );
     const { data: isCommunityActive } = useIsCommunityActive();
     return (
         <Container
@@ -239,7 +281,7 @@ const PendingDonationStep = ({
             <InductionDonateForm
                 induction={induction}
                 isCommunityActive={isCommunityActive}
-                setIsReviewingProfile={setIsReviewingProfile}
+                setIsRevisitingProfile={setIsRevisitingProfile}
             />
         </Container>
     );

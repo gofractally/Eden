@@ -279,13 +279,30 @@ namespace eden
       return max_steps;
    }
 
+   void distributions::sub_balance(eosio::name from,
+                                   eosio::block_timestamp distribution_time,
+                                   uint8_t rank,
+                                   eosio::asset amount)
+   {
+      const auto& row = distribution_account_tb.get_index<"byowner"_n>().get(
+          distribution_account_key(from, distribution_time, rank));
+      eosio::check(row.balance() >= amount, "insufficient balance");
+      if (row.balance() == amount)
+      {
+         distribution_account_tb.erase(row);
+      }
+      else
+      {
+         distribution_account_tb.modify(row, contract, [&](auto& row) { row.balance() -= amount; });
+      }
+   }
+
    // Differences from on_resign
    // - iterated (a user cannot block an election by building up too many accounts)
    // - No pending distributions are possible at this stage of the election
-   uint32_t distributions::on_election_kick(eosio::name member, uint64_t& key, uint32_t max_steps)
+   uint32_t distributions::on_election_kick(eosio::name member, uint32_t max_steps)
    {
       accounts owned_accounts{contract, "owned"_n};
-      distribution_account_table_type distribution_account_tb{contract, default_scope};
       auto member_idx = distribution_account_tb.get_index<"byowner"_n>();
       for (auto iter = member_idx.lower_bound(uint128_t(member.value) << 64),
                 end = member_idx.end();
@@ -301,7 +318,6 @@ namespace eden
    {
       accounts owned_accounts{contract, "owned"_n};
       setup_distribution(contract, owned_accounts);
-      distribution_account_table_type distribution_account_tb{contract, default_scope};
       auto member_idx = distribution_account_tb.get_index<"byowner"_n>();
       for (auto iter = member_idx.lower_bound(uint128_t(member.account().value) << 64),
                 end = member_idx.end();
@@ -355,7 +371,7 @@ namespace eden
 
    void distributions::clear_all()
    {
-      clear_table(distribution_account_table_type{contract, default_scope});
+      clear_table(distribution_account_tb);
       clear_table(pool_table_type{contract, default_scope});
       clear_table(distribution_table_type{contract, default_scope});
    }

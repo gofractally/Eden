@@ -2,6 +2,6 @@
     "extends": "../../tsconfig.json",
     "compilerOptions": {
         "resolveJsonModule": true,
-        "strict": true
+        "types": ["node"]
     }
 }

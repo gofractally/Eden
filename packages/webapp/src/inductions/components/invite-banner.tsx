@@ -1,4 +1,5 @@
 import { CallToAction, Button } from "_app";
+import { ROUTES } from "_app/config";
 
 interface InviteBannerProps {
     canInvite?: boolean;
@@ -11,7 +12,10 @@ export const InviteBanner = ({
 }: InviteBannerProps) => {
     if (canInvite && asCallToAction) {
         return (
-            <CallToAction buttonLabel="Invite to Eden" href="/induction/init">
+            <CallToAction
+                buttonLabel="Invite to Eden"
+                href={`${ROUTES.INDUCTION.href}/init`}
+            >
                 Spread the love! Invite your trusted contacts in the EOS
                 community to Eden.
             </CallToAction>
@@ -20,7 +24,11 @@ export const InviteBanner = ({
         return (
             <div className="flex items-center justify-center text-center flex-col md:flex-row-reverse md:justify-start mt-4 mb-6">
                 <div className="w-44 md:w-56 sm:mx-0 md:mx-4">
-                    <Button href="/induction/init" size="sm" fullWidth>
+                    <Button
+                        href={`${ROUTES.INDUCTION.href}/init`}
+                        size="sm"
+                        fullWidth
+                    >
                         Invite to Eden
                     </Button>
                 </div>

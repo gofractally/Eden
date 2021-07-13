@@ -8,9 +8,13 @@ import {
     Heading,
     Link,
     queryMembersStats,
+    queryTreasuryStats,
     RawLayout,
     Text,
+    Asset,
+    assetToString,
 } from "_app";
+import { ROUTES } from "_app/config";
 
 export const getServerSideProps: GetServerSideProps = async () => {
     const queryClient = new QueryClient();
@@ -23,8 +27,20 @@ export const getServerSideProps: GetServerSideProps = async () => {
 };
 
 export const Index = () => {
-    const { data: memberStats } = useQuery({
+    const {
+        isError: isMemberDataFetchError,
+        error: memberStatsError,
+        data: memberStats,
+    } = useQuery({
         ...queryMembersStats,
+        keepPreviousData: true,
+    });
+
+    const {
+        isError: isTreasuryDataFetchError,
+        data: treasuryBalance,
+    } = useQuery({
+        ...queryTreasuryStats,
         keepPreviousData: true,
     });
 
@@ -82,38 +98,49 @@ export const Index = () => {
                     </Card>
                 </div>
                 <aside className="col-span-1 space-y-4 pb-5">
-                    <CommunityStatsCard memberStats={memberStats} />
+                    {isMemberDataFetchError || isTreasuryDataFetchError ? (
+                        <Text>Error fetching data...</Text>
+                    ) : (
+                        <CommunityStatsCard
+                            memberStats={memberStats}
+                            treasuryBalance={treasuryBalance}
+                        />
+                    )}
                 </aside>
             </div>
         </RawLayout>
     );
 };
 
-interface CommunityStatusProps {
+interface CommunityStatsProps {
     memberStats: any;
+    treasuryBalance: Asset | undefined;
 }
 
-const CommunityStatsCard = ({ memberStats }: CommunityStatusProps) => {
-    return (
-        memberStats && (
-            <Card className="flex flex-col justify-center items-center h-full space-y-8 text-md lg:text-xl">
-                <Heading size={2} className="mb-2">
-                    Community Stats
-                </Heading>
-                <Link href="/members" className="font-medium">
-                    {memberStats.active_members} active member
-                    {memberStats.active_members !== 1 && "s"}
-                </Link>
-                <Link
-                    href="/induction/pending-invitations"
-                    className="font-medium"
-                >
-                    {memberStats.pending_members} pending invitation
-                    {memberStats.pending_members !== 1 && "s"}
-                </Link>
-            </Card>
-        )
-    );
-};
+const CommunityStatsCard = ({
+    memberStats,
+    treasuryBalance,
+}: CommunityStatsProps) =>
+    memberStats && treasuryBalance ? (
+        <Card className="flex flex-col justify-center items-center h-full space-y-4 lg:text-lg">
+            <Heading size={2} className="mb-2">
+                Community Stats
+            </Heading>
+            <Text className="font-medium" size="inherit">
+                Treasury: {assetToString(treasuryBalance, 4)}
+            </Text>
+            <Link href={ROUTES.MEMBERS.href} className="font-medium">
+                {memberStats.active_members} active member
+                {memberStats.active_members !== 1 && "s"}
+            </Link>
+            <Link
+                href={`${ROUTES.INDUCTION.href}/pending-invitations`}
+                className="font-medium"
+            >
+                {memberStats.pending_members} pending invitation
+                {memberStats.pending_members !== 1 && "s"}
+            </Link>
+        </Card>
+    ) : null;
 
 export default Index;

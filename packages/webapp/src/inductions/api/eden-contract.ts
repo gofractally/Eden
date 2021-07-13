@@ -97,9 +97,8 @@ export const getInductions = async (
     upperBound?: string,
     limit = 10
 ): Promise<Induction[]> =>
-    getTableRows<Induction>(
-        CONTRACT_INDUCTION_TABLE,
+    getTableRows<Induction>(CONTRACT_INDUCTION_TABLE, {
         lowerBound,
         upperBound,
-        limit
-    );
+        limit,
+    });

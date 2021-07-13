@@ -30,7 +30,11 @@ export const MemberHoloCard = ({ member, inducted = true }: Props) => {
                 style={{ padding: width * 0.047 }}
             >
                 <img
-                    src={ipfsUrl(member.image)}
+                    src={
+                        member.image.startsWith("blob:")
+                            ? member.image
+                            : ipfsUrl(member.image)
+                    }
                     className="rounded-full object-cover bg-white"
                     title={memberImageTitle}
                     style={{

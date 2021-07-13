@@ -1,4 +1,5 @@
 import { edenContractAccount, rpcEndpoint } from "config";
+import { TableQueryOptions } from "./interfaces";
 
 const RPC_URL = `${rpcEndpoint.protocol}://${rpcEndpoint.host}:${rpcEndpoint.port}`;
 export const RPC_GET_TABLE_ROWS = `${RPC_URL}/v1/chain/get_table_rows`;
@@ -7,6 +8,7 @@ export const CONTRACT_SCOPE = "0";
 export const CONTRACT_GLOBAL_TABLE = "global";
 export const CONTRACT_MEMBER_TABLE = "member";
 export const CONTRACT_MEMBERSTATS_TABLE = "memberstats";
+export const CONTRACT_ACCOUNT_TABLE = "account";
 export const CONTRACT_INDUCTION_TABLE = "induction";
 export const CONTRACT_ENDORSEMENT_TABLE = "endorsement";
 
@@ -16,12 +18,23 @@ interface TableResponse<T> {
     next_key: string;
 }
 
+const TABLE_PARAM_DEFAULTS = {
+    scope: CONTRACT_SCOPE,
+    lowerBound: "0",
+    upperBound: null,
+    limit: 1,
+};
+
 export const getRow = async <T>(
     table: string,
     keyName?: string,
     keyValue?: string
 ): Promise<T | undefined> => {
-    const rows = await getTableRows(table, keyValue);
+    const options: TableQueryOptions | undefined = keyValue
+        ? { lowerBound: keyValue }
+        : undefined;
+    const rows = await getTableRows(table, options);
+
     if (!rows.length) {
         return undefined;
     }
@@ -35,22 +48,21 @@ export const getRow = async <T>(
 
 export const getTableRows = async <T = any>(
     table: string,
-    lowerBound: any = "0",
-    upperBound: any = null,
-    limit = 1
+    options?: TableQueryOptions
 ): Promise<T[]> => {
-    const reverse = Boolean(lowerBound === "0" && upperBound);
+    options = { ...TABLE_PARAM_DEFAULTS, ...options };
+    const reverse = Boolean(options.lowerBound === "0" && options.upperBound);
 
     const requestBody = {
         code: edenContractAccount,
         index_position: 1,
         json: true,
         key_type: "",
-        limit: `${limit}`,
-        lower_bound: lowerBound,
-        upper_bound: upperBound,
+        limit: `${options.limit}`,
+        lower_bound: options.lowerBound,
+        upper_bound: options.upperBound,
         reverse,
-        scope: CONTRACT_SCOPE,
+        scope: options.scope,
         show_payer: false,
         table: table,
         table_key: "",

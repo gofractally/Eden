@@ -1,5 +1,5 @@
 import { NextApiRequest, NextApiResponse } from "next";
-import { BadRequestError, handleErrors } from "./error-handlers";
+import { BadRequestError, handleErrors } from "@edenos/common";
 
 export const jobHandler = async (
     req: NextApiRequest,

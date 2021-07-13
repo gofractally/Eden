@@ -265,7 +265,8 @@ namespace eden
                  std::get<current_election_state_registration>(state).start_time >= lock_time,
              "Election cannot be rescheduled");
       }
-      state_sing.set(current_election_state_registration{election_time}, contract);
+      state_sing.set(current_election_state_registration{election_time, max_active_members + 1},
+                     contract);
    }
 
    void elections::set_time(uint8_t day, const std::string& time)
@@ -333,7 +334,9 @@ namespace eden
                 get_election_time(state.election_start_time, now + eosio::days(30))};
             if (new_start_time < current->start_time)
             {
-               state_sing.set(current_election_state_registration{new_start_time}, contract);
+               state_sing.set(
+                   current_election_state_registration{new_start_time, max_active_members + 1},
+                   contract);
             }
          }
       }
@@ -400,7 +403,6 @@ namespace eden
    uint32_t elections::randomize_voters(current_election_state_init_voters& state,
                                         uint32_t max_steps)
    {
-      election_state_singleton sequence_state(contract, default_scope);
       members members(contract);
       const auto& member_tb = members.get_table();
       auto iter = member_tb.upper_bound(state.last_processed.value);
@@ -414,17 +416,11 @@ namespace eden
                case no_donation:
                {
                   distributions distributions{contract};
-                  if (!state.last_closed_account)
-                  {
-                     state.last_closed_account = 0;
-                  }
-                  max_steps = distributions.on_election_kick(iter->account(),
-                                                             *state.last_closed_account, max_steps);
+                  max_steps = distributions.on_election_kick(iter->account(), max_steps);
                   if (max_steps == 0)
                   {
                      return max_steps;
                   }
-                  state.last_closed_account = std::nullopt;
                   remove_from_board(iter->account());
                   iter = members.erase(iter);
                   continue;

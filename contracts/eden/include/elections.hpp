@@ -136,13 +136,8 @@ namespace eden
       uint16_t next_member_idx;
       election_rng rng;
       eosio::name last_processed = {};
-      std::optional<uint64_t> last_closed_account = {};
    };
-   EOSIO_REFLECT(current_election_state_init_voters,
-                 next_member_idx,
-                 rng,
-                 last_processed,
-                 last_closed_account)
+   EOSIO_REFLECT(current_election_state_init_voters, next_member_idx, rng, last_processed)
 
    struct current_election_state_active
    {

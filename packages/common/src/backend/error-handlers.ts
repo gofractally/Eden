@@ -1,5 +1,3 @@
-import { NextApiResponse } from "next";
-
 export class ServerError extends Error {
     constructor(public status: number, public error: any) {
         super(`Server Error: ${status} ${JSON.stringify(error)}`);
@@ -27,7 +25,7 @@ export class InternalServerError extends ServerError {
     }
 }
 
-export const handleErrors = (res: NextApiResponse, error: Error) => {
+export const handleErrors = (res: any, error: Error) => {
     if (error instanceof ServerError) {
         return res
             .status(error.status)
