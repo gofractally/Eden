@@ -22,4 +22,9 @@ namespace eden
          encrypted_data_tb.erase(iter);
       }
    }
+
+   void encrypt::clear_all()
+   {
+      clear_table(encrypted_data_tb);
+   }
 }  // namespace eden
