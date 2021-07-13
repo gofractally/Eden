@@ -12,15 +12,18 @@ interface MenuItem {
     href: string;
     label: string;
     exactPath?: boolean;
+    hideNav?: boolean;
 }
 
-const MENU_ITEMS: MenuItem[] = Object.keys(ROUTES).map((k) => {
-    let pathObj: MenuItem = ROUTES[k];
-    if (k === "HOME") {
-        pathObj.exactPath = true;
-    }
-    return pathObj;
-});
+const MENU_ITEMS: MenuItem[] = Object.keys(ROUTES)
+    .map((k) => {
+        let pathObj: MenuItem = ROUTES[k];
+        if (k === "HOME") {
+            pathObj.exactPath = true;
+        }
+        return pathObj;
+    })
+    .filter((k) => !k.hideNav);
 
 export const HeaderNav = () => (
     <header className="text-gray-600 body-font border-b border-gray-200 bg-white">
