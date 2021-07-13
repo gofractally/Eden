@@ -2,10 +2,12 @@ import type { NextApiRequest, NextApiResponse } from "next";
 import * as z from "zod";
 import { BadRequestError, handleErrors } from "@edenos/common";
 
+import { zoomRefreshAuth } from "_api/zoom-commons";
+
 export default async (req: NextApiRequest, res: NextApiResponse) => {
     switch (req.method) {
         case "POST":
-            return handleNewMeeting(req, res);
+            return handleZoomRefresh(req, res);
         default:
             return handleErrors(
                 res,
@@ -15,31 +17,22 @@ export default async (req: NextApiRequest, res: NextApiResponse) => {
 };
 
 export const reqSchema = z.object({
-    meetingClient: z.string(),
-    accessToken: z.string(),
+    refreshToken: z.string(),
 });
-export type MeetingLinkRequest = z.infer<typeof reqSchema>;
+export type RefreshZoomRequest = z.infer<typeof reqSchema>;
 
-const handleNewMeeting = async (req: NextApiRequest, res: NextApiResponse) => {
+const handleZoomRefresh = async (req: NextApiRequest, res: NextApiResponse) => {
     const result = reqSchema.safeParse(JSON.parse(req.body));
     if (!result.success) {
         return handleErrors(res, new BadRequestError(result.error.flatten()));
     }
 
-    const data: MeetingLinkRequest = result.data;
-
-    if (data.meetingClient !== "zoom") {
-        return handleErrors(
-            res,
-            new BadRequestError(
-                "invalid meeting client, only zoom is supported for now"
-            )
-        );
-    }
+    const data: RefreshZoomRequest = result.data;
 
     try {
-        const meeting = await generateMeeting(data.accessToken);
-        return res.status(200).json({ meeting });
+        const zoomResponse = await zoomRefreshAuth(data.refreshToken);
+        console.info(zoomResponse);
+        return res.status(200).json(zoomResponse);
     } catch (error) {
         console.error(error);
         return handleErrors(res, new BadRequestError(error));
@@ -60,9 +53,7 @@ const generateMeeting = async (accessToken: string) => {
         },
     };
 
-    console.info("creating meeting with accessTOken", accessToken);
-
-    const response = await fetch(`https://api.zoom.us/v2/users/me/meetings`, {
+    const response = await fetch(`https://zoom.us/oauth/token`, {
         method: "POST",
         headers: {
             Authorization: `Bearer ${accessToken}`,

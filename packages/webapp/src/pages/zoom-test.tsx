@@ -1,27 +1,26 @@
-import { SingleColLayout, CallToAction, useUALAccount, Button } from "_app";
-import { zoom } from "config";
-
+import { useEffect } from "react";
 import { GetServerSideProps } from "next";
 
-const ZOOM_AUTHORIZATION = Buffer.from(
-    zoom.clientKey + ":" + zoom.clientSecret
-).toString("base64");
+import {
+    zoomRequestAuth,
+    zoomConnectAccountLink,
+    zoomAccountJWTIsExpired,
+    zoomResponseIsInvalidAccess,
+} from "_api/zoom-commons";
+import {
+    SingleColLayout,
+    CallToAction,
+    useUALAccount,
+    Button,
+    useZoomAccountJWT,
+} from "_app";
 
 export const getServerSideProps: GetServerSideProps = async ({ query }) => {
     const oauthCode = (query.code as string) || "";
-    let oauthAccessData = null;
+    let newZoomAccountJWT = null;
 
     if (oauthCode) {
-        const zoomResponse = await fetch(
-            `https://zoom.us/oauth/token?grant_type=authorization_code&code=${oauthCode}&redirect_uri=${zoom.oauthRedirect}`,
-            {
-                method: "POST",
-                headers: {
-                    Authorization: `Basic ${ZOOM_AUTHORIZATION}`,
-                },
-            }
-        );
-        const oauthDataResponse = await zoomResponse.json();
+        const oauthDataResponse = await zoomRequestAuth(oauthCode);
         if (oauthDataResponse.error) {
             console.error(
                 "fail to auth zoom code",
@@ -29,31 +28,36 @@ export const getServerSideProps: GetServerSideProps = async ({ query }) => {
                 oauthDataResponse
             );
         } else {
-            oauthAccessData = oauthDataResponse;
+            newZoomAccountJWT = oauthDataResponse;
         }
     }
 
     return {
         props: {
-            oauthAccessData,
+            newZoomAccountJWT,
         },
     };
 };
 
 interface Props {
-    oauthAccessData: any;
+    newZoomAccountJWT: any;
 }
 
-export const ZoomTestPage = ({ oauthAccessData }: Props) => {
+export const ZoomTestPage = ({ newZoomAccountJWT }: Props) => {
     const [ualAccount, _, ualShowModal] = useUALAccount();
+    const [_zoomAccountJWT, setZoomAccountJWT] = useZoomAccountJWT(null);
+
+    useEffect(() => {
+        if (newZoomAccountJWT) {
+            setZoomAccountJWT(newZoomAccountJWT);
+            console.info("new zoom credentials set", newZoomAccountJWT);
+        }
+    }, [newZoomAccountJWT]);
 
     return (
         <SingleColLayout title="Zoom Test">
             {ualAccount ? (
-                <ZoomTestContainer
-                    ualAccount={ualAccount}
-                    oauthAccessData={oauthAccessData}
-                />
+                <ZoomTestContainer ualAccount={ualAccount} />
             ) : (
                 <CallToAction buttonLabel="Sign in" onClick={ualShowModal}>
                     Welcome to Eden. Sign in using your wallet.
@@ -65,30 +69,36 @@ export const ZoomTestPage = ({ oauthAccessData }: Props) => {
 
 export default ZoomTestPage;
 
-const ZoomTestContainer = ({ ualAccount, oauthAccessData }: any) => {
-    const linkZoomAccount = () => {
-        // const electionRoom = Math.floor(Math.random() * 100_000_000);
-        // const oauthRedirect = `${zoom.oauthRedirect}?election_room=${electionRoom}`;
-        const oauthUrl = `https://zoom.us/oauth/authorize?response_type=code&client_id=${zoom.clientKey}&redirect_uri=${zoom.oauthRedirect}`;
-        return oauthUrl;
+const ZoomTestContainer = ({ ualAccount }: any) => {
+    const [zoomAccountJWT, setZoomAccountJWT] = useZoomAccountJWT(null);
+
+    const resetZoomAccount = () => {
+        setZoomAccountJWT(null);
     };
 
     const generateZoomMeetingLink = async () => {
-        const accessToken = oauthAccessData.access_token;
+        let accessToken = zoomAccountJWT.access_token;
         if (!accessToken) {
             return alert("Invalid AccessToken");
         }
 
-        const body = {
-            topic: "Test Eden Election #5",
-            duration: 40,
-            start_time: "2025-08-15T13:35:00Z",
-            settings: {
-                join_before_host: true,
-                jbh_time: 0,
-                auto_recording: "local",
-            },
-        };
+        if (zoomAccountJWTIsExpired(zoomAccountJWT)) {
+            const newTokensResponse = await fetch(`/api/refresh-zoom`, {
+                method: "POST",
+                body: JSON.stringify({
+                    refreshToken: zoomAccountJWT.refresh_token,
+                }),
+            });
+
+            const newTokens = await newTokensResponse.json();
+            console.info(newTokens);
+            if (!newTokensResponse.ok) {
+                resetZoomAccount();
+            }
+
+            setZoomAccountJWT(newTokens);
+            accessToken = newTokens.access_token;
+        }
 
         const response = await fetch(`/api/meeting-links`, {
             method: "POST",
@@ -96,16 +106,19 @@ const ZoomTestContainer = ({ ualAccount, oauthAccessData }: any) => {
         });
 
         const responseData = await response.json();
-        console.info(responseData);
+        if (zoomResponseIsInvalidAccess(responseData)) {
+            resetZoomAccount();
+        }
 
+        console.info(responseData);
         alert(JSON.stringify(responseData, undefined, 2));
     };
 
-    console.info(oauthAccessData);
+    console.info(zoomAccountJWT);
 
     return (
         <div>
-            {oauthAccessData ? (
+            {zoomAccountJWT ? (
                 <div>
                     Thanks for connecting Eden to your Zoom account.
                     <p>
@@ -116,7 +129,9 @@ const ZoomTestContainer = ({ ualAccount, oauthAccessData }: any) => {
                     </p>
                 </div>
             ) : (
-                <Button href={linkZoomAccount()}>Link your Zoom Account</Button>
+                <Button href={zoomConnectAccountLink}>
+                    Link your Zoom Account
+                </Button>
             )}
         </div>
     );
