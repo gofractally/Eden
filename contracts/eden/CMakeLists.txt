@@ -5,7 +5,9 @@ add_executable(eden
    src/actions/accounts.cpp
    src/actions/genesis.cpp
    src/actions/induct.cpp
+   src/actions/elect.cpp
    src/actions/notify_assets.cpp
+   src/actions/bylaws.cpp
    src/actions/migrate.cpp
    src/eden.cpp
    src/accounts.cpp
@@ -15,6 +17,9 @@ add_executable(eden
    src/auctions.cpp
    src/migrations.cpp
    src/atomicassets.cpp
+   src/elections.cpp
+   src/bylaws.cpp
+   src/distributions.cpp
 )
 target_include_directories(eden PUBLIC include ../token/include PRIVATE ../../external/atomicassets-contract/include)
 target_link_libraries(eden eosio-contract)
@@ -28,7 +33,7 @@ add_custom_command(TARGET eden-abigen POST_BUILD
 )
 
 function(add_test_eden suffix)
-    add_executable(test-eden${suffix} tests/test-eden.cpp src/globals.cpp src/accounts.cpp src/members.cpp src/atomicassets.cpp)
+    add_executable(test-eden${suffix} tests/test-eden.cpp src/globals.cpp src/accounts.cpp src/members.cpp src/atomicassets.cpp src/elections.cpp)
     target_include_directories(test-eden${suffix} PUBLIC include)
     target_include_directories(test-eden${suffix} PUBLIC ../token/include ../boot/include ../../external/atomicassets-contract/include)
     target_link_libraries(test-eden${suffix} catch2 cltestlib${suffix})

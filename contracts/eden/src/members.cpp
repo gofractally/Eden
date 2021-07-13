@@ -1,3 +1,4 @@
+#include <elections.hpp>
 #include <members.hpp>
 
 namespace eden
@@ -27,7 +28,7 @@ namespace eden
 
    void members::create(eosio::name account)
    {
-      auto stats = std::get<member_stats_v0>(member_stats.get_or_default());
+      auto stats = this->stats();
       ++stats.pending_members;
       eosio::check(stats.pending_members != 0, "Integer overflow");
       member_stats.set(stats, contract);
@@ -50,6 +51,10 @@ namespace eden
          case member_status::active_member:
             eosio::check(stats.active_members != 0, "Integer overflow");
             --stats.active_members;
+            if (iter->representative() != eosio::name(-1))
+            {
+               --stats.ranks[iter->election_rank()];
+            }
             break;
          default:
             eosio::check(false, "Invariant failure: unknown member status");
@@ -72,7 +77,7 @@ namespace eden
       if (member.status() == member_status::pending_membership)
       {
          member_tb.erase(member);
-         auto stats = std::get<member_stats_v0>(member_stats.get_or_default());
+         auto stats = this->stats();
          eosio::check(stats.pending_members != 0, "Integer overflow");
          --stats.pending_members;
          member_stats.set(stats, contract);
@@ -89,7 +94,7 @@ namespace eden
 
    void members::set_active(eosio::name account, const std::string& name)
    {
-      auto stats = std::get<member_stats_v0>(member_stats.get());
+      auto stats = this->stats();
       eosio::check(stats.pending_members > 0, "Invariant failure: no pending members");
       eosio::check(stats.active_members < max_active_members,
                    "Invariant failure: active members too high");
@@ -97,14 +102,94 @@ namespace eden
       ++stats.active_members;
       member_stats.set(stats, eosio::same_payer);
       check_pending_member(account);
+      current_election_state_singleton election_state(contract, default_scope);
+      auto status = no_donation;
+      if (election_state.exists())
+      {
+         auto state = election_state.get();
+         if (auto* reg = std::get_if<current_election_state_registration>(&state))
+         {
+            if (reg->start_time.to_time_point() <= eosio::current_time_point() + eosio::days(30))
+            {
+               status = recently_inducted;
+            }
+         }
+         else if (std::holds_alternative<current_election_state_seeding>(state))
+         {
+            status = recently_inducted;
+         }
+         else if (auto* init = std::get_if<current_election_state_init_voters>(&state))
+         {
+            if (init->last_processed < account)
+            {
+               status = recently_inducted;
+            }
+         }
+      }
       const auto& member = get_member(account);
       member_tb.modify(member, eosio::same_payer, [&](auto& row) {
-         row.status() = member_status::active_member;
-         row.name() = name;
+         row.value = member_v1{{.account = row.account(),
+                                .name = name,
+                                .status = member_status::active_member,
+                                .nft_template_id = row.nft_template_id(),
+                                .election_participation_status = status}};
       });
    }
 
-   struct member_stats_v0 members::stats() { return std::get<member_stats_v0>(member_stats.get()); }
+   void members::set_rank(eosio::name member, uint8_t rank, eosio::name representative)
+   {
+      member_tb.modify(member_tb.get(member.value), contract, [&](auto& row) {
+         row.value = std::visit([](auto& v) { return member_v1{v}; }, row.value);
+         row.election_rank() = rank;
+         row.representative() = representative;
+         row.election_participation_status() = no_donation;
+      });
+      auto stats = this->stats();
+      if (representative != eosio::name(-1))
+      {
+         if (stats.ranks.size() <= rank)
+         {
+            stats.ranks.resize(rank + 1);
+         }
+         ++stats.ranks[rank];
+      }
+      member_stats.set(stats, contract);
+   }
+
+   void members::clear_ranks()
+   {
+      auto stats = this->stats();
+      stats.ranks.clear();
+      member_stats.set(stats, contract);
+   }
+
+   void members::election_opt(const member& member, bool participating)
+   {
+      check_active_member(member.account());
+
+      elections elections{contract};
+      auto election_time = elections.get_next_election_time();
+      eosio::check(
+          election_time && eosio::current_time_point() + eosio::seconds(election_seeding_window) <
+                               election_time->to_time_point(),
+          "Registration has closed");
+
+      member_tb.modify(member, eosio::same_payer, [&](auto& row) {
+         row.value = member_v1{
+             {.account = row.account(),
+              .name = row.name(),
+              .status = row.status(),
+              .nft_template_id = row.nft_template_id(),
+              .election_participation_status = participating ? in_election : not_in_election,
+              .election_rank = row.election_rank()}};
+      });
+   }
+
+   struct member_stats_v1 members::stats()
+   {
+      return std::visit([](const auto& stats) { return member_stats_v1{stats}; },
+                        member_stats.get_or_default());
+   }
 
    void members::maybe_activate_contract()
    {
