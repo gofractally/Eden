@@ -46,6 +46,8 @@ namespace eden
 
    using account_table_type = eosio::multi_index<"account"_n, account>;
 
+   void add_to_pool(eosio::name contract, eosio::name pool, eosio::asset amount);
+
    class accounts
    {
      private:

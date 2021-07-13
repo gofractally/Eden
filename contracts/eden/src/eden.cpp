@@ -1,6 +1,9 @@
 #include <accounts.hpp>
 #include <auctions.hpp>
+#include <bylaws.hpp>
+#include <distributions.hpp>
 #include <eden.hpp>
+#include <elections.hpp>
 #include <inductions.hpp>
 #include <members.hpp>
 #include <migrations.hpp>
@@ -36,11 +39,18 @@ EOSIO_ABIGEN(
     actions(eden::actions),
     table("account"_n, eden::account_variant),
     table("auction"_n, eden::auction_variant),
+    table("bylaws"_n, eden::bylaws_variant),
+    table("distaccount"_n, eden::distribution_account_variant),
+    table("distribution"_n, eden::distribution_variant),
     table("endorsement"_n, eden::endorsement_variant),
+    table("elect.curr"_n, eden::current_election_state),
+    table("elect.state"_n, eden::election_state_variant),
     table("global"_n, eden::global_variant),
     table("induction"_n, eden::induction_variant),
     table("member"_n, eden::member_variant),
     table("memberstats"_n, eden::member_stats_variant),
     table("migration"_n, eden::migration_variant),
+    table("pools"_n, eden::pool_variant),
+    table("votes"_n, eden::vote),
     ricardian_clause("peacetreaty", eden::peacetreaty_clause),
     ricardian_clause("bylaws", eden::bylaws_clause))

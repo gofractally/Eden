@@ -16,17 +16,18 @@ import {
 
 import { donateAndCompleteInductionTransaction } from "inductions";
 import { Induction } from "inductions/interfaces";
+import { ROUTES } from "_app/config";
 
 interface Props {
     induction: Induction;
     isCommunityActive?: boolean;
-    setIsReviewingProfile: (isReviewing: boolean) => void;
+    setIsRevisitingProfile: (isRevisiting: boolean) => void;
 }
 
 export const InductionDonateForm = ({
     induction,
     isCommunityActive,
-    setIsReviewingProfile,
+    setIsRevisitingProfile,
 }: Props) => {
     const router = useRouter();
     const queryClient = useQueryClient();
@@ -58,7 +59,7 @@ export const InductionDonateForm = ({
             );
 
             // router goes to the newly created member page
-            router.push(`/members/${induction.invitee}`);
+            router.push(`${ROUTES.MEMBERS.href}/${induction.invitee}`);
             return;
         } catch (error) {
             onError(
@@ -75,7 +76,7 @@ export const InductionDonateForm = ({
             <Text>
                 This is your last chance to review your profile below for
                 completeness and accuracy. If anything needs to be corrected,{" "}
-                <Link onClick={() => setIsReviewingProfile(true)}>
+                <Link onClick={() => setIsRevisitingProfile(true)}>
                     click here
                 </Link>
                 .

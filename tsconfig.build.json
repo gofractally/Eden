@@ -5,7 +5,8 @@
         "sourceMap": true,
         "noEmitOnError": true,
         "skipLibCheck": true,
-        "esModuleInterop": true
+        "esModuleInterop": true,
+        "declaration": true
     },
 
     "exclude": ["node_modules", "dist"]

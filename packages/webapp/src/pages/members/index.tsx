@@ -5,8 +5,9 @@ import { QueryClient, useQuery } from "react-query";
 import { dehydrate } from "react-query/hydration";
 
 import {
-    SingleColLayout,
-    Card,
+    Container,
+    FluidLayout,
+    Heading,
     PaginationNav,
     queryMembersStats,
     queryMembers,
@@ -14,8 +15,8 @@ import {
 } from "_app";
 import { MembersGrid } from "members";
 
-const MEMBERS_PAGE_SIZE = 16;
-const NEW_MEMBERS_PAGE_SIZE = 8;
+const MEMBERS_PAGE_SIZE = 18;
+const NEW_MEMBERS_PAGE_SIZE = 12;
 
 export const getServerSideProps: GetServerSideProps = async ({ query }) => {
     const queryClient = new QueryClient();
@@ -91,51 +92,56 @@ export const MembersPage = (props: Props) => {
     };
 
     return (
-        <SingleColLayout>
-            <>
-                <Card title="New Members" titleSize={2}>
-                    {newMembers.isLoading && "Loading new members..."}
-                    {newMembers.error && "Fail to load new members"}
-                    {newMembers.data && (
-                        <>
-                            <MembersGrid
-                                members={newMembers.data}
-                                dataTestId="new-members-grid"
-                            />
-                            <PaginationNav
-                                paginate={paginateNewMembers}
-                                hasNext={
-                                    newMembers.data.length >=
-                                    NEW_MEMBERS_PAGE_SIZE
-                                }
-                                hasPrevious={newMembersPage > 1}
-                            />
-                        </>
-                    )}
-                </Card>
-                <Card title="All Members" titleSize={2}>
-                    {members.isLoading && "Loading members..."}
-                    {members.error && "Fail to load members"}
-                    {members.data && (
-                        <>
-                            <MembersGrid
-                                members={members.data}
-                                dataTestId="members-grid"
-                            />
-                            <PaginationNav
-                                paginate={paginateMembers}
-                                hasNext={
-                                    members.data.length >= MEMBERS_PAGE_SIZE
-                                }
-                                hasPrevious={membersPage > 1}
-                                pageNumber={membersPage}
-                                totalPages={totalMembersPages}
-                            />
-                        </>
-                    )}
-                </Card>
-            </>
-        </SingleColLayout>
+        <FluidLayout title="Community">
+            <Container>
+                <Heading size={1}>New Members</Heading>
+                {newMembers.isLoading && "Loading new members..."}
+                {newMembers.error && "Fail to load new members"}
+            </Container>
+            {newMembers.data && (
+                <>
+                    <div className="border-t border-b">
+                        <MembersGrid
+                            members={newMembers.data}
+                            dataTestId="new-members-grid"
+                        />
+                    </div>
+                    <Container>
+                        <PaginationNav
+                            paginate={paginateNewMembers}
+                            hasNext={
+                                newMembers.data.length >= NEW_MEMBERS_PAGE_SIZE
+                            }
+                            hasPrevious={newMembersPage > 1}
+                        />
+                    </Container>
+                </>
+            )}
+            <Container>
+                <Heading size={1}>All Members</Heading>
+                {members.isLoading && "Loading members..."}
+                {members.error && "Fail to load members"}
+            </Container>
+            {members.data && (
+                <>
+                    <div className="border-t border-b">
+                        <MembersGrid
+                            members={members.data}
+                            dataTestId="members-grid"
+                        />
+                    </div>
+                    <Container>
+                        <PaginationNav
+                            paginate={paginateMembers}
+                            hasNext={members.data.length >= MEMBERS_PAGE_SIZE}
+                            hasPrevious={membersPage > 1}
+                            pageNumber={membersPage}
+                            totalPages={totalMembersPages}
+                        />
+                    </Container>
+                </>
+            )}
+        </FluidLayout>
     );
 };
 

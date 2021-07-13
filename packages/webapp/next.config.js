@@ -23,6 +23,13 @@ module.exports = {
             })()
         );
 
+        // Fixes build with ts/lerna monorepo workspaces
+        const tsRule = config.module.rules.find(
+            (rule) => rule.test && rule.test.toString().includes("tsx|ts")
+        );
+        tsRule.include = undefined;
+        tsRule.exclude = /node_modules/;
+
         // Important: return the modified config
         return config;
     },

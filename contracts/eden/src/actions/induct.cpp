@@ -1,6 +1,9 @@
 #include <accounts.hpp>
 #include <auctions.hpp>
+#include <bylaws.hpp>
+#include <distributions.hpp>
 #include <eden.hpp>
+#include <elections.hpp>
 #include <inductions.hpp>
 #include <members.hpp>
 #include <migrations.hpp>
@@ -84,7 +87,6 @@ namespace eden
       globals globals{get_self()};
       inductions inductions{get_self()};
       accounts user_accounts{get_self()};
-      accounts internal_accounts{get_self(), "owned"_n};
 
       const auto& induction = inductions.get_induction(id);
       eosio::check(payer == induction.invitee(), "only inductee may donate using this action");
@@ -98,7 +100,7 @@ namespace eden
       }
       else if (migrations.is_completed<migrate_account_v0>())
       {
-         internal_accounts.add_balance("master"_n, quantity);
+         add_to_pool(get_self(), "master"_n, quantity);
       }
       inductions.create_nft(induction);
    }
@@ -121,6 +123,18 @@ namespace eden
       }
 
       members.maybe_activate_contract();
+
+      current_election_state_singleton elect_state{get_self(), default_scope};
+      if (elect_state.exists())
+      {
+         auto state = elect_state.get();
+         if (auto* reg = std::get_if<current_election_state_registration>(&state);
+             reg && members.stats().active_members >= reg->election_threshold)
+         {
+            elections elections{get_self()};
+            elections.trigger_election();
+         }
+      }
    }
 
    void eden::gc(uint32_t limit)
@@ -181,7 +195,13 @@ namespace eden
       eosio::require_auth(account);
       members members{get_self()};
       members.check_active_member(account);
+      distributions dist{get_self()};
+      dist.on_resign(members.get_member(account));
+      elections elections{get_self()};
+      elections.on_resign(account);
       members.remove(account);
+      bylaws bylaws{get_self()};
+      bylaws.on_resign(account);
    }
 
 }  // namespace eden

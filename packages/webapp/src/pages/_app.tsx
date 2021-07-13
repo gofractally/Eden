@@ -5,6 +5,7 @@ import { QueryClient, QueryClientProvider } from "react-query";
 import { Hydrate } from "react-query/hydration";
 import { ReactQueryDevtools } from "react-query/devtools";
 import NProgress from "nprogress";
+import Modal from "react-modal";
 import dayjs from "dayjs";
 import * as localizedFormat from "dayjs/plugin/localizedFormat";
 import * as relativeTime from "dayjs/plugin/relativeTime";
@@ -23,6 +24,8 @@ Router.events.on("routeChangeError", () => NProgress.done());
 
 dayjs.extend(localizedFormat.default);
 dayjs.extend(relativeTime.default);
+
+Modal.setAppElement("#__next");
 
 const WebApp = ({ Component, pageProps }: AppProps) => {
     const queryClientRef = useRef<QueryClient>();

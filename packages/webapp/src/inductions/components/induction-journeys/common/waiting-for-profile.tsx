@@ -1,6 +1,7 @@
 import { Button, Heading, Link, Text } from "_app";
 import { getInductionRemainingTimeDays } from "inductions";
 import { Induction } from "inductions/interfaces";
+import { ROUTES } from "_app/config";
 
 export const WaitingForProfile = ({ induction }: { induction: Induction }) => {
     return (
@@ -29,7 +30,7 @@ export const WaitingForProfile = ({ induction }: { induction: Induction }) => {
                     {getInductionRemainingTimeDays(induction)}.
                 </Text>
             </div>
-            <Button href="/induction" size="lg">
+            <Button href={ROUTES.INDUCTION.href} size="lg">
                 Membership dashboard
             </Button>
         </>

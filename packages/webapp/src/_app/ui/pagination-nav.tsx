@@ -1,4 +1,5 @@
-import { Button } from "./button";
+import { BiLeftArrowAlt, BiRightArrowAlt } from "react-icons/bi";
+
 import { Text } from "./text";
 
 interface Props {
@@ -9,6 +10,9 @@ interface Props {
     totalPages?: number;
 }
 
+const PAGE_BUTTON_BASE_CLASS =
+    "flex justify-center items-center h-8 w-8 rounded-full cursor-pointer transition bg-gray-100 hover:bg-gray-200 active:bg-gray-300";
+
 export const PaginationNav = ({
     hasPrevious,
     hasNext,
@@ -16,21 +20,21 @@ export const PaginationNav = ({
     pageNumber,
     totalPages,
 }: Props) => (
-    <div className="flex items-center justify-center mt-4 max-w-md mx-auto text-center space-x-4">
-        {hasPrevious && (
-            <Button type="neutral" size="sm" onClick={() => paginate(-1)}>
-                Previous Page
-            </Button>
-        )}
+    <div className="flex items-center justify-center md:justify-end space-x-3">
         {Boolean(totalPages && pageNumber) && (
-            <Text>
+            <Text size="sm" className="mr-4">
                 Page {pageNumber} of {totalPages}
             </Text>
         )}
+        {hasPrevious && (
+            <div className={`${PAGE_BUTTON_BASE_CLASS} pl-px`}>
+                <BiLeftArrowAlt size={22} onClick={() => paginate(-1)} />
+            </div>
+        )}
         {hasNext && (
-            <Button type="neutral" size="sm" onClick={() => paginate(1)}>
-                Next Page
-            </Button>
+            <div className={PAGE_BUTTON_BASE_CLASS}>
+                <BiRightArrowAlt size={22} onClick={() => paginate(1)} />
+            </div>
         )}
     </div>
 );

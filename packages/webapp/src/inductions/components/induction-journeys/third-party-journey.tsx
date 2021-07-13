@@ -83,7 +83,11 @@ const PendingProfileStep = ({ induction }: { induction: Induction }) => {
 };
 
 const PendingVideoStep = ({ induction }: { induction: Induction }) => {
-    const memberData = convertPendingProfileToMemberData(induction);
+    const memberData = convertPendingProfileToMemberData(
+        induction.new_member_profile,
+        induction.invitee,
+        induction.video
+    );
     return (
         <Container
             step={InductionStepInvitee.PendingVideoAndEndorsements}
@@ -103,7 +107,11 @@ const PendingEndorsementStep = ({
     induction,
     endorsements,
 }: PendingCompletionProps) => {
-    const memberData = convertPendingProfileToMemberData(induction);
+    const memberData = convertPendingProfileToMemberData(
+        induction.new_member_profile,
+        induction.invitee,
+        induction.video
+    );
     return (
         <Container
             step={InductionStepInvitee.PendingVideoAndEndorsements}
@@ -124,7 +132,11 @@ const PendingDonationStep = ({
     endorsements,
 }: PendingCompletionProps) => {
     const { data: isCommunityActive } = useIsCommunityActive();
-    const memberData = convertPendingProfileToMemberData(induction);
+    const memberData = convertPendingProfileToMemberData(
+        induction.new_member_profile,
+        induction.invitee,
+        induction.video
+    );
     return (
         <Container
             step={

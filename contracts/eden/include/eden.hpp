@@ -3,6 +3,7 @@
 #include <constants.hpp>
 #include <eden-atomicassets.hpp>
 #include <eosio/asset.hpp>
+#include <eosio/bytes.hpp>
 #include <eosio/eosio.hpp>
 #include <inductions.hpp>
 #include <string>
@@ -54,7 +55,10 @@ namespace eden
                    atomicassets::attribute_map collection_attributes,
                    eosio::asset auction_starting_bid,
                    uint32_t auction_duration,
-                   eosio::ignore<std::string> memo);
+                   const std::string& memo,
+                   uint8_t election_day,
+                   const std::string& election_time,
+                   const eosio::asset& election_donation);
 
       void addtogenesis(eosio::name new_genesis_member, eosio::time_point expiration);
       void gensetexpire(uint64_t induction_id, eosio::time_point new_expiration);
@@ -79,6 +83,36 @@ namespace eden
       void inducted(eosio::name inductee);
 
       void resign(eosio::name member);
+
+      void electsettime(eosio::time_point_sec election_time);
+
+      void electconfig(uint8_t election_day,
+                       const std::string& election_time,
+                       const eosio::asset& election_donation);
+
+      void electdonate(eosio::name member, const eosio::asset& quantity);
+      void electopt(eosio::name member, bool participating);
+
+      void electseed(const eosio::bytes& btc_header);
+      void electvote(uint8_t round, eosio::name voter, eosio::name candidate);
+      void electprocess(uint32_t max_steps);
+
+      void distribute(uint32_t max_steps);
+
+      void fundtransfer(eosio::name from,
+                        eosio::block_timestamp distribution_time,
+                        uint8_t rank,
+                        eosio::name to,
+                        eosio::asset amount,
+                        const std::string& memo);
+      void usertransfer(eosio::name from,
+                        eosio::name to,
+                        eosio::asset amount,
+                        const std::string& memo);
+
+      void bylawspropose(eosio::name proposer, const std::string& bylaws);
+      void bylawsapprove(eosio::name approver, const eosio::checksum256& bylaws_hash);
+      void bylawsratify(eosio::name approver, const eosio::checksum256& bylaws_hash);
 
       void gc(uint32_t limit);
 
@@ -114,6 +148,8 @@ namespace eden
        action(withdraw, owner, quantity, ricardian_contract(withdraw_ricardian)),
        action(donate, owner, quantity),
        action(transfer, to, quantity, memo),
+       action(fundtransfer, from, distribution_time, rank, to, amount, memo),
+       action(usertransfer, from, to, amount, memo),
        action(genesis,
               community,
               community_symbol,
@@ -124,6 +160,9 @@ namespace eden
               auction_starting_bid,
               auction_duration,
               memo,
+              election_day,
+              election_time,
+              election_donation,
               ricardian_contract(genesis_ricardian)),
        action(addtogenesis, account, expiration),
        action(gensetexpire, id, new_expiration),
@@ -141,6 +180,17 @@ namespace eden
               id,
               induction_data_hash,
               ricardian_contract(inductendors_ricardian)),
+       action(electsettime, election_time),
+       action(electconfig, day, time, donation),
+       action(electdonate, payer, quantity),
+       action(electopt, member, participating),
+       action(electseed, btc_header),
+       action(electvote, round, voter, candidate),
+       action(electprocess, max_steps),
+       action(bylawspropose, proposer, bylaws),
+       action(bylawsapprove, approver, bylaws_hash),
+       action(bylawsratify, approver, bylaws_hash),
+       action(distribute, max_steps),
        action(inductdonate, payer, id, quantity, ricardian_contract(inductdonate_ricardian)),
        action(inductcancel, account, id, ricardian_contract(inductcancel_ricardian)),
        action(inducted, inductee, ricardian_contract(inducted_ricardian)),
