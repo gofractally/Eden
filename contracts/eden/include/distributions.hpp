@@ -113,9 +113,17 @@ namespace eden
    {
      private:
       eosio::name contract;
+      distribution_account_table_type distribution_account_tb;
 
      public:
-      distributions(eosio::name contract) : contract(contract) {}
+      explicit distributions(eosio::name contract)
+          : contract(contract), distribution_account_tb(contract, default_scope)
+      {
+      }
+      void sub_balance(eosio::name from,
+                       eosio::block_timestamp distribution_time,
+                       uint8_t rank,
+                       eosio::asset amount);
       uint32_t on_election_kick(eosio::name member, uint32_t max_steps);
       void on_resign(const member& member);
       void clear_all();

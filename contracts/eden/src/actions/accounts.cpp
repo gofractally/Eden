@@ -116,12 +116,9 @@ namespace eden
       members members{get_self()};
       members.check_active_member(from);
       members.check_active_member(to);
-      distribution_account_table_type distribution_accounts{get_self(), default_scope};
+      distributions distributions{get_self()};
       accounts accounts{get_self()};
-      const auto& row = distribution_accounts.get_index<"byowner"_n>().get(
-          distribution_account_key(from, distribution_time, rank));
-      eosio::check(row.balance() >= amount, "insufficient balance");
-      distribution_accounts.modify(row, get_self(), [&](auto& row) { row.balance() -= amount; });
+      distributions.sub_balance(from, distribution_time, rank, amount);
       accounts.add_balance(to, amount);
    }
 
