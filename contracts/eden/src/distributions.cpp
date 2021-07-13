@@ -282,7 +282,7 @@ namespace eden
    // Differences from on_resign
    // - iterated (a user cannot block an election by building up too many accounts)
    // - No pending distributions are possible at this stage of the election
-   uint32_t distributions::on_election_kick(eosio::name member, uint64_t& key, uint32_t max_steps)
+   uint32_t distributions::on_election_kick(eosio::name member, uint32_t max_steps)
    {
       accounts owned_accounts{contract, "owned"_n};
       distribution_account_table_type distribution_account_tb{contract, default_scope};

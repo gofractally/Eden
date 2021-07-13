@@ -388,7 +388,6 @@ namespace eden
    uint32_t elections::randomize_voters(current_election_state_init_voters& state,
                                         uint32_t max_steps)
    {
-      election_state_singleton sequence_state(contract, default_scope);
       members members(contract);
       const auto& member_tb = members.get_table();
       auto iter = member_tb.upper_bound(state.last_processed.value);
@@ -402,17 +401,11 @@ namespace eden
                case no_donation:
                {
                   distributions distributions{contract};
-                  if (!state.last_closed_account)
-                  {
-                     state.last_closed_account = 0;
-                  }
-                  max_steps = distributions.on_election_kick(iter->account(),
-                                                             *state.last_closed_account, max_steps);
+                  max_steps = distributions.on_election_kick(iter->account(), max_steps);
                   if (max_steps == 0)
                   {
                      return max_steps;
                   }
-                  state.last_closed_account = std::nullopt;
                   remove_from_board(iter->account());
                   iter = members.erase(iter);
                   continue;
