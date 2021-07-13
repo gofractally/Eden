@@ -1190,6 +1190,7 @@ TEST_CASE("election with multiple rounds")
    constexpr std::size_t num_accounts = 200;  // 10000 takes too long
    eden_tester t;
    t.genesis();
+   t.eden_gm.act<actions::electsettime>(s2t("2020-07-04T15:30:00.000"));
    auto test_accounts = make_names(num_accounts - 3);
    t.create_accounts(test_accounts);
 

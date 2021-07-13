@@ -250,7 +250,8 @@ namespace eden
                  std::get<current_election_state_registration>(state).start_time >= lock_time,
              "Election cannot be rescheduled");
       }
-      state_sing.set(current_election_state_registration{election_time}, contract);
+      state_sing.set(current_election_state_registration{election_time, max_active_members + 1},
+                     contract);
    }
 
    void elections::set_time(uint8_t day, const std::string& time)
@@ -318,7 +319,9 @@ namespace eden
                 get_election_time(state.election_start_time, now + eosio::days(30))};
             if (new_start_time < current->start_time)
             {
-               state_sing.set(current_election_state_registration{new_start_time}, contract);
+               state_sing.set(
+                   current_election_state_registration{new_start_time, max_active_members + 1},
+                   contract);
             }
          }
       }
