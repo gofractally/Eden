@@ -29,21 +29,24 @@ namespace eden
    void members::check_keys(const std::vector<eosio::name>& accounts,
                             const std::vector<encrypted_key>& keys)
    {
-      // N.B. this doesn't catch duplicate keys.
-      // duplicate keys should never happen by accident, and
-      // intentional subversion is pointless as anyone who
-      // can decrypt the data can do whatever he wants with
-      // it already.
       eosio::check(accounts.size() == keys.size(), "Wrong number of encyption keys");
+      std::vector<eosio::public_key> actual_keys;
+      std::vector<eosio::public_key> expected_keys;
+      actual_keys.reserve(keys.size());
+      expected_keys.reserve(accounts.size());
       for (auto account : accounts)
       {
          const auto& member = member_tb.get(account.value);
          eosio::check(!!member.encryption_key(), "Encryption key not set");
-         auto iter = std::find_if(keys.begin(), keys.end(), [&](auto& k) {
-            return k.recipient_key == *member.encryption_key();
-         });
-         eosio::check(iter != keys.end(), "Wrong encryption key");
+         expected_keys.push_back(*member.encryption_key());
       }
+      for (const auto& key : keys)
+      {
+         actual_keys.push_back(key.recipient_key);
+      }
+      std::sort(actual_keys.begin(), actual_keys.end());
+      std::sort(expected_keys.begin(), expected_keys.end());
+      eosio::check(actual_keys == expected_keys, "Wrong encryption key");
    }
 
    void members::set_key(eosio::name member, const eosio::public_key& key)
