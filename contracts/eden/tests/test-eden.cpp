@@ -76,10 +76,8 @@ void atomicassets_setup(test_chain& t)
 
 void eden_setup(test_chain& t)
 {
-   token_setup(t);
    atomicassets_setup(t);
    atomicmarket_setup(t);
-   t.create_code_account("eden.gm"_n);
    t.set_code("eden.gm"_n, "eden.wasm");
 }
 
@@ -197,9 +195,12 @@ struct eden_tester
    user_context bertie = chain.as("bertie"_n);
    user_context ahab = chain.as("ahab"_n);
 
-   eden_tester()
+   explicit eden_tester(std::function<void()> f = [] {})
    {
       chain_setup(chain);
+      token_setup(chain);
+      chain.create_code_account("eden.gm"_n);
+      f();
       eden_setup(chain);
       for (auto account : {"alice"_n, "pip"_n, "egeon"_n, "bertie"_n, "ahab"_n})
       {
@@ -452,15 +453,29 @@ struct eden_tester
       }
    }
 
+   template <typename T>
+   eosio::asset get_total_balance(const T& table)
+   {
+      eosio::asset result{s2a("0.0000 EOS")};
+      for (auto item : table)
+      {
+         result += item.balance();
+      }
+      return result;
+   }
+
+   eosio::asset get_total_balance()
+   {
+      eden::account_table_type user_accounts{"eden.gm"_n, eden::default_scope};
+      eden::account_table_type internal_accounts{"eden.gm"_n, "owned"_n.value};
+      return get_total_balance(user_accounts) + get_total_balance(internal_accounts) +
+             get_total_budget();
+   }
+
    eosio::asset get_total_budget()
    {
-      eosio::asset total = s2a("0.0000 EOS");
       eden::distribution_account_table_type distributions{"eden.gm"_n, eden::default_scope};
-      for (auto item : distributions)
-      {
-         total += item.balance();
-      }
-      return total;
+      return get_total_balance(distributions);
    };
 
    auto get_budgets_by_period() const
@@ -1495,6 +1510,16 @@ TEST_CASE("accounting")
    t.eden_gm.act<actions::transfer>("eosio"_n, s2a("30.0000 EOS"), "");
    CHECK(get_token_balance("eden.gm"_n) == s2a("90.0000 EOS"));
    CHECK(get_token_balance("eosio"_n) == s2a("30.0000 EOS"));
+}
+
+TEST_CASE("pre-genesis balance")
+{
+   eden_tester t{[&] {
+      t.eosio_token.act<token::actions::transfer>("eosio.token"_n, "eden.gm"_n, s2a("3.1415 EOS"),
+                                                  "");
+   }};
+   t.genesis();
+   CHECK(get_token_balance("eden.gm"_n) == t.get_total_balance());
 }
 
 TEST_CASE("account migration")

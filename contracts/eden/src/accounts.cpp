@@ -60,6 +60,16 @@ namespace eden
       }
    }
 
+   void accounts::init()
+   {
+      token::accounts token_accounts_tb{token_contract, contract.value};
+      auto iter = token_accounts_tb.find(globals.default_token().code().raw());
+      if (iter != token_accounts_tb.end())
+      {
+         add_balance("master"_n, iter->balance);
+      }
+   }
+
    std::optional<account> accounts::get_account(eosio::name owner)
    {
       auto record = account_tb.find(owner.value);
