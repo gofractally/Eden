@@ -86,6 +86,7 @@ const fs = require('fs');
          instance.exports.free_memory(destAddr);
       }
 
+      instance.exports.scan_blocks();
       fs.writeFileSync('state', new Uint8Array(instance.exports.memory.buffer));
    } catch (e) {
       console.error(e);

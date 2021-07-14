@@ -27,6 +27,12 @@ extern "C" void __wasm_call_ctors();
    free(p);
 }
 
+template <typename T>
+void dump(const T& ind)
+{
+   printf("%s\n", eosio::format_json(ind).c_str());
+}
+
 namespace boost
 {
    BOOST_NORETURN void throw_exception(std::exception const& e)
@@ -39,14 +45,78 @@ namespace boost
    }
 }  // namespace boost
 
+struct by_id;
+struct by_pk;
+
+template <typename T, typename... Indexes>
+using mic = boost::
+    multi_index_container<T, boost::multi_index::indexed_by<Indexes...>, chainbase::allocator<T>>;
+
+template <typename T>
+using ordered_by_id = boost::multi_index::ordered_unique<  //
+    boost::multi_index::tag<by_id>,
+    boost::multi_index::member<T, typename T::id_type, &T::id>>;
+
+template <typename T>
+using ordered_by_pk = boost::multi_index::ordered_unique<  //
+    boost::multi_index::tag<by_pk>,
+    boost::multi_index::const_mem_fun<
+        T,
+        eosio::remove_cvref_t<typename eosio::member_fn<decltype(&T::pk)>::return_type>,
+        &T::pk>>;
+
+auto available_pk(const auto& table, const auto& first)
+    -> eosio::remove_cvref_t<decltype(table.begin()->pk())>
+{
+   auto& idx = table.template get<by_pk>();
+   if (idx.empty())
+      return first;
+   return (--idx.end())->pk() + 1;
+}
+
 enum tables
 {
-   induction_table
+   status_table,
+   induction_table,
 };
+
+struct status
+{
+   bool initialized = false;
+   std::string community;
+   eosio::symbol communitySymbol;
+   eosio::asset minimumDonation;
+   std::vector<eosio::name> initialMembers;
+   std::string genesisVideo;
+   eden::atomicassets::attribute_map collectionAttributes;
+   eosio::asset auctionStartingBid;
+   uint32_t auctionDuration;
+   std::string memo;
+};
+EOSIO_REFLECT(status,
+              initialized,
+              community,
+              communitySymbol,
+              minimumDonation,
+              initialMembers,
+              genesisVideo,
+              collectionAttributes,
+              auctionStartingBid,
+              auctionDuration,
+              memo)
+
+struct status_object : public chainbase::object<status_table, status_object>
+{
+   CHAINBASE_DEFAULT_CONSTRUCTOR(status_object)
+
+   id_type id;
+   status status;
+};
+using status_index = mic<status_object, ordered_by_id<status_object>>;
 
 struct induction
 {
-   uint64_t id;
+   uint64_t id = 0;
    eosio::name inviter;
    eosio::name invitee;
    std::vector<eosio::name> witnesses;
@@ -54,11 +124,6 @@ struct induction
    std::string video;
 };
 EOSIO_REFLECT(induction, id, inviter, invitee, witnesses, profile, video)
-
-void dump(const induction& ind)
-{
-   printf("%s\n", eosio::format_json(ind).c_str());
-}
 
 struct induction_object : public chainbase::object<induction_table, induction_object>
 {
@@ -69,61 +134,117 @@ struct induction_object : public chainbase::object<induction_table, induction_ob
 
    uint64_t pk() const { return induction.id; }
 };
-
-struct by_id;
-struct by_pk;
-
-typedef boost::multi_index_container<
-    induction_object,
-    boost::multi_index::indexed_by<
-        boost::multi_index::ordered_unique<  //
-            boost::multi_index::tag<by_id>,
-            boost::multi_index::
-                member<induction_object, induction_object::id_type, &induction_object::id>>,
-        boost::multi_index::ordered_unique<  //
-            boost::multi_index::tag<by_pk>,
-            boost::multi_index::const_mem_fun<induction_object, uint64_t, &induction_object::pk>>>,
-    chainbase::allocator<induction_object>>
-    induction_index;
-CHAINBASE_SET_INDEX_TYPE(induction_object, induction_index)
+using induction_index =
+    mic<induction_object, ordered_by_id<induction_object>, ordered_by_pk<induction_object>>;
 
 struct database
 {
    chainbase::database db;
+   chainbase::generic_index<status_index> status;
    chainbase::generic_index<induction_index> inductions;
 
-   database() { db.add_index(inductions); }
+   database()
+   {
+      db.add_index(status);
+      db.add_index(inductions);
+   }
 };
 database db;
 
-template <typename Tag, typename Index, typename Key, typename F>
-void add_or_modify(Index& index, const Key& key, F&& f)
+template <typename Tag, typename Table, typename Key, typename F>
+void add_or_modify(Table& table, const Key& key, F&& f)
 {
-   auto& idx = index.template get<Tag>();
+   auto& idx = table.template get<Tag>();
    auto it = idx.find(key);
    if (it != idx.end())
-      index.modify(*it, f);
+      table.modify(*it, [&](auto& obj) { return f(false, obj); });
    else
-      index.emplace(f);
+      table.emplace([&](auto& obj) { return f(true, obj); });
 }
 
-template <typename Tag, typename Index, typename Key, typename F>
-void add_or_replace(Index& index, const Key& key, F&& f)
+template <typename Tag, typename Table, typename Key, typename F>
+void add_or_replace(Table& table, const Key& key, F&& f)
 {
-   auto& idx = index.template get<Tag>();
+   auto& idx = table.template get<Tag>();
    auto it = idx.find(key);
    if (it != idx.end())
-      index.remove(*it);
-   index.emplace(f);
+      table.remove(*it);
+   table.emplace(f);
 }
 
-template <typename Tag, typename Index, typename Key>
-void remove_if_exists(Index& index, const Key& key)
+template <typename Tag, typename Table, typename Key, typename F>
+void modify(Table& table, const Key& key, F&& f)
 {
-   auto& idx = index.template get<Tag>();
+   auto& idx = table.template get<Tag>();
+   auto it = idx.find(key);
+   eosio::check(it != idx.end(), "missing record");
+   table.modify(*it, [&](auto& obj) { return f(obj); });
+}
+
+template <typename Tag, typename Table, typename Key>
+void remove_if_exists(Table& table, const Key& key)
+{
+   auto& idx = table.template get<Tag>();
    auto it = idx.find(key);
    if (it != idx.end())
-      index.remove(*it);
+      table.remove(*it);
+}
+
+const auto& get_status()
+{
+   auto& idx = db.status.get<by_id>();
+   eosio::check(idx.size() == 1, "missing genesis action");
+   return *idx.begin();
+}
+
+void add_genesis_member(const status& status, eosio::name member)
+{
+   db.inductions.emplace([&](auto& obj) {
+      obj.induction.id = available_pk(db.inductions, 1);
+      obj.induction.inviter = "genesis.eden"_n;  // TODO
+      obj.induction.invitee = member;
+      for (auto witness : status.initialMembers)
+         if (witness != member)
+            obj.induction.witnesses.push_back(witness);
+   });
+}
+
+void genesis(std::string community,
+             eosio::symbol community_symbol,
+             eosio::asset minimum_donation,
+             std::vector<eosio::name> initial_members,
+             std::string genesis_video,
+             eden::atomicassets::attribute_map collection_attributes,
+             eosio::asset auction_starting_bid,
+             uint32_t auction_duration,
+             std::string memo)
+{
+   auto& idx = db.status.get<by_id>();
+   eosio::check(idx.empty(), "duplicate genesis action");
+   db.status.emplace([&](auto& obj) {
+      obj.status.community = std::move(community);
+      obj.status.communitySymbol = std::move(community_symbol);
+      obj.status.minimumDonation = std::move(minimum_donation);
+      obj.status.initialMembers = std::move(initial_members);
+      obj.status.genesisVideo = std::move(genesis_video);
+      obj.status.collectionAttributes = std::move(collection_attributes);
+      obj.status.auctionStartingBid = std::move(auction_starting_bid);
+      obj.status.auctionDuration = std::move(auction_duration);
+      obj.status.memo = std::move(memo);
+      for (auto& member : obj.status.initialMembers)
+         add_genesis_member(obj.status, member);
+   });
+}
+
+void addtogenesis(eosio::name new_genesis_member)
+{
+   auto& status = get_status();
+   db.status.modify(get_status(),
+                    [&](auto& obj) { obj.status.initialMembers.push_back(new_genesis_member); });
+   for (auto& obj : db.inductions)
+      db.inductions.modify(
+          obj, [&](auto& obj) { obj.induction.witnesses.push_back(new_genesis_member); });
+   add_genesis_member(status.status, new_genesis_member);
 }
 
 void inductinit(uint64_t id,
@@ -132,46 +253,33 @@ void inductinit(uint64_t id,
                 std::vector<eosio::name> witnesses)
 {
    // TODO: expire records
-   printf("inductinit %llu\n", id);
+   const auto& status = get_status();
+   if (!status.status.initialized)
+      db.status.modify(status, [&](auto& obj) { obj.status.initialized = true; });
    add_or_replace<by_pk>(db.inductions, id, [&](auto& obj) {
       obj.induction.id = id;
       obj.induction.inviter = inviter;
       obj.induction.invitee = invitee;
       obj.induction.witnesses = witnesses;
-      dump(obj.induction);
    });
 }
 
 void inductprofil(uint64_t id, eden::new_member_profile profile)
 {
-   printf("inductprofil %llu\n", id);
-   add_or_modify<by_pk>(db.inductions, id, [&](auto& obj) {
-      obj.induction.id = id;  // !!!
-      obj.induction.profile = profile;
-      dump(obj.induction);
-   });
+   modify<by_pk>(db.inductions, id, [&](auto& obj) { obj.induction.profile = profile; });
 }
 
 void inductvideo(eosio::name account, uint64_t id, std::string video)
 {
-   printf("inductvideo %016llx\n", id);
-   add_or_modify<by_pk>(db.inductions, id, [&](auto& obj) {
-      obj.induction.id = id;  // !!!
-      obj.induction.video = video;
-      dump(obj.induction);
-   });
+   modify<by_pk>(db.inductions, id, [&](auto& obj) { obj.induction.video = video; });
 }
 
 void inductcancel(eosio::name account, uint64_t id)
 {
-   printf("inductcancel %016llx\n", id);
    remove_if_exists<by_pk>(db.inductions, id);
 }
 
-void inductdonate(eosio::name payer, uint64_t id, eosio::asset quantity)
-{
-   printf("inductdonate %016llx\n", id);
-}
+void inductdonate(eosio::name payer, uint64_t id, eosio::asset quantity) {}
 
 template <typename... Args>
 void call(void (*f)(Args...), const std::vector<char>& data)
@@ -192,7 +300,11 @@ void filter_block(const eden_chain::eosio_block& block)
       {
          if (action.firstReceiver == "genesis.eden"_n)
          {
-            if (action.name == "inductinit"_n)
+            if (action.name == "genesis"_n)
+               call(genesis, action.hexData.data);
+            else if (action.name == "addtogenesis"_n)
+               call(addtogenesis, action.hexData.data);
+            else if (action.name == "inductinit"_n)
                call(inductinit, action.hexData.data);
             else if (action.name == "inductprofil"_n)
                call(inductprofil, action.hexData.data);
@@ -235,12 +347,21 @@ eden_chain::block_log block_log;
       bi.id = clchain::sha256(bin.data(), bin.size());
       auto status = block_log.add_block(bi);
       // TODO: notify chainbase of forks & irreversible
-      filter_block(bi.block.eosio_block);
+      // TODO: filter_block
       // printf("%s block %u %s\n", block_log.status_str[status], bi.block.eosio_block.num,
       //        to_string(bi.block.eosio_block.id).c_str());
    }
    // printf("%d blocks processed, %d blocks now in log\n", (int)eosio_blocks.size(),
    //        (int)block_log.blocks.size());
+}
+
+// TODO: remove
+[[clang::export_name("scan_blocks")]] void scan_blocks()
+{
+   printf("scan_blocks...\n");
+   for (auto& block : block_log.blocks)
+      filter_block(block->block.eosio_block);
+   printf("%d blocks processed\n", (int)block_log.blocks.size());
 }
 
 struct Query
