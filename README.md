@@ -1,8 +1,8 @@
 # Eden
 
-## Eden Community WebApp
+## Eden Community Web App
 
-### Running Eden Community WebApp locally
+### Running Eden Community Web App locally
 
 ```sh
 yarn
@@ -10,7 +10,11 @@ yarn dev --stream
 open http://localhost:3000
 ```
 
+For more details, refer to the [Web App README](./packages/webapp/README.md).
+
 ## Eden Contracts
+
+Contacts can be built manually (see below) but the latest contracts are also available from our Github CI/CD in this repo.
 
 ### Build
 
