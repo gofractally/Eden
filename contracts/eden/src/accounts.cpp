@@ -28,8 +28,16 @@ namespace eden
       if (done)
       {
          account_table_type system_tb(contract, "owned"_n.value);
-         auto total_balance = token::contract::get_balance(
-             token_contract, contract, globals{contract}.default_token().code());
+         globals globals{contract};
+         eosio::asset total_balance{0, globals.default_token()};
+         {
+            token::accounts token_accounts_tb{token_contract, contract.value};
+            auto iter = token_accounts_tb.find(globals.default_token().code().raw());
+            if (iter != token_accounts_tb.end())
+            {
+               total_balance = iter->balance;
+            }
+         }
          eosio::check(total_balance >= user_total,
                       "Invariant failure: not enough funds to cover user balances");
          if (total_balance != user_total)
@@ -57,6 +65,16 @@ namespace eden
       if (owner <= last_visited)
       {
          user_total += amount;
+      }
+   }
+
+   void accounts::init()
+   {
+      token::accounts token_accounts_tb{token_contract, contract.value};
+      auto iter = token_accounts_tb.find(globals.default_token().code().raw());
+      if (iter != token_accounts_tb.end())
+      {
+         add_balance("master"_n, iter->balance);
       }
    }
 
