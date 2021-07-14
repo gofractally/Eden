@@ -47,6 +47,7 @@ namespace boost
 
 struct by_id;
 struct by_pk;
+struct by_invitee;
 
 template <typename T, typename... Indexes>
 using mic = boost::
@@ -65,6 +66,14 @@ using ordered_by_pk = boost::multi_index::ordered_unique<  //
         eosio::remove_cvref_t<typename eosio::member_fn<decltype(&T::pk)>::return_type>,
         &T::pk>>;
 
+template <typename T>
+using ordered_by_invitee = boost::multi_index::ordered_unique<  //
+    boost::multi_index::tag<by_invitee>,
+    boost::multi_index::const_mem_fun<
+        T,
+        eosio::remove_cvref_t<typename eosio::member_fn<decltype(&T::invitee)>::return_type>,
+        &T::invitee>>;
+
 auto available_pk(const auto& table, const auto& first)
     -> eosio::remove_cvref_t<decltype(table.begin()->pk())>
 {
@@ -78,11 +87,12 @@ enum tables
 {
    status_table,
    induction_table,
+   member_table,
 };
 
 struct status
 {
-   bool initialized = false;
+   bool active = false;
    std::string community;
    eosio::symbol communitySymbol;
    eosio::asset minimumDonation;
@@ -94,7 +104,7 @@ struct status
    std::string memo;
 };
 EOSIO_REFLECT(status,
-              initialized,
+              active,
               community,
               communitySymbol,
               minimumDonation,
@@ -133,20 +143,46 @@ struct induction_object : public chainbase::object<induction_table, induction_ob
    induction induction;
 
    uint64_t pk() const { return induction.id; }
+   std::pair<eosio::name, uint64_t> invitee() const { return {induction.invitee, induction.id}; }
 };
-using induction_index =
-    mic<induction_object, ordered_by_id<induction_object>, ordered_by_pk<induction_object>>;
+using induction_index = mic<induction_object,
+                            ordered_by_id<induction_object>,
+                            ordered_by_pk<induction_object>,
+                            ordered_by_invitee<induction_object>>;
+
+struct member
+{
+   eosio::name account;
+   eosio::name inviter;
+   std::vector<eosio::name> inductionWitnesses;
+   eden::new_member_profile profile;
+   std::string inductionVideo;
+};
+EOSIO_REFLECT(member, account, inviter, inductionWitnesses, profile, inductionVideo)
+
+struct member_object : public chainbase::object<member_table, member_object>
+{
+   CHAINBASE_DEFAULT_CONSTRUCTOR(member_object)
+
+   id_type id;
+   member member;
+
+   eosio::name pk() const { return member.account; }
+};
+using member_index = mic<member_object, ordered_by_id<member_object>, ordered_by_pk<member_object>>;
 
 struct database
 {
    chainbase::database db;
    chainbase::generic_index<status_index> status;
    chainbase::generic_index<induction_index> inductions;
+   chainbase::generic_index<member_index> members;
 
    database()
    {
       db.add_index(status);
       db.add_index(inductions);
+      db.add_index(members);
    }
 };
 database db;
@@ -188,6 +224,15 @@ void remove_if_exists(Table& table, const Key& key)
    auto it = idx.find(key);
    if (it != idx.end())
       table.remove(*it);
+}
+
+template <typename Tag, typename Table, typename Key>
+const auto& get(Table& table, const Key& key)
+{
+   auto& idx = table.template get<Tag>();
+   auto it = idx.find(key);
+   eosio::check(it != idx.end(), "missing record");
+   return *it;
 }
 
 const auto& get_status()
@@ -253,9 +298,12 @@ void inductinit(uint64_t id,
                 std::vector<eosio::name> witnesses)
 {
    // TODO: expire records
+
+   // contract doesn't allow inductinit() until it transitioned to active
    const auto& status = get_status();
-   if (!status.status.initialized)
-      db.status.modify(status, [&](auto& obj) { obj.status.initialized = true; });
+   if (!status.status.active)
+      db.status.modify(status, [&](auto& obj) { obj.status.active = true; });
+
    add_or_replace<by_pk>(db.inductions, id, [&](auto& obj) {
       obj.induction.id = id;
       obj.induction.inviter = inviter;
@@ -279,7 +327,28 @@ void inductcancel(eosio::name account, uint64_t id)
    remove_if_exists<by_pk>(db.inductions, id);
 }
 
-void inductdonate(eosio::name payer, uint64_t id, eosio::asset quantity) {}
+void inductdonate(eosio::name payer, uint64_t id, eosio::asset quantity)
+{
+   auto& induction = get<by_pk>(db.inductions, id);
+   auto& member = db.members.emplace([&](auto& obj) {
+      obj.member.account = induction.induction.invitee;
+      obj.member.inviter = induction.induction.inviter;
+      obj.member.inductionWitnesses = induction.induction.witnesses;
+      obj.member.profile = induction.induction.profile;
+      obj.member.inductionVideo = induction.induction.video;
+      dump(obj.member);
+   });
+
+   auto& index = db.inductions.get<by_invitee>();
+   for (auto it = index.lower_bound(std::pair<eosio::name, uint64_t>{member.member.account, 0});
+        it != index.end() && it->induction.invitee == member.member.account;)
+   {
+      auto next = it;
+      ++next;
+      db.inductions.remove(*it);
+      it = next;
+   }
+}
 
 template <typename... Args>
 void call(void (*f)(Args...), const std::vector<char>& data)
