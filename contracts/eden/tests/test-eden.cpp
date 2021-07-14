@@ -1568,4 +1568,10 @@ TEST_CASE("account migration")
       CHECK(sum_accounts(user_table) + sum_accounts(system_table) ==
             get_token_balance("eden.gm"_n));
    }
+
+   t.set_balance(s2a("0.0000 EOS"));
+   t.alice.act<actions::withdraw>("alice"_n, get_eden_account("alice"_n)->balance());
+   t.eden_gm.act<token::actions::close>("eden.gm"_n, eosio::symbol("EOS", 4));
+   t.eden_gm.act<actions::unmigrate>();
+   t.eden_gm.act<actions::migrate>(100);
 }
