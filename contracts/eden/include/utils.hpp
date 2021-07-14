@@ -29,4 +29,13 @@ namespace eden
    }
 #define EDEN_FORWARD_MEMBERS(var, ...) EOSIO_MAP_REUSE_ARG0(EDEN_FORWARD_MEMBER, var, __VA_ARGS__)
 
+   template <typename T>
+   void clear_table(T&& tb)
+   {
+      for (auto iter = tb.begin(), end = tb.end(); iter != end;)
+      {
+         iter = tb.erase(iter);
+      }
+   }
+
 }  // namespace eden

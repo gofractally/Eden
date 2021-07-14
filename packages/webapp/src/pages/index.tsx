@@ -14,6 +14,7 @@ import {
     Asset,
     assetToString,
 } from "_app";
+import { ROUTES } from "_app/config";
 
 export const getServerSideProps: GetServerSideProps = async () => {
     const queryClient = new QueryClient();
@@ -121,18 +122,21 @@ const CommunityStatsCard = ({
     treasuryBalance,
 }: CommunityStatsProps) =>
     memberStats && treasuryBalance ? (
-        <Card className="flex flex-col justify-center items-center h-full space-y-4 text-md lg:text-lg">
+        <Card className="flex flex-col justify-center items-center h-full space-y-4 lg:text-lg">
             <Heading size={2} className="mb-2">
                 Community Stats
             </Heading>
-            <Text className="font-medium" size="md">
+            <Text className="font-medium" size="inherit">
                 Treasury: {assetToString(treasuryBalance, 4)}
             </Text>
-            <Link href="/members" className="font-medium">
+            <Link href={ROUTES.MEMBERS.href} className="font-medium">
                 {memberStats.active_members} active member
                 {memberStats.active_members !== 1 && "s"}
             </Link>
-            <Link href="/induction/pending-invitations" className="font-medium">
+            <Link
+                href={`${ROUTES.INDUCTION.href}/pending-invitations`}
+                className="font-medium"
+            >
                 {memberStats.pending_members} pending invitation
                 {memberStats.pending_members !== 1 && "s"}
             </Link>

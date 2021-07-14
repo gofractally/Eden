@@ -1,10 +1,12 @@
 import React from "react";
 import Link from "next/link";
 import dayjs from "dayjs";
+import { FaGavel } from "react-icons/fa";
 
 import { assetToString, ipfsUrl } from "_app";
-import { atomicAssets } from "config";
+import { atomicAssets, blockExplorerAccountBaseUrl } from "config";
 import { MemberData } from "../interfaces";
+import { ROUTES } from "_app/config";
 
 interface Props {
     members: MemberData[];
@@ -17,84 +19,92 @@ const openInNewTab = (url: string) => {
 };
 
 export const MembersGrid = ({ members, dataTestId }: Props) => {
-    const containerClass = `grid grid-cols-1 max-w-xs sm:max-w-xl md:max-w-none sm:grid-cols-2 lg:grid-cols-4 gap-5 mx-auto`;
     return (
-        <div className={containerClass} data-testid={dataTestId}>
+        <div
+            className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-px"
+            data-testid={dataTestId}
+        >
             {(members.length &&
                 members.map((member) => (
-                    <MemberSquare key={member.account} member={member} />
+                    <MemberChip key={member.account} member={member} />
                 ))) ||
                 "No members to list."}
         </div>
     );
 };
 
-export const MemberSquare = ({ member }: { member: MemberData }) => {
-    const cardClass =
-        "group border border-gray-300 rounded-md shadow-md overflow-hidden text-gray-800";
-    const memberCard = (
-        <div className={cardClass}>
-            <MemberImage member={member} />
-            <div className="p-3 pt-1">
-                <div className="flex items-center space-x-3 mt-1">
-                    <MintDate createdAt={member.createdAt} />
-                    <AssetBadge member={member} />
+export const MemberChip = ({ member }: { member: MemberData }) => {
+    const memberChip = (
+        <div
+            className="relative flex items-center p-2.5 bg-white hover:bg-gray-100 active:bg-gray-200 transition select-none"
+            style={{ boxShadow: "0 0 0 1px #e5e5e5" }}
+        >
+            <div className="flex space-x-2.5">
+                <MemberImage member={member} />
+                <div className="flex-1 flex flex-col justify-center group">
+                    <p className="text-xs text-gray-500 font-light">
+                        {member.createdAt === 0
+                            ? "not an eden member"
+                            : dayjs(member.createdAt).format("YYYY.MM.DD")}
+                    </p>
+                    <p className="group-hover:underline">{member.name}</p>
+                    {member.account && (
+                        <p className="text-xs text-gray-500 font-light">
+                            @{member.account}
+                        </p>
+                    )}
                 </div>
-                <MemberNames member={member} />
-                <AuctionBadge member={member} />
-                <SaleBadge member={member} />
             </div>
+            <NFTBadges member={member} />
         </div>
     );
 
     if (member.account) {
         return (
-            <Link href={`/members/${member.account}`}>
-                <a>{memberCard}</a>
+            <Link href={`${ROUTES.MEMBERS.href}/${member.account}`}>
+                <a>{memberChip}</a>
             </Link>
         );
     }
-    return memberCard;
+    return (
+        <a
+            href={`${blockExplorerAccountBaseUrl}/${member.name}`}
+            target="_blank"
+            rel="noopener noreferrer"
+        >
+            {memberChip}
+        </a>
+    );
 };
 
-const baseBadge = "rounded px-2 text-xs";
-
 const MemberImage = ({ member }: { member: MemberData }) => {
-    const imageClass = "h-60 md:h-44 w-full object-cover object-center mx-auto";
-    if (member.account) {
+    const imageClass = "rounded-full h-14 w-14 object-cover shadow";
+    if (member.account && member.image) {
         return (
-            <div className="relative">
-                <img
-                    src={
-                        member.image
-                            ? ipfsUrl(member.image)
-                            : "/images/unknown-member.png"
-                    }
-                    className={imageClass}
-                />
-                <div className="absolute inset-0 bg-black opacity-0 group-hover:opacity-20 transition" />
+            <div className="relative group">
+                <img src={ipfsUrl(member.image)} className={imageClass} />
+                <div className="absolute inset-0 bg-black opacity-0 group-hover:opacity-20 transition rounded-full" />
             </div>
         );
     }
     return <img src={"/images/unknown-member.png"} className={imageClass} />;
 };
 
-const MintDate = ({ createdAt }: { createdAt: number }) => (
-    <div>
-        <p className="text-sm text-gray-500">
-            {createdAt === 0
-                ? "not an eden member"
-                : dayjs(createdAt).format("l")}
-        </p>
+const NFTBadges = ({ member }: { member: MemberData }) => (
+    <div className="absolute right-0 bottom-0 p-2.5 space-y-0.5">
+        <AuctionBadge member={member} />
+        <SaleBadge member={member} />
+        {!member.auctionData && !member.saleId && (
+            <AssetBadge member={member} />
+        )}
     </div>
 );
 
 const AssetBadge = ({ member }: { member: MemberData }) => {
-    const assetBadgeClass = `${baseBadge} py-0.5 text-white tracking-wider font-medium bg-gray-500 hover:bg-gray-600 transition`;
     if (member.assetData) {
         return (
             <div
-                className={assetBadgeClass}
+                className="group flex justify-end items-center space-x-1"
                 onClick={(e) => {
                     e.preventDefault();
                     openInNewTab(
@@ -102,64 +112,58 @@ const AssetBadge = ({ member }: { member: MemberData }) => {
                     );
                 }}
             >
-                NFT #{member.assetData.templateMint}
+                <p className="text-sm tracking-tight leading-none p-t-px group-hover:underline">
+                    NFT #{member.assetData.templateMint}
+                </p>
             </div>
         );
     }
     return <></>;
 };
 
-const MemberNames = ({ member }: { member: MemberData }) => (
-    <div className="tracking-tighter my-1 leading-none">
-        {member.account ? (
-            <>
-                <p className="font-medium">{member.name}</p>
-                <p className="text-sm text-gray-600">@{member.account}</p>
-            </>
-        ) : (
-            member.name
-        )}
-    </div>
-);
-
-const auctionBadgeClass = `${baseBadge} py-1 text-white font-semibold tracking-wide bg-blue-400 hover:bg-blue-500 transition`;
-
 const AuctionBadge = ({ member }: { member: MemberData }) => {
     if (member.auctionData) {
         return (
-            <div className="flex">
-                <div
-                    className={auctionBadgeClass}
-                    onClick={(e) => {
-                        e.preventDefault();
-                        openInNewTab(
-                            `${atomicAssets.hubUrl}/market/auction/${member?.auctionData?.auctionId}`
-                        );
-                    }}
-                >
-                    🧑‍⚖️ {assetToString(member.auctionData.price, 2)}
-                </div>
+            <div
+                className="group flex justify-end items-center space-x-1"
+                onClick={(e) => {
+                    e.preventDefault();
+                    openInNewTab(
+                        `${atomicAssets.hubUrl}/market/auction/${member?.auctionData?.auctionId}`
+                    );
+                }}
+            >
+                <FaGavel
+                    size={14}
+                    className="text-gray-600 group-hover:text-gray-800"
+                />
+                <p className="text-sm tracking-tight leading-none p-t-px group-hover:underline">
+                    {assetToString(member.auctionData.price, 2)} (#
+                    {member.assetData?.templateMint})
+                </p>
             </div>
         );
     }
+
     return <></>;
 };
 
 const SaleBadge = ({ member }: { member: MemberData }) => {
     if (member.saleId) {
         return (
-            <div className="flex">
-                <div
-                    className={auctionBadgeClass}
-                    onClick={(e) => {
-                        e.preventDefault();
-                        openInNewTab(
-                            `${atomicAssets.hubUrl}/market/sale/${member.saleId}`
-                        );
-                    }}
-                >
-                    ON SALE
-                </div>
+            <div
+                className="group flex justify-end items-center space-x-1"
+                onClick={(e) => {
+                    e.preventDefault();
+                    openInNewTab(
+                        `${atomicAssets.hubUrl}/market/sale/${member.saleId}`
+                    );
+                }}
+            >
+                <p className="text-sm tracking-tight leading-none p-t-px group-hover:underline">
+                    ON SALE (#
+                    {member.assetData?.templateMint})
+                </p>
             </div>
         );
     }

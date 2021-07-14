@@ -48,6 +48,7 @@ export const InductionVideoFormContainer = ({
             setVideoSubmissionPhase("signing");
             const signedTrx = await ualAccount.signTransaction(transaction, {
                 broadcast: false,
+                expireSeconds: 1200,
             });
             console.info("inductvideo trx", signedTrx);
 

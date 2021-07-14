@@ -16,6 +16,7 @@ import {
 
 import { donateAndCompleteInductionTransaction } from "inductions";
 import { Induction } from "inductions/interfaces";
+import { ROUTES } from "_app/config";
 
 interface Props {
     induction: Induction;
@@ -58,7 +59,7 @@ export const InductionDonateForm = ({
             );
 
             // router goes to the newly created member page
-            router.push(`/members/${induction.invitee}`);
+            router.push(`${ROUTES.MEMBERS.href}/${induction.invitee}`);
             return;
         } catch (error) {
             onError(

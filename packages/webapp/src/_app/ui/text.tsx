@@ -2,15 +2,17 @@ import React from "react";
 
 export type TextType = "regular" | "note";
 const TYPES: { [key in TextType]: string } = {
-    regular: "text-gray-600",
+    regular: "text-gray-700",
     note: "text-gray-500",
 };
 
-export type TextSize = "base" | "md" | "xs";
+export type TextSize = "xs" | "sm" | "base" | "lg" | "inherit";
 const SIZES: { [key in TextSize]: string } = {
-    base: "text-base",
-    md: "text-md",
     xs: "text-xs",
+    sm: "text-sm",
+    base: "text-base",
+    lg: "text-lg",
+    inherit: "",
 };
 
 interface Props {

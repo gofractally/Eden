@@ -1,7 +1,10 @@
 #include <accounts.hpp>
 #include <auctions.hpp>
+#include <bylaws.hpp>
+#include <distributions.hpp>
 #include <eden-atomicassets.hpp>
 #include <eden.hpp>
+#include <elections.hpp>
 #include <globals.hpp>
 #include <inductions.hpp>
 #include <members.hpp>
@@ -17,7 +20,10 @@ namespace eden
       inductions{get_self()}.clear_all();
       auctions{get_self()}.clear_all();
       migrations{get_self()}.clear_all();
+      distributions{get_self()}.clear_all();
+      elections{get_self()}.clear_all();
       get_global_singleton(get_self()).remove();
+      bylaws{get_self()}.clear_all();
    }
 
    void eden::gensetexpire(uint64_t induction_id, eosio::time_point new_expiration)
@@ -92,7 +98,10 @@ namespace eden
                       atomicassets::attribute_map collection_attributes,
                       eosio::asset auction_starting_bid,
                       uint32_t auction_duration,
-                      eosio::ignore<std::string> memo)
+                      const std::string& memo,
+                      uint8_t election_day,
+                      const std::string& election_time,
+                      const eosio::asset& election_donation)
    {
       require_auth(get_self());
 
@@ -102,16 +111,27 @@ namespace eden
       eosio::check(community_symbol == auction_starting_bid.symbol,
                    "community symbol does not match auction starting bid");
 
+      eosio::check(community_symbol == election_donation.symbol,
+                   "community symbol does not match election donation");
+
       migrations{get_self()}.init();
 
       globals{get_self(),
-              {.community = community,
-               .minimum_donation = minimum_donation,
-               .auction_starting_bid = auction_starting_bid,
-               .auction_duration = auction_duration,
-               .stage = contract_stage::genesis}};
+              {{.community = community,
+                .minimum_donation = minimum_donation,
+                .auction_starting_bid = auction_starting_bid,
+                .auction_duration = auction_duration,
+                .stage = contract_stage::genesis},
+               .election_donation = election_donation}};
       members members{get_self()};
       inductions inductions{get_self()};
+
+      init_pools(get_self());
+
+      accounts{get_self(), "owned"_n}.init();
+
+      elections elections{get_self()};
+      elections.set_time(election_day, election_time);
 
       auto inviter = get_self();
       auto total_endorsements = initial_members.size() - 1;

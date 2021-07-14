@@ -6,18 +6,24 @@ import { FaSignOutAlt } from "react-icons/fa";
 import { useUALAccount } from "../eos";
 import { useCurrentMember } from "_app/hooks";
 import { Button } from "./button";
+import { ROUTES } from "_app/config";
 
 interface MenuItem {
     href: string;
     label: string;
     exactPath?: boolean;
+    hideNav?: boolean;
 }
 
-const MENU_ITEMS: MenuItem[] = [
-    { href: "/", label: "Home", exactPath: true },
-    { href: "/members", label: "Community" },
-    { href: "/induction", label: "Membership" },
-];
+const MENU_ITEMS: MenuItem[] = Object.keys(ROUTES)
+    .map((k) => {
+        let pathObj: MenuItem = ROUTES[k];
+        if (k === "HOME") {
+            pathObj.exactPath = true;
+        }
+        return pathObj;
+    })
+    .filter((k) => !k.hideNav);
 
 export const HeaderNav = () => (
     <header className="text-gray-600 body-font border-b border-gray-200 bg-white">
@@ -94,7 +100,7 @@ const AccountMenu = () => {
 
     return ualAccount ? (
         <div className="mt-2 md:mt-0 space-x-3 hover:text-gray-900">
-            <Link href={`/members/${accountName}`}>
+            <Link href={`${ROUTES.MEMBERS.href}/${accountName}`}>
                 <a>{member?.name || accountName || "(unknown)"}</a>
             </Link>
             <a href="#" onClick={onSignOut}>

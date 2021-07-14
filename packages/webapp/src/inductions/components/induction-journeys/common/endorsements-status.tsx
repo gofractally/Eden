@@ -1,4 +1,5 @@
 import { Link, useMemberListByAccountNames } from "_app";
+import { ROUTES } from "_app/config";
 import { Endorsement } from "inductions/interfaces";
 
 export const EndorsementsStatus = ({
@@ -33,7 +34,7 @@ export const EndorsementsStatus = ({
             {endorsements.map((endorser) => (
                 <li key={endorser.id}>
                     {getEndorserStatus(endorser)}{" "}
-                    <Link href={`/members/${endorser.endorser}`}>
+                    <Link href={`${ROUTES.MEMBERS.href}/${endorser.endorser}`}>
                         <span className="text-gray-800 hover:underline">
                             {getEndorserName(endorser)}
                         </span>

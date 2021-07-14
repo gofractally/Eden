@@ -7,6 +7,7 @@ import {
 } from "_app";
 
 import { InductionsContainer } from "inductions";
+import { ROUTES } from "_app/config";
 
 export const InductionPage = () => {
     const [ualAccount, _, ualShowModal] = useUALAccount();
@@ -23,7 +24,7 @@ export const InductionPage = () => {
             )}
             {isCommunityActive && (
                 <Link
-                    href="/induction/pending-invitations"
+                    href={`${ROUTES.INDUCTION.href}/pending-invitations`}
                     className="block w-full my-8 text-center"
                 >
                     <span className="text-gray-400">
