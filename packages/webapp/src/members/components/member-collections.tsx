@@ -1,10 +1,10 @@
 import React, { useEffect, useState } from "react";
 
 import { Button, Container, Heading, LoadingCard } from "_app";
+import { MemberChip, MembersGrid } from "members";
 
 import { getCollection, getCollectedBy } from "../api";
 import { MemberData } from "../interfaces";
-import { MembersGrid } from "./members-grid";
 
 interface Props {
     member: MemberData;
@@ -74,7 +74,11 @@ export const MemberCollections = ({ member }: Props) => {
             {isLoading ? (
                 <LoadingCard />
             ) : (
-                <MembersGrid members={members || []} />
+                <MembersGrid members={members || []}>
+                    {(member) => (
+                        <MemberChip key={member.account} member={member} />
+                    )}
+                </MembersGrid>
             )}
         </div>
     );
