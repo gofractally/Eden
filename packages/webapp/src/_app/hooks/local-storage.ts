@@ -2,6 +2,10 @@ import { useState } from "react";
 import { ZoomAccountJWT } from "_api/zoom-commons";
 
 export const useLocalStorage = (key: string, initialValue: any) => {
+    if (typeof window === "undefined") {
+        return [undefined, () => undefined];
+    }
+
     const [storedValue, setStoredValue] = useState(() => {
         try {
             const item = window.localStorage.getItem(key);

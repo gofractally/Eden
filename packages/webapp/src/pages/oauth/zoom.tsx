@@ -7,6 +7,7 @@ import {
     zoomAccountJWTIsExpired,
     zoomResponseIsInvalidAccess,
 } from "_api/zoom-commons";
+import { AvailableMeetingClients } from "_api/schemas";
 import {
     SingleColLayout,
     CallToAction,
@@ -15,7 +16,10 @@ import {
     useZoomAccountJWT,
 } from "_app";
 
-export const getServerSideProps: GetServerSideProps = async ({ query }) => {
+export const getServerSideProps: GetServerSideProps = async ({
+    query,
+    req,
+}) => {
     const oauthCode = (query.code as string) || "";
     let newZoomAccountJWT = null;
 
@@ -102,7 +106,10 @@ const ZoomTestContainer = ({ ualAccount }: any) => {
 
         const response = await fetch(`/api/meeting-links`, {
             method: "POST",
-            body: JSON.stringify({ accessToken, meetingClient: "zoom" }),
+            body: JSON.stringify({
+                accessToken,
+                client: AvailableMeetingClients.Zoom,
+            }),
         });
 
         const responseData = await response.json();
