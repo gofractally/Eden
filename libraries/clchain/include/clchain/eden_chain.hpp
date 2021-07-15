@@ -43,17 +43,16 @@ namespace eden_chain
    };
    EOSIO_REFLECT(block, num, previous, eosio_block)
 
-   struct block_with_id
+   struct block_with_id : block
    {
-      block block;
       eosio::checksum256 id;
    };
-   EOSIO_REFLECT(block_with_id, block, id)
+   EOSIO_REFLECT(block_with_id, base block, id)
 
    inline const block& deref(const block& block) { return block; }
    inline const block& deref(const std::unique_ptr<block>& block) { return *block; }
    inline uint32_t get_block_num(uint32_t num) { return num; }
-   inline uint32_t get_block_num(const auto& block) { return deref(block).block.num; }
+   inline uint32_t get_block_num(const auto& block) { return deref(block).num; }
    inline constexpr auto by_block_num = [](const auto& a, const auto& b) {
       return get_block_num(a) < get_block_num(b);
    };
@@ -61,7 +60,7 @@ namespace eden_chain
    inline const block_with_id& deref(const block_with_id& block) { return block; }
    inline const block_with_id& deref(const std::unique_ptr<block_with_id>& block) { return *block; }
    inline uint32_t get_eosio_num(uint32_t num) { return num; }
-   inline uint32_t get_eosio_num(const auto& block) { return deref(block).block.eosio_block.num; }
+   inline uint32_t get_eosio_num(const auto& block) { return deref(block).eosio_block.num; }
    inline constexpr auto by_eosio_num = [](const auto& a, const auto& b) {
       return get_eosio_num(a) < get_eosio_num(b);
    };
@@ -71,19 +70,18 @@ namespace eden_chain
       enum status
       {
          appended,
-         forked,
          duplicate,
          unlinkable,
       };
 
       static constexpr const char* status_str[] = {
           "appended",
-          "forked",
           "duplicate",
           "unlinkable",
       };
 
       std::vector<std::unique_ptr<block_with_id>> blocks;
+      uint32_t irreversible = 0;
 
       const block_with_id* blockByEosioNum(uint32_t num) const
       {
@@ -101,31 +99,27 @@ namespace eden_chain
          return nullptr;
       }
 
-      status add_block(const block_with_id& block)
+      std::pair<status, size_t> add_block(const block_with_id& block)
       {
+         size_t num_forked = 0;
          auto it = std::lower_bound(blocks.begin(), blocks.end(), block, by_block_num);
-         if (it != blocks.end() && it[0]->id == block.id)
-            return duplicate;
-         auto result = appended;
-         if (it == blocks.begin())
+         if (it != blocks.end() && block.id == it[0]->id)
+            return {duplicate, 0};
+         if (it == blocks.begin() && block.num != 1)
+            return {unlinkable, 0};
+         if (it != blocks.begin())
          {
-            if (!blocks.empty() || block.block.num != 1)
-               return unlinkable;
+            if (block.previous != it[-1]->id || block.num != it[-1]->num + 1)
+               return {unlinkable, 0};
+            if (it != blocks.end() && it[0]->num <= irreversible)
+               return {unlinkable, 0};
          }
-         else
-         {
-            if (block.block.previous != it[-1]->id)
-               return unlinkable;
-            if (it != blocks.end())
-            {
-               blocks.erase(it, blocks.end());
-               result = forked;
-            }
-         }
+         num_forked = blocks.end() - it;
+         blocks.erase(it, blocks.end());
          blocks.push_back(std::make_unique<block_with_id>(block));
-         return result;
+         return {appended, num_forked};
       }
    };
-   EOSIO_REFLECT2(block_log, blocks, method(blockByEosioNum, "num"))
+   EOSIO_REFLECT2(block_log, blocks, irreversible, method(blockByEosioNum, "num"))
 
 }  // namespace eden_chain

@@ -82,11 +82,10 @@ const fs = require('fs');
          const dest = new Uint8Array(instance.exports.memory.buffer, destAddr, utf8.length);
          for (let i = 0; i < utf8.length; ++i)
             dest[i] = utf8[i];
-         instance.exports.add_eosio_blocks_json(destAddr, utf8.length);
+         instance.exports.add_eosio_blocks_json(destAddr, utf8.length, 999999999);
          instance.exports.free_memory(destAddr);
       }
 
-      instance.exports.scan_blocks();
       fs.writeFileSync('state', new Uint8Array(instance.exports.memory.buffer));
    } catch (e) {
       console.error(e);

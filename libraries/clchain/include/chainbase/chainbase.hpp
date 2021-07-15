@@ -256,6 +256,13 @@ namespace chainbase
          return _index_list[0]->revision();
       }
 
+      std::pair<int64_t, int64_t> undo_stack_revision_range() const
+      {
+         if (_index_list.size() == 0)
+            return {-1, -1};
+         return _index_list[0]->undo_stack_revision_range();
+      }
+
       void undo()
       {
          for (auto& item : _index_list)
