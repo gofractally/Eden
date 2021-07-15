@@ -110,6 +110,8 @@ namespace clchain
          return generate_gql_whole_name((T) nullptr, true);
       else if constexpr (eosio::is_std_unique_ptr<T>())
          return generate_gql_whole_name((typename T::element_type*)nullptr, true);
+      else if constexpr (eosio::is_std_reference_wrapper<T>())
+         return generate_gql_whole_name((typename T::type*)nullptr, false);
       else if (is_optional)
          return generate_gql_partial_name((Raw*)nullptr);
       else
@@ -126,6 +128,8 @@ namespace clchain
          fill_gql_schema((T) nullptr, stream, defined_types);
       else if constexpr (eosio::is_std_unique_ptr<T>())
          fill_gql_schema((typename T::element_type*)nullptr, stream, defined_types);
+      else if constexpr (eosio::is_std_reference_wrapper<T>())
+         fill_gql_schema((typename T::type*)nullptr, stream, defined_types);
       else if constexpr (eosio::is_serializable_container<T>())
          fill_gql_schema((typename T::value_type*)nullptr, stream, defined_types);
       else if constexpr (eosio::reflection::has_for_each_field_v<T> && !has_get_gql_name<T>::value)
@@ -484,12 +488,18 @@ namespace clchain
        -> std::enable_if_t<eosio::is_std_optional<T>() || std::is_pointer<T>() ||
                                eosio::is_std_unique_ptr<T>(),
                            bool>
-
    {
       if (value)
          return gql_query(*value, input_stream, output_stream, error);
       output_stream.write_str("null");
       return gql_skip_selection_set(input_stream, error);
+   }
+
+   template <typename T, typename OS, typename E>
+   auto gql_query(const T& value, gql_stream& input_stream, OS& output_stream, const E& error)
+       -> std::enable_if_t<eosio::is_std_reference_wrapper<T>::value, bool>
+   {
+      return gql_query(value.get(), input_stream, output_stream, error);
    }
 
    template <typename T, typename OS, typename E>

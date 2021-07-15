@@ -445,7 +445,7 @@ add_eosio_blocks_json(const char* json, uint32_t size, uint32_t eosio_irreversib
 
 struct Query
 {
-   eden_chain::block_log* blockLog;  // TODO: fix ref support
+   std::reference_wrapper<eden_chain::block_log> blockLog;
 };
 EOSIO_REFLECT(Query, blockLog)
 
@@ -462,7 +462,7 @@ auto schema = clchain::get_gql_schema<Query>();
 std::string result;
 [[clang::export_name("exec_query")]] void exec_query(const char* query, uint32_t size)
 {
-   Query root{&block_log};
+   Query root{block_log};
    result = clchain::gql_query(root, {query, size});
 }
 [[clang::export_name("get_result_size")]] uint32_t get_result_size()

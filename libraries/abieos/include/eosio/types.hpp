@@ -133,6 +133,17 @@ namespace eosio
    };
 
    template <typename T>
+   struct is_std_reference_wrapper : std::false_type
+   {
+   };
+
+   template <typename T>
+   struct is_std_reference_wrapper<std::reference_wrapper<T>> : std::true_type
+   {
+      using value_type = T;
+   };
+
+   template <typename T>
    struct is_binary_extension : std::false_type
    {
    };
