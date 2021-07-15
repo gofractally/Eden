@@ -1,9 +1,11 @@
+import React from "react";
 import { useRouter } from "next/router";
 import dayjs from "dayjs";
 import { FaGavel } from "react-icons/fa";
 
 import { atomicAssets, blockExplorerAccountBaseUrl } from "config";
 import { assetToString, ipfsUrl } from "_app";
+import { GenericMemberChip } from "_app/ui";
 import { ROUTES } from "_app/config";
 
 import { MemberData } from "../interfaces";
@@ -13,78 +15,36 @@ const openInNewTab = (url: string) => {
     if (newWindow) newWindow.opener = null;
 };
 
-interface Props {
-    children?: React.ReactNode;
-    member: MemberData;
-    onClickChip?: (e: React.MouseEvent) => void;
-    onClickProfileImage?: (e: React.MouseEvent) => void;
-}
-
-export const MemberChip = ({
-    member,
-    onClickChip,
-    onClickProfileImage,
-    children,
-}: Props) => {
+export const MemberChip = ({ member }: { member: MemberData }) => {
     const router = useRouter();
 
-    const onClickMember = (e: React.MouseEvent) => {
-        if (!member.account) return undefined;
-        e.stopPropagation();
-        router.push(`${ROUTES.MEMBERS.href}/${member.account}`);
+    const onClick = (e: React.MouseEvent) => {
+        if (member.account) {
+            e.stopPropagation();
+            router.push(`${ROUTES.MEMBERS.href}/${member.account}`);
+        } else {
+            openInNewTab(`${blockExplorerAccountBaseUrl}/${member.name}`);
+        }
     };
 
-    const memberChip = (
-        <div
-            className="relative flex items-center justify-between p-2.5 bg-white hover:bg-gray-100 active:bg-gray-200 transition select-none cursor-pointer"
-            style={{ boxShadow: "0 0 0 1px #e5e5e5" }}
-            onClick={onClickChip ?? onClickMember}
-        >
-            <div className="flex space-x-2.5">
-                <MemberImage
-                    member={member}
-                    onClick={onClickProfileImage ?? onClickMember}
-                />
-                <MemberDetails member={member} onClick={onClickMember} />
-            </div>
-            {children}
-        </div>
-    );
-
-    if (member.account) {
-        return memberChip;
-    }
-
     return (
-        <a
-            href={`${blockExplorerAccountBaseUrl}/${member.name}`}
-            target="_blank"
-            rel="noopener noreferrer"
-        >
-            {memberChip}
-        </a>
+        <GenericMemberChip
+            member={member}
+            onClickChip={onClick}
+            contentComponent={
+                <MemberDetails member={member} onClick={onClick} />
+            }
+            actionComponent={<MemberChipNFTBadges member={member} />}
+        />
     );
 };
 
-interface MemberDetailProps {
+interface MemberDetailsProps {
     member: MemberData;
     onClick?: (e: React.MouseEvent) => void;
 }
 
-const MemberImage = ({ member, onClick }: MemberDetailProps) => {
-    const imageClass = "rounded-full h-14 w-14 object-cover shadow";
-    if (member.account && member.image) {
-        return (
-            <div className="relative group" onClick={onClick}>
-                <img src={ipfsUrl(member.image)} className={imageClass} />
-                <div className="absolute inset-0 bg-black opacity-0 group-hover:opacity-20 transition rounded-full" />
-            </div>
-        );
-    }
-    return <img src={"/images/unknown-member.png"} className={imageClass} />;
-};
-
-const MemberDetails = ({ member, onClick }: MemberDetailProps) => (
+export const MemberDetails = ({ member, onClick }: MemberDetailsProps) => (
     <div
         onClick={onClick}
         className="flex-1 flex flex-col justify-center group"
@@ -119,7 +79,7 @@ const AssetBadge = ({ member }: { member: MemberData }) => {
             <div
                 className="group flex justify-end items-center space-x-1"
                 onClick={(e) => {
-                    e.preventDefault();
+                    e.stopPropagation();
                     openInNewTab(
                         `${atomicAssets.hubUrl}/explorer/asset/${member?.assetData?.assetId}`
                     );
@@ -140,7 +100,7 @@ const AuctionBadge = ({ member }: { member: MemberData }) => {
             <div
                 className="group flex justify-end items-center space-x-1"
                 onClick={(e) => {
-                    e.preventDefault();
+                    e.stopPropagation();
                     openInNewTab(
                         `${atomicAssets.hubUrl}/market/auction/${member?.auctionData?.auctionId}`
                     );
@@ -167,7 +127,7 @@ const SaleBadge = ({ member }: { member: MemberData }) => {
             <div
                 className="group flex justify-end items-center space-x-1"
                 onClick={(e) => {
-                    e.preventDefault();
+                    e.stopPropagation();
                     openInNewTab(
                         `${atomicAssets.hubUrl}/market/sale/${member.saleId}`
                     );
