@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 
 import { Button, Container, Heading, LoadingCard } from "_app";
-import { MemberChip, MembersGrid } from "members";
+import { MemberChip, MemberChipNFTBadges, MembersGrid } from "members";
 
 import { getCollection, getCollectedBy } from "../api";
 import { MemberData } from "../interfaces";
@@ -76,7 +76,9 @@ export const MemberCollections = ({ member }: Props) => {
             ) : (
                 <MembersGrid members={members || []}>
                     {(member) => (
-                        <MemberChip key={member.account} member={member} />
+                        <MemberChip key={member.account} member={member}>
+                            <MemberChipNFTBadges member={member} />
+                        </MemberChip>
                     )}
                 </MembersGrid>
             )}

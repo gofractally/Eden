@@ -13,7 +13,7 @@ import {
     queryMembers,
     queryNewMembers,
 } from "_app";
-import { MemberChip, MembersGrid } from "members";
+import { MemberChip, MemberChipNFTBadges, MembersGrid } from "members";
 
 const MEMBERS_PAGE_SIZE = 18;
 const NEW_MEMBERS_PAGE_SIZE = 12;
@@ -106,7 +106,9 @@ export const MembersPage = (props: Props) => {
                                 <MemberChip
                                     key={member.account}
                                     member={member}
-                                />
+                                >
+                                    <MemberChipNFTBadges member={member} />
+                                </MemberChip>
                             )}
                         </MembersGrid>
                     </div>

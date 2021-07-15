@@ -1,4 +1,3 @@
-import Link from "next/link";
 import { useRouter } from "next/router";
 import dayjs from "dayjs";
 import { FaGavel } from "react-icons/fa";
@@ -21,7 +20,6 @@ interface Props {
     onClickProfileImage?: (e: React.MouseEvent) => void;
 }
 
-// TODO: Extract to new component.
 export const MemberChip = ({
     member,
     onClickChip,
@@ -31,6 +29,7 @@ export const MemberChip = ({
     const router = useRouter();
 
     const onClickMember = (e: React.MouseEvent) => {
+        if (!member.account) return undefined;
         e.stopPropagation();
         router.push(`${ROUTES.MEMBERS.href}/${member.account}`);
     };
@@ -39,7 +38,7 @@ export const MemberChip = ({
         <div
             className="relative flex items-center justify-between p-2.5 bg-white hover:bg-gray-100 active:bg-gray-200 transition select-none cursor-pointer"
             style={{ boxShadow: "0 0 0 1px #e5e5e5" }}
-            onClick={onClickChip}
+            onClick={onClickChip ?? onClickMember}
         >
             <div className="flex space-x-2.5">
                 <MemberImage
@@ -47,7 +46,7 @@ export const MemberChip = ({
                     onClick={onClickProfileImage ?? onClickMember}
                 />
                 <div
-                    onClick={onClickMember}
+                    onClick={member.account ? onClickMember : undefined}
                     className="flex-1 flex flex-col justify-center group"
                 >
                     <p className="text-xs text-gray-500 font-light">
@@ -63,24 +62,14 @@ export const MemberChip = ({
                     )}
                 </div>
             </div>
-            {/* TODO: Pass in NFTBadges as children where invoked? */}
-            <NFTBadges member={member} />
             {children}
         </div>
     );
 
-    if (onClickChip) {
+    if (member.account) {
         return memberChip;
     }
 
-    if (member.account) {
-        // TODO: Change to onClick? Should anchor tag have clickable children?
-        return (
-            <Link href={`${ROUTES.MEMBERS.href}/${member.account}`}>
-                <a>{memberChip}</a>
-            </Link>
-        );
-    }
     return (
         <a
             href={`${blockExplorerAccountBaseUrl}/${member.name}`}
@@ -91,6 +80,16 @@ export const MemberChip = ({
         </a>
     );
 };
+
+export const MemberChipNFTBadges = ({ member }: { member: MemberData }) => (
+    <div className="absolute right-0 bottom-0 p-2.5 space-y-0.5">
+        <AuctionBadge member={member} />
+        <SaleBadge member={member} />
+        {!member.auctionData && !member.saleId && (
+            <AssetBadge member={member} />
+        )}
+    </div>
+);
 
 interface MemberImageProps {
     member: MemberData;
@@ -109,16 +108,6 @@ const MemberImage = ({ member, onClick }: MemberImageProps) => {
     }
     return <img src={"/images/unknown-member.png"} className={imageClass} />;
 };
-
-const NFTBadges = ({ member }: { member: MemberData }) => (
-    <div className="absolute right-0 bottom-0 p-2.5 space-y-0.5">
-        <AuctionBadge member={member} />
-        <SaleBadge member={member} />
-        {!member.auctionData && !member.saleId && (
-            <AssetBadge member={member} />
-        )}
-    </div>
-);
 
 const AssetBadge = ({ member }: { member: MemberData }) => {
     if (member.assetData) {
