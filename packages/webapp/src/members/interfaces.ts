@@ -10,6 +10,9 @@ export interface MemberData {
     attributions: string;
     socialHandles: EdenNftSocialHandles;
     inductionVideo: string;
+    status: number;
+    election_participation_status: number;
+    election_rank: number;
     createdAt: number;
     auctionData?: MemberAuctionData;
     assetData?: AssetData;
@@ -44,4 +47,5 @@ export interface MemberStats {
     active_members: number;
     pending_members: number;
     completed_waiting_inductions: number;
+    ranks: any[];
 }

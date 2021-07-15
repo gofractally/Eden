@@ -19,6 +19,31 @@ import {
     getInductions,
     getInductionWithEndorsements,
 } from "inductions/api";
+import {
+    getCurrentElection,
+    getElectionState,
+    getHeadDelegate,
+} from "delegates/api";
+
+export const queryHeadDelegate = {
+    queryKey: "query_head_delegate",
+    queryFn: getHeadDelegate,
+};
+
+export const queryCurrentElection = {
+    queryKey: "query_current_election",
+    queryFn: getCurrentElection,
+};
+
+export const queryMemberStats = {
+    queryKey: "query_member_stats",
+    queryFn: getMembersStats,
+};
+
+export const queryElectionState = {
+    queryKey: "query_election_state",
+    queryFn: getElectionState,
+};
 
 export const queryTreasuryStats = {
     queryKey: "query_treasury_stats",
