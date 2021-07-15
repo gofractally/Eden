@@ -45,22 +45,7 @@ export const MemberChip = ({
                     member={member}
                     onClick={onClickProfileImage ?? onClickMember}
                 />
-                <div
-                    onClick={member.account ? onClickMember : undefined}
-                    className="flex-1 flex flex-col justify-center group"
-                >
-                    <p className="text-xs text-gray-500 font-light">
-                        {member.createdAt === 0
-                            ? "not an eden member"
-                            : dayjs(member.createdAt).format("YYYY.MM.DD")}
-                    </p>
-                    <p className="group-hover:underline">{member.name}</p>
-                    {member.account && (
-                        <p className="text-xs text-gray-500 font-light">
-                            @{member.account}
-                        </p>
-                    )}
-                </div>
+                <MemberDetails member={member} onClick={onClickMember} />
             </div>
             {children}
         </div>
@@ -81,22 +66,12 @@ export const MemberChip = ({
     );
 };
 
-export const MemberChipNFTBadges = ({ member }: { member: MemberData }) => (
-    <div className="absolute right-0 bottom-0 p-2.5 space-y-0.5">
-        <AuctionBadge member={member} />
-        <SaleBadge member={member} />
-        {!member.auctionData && !member.saleId && (
-            <AssetBadge member={member} />
-        )}
-    </div>
-);
-
-interface MemberImageProps {
+interface MemberDetailProps {
     member: MemberData;
     onClick?: (e: React.MouseEvent) => void;
 }
 
-const MemberImage = ({ member, onClick }: MemberImageProps) => {
+const MemberImage = ({ member, onClick }: MemberDetailProps) => {
     const imageClass = "rounded-full h-14 w-14 object-cover shadow";
     if (member.account && member.image) {
         return (
@@ -108,6 +83,35 @@ const MemberImage = ({ member, onClick }: MemberImageProps) => {
     }
     return <img src={"/images/unknown-member.png"} className={imageClass} />;
 };
+
+const MemberDetails = ({ member, onClick }: MemberDetailProps) => (
+    <div
+        onClick={onClick}
+        className="flex-1 flex flex-col justify-center group"
+    >
+        <p className="text-xs text-gray-500 font-light">
+            {member.createdAt === 0
+                ? "not an eden member"
+                : dayjs(member.createdAt).format("YYYY.MM.DD")}
+        </p>
+        <p className="group-hover:underline">{member.name}</p>
+        {member.account && (
+            <p className="text-xs text-gray-500 font-light">
+                @{member.account}
+            </p>
+        )}
+    </div>
+);
+
+export const MemberChipNFTBadges = ({ member }: { member: MemberData }) => (
+    <div className="absolute right-0 bottom-0 p-2.5 space-y-0.5">
+        <AuctionBadge member={member} />
+        <SaleBadge member={member} />
+        {!member.auctionData && !member.saleId && (
+            <AssetBadge member={member} />
+        )}
+    </div>
+);
 
 const AssetBadge = ({ member }: { member: MemberData }) => {
     if (member.assetData) {
