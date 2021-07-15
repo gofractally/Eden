@@ -47,6 +47,15 @@ BOX_UPLOAD_IPFS="${process.env.NEXT_PUBLIC_BOX_UPLOAD_IPFS}"
 BOX_ADDRESS="${process.env.NEXT_PUBLIC_BOX_ADDRESS}"
 `);
 
+console.info(
+    `NEXT_PUBLIC_DEV_USE_FIXTURE_DATA="${process.env.NEXT_PUBLIC_DEV_USE_FIXTURE_DATA}"`
+);
+console.info(`>>> Dev Configs:
+NEXT_PUBLIC_DEV_USE_FIXTURE_DATA="${
+    process.env.NEXT_PUBLIC_DEV_USE_FIXTURE_DATA === "true" || false
+}"
+`);
+
 export const ipfsBaseUrl = "https://ipfs.io/ipfs"; //"https://ipfs.pink.gg/ipfs";
 export const ipfsApiBaseUrl = "https://ipfs.infura.io:5001/api/v0";
 
@@ -123,3 +132,8 @@ export const jobKeys = {
 export const eosPrivateKeys = {
     gcJob: process.env.EOS_PRIVATE_KEY_GC_JOB || "",
 };
+
+// DEV CONFIGS
+export const devUseFixtureData = process.env.NEXT_PUBLIC_DEV_USE_FIXTURE_DATA
+    ? process.env.NEXT_PUBLIC_DEV_USE_FIXTURE_DATA === "true"
+    : false;
