@@ -49,7 +49,7 @@ interface Props {
 
 export const ZoomOauthPage = ({ newZoomAccountJWT }: Props) => {
     const [ualAccount, _, ualShowModal] = useUALAccount();
-    const [_zoomAccountJWT, setZoomAccountJWT] = useZoomAccountJWT(null);
+    const [_zoomAccountJWT, setZoomAccountJWT] = useZoomAccountJWT(undefined);
 
     useEffect(() => {
         if (newZoomAccountJWT) {
@@ -74,10 +74,10 @@ export const ZoomOauthPage = ({ newZoomAccountJWT }: Props) => {
 export default ZoomOauthPage;
 
 const ZoomTestContainer = ({ ualAccount }: any) => {
-    const [zoomAccountJWT, setZoomAccountJWT] = useZoomAccountJWT(null);
+    const [zoomAccountJWT, setZoomAccountJWT] = useZoomAccountJWT(undefined);
 
     const resetZoomAccount = () => {
-        setZoomAccountJWT(null);
+        setZoomAccountJWT(undefined);
     };
 
     const generateZoomMeetingLink = async () => {
