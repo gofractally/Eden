@@ -47,7 +47,7 @@ interface Props {
     newZoomAccountJWT: any;
 }
 
-export const ZoomTestPage = ({ newZoomAccountJWT }: Props) => {
+export const ZoomOauthPage = ({ newZoomAccountJWT }: Props) => {
     const [ualAccount, _, ualShowModal] = useUALAccount();
     const [_zoomAccountJWT, setZoomAccountJWT] = useZoomAccountJWT(null);
 
@@ -71,7 +71,7 @@ export const ZoomTestPage = ({ newZoomAccountJWT }: Props) => {
     );
 };
 
-export default ZoomTestPage;
+export default ZoomOauthPage;
 
 const ZoomTestContainer = ({ ualAccount }: any) => {
     const [zoomAccountJWT, setZoomAccountJWT] = useZoomAccountJWT(null);
