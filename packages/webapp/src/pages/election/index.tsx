@@ -69,7 +69,7 @@ export const ElectionPage = (props: Props) => {
     return (
         <RawLayout title="Election">
             <Text size="sm" className="mb-8">
-                Note: Data is in square brackets if it's not Jason (to show if
+                Note: Data is in square brackets if it's not JSON (to show if
                 something's undefined)
             </Text>
             <Text size="lg" className="bg-gray-200">

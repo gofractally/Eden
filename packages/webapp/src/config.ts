@@ -49,7 +49,7 @@ BOX_ADDRESS="${process.env.NEXT_PUBLIC_BOX_ADDRESS}"
 
 console.info(`>>> Dev Configs:
 NEXT_PUBLIC_DEV_USE_FIXTURE_DATA="${
-    process.env.NEXT_PUBLIC_DEV_USE_FIXTURE_DATA === "true" || false
+    process.env.NEXT_PUBLIC_DEV_USE_FIXTURE_DATA === "true"
 }"
 `);
 
@@ -131,6 +131,5 @@ export const eosPrivateKeys = {
 };
 
 // DEV CONFIGS
-export const devUseFixtureData = process.env.NEXT_PUBLIC_DEV_USE_FIXTURE_DATA
-    ? process.env.NEXT_PUBLIC_DEV_USE_FIXTURE_DATA === "true"
-    : false;
+export const devUseFixtureData =
+    process.env.NEXT_PUBLIC_DEV_USE_FIXTURE_DATA === "true";
