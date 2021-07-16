@@ -14,6 +14,12 @@ Environment variables are defined `.env` file. Most should be self-explanatory. 
 
 When deployed for production, environment variables can be overridden by setting environment variables in your host. In Vercel, for example, environment variables can be set individually for production, development and preview (branch) environments.
 
+### Helpful Local Environment Variables
+
+-   `NEXT_PUBLIC_AA_COLLECTION_NAME` and `NEXT_PUBLIC_EDEN_CONTRACT_ACCOUNT`: Change these to point to a different contract. For example, `"test2.edev"`.
+-   `NEXT_PUBLIC_AA_FETCH_AFTER`: Seeing more NFTs than members in a test environment? It may be because the contract has been reset and you're seeing members from past tests. To filter those out, set the `NEXT_PUBLIC_AA_FETCH_AFTER` environment variable in your `.env.local` file to the approximate UNIX timestamp, in milliseconds, of the new contract deployment. (\_E.g., `NEXT_PUBLIC_AA_FETCH_AFTER="1626286021000"`.
+-   `NEXT_PUBLIC_DEV_USE_FIXTURE_DATA`: If you want to test against hard-coded fixture data (for certain features currently under development), set this to `true`: `NEXT_PUBLIC_DEV_USE_FIXTURE_DATA="true"`.
+
 ### IPFS Upload Handlers
 
 There are currently two options for managing IPFS upload and pinning:
@@ -31,9 +37,9 @@ To use this option:
 
 #### Eden Box + pinata.cloud
 
-The client uploads the file to our own [Eden Box](/packages/box) service, which, in turn, uploads and pins the file to the IPFS network via pinata.cloud. The file is uploaded together with the related signed transaction so that it can be validated against the transaction and a whitelist prior to pinning.
+The client uploads the file to our own [Eden Box](../box) service, which, in turn, uploads and pins the file to the IPFS network via pinata.cloud. The file is uploaded together with the related signed transaction so that it can be validated against the transaction and a whitelist prior to pinning.
 
-This is nice because we remove the dependency on Infura, but there is a bit more complexity in running the Eden Box service. More info on that [here](/packages/box/README.md).
+This is nice because we remove the dependency on Infura, but there is a bit more complexity in running the Eden Box service. More info on that [here](../box/README.md).
 
 To use this option:
 
