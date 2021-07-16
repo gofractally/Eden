@@ -8,6 +8,7 @@ import {
 import { fixtureElectionState } from "./fixtures";
 
 export const getCurrentElection = async () => {
+    // TODO: Add fixture here with more data fleshed out
     const rows = await getTableRows<any>(CONTRACT_CURRENT_ELECTION_TABLE);
 
     if (!rows.length) {
