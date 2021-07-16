@@ -1,5 +1,5 @@
 import { useRouter } from "next/router";
-import { FaMedal, FaRegSquare, FaSquare } from "react-icons/fa";
+import { FaCheckSquare, FaRegSquare, FaRegStar } from "react-icons/fa";
 
 import { ROUTES } from "_app/config";
 import { GenericMemberChip } from "_app/ui";
@@ -31,14 +31,11 @@ export const VotingMemberChip = ({
             }
             actionComponent={
                 isSelected ? (
-                    <FaSquare
-                        size={31}
-                        className="text-gray-600 hover:text-gray-700"
-                    />
+                    <FaCheckSquare size={31} className="mr-2 text-blue-500" />
                 ) : (
                     <FaRegSquare
                         size={31}
-                        className="text-gray-300 hover:text-gray-400"
+                        className="mr-2 text-gray-300 hover:text-gray-400"
                     />
                 )
             }
@@ -59,11 +56,17 @@ export const WinningMemberChip = ({ member }: { member: MemberData }) => {
         <GenericMemberChip
             member={member}
             contentComponent={<MemberDetails member={member} />}
-            actionComponent={<FaMedal size={31} className="text-gray-700" />}
+            actionComponent={<WinnerBadge />}
             onClickChip={goToMemberPage}
         />
     );
 };
+
+const WinnerBadge = () => (
+    <div className="flex justify-center items-center rounded-full mr-2 p-1 border border-yellow-800 bg-yellow-500">
+        <FaRegStar size={14} className="text-white" />
+    </div>
+);
 
 interface MemberDetailsProps {
     member: MemberData;

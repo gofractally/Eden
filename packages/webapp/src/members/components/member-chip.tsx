@@ -4,7 +4,7 @@ import dayjs from "dayjs";
 import { FaGavel } from "react-icons/fa";
 
 import { atomicAssets, blockExplorerAccountBaseUrl } from "config";
-import { assetToString, ipfsUrl } from "_app";
+import { assetToString } from "_app";
 import { GenericMemberChip } from "_app/ui";
 import { ROUTES } from "_app/config";
 
@@ -74,73 +74,66 @@ export const MemberChipNFTBadges = ({ member }: { member: MemberData }) => (
 );
 
 const AssetBadge = ({ member }: { member: MemberData }) => {
-    if (member.assetData) {
-        return (
-            <div
-                className="group flex justify-end items-center space-x-1"
-                onClick={(e) => {
-                    e.stopPropagation();
-                    openInNewTab(
-                        `${atomicAssets.hubUrl}/explorer/asset/${member?.assetData?.assetId}`
-                    );
-                }}
-            >
-                <p className="text-sm tracking-tight leading-none p-t-px group-hover:underline">
-                    NFT #{member.assetData.templateMint}
-                </p>
-            </div>
-        );
-    }
-    return <></>;
+    if (!member.assetData) return <></>;
+    return (
+        <div
+            className="group flex justify-end items-center space-x-1"
+            onClick={(e) => {
+                e.stopPropagation();
+                openInNewTab(
+                    `${atomicAssets.hubUrl}/explorer/asset/${member?.assetData?.assetId}`
+                );
+            }}
+        >
+            <p className="text-sm tracking-tight leading-none p-t-px group-hover:underline">
+                NFT #{member.assetData.templateMint}
+            </p>
+        </div>
+    );
 };
 
 const AuctionBadge = ({ member }: { member: MemberData }) => {
-    if (member.auctionData) {
-        return (
-            <div
-                className="group flex justify-end items-center space-x-1"
-                onClick={(e) => {
-                    e.stopPropagation();
-                    openInNewTab(
-                        `${atomicAssets.hubUrl}/market/auction/${member?.auctionData?.auctionId}`
-                    );
-                }}
-            >
-                <FaGavel
-                    size={14}
-                    className="text-gray-600 group-hover:text-gray-800"
-                />
-                <p className="text-sm tracking-tight leading-none p-t-px group-hover:underline">
-                    {assetToString(member.auctionData.price, 2)} (#
-                    {member.assetData?.templateMint})
-                </p>
-            </div>
-        );
-    }
-
-    return <></>;
+    if (!member.auctionData) return <></>;
+    return (
+        <div
+            className="group flex justify-end items-center space-x-1"
+            onClick={(e) => {
+                e.stopPropagation();
+                openInNewTab(
+                    `${atomicAssets.hubUrl}/market/auction/${member?.auctionData?.auctionId}`
+                );
+            }}
+        >
+            <FaGavel
+                size={14}
+                className="text-gray-600 group-hover:text-gray-800"
+            />
+            <p className="text-sm tracking-tight leading-none p-t-px group-hover:underline">
+                {assetToString(member.auctionData.price, 2)} (#
+                {member.assetData?.templateMint})
+            </p>
+        </div>
+    );
 };
 
 const SaleBadge = ({ member }: { member: MemberData }) => {
-    if (member.saleId) {
-        return (
-            <div
-                className="group flex justify-end items-center space-x-1"
-                onClick={(e) => {
-                    e.stopPropagation();
-                    openInNewTab(
-                        `${atomicAssets.hubUrl}/market/sale/${member.saleId}`
-                    );
-                }}
-            >
-                <p className="text-sm tracking-tight leading-none p-t-px group-hover:underline">
-                    ON SALE (#
-                    {member.assetData?.templateMint})
-                </p>
-            </div>
-        );
-    }
-    return <></>;
+    if (!member.saleId) return <></>;
+    return (
+        <div
+            className="group flex justify-end items-center space-x-1"
+            onClick={(e) => {
+                e.stopPropagation();
+                openInNewTab(
+                    `${atomicAssets.hubUrl}/market/sale/${member.saleId}`
+                );
+            }}
+        >
+            <p className="text-sm tracking-tight leading-none p-t-px group-hover:underline">
+                ON SALE (#
+                {member.assetData?.templateMint})
+            </p>
+        </div>
+    );
 };
 
 export default MemberChip;
