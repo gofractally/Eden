@@ -5,9 +5,9 @@ import {
     getEdenMember,
     getMember,
     getMembers,
-    getMemberStats,
     getTreasuryStats,
     getNewMembers,
+    getMembersStats,
 } from "members";
 import { getIsCommunityActive } from "_app/api";
 
@@ -52,7 +52,7 @@ export const queryTreasuryStats = {
 
 export const queryMembersStats = {
     queryKey: "query_member_stats",
-    queryFn: getMemberStats,
+    queryFn: getMembersStats,
 };
 
 export const queryIsCommunityActive = {
