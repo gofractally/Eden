@@ -3,7 +3,7 @@ import { GetServerSideProps } from "next";
 import { QueryClient, useQuery } from "react-query";
 import { dehydrate } from "react-query/hydration";
 
-import { queryMembers, queryMemberStats, RawLayout, Text } from "_app";
+import { queryMembers, queryMembersStats, RawLayout, Text } from "_app";
 
 export const getServerSideProps: GetServerSideProps = async ({ query }) => {
     const queryClient = new QueryClient();
@@ -29,9 +29,9 @@ export const DelegatesPage = (props: Props) => {
 
     const {
         isError: isMemberStatsDataFetchError,
-        data: memberStats,
+        data: membersStats,
     } = useQuery({
-        ...queryMemberStats,
+        ...queryMembersStats,
         keepPreviousData: true,
     });
 
@@ -90,7 +90,7 @@ export const DelegatesPage = (props: Props) => {
                         the number of Chiefs, etc.
                     </Text>
                     <div>
-                        <pre>{JSON.stringify(memberStats || {}, null, 2)}</pre>
+                        <pre>{JSON.stringify(membersStats || {}, null, 2)}</pre>
                     </div>
                 </div>
             </div>

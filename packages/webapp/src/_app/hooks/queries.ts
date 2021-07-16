@@ -35,9 +35,9 @@ export const queryCurrentElection = {
     queryFn: getCurrentElection,
 };
 
-export const queryMemberStats = {
+export const queryMembersStats = {
     queryKey: "query_member_stats",
-    queryFn: getMemberStats,
+    queryFn: getMembersStats,
 };
 
 export const queryElectionState = {
@@ -48,11 +48,6 @@ export const queryElectionState = {
 export const queryTreasuryStats = {
     queryKey: "query_treasury_stats",
     queryFn: getTreasuryStats,
-};
-
-export const queryMembersStats = {
-    queryKey: "query_member_stats",
-    queryFn: getMembersStats,
 };
 
 export const queryIsCommunityActive = {
