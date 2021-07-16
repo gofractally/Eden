@@ -1,5 +1,5 @@
 import { useRouter } from "next/router";
-import { FaCheckSquare, FaRegSquare, FaRegStar } from "react-icons/fa";
+import { FaCheckSquare, FaRegSquare, FaStar } from "react-icons/fa";
 
 import { ROUTES } from "_app/config";
 import { GenericMemberChip } from "_app/ui";
@@ -64,7 +64,7 @@ export const WinningMemberChip = ({ member }: { member: MemberData }) => {
 
 const WinnerBadge = () => (
     <div className="flex justify-center items-center rounded-full mr-2 p-1 border border-yellow-800 bg-yellow-500">
-        <FaRegStar size={14} className="text-white" />
+        <FaStar size={15} className="text-white" />
     </div>
 );
 
