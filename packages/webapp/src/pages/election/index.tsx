@@ -7,8 +7,6 @@ import {
     queryCurrentElection,
     queryElectionState,
     queryHeadDelegate,
-    queryMembers,
-    queryMemberStats,
     RawLayout,
     Text,
 } from "_app";
