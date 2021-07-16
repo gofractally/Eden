@@ -5,6 +5,7 @@ export interface ElectionState {
 }
 
 export interface CurrentElection {
+    // TODO: make this a disjoint union of types
     // for state: pending
     // nothing
 
