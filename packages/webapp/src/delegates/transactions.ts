@@ -1,3 +1,5 @@
+// PLACEHOLDER
+
 // import { SerialBuffer } from "eosjs/dist/eosjs-serialize";
 import {
     assetToString,
