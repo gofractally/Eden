@@ -171,14 +171,14 @@ namespace clchain
                {
                   stream.write_str("    ");
                   stream.write_str(name);
-                  if constexpr (mf::arg_types::size)
+                  if constexpr (mf::arg_types::size > 0)
                   {
                      stream.write_str("(");
                      bool first = true;
                      eosio::for_each_named_type(
                          [&](auto* p, const char* name) {
                             if (!first)
-                               stream.write_str(", ");
+                               stream.write_str(" ");
                             stream.write_str(name);
                             stream.write_str(": ");
                             stream.write_str(generate_gql_whole_name(p));
@@ -308,8 +308,9 @@ namespace clchain
                   if (!input.remaining())
                      return;
                   ++input.pos;
-                  current_value = {begin, size_t(input.pos - begin)};
+                  current_value = {begin + 1, size_t(input.pos - begin - 2)};
                   current_type = string;
+                  return;
                default:;
             }  // switch (input.pos[0])
 
@@ -384,19 +385,32 @@ namespace clchain
       }     // skip()
    };       // gql_stream
 
+   template <typename E>
+   auto gql_parse_arg(std::string& arg, gql_stream& input_stream, const E& error)
+   {
+      if (input_stream.current_type == gql_stream::string)
+      {
+         arg = input_stream.current_value;
+         input_stream.skip();
+         return true;
+      }
+      return error("expected String");
+   }
+
    template <typename T, typename E>
    auto gql_parse_arg(T& arg, gql_stream& input_stream, const E& error)
        -> std::enable_if_t<std::is_arithmetic_v<T> || std::is_same_v<T, bool>, bool>
    {
       if constexpr (std::is_same_v<T, bool>)
       {
-         if (input_stream.current_value == "true")
+         if (input_stream.current_type == gql_stream::name && input_stream.current_value == "true")
          {
             input_stream.skip();
             arg = true;
             return true;
          }
-         else if (input_stream.current_value == "false")
+         else if (input_stream.current_type == gql_stream::name &&
+                  input_stream.current_value == "false")
          {
             input_stream.skip();
             arg = false;
@@ -432,15 +446,30 @@ namespace clchain
                        const char* arg_name,
                        Arg_names... arg_names)
    {
+      constexpr bool is_optional =
+          eosio::is_std_optional<eosio::remove_cvref_t<decltype(std::get<i>(args))>>();
       if (input_stream.current_type != gql_stream::name || input_stream.current_value != arg_name)
-         return error("expected " + std::string(arg_name) + " (argument order is enforced)");
+      {
+         if constexpr (is_optional)
+            return gql_parse_args<i + 1>(args, input_stream, error, arg_names...);
+         else
+            return error("expected " + std::string(arg_name) + " (argument order is enforced)");
+      }
       input_stream.skip();
       if (input_stream.current_puncuator != ':')
          return error("expected :");
       input_stream.skip();
-      if (!gql_parse_arg(std::get<i>(args), input_stream, error))
+      if constexpr (is_optional)
+      {
+         if (input_stream.current_type == gql_stream::name && input_stream.current_value == "null")
+            input_stream.skip();
+         std::get<i>(args).emplace();
+         if (!gql_parse_arg(*std::get<i>(args), input_stream, error))
+            return false;
+      }
+      else if (!gql_parse_arg(std::get<i>(args), input_stream, error))
          return false;
-      return gql_parse_args<i + 1>(args, input_stream, error);
+      return gql_parse_args<i + 1>(args, input_stream, error, arg_names...);
    }
 
    template <int i, typename... Args, typename E>

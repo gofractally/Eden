@@ -86,6 +86,9 @@ const fs = require('fs');
          instance.exports.free_memory(destAddr);
       }
 
+      // const schemaText = decodeStr(instance.exports.get_schema(), instance.exports.get_schema_size());
+      // console.log(schemaText);
+
       fs.writeFileSync('state', new Uint8Array(instance.exports.memory.buffer));
    } catch (e) {
       console.error(e);

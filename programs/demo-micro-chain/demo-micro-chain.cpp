@@ -5,7 +5,7 @@
 #include <chainbase/chainbase.hpp>
 #include <clchain/crypto.hpp>
 #include <clchain/eden_chain.hpp>
-#include <clchain/graphql.hpp>
+#include <clchain/graphql_connection.hpp>
 #include <eden.hpp>
 #include <eosio/to_bin.hpp>
 
@@ -430,12 +430,12 @@ add_eosio_blocks_json(const char* json, uint32_t size, uint32_t eosio_irreversib
       session.push();
       if (!need_undo)
          db.db.set_revision(bi.num);
-      printf("%s block: %d %d log: %d irreversible: %d db: %d-%d %s\n",
-             block_log.status_str[status], (int)bi.eosio_block.num, (int)bi.num,
-             (int)block_log.blocks.size(), block_log.irreversible,
-             (int)db.db.undo_stack_revision_range().first,
-             (int)db.db.undo_stack_revision_range().second,  //
-             to_string(bi.eosio_block.id).c_str());
+      // printf("%s block: %d %d log: %d irreversible: %d db: %d-%d %s\n",
+      //        block_log.status_str[status], (int)bi.eosio_block.num, (int)bi.num,
+      //        (int)block_log.blocks.size(), block_log.irreversible,
+      //        (int)db.db.undo_stack_revision_range().first,
+      //        (int)db.db.undo_stack_revision_range().second,  //
+      //        to_string(bi.eosio_block.id).c_str());
    }
    // printf("%d blocks processed, %d blocks now in log\n", (int)eosio_blocks.size(),
    //        (int)block_log.blocks.size());
@@ -443,11 +443,28 @@ add_eosio_blocks_json(const char* json, uint32_t size, uint32_t eosio_irreversib
    //    printf("%d\n", (int)b->num);
 }
 
+constexpr const char MemberConnection_name[] = "MemberConnection";
+constexpr const char MemberEdge_name[] = "MemberEdge";
+using MemberConnection =
+    clchain::Connection<clchain::ConnectionConfig<std::reference_wrapper<const member>,
+                                                  MemberConnection_name,
+                                                  MemberEdge_name>>;
+
 struct Query
 {
    std::reference_wrapper<eden_chain::block_log> blockLog;
+
+   MemberConnection members(std::optional<int32_t> first, std::optional<std::string> after) const
+   {
+      return clchain::firstAfter<MemberConnection, eosio::name>(
+          first, after, db.members.get<by_pk>(),  //
+          [](auto& obj) { return obj.member.account; },
+          [](auto& obj) { return std::cref(obj.member); });
+   }
 };
-EOSIO_REFLECT(Query, blockLog)
+EOSIO_REFLECT2(Query,  //
+               blockLog,
+               method(members, "first", "after"))
 
 auto schema = clchain::get_gql_schema<Query>();
 [[clang::export_name("get_schema_size")]] uint32_t get_schema_size()
