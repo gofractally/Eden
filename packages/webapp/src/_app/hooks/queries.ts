@@ -19,11 +19,11 @@ import {
     getInductions,
     getInductionWithEndorsements,
 } from "inductions/api";
+import { getHeadDelegate } from "delegates/api";
 import {
     getCurrentElection,
     getElectionState,
-    getHeadDelegate,
-} from "delegates/api";
+} from "elections/api/eden-contract";
 
 export const queryHeadDelegate = {
     queryKey: "query_head_delegate",

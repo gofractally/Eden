@@ -1,5 +1,6 @@
 // PLACEHOLDER
 
+export {};
 // export interface NewMemberProfile {
 //     name: string;
 //     img: string;

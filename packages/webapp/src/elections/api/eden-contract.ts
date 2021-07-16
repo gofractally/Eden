@@ -1,31 +1,32 @@
-// PLACEHOLDER
+import { devUseFixtureData } from "config";
+import { ElectionState } from "elections/interfaces";
+import {
+    CONTRACT_CURRENT_ELECTION_TABLE,
+    CONTRACT_ELECTION_STATE_TABLE,
+    getTableRows,
+} from "_app";
+import { fixtureElectionState } from "./fixtures";
 
-import { now } from "cypress/types/lodash";
-// import {
-//     CONTRACT_INDUCTION_TABLE,
-//     getRow,
-//     i128BoundsForAccount,
-//     getTableIndexRows,
-//     CONTRACT_ENDORSEMENT_TABLE,
-//     getTableRows,
-// } from "_app";
+export const getCurrentElection = async () => {
+    const rows = await getTableRows<any>(CONTRACT_CURRENT_ELECTION_TABLE);
 
-export const getNextElectionDateTime = () => {
-    return now();
+    if (!rows.length) {
+        return undefined;
+    }
+
+    return rows[0];
 };
 
-// export const getInductionWithEndorsements = async (
-//     inductionId: string
-// ): Promise<
-//     | {
-//           induction: Induction;
-//           endorsements: Endorsement[];
-//       }
-//     | undefined
-// > => {
-//     const induction = await getInduction(inductionId);
-//     if (induction) {
-//         const endorsements = await getEndorsementsByInductionId(inductionId);
-//         return { induction, endorsements };
-//     }
-// };
+export const getElectionState = async () => {
+    if (devUseFixtureData) return fixtureElectionState;
+
+    const rows = await getTableRows<ElectionState>(
+        CONTRACT_ELECTION_STATE_TABLE
+    );
+
+    if (!rows.length) {
+        return undefined;
+    }
+
+    return rows[0];
+};
