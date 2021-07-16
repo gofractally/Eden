@@ -14,7 +14,7 @@ For more details, refer to the [Web App README](./packages/webapp/README.md).
 
 ## Eden Contracts
 
-Contacts can be built manually (see below) but the latest contracts are also available from our Github CI/CD in this repo. For contract deployment/update instructions and considerations, see the [Contracts README](./contracts/README.md).
+Contracts can be built manually (see below) but the latest contracts are also available from our Github CI/CD in this repo. For contract deployment/update instructions and considerations, see the [Contracts README](./contracts/README.md).
 
 ### Build
 
