@@ -6,7 +6,7 @@ export const getTemplate = async (templateId: string) => {
     return templates.length ? templates[0] : undefined;
 };
 
-const LAUNCH_TIMESTAMP = "&after=1619779033000";
+const LAUNCH_TIMESTAMP = "&after=1626281073000";
 
 export const getTemplates = async (
     page = 1,

@@ -47,9 +47,6 @@ BOX_UPLOAD_IPFS="${process.env.NEXT_PUBLIC_BOX_UPLOAD_IPFS}"
 BOX_ADDRESS="${process.env.NEXT_PUBLIC_BOX_ADDRESS}"
 `);
 
-console.info(
-    `NEXT_PUBLIC_DEV_USE_FIXTURE_DATA="${process.env.NEXT_PUBLIC_DEV_USE_FIXTURE_DATA}"`
-);
 console.info(`>>> Dev Configs:
 NEXT_PUBLIC_DEV_USE_FIXTURE_DATA="${
     process.env.NEXT_PUBLIC_DEV_USE_FIXTURE_DATA === "true" || false

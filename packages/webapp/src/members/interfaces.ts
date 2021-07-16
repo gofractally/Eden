@@ -13,6 +13,7 @@ export interface MemberData {
     status: number;
     election_participation_status: number;
     election_rank: number;
+    representative: string;
     createdAt: number;
     auctionData?: MemberAuctionData;
     assetData?: AssetData;
