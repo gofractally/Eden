@@ -5,26 +5,24 @@ import {
     CONTRACT_ELECTION_STATE_TABLE,
     getTableRows,
 } from "_app";
-import { fixtureElectionState } from "../fixtures";
+import { fixtureElectionState } from "./fixtures";
 
 const getDelegates = () => {
-    return {};
+    return {}; // TODO
 };
 
 export const getHeadDelegate = async (): Promise<string | undefined> => {
     const electionState = await getElectionState();
-    return electionState && electionState.lead_representative;
+    return electionState?.lead_representative;
 };
 
 export const getChiefDelegates = async (): Promise<string[] | undefined> => {
     const electionState = await getElectionState();
-    return electionState && electionState.board;
+    return electionState?.board;
 };
 
 export const getCurrentElection = async () => {
     const rows = await getTableRows<any>(CONTRACT_CURRENT_ELECTION_TABLE);
-    console.info("getCurrentElection().rows:");
-    console.info(rows);
 
     if (!rows.length) {
         return undefined;
@@ -39,8 +37,6 @@ export const getElectionState = async () => {
     const rows = await getTableRows<ElectionState>(
         CONTRACT_ELECTION_STATE_TABLE
     );
-    console.info("getElectionState().rows:");
-    console.info(rows);
 
     if (!rows.length) {
         return undefined;
@@ -50,33 +46,17 @@ export const getElectionState = async () => {
 };
 
 const getMemberBudgetBalance = () => {
-    return {};
+    return {}; // TODO
 };
 
 const getMemberElectionParticipationStatus = () => {
-    return {};
+    return {}; // TODO
 };
 
 const hasMemberRSVPed = () => {
-    return false;
+    return false; // TODO
 };
 
 export const getMyDelegation = () => {
-    return {};
+    return {}; // TODO
 };
-
-// export const getInductionWithEndorsements = async (
-//     inductionId: string
-// ): Promise<
-//     | {
-//           induction: Induction;
-//           endorsements: Endorsement[];
-//       }
-//     | undefined
-// > => {
-//     const induction = await getInduction(inductionId);
-//     if (induction) {
-//         const endorsements = await getEndorsementsByInductionId(inductionId);
-//         return { induction, endorsements };
-//     }
-// };

@@ -24,7 +24,6 @@
         "react-cool-dimensions": "^2.0.3",
         "react-dom": "~17",
         "react-hot-toast": "^1.0.2",
-        "react-i18next": "^11.10.0",
         "react-icons": "^4.2.0",
         "react-modal": "^3.14.3",
         "react-query": "^3.15.2",
