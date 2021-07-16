@@ -5,7 +5,7 @@ import {
     getEdenMember,
     getMember,
     getMembers,
-    getMembersStats,
+    getMemberStats,
     getTreasuryStats,
     getNewMembers,
 } from "members";
@@ -37,7 +37,7 @@ export const queryCurrentElection = {
 
 export const queryMemberStats = {
     queryKey: "query_member_stats",
-    queryFn: getMembersStats,
+    queryFn: getMemberStats,
 };
 
 export const queryElectionState = {
@@ -52,7 +52,7 @@ export const queryTreasuryStats = {
 
 export const queryMembersStats = {
     queryKey: "query_member_stats",
-    queryFn: getMembersStats,
+    queryFn: getMemberStats,
 };
 
 export const queryIsCommunityActive = {

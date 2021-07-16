@@ -15,7 +15,7 @@ import { fixtureMemberStats } from "delegates/api/fixtures";
 export const getEdenMember = (account: string) =>
     getRow<EdenMember>(CONTRACT_MEMBER_TABLE, "account", account);
 
-export const getMembersStats = async () => {
+export const getMemberStats = async () => {
     if (devUseFixtureData) return Promise.resolve(fixtureMemberStats);
     getRow<MemberStats>(CONTRACT_MEMBERSTATS_TABLE);
 };
