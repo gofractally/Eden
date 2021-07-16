@@ -1,6 +1,13 @@
-import { MemberStats } from "members";
+import { CurrentElection, ElectionState } from "elections/interfaces";
+import { MemberData, MemberStats } from "members";
 
-export const fixtureElectionState = {
+export const fixtureElectionState: ElectionState = {
+    lead_representative: "edenmember11",
+    board: ["edenmember11", "edenmember12", "edenmember13"],
+    last_election_time: "2022-01-16T16:00:00.000",
+};
+
+export const fixtureCurrentElection: CurrentElection = {
     lead_representative: "edenmember11",
     board: ["edenmember11", "edenmember12", "edenmember13"],
 };
@@ -12,8 +19,9 @@ export const fixtureMemberStats: MemberStats = {
     ranks: [4, 1],
 };
 
-export const fixtureMembers = [
+export const fixtureMembers: MemberData[] = [
     {
+        // a Chief Delegate
         templateId: 84431,
         createdAt: 1621635292500,
         name: "Eden Member 12",
@@ -29,6 +37,10 @@ export const fixtureMembers = [
             telegram: "brandonfancher",
             blog: "brandonfancher.com",
         },
+        status: 1, //active
+        election_participation_status: 0, // no_donation is kinda the default if other special cases don't apply
+        election_rank: 1,
+        representative: "edenmember11", // "parent" field
     },
     {
         templateId: 84432,
@@ -47,6 +59,10 @@ export const fixtureMembers = [
             facebook: "test",
             blog: "test.com",
         },
+        status: 1, //active
+        election_participation_status: 0, // no_donation is kinda the default if other special cases don't apply
+        election_rank: 2,
+        representative: "edenmember11", // "parent" field
     },
     {
         templateId: 84545,
@@ -63,6 +79,10 @@ export const fixtureMembers = [
             telegram: "test",
             blog: "test.com",
         },
+        status: 1, //active
+        election_participation_status: 0, // no_donation is kinda the default if other special cases don't apply
+        election_rank: 1,
+        representative: "edenmember11", // "parent" field
     },
     {
         templateId: 140784,
@@ -79,6 +99,10 @@ export const fixtureMembers = [
             twitter: "boom",
             telegram: "boom",
         },
+        status: 1, //active
+        election_participation_status: 0, // no_donation is kinda the default if other special cases don't apply
+        election_rank: 1,
+        representative: "edenmember11", // "parent" field
     },
     {
         templateId: 140785,
@@ -95,5 +119,9 @@ export const fixtureMembers = [
             twitter: "pip",
             telegram: "pip",
         },
+        status: 1, //active
+        election_participation_status: 0, // no_donation is kinda the default if other special cases don't apply
+        election_rank: 1,
+        representative: "edenmember11", // "parent" field
     },
 ];

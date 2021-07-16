@@ -61,13 +61,14 @@ export const ElectionPage = (props: Props) => {
         ...queryMemberStats,
         keepPreviousData: true,
     });
-    console.info("after useQuery.memberStats:");
-    console.info(memberStats);
 
     const { isError: isMembersDataFetchError, data: members } = useQuery({
         ...queryMembers(1, MEMBERS_PAGE_SIZE),
         keepPreviousData: true,
     });
+
+    console.info("Elections Page.index.members:");
+    console.info(members);
 
     if (isElectionStateDataFetchError) {
         return (
@@ -96,6 +97,14 @@ export const ElectionPage = (props: Props) => {
                 <div>
                     <Text size="lg" className="mb-4">
                         -- Raw Table Data --
+                    </Text>
+                    <Text size="sm" className="mb-4">
+                        <code>{`enum for status { pending = 0, active }`}</code>
+                    </Text>
+                    <Text size="sm" className="mb-4">
+                        <code>
+                            {`enum for election_participation_status { no_donation = 0, in_election, not_in_election, recently_inducted }`}
+                        </code>
                     </Text>
                     <div>
                         <Text size="sm">

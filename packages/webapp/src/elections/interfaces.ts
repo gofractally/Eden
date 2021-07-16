@@ -1,7 +1,10 @@
 export interface ElectionState {
     lead_representative: string;
-    board: [string];
+    board: string[];
     last_election_time: string;
 }
 
-export interface CurrentElection {}
+export interface CurrentElection {
+    lead_representative: string;
+    board: string[];
+}
