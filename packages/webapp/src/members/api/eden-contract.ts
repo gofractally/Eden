@@ -17,7 +17,7 @@ export const getEdenMember = (account: string) =>
 
 export const getMembersStats = async () => {
     if (devUseFixtureData) return Promise.resolve(fixtureMembersStats);
-    getRow<MemberStats>(CONTRACT_MEMBERSTATS_TABLE);
+    return getRow<MemberStats>(CONTRACT_MEMBERSTATS_TABLE);
 };
 
 export const getTreasuryStats = async () => {
