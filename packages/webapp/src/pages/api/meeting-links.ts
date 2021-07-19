@@ -56,7 +56,7 @@ const generateZoomMeeting = async (accessToken: string) => {
             Math.random() * 59
         )}:00Z`,
         settings: {
-            join_before_host: false,
+            join_before_host: true,
             jbh_time: 0,
             waiting_room: false,
             auto_recording: "local",
