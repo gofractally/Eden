@@ -1,5 +1,5 @@
 import type { NextApiRequest, NextApiResponse } from "next";
-import * as z from "zod";
+import { z } from "zod";
 import { BadRequestError, handleErrors } from "@edenos/common";
 
 import { zoomRefreshAuth } from "_api/zoom-commons";

@@ -44,6 +44,10 @@ export const generateMeeting = async (meetingRequest: MeetingLinkRequest) => {
     }
 };
 
+/**
+ * Zoom Meeting Create API can be found here:
+ * https://marketplace.zoom.us/docs/api-reference/zoom-api/meetings/meetingcreate
+ */
 const generateZoomMeeting = async (accessToken: string) => {
     const body = {
         topic: `Test Eden Election #${Math.floor(Math.random() * 100_000_000)}`,
@@ -52,8 +56,9 @@ const generateZoomMeeting = async (accessToken: string) => {
             Math.random() * 59
         )}:00Z`,
         settings: {
-            join_before_host: true,
+            join_before_host: false,
             jbh_time: 0,
+            waiting_room: false,
             auto_recording: "local",
         },
     };
@@ -68,7 +73,7 @@ const generateZoomMeeting = async (accessToken: string) => {
     });
 
     if (!response.ok) {
-        throw await response.json();
+        throw new BadRequestError(await response.json());
     } else {
         return response.json();
     }

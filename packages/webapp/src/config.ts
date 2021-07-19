@@ -147,5 +147,5 @@ export const devUseFixtureData =
 export const zoom = {
     clientKey: process.env.NEXT_PUBLIC_ZOOM_CLIENT_ID || "",
     clientSecret: process.env.ZOOM_CLIENT_SECRET || "",
-    oauthRedirect: `http://localhost:3000/oauth/zoom`, // todo: make the domain dynamic
+    oauthRedirect: `http://localhost:3000/oauth/zoom`, // TODO: make the domain dynamic
 };

@@ -54,7 +54,6 @@ export const ZoomOauthPage = ({ newZoomAccountJWT }: Props) => {
     useEffect(() => {
         if (newZoomAccountJWT) {
             setZoomAccountJWT(newZoomAccountJWT);
-            console.info("new zoom credentials set", newZoomAccountJWT);
         }
     }, [newZoomAccountJWT]);
 
@@ -95,7 +94,6 @@ const ZoomTestContainer = ({ ualAccount }: any) => {
             });
 
             const newTokens = await newTokensResponse.json();
-            console.info(newTokens);
             if (!newTokensResponse.ok) {
                 resetZoomAccount();
             }
@@ -120,8 +118,6 @@ const ZoomTestContainer = ({ ualAccount }: any) => {
         console.info(responseData);
         alert(JSON.stringify(responseData, undefined, 2));
     };
-
-    console.info(zoomAccountJWT);
 
     return (
         <div>
