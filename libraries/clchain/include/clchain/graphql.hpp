@@ -185,8 +185,9 @@ namespace clchain
                             first = false;
                          },
                          typename mf::arg_types{}, arg_names...);
-                     stream.write_str("): ");
+                     stream.write_str(")");
                   }
+                  stream.write_str(": ");
                   stream.write_str(generate_gql_whole_name((ret*)nullptr));
                   stream.write_str("\n");
                }
@@ -439,8 +440,23 @@ namespace clchain
       }
    }
 
+   template <int i, typename... Args>
+   void gql_mark_optional(std::tuple<Args...>& args, bool filled[])
+   {
+      if constexpr (i < sizeof...(Args))
+      {
+         constexpr bool is_optional =
+             eosio::is_std_optional<eosio::remove_cvref_t<decltype(std::get<i>(args))>>();
+         if constexpr (is_optional)
+            filled[i] = true;
+         gql_mark_optional<i + 1>(args, filled);
+      }
+   }
+
    template <int i, typename... Args, typename E, typename... Arg_names>
    bool gql_parse_args(std::tuple<Args...>& args,
+                       bool filled[],
+                       bool& found,
                        gql_stream& input_stream,
                        const E& error,
                        const char* arg_name,
@@ -448,13 +464,8 @@ namespace clchain
    {
       constexpr bool is_optional =
           eosio::is_std_optional<eosio::remove_cvref_t<decltype(std::get<i>(args))>>();
-      if (input_stream.current_type != gql_stream::name || input_stream.current_value != arg_name)
-      {
-         if constexpr (is_optional)
-            return gql_parse_args<i + 1>(args, input_stream, error, arg_names...);
-         else
-            return error("expected " + std::string(arg_name) + " (argument order is enforced)");
-      }
+      if (input_stream.current_value != arg_name)
+         return gql_parse_args<i + 1>(args, filled, found, input_stream, error, arg_names...);
       input_stream.skip();
       if (input_stream.current_puncuator != ':')
          return error("expected :");
@@ -469,11 +480,17 @@ namespace clchain
       }
       else if (!gql_parse_arg(std::get<i>(args), input_stream, error))
          return false;
-      return gql_parse_args<i + 1>(args, input_stream, error, arg_names...);
+      filled[i] = true;
+      found = true;
+      return true;
    }
 
    template <int i, typename... Args, typename E>
-   bool gql_parse_args(std::tuple<Args...>& args, gql_stream& input_stream, const E& error)
+   bool gql_parse_args(std::tuple<Args...>& args,
+                       bool filled[],
+                       bool& found,
+                       gql_stream& input_stream,
+                       const E& error)
    {
       static_assert(i == sizeof...(Args), "mismatched arg names");
       return true;
@@ -587,57 +604,73 @@ namespace clchain
             field_name = input_stream.current_value;
             input_stream.skip();
          }
-         eosio_for_each_field(
-             (T*)nullptr, [&](std::string_view name, auto&& member, auto... arg_names) {
-                using member_type = decltype(member((T*)nullptr));
-                if constexpr (eosio::is_non_const_member_fn<member_type>())
-                   return;
-                else
-                {
-                   if (found)
-                      return;
-                   if (name == field_name)
-                   {
-                      found = true;
-                      if (first)
-                      {
-                         increase_indent(output_stream);
-                         first = false;
-                      }
-                      else
-                         output_stream.write(',');
-                      write_newline(output_stream);
-                      to_json(alias, output_stream);
-                      write_colon(output_stream);
-                      if constexpr (std::is_member_object_pointer_v<member_type>)
-                      {
-                         if (!gql_query(value.*member(&value), input_stream, output_stream, error))
-                            ok = false;
-                      }
-                      else
-                      {
-                         using mf = eosio::member_fn<member_type>;
-                         if (input_stream.current_puncuator != '(')
-                            return (ok = error("expected (")), void();
-                         input_stream.skip();
-                         eosio::tuple_from_type_list<typename mf::arg_types> args;
-                         if (!gql_parse_args<0>(args, input_stream, error, arg_names...))
-                            return (ok = false), void();
-                         if (input_stream.current_puncuator != ')')
-                            return (ok = error("expected )")), void();
-                         input_stream.skip();
-
-                         auto result = std::apply(
-                             [&](auto&&... args) {
-                                return (value.*member(&value))(std::move(args)...);
-                             },
-                             args);
-                         if (!gql_query(result, input_stream, output_stream, error))
-                            return (ok = false), void();
-                      }
-                   }
-                }
-             });
+         eosio_for_each_field((T*)nullptr, [&](std::string_view name, auto&& member,
+                                               auto... arg_names) {
+            using member_type = decltype(member((T*)nullptr));
+            if constexpr (eosio::is_non_const_member_fn<member_type>())
+               return;
+            else
+            {
+               if (found)
+                  return;
+               if (name == field_name)
+               {
+                  found = true;
+                  if (first)
+                  {
+                     increase_indent(output_stream);
+                     first = false;
+                  }
+                  else
+                     output_stream.write(',');
+                  write_newline(output_stream);
+                  to_json(alias, output_stream);
+                  write_colon(output_stream);
+                  if constexpr (std::is_member_object_pointer_v<member_type>)
+                  {
+                     if (!gql_query(value.*member(&value), input_stream, output_stream, error))
+                        ok = false;
+                  }
+                  else
+                  {
+                     using mf = eosio::member_fn<member_type>;
+                     eosio::tuple_from_type_list<typename mf::arg_types> args;
+                     bool filled[mf::num_args] = {};
+                     gql_mark_optional<0>(args, filled);
+                     if (input_stream.current_puncuator == '(')
+                     {
+                        input_stream.skip();
+                        while (input_stream.current_type == gql_stream::name)
+                        {
+                           bool found = false;
+                           if (!gql_parse_args<0>(args, filled, found, input_stream, error,
+                                                  arg_names...))
+                              return (ok = false), void();
+                           if (!found)
+                              return (ok = error("unknown arg '" +
+                                                 (std::string)input_stream.current_value + "'")),
+                                     void();
+                        }
+                        if (input_stream.current_puncuator != ')')
+                           return (ok = error("expected )")), void();
+                        input_stream.skip();
+                     }
+                     for (int i = 0; i < mf::num_args; ++i)
+                        if (!filled[i])
+                           return (ok = error("function missing required arg '" +
+                                              std::string(std::data({arg_names...})[i]) + "'")),
+                                  void();
+                     auto result = std::apply(
+                         [&](auto&&... args) {
+                            return (value.*member(&value))(std::move(args)...);
+                         },
+                         args);
+                     if (!gql_query(result, input_stream, output_stream, error))
+                        return (ok = false), void();
+                  }
+               }
+            }
+         });
          if (!ok)
             return false;
          if (!found)

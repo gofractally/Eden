@@ -35,6 +35,7 @@ namespace eosio
    struct member_fn<R (T::*)(Args...)>
    {
       static constexpr bool is_const = false;
+      static constexpr int num_args = sizeof...(Args);
       using type = R (T::*)(Args...);
       using class_type = T;
       using return_type = R;
@@ -45,6 +46,7 @@ namespace eosio
    struct member_fn<R (T::*)(Args...) const>
    {
       static constexpr bool is_const = true;
+      static constexpr int num_args = sizeof...(Args);
       using type = R (T::*)(Args...) const;
       using class_type = T;
       using return_type = R;

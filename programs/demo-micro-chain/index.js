@@ -40,29 +40,32 @@ const defaultQuery = `# GraphiQL is talking to a WASM running in the browser.
 # the genesis.eden contract.
 
 {
-  blockLog {
-    blockByEosioNum(num: 183728447) {
-      block {
-        eosio_block {
-          timestamp
-          transactions {
-            actions {
-              name
-            }
-          }
-        }
-      }
-    }
-    blocks {
-      block {
-        eosio_block {
-          num
-        }
-      }
-    }
-  }
-}
-`;
+   members(first: 10, after: "000000928149AF31") {
+     pageInfo {
+       hasPreviousPage
+       hasNextPage
+       startCursor
+       endCursor
+     }
+     edges {
+       cursor
+       node {
+         account
+         inviter
+         inductionWitnesses
+         inductionVideo
+         profile {
+           name
+           img
+           social
+           bio
+           attributions
+         }
+       }
+     }
+   }
+ }
+ `;
 
 const imports = {
    clchain: {
@@ -87,11 +90,11 @@ const imports = {
       instance = x.instance;
       memory = instance.exports.memory;
 
-      const state = new Uint8Array(await (await fetch('state')).arrayBuffer());
-      const growth = (state.length - memory.buffer.byteLength) / (64 * 1024);
+      const state = new Uint32Array(await (await fetch('state')).arrayBuffer());
+      const growth = (state.buffer.byteLength - memory.buffer.byteLength) / (64 * 1024);
       if (growth > 0)
          memory.grow(growth);
-      const dest = new Uint8Array(memory.buffer);
+      const dest = new Uint32Array(memory.buffer);
       for (let i = 0; i < state.length; ++i)
          dest[i] = state[i];
 
