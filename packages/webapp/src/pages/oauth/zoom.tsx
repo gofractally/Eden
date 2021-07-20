@@ -14,6 +14,7 @@ import {
     useUALAccount,
     Button,
     useZoomAccountJWT,
+    publishSecretToChain,
 } from "_app";
 
 export const getServerSideProps: GetServerSideProps = async ({
@@ -80,6 +81,15 @@ const ZoomTestContainer = ({ ualAccount }: any) => {
     };
 
     const generateZoomMeetingLink = async () => {
+        const x = await publishSecretToChain(
+            "https://us05web.zoom.us/j/81089675368?pwd=MUFWVkowNmk1SFVLTkJ4eEtyY01ldz09",
+            ualAccount.accountName,
+            ["participanta", "participantb", "participantc"]
+        );
+        if (x) {
+            return;
+        }
+
         let accessToken = zoomAccountJWT.access_token;
         if (!accessToken) {
             return alert("Invalid AccessToken");
