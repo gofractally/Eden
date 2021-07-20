@@ -56,12 +56,12 @@ const generateZoomMeeting = async (accessToken: string) => {
         start_time: `2025-08-15T${Math.floor(Math.random() * 23)}:${Math.floor(
             Math.random() * 59
         )}:00Z`,
+        password: uuidv4().substr(0, 8),
         settings: {
             join_before_host: true,
             jbh_time: 0,
             waiting_room: false,
             auto_recording: "local",
-            passcode: uuidv4().substr(0, 8),
         },
     };
 
