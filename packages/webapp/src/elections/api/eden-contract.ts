@@ -31,3 +31,11 @@ export const getElectionState = async () => {
 
     return rows[0];
 };
+
+const getMemberElectionParticipationStatus = () => {
+    return {}; // TODO
+};
+
+const hasMemberRSVPed = () => {
+    return false; // TODO
+};

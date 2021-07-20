@@ -1,7 +1,7 @@
 import { MemberData, MemberStats } from "members";
 
 export const fixtureMembersStats: MemberStats = {
-    active_members: 4,
+    active_members: 5,
     pending_members: 0,
     completed_waiting_inductions: 0,
     ranks: [1, 3, 1],

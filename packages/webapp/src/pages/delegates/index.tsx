@@ -7,12 +7,14 @@ import {
     queryHeadDelegate,
     queryMembers,
     queryMembersStats,
+    queryMyDelegation,
     RawLayout,
     Text,
     useCurrentMember,
     useUALAccount,
 } from "_app";
 import { MemberData } from "members";
+import { getMemberRecordFromName, getMyDelegation } from "delegates/api";
 
 export const getServerSideProps: GetServerSideProps = async ({ query }) => {
     const queryClient = new QueryClient();
@@ -40,6 +42,10 @@ export const DelegatesPage = (props: Props) => {
         keepPreviousData: true,
     });
 
+    const loggedInMemberName = currentMember?.name || accountName;
+    const loggedInMember: MemberData | undefined =
+        members && getMemberRecordFromName(members, loggedInMemberName);
+
     const { data: membersStats } = useQuery({
         ...queryMembersStats,
         keepPreviousData: true,
@@ -50,45 +56,11 @@ export const DelegatesPage = (props: Props) => {
         keepPreviousData: true,
     });
 
-    const loggedInMemberName = currentMember?.name || accountName;
-    const loggedInMember: MemberData | undefined = members?.filter(
-        (member) => member.account === loggedInMemberName
-    )[0];
-
-    const getMyDelegation = (members: MemberData[]): MemberData[] => {
-        let myDelegates: MemberData[] = [];
-        if (loggedInMember === undefined) return myDelegates;
-        // establish height of tree from electionState
-        // const heightOfDelegationTree = membersStats?.ranks.length;
-        // get logged-in user's rank
-        // loggedInMember.election_rank
-        // loggedInMember.representative
-        // get lead rep's account name
-        let m: MemberData = getMemberRecordFromName(
-            members,
-            loggedInMember?.account
-        );
-        while (m && m?.account != lead_representative) {
-            myDelegates.push(m);
-            m = getMemberRecordFromName(members, m?.representative!);
-        }
-        members &&
-            myDelegates.length &&
-            myDelegates.push(
-                getMemberRecordFromName(members, lead_representative!)
-            );
-        return myDelegates;
-    };
-
-    const getMemberRecordFromName = (
-        members: MemberData[],
-        memberAccount: string
-    ) => members?.filter((member) => member.account === memberAccount)[0];
-
-    const delegates: MemberData[] =
-        members && membersStats && loggedInMember
-            ? getMyDelegation(members)
-            : [];
+    const { data: myDelegation } = useQuery({
+        ...queryMyDelegation(members!, loggedInMemberName),
+        enabled: !!members && !!loggedInMemberName,
+        keepPreviousData: true,
+    });
 
     return (
         <RawLayout title="Election">
@@ -106,13 +78,16 @@ export const DelegatesPage = (props: Props) => {
                 <Text
                     size="sm"
                     className="mt-4"
-                >{`Your Delegates are as follows (You at the bottom; Head Chief at the top):`}</Text>
+                >{`Your Delegation is as follows:`}</Text>
                 <ul>
-                    {/* {delegates.map((delegate) => (
-                            <li key={delegate.account}> {delegate}</li>
-                        ))} */}
-                    {delegates.reverse().map((delegate) => (
-                        <li key={delegate.account}> {delegate.name}</li>
+                    {myDelegation?.reverse().map((delegate) => (
+                        <li key={delegate?.account}>
+                            {delegate?.name}
+                            {delegate?.account === lead_representative &&
+                                `<-- Head Chief`}
+                            {delegate?.account === loggedInMember?.account &&
+                                `<-- you`}
+                        </li>
                     ))}
                 </ul>
             </div>
