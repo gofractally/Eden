@@ -9,7 +9,7 @@ describe("Community", () => {
         expect(newMembersGrid).to.exist;
         const membersGrid = cy.get(`[data-testid="members-grid"]`);
         expect(membersGrid).to.exist;
-        membersGrid.find("a").should("have.length.greaterThan", 0);
+        membersGrid.find("div").should("have.length.greaterThan", 0);
     });
 
     it("should allow to view a member profile", () => {
