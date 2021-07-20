@@ -8,6 +8,7 @@ import {
     getTreasuryStats,
     getNewMembers,
     getMembersStats,
+    MemberData,
 } from "members";
 import { getIsCommunityActive } from "_app/api";
 
@@ -19,7 +20,7 @@ import {
     getInductions,
     getInductionWithEndorsements,
 } from "inductions/api";
-import { getHeadDelegate } from "delegates/api";
+import { getHeadDelegate, getMyDelegation } from "delegates/api";
 import {
     getCurrentElection,
     getElectionState,
@@ -29,6 +30,14 @@ export const queryHeadDelegate = {
     queryKey: "query_head_delegate",
     queryFn: getHeadDelegate,
 };
+
+export const queryMyDelegation = (
+    members: MemberData[],
+    loggedInMemberName: string
+) => ({
+    queryKey: ["query_my_delegation", members],
+    queryFn: () => getMyDelegation(members, loggedInMemberName),
+});
 
 export const queryCurrentElection = {
     queryKey: "query_current_election",
