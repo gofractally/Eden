@@ -1,5 +1,6 @@
 import type { NextApiRequest, NextApiResponse } from "next";
 import { BadRequestError, handleErrors } from "@edenos/common";
+import { v4 as uuidv4 } from "uuid";
 
 import {
     MeetingLinkRequest,
@@ -60,6 +61,7 @@ const generateZoomMeeting = async (accessToken: string) => {
             jbh_time: 0,
             waiting_room: false,
             auto_recording: "local",
+            passcode: uuidv4().substr(0, 8),
         },
     };
 
