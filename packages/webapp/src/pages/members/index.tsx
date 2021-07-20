@@ -101,7 +101,10 @@ export const MembersPage = (props: Props) => {
             {newMembers.data && (
                 <>
                     <div className="border-t border-b">
-                        <MembersGrid members={newMembers.data}>
+                        <MembersGrid
+                            members={newMembers.data}
+                            dataTestId="new-members-grid"
+                        >
                             {(member) => (
                                 <MemberChip
                                     key={member.account}
@@ -129,7 +132,10 @@ export const MembersPage = (props: Props) => {
             {members.data && (
                 <>
                     <div className="border-t border-b">
-                        <MembersGrid members={members.data}>
+                        <MembersGrid
+                            members={members.data}
+                            dataTestId="members-grid"
+                        >
                             {(member) => (
                                 <MemberChip
                                     key={member.account}
