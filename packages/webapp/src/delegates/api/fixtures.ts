@@ -4,7 +4,7 @@ export const fixtureMembersStats: MemberStats = {
     active_members: 4,
     pending_members: 0,
     completed_waiting_inductions: 0,
-    ranks: [4, 1],
+    ranks: [1, 3, 1],
 };
 
 export const fixtureMembers: MemberData[] = [
@@ -28,7 +28,7 @@ export const fixtureMembers: MemberData[] = [
         status: 1, //active
         election_participation_status: 0, // no_donation is kinda the default if other special cases don't apply
         election_rank: 1,
-        representative: "edenmember11", // "parent" field
+        representative: "edenmember13", // "parent" field
     },
     {
         templateId: 84432,
@@ -49,7 +49,7 @@ export const fixtureMembers: MemberData[] = [
         },
         status: 1, //active
         election_participation_status: 0, // no_donation is kinda the default if other special cases don't apply
-        election_rank: 2,
+        election_rank: 3,
         representative: "edenmember11", // "parent" field
     },
     {
@@ -69,7 +69,7 @@ export const fixtureMembers: MemberData[] = [
         },
         status: 1, //active
         election_participation_status: 0, // no_donation is kinda the default if other special cases don't apply
-        election_rank: 1,
+        election_rank: 2,
         representative: "edenmember11", // "parent" field
     },
     {
@@ -90,7 +90,7 @@ export const fixtureMembers: MemberData[] = [
         status: 1, //active
         election_participation_status: 0, // no_donation is kinda the default if other special cases don't apply
         election_rank: 1,
-        representative: "edenmember11", // "parent" field
+        representative: "edenmember13", // "parent" field
     },
     {
         templateId: 140785,
@@ -110,6 +110,6 @@ export const fixtureMembers: MemberData[] = [
         status: 1, //active
         election_participation_status: 0, // no_donation is kinda the default if other special cases don't apply
         election_rank: 1,
-        representative: "edenmember11", // "parent" field
+        representative: "edenmember13", // "parent" field
     },
 ];

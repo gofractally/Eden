@@ -43,6 +43,8 @@ export interface EdenMember {
     status: MemberStatus;
     nft_template_id: number;
     encryption_key?: string;
+    election_rank?: number;
+    representative?: string;
 }
 
 export interface MemberStats {
