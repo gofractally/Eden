@@ -42,6 +42,8 @@ export interface EdenMember {
     name: string;
     status: MemberStatus;
     nft_template_id: number;
+    election_rank?: number;
+    representative?: string;
 }
 
 export interface MemberStats {
