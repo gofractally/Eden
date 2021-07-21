@@ -84,7 +84,8 @@ const ZoomTestContainer = ({ ualAccount }: any) => {
         const x = await publishSecretToChain(
             "https://us05web.zoom.us/j/81089675368?pwd=MUFWVkowNmk1SFVLTkJ4eEtyY01ldz09",
             ualAccount.accountName,
-            ["participanta", "participantb", "participantc"]
+            ["participanta", "participantb", "participantc"],
+            "Super important Meeting!"
         );
         if (x) {
             return;
