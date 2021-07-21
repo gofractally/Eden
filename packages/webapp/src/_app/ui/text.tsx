@@ -8,9 +8,9 @@ const TYPES: { [key in TextType]: string } = {
 
 export type TextSize = "xs" | "sm" | "base" | "lg" | "inherit";
 const SIZES: { [key in TextSize]: string } = {
-    xs: "text-xs",
-    sm: "text-sm",
-    base: "text-base",
+    xs: "text-xs leading-5",
+    sm: "text-sm leading-5",
+    base: "text-base leading-5 tracking-tight",
     lg: "text-lg",
     inherit: "",
 };
