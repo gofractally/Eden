@@ -55,6 +55,7 @@ namespace eden
                                                 member_stats_variant,
                                                 migration_variant,
                                                 pool_variant,
+                                                encrypted_data_variant,
                                                 std::variant<vote>>;
 #endif
 

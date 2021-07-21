@@ -77,10 +77,11 @@ namespace eden
       migration_singleton migration_tb{get_self(), scope.value};
       pool_table_type pool_tb{get_self(), scope.value};
       vote_table_type vote_tb{get_self(), scope.value};
-      auto all_tables =
-          std::tie(account_tb, auction_tb, bylaws_tb, distribution_account_tb, distribution_tb,
-                   endorsement_tb, current_election_state_tb, election_state_tb, global_tb,
-                   induction_tb, member_tb, member_stats_tb, migration_tb, pool_tb, vote_tb);
+      encrypted_data_table_type encrypted_data_tb{get_self(), scope.value};
+      auto all_tables = std::tie(
+          account_tb, auction_tb, bylaws_tb, distribution_account_tb, distribution_tb,
+          endorsement_tb, current_election_state_tb, election_state_tb, global_tb, induction_tb,
+          member_tb, member_stats_tb, migration_tb, pool_tb, vote_tb, encrypted_data_tb);
       for (const auto& row : rows)
       {
          return std::visit([&](const auto& value) { set_table_row(get_self(), value, all_tables); },
