@@ -26,6 +26,40 @@ namespace eden
       return itr == member_tb.end();
    }
 
+   void members::check_keys(const std::vector<eosio::name>& accounts,
+                            const std::vector<encrypted_key>& keys)
+   {
+      std::vector<eosio::public_key> actual_keys;
+      std::vector<eosio::public_key> expected_keys;
+      actual_keys.reserve(keys.size());
+      expected_keys.reserve(accounts.size());
+      for (auto account : accounts)
+      {
+         const auto& member = member_tb.get(account.value);
+         if (member.encryption_key())
+         {
+            expected_keys.push_back(*member.encryption_key());
+         }
+      }
+      eosio::check(expected_keys.size() == keys.size(), "Wrong number of encyption keys");
+      for (const auto& key : keys)
+      {
+         actual_keys.push_back(key.recipient_key);
+      }
+      std::sort(actual_keys.begin(), actual_keys.end());
+      std::sort(expected_keys.begin(), expected_keys.end());
+      eosio::check(actual_keys == expected_keys, "Wrong encryption key");
+   }
+
+   void members::set_key(eosio::name member, const eosio::public_key& key)
+   {
+      member_tb.modify(get_member(member), contract, [&](auto& row) {
+         auto next = std::visit([](auto& m) { return member_v1{m}; }, row.value);
+         next.encryption_key = key;
+         row.value = std::move(next);
+      });
+   }
+
    void members::create(eosio::name account)
    {
       auto stats = this->stats();

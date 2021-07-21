@@ -59,6 +59,7 @@ namespace eden
       constexpr uint32_t num_large_groups() const { return num_groups - num_short_groups(); }
       constexpr uint32_t group_min_size() const { return group_max_size() - 1; }
       uint32_t member_index_to_group(uint32_t idx) const;
+      uint32_t group_to_first_member_index(uint32_t idx) const;
       // invariants:
       // num_groups * group_max_size - num_short_groups = num_participants
       // group_max_size <= 12
@@ -225,6 +226,8 @@ namespace eden
       void on_resign(eosio::name member);
       // \pre voter and candidate are members of the same group
       void vote(uint8_t round, eosio::name voter, eosio::name candidate);
+      uint64_t get_group_id(eosio::name voter, uint8_t round);
+      std::vector<eosio::name> get_group_members(uint64_t group_id);
       void clear_all();
    };
 

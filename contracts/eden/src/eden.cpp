@@ -4,6 +4,7 @@
 #include <distributions.hpp>
 #include <eden.hpp>
 #include <elections.hpp>
+#include <encrypt.hpp>
 #include <inductions.hpp>
 #include <members.hpp>
 #include <migrations.hpp>
@@ -45,6 +46,7 @@ EOSIO_ABIGEN(
     table("endorsement"_n, eden::endorsement_variant),
     table("elect.curr"_n, eden::current_election_state),
     table("elect.state"_n, eden::election_state_variant),
+    table("encrypted"_n, eden::encrypted_data_variant),
     table("global"_n, eden::global_variant),
     table("induction"_n, eden::induction_variant),
     table("member"_n, eden::member_variant),
