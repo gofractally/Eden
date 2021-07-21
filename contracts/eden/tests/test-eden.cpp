@@ -767,7 +767,7 @@ TEST_CASE("induction")
    t.alice.act<actions::inductinit>(4, "alice"_n, "bertie"_n, std::vector{"pip"_n, "egeon"_n});
    t.bertie.act<actions::setencpubkey>("bertie"_n, eosio::public_key{});
    t.alice.act<actions::inductmeeting>("alice"_n, 4, std::vector<eden::encrypted_key>(4),
-                                       eosio::bytes{});
+                                       eosio::bytes{}, std::nullopt);
    CHECK(get_table_size<eden::encrypted_data_table_type>("induction"_n) == 1);
    t.bertie.act<token::actions::transfer>("bertie"_n, "eden.gm"_n, s2a("10.0000 EOS"), "memo");
    CHECK(get_eden_membership("bertie"_n).status() == eden::member_status::pending_membership);
@@ -1236,16 +1236,19 @@ TEST_CASE("election with multiple rounds")
 
    // With 200 members, there should be three rounds
    CHECK(get_table_size<eden::vote_table_type>() == 200);
-   t.alice.act<actions::electmeeting>(
-       "alice"_n, 0, std::vector<eden::encrypted_key>{{}, {}, {}, {}}, eosio::bytes{});
+   t.alice.act<actions::electmeeting>("alice"_n, 0,
+                                      std::vector<eden::encrypted_key>{{}, {}, {}, {}},
+                                      eosio::bytes{}, std::nullopt);
    t.generic_group_vote(t.get_current_groups(), round++);
    CHECK(get_table_size<eden::vote_table_type>() == 48);
-   t.alice.act<actions::electmeeting>(
-       "alice"_n, 1, std::vector<eden::encrypted_key>{{}, {}, {}, {}}, eosio::bytes{});
+   t.alice.act<actions::electmeeting>("alice"_n, 1,
+                                      std::vector<eden::encrypted_key>{{}, {}, {}, {}},
+                                      eosio::bytes{}, std::nullopt);
    t.generic_group_vote(t.get_current_groups(), round++);
    CHECK(get_table_size<eden::vote_table_type>() == 12);
-   t.alice.act<actions::electmeeting>(
-       "alice"_n, 2, std::vector<eden::encrypted_key>{{}, {}, {}, {}}, eosio::bytes{});
+   t.alice.act<actions::electmeeting>("alice"_n, 2,
+                                      std::vector<eden::encrypted_key>{{}, {}, {}, {}},
+                                      eosio::bytes{}, std::nullopt);
    t.generic_group_vote(t.get_current_groups(), round++);
    CHECK(get_table_size<eden::vote_table_type>() == 3);
    t.electseed(eosio::time_point_sec(0x5f010070));

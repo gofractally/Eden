@@ -36,7 +36,8 @@ namespace eden
    void eden::inductmeeting(eosio::name account,
                             uint64_t id,
                             const std::vector<encrypted_key>& keys,
-                            const eosio::bytes& data)
+                            const eosio::bytes& data,
+                            const std::optional<eosio::bytes>& old_data)
    {
       require_auth(account);
       globals{get_self()}.check_active();
@@ -48,7 +49,7 @@ namespace eden
       participants.push_back(inductions.get_induction(id).invitee());
       members.check_keys(participants, keys);
       encrypt encrypt{get_self(), "induction"_n};
-      encrypt.set(id, keys, data);
+      encrypt.set(id, keys, data, old_data);
    }
 
    void eden::inductprofil(uint64_t id, new_member_profile new_member_profile)

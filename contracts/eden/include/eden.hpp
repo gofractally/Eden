@@ -83,7 +83,8 @@ namespace eden
       void inductmeeting(eosio::name account,
                          uint64_t id,
                          const std::vector<encrypted_key>& keys,
-                         const eosio::bytes& data);
+                         const eosio::bytes& data,
+                         const std::optional<eosio::bytes>& old_data);
 
       void inducted(eosio::name inductee);
 
@@ -104,7 +105,8 @@ namespace eden
       void electmeeting(eosio::name account,
                         uint8_t round,
                         const std::vector<encrypted_key>& keys,
-                        const eosio::bytes& data);
+                        const eosio::bytes& data,
+                        const std::optional<eosio::bytes>& old_data);
       void electvote(uint8_t round, eosio::name voter, eosio::name candidate);
       void electprocess(uint32_t max_steps);
 
@@ -184,7 +186,7 @@ namespace eden
               invitee,
               witnesses,
               ricardian_contract(inductinit_ricardian)),
-       action(inductmeeting, id, keys, data),
+       action(inductmeeting, id, keys, data, old_data),
        action(inductprofil, id, new_member_profile, ricardian_contract(inductprofil_ricardian)),
        action(inductvideo, account, id, video, ricardian_contract(inductvideo_ricardian)),
        action(inductendors,
@@ -198,7 +200,7 @@ namespace eden
        action(electdonate, payer, quantity),
        action(electopt, member, participating),
        action(electseed, btc_header),
-       action(electmeeting, account, round, keys, data),
+       action(electmeeting, account, round, keys, data, old_data),
        action(electvote, round, voter, candidate),
        action(electprocess, max_steps),
        action(bylawspropose, proposer, bylaws),

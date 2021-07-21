@@ -45,7 +45,10 @@ namespace eden
 
      public:
       encrypt(eosio::name contract, eosio::name scope);
-      void set(uint64_t id, const std::vector<encrypted_key>& keys, const eosio::bytes& data);
+      void set(uint64_t id,
+               const std::vector<encrypted_key>& keys,
+               const eosio::bytes& data,
+               const std::optional<eosio::bytes>& old_data);
       void erase(uint64_t id);
       void clear_all();
    };

@@ -78,7 +78,8 @@ namespace eden
    void eden::electmeeting(eosio::name account,
                            uint8_t round,
                            const std::vector<encrypted_key>& keys,
-                           const eosio::bytes& data)
+                           const eosio::bytes& data,
+                           const std::optional<eosio::bytes>& old_data)
    {
       eosio::require_auth(account);
       members members{get_self()};
@@ -86,7 +87,7 @@ namespace eden
       auto group_id = elections.get_group_id(account, round);
       members.check_keys(elections.get_group_members(group_id), keys);
       encrypt encrypt{get_self(), "election"_n};
-      encrypt.set(group_id, keys, data);
+      encrypt.set(group_id, keys, data, old_data);
    }
 
    void eden::electvote(uint8_t round, eosio::name voter, eosio::name candidate)
