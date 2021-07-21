@@ -29,7 +29,6 @@ namespace eden
    void members::check_keys(const std::vector<eosio::name>& accounts,
                             const std::vector<encrypted_key>& keys)
    {
-      eosio::check(accounts.size() == keys.size(), "Wrong number of encyption keys");
       std::vector<eosio::public_key> actual_keys;
       std::vector<eosio::public_key> expected_keys;
       actual_keys.reserve(keys.size());
@@ -37,9 +36,12 @@ namespace eden
       for (auto account : accounts)
       {
          const auto& member = member_tb.get(account.value);
-         eosio::check(!!member.encryption_key(), "Encryption key not set");
-         expected_keys.push_back(*member.encryption_key());
+         if (member.encryption_key())
+         {
+            expected_keys.push_back(*member.encryption_key());
+         }
       }
+      eosio::check(expected_keys.size() == keys.size(), "Wrong number of encyption keys");
       for (const auto& key : keys)
       {
          actual_keys.push_back(key.recipient_key);
