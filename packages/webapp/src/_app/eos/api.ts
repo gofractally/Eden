@@ -9,6 +9,8 @@ export const CONTRACT_GLOBAL_TABLE = "global";
 export const CONTRACT_MEMBER_TABLE = "member";
 export const CONTRACT_MEMBERSTATS_TABLE = "memberstats";
 export const CONTRACT_ACCOUNT_TABLE = "account";
+export const CONTRACT_ELECTION_STATE_TABLE = "elect.state";
+export const CONTRACT_CURRENT_ELECTION_TABLE = "elect.curr";
 export const CONTRACT_INDUCTION_TABLE = "induction";
 export const CONTRACT_ENDORSEMENT_TABLE = "endorsement";
 

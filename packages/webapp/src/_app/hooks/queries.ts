@@ -5,9 +5,9 @@ import {
     getEdenMember,
     getMember,
     getMembers,
-    getMembersStats,
     getTreasuryStats,
     getNewMembers,
+    getMembersStats,
 } from "members";
 import { getIsCommunityActive } from "_app/api";
 
@@ -19,15 +19,35 @@ import {
     getInductions,
     getInductionWithEndorsements,
 } from "inductions/api";
+import { getHeadDelegate } from "delegates/api";
+import {
+    getCurrentElection,
+    getElectionState,
+} from "elections/api/eden-contract";
 
-export const queryTreasuryStats = {
-    queryKey: "query_treasury_stats",
-    queryFn: getTreasuryStats,
+export const queryHeadDelegate = {
+    queryKey: "query_head_delegate",
+    queryFn: getHeadDelegate,
+};
+
+export const queryCurrentElection = {
+    queryKey: "query_current_election",
+    queryFn: getCurrentElection,
 };
 
 export const queryMembersStats = {
     queryKey: "query_member_stats",
     queryFn: getMembersStats,
+};
+
+export const queryElectionState = {
+    queryKey: "query_election_state",
+    queryFn: getElectionState,
+};
+
+export const queryTreasuryStats = {
+    queryKey: "query_treasury_stats",
+    queryFn: getTreasuryStats,
 };
 
 export const queryIsCommunityActive = {

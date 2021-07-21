@@ -10,6 +10,10 @@ export interface MemberData {
     attributions: string;
     socialHandles: EdenNftSocialHandles;
     inductionVideo: string;
+    status?: number; // TODO: remove these question marks if possible
+    election_participation_status?: number;
+    election_rank?: number;
+    representative?: string;
     createdAt: number;
     auctionData?: MemberAuctionData;
     assetData?: AssetData;
@@ -44,4 +48,5 @@ export interface MemberStats {
     active_members: number;
     pending_members: number;
     completed_waiting_inductions: number;
+    ranks: any[];
 }

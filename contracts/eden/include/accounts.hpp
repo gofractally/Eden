@@ -61,6 +61,7 @@ namespace eden
       {
       }
 
+      void init();
       std::optional<account> get_account(eosio::name owner);
       void add_balance(eosio::name owner, const eosio::asset& quantity);
       void sub_balance(eosio::name owner, const eosio::asset& quantity);

@@ -48,8 +48,6 @@ namespace eden
 
    struct induction
    {
-      induction() = default;
-      induction(const induction&) = delete;
       induction_variant value;
       EDEN_FORWARD_MEMBERS(value,
                            id,

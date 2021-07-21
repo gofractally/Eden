@@ -13,7 +13,7 @@ import {
     queryMembers,
     queryNewMembers,
 } from "_app";
-import { MembersGrid } from "members";
+import { MemberChip, MembersGrid } from "members";
 
 const MEMBERS_PAGE_SIZE = 18;
 const NEW_MEMBERS_PAGE_SIZE = 12;
@@ -104,7 +104,14 @@ export const MembersPage = (props: Props) => {
                         <MembersGrid
                             members={newMembers.data}
                             dataTestId="new-members-grid"
-                        />
+                        >
+                            {(member) => (
+                                <MemberChip
+                                    key={member.account}
+                                    member={member}
+                                />
+                            )}
+                        </MembersGrid>
                     </div>
                     <Container>
                         <PaginationNav
@@ -128,7 +135,14 @@ export const MembersPage = (props: Props) => {
                         <MembersGrid
                             members={members.data}
                             dataTestId="members-grid"
-                        />
+                        >
+                            {(member) => (
+                                <MemberChip
+                                    key={member.account}
+                                    member={member}
+                                />
+                            )}
+                        </MembersGrid>
                     </div>
                     <Container>
                         <PaginationNav
