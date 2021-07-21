@@ -7,9 +7,15 @@ import {
     queryCurrentElection,
     queryElectionState,
     queryHeadDelegate,
+    queryMembers,
+    queryVoteData,
     RawLayout,
     Text,
+    useCurrentMember,
+    useUALAccount,
 } from "_app";
+import { MemberData } from "members";
+import { getMemberRecordFromName } from "delegates/api";
 
 export const getServerSideProps: GetServerSideProps = async ({ query }) => {
     const queryClient = new QueryClient();
@@ -26,12 +32,22 @@ interface Props {
 }
 
 export const ElectionPage = (props: Props) => {
+    const [ualAccount] = useUALAccount();
+    const accountName = ualAccount?.accountName;
+    const { data: currentMember } = useCurrentMember();
+
     const {
         isError: isLeadRepresentativeDataFetchError,
         data: lead_representative,
     } = useQuery({
         ...queryHeadDelegate,
         keepPreviousData: true,
+    });
+
+    const { isError: isVoteDataFetchError, data: voteData } = useQuery({
+        ...queryVoteData(accountName),
+        keepPreviousData: true,
+        enabled: !!accountName,
     });
 
     const {
@@ -50,6 +66,14 @@ export const ElectionPage = (props: Props) => {
         keepPreviousData: true,
     });
 
+    // TODO: DRY this up
+    const MEMBERS_PAGE_SIZE = 18;
+
+    const { data: members } = useQuery({
+        ...queryMembers(1, MEMBERS_PAGE_SIZE),
+        keepPreviousData: true,
+    });
+
     if (isElectionStateDataFetchError) {
         return (
             <Text className="text-red-500">
@@ -64,6 +88,47 @@ export const ElectionPage = (props: Props) => {
             currentElection.election_seeder.end_time) ||
             currentElection.start_time);
 
+    console.info("ElectionPage.currentElection:");
+    console.info(currentElection);
+
+    const loggedInMemberName = currentMember?.name || accountName;
+    const loggedInMember: MemberData | undefined =
+        members &&
+        loggedInMemberName &&
+        getMemberRecordFromName(members, loggedInMemberName);
+    console.info("loggedInMember:");
+    console.info(loggedInMember);
+    console.info("election_participation_status:");
+    console.info(loggedInMember?.election_participation_status);
+
+    const RSVPStatus = [
+        "no_donation",
+        "in_election",
+        "not_in_election",
+        "recently_inducted",
+    ];
+    const getMemberGroupFromIndex = (idx: number) => {
+        const totalParticipants = currentElection.config.num_participants;
+        const numGroups = currentElection.config.num_groups;
+        const maxGroupSize = (totalParticipants + numGroups - 1) / numGroups;
+        const numShortGroups = maxGroupSize * numGroups - totalParticipants;
+        const numLargeGroups = numGroups - numShortGroups;
+        const minGroupSize = maxGroupSize - 1;
+        const totalMembersInLargeGroups = (minGroupSize + 1) * numLargeGroups;
+        if (idx < totalMembersInLargeGroups) {
+            return idx / (minGroupSize + 1);
+        } else {
+            return (
+                (idx - totalMembersInLargeGroups) / minGroupSize +
+                numLargeGroups
+            );
+        }
+    };
+    const groupIndex = 5;
+
+    if (!currentElection || !voteData) {
+        return <Text size="lg">Fetching Data...</Text>;
+    }
     return (
         <RawLayout title="Election">
             <Text size="sm" className="mb-8">
@@ -73,11 +138,112 @@ export const ElectionPage = (props: Props) => {
             <Text size="lg" className="bg-gray-200">
                 Current Election
             </Text>
+            <div>
+                <Text size="lg" className="mb-4 mt-4">
+                    Election Start Date/Time
+                </Text>
+                <div>
+                    <Text
+                        size="lg"
+                        className="mt-4"
+                    >{`Case 1: >24 hours prior (Upcoming Election):`}</Text>
+                    <Text size="sm">
+                        Date of Next Election (currentElection.start_time):
+                    </Text>
+                    <pre>[{electionStartDateTime}]</pre>
+                </div>
+                <div>
+                    <Text size="lg" className="mt-4">
+                        {`Case 2: <24 hours prior (Upcoming Election):`}
+                    </Text>
+                    <Text size="sm">
+                        Date of Next Election
+                        (currentElection.election_seeder.end_time):
+                    </Text>
+                    <pre>[{electionStartDateTime}]</pre>
+                </div>
+                <div>
+                    <Text size="lg" className="mt-4">
+                        {`Case 3 (else): Election in Progress:`}
+                    </Text>
+                    <Text size="sm">
+                        Date of Next Election
+                        (currentElection.election_seeder.end_time):
+                    </Text>
+                    <pre>[{electionStartDateTime}]</pre>
+                </div>
+            </div>
+            <div>
+                <Text size="lg" className="mt-8">
+                    About Previous (completed) Election:
+                </Text>
+                <Text size="sm">Head Chief Delegate:</Text>
+                <pre>[{lead_representative}]</pre>
+                <Text size="sm">Chief Delegates:</Text>
+                <pre>[{electionState && electionState.board}]</pre>
+            </div>
+            <div>
+                <Text size="lg" className="mt-8">
+                    RSVP Status
+                </Text>
+                <Text size="sm">
+                    {`default is recently_inducted, unless there's >30 days to next election, in which case it's no_donation`}
+                </Text>
+                <Text size="sm">
+                    {`after election, everyone is reset to no_donation`}
+                </Text>
+                <pre>
+                    [
+                    {loggedInMember?.election_participation_status !== undefined
+                        ? RSVPStatus[
+                              loggedInMember?.election_participation_status
+                          ]
+                        : "<error>"}
+                    ]
+                </pre>
+            </div>
+            <div>
+                <Text size="lg" className="mt-8">
+                    Upcoming groups and participants
+                </Text>
+                <Text size="sm">
+                    {`Who voted for whom is *only* available during the active round. That info is *not* stored long-term in tables. We'll need a history solution to look at the history of who voted for whom.`}
+                </Text>
+                <Text size="sm">
+                    {`And... vote info will only be available while the property 'electionState' is 'active'. NOTE: this 'active' field is the underlying variant type. It's meta info... the first field in the array-encoding we get back for table rows. See code for details if interested; or be thankful you don't need to know more than this note... :)`}
+                </Text>
+                Is there leaderboard / voting info available right now? ie. is
+                electionState 'active'?
+                <pre>[{currentElection.electionState}]</pre>
+                <pre>{`Your current group index:${groupIndex}`}</pre>
+                <pre>{`Your group assignment is ${getMemberGroupFromIndex(
+                    groupIndex
+                )}`}</pre>
+                <pre>
+                    If active, here are the participants in your next round:
+                </pre>
+                <pre>
+                    [
+                    {currentElection.electionState === "active" &&
+                        `<participants go here>`}
+                    ]
+                </pre>
+            </div>
+
+            <Text size="lg" className="bg-gray-200 mt-16">
+                Original
+            </Text>
             <div className="grid grid-cols-2">
                 <div>
                     <Text size="lg" className="mb-4">
                         -- Raw Table Data --
                     </Text>
+                    <div>
+                        <Text size="lg" className="mt-4">
+                            Vote Data
+                        </Text>
+                        <pre>{JSON.stringify(voteData, null, 2)}</pre>
+                    </div>
                     <div>
                         <Text size="lg" className="mt-4">
                             Current Election
@@ -91,55 +257,6 @@ export const ElectionPage = (props: Props) => {
                         <pre>
                             {JSON.stringify(electionState || {}, null, 2)}
                         </pre>
-                    </div>
-                </div>
-                <div>
-                    <Text size="lg" className="mb-4">
-                        -- specific fields I know we'll need --
-                    </Text>
-                    <div>
-                        <Text
-                            size="lg"
-                            className="mt-4"
-                        >{`Case 1: >24 hours prior (Upcoming Election):`}</Text>
-                        <Text size="sm">
-                            Date of Next Election (currentElection.start_time):
-                        </Text>
-                        <pre>[{electionStartDateTime}]</pre>
-                    </div>
-                    <div>
-                        <Text size="lg" className="mt-4">
-                            {`Case 2: <24 hours prior (Upcoming Election):`}
-                        </Text>
-                        <Text size="sm">
-                            Date of Next Election
-                            (currentElection.election_seeder.end_time):
-                        </Text>
-                        <pre>[{electionStartDateTime}]</pre>
-                    </div>
-                    <div>
-                        <Text size="lg" className="mt-4">
-                            {`Case 3 (else): Election in Progress:`}
-                        </Text>
-                        <Text size="sm">
-                            Date of Next Election
-                            (currentElection.election_seeder.end_time):
-                        </Text>
-                        <pre>[{electionStartDateTime}]</pre>
-                    </div>
-                    <div>
-                        <Text size="lg" className="mt-4">
-                            About Previous (completed) Election:
-                        </Text>
-                        <Text size="sm">
-                            Note: you'll need this to start the search of "My
-                            Delegation"; this is the only global reference point
-                            into the Delegates
-                        </Text>
-                        <Text size="sm">Head Chief Delegate:</Text>
-                        <pre>[{lead_representative}]</pre>
-                        <Text size="sm">Chief Delegates:</Text>
-                        <pre>[{electionState && electionState.board}]</pre>
                     </div>
                 </div>
             </div>
