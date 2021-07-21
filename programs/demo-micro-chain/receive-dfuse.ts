@@ -17,7 +17,8 @@ const jsonTrxFile =
 const dfuseApiKey = process.env.DFUSE_API_KEY || "";
 const dfuseApiNetwork =
     process.env.DFUSE_API_NETWORK || "eos.dfuse.eosnation.io";
-const dfuseAuthNetwork = process.env.DFUSE_AUTH_NETWORK || "auth.eosnation.io";
+const dfuseAuthNetwork =
+    process.env.DFUSE_AUTH_NETWORK || "https://auth.eosnation.io";
 
 const edenContractAccount =
     process.env.NEXT_PUBLIC_EDEN_CONTRACT_ACCOUNT || "genesis.eden";
@@ -28,20 +29,24 @@ const atomicMarketContractAccount =
     process.env.NEXT_PUBLIC_AA_MARKET_CONTRACT || "atomicmarket";
 
 const query = `
-subscription ($query: String!, $cursor: String, $limit: Int64, $low: Int64, $high: Int64, $irrev: Boolean) {
-    searchTransactionsForward(query: $query, lowBlockNum: $low, highBlockNum: $high, limit: $limit, cursor: $cursor, irreversibleOnly: $irrev) {
+subscription ($query: String!, $cursor: String, $limit: Int64, $low: Int64,
+              $high: Int64, $irrev: Boolean, $interval: Uint32) {
+    searchTransactionsForward(
+                query: $query, lowBlockNum: $low, highBlockNum: $high,
+                limit: $limit, cursor: $cursor, irreversibleOnly: $irrev,
+                liveMarkerInterval: $interval) {
         undo
         cursor
         irreversibleBlockNum
+        block {
+            num
+            id
+            timestamp
+            previous
+        }
         trace {
             id
             status
-            block {
-                num
-                id
-                timestamp
-                previous
-            }
             matchingActions {
                 seq
                 receiver
@@ -67,11 +72,18 @@ const variables = {
     low: 183_349_905,
     limit: 0,
     irrev: false,
+    interval: 1,
 };
 
 interface JsonTrx {
     undo: boolean;
     cursor: string;
+    block: {
+        num: number;
+        id: string;
+        timestamp: string;
+        previous: string;
+    };
     trace: any;
 }
 
@@ -112,16 +124,26 @@ async function main(): Promise<void> {
             stream: Stream
         ): void => {
             if (message.type === "data") {
-                const trx = message.data.searchTransactionsForward;
-                console.log(trx.undo, trx.trace.block.num, trx.trace.id);
-                jsonTransactions.push(trx);
-                if (jsonTransactions.length - numSaved > 10) {
-                    console.log("save...", jsonTransactions.length);
-                    writeFileSync(
-                        jsonTrxFile,
-                        JSON.stringify(jsonTransactions)
-                    );
-                    numSaved = jsonTransactions.length;
+                const trx: JsonTrx = message.data.searchTransactionsForward;
+                const prev =
+                    jsonTransactions.length > 0
+                        ? jsonTransactions[jsonTransactions.length - 1]
+                        : null;
+                console.log(
+                    trx.undo,
+                    trx.block.num,
+                    trx.trace ? trx.trace.id : null
+                );
+                if (trx.trace || (prev && prev.trace)) {
+                    jsonTransactions.push(trx);
+                    if (jsonTransactions.length - numSaved > 10 || !trx.trace) {
+                        console.log("save...", jsonTransactions.length);
+                        writeFileSync(
+                            jsonTrxFile,
+                            JSON.stringify(jsonTransactions)
+                        );
+                        numSaved = jsonTransactions.length;
+                    }
                 }
                 stream.mark({
                     cursor: trx.cursor,
