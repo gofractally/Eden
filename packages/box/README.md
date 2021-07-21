@@ -4,14 +4,14 @@ Box is a utility server to extend Eden App functionalities like uploading, compr
 
 ## Box Settings
 
-When deploying the box you can setup all of the configuration using environment variables. Most of them are self explanatory and can be easily digestable by looking at the `.env` file. Here are some important ones that you must know how to set:
+When deploying the box you can set up all of the configuration using environment variables. Most of them are self explanatory and can be easily digestible by looking at the `.env` file. Here are some important ones that you must know how to set:
 
 -   `EOS_CHAIN_ID`, `EOS_RPC_PROTOCOL`, `EOS_RPC_HOST`, `EOS_RPC_PORT`: This is the configuration related to the EOS Blockchain that the box supports (generally for parsing aciton ABIs and broadcasting transactions).
--   `IPFS_PINATA_JWT`: the box has a file upload endpoint that receives a file and upload to IPFS using Pinata API. Set here your Pinata JWT that has permission to `pinFileToIPFS`
+-   `IPFS_PINATA_JWT`: the box has a file upload endpoint that receives a file and upload to IPFS using Pinata API. Set here your Pinata JWT that has permission to `pinFileToIPFS`.
 
 ### Supported Eden Actions Upload
 
-The way that the box accept or reject an uploaded file is by extracting the file IPFS CID from the relevant transaction field and checking if the uploaded file hash matches. Then the transaction is broadcasted and if successful, the file is Pinned to IPFS.
+The way that the box accept or reject an uploaded file is by extracting the file IPFS CID from the relevant transaction field and checking if the uploaded file hash matches. Then the transaction is broadcast and if successful, the file is pinned to IPFS.
 
 This way we validate that only relevant files from valid signed Eden transactions are pinned.
 

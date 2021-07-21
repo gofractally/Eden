@@ -2,6 +2,7 @@ export * from "./button";
 export * from "./container";
 export * from "./heading";
 export * from "./form";
+export * from "./generic-member-chip";
 export * from "./help-link";
 export * from "./link";
 export * from "./opens-in-new-tab-icon";

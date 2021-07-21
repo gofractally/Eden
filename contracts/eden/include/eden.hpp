@@ -10,6 +10,19 @@
 #include <string>
 #include <vector>
 
+#ifdef ENABLE_SET_TABLE_ROWS
+#include <accounts.hpp>
+#include <auctions.hpp>
+#include <boost/mp11/list.hpp>
+#include <bylaws.hpp>
+#include <distributions.hpp>
+#include <elections.hpp>
+#include <globals.hpp>
+#include <inductions.hpp>
+#include <members.hpp>
+#include <migrations.hpp>
+#endif
+
 namespace eden
 {
    // Ricardian contracts live in eden-ricardian.cpp
@@ -26,6 +39,24 @@ namespace eden
    extern const char* inducted_ricardian;
    extern const char* peacetreaty_clause;
    extern const char* bylaws_clause;
+
+#ifdef ENABLE_SET_TABLE_ROWS
+   using table_variant = boost::mp11::mp_append<account_variant,
+                                                auction_variant,
+                                                bylaws_variant,
+                                                distribution_account_variant,
+                                                distribution_variant,
+                                                endorsement_variant,
+                                                current_election_state,
+                                                election_state_variant,
+                                                global_variant,
+                                                induction_variant,
+                                                member_variant,
+                                                member_stats_variant,
+                                                migration_variant,
+                                                pool_variant,
+                                                std::variant<vote>>;
+#endif
 
    class eden : public eosio::contract
    {
@@ -135,6 +166,10 @@ namespace eden
       // For testing only.
       void unmigrate();
 
+#ifdef ENABLE_SET_TABLE_ROWS
+      void settablerows(eosio::name scope, const std::vector<table_variant>&);
+#endif
+
       void notify_lognewtempl(int32_t template_id,
                               eosio::name authorized_creator,
                               eosio::name collection_name,
@@ -214,6 +249,9 @@ namespace eden
        action(gc, limit, ricardian_contract(gc_ricardian)),
        action(migrate, limit),
        action(unmigrate),
+#ifdef ENABLE_SET_TABLE_ROWS
+       action(settablerows, scope, rows),
+#endif
        notify(token_contract, transfer),
        notify(atomic_assets_account, lognewtempl),
        notify(atomic_assets_account, logmint))

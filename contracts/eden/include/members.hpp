@@ -60,7 +60,6 @@ namespace eden
 
    struct member
    {
-      member() = default;
       member_variant value;
       EDEN_FORWARD_MEMBERS(value,
                            account,

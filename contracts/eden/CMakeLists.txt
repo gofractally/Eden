@@ -1,6 +1,12 @@
 configure_file(include/_config.hpp.in ${CMAKE_BINARY_DIR}/generated/config.hpp)
 include_directories(${CMAKE_BINARY_DIR}/generated/)
 
+set(extra-sources)
+set(EDEN_ENABLE_SET_TABLE_ROWS "no" CACHE BOOL "Enable the settablerows action")
+if(EDEN_ENABLE_SET_TABLE_ROWS)
+  add_definitions(-DENABLE_SET_TABLE_ROWS)
+endif()
+
 add_executable(eden
    src/actions/accounts.cpp
    src/actions/genesis.cpp
@@ -10,6 +16,7 @@ add_executable(eden
    src/actions/bylaws.cpp
    src/actions/migrate.cpp
    src/actions/encrypt.cpp
+   src/actions/tables.cpp
    src/eden.cpp
    src/accounts.cpp
    src/globals.cpp

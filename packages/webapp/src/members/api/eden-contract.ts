@@ -9,12 +9,16 @@ import {
 
 import { EdenMember, MemberStats } from "../interfaces";
 import { TreasuryStats } from "../../pages/api/interfaces";
+import { devUseFixtureData } from "config";
+import { fixtureMembersStats } from "delegates/api/fixtures";
 
 export const getEdenMember = (account: string) =>
     getRow<EdenMember>(CONTRACT_MEMBER_TABLE, "account", account);
 
-export const getMembersStats = async () =>
-    getRow<MemberStats>(CONTRACT_MEMBERSTATS_TABLE);
+export const getMembersStats = async () => {
+    if (devUseFixtureData) return Promise.resolve(fixtureMembersStats);
+    return getRow<MemberStats>(CONTRACT_MEMBERSTATS_TABLE);
+};
 
 export const getTreasuryStats = async () => {
     const rows = await getTableRows<TreasuryStats>(CONTRACT_ACCOUNT_TABLE, {

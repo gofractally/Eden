@@ -131,6 +131,8 @@ namespace eden
 
       init_pools(get_self());
 
+      accounts{get_self(), "owned"_n}.init();
+
       elections elections{get_self()};
       elections.set_time(election_day, election_time);
 
