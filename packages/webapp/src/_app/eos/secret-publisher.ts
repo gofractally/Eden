@@ -77,14 +77,14 @@ const ecdhRecipientsKeyEncriptionKeys = async (
     recipientPublicKeys: string[],
     transientPrivateKeyString: string,
     info?: string
-) => {
+): Promise<CryptoKey[]> => {
     const transientPrivateKey = PrivateKey.fromString(
         transientPrivateKeyString
     );
     const transientEc = ec.keyPair({
         priv: new bn(transientPrivateKey.d.toHex(), 16),
     });
-    return await Promise.all(
+    return Promise.all(
         recipientPublicKeys.map(async (publicKey: string) => {
             const recipientEcPublicKey = ec.keyFromPublic(
                 PublicKey.fromString(publicKey).toHex(),
@@ -101,7 +101,10 @@ const ecdhRecipientsKeyEncriptionKeys = async (
     );
 };
 
-const hkdfSha256FromEcdh = async (ecdhSecret: ArrayBuffer, info?: string) => {
+const hkdfSha256FromEcdh = async (
+    ecdhSecret: ArrayBuffer,
+    info?: string
+): Promise<CryptoKey> => {
     const sharedSecretKey = await crypto.subtle.importKey(
         "raw",
         ecdhSecret,
@@ -157,7 +160,7 @@ const encryptSessionKeys = async (sessionKey: CryptoKey, keks: CryptoKey[]) => {
 const encryptMessage = async (
     sessionKey: CryptoKey,
     message: string
-): Uint8Array => {
+): Promise<Uint8Array> => {
     const encodedMessage = new TextEncoder().encode(message);
     const encryptedMessage = await crypto.subtle.encrypt(
         {
