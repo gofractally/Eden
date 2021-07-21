@@ -24,6 +24,7 @@ import { getHeadDelegate, getMyDelegation } from "delegates/api";
 import {
     getCurrentElection,
     getElectionState,
+    getVoteTable,
 } from "elections/api/eden-contract";
 
 export const queryHeadDelegate = {
@@ -37,6 +38,11 @@ export const queryMyDelegation = (
 ) => ({
     queryKey: ["query_my_delegation", members],
     queryFn: () => getMyDelegation(members, loggedInMemberName),
+});
+
+export const queryVoteData = (memberName: string) => ({
+    queryKey: ["query_vote_data", memberName],
+    queryFn: () => getVoteTable(memberName),
 });
 
 export const queryCurrentElection = {
