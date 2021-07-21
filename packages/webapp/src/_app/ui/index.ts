@@ -16,3 +16,5 @@ export * from "./table";
 export * from "./call-to-action";
 export * from "./pagination-nav";
 export * from "./loaders";
+export * from "./profile-image";
+export * from "./delegate-badge";
