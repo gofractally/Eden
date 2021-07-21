@@ -80,11 +80,11 @@ namespace eden
       void inductdonate(eosio::name payer, uint64_t id, const eosio::asset& quantity);
 
       void inductcancel(eosio::name account, uint64_t id);
-      void inductmeeting(eosio::name account,
-                         uint64_t id,
-                         const std::vector<encrypted_key>& keys,
-                         const eosio::bytes& data,
-                         const std::optional<eosio::bytes>& old_data);
+      void inductmeetin(eosio::name account,
+                        uint64_t id,
+                        const std::vector<encrypted_key>& keys,
+                        const eosio::bytes& data,
+                        const std::optional<eosio::bytes>& old_data);
 
       void inducted(eosio::name inductee);
 
@@ -186,7 +186,7 @@ namespace eden
               invitee,
               witnesses,
               ricardian_contract(inductinit_ricardian)),
-       action(inductmeeting, id, keys, data, old_data),
+       action(inductmeetin, id, keys, data, old_data),
        action(inductprofil, id, new_member_profile, ricardian_contract(inductprofil_ricardian)),
        action(inductvideo, account, id, video, ricardian_contract(inductvideo_ricardian)),
        action(inductendors,

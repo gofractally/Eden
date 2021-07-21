@@ -33,11 +33,11 @@ namespace eden
       inductions{get_self()}.initialize_induction(id, inviter, invitee, witnesses);
    }
 
-   void eden::inductmeeting(eosio::name account,
-                            uint64_t id,
-                            const std::vector<encrypted_key>& keys,
-                            const eosio::bytes& data,
-                            const std::optional<eosio::bytes>& old_data)
+   void eden::inductmeetin(eosio::name account,
+                           uint64_t id,
+                           const std::vector<encrypted_key>& keys,
+                           const eosio::bytes& data,
+                           const std::optional<eosio::bytes>& old_data)
    {
       require_auth(account);
       globals{get_self()}.check_active();
