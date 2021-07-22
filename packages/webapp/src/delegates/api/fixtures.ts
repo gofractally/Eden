@@ -1,15 +1,17 @@
 import { MemberData, MemberStats } from "members";
+import { ElectionParticipationStatus, MemberStatus } from "_app";
 
 export const fixtureMembersStats: MemberStats = {
-    active_members: 4,
+    active_members: 5,
     pending_members: 0,
     completed_waiting_inductions: 0,
-    ranks: [1, 4, 1],
+    // # representatives at each level, in order of Delegate Levels (bottom up),
+    // ie. 5 members who never became delegates (idx=0), 2 Chief Delegates (idx=1), Head Chief (idx=2);
+    ranks: [5, 2, 1],
 };
 
 export const fixtureMembers: MemberData[] = [
     {
-        // a Chief Delegate
         templateId: 84431,
         createdAt: 1621635292500,
         name: "Eden Member 12",
@@ -25,8 +27,8 @@ export const fixtureMembers: MemberData[] = [
             telegram: "brandonfancher",
             blog: "brandonfancher.com",
         },
-        status: 1, //active
-        election_participation_status: 0, // no_donation is kinda the default if other special cases don't apply
+        status: MemberStatus.ActiveMember, // active
+        election_participation_status: ElectionParticipationStatus.NoDonation, // See ElectionParticipationStatus for enum values; NoDonation is kinda the default if other special cases don't apply
         election_rank: 1,
         representative: "edenmember13", // "parent" field
     },
@@ -47,10 +49,10 @@ export const fixtureMembers: MemberData[] = [
             facebook: "test",
             blog: "test.com",
         },
-        status: 1, //active
-        election_participation_status: 0, // no_donation is kinda the default if other special cases don't apply
+        status: MemberStatus.ActiveMember,
+        election_participation_status: ElectionParticipationStatus.NoDonation,
         election_rank: 3,
-        representative: "edenmember11", // "parent" field
+        representative: "edenmember11",
     },
     {
         templateId: 84545,
@@ -67,10 +69,10 @@ export const fixtureMembers: MemberData[] = [
             telegram: "test",
             blog: "test.com",
         },
-        status: 1, //active
-        election_participation_status: 0, // no_donation is kinda the default if other special cases don't apply
+        status: MemberStatus.ActiveMember,
+        election_participation_status: ElectionParticipationStatus.NoDonation,
         election_rank: 2,
-        representative: "edenmember11", // "parent" field
+        representative: "edenmember11",
     },
     {
         templateId: 140784,
@@ -87,10 +89,10 @@ export const fixtureMembers: MemberData[] = [
             twitter: "boom",
             telegram: "boom",
         },
-        status: 1, //active
-        election_participation_status: 0, // no_donation is kinda the default if other special cases don't apply
+        status: MemberStatus.ActiveMember,
+        election_participation_status: ElectionParticipationStatus.NoDonation,
         election_rank: 1,
-        representative: "edenmember13", // "parent" field
+        representative: "edenmember13",
     },
     {
         templateId: 140785,
@@ -107,9 +109,9 @@ export const fixtureMembers: MemberData[] = [
             twitter: "pip",
             telegram: "pip",
         },
-        status: 1, //active
-        election_participation_status: 0, // no_donation is kinda the default if other special cases don't apply
+        status: MemberStatus.ActiveMember,
+        election_participation_status: ElectionParticipationStatus.NoDonation,
         election_rank: 1,
-        representative: "edenmember13", // "parent" field
+        representative: "edenmember13",
     },
 ];

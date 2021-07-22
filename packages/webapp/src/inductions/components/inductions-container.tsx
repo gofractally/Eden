@@ -6,8 +6,9 @@ import {
     useIsCommunityActive,
     LoadingCard,
     queryCurrentInductions,
+    MemberStatus,
 } from "_app";
-import { EdenMember, MemberStatus } from "members";
+import { EdenMember } from "members";
 
 import { Endorsement } from "../interfaces";
 import { PendingInductions } from "./pending-inductions";

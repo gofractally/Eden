@@ -2,12 +2,12 @@ import React from "react";
 import {
     CallToAction,
     Card,
+    MemberStatus,
     SingleColLayout,
     useCurrentMember,
     useUALAccount,
 } from "_app";
 import { GetAnInviteCTA, InductionInviteFormContainer } from "inductions";
-import { MemberStatus } from "members";
 
 export const InitInductionPage = () => {
     const [ualAccount, _, ualShowModal] = useUALAccount();
