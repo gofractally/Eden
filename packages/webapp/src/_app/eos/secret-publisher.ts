@@ -8,6 +8,7 @@ export const publishSecretToChain = async (
     recipientAccounts: string[],
     info?: string
 ) => {
+    console.info("encrypting message", message);
     const [publisherKey, ...recipientKeys] = await fetchRecipientKeys([
         publisherAccount,
         ...recipientAccounts,
@@ -27,7 +28,7 @@ export const publishSecretToChain = async (
     console.info(keks);
 
     const sessionKey = await generateRandomSessionKey();
-    console.info(sessionKey);
+    console.info("session key", sessionKey);
 
     const encryptedSessionKeys = await encryptSessionKeys(sessionKey, keks);
     console.info(encryptedSessionKeys);
@@ -44,40 +45,52 @@ export const publishSecretToChain = async (
     //   )
     console.info({
         encryptedSessionKeys,
+        publisherKey,
         recipientKeys,
         transientKeyPair,
         encryptedMessage,
     });
 
+    // TODO: remove this test
+    console.info("testing decryption...");
+    await decryptPublishedMessage(
+        encryptedMessage,
+        publisherKey,
+        transientKeyPair.publicKey.toString(),
+        encryptedSessionKeys[0],
+        info
+    );
+
     return {};
 };
 
-export const decryptMessage = async (
+export const decryptPublishedMessage = async (
     encryptedMessage: Uint8Array,
-    recipientAccount: string,
     recipientPublicKey: string,
     transientPublicKey: string,
-    encryptedSessionKey: Uint8Array
+    encryptedSessionKey: Uint8Array,
+    info?: string
 ) => {
-    const recipientPrivateKey = retrieveKeyPair(recipientPublicKey);
+    const recipientPrivateKey = retrieveRecipientPrivateKey(recipientPublicKey);
     const ecdhSecret = deriveEcdhSecret(
-        recipientPrivateKey.privateKey,
+        recipientPrivateKey,
         PublicKey.fromString(transientPublicKey)
     );
-    const hkdfKey = await hkdfSha256FromEcdh(ecdhSecret);
-    // const sessionKey = unwrapSessionKey(encryptedSessionKey, hkdfKey);
-    console.info(hkdfKey);
+    console.info("ecdh secret is ", ecdhSecret);
+    const hkdfKey = await hkdfSha256FromEcdh(ecdhSecret, info);
+    console.info("hkdf key to unwrap is", hkdfKey);
+    const sessionKey = await unwrapSessionKey(encryptedSessionKey, hkdfKey);
+    console.info("unwrapped session key!", sessionKey);
+    const message = await decryptMessage(sessionKey, encryptedMessage);
+    console.info("decrypted message:", message);
+    return message;
 };
 
-const retrieveKeyPair = (publicKey: string) => {
+const retrieveRecipientPrivateKey = (publicKey: string): PrivateKey => {
     // TODO: find the corresponding private key in the localstorage, or else throw
     console.info("retrieving publicKey...");
     const rawPrivateKey = "5KcMypBPGByXbeBphsVzyyzUvg31tWNKsgrfXs2MmanYgYf4gao";
-    const privateKey = PrivateKey.fromString(rawPrivateKey);
-    return {
-        privateKey,
-        publicKey: privateKey.getPublicKey(),
-    };
+    return PrivateKey.fromString(rawPrivateKey);
 };
 
 const fetchRecipientKeys = async (accounts: string[]) => {
@@ -178,17 +191,6 @@ const encryptSessionKeys = async (sessionKey: CryptoKey, keks: CryptoKey[]) => {
     );
 };
 
-// const unwrapSessionKey = async (sessionKey: Uint8Array, hkdfKey: CryptoKey) => {
-//     const unwrappedKey = await crypto.subtle.unwrapKey(
-//         "raw",
-//         sessionKey,
-//         kek,
-//         "AES-KW"
-//     );
-//     console.info(unwrappedKey);
-//     return new Uint8Array(wrappedKey);
-// };
-
 const encryptMessage = async (
     sessionKey: CryptoKey,
     message: string
@@ -203,4 +205,35 @@ const encryptMessage = async (
         encodedMessage
     );
     return new Uint8Array(encryptedMessage);
+};
+
+const unwrapSessionKey = async (
+    sessionKey: Uint8Array,
+    hkdfKey: CryptoKey
+): Promise<CryptoKey> => {
+    return crypto.subtle.unwrapKey(
+        "raw",
+        sessionKey,
+        hkdfKey,
+        "AES-KW",
+        { name: "AES-GCM", length: 128 },
+        false,
+        ["decrypt"]
+    );
+};
+
+const decryptMessage = async (
+    sessionKey: CryptoKey,
+    encryptedMessage: Uint8Array
+): Promise<String> => {
+    const encodedMessage = await crypto.subtle.decrypt(
+        {
+            name: "AES-GCM",
+            iv: new Uint8Array([0]),
+        },
+        sessionKey,
+        encryptedMessage
+    );
+    const decodedMessage = new TextDecoder().decode(encodedMessage);
+    return decodedMessage;
 };
