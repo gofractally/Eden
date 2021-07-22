@@ -18,7 +18,7 @@ module.exports = {
             { from: 'index.html' },
             { from: 'node_modules/graphiql/graphiql.min.css' },
             { from: '../../build/demo-micro-chain.wasm' },
-            { from: '../../build/state' },
+            { from: 'state' },
          ],
       }),
    ],

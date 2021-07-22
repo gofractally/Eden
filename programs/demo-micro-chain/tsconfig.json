@@ -1,16 +1,11 @@
 {
    "compilerOptions": {
-      "module": "ES2020",
-      "target": "ES2020",
-      "moduleResolution": "node",
-      "allowSyntheticDefaultImports": true,
-      "esModuleInterop": true,
-      "outDir": "dist",
-      "baseUrl": ".",
-      "paths": {
-         "*": [
-            "node_modules/*"
-         ]
-      }
-   }
+      "target": "es2020",
+      "module": "commonjs",
+      "esModuleInterop": true
+   },
+   "files": [
+      "receive-dfuse.ts",
+      "wrap-wasm.ts"
+   ]
 }

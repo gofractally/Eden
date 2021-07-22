@@ -8,6 +8,7 @@ import { readFileSync, writeFileSync } from "fs";
 import { IncomingMessage } from "http";
 import nodeFetch from "node-fetch";
 import WebSocketClient from "ws";
+import { WrapWasm } from "./wrap-wasm";
 
 // TODO: move constants to config.ts
 
@@ -78,13 +79,26 @@ const variables = {
 interface JsonTrx {
     undo: boolean;
     cursor: string;
+    irreversibleBlockNum: number;
     block: {
         num: number;
         id: string;
         timestamp: string;
         previous: string;
     };
-    trace: any;
+    trace: {
+        id: string;
+        status: string;
+        matchingActions: [
+            {
+                seq: number;
+                receiver: string;
+                account: string;
+                name: string;
+                hexData: string;
+            }
+        ];
+    };
 }
 
 let jsonTransactions: JsonTrx[] = [];
@@ -97,8 +111,47 @@ try {
 if (jsonTransactions.length)
     variables.cursor = jsonTransactions[jsonTransactions.length - 1].cursor;
 
+let wasm: WrapWasm;
+
+let unpushedTransactions: JsonTrx[] = [];
+function pushTrx(trx: JsonTrx) {
+    if (unpushedTransactions.length) {
+        const prev = unpushedTransactions[unpushedTransactions.length - 1];
+        if (trx.undo != prev.undo || trx.block.id != prev.block.id) {
+            if (prev.undo) wasm.undo(prev.block.id);
+            else if (prev.trace) {
+                const block = { ...prev.block, transactions: [] };
+                for (let t of unpushedTransactions) {
+                    block.transactions.push({
+                        id: t.trace.id,
+                        actions: t.trace.matchingActions.map((a) => ({
+                            seq: a.seq,
+                            firstReceiver: a.account,
+                            receiver: a.receiver,
+                            name: a.name,
+                            hexData: a.hexData,
+                        })),
+                    });
+                }
+                wasm.pushJsonBlocks(
+                    JSON.stringify([block]),
+                    prev.irreversibleBlockNum
+                );
+            }
+            unpushedTransactions = [];
+        }
+    }
+    if (trx.trace !== null) unpushedTransactions.push(trx);
+}
+
 async function main(): Promise<void> {
     try {
+        wasm = new WrapWasm();
+        await wasm.instantiate("../../build/demo-micro-chain.wasm");
+        wasm.initializeMemory();
+        for (let trx of jsonTransactions) pushTrx(trx);
+        wasm.saveMemory("state");
+
         const client = createDfuseClient({
             apiKey: dfuseApiKey,
             network: dfuseApiNetwork,
@@ -136,12 +189,14 @@ async function main(): Promise<void> {
                 );
                 if (trx.trace || (prev && prev.trace)) {
                     jsonTransactions.push(trx);
+                    pushTrx(trx);
                     if (jsonTransactions.length - numSaved > 10 || !trx.trace) {
                         console.log("save...", jsonTransactions.length);
                         writeFileSync(
                             jsonTrxFile,
                             JSON.stringify(jsonTransactions)
                         );
+                        wasm.saveMemory("state");
                         numSaved = jsonTransactions.length;
                     }
                 }
