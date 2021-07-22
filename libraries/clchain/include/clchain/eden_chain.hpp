@@ -47,7 +47,7 @@ namespace eden_chain
    {
       eosio::checksum256 id;
    };
-   EOSIO_REFLECT(block_with_id, base block, id)
+   EOSIO_REFLECT(block_with_id, id, base block)
 
    inline const block& deref(const block& block) { return block; }
    inline const block& deref(const std::unique_ptr<block>& block) { return *block; }

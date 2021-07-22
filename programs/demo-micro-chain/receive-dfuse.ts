@@ -9,6 +9,7 @@ import { IncomingMessage } from "http";
 import nodeFetch from "node-fetch";
 import WebSocketClient from "ws";
 import { WrapWasm } from "./wrap-wasm";
+import { performance } from "perf_hooks";
 
 // TODO: move constants to config.ts
 
@@ -133,8 +134,8 @@ function pushTrx(trx: JsonTrx) {
                         })),
                     });
                 }
-                wasm.pushJsonBlocks(
-                    JSON.stringify([block]),
+                wasm.pushJsonBlock(
+                    JSON.stringify(block),
                     prev.irreversibleBlockNum
                 );
             }
@@ -149,8 +150,13 @@ async function main(): Promise<void> {
         wasm = new WrapWasm();
         await wasm.instantiate("../../build/demo-micro-chain.wasm");
         wasm.initializeMemory();
+
+        const begin = performance.now();
+        console.log("pushing blocks...");
         for (let trx of jsonTransactions) pushTrx(trx);
+        console.log(performance.now() - begin, "ms");
         wasm.saveMemory("state");
+        console.log("state saved");
 
         const client = createDfuseClient({
             apiKey: dfuseApiKey,

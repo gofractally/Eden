@@ -23,15 +23,15 @@ function decodeStr(pos, len) {
 async function fetcher(params) {
    console.log(params);
    const utf8 = (new TextEncoder()).encode(params.query);
-   const destAddr = instance.exports.allocate_memory(utf8.length);
+   const destAddr = instance.exports.allocateMemory(utf8.length);
    if (!destAddr)
-      return "allocate_memory failed";
+      return "allocateMemory failed";
    const dest = new Uint8Array(memory.buffer, destAddr, utf8.length);
    for (let i = 0; i < utf8.length; ++i)
       dest[i] = utf8[i];
-   instance.exports.exec_query(destAddr, utf8.length);
-   instance.exports.free_memory(destAddr);
-   return JSON.parse(decodeStr(instance.exports.get_result(), instance.exports.get_result_size()));
+   instance.exports.query(destAddr, utf8.length);
+   instance.exports.freeMemory(destAddr);
+   return JSON.parse(decodeStr(instance.exports.getResult(), instance.exports.getResultSize()));
 }
 
 const defaultQuery = `# GraphiQL is talking to a WASM running in the browser.
@@ -98,7 +98,7 @@ const imports = {
       for (let i = 0; i < state.length; ++i)
          dest[i] = state[i];
 
-      schemaText = decodeStr(instance.exports.get_schema(), instance.exports.get_schema_size());
+      schemaText = decodeStr(instance.exports.getSchema(), instance.exports.getSchemaSize());
       // console.log(schemaText);
       ReactDOM.render(
          <GraphiQL {...{ fetcher, defaultQuery, schema: buildSchema(schemaText) }} />,

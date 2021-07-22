@@ -17,14 +17,23 @@ extern "C" void __wasm_call_ctors();
    __wasm_call_ctors();
 }
 
-[[clang::export_name("allocate_memory")]] void* allocate_memory(uint32_t size)
+[[clang::export_name("allocateMemory")]] void* allocateMemory(uint32_t size)
 {
    return malloc(size);
 }
-
-[[clang::export_name("free_memory")]] void free_memory(void* p)
+[[clang::export_name("freeMemory")]] void freeMemory(void* p)
 {
    free(p);
+}
+
+std::variant<std::string, std::vector<char>> result;
+[[clang::export_name("getResultSize")]] uint32_t getResultSize()
+{
+   return std::visit([](auto& data) { return data.size(); }, result);
+}
+[[clang::export_name("getResult")]] const char* getResult()
+{
+   return std::visit([](auto& data) { return data.data(); }, result);
 }
 
 template <typename T>
@@ -389,54 +398,67 @@ void filter_block(const eden_chain::eosio_block& block)
 
 eden_chain::block_log block_log;
 
+bool add_block(eden_chain::block_with_id&& bi, uint32_t eosio_irreversible)
+{
+   auto [status, num_forked] = block_log.add_block(bi);
+   if (status)
+      return false;
+   if (num_forked)
+      printf("forked %d blocks, %d now in log\n", (int)num_forked, (int)block_log.blocks.size());
+   while (num_forked--)
+      db.db.undo();
+   if (auto* b = block_log.block_before_eosio_num(eosio_irreversible + 1))
+      block_log.irreversible = std::max(block_log.irreversible, b->num);
+   db.db.commit(block_log.irreversible);
+   bool need_undo = bi.num > block_log.irreversible;
+   auto session = db.db.start_undo_session(bi.num > block_log.irreversible);
+   filter_block(bi.eosio_block);
+   session.push();
+   if (!need_undo)
+      db.db.set_revision(bi.num);
+   // printf("%s block: %d %d log: %d irreversible: %d db: %d-%d %s\n", block_log.status_str[status],
+   //        (int)bi.eosio_block.num, (int)bi.num, (int)block_log.blocks.size(),
+   //        block_log.irreversible,  //
+   //        (int)db.db.undo_stack_revision_range().first,
+   //        (int)db.db.undo_stack_revision_range().second,  //
+   //        to_string(bi.eosio_block.id).c_str());
+   return true;
+}
+
+bool add_block(eden_chain::block&& eden_block, uint32_t eosio_irreversible)
+{
+   auto bin = eosio::convert_to_bin(eden_block);
+   eden_chain::block_with_id bi;
+   static_cast<eden_chain::block&>(bi) = std::move(eden_block);
+   bi.id = clchain::sha256(bin.data(), bin.size());
+   auto bin_with_id = eosio::convert_to_bin(bi.id);
+   bin_with_id.insert(bin_with_id.end(), bin.begin(), bin.end());
+   result = std::move(bin_with_id);
+   return add_block(std::move(bi), eosio_irreversible);
+}
+
 // TODO: prevent from_json from aborting
-[[clang::export_name("add_eosio_blocks_json")]] void
-add_eosio_blocks_json(const char* json, uint32_t size, uint32_t eosio_irreversible)
+[[clang::export_name("addEosioBlockJson")]] bool addEosioBlockJson(const char* json,
+                                                                   uint32_t size,
+                                                                   uint32_t eosio_irreversible)
 {
    std::string str(json, size);
    eosio::json_token_stream s(str.data());
-   std::vector<eden_chain::eosio_block> eosio_blocks;
-   eosio::from_json(eosio_blocks, s);
-   for (auto& eosio_block : eosio_blocks)
+   eden_chain::eosio_block eosio_block;
+   eosio::from_json(eosio_block, s);
+
+   eden_chain::block eden_block;
+   eden_block.eosio_block = std::move(eosio_block);
+   auto* prev = block_log.block_before_eosio_num(eden_block.eosio_block.num);
+   if (prev)
    {
-      eden_chain::block eden_block;
-      eden_block.eosio_block = std::move(eosio_block);
-      auto* prev = block_log.block_before_eosio_num(eden_block.eosio_block.num);
-      if (prev)
-      {
-         eden_block.num = prev->num + 1;
-         eden_block.previous = prev->id;
-      }
-      else
-         eden_block.num = 1;
-      auto bin = eosio::convert_to_bin(eden_block);
-      eden_chain::block_with_id bi;
-      static_cast<eden_chain::block&>(bi) = std::move(eden_block);
-      bi.id = clchain::sha256(bin.data(), bin.size());
-      // printf("%d now in log\n", (int)block_log.blocks.size());
-      auto [status, num_forked] = block_log.add_block(bi);
-      if (status)
-         continue;
-      if (num_forked)
-         printf("forked %d blocks, %d now in log\n", (int)num_forked, (int)block_log.blocks.size());
-      while (num_forked--)
-         db.db.undo();
-      if (auto* b = block_log.block_before_eosio_num(eosio_irreversible + 1))
-         block_log.irreversible = std::max(block_log.irreversible, b->num);
-      db.db.commit(block_log.irreversible);
-      bool need_undo = bi.num > block_log.irreversible;
-      auto session = db.db.start_undo_session(bi.num > block_log.irreversible);
-      filter_block(bi.eosio_block);
-      session.push();
-      if (!need_undo)
-         db.db.set_revision(bi.num);
-      // printf("%s block: %d %d log: %d irreversible: %d db: %d-%d %s\n",
-      //        block_log.status_str[status], (int)bi.eosio_block.num, (int)bi.num,
-      //        (int)block_log.blocks.size(), block_log.irreversible,
-      //        (int)db.db.undo_stack_revision_range().first,
-      //        (int)db.db.undo_stack_revision_range().second,  //
-      //        to_string(bi.eosio_block.id).c_str());
+      eden_block.num = prev->num + 1;
+      eden_block.previous = prev->id;
    }
+   else
+      eden_block.num = 1;
+   return add_block(std::move(eden_block), eosio_irreversible);
+
    // printf("%d blocks processed, %d blocks now in log\n", (int)eosio_blocks.size(),
    //        (int)block_log.blocks.size());
    // for (auto& b : block_log.blocks)
@@ -467,26 +489,17 @@ EOSIO_REFLECT2(Query,  //
                method(members, "first", "after"))
 
 auto schema = clchain::get_gql_schema<Query>();
-[[clang::export_name("get_schema_size")]] uint32_t get_schema_size()
+[[clang::export_name("getSchemaSize")]] uint32_t getSchemaSize()
 {
    return schema.size();
 }
-[[clang::export_name("get_schema")]] const char* get_schema()
+[[clang::export_name("getSchema")]] const char* getSchema()
 {
    return schema.c_str();
 }
 
-std::string result;
-[[clang::export_name("exec_query")]] void exec_query(const char* query, uint32_t size)
+[[clang::export_name("query")]] void query(const char* query, uint32_t size)
 {
    Query root{block_log};
    result = clchain::gql_query(root, {query, size});
-}
-[[clang::export_name("get_result_size")]] uint32_t get_result_size()
-{
-   return result.size();
-}
-[[clang::export_name("get_result")]] const char* get_result()
-{
-   return result.c_str();
 }
