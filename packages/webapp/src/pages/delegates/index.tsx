@@ -10,11 +10,9 @@ import {
     queryMyDelegation,
     RawLayout,
     Text,
-    useCurrentMember,
     useUALAccount,
 } from "_app";
-import { MemberData } from "members";
-import { getMemberRecordFromName, getMyDelegation } from "delegates/api";
+import { getMemberRecordFromAccount } from "delegates/api";
 
 export const getServerSideProps: GetServerSideProps = async ({ query }) => {
     const queryClient = new QueryClient();
@@ -34,15 +32,11 @@ const MEMBERS_PAGE_SIZE = 18;
 
 export const DelegatesPage = (props: Props) => {
     const [ualAccount] = useUALAccount();
-    const accountName = ualAccount?.accountName;
-    const { data: currentMember } = useCurrentMember();
 
     const { data: members } = useQuery({
         ...queryMembers(1, MEMBERS_PAGE_SIZE),
         keepPreviousData: true,
     });
-
-    const loggedInMemberName = currentMember?.name || accountName;
 
     const { data: membersStats } = useQuery({
         ...queryMembersStats,
@@ -55,25 +49,35 @@ export const DelegatesPage = (props: Props) => {
     });
 
     const { data: myDelegation } = useQuery({
-        ...queryMyDelegation(members!, loggedInMemberName),
-        enabled: !!members && !!loggedInMemberName,
+        ...queryMyDelegation(members!, ualAccount!.name),
+        enabled: !!members && !!ualAccount && !!ualAccount.name,
         keepPreviousData: true,
     });
 
     if (
-        !loggedInMemberName ||
+        !ualAccount ||
         !members ||
         !membersStats ||
         !leadRepresentative ||
         !myDelegation
     ) {
-        return <Text size="lg">Fetching Data...</Text>;
+        return (
+            <RawLayout>
+                <Text size="lg">Fetching Data...</Text>;
+            </RawLayout>
+        );
     }
 
-    const loggedInMember: MemberData | undefined =
-        members && getMemberRecordFromName(members, loggedInMemberName);
+    const loggedInMember = getMemberRecordFromAccount(
+        members,
+        ualAccount.account
+    );
     if (!loggedInMember) {
-        return <Text size="lg">Failed to get loggedInMember record</Text>;
+        return (
+            <RawLayout>
+                <Text size="lg">Failed to get loggedInMember record</Text>;
+            </RawLayout>
+        );
     }
 
     return (
@@ -87,20 +91,21 @@ export const DelegatesPage = (props: Props) => {
                     My Delegation
                 </Text>
                 <Text size="sm" className="mt-4">
-                    {`You [${loggedInMember.account}] are level (rank) ${loggedInMember.election_rank} out of ${membersStats.ranks.length}`}
+                    You [{loggedInMember.account}] are level (rank){" "}
+                    {loggedInMember.election_rank} out of{" "}
+                    {membersStats.ranks.length}
                 </Text>
-                <Text
-                    size="sm"
-                    className="mt-4"
-                >{`Your Delegation is as follows:`}</Text>
+                <Text size="sm" className="mt-4">
+                    Your Delegation is as follows:
+                </Text>
                 <ul>
                     {myDelegation.reverse().map((delegate) => (
                         <li key={delegate.account}>
                             {delegate.name}
                             {delegate.account === leadRepresentative &&
-                                `<-- Head Chief`}
+                                "<-- Head Chief"}
                             {delegate.account === loggedInMember.account &&
-                                `<-- you`}
+                                "<-- you"}
                         </li>
                     ))}
                 </ul>
@@ -138,7 +143,7 @@ export const DelegatesPage = (props: Props) => {
                 </Text>
                 <Text size="sm" className="mb-4">
                     <code>
-                        {`enum for election_participation_status { no_donation = 0, in_election, not_in_election, recently_inducted }`}
+                        {`enum for election_participation_status { NoDonation = 0, InElection, NotInElection, RecentlyInducted }`}
                     </code>
                 </Text>
                 <div>
@@ -154,7 +159,6 @@ export const DelegatesPage = (props: Props) => {
             </div>
         </RawLayout>
     );
-    // }
 };
 
 export default DelegatesPage;

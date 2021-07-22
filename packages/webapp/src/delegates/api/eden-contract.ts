@@ -15,7 +15,7 @@ const getMemberBudgetBalance = () => {
     return {}; // TODO
 };
 
-export const getMemberRecordFromName = (
+export const getMemberRecordFromAccount = (
     members: MemberData[],
     memberAccount: string
 ) => members.find((member) => member.account === memberAccount);
@@ -31,7 +31,7 @@ export const getMyDelegation = async (
     let myDelegates: MemberData[] = [];
 
     const leadRepresentative = await getHeadDelegate();
-    let nextDelegate = getMemberRecordFromName(members, loggedInMemberName);
+    let nextDelegate = getMemberRecordFromAccount(members, loggedInMemberName);
     if (!nextDelegate || !leadRepresentative) return myDelegates;
 
     while (
@@ -39,7 +39,7 @@ export const getMyDelegation = async (
         memberHasRepresentative(nextDelegate)
     ) {
         myDelegates.push(nextDelegate);
-        nextDelegate = getMemberRecordFromName(
+        nextDelegate = getMemberRecordFromAccount(
             members,
             nextDelegate!.representative
         );
