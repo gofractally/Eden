@@ -12,12 +12,9 @@
     },
     "dependencies": {
         "@edenos/common": "^0.1.0",
-        "bn.js": "^5.2.0",
         "cids": "^1.1.6",
         "dayjs": "^1.10.4",
-        "elliptic": "^6.5.4",
         "eosjs": "^21.0.3",
-        "eosjs-ecc": "^4.0.7",
         "hash.js": "^1.1.7",
         "ipfs-http-client": "^50.0.0",
         "ipfs-only-hash": "^4.0.0",
