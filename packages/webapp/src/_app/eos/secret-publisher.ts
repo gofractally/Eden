@@ -1,6 +1,6 @@
-import ecc, { PrivateKey, PublicKey } from "eosjs-ecc";
-const ec = require("elliptic").ec("secp256k1");
-const bn = require("bn.js");
+import { PrivateKey, PublicKey } from "eosjs/dist/eosjs-jssig";
+import { generateKeyPair } from "eosjs/dist/eosjs-key-conversions";
+import { KeyType } from "eosjs/dist/eosjs-numeric";
 
 export const publishSecretToChain = async (
     message: string,
@@ -16,7 +16,7 @@ export const publishSecretToChain = async (
 
     // TODO: check publisherkey matches the current one in browser
 
-    const transientKeyPair = await generateRandomTransientKey();
+    const transientKeyPair = generateKeyPair(KeyType.k1, { secureEnv: true });
     console.info(transientKeyPair);
 
     const keks = await ecdhRecipientsKeyEncriptionKeys(
@@ -52,6 +52,34 @@ export const publishSecretToChain = async (
     return {};
 };
 
+export const decryptMessage = async (
+    encryptedMessage: Uint8Array,
+    recipientAccount: string,
+    recipientPublicKey: string,
+    transientPublicKey: string,
+    encryptedSessionKey: Uint8Array
+) => {
+    const recipientPrivateKey = retrieveKeyPair(recipientPublicKey);
+    const ecdhSecret = deriveEcdhSecret(
+        recipientPrivateKey.privateKey,
+        PublicKey.fromString(transientPublicKey)
+    );
+    const hkdfKey = await hkdfSha256FromEcdh(ecdhSecret);
+    // const sessionKey = unwrapSessionKey(encryptedSessionKey, hkdfKey);
+    console.info(hkdfKey);
+};
+
+const retrieveKeyPair = (publicKey: string) => {
+    // TODO: find the corresponding private key in the localstorage, or else throw
+    console.info("retrieving publicKey...");
+    const rawPrivateKey = "5KcMypBPGByXbeBphsVzyyzUvg31tWNKsgrfXs2MmanYgYf4gao";
+    const privateKey = PrivateKey.fromString(rawPrivateKey);
+    return {
+        privateKey,
+        publicKey: privateKey.getPublicKey(),
+    };
+};
+
 const fetchRecipientKeys = async (accounts: string[]) => {
     // TODO: real implementation
     // fetch eden.keys_table( where account = each account item )
@@ -67,38 +95,31 @@ const fetchRecipientKeys = async (accounts: string[]) => {
     return mockedKeys;
 };
 
-const generateRandomTransientKey = async () => {
-    const privateKey = await ecc.randomKey();
-    const publicKey = ecc.privateToPublic(privateKey);
-    return { privateKey, publicKey };
-};
-
 const ecdhRecipientsKeyEncriptionKeys = async (
     recipientPublicKeys: string[],
-    transientPrivateKeyString: string,
+    transientPrivateKey: PrivateKey,
     info?: string
 ): Promise<CryptoKey[]> => {
-    const transientPrivateKey = PrivateKey.fromString(
-        transientPrivateKeyString
-    );
-    const transientEc = ec.keyPair({
-        priv: new bn(transientPrivateKey.d.toHex(), 16),
-    });
     return Promise.all(
         recipientPublicKeys.map(async (publicKey: string) => {
-            const recipientEcPublicKey = ec.keyFromPublic(
-                PublicKey.fromString(publicKey).toHex(),
-                "hex"
+            const ecdhSecret = deriveEcdhSecret(
+                transientPrivateKey,
+                PublicKey.fromString(publicKey)
             );
-            const ecdhSecret = transientEc.derive(
-                recipientEcPublicKey.getPublic()
-            );
-            return await hkdfSha256FromEcdh(
-                ecdhSecret.toArrayLike(ArrayBuffer), // TODO: review endianness, empty = Big Endian
-                info
-            );
+            console.info(ecdhSecret);
+            return await hkdfSha256FromEcdh(ecdhSecret, info);
         })
     );
+};
+
+const deriveEcdhSecret = (
+    eosPrivateKeyA: PrivateKey,
+    eosPublicKeyB: PublicKey
+) => {
+    return eosPrivateKeyA
+        .toElliptic()
+        .derive(eosPublicKeyB.toElliptic().getPublic())
+        .toArrayLike(ArrayBuffer); // TODO: review endianness, empty = Big Endian
 };
 
 const hkdfSha256FromEcdh = async (
@@ -156,6 +177,17 @@ const encryptSessionKeys = async (sessionKey: CryptoKey, keks: CryptoKey[]) => {
         })
     );
 };
+
+// const unwrapSessionKey = async (sessionKey: Uint8Array, hkdfKey: CryptoKey) => {
+//     const unwrappedKey = await crypto.subtle.unwrapKey(
+//         "raw",
+//         sessionKey,
+//         kek,
+//         "AES-KW"
+//     );
+//     console.info(unwrappedKey);
+//     return new Uint8Array(wrappedKey);
+// };
 
 const encryptMessage = async (
     sessionKey: CryptoKey,
