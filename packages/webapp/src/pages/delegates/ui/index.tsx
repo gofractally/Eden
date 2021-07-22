@@ -47,12 +47,11 @@ const Delegates = ({ members }: { members?: MemberData[] }) => {
     return (
         <>
             {levels.map((level, index) => (
-                <div className="-mt-px">
-                    <DelegateChip
-                        key={`my-delegation-${members[index].account}`}
-                        member={members[index]}
-                        level={level}
-                    />
+                <div
+                    className="-mt-px"
+                    key={`my-delegation-${members[index].account}`}
+                >
+                    <DelegateChip member={members[index]} level={level} />
                     {levels.length !== index + 1 && (
                         <Container className="py-2.5">
                             <BsArrowDown
