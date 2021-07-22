@@ -1,20 +1,9 @@
-import { GetServerSideProps } from "next";
-import { QueryClient, useQuery } from "react-query";
-import { dehydrate } from "react-query/hydration";
+import { useQuery } from "react-query";
 import { BsArrowDown } from "react-icons/bs";
 
 import { Container, FluidLayout, Heading, queryMembers, Text } from "_app";
 import { DelegateChip } from "elections";
 import { MemberData } from "members/interfaces";
-
-export const getServerSideProps: GetServerSideProps = async ({ query }) => {
-    const queryClient = new QueryClient();
-    return {
-        props: {
-            dehydratedState: dehydrate(queryClient),
-        },
-    };
-};
 
 interface Props {
     delegatesPage: number;
@@ -66,6 +55,7 @@ const Delegates = ({ members }: { members?: MemberData[] }) => {
     );
 };
 
+// TODO: The levels and their names should be dynamic and a matter of configuration
 const levels: string[] = [
     "D1 - Your direct delegate",
     "D2",
