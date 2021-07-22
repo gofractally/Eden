@@ -3,4 +3,5 @@ export interface TableQueryOptions {
     lowerBound?: any;
     upperBound?: any;
     limit?: number;
+    index_position?: number;
 }

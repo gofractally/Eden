@@ -1,7 +1,7 @@
 import dayjs from "dayjs";
 
 import { eosBlockTimestampISO } from "_app";
-import { MemberData } from "members";
+import { MemberData, memberDataDefaults } from "members";
 import {
     Endorsement,
     Induction,
@@ -16,19 +16,16 @@ export const convertPendingProfileToMemberData = (
     profile: NewMemberProfile,
     inviteeChainAccountName: string,
     inductionVideo?: string
-): MemberData => {
-    return {
-        templateId: 0,
-        name: profile.name,
-        image: profile.img,
-        account: inviteeChainAccountName,
-        bio: profile.bio,
-        socialHandles: JSON.parse(profile.social || "{}"),
-        inductionVideo: inductionVideo || "",
-        attributions: profile.attributions || "",
-        createdAt: 0,
-    };
-};
+): MemberData => ({
+    ...memberDataDefaults,
+    name: profile.name,
+    image: profile.img,
+    account: inviteeChainAccountName,
+    bio: profile.bio,
+    socialHandles: JSON.parse(profile.social || "{}"),
+    inductionVideo: inductionVideo || "",
+    attributions: profile.attributions || "",
+});
 
 export const getInductionStatus = (
     induction?: Induction,
