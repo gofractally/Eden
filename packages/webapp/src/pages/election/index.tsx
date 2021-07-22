@@ -7,8 +7,8 @@ import {
     queryCurrentElection,
     queryElectionState,
     queryHeadDelegate,
+    queryMemberGroupParticipants,
     queryMembers,
-    queryVoteData,
     RawLayout,
     Text,
     useCurrentMember,
@@ -38,16 +38,10 @@ export const ElectionPage = (props: Props) => {
 
     const {
         isError: isLeadRepresentativeDataFetchError,
-        data: lead_representative,
+        data: leadRepresentative,
     } = useQuery({
         ...queryHeadDelegate,
         keepPreviousData: true,
-    });
-
-    const { isError: isVoteDataFetchError, data: voteData } = useQuery({
-        ...queryVoteData(accountName),
-        keepPreviousData: true,
-        enabled: !!accountName,
     });
 
     const {
@@ -56,6 +50,12 @@ export const ElectionPage = (props: Props) => {
     } = useQuery({
         ...queryCurrentElection,
         keepPreviousData: true,
+    });
+
+    const { isError: isVoteDataFetchError, data: voteData } = useQuery({
+        ...queryMemberGroupParticipants(accountName, currentElection?.config),
+        keepPreviousData: true,
+        enabled: !!accountName && !!currentElection && !!currentElection.config,
     });
 
     const {
@@ -88,18 +88,11 @@ export const ElectionPage = (props: Props) => {
             currentElection.election_seeder.end_time) ||
             currentElection.start_time);
 
-    console.info("ElectionPage.currentElection:");
-    console.info(currentElection);
-
     const loggedInMemberName = currentMember?.name || accountName;
     const loggedInMember: MemberData | undefined =
         members &&
         loggedInMemberName &&
         getMemberRecordFromName(members, loggedInMemberName);
-    console.info("loggedInMember:");
-    console.info(loggedInMember);
-    console.info("election_participation_status:");
-    console.info(loggedInMember?.election_participation_status);
 
     const RSVPStatus = [
         "no_donation",
@@ -107,26 +100,8 @@ export const ElectionPage = (props: Props) => {
         "not_in_election",
         "recently_inducted",
     ];
-    const getMemberGroupFromIndex = (idx: number) => {
-        const totalParticipants = currentElection.config.num_participants;
-        const numGroups = currentElection.config.num_groups;
-        const maxGroupSize = (totalParticipants + numGroups - 1) / numGroups;
-        const numShortGroups = maxGroupSize * numGroups - totalParticipants;
-        const numLargeGroups = numGroups - numShortGroups;
-        const minGroupSize = maxGroupSize - 1;
-        const totalMembersInLargeGroups = (minGroupSize + 1) * numLargeGroups;
-        if (idx < totalMembersInLargeGroups) {
-            return idx / (minGroupSize + 1);
-        } else {
-            return (
-                (idx - totalMembersInLargeGroups) / minGroupSize +
-                numLargeGroups
-            );
-        }
-    };
-    const groupIndex = 5;
 
-    if (!currentElection || !voteData) {
+    if (!loggedInMember || !currentElection || !voteData) {
         return <Text size="lg">Fetching Data...</Text>;
     }
     return (
@@ -178,7 +153,7 @@ export const ElectionPage = (props: Props) => {
                     About Previous (completed) Election:
                 </Text>
                 <Text size="sm">Head Chief Delegate:</Text>
-                <pre>[{lead_representative}]</pre>
+                <pre>[{leadRepresentative}]</pre>
                 <Text size="sm">Chief Delegates:</Text>
                 <pre>[{electionState && electionState.board}]</pre>
             </div>
@@ -194,9 +169,9 @@ export const ElectionPage = (props: Props) => {
                 </Text>
                 <pre>
                     [
-                    {loggedInMember?.election_participation_status !== undefined
+                    {!loggedInMember.election_participation_status
                         ? RSVPStatus[
-                              loggedInMember?.election_participation_status
+                              loggedInMember.election_participation_status
                           ]
                         : "<error>"}
                     ]
@@ -215,19 +190,10 @@ export const ElectionPage = (props: Props) => {
                 Is there leaderboard / voting info available right now? ie. is
                 electionState 'active'?
                 <pre>[{currentElection.electionState}]</pre>
-                <pre>{`Your current group index:${groupIndex}`}</pre>
-                <pre>{`Your group assignment is ${getMemberGroupFromIndex(
-                    groupIndex
-                )}`}</pre>
                 <pre>
                     If active, here are the participants in your next round:
                 </pre>
-                <pre>
-                    [
-                    {currentElection.electionState === "active" &&
-                        `<participants go here>`}
-                    ]
-                </pre>
+                <pre>{JSON.stringify(voteData, null, 2)}</pre>
             </div>
 
             <Text size="lg" className="bg-gray-200 mt-16">
@@ -238,12 +204,6 @@ export const ElectionPage = (props: Props) => {
                     <Text size="lg" className="mb-4">
                         -- Raw Table Data --
                     </Text>
-                    <div>
-                        <Text size="lg" className="mt-4">
-                            Vote Data
-                        </Text>
-                        <pre>{JSON.stringify(voteData, null, 2)}</pre>
-                    </div>
                     <div>
                         <Text size="lg" className="mt-4">
                             Current Election

@@ -26,6 +26,7 @@ const TABLE_PARAM_DEFAULTS = {
     lowerBound: "0",
     upperBound: null,
     limit: 1,
+    index_position: 1,
 };
 
 export const getRow = async <T>(
@@ -68,7 +69,7 @@ export const getTableRawRows = async <T = any>(
 
     const requestBody = {
         code: edenContractAccount,
-        index_position: 1,
+        index_position: options.index_position,
         json: true,
         key_type: "",
         limit: `${options.limit}`,

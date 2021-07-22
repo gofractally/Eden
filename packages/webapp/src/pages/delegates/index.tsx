@@ -43,15 +43,13 @@ export const DelegatesPage = (props: Props) => {
     });
 
     const loggedInMemberName = currentMember?.name || accountName;
-    const loggedInMember: MemberData | undefined =
-        members && getMemberRecordFromName(members, loggedInMemberName);
 
     const { data: membersStats } = useQuery({
         ...queryMembersStats,
         keepPreviousData: true,
     });
 
-    const { data: lead_representative } = useQuery({
+    const { data: leadRepresentative } = useQuery({
         ...queryHeadDelegate,
         keepPreviousData: true,
     });
@@ -61,6 +59,22 @@ export const DelegatesPage = (props: Props) => {
         enabled: !!members && !!loggedInMemberName,
         keepPreviousData: true,
     });
+
+    if (
+        !loggedInMemberName ||
+        !members ||
+        !membersStats ||
+        !leadRepresentative ||
+        !myDelegation
+    ) {
+        return <Text size="lg">Fetching Data...</Text>;
+    }
+
+    const loggedInMember: MemberData | undefined =
+        members && getMemberRecordFromName(members, loggedInMemberName);
+    if (!loggedInMember) {
+        return <Text size="lg">Failed to get loggedInMember record</Text>;
+    }
 
     return (
         <RawLayout title="Election">
@@ -73,19 +87,19 @@ export const DelegatesPage = (props: Props) => {
                     My Delegation
                 </Text>
                 <Text size="sm" className="mt-4">
-                    {`You [${loggedInMember?.account}] are level (rank) ${loggedInMember?.election_rank} out of ${membersStats?.ranks.length}`}
+                    {`You [${loggedInMember.account}] are level (rank) ${loggedInMember.election_rank} out of ${membersStats.ranks.length}`}
                 </Text>
                 <Text
                     size="sm"
                     className="mt-4"
                 >{`Your Delegation is as follows:`}</Text>
                 <ul>
-                    {myDelegation?.reverse().map((delegate) => (
-                        <li key={delegate?.account}>
-                            {delegate?.name}
-                            {delegate?.account === lead_representative &&
+                    {myDelegation.reverse().map((delegate) => (
+                        <li key={delegate.account}>
+                            {delegate.name}
+                            {delegate.account === leadRepresentative &&
                                 `<-- Head Chief`}
-                            {delegate?.account === loggedInMember?.account &&
+                            {delegate.account === loggedInMember.account &&
                                 `<-- you`}
                         </li>
                     ))}

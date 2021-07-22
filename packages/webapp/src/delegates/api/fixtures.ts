@@ -1,10 +1,10 @@
 import { MemberData, MemberStats } from "members";
 
 export const fixtureMembersStats: MemberStats = {
-    active_members: 5,
+    active_members: 4,
     pending_members: 0,
     completed_waiting_inductions: 0,
-    ranks: [1, 3, 1],
+    ranks: [1, 4, 1],
 };
 
 export const fixtureMembers: MemberData[] = [

@@ -7,56 +7,57 @@ export interface ElectionState {
 }
 
 interface CurrentElection_registationState {
-    // for state: registration
-    start_time?: string;
+    start_time: string;
     election_threshold?: number;
 }
 
+interface Seeder {
+    current: string;
+    start_time: string;
+    end_time: string;
+}
+
 interface CurrentElection_seedingState {
-    // for states: seeding and final
-    seed?: {
-        current: string;
-        start_time: string;
-        end_time: string;
-    };
+    seed?: Seeder;
+}
+
+interface CurrentElection_finalState {
+    seed?: Seeder;
 }
 
 interface CurrentElection_initVotersState {
-    // for state: init_voters
-    next_member_idx?: number;
-    rng?: any; // also for state: post_round
-    last_processed?: string;
+    next_member_idx: number;
+    rng: any;
+    last_processed: string;
 }
-
+export interface ActiveStateConfigType {
+    num_participants: number;
+    num_groups: number;
+}
 interface CurrentElection_activeState {
-    // for state: active
-    round?: number;
-    config?: {
-        num_participants: number;
-        num_groups: number;
-    };
-    saved_seed?: string;
-    round_end?: string;
+    round: number;
+    config: ActiveStateConfigType;
+    saved_seed: string;
+    round_end: string;
 }
 
 interface CurrentElection_postRoundState {
     // for state: post_round
-    prev_round?: number;
-    prev_config?: {
+    prev_round: number;
+    prev_config: {
         num_participants: number;
         num_groups: number;
     };
-    next_input_index?: number;
-    next_output_index?: number;
+    rng: any;
+    next_input_index: number;
+    next_output_index: number;
 }
 
 // for state: pending
-// nothing
 interface CurrentElectionBase {
     electionState: string;
 }
 
-// TODO: make this a disjoint union of types
 export type CurrentElection = CurrentElectionBase &
     (
         | CurrentElection_activeState
