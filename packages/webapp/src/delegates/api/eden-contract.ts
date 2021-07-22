@@ -18,7 +18,11 @@ const getMemberBudgetBalance = () => {
 export const getMemberRecordFromName = (
     members: MemberData[],
     memberAccount: string
-) => members?.filter((member) => member.account === memberAccount)[0];
+) => members.find((member) => member.account === memberAccount);
+
+// check that member has participated in an election (if there's been one yet) (!="zzz...") and came to consensus with their group in the last election (!=0)
+const memberHasRepresentative = (member: MemberData) =>
+    member.account !== "" && member.account !== "zzzzzzzzzzzzj";
 
 export const getMyDelegation = async (
     members: MemberData[],
@@ -26,28 +30,26 @@ export const getMyDelegation = async (
 ): Promise<MemberData[]> => {
     let myDelegates: MemberData[] = [];
 
-    const lead_representative = await getHeadDelegate();
+    const leadRepresentative = await getHeadDelegate();
+    let nextDelegate = getMemberRecordFromName(members, loggedInMemberName);
+    if (!nextDelegate || !leadRepresentative) return myDelegates;
 
-    const loggedInMember: MemberData | undefined =
-        members && getMemberRecordFromName(members, loggedInMemberName);
-
-    if (loggedInMember === undefined) return myDelegates;
-
-    let m: MemberData = getMemberRecordFromName(
-        members,
-        loggedInMember?.account
-    );
-    while (m && m?.account != lead_representative) {
-        myDelegates.push(m);
-        m = getMemberRecordFromName(members, m?.representative!);
+    while (
+        nextDelegate!.account !== leadRepresentative &&
+        memberHasRepresentative(nextDelegate)
+    ) {
+        myDelegates.push(nextDelegate);
+        nextDelegate = getMemberRecordFromName(
+            members,
+            nextDelegate!.representative
+        );
+        if (!nextDelegate) return myDelegates;
     }
     if (
-        (members && myDelegates.length) ||
-        loggedInMemberName === lead_representative
+        nextDelegate.account === leadRepresentative &&
+        memberHasRepresentative(nextDelegate)
     ) {
-        myDelegates.push(
-            getMemberRecordFromName(members, lead_representative!)
-        );
+        myDelegates.push(nextDelegate);
     }
     return myDelegates;
 };

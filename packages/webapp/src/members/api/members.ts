@@ -91,7 +91,23 @@ export const getCollectedBy = async (
     return { members, unknownOwners };
 };
 
+export const memberDataDefaults = {
+    templateId: 0,
+    name: "",
+    image: "",
+    account: "",
+    bio: "",
+    socialHandles: {},
+    inductionVideo: "",
+    attributions: "",
+    createdAt: 0,
+    representative: "",
+    status: 0,
+    election_participation_status: 0,
+    election_rank: 0,
+};
 const convertAtomicTemplateToMember = (data: TemplateData): MemberData => ({
+    ...memberDataDefaults,
     templateId: parseInt(data.template_id),
     createdAt: parseInt(data.created_at_time),
     name: data.immutable_data.name,
