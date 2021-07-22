@@ -8,6 +8,7 @@ export const publishSecretToChain = async (
     recipientAccounts: string[],
     info?: string
 ) => {
+    // TODO: Remove all the print messages
     console.info("encrypting message", message);
     const [publisherKey, ...recipientKeys] = await fetchRecipientKeys([
         publisherAccount,
