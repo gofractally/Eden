@@ -1,5 +1,5 @@
 import { EdenNftSocialHandles } from "nfts/interfaces";
-import { Asset } from "_app";
+import { Asset, ElectionParticipationStatus, MemberStatus } from "_app";
 
 export interface MemberData {
     templateId: number;
@@ -11,7 +11,7 @@ export interface MemberData {
     socialHandles: EdenNftSocialHandles;
     inductionVideo: string;
     status: number;
-    election_participation_status: number;
+    election_participation_status: ElectionParticipationStatus;
     election_rank: number;
     representative: string;
     createdAt: number;
@@ -29,12 +29,6 @@ export interface MemberAuctionData {
     auctionId: string;
     price: Asset;
     bidEndTime?: number;
-}
-
-// it needs to replicate our contract status, see /contracts/eden/include/members.hpp
-export enum MemberStatus {
-    PendingMembership = 0,
-    ActiveMember = 1,
 }
 
 export interface EdenMember {

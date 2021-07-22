@@ -4,6 +4,7 @@ import { QueryClient, useQuery } from "react-query";
 import { dehydrate } from "react-query/hydration";
 
 import {
+    ElectionParticipationStatus,
     queryCurrentElection,
     queryElectionState,
     queryHeadDelegate,
@@ -15,7 +16,7 @@ import {
     useUALAccount,
 } from "_app";
 import { MemberData } from "members";
-import { getMemberRecordFromName } from "delegates/api";
+import { getMemberRecordFromAccount } from "delegates/api";
 
 export const getServerSideProps: GetServerSideProps = async ({ query }) => {
     const queryClient = new QueryClient();
@@ -92,14 +93,7 @@ export const ElectionPage = (props: Props) => {
     const loggedInMember: MemberData | undefined =
         members &&
         loggedInMemberName &&
-        getMemberRecordFromName(members, loggedInMemberName);
-
-    const RSVPStatus = [
-        "no_donation",
-        "in_election",
-        "not_in_election",
-        "recently_inducted",
-    ];
+        getMemberRecordFromAccount(members, loggedInMemberName);
 
     if (!loggedInMember || !currentElection || !voteData) {
         return <Text size="lg">Fetching Data...</Text>;
@@ -139,7 +133,7 @@ export const ElectionPage = (props: Props) => {
                 </div>
                 <div>
                     <Text size="lg" className="mt-4">
-                        {`Case 3 (else): Election in Progress:`}
+                        Case 3 (else): Election in Progress:
                     </Text>
                     <Text size="sm">
                         Date of Next Election
@@ -162,15 +156,16 @@ export const ElectionPage = (props: Props) => {
                     RSVP Status
                 </Text>
                 <Text size="sm">
-                    {`default is recently_inducted, unless there's >30 days to next election, in which case it's no_donation`}
+                    {`default is RecentlyInducted, unless there's >30 days to next election, in which case it's NoDonation`}
                 </Text>
                 <Text size="sm">
-                    {`after election, everyone is reset to no_donation`}
+                    election_participation_status / RSVP: after election,
+                    everyone is reset to NoDonation
                 </Text>
                 <pre>
                     [
                     {!loggedInMember.election_participation_status
-                        ? RSVPStatus[
+                        ? ElectionParticipationStatus[
                               loggedInMember.election_participation_status
                           ]
                         : "<error>"}
@@ -182,10 +177,18 @@ export const ElectionPage = (props: Props) => {
                     Upcoming groups and participants
                 </Text>
                 <Text size="sm">
-                    {`Who voted for whom is *only* available during the active round. That info is *not* stored long-term in tables. We'll need a history solution to look at the history of who voted for whom.`}
+                    Who voted for whom is *only* available during the active
+                    round. That info is *not* stored long-term in tables. We'll
+                    need a history solution to look at the history of who voted
+                    for whom.
                 </Text>
                 <Text size="sm">
-                    {`And... vote info will only be available while the property 'electionState' is 'active'. NOTE: this 'active' field is the underlying variant type. It's meta info... the first field in the array-encoding we get back for table rows. See code for details if interested; or be thankful you don't need to know more than this note... :)`}
+                    And... vote info will only be available while the property
+                    'electionState' is 'active'. NOTE: this 'active' field is
+                    the underlying variant type. It's meta info... the first
+                    field in the array-encoding we get back for table rows. See
+                    code for details if interested; or be thankful you don't
+                    need to know more than this note... :)
                 </Text>
                 Is there leaderboard / voting info available right now? ie. is
                 electionState 'active'?
