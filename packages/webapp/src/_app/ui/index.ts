@@ -18,3 +18,4 @@ export * from "./pagination-nav";
 export * from "./loaders";
 export * from "./profile-image";
 export * from "./delegate-badge";
+export * from "./expander";
