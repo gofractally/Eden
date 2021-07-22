@@ -1,34 +1,32 @@
-// import { SerialBuffer } from "eosjs/dist/eosjs-serialize";
-import {
-    assetToString,
-    // hash256EosjsSerialBuffer,
-    // primaryKeyFromAccountInstant,
-    // serializeType,
-} from "_app";
-import { edenContractAccount, minimumDonationAmount } from "config";
+import { edenContractAccount } from "config";
+import { EncryptedKey } from "encryption";
 
-// import { Induction, NewMemberProfile } from "./interfaces";
-
-export const someTransaction = (authorizerAccount: string) => ({
-    actions: [
-        {
-            account: "eosio.token",
-            name: "transfer",
-            authorization: [
-                {
-                    actor: authorizerAccount,
-                    permission: "active",
+export const setElectionMeeting = (
+    authorizerAccount: string,
+    round: number,
+    keys: EncryptedKey[],
+    data: Uint8Array,
+    old_data?: Uint8Array
+) => {
+    return {
+        actions: [
+            {
+                account: edenContractAccount,
+                name: "inductmeetin",
+                authorization: [
+                    {
+                        actor: authorizerAccount,
+                        permission: "active",
+                    },
+                ],
+                data: {
+                    account: authorizerAccount,
+                    round,
+                    keys,
+                    data,
+                    old_data,
                 },
-            ],
-            data: {
-                from: authorizerAccount,
-                to: edenContractAccount,
-                quantity: assetToString(
-                    minimumDonationAmount,
-                    minimumDonationAmount.precision
-                ),
-                memo: "donation",
             },
-        },
-    ],
-});
+        ],
+    };
+};
