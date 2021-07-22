@@ -13,7 +13,7 @@ export const Heading = ({ children, size, className }: Props) => {
     switch (size) {
         case 2:
             element = "h2";
-            textSize = "text-2xl";
+            textSize = "text-xl sm:text-2xl";
             break;
         case 3:
             element = "h3";
