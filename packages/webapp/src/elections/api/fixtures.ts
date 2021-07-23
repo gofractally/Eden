@@ -1,10 +1,9 @@
-import { any } from "cypress/types/bluebird";
 import { CurrentElection, ElectionState, VoteData } from "elections/interfaces";
 
 // The following fixtures represent the following Election/round layout
 // Round 1:
-//  - Group1: edenmember11, pip.edev (voted up edenmember13)
-//  - Group2: egeon.edev, edenmember12, edenmember13 (voted up edenmember11)
+//  - Group1: edenmember11, pip.edev (voted up edenmember11)
+//  - Group2: egeon.edev, edenmember12, edenmember13 (voted up edenmember13)
 // Round 2 (assumes a full voting / non-sortition round just for the sake of minimal fixture data)
 //  - Group1: edenmember11, edenmember13 (voted up edenmember11)
 // Head Chief: edenmember11

@@ -10,10 +10,6 @@ export interface MemberData {
     attributions: string;
     socialHandles: EdenNftSocialHandles;
     inductionVideo: string;
-    status: number;
-    election_participation_status: ElectionParticipationStatus;
-    election_rank: number;
-    representative: string;
     createdAt: number;
     auctionData?: MemberAuctionData;
     assetData?: AssetData;
@@ -36,6 +32,9 @@ export interface EdenMember {
     name: string;
     status: MemberStatus;
     nft_template_id: number;
+    election_participation_status: ElectionParticipationStatus;
+    election_rank: number;
+    representative: string;
 }
 
 export interface MemberStats {

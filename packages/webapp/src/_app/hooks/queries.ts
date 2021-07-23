@@ -34,18 +34,17 @@ export const queryHeadDelegate = {
 };
 
 export const queryMyDelegation = (
-    members: MemberData[],
-    loggedInMemberName: string
+    loggedInMemberAccount: string | undefined
 ) => ({
-    queryKey: ["query_my_delegation", members],
-    queryFn: () => getMyDelegation(members, loggedInMemberName),
+    queryKey: ["query_my_delegation", loggedInMemberAccount],
+    queryFn: () => getMyDelegation(loggedInMemberAccount),
 });
 
 export const queryMemberGroupParticipants = (
     memberAccount: string,
     config: ActiveStateConfigType
 ) => ({
-    queryKey: ["query_member_group_participants", memberAccount],
+    queryKey: ["query_member_group_participants", memberAccount, config],
     queryFn: () => getMemberGroupParticipants(memberAccount, config),
 });
 
