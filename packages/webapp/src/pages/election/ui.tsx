@@ -25,11 +25,7 @@ interface Props {
 
 const MEMBERS_PAGE_SIZE = 4;
 
-// TODO: Hook up to real/fixture data
-// TODO: Implement leaderboard: sort by most votes; show leader by votes; highlight consensus
-// TODO: Round timer
-// TODO: Too many primary style buttons!
-// TODO: As we connect to data, break apart file, organize
+// TODO: Hook up to real/fixture data; break apart and organize
 export const OngoingElectionPage = (props: Props) => {
     const { data: members } = useQuery({
         ...queryMembers(1, MEMBERS_PAGE_SIZE),
