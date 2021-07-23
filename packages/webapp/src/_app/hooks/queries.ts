@@ -41,7 +41,7 @@ export const queryMyDelegation = (
 });
 
 export const queryMemberGroupParticipants = (
-    memberAccount: string,
+    memberAccount: string | undefined,
     config: ActiveStateConfigType
 ) => ({
     queryKey: ["query_member_group_participants", memberAccount, config],

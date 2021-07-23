@@ -52,10 +52,11 @@ const getMemberGroupFromIndex = (
 };
 
 export const getMemberGroupParticipants = async (
-    memberAccount: string,
+    memberAccount: string | undefined,
     config: ActiveStateConfigType
 ) => {
-    if (!config) return undefined;
+    if (!memberAccount || !config) return undefined;
+
     const totalParticipants = config.num_participants;
     const numGroups = config.num_groups;
     // TODO: consider how to mock this more deeply to test the logic below
