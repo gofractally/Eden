@@ -35,7 +35,7 @@ export const VotingMemberChip = ({
                 ) : (
                     <FaRegSquare
                         size={31}
-                        className="mr-2 text-gray-300 hover:text-gray-400"
+                        className="mr-2 text-gray-400 hover:text-gray-500"
                     />
                 )
             }
@@ -83,7 +83,7 @@ export const MemberDetails = ({
         className="flex-1 flex flex-col justify-center group"
     >
         <p className="text-xs text-gray-500 font-light">@{member.account}</p>
-        <p className="group-hover:underline font-medium">{member.name}</p>
+        <p className="group-hover:underline">{member.name}</p>
         {subText && (
             <p className="text-xs text-gray-500 font-light">{subText}</p>
         )}
