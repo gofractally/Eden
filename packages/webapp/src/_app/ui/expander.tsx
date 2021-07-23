@@ -30,13 +30,13 @@ export const Expander = ({
                 {header}
                 {isExpanded ? (
                     <IoChevronUpSharp
-                        size={22}
-                        className="text-gray-400 group-hover:text-gray-500 active:text-gray-600"
+                        size={19}
+                        className="text-gray-500 group-hover:text-gray-500 active:text-gray-600"
                     />
                 ) : (
                     <IoChevronDownSharp
-                        size={22}
-                        className="text-gray-400 group-hover:text-gray-500 active:text-gray-600"
+                        size={19}
+                        className="text-gray-500 group-hover:text-gray-500 active:text-gray-600"
                     />
                 )}
             </Container>

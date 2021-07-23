@@ -30,6 +30,9 @@ export const OngoingElectionPage = (props: Props) => {
             <div className="divide-y">
                 <Container>
                     <Heading size={1}>Election</Heading>
+                </Container>
+                <Container darkBg>
+                    <Heading size={2}>Today's Election</Heading>
                     <Text size="sm">In progress until 6:30pm EDT</Text>
                 </Container>
                 <SupportSegment />
@@ -55,7 +58,9 @@ const SupportSegment = () => (
         header={
             <div className="flex justify-center items-center space-x-2">
                 <GoSync size={24} className="text-gray-400" />
-                <Heading size={4}>Community Room &amp; Support</Heading>
+                <Text className="font-semibold">
+                    Community Room &amp; Support
+                </Text>
             </div>
         }
     >
@@ -82,7 +87,7 @@ const CompletedRoundSegment = ({
             <div className="flex items-center space-x-2">
                 <FaCheckCircle size={22} className="ml-px text-gray-400" />
                 <div>
-                    <Heading size={4}>Round {round}</Heading>
+                    <Text className="font-semibold">Round {round}</Text>
                     <Text>Delegate elect: {winner.name}</Text>
                 </div>
             </div>
@@ -93,6 +98,12 @@ const CompletedRoundSegment = ({
                 <DelegateChip key={`round-${round}-winner`} member={member} />
             )}
         </MembersGrid>
+        <Container>
+            <Button size="sm">
+                <RiVideoUploadLine size={18} className="mr-2" />
+                Upload round {round} recording
+            </Button>
+        </Container>
     </Expander>
 );
 
@@ -123,7 +134,7 @@ const OngoingRoundSegment = ({
                 <div className="flex items-center space-x-2">
                     <GoSync size={24} className="text-gray-400" />
                     <div>
-                        <Heading size={4}>Round {round}</Heading>
+                        <Text className="font-semibold">Round {round}</Text>
                         <Text>{time}</Text>
                     </div>
                 </div>
@@ -131,7 +142,7 @@ const OngoingRoundSegment = ({
             startExpanded
         >
             <Container className="space-y-2">
-                <Heading size={2}>Meeting group members</Heading>
+                <Heading size={3}>Meeting group members</Heading>
                 <Text>
                     Meet with your group. Align on a leader &gt;2/3 majority.
                     Select your leader and submit your vote below.
@@ -171,7 +182,7 @@ const OngoingRoundSegment = ({
                     </Button>
                     <Button size="sm">
                         <RiVideoUploadLine size={18} className="mr-2" />
-                        Upload meeting video
+                        Upload round {round} recording
                     </Button>
                 </div>
             </Container>
