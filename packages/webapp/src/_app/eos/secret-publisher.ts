@@ -2,6 +2,18 @@ import { PrivateKey, PublicKey } from "eosjs/dist/eosjs-jssig";
 import { generateKeyPair } from "eosjs/dist/eosjs-key-conversions";
 import { KeyType } from "eosjs/dist/eosjs-numeric";
 
+/**
+ * Provides a way to encrypt data to be published on chain. Useful for
+ * secretly sharing any temporal data. Eg. induction meeting links, election
+ * room links.
+ *
+ * IMPORTANT NOTES:
+ * - Any data on chain will eventually be decrypted. Never use it for PII (read the
+ * above description for reasanoble use cases).
+ * - The key curve for all participants need to be the same. EdenOS interface
+ * ensures that all generated public encrypted keys are K1.
+ * - ECDH secrets derived bytes are in Big Endianess order.
+ */
 export const publishSecretToChain = async (
     message: string,
     publisherAccount: string,
@@ -96,7 +108,7 @@ const retrieveRecipientPrivateKey = (publicKey: string): PrivateKey => {
 
 const fetchRecipientKeys = async (accounts: string[]) => {
     // TODO: real implementation
-    // fetch eden.keys_table( where account = each account item )
+    // fetch eden.members( where account = each account item )
 
     const mockedKeysLen = accounts.length;
     const mockedKeys = [];
@@ -133,7 +145,7 @@ const deriveEcdhSecret = (
     return eosPrivateKeyA
         .toElliptic()
         .derive(eosPublicKeyB.toElliptic().getPublic())
-        .toArrayLike(ArrayBuffer); // TODO: review endianness, empty = Big Endian
+        .toArrayLike(ArrayBuffer);
 };
 
 const hkdfSha256FromEcdh = async (
