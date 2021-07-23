@@ -6,7 +6,7 @@ import { dehydrate } from "react-query/hydration";
 import { FluidLayout, queryMembersStats, queryMembers } from "_app";
 import { Container, Heading } from "_app/ui";
 import { MembersGrid } from "members";
-import { VotingMemberChip, WinningMemberChip } from "elections";
+import { VotingMemberChip, DelegateChip } from "elections";
 
 const MEMBERS_PAGE_SIZE = 18;
 
@@ -57,13 +57,17 @@ export const MembersPage = (props: Props) => {
                 )}
             </MembersGrid>
             <Container className="pt-6 border-t border-b">
-                <Heading size={1}>Winner Chip</Heading>
+                <Heading size={1}>Delegate Chip</Heading>
                 {members.isLoading && "Loading members..."}
                 {members.error && "Fail to load members"}
             </Container>
             <MembersGrid members={members.data?.slice(1, 2)}>
                 {(member) => (
-                    <WinningMemberChip key={member.account} member={member} />
+                    <DelegateChip
+                        key={member.account}
+                        member={member}
+                        level="D3 - Chief Delegate"
+                    />
                 )}
             </MembersGrid>
         </FluidLayout>

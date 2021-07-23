@@ -2,6 +2,7 @@
 
 #include <constants.hpp>
 #include <eden-atomicassets.hpp>
+#include <encrypt.hpp>
 #include <eosio/asset.hpp>
 #include <eosio/bytes.hpp>
 #include <eosio/eosio.hpp>
@@ -54,6 +55,7 @@ namespace eden
                                                 member_stats_variant,
                                                 migration_variant,
                                                 pool_variant,
+                                                encrypted_data_variant,
                                                 std::variant<vote>>;
 #endif
 
@@ -110,10 +112,17 @@ namespace eden
       void inductdonate(eosio::name payer, uint64_t id, const eosio::asset& quantity);
 
       void inductcancel(eosio::name account, uint64_t id);
+      void inductmeetin(eosio::name account,
+                        uint64_t id,
+                        const std::vector<encrypted_key>& keys,
+                        const eosio::bytes& data,
+                        const std::optional<eosio::bytes>& old_data);
 
       void inducted(eosio::name inductee);
 
       void resign(eosio::name member);
+
+      void setencpubkey(eosio::name member, const eosio::public_key& key);
 
       void electsettime(eosio::time_point_sec election_time);
 
@@ -125,6 +134,11 @@ namespace eden
       void electopt(eosio::name member, bool participating);
 
       void electseed(const eosio::bytes& btc_header);
+      void electmeeting(eosio::name account,
+                        uint8_t round,
+                        const std::vector<encrypted_key>& keys,
+                        const eosio::bytes& data,
+                        const std::optional<eosio::bytes>& old_data);
       void electvote(uint8_t round, eosio::name voter, eosio::name candidate);
       void electprocess(uint32_t max_steps);
 
@@ -208,6 +222,7 @@ namespace eden
               invitee,
               witnesses,
               ricardian_contract(inductinit_ricardian)),
+       action(inductmeetin, id, keys, data, old_data),
        action(inductprofil, id, new_member_profile, ricardian_contract(inductprofil_ricardian)),
        action(inductvideo, account, id, video, ricardian_contract(inductvideo_ricardian)),
        action(inductendors,
@@ -215,11 +230,13 @@ namespace eden
               id,
               induction_data_hash,
               ricardian_contract(inductendors_ricardian)),
+       action(setencpubkey, account, key),
        action(electsettime, election_time),
        action(electconfig, day, time, donation),
        action(electdonate, payer, quantity),
        action(electopt, member, participating),
        action(electseed, btc_header),
+       action(electmeeting, account, round, keys, data, old_data),
        action(electvote, round, voter, candidate),
        action(electprocess, max_steps),
        action(bylawspropose, proposer, bylaws),

@@ -188,6 +188,7 @@ namespace eden
       void create_nfts(const induction& induction, int32_t template_id);
       void mint_nft(int template_id, eosio::name new_asset_owner);
       void start_auction(const induction& induction, uint64_t asset_id);
+      std::vector<eosio::name> get_endorsers(uint64_t id);
       void erase_induction(const induction& induction);
       uint32_t erase_expired(uint32_t limit, std::vector<eosio::name>& removed_members);
       uint32_t erase_by_inductee(eosio::name inductee, uint32_t limit);

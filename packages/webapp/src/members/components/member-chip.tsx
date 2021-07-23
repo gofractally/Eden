@@ -54,7 +54,7 @@ export const MemberDetails = ({ member, onClick }: MemberDetailsProps) => (
                 ? "not an eden member"
                 : dayjs(member.createdAt).format("YYYY.MM.DD")}
         </p>
-        <p className="group-hover:underline">{member.name}</p>
+        <p className="group-hover:underline font-medium">{member.name}</p>
         {member.account && (
             <p className="text-xs text-gray-500 font-light">
                 @{member.account}

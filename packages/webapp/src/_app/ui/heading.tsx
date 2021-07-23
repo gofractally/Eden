@@ -21,7 +21,7 @@ export const Heading = ({ children, size, className }: Props) => {
             break;
         case 4:
             element = "h4";
-            textSize = "text-lg";
+            textSize = "text-md sm:text-lg";
             break;
         case 1:
         default:

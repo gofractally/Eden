@@ -5,6 +5,7 @@
 #include <eden-atomicmarket.hpp>
 #include <eden.hpp>
 #include <elections.hpp>
+#include <encrypt.hpp>
 #include <eosio/tester.hpp>
 #include <members.hpp>
 #include <token/token.hpp>
@@ -107,6 +108,13 @@ template <typename T>
 auto get_table_size()
 {
    T tb("eden.gm"_n, eden::default_scope);
+   return std::distance(tb.begin(), tb.end());
+}
+
+template <typename T>
+auto get_table_size(eosio::name scope)
+{
+   T tb("eden.gm"_n, scope.value);
    return std::distance(tb.begin(), tb.end());
 }
 
@@ -767,7 +775,15 @@ TEST_CASE("induction")
    eden_tester t;
    t.genesis();
 
+   for (auto member : {"alice"_n, "pip"_n, "egeon"_n})
+   {
+      t.chain.as(member).act<actions::setencpubkey>(member, eosio::public_key{});
+   }
    t.alice.act<actions::inductinit>(4, "alice"_n, "bertie"_n, std::vector{"pip"_n, "egeon"_n});
+   t.bertie.act<actions::setencpubkey>("bertie"_n, eosio::public_key{});
+   t.alice.act<actions::inductmeetin>("alice"_n, 4, std::vector<eden::encrypted_key>(4),
+                                      eosio::bytes{}, std::nullopt);
+   CHECK(get_table_size<eden::encrypted_data_table_type>("induction"_n) == 1);
    t.bertie.act<token::actions::transfer>("bertie"_n, "eden.gm"_n, s2a("10.0000 EOS"), "memo");
    CHECK(get_eden_membership("bertie"_n).status() == eden::member_status::pending_membership);
 
@@ -839,6 +855,7 @@ TEST_CASE("induction")
 
    t.bertie.act<actions::inductdonate>("bertie"_n, 4, s2a("10.0000 EOS"));
    CHECK(get_eden_membership("bertie"_n).status() == eden::member_status::active_member);
+   CHECK(get_table_size<eden::encrypted_data_table_type>("induction"_n) == 0);
 }
 
 TEST_CASE("resignation")
@@ -1216,6 +1233,14 @@ TEST_CASE("election with multiple rounds")
       t.finish_induction(42, "alice"_n, account, {"pip"_n, "egeon"_n});
    }
    t.electdonate_all();
+   t.alice.act<actions::setencpubkey>("alice"_n, eosio::public_key{});
+   t.pip.act<actions::setencpubkey>("pip"_n, eosio::public_key{});
+   t.egeon.act<actions::setencpubkey>("egeon"_n, eosio::public_key{});
+   for (auto account : test_accounts)
+   {
+      t.chain.start_block();
+      t.chain.as(account).act<actions::setencpubkey>(account, eosio::public_key{});
+   }
 
    t.skip_to("2020-07-03T15:30:00.000");
    t.electseed(eosio::time_point_sec(0x5f009260));
@@ -1226,10 +1251,19 @@ TEST_CASE("election with multiple rounds")
 
    // With 200 members, there should be three rounds
    CHECK(get_table_size<eden::vote_table_type>() == 200);
+   t.alice.act<actions::electmeeting>("alice"_n, 0,
+                                      std::vector<eden::encrypted_key>{{}, {}, {}, {}},
+                                      eosio::bytes{}, std::nullopt);
    t.generic_group_vote(t.get_current_groups(), round++);
    CHECK(get_table_size<eden::vote_table_type>() == 48);
+   t.alice.act<actions::electmeeting>("alice"_n, 1,
+                                      std::vector<eden::encrypted_key>{{}, {}, {}, {}},
+                                      eosio::bytes{}, std::nullopt);
    t.generic_group_vote(t.get_current_groups(), round++);
    CHECK(get_table_size<eden::vote_table_type>() == 12);
+   t.alice.act<actions::electmeeting>("alice"_n, 2,
+                                      std::vector<eden::encrypted_key>{{}, {}, {}, {}},
+                                      eosio::bytes{}, std::nullopt);
    t.generic_group_vote(t.get_current_groups(), round++);
    CHECK(get_table_size<eden::vote_table_type>() == 3);
    t.electseed(eosio::time_point_sec(0x5f010070));
@@ -1237,6 +1271,7 @@ TEST_CASE("election with multiple rounds")
    t.chain.start_block(24 * 60 * 60 * 1000);
    t.alice.act<actions::electprocess>(256);
    CHECK(get_table_size<eden::vote_table_type>() == 0);
+   CHECK(get_table_size<eden::encrypted_data_table_type>("election"_n) == 0);
 
    eden::election_state_singleton results("eden.gm"_n, eden::default_scope);
    auto result = std::get<eden::election_state_v0>(results.get());

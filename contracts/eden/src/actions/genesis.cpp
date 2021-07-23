@@ -5,6 +5,7 @@
 #include <eden-atomicassets.hpp>
 #include <eden.hpp>
 #include <elections.hpp>
+#include <encrypt.hpp>
 #include <globals.hpp>
 #include <inductions.hpp>
 #include <members.hpp>
@@ -24,6 +25,8 @@ namespace eden
       elections{get_self()}.clear_all();
       get_global_singleton(get_self()).remove();
       bylaws{get_self()}.clear_all();
+      encrypt{get_self(), "induction"_n}.clear_all();
+      encrypt{get_self(), "election"_n}.clear_all();
    }
 
    void eden::gensetexpire(uint64_t induction_id, eosio::time_point new_expiration)
