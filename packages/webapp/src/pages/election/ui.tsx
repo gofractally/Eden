@@ -3,11 +3,18 @@ import { useQuery } from "react-query";
 import { BiCheck, BiWebcam } from "react-icons/bi";
 import { FaCheckCircle } from "react-icons/fa";
 import { GoSync } from "react-icons/go";
-import { IoIosLink } from "react-icons/io";
 import { RiVideoUploadLine } from "react-icons/ri";
 
-import { FluidLayout, queryMembers } from "_app";
-import { Button, Container, Expander, Heading, Text } from "_app/ui";
+import { FluidLayout, queryMembers, useFormFields } from "_app";
+import {
+    Button,
+    Container,
+    Expander,
+    Form,
+    Heading,
+    Modal,
+    Text,
+} from "_app/ui";
 import { DelegateChip, VotingMemberChip } from "elections";
 import { MembersGrid } from "members";
 import { MemberData } from "members/interfaces";
@@ -19,6 +26,10 @@ interface Props {
 const MEMBERS_PAGE_SIZE = 4;
 
 // TODO: Hook up to real/fixture data
+// TODO: Implement leaderboard: sort by most votes; show leader by votes; highlight consensus
+// TODO: Round timer
+// TODO: Too many primary style buttons!
+// TODO: As we connect to data, break apart file, organize
 export const OngoingElectionPage = (props: Props) => {
     const { data: members } = useQuery({
         ...queryMembers(1, MEMBERS_PAGE_SIZE),
@@ -120,6 +131,14 @@ const OngoingRoundSegment = ({
 }: OngoingRoundSegmentProps) => {
     const [selectedMember, setSelected] = useState<MemberData | null>(null);
     const [votedFor, setVotedFor] = useState<MemberData | null>(null);
+    const [
+        showZoomLinkPermutations,
+        setShowZoomLinkPermutations,
+    ] = useState<boolean>(false);
+    // may need to push this password prompt state up
+    const [showPasswordPrompt, setShowPasswordPrompt] = useState<boolean>(
+        false
+    );
 
     const onSelectMember = (member: MemberData) => {
         if (member.account === selectedMember?.account) return;
@@ -147,10 +166,66 @@ const OngoingRoundSegment = ({
                     Meet with your group. Align on a leader &gt;2/3 majority.
                     Select your leader and submit your vote below.
                 </Text>
-                <Button size="sm">
-                    <IoIosLink size={18} className="-ml-px mr-1" />
-                    Request meeting link
-                </Button>
+                {!showZoomLinkPermutations ? (
+                    <Button
+                        size="sm"
+                        onClick={() => setShowZoomLinkPermutations(true)}
+                    >
+                        <BiWebcam className="mr-1" />
+                        Request meeting link
+                    </Button>
+                ) : (
+                    <>
+                        <div className="flex items-center space-x-2">
+                            <Button size="sm">
+                                <BiWebcam className="mr-1" />
+                                Request meeting link
+                            </Button>
+                            <Text
+                                size="xs"
+                                type="note"
+                                className="leading-tight"
+                            >
+                                [Not implemented] No one has created
+                                <br />a link yet. Should trigger Zoom Oauth.
+                            </Text>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                            <Button
+                                size="sm"
+                                onClick={() => setShowPasswordPrompt(true)}
+                            >
+                                <BiWebcam className="mr-1" />
+                                Request meeting link
+                            </Button>
+                            <Text
+                                size="xs"
+                                type="note"
+                                className="leading-tight"
+                            >
+                                [Opens modal UI] Link created,
+                                <br />
+                                but password not set in browser.
+                            </Text>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                            <Button size="sm">
+                                <BiWebcam className="mr-1" />
+                                Join meeting
+                            </Button>
+                            <Text
+                                size="xs"
+                                type="note"
+                                className="leading-tight"
+                            >
+                                [Not implemented] Poll for encrypted link. If
+                                found
+                                <br />
+                                automatically decrypt and show join button.
+                            </Text>
+                        </div>
+                    </>
+                )}
             </Container>
             <MembersGrid members={members || []}>
                 {(member) => (
@@ -186,6 +261,81 @@ const OngoingRoundSegment = ({
                     </Button>
                 </div>
             </Container>
+            <PasswordPromptModal
+                isOpen={showPasswordPrompt}
+                close={() => setShowPasswordPrompt(false)}
+            />
         </Expander>
+    );
+};
+
+interface ModalProps {
+    isOpen: boolean;
+    close: () => void;
+}
+
+const PasswordPromptModal = ({ isOpen, close }: ModalProps) => {
+    const [isLoading, setIsLoading] = useState<boolean>(false);
+    const [fields, setFields] = useFormFields({ password: "" });
+    const onChangeFields = (e: React.ChangeEvent<HTMLInputElement>) =>
+        setFields(e);
+
+    const onSubmit = async (e: React.FormEvent) => {
+        e.preventDefault();
+        setIsLoading(true);
+        await new Promise((resolve) => setTimeout(resolve, 3000));
+        setIsLoading(false);
+        setFields({ target: { id: "password", value: "" } });
+        close();
+    };
+
+    return (
+        <Modal
+            isOpen={isOpen}
+            title="Activate Meeting Link"
+            onRequestClose={close}
+            contentLabel="Meeting Link Activation Modal - Requesting Password"
+            preventScroll
+            shouldCloseOnOverlayClick={!isLoading}
+            shouldCloseOnEsc={!isLoading}
+        >
+            <div className="space-y-4">
+                <Text>
+                    Enter your election password below to activate your meeting
+                    links on this device.
+                </Text>
+                <form onSubmit={onSubmit} className="space-y-3">
+                    <Form.LabeledSet
+                        label="Your Election Password"
+                        htmlFor="password"
+                        className="col-span-6 sm:col-span-3"
+                    >
+                        <Form.Input
+                            id="password"
+                            type="text"
+                            required
+                            value={fields.password}
+                            onChange={onChangeFields}
+                        />
+                    </Form.LabeledSet>
+                    <div className="flex space-x-3">
+                        <Button
+                            type="neutral"
+                            onClick={close}
+                            disabled={isLoading}
+                        >
+                            Cancel
+                        </Button>
+                        <Button
+                            isSubmit
+                            isLoading={isLoading}
+                            disabled={!fields.password || isLoading}
+                        >
+                            {isLoading ? "Submitting..." : "Submit"}
+                        </Button>
+                    </div>
+                </form>
+            </div>
+        </Modal>
     );
 };
