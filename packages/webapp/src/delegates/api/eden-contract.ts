@@ -1,5 +1,5 @@
 import { getElectionState } from "elections/api";
-import { MemberData } from "members";
+import { EdenMember, getEdenMember, MemberData } from "members";
 
 export const getHeadDelegate = async (): Promise<string | undefined> => {
     const electionState = await getElectionState();
@@ -15,23 +15,23 @@ const getMemberBudgetBalance = () => {
     return {}; // TODO
 };
 
-export const getMemberRecordFromAccount = (
-    members: MemberData[],
-    memberAccount: string
-) => members.find((member) => member.account === memberAccount);
-
+const MEMBER_REPRESENTATIVE_IF_NOT_PARTICIPATED_IN_RECENT_ELECTION =
+    "zzzzzzzzzzzzj";
 // check that member has participated in an election (if there's been one yet) (!="zzz...") and came to consensus with their group in the last election (!=0)
-const memberHasRepresentative = (member: MemberData) =>
-    member.account !== "" && member.account !== "zzzzzzzzzzzzj";
+const memberHasRepresentative = (member: EdenMember) =>
+    member.account !== "" &&
+    member.account !==
+        MEMBER_REPRESENTATIVE_IF_NOT_PARTICIPATED_IN_RECENT_ELECTION;
 
 export const getMyDelegation = async (
-    members: MemberData[],
-    loggedInMemberName: string
-): Promise<MemberData[]> => {
-    let myDelegates: MemberData[] = [];
+    loggedInMemberAccount: string | undefined
+): Promise<EdenMember[]> => {
+    let myDelegates: EdenMember[] = [];
+
+    if (!loggedInMemberAccount) return myDelegates;
 
     const leadRepresentative = await getHeadDelegate();
-    let nextDelegate = getMemberRecordFromAccount(members, loggedInMemberName);
+    let nextDelegate = await getEdenMember(loggedInMemberAccount);
     if (!nextDelegate || !leadRepresentative) return myDelegates;
 
     while (
@@ -39,10 +39,7 @@ export const getMyDelegation = async (
         memberHasRepresentative(nextDelegate)
     ) {
         myDelegates.push(nextDelegate);
-        nextDelegate = getMemberRecordFromAccount(
-            members,
-            nextDelegate!.representative
-        );
+        nextDelegate = await getEdenMember(nextDelegate!.representative);
         if (!nextDelegate) return myDelegates;
     }
     if (

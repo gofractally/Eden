@@ -13,10 +13,7 @@ import {
     RawLayout,
     Text,
     useCurrentMember,
-    useUALAccount,
 } from "_app";
-import { MemberData } from "members";
-import { getMemberRecordFromAccount } from "delegates/api";
 
 export const getServerSideProps: GetServerSideProps = async ({ query }) => {
     const queryClient = new QueryClient();
@@ -33,9 +30,7 @@ interface Props {
 }
 
 export const ElectionPage = (props: Props) => {
-    const [ualAccount] = useUALAccount();
-    const accountName = ualAccount?.accountName;
-    const { data: currentMember } = useCurrentMember();
+    const { data: loggedInMember } = useCurrentMember();
 
     const {
         isError: isLeadRepresentativeDataFetchError,
@@ -54,9 +49,12 @@ export const ElectionPage = (props: Props) => {
     });
 
     const { isError: isVoteDataFetchError, data: voteData } = useQuery({
-        ...queryMemberGroupParticipants(accountName, currentElection?.config),
+        ...queryMemberGroupParticipants(
+            loggedInMember!.account,
+            currentElection?.config
+        ),
         keepPreviousData: true,
-        enabled: !!accountName && !!currentElection && !!currentElection.config,
+        enabled: !!loggedInMember?.account && !!currentElection?.config,
     });
 
     const {
@@ -89,14 +87,23 @@ export const ElectionPage = (props: Props) => {
             currentElection.election_seeder.end_time) ||
             currentElection.start_time);
 
-    const loggedInMemberName = currentMember?.name || accountName;
-    const loggedInMember: MemberData | undefined =
-        members &&
-        loggedInMemberName &&
-        getMemberRecordFromAccount(members, loggedInMemberName);
-
     if (!loggedInMember || !currentElection || !voteData) {
-        return <Text size="lg">Fetching Data...</Text>;
+        return (
+            <>
+                <Text size="lg">
+                    Fetching Data loggedInMember: [{!!loggedInMember}],
+                    voteData[
+                    {!!voteData}], currentElection[{!!currentElection}]...
+                </Text>
+                <div>
+                    {!loggedInMember?.account &&
+                        "The logged-in member is not part of the deployed member base. Log in as another user, eg. pip.edev, egeon.edev"}
+                </div>
+                [<pre>{JSON.stringify(loggedInMember, null, 2)}</pre>] [
+                <pre>{JSON.stringify(voteData, null, 2)}</pre>] [
+                <pre>{JSON.stringify(currentElection, null, 2)}</pre>]
+            </>
+        );
     }
     return (
         <RawLayout title="Election">
@@ -149,7 +156,7 @@ export const ElectionPage = (props: Props) => {
                 <Text size="sm">Head Chief Delegate:</Text>
                 <pre>[{leadRepresentative}]</pre>
                 <Text size="sm">Chief Delegates:</Text>
-                <pre>[{electionState && electionState.board}]</pre>
+                <pre>[{electionState && electionState.board.toString()}]</pre>
             </div>
             <div>
                 <Text size="lg" className="mt-8">

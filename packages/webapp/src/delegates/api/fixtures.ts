@@ -1,16 +1,54 @@
-import { MemberData, MemberStats } from "members";
+import { EdenMember, MemberData, MemberStats } from "members";
 import { ElectionParticipationStatus, MemberStatus } from "_app";
 
-export const fixtureMembersStats: MemberStats = {
-    active_members: 5,
-    pending_members: 0,
-    completed_waiting_inductions: 0,
-    // # representatives at each level, in order of Delegate Levels (bottom up),
-    // ie. 5 members who never became delegates (idx=0), 2 Chief Delegates (idx=1), Head Chief (idx=2);
-    ranks: [5, 2, 1],
-};
-
-export const fixtureMembers: MemberData[] = [
+export const fixtureEdenMembers: EdenMember[] = [
+    {
+        name: "Eden Member 12",
+        account: "edenmember12",
+        nft_template_id: 1,
+        status: MemberStatus.ActiveMember,
+        election_participation_status: ElectionParticipationStatus.NoDonation, // See ElectionParticipationStatus for enum values; NoDonation is kinda the default if other special cases don't apply
+        election_rank: 1,
+        representative: "edenmember13", // "parent" field
+    },
+    {
+        name: "Eden Member 11",
+        account: "edenmember11",
+        nft_template_id: 1,
+        status: MemberStatus.ActiveMember,
+        election_participation_status: ElectionParticipationStatus.NoDonation,
+        election_rank: 3,
+        representative: "edenmember11",
+    },
+    {
+        name: "Eden Member 13",
+        account: "edenmember13",
+        nft_template_id: 1,
+        status: MemberStatus.ActiveMember,
+        election_participation_status: ElectionParticipationStatus.NoDonation,
+        election_rank: 2,
+        representative: "edenmember11",
+    },
+    {
+        name: "Egeon The Great",
+        account: "egeon.edev",
+        nft_template_id: 1,
+        status: MemberStatus.ActiveMember,
+        election_participation_status: ElectionParticipationStatus.NoDonation,
+        election_rank: 1,
+        representative: "edenmember13",
+    },
+    {
+        name: "Philip Pip",
+        account: "pip.edev",
+        nft_template_id: 1,
+        status: MemberStatus.ActiveMember,
+        election_participation_status: ElectionParticipationStatus.NoDonation,
+        election_rank: 1,
+        representative: "edenmember11",
+    },
+];
+export const fixtureMemberData: MemberData[] = [
     {
         templateId: 84431,
         createdAt: 1621635292500,
@@ -27,10 +65,6 @@ export const fixtureMembers: MemberData[] = [
             telegram: "brandonfancher",
             blog: "brandonfancher.com",
         },
-        status: MemberStatus.ActiveMember, // active
-        election_participation_status: ElectionParticipationStatus.NoDonation, // See ElectionParticipationStatus for enum values; NoDonation is kinda the default if other special cases don't apply
-        election_rank: 1,
-        representative: "edenmember13", // "parent" field
     },
     {
         templateId: 84432,
@@ -49,10 +83,6 @@ export const fixtureMembers: MemberData[] = [
             facebook: "test",
             blog: "test.com",
         },
-        status: MemberStatus.ActiveMember,
-        election_participation_status: ElectionParticipationStatus.NoDonation,
-        election_rank: 3,
-        representative: "edenmember11",
     },
     {
         templateId: 84545,
@@ -69,10 +99,6 @@ export const fixtureMembers: MemberData[] = [
             telegram: "test",
             blog: "test.com",
         },
-        status: MemberStatus.ActiveMember,
-        election_participation_status: ElectionParticipationStatus.NoDonation,
-        election_rank: 2,
-        representative: "edenmember11",
     },
     {
         templateId: 140784,
@@ -89,10 +115,6 @@ export const fixtureMembers: MemberData[] = [
             twitter: "boom",
             telegram: "boom",
         },
-        status: MemberStatus.ActiveMember,
-        election_participation_status: ElectionParticipationStatus.NoDonation,
-        election_rank: 1,
-        representative: "edenmember13",
     },
     {
         templateId: 140785,
@@ -109,9 +131,16 @@ export const fixtureMembers: MemberData[] = [
             twitter: "pip",
             telegram: "pip",
         },
-        status: MemberStatus.ActiveMember,
-        election_participation_status: ElectionParticipationStatus.NoDonation,
-        election_rank: 1,
-        representative: "edenmember13",
     },
 ];
+
+export const fixtureMembersStats: MemberStats = {
+    active_members: fixtureEdenMembers.filter(
+        (member) => member.status === MemberStatus.ActiveMember
+    ).length,
+    pending_members: 0,
+    completed_waiting_inductions: 0,
+    // # representatives at each level, in order of Delegate Levels (bottom up),
+    // ie. 3 members who never became delegates (idx=0), 1 Chief Delegates (idx=1) who didn't make it further, and 1 Head Chief (idx=2);
+    ranks: [3, 1, 1],
+};

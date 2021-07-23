@@ -1,4 +1,4 @@
-export enum ElectionParticipationStatus { // was RSVPStatus
+export enum ElectionParticipationStatus { // Among other things, this corresponds to RSVP in the UI
     NoDonation = 0,
     InElection,
     NotInElection,

@@ -10,9 +10,8 @@ import {
     queryMyDelegation,
     RawLayout,
     Text,
-    useUALAccount,
+    useCurrentMember,
 } from "_app";
-import { getMemberRecordFromAccount } from "delegates/api";
 
 export const getServerSideProps: GetServerSideProps = async ({ query }) => {
     const queryClient = new QueryClient();
@@ -31,7 +30,7 @@ interface Props {
 const MEMBERS_PAGE_SIZE = 18;
 
 export const DelegatesPage = (props: Props) => {
-    const [ualAccount] = useUALAccount();
+    const { data: loggedInMember } = useCurrentMember();
 
     const { data: members } = useQuery({
         ...queryMembers(1, MEMBERS_PAGE_SIZE),
@@ -49,13 +48,13 @@ export const DelegatesPage = (props: Props) => {
     });
 
     const { data: myDelegation } = useQuery({
-        ...queryMyDelegation(members!, ualAccount!.name),
-        enabled: !!members && !!ualAccount && !!ualAccount.name,
+        ...queryMyDelegation(loggedInMember?.account),
+        enabled: !!loggedInMember && !!loggedInMember.account,
         keepPreviousData: true,
     });
 
     if (
-        !ualAccount ||
+        !loggedInMember ||
         !members ||
         !membersStats ||
         !leadRepresentative ||
@@ -63,22 +62,22 @@ export const DelegatesPage = (props: Props) => {
     ) {
         return (
             <RawLayout>
-                <Text size="lg">Fetching Data...</Text>;
+                <Text size="lg">Fetching Data...</Text>; [
+                <pre>{JSON.stringify(loggedInMember, null, 2)}</pre>] [
+                <pre>{JSON.stringify(membersStats, null, 2)}</pre>] [
+                <pre>{leadRepresentative}</pre>] [
+                <pre>{JSON.stringify(myDelegation, null, 2)}</pre>] [
             </RawLayout>
         );
     }
 
-    const loggedInMember = getMemberRecordFromAccount(
-        members,
-        ualAccount.account
-    );
-    if (!loggedInMember) {
+    if (!loggedInMember)
         return (
-            <RawLayout>
-                <Text size="lg">Failed to get loggedInMember record</Text>;
-            </RawLayout>
+            <div>
+                Not logged in or Account doesn't exist in deployed
+                environment...
+            </div>
         );
-    }
 
     return (
         <RawLayout title="Election">
