@@ -50,7 +50,7 @@ export const ElectionPage = (props: Props) => {
 
     const { isError: isVoteDataFetchError, data: voteData } = useQuery({
         ...queryMemberGroupParticipants(
-            loggedInMember!.account,
+            loggedInMember?.account,
             currentElection?.config
         ),
         keepPreviousData: true,
