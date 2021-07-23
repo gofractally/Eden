@@ -4,11 +4,11 @@ import {
     Stream,
     waitFor,
 } from "@dfuse/client";
-import { readFileSync, writeFileSync } from "fs";
+import * as fs from "fs";
 import { IncomingMessage } from "http";
 import nodeFetch from "node-fetch";
 import WebSocketClient from "ws";
-import { WrapWasm } from "./wrap-wasm";
+import { EdenSubchain } from "@edenos/common";
 import { performance } from "perf_hooks";
 
 // TODO: move constants to config.ts
@@ -105,14 +105,14 @@ interface JsonTrx {
 let jsonTransactions: JsonTrx[] = [];
 let numSaved = 0;
 try {
-    jsonTransactions = JSON.parse(readFileSync(jsonTrxFile, "utf8"));
+    jsonTransactions = JSON.parse(fs.readFileSync(jsonTrxFile, "utf8"));
     numSaved = jsonTransactions.length;
 } catch (e) {}
 
 if (jsonTransactions.length)
     variables.cursor = jsonTransactions[jsonTransactions.length - 1].cursor;
 
-let wasm: WrapWasm;
+let wasm: EdenSubchain;
 
 let unpushedTransactions: JsonTrx[] = [];
 function pushTrx(trx: JsonTrx) {
@@ -147,15 +147,18 @@ function pushTrx(trx: JsonTrx) {
 
 async function main(): Promise<void> {
     try {
-        wasm = new WrapWasm();
-        await wasm.instantiate("../../build/demo-micro-chain.wasm");
+        wasm = new EdenSubchain();
+        await wasm.instantiate(
+            new Uint8Array(fs.readFileSync("../../build/demo-micro-chain.wasm"))
+        );
         wasm.initializeMemory();
 
         const begin = performance.now();
-        console.log("pushing blocks...");
+        console.log("pushing existing blocks...");
         for (let trx of jsonTransactions) pushTrx(trx);
         console.log(performance.now() - begin, "ms");
-        wasm.saveMemory("state");
+        fs.writeFileSync("state.tmp", wasm.uint8Array());
+        fs.renameSync("state.tmp", "state");
         console.log("state saved");
 
         const client = createDfuseClient({
@@ -189,20 +192,28 @@ async function main(): Promise<void> {
                         ? jsonTransactions[jsonTransactions.length - 1]
                         : null;
                 console.log(
-                    trx.undo,
+                    trx.undo ? "undo block" : "recv block",
                     trx.block.num,
-                    trx.trace ? trx.trace.id : null
+                    trx.trace
+                        ? "trx " + trx.trace.id
+                        : "no matching transactions"
                 );
                 if (trx.trace || (prev && prev.trace)) {
                     jsonTransactions.push(trx);
                     pushTrx(trx);
                     if (jsonTransactions.length - numSaved > 10 || !trx.trace) {
-                        console.log("save...", jsonTransactions.length);
-                        writeFileSync(
-                            jsonTrxFile,
+                        console.log(
+                            `save ${jsonTrxFile}:`,
+                            jsonTransactions.length,
+                            "transactions and undo entries"
+                        );
+                        fs.writeFileSync(
+                            jsonTrxFile + ".tmp",
                             JSON.stringify(jsonTransactions)
                         );
-                        wasm.saveMemory("state");
+                        fs.renameSync(jsonTrxFile + ".tmp", jsonTrxFile);
+                        fs.writeFileSync("state.tmp", wasm.uint8Array());
+                        fs.renameSync("state.tmp", "state");
                         numSaved = jsonTransactions.length;
                     }
                 }
