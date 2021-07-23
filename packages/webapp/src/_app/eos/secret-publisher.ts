@@ -11,7 +11,7 @@ import { KeyType } from "eosjs/dist/eosjs-numeric";
  * - Any data on chain will eventually be decrypted. Never use it for PII (read the
  * above description for reasanoble use cases).
  * - The key curve for all participants need to be the same. EdenOS interface
- * ensures that all generated public encrypted keys are K1.
+ * ensures that all generated encryption public keys are K1.
  * - ECDH secrets derived bytes are in Big Endianess order.
  */
 export const publishSecretToChain = async (
