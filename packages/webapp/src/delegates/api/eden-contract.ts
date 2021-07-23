@@ -1,5 +1,15 @@
+import { useEffect, useState } from "react";
+import { useQuery, useQueryClient } from "react-query";
+
 import { getElectionState } from "elections/api";
 import { EdenMember, getEdenMember, MemberData } from "members";
+import {
+    queryHeadDelegate,
+    queryMemberByAccountName,
+    useCurrentMember,
+    useMemberByAccountName,
+} from "_app";
+import { useHeadDelegate } from "delegates/hooks";
 
 export const getHeadDelegate = async (): Promise<string | undefined> => {
     const electionState = await getElectionState();
@@ -18,7 +28,7 @@ const getMemberBudgetBalance = () => {
 const MEMBER_REPRESENTATIVE_IF_NOT_PARTICIPATED_IN_RECENT_ELECTION =
     "zzzzzzzzzzzzj";
 // check that member has participated in an election (if there's been one yet) (!="zzz...") and came to consensus with their group in the last election (!=0)
-const memberHasRepresentative = (member: EdenMember) =>
+export const memberHasRepresentative = (member: EdenMember) =>
     member.account !== "" &&
     member.account !==
         MEMBER_REPRESENTATIVE_IF_NOT_PARTICIPATED_IN_RECENT_ELECTION;

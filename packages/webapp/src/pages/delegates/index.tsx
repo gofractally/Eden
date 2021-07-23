@@ -4,14 +4,13 @@ import { QueryClient, useQuery } from "react-query";
 import { dehydrate } from "react-query/hydration";
 
 import {
-    queryHeadDelegate,
     queryMembers,
     queryMembersStats,
-    queryMyDelegation,
     RawLayout,
     Text,
     useCurrentMember,
 } from "_app";
+import { useHeadDelegate, useMyDelegation } from "delegates/hooks";
 
 export const getServerSideProps: GetServerSideProps = async ({ query }) => {
     const queryClient = new QueryClient();
@@ -42,16 +41,8 @@ export const DelegatesPage = (props: Props) => {
         keepPreviousData: true,
     });
 
-    const { data: leadRepresentative } = useQuery({
-        ...queryHeadDelegate,
-        keepPreviousData: true,
-    });
-
-    const { data: myDelegation } = useQuery({
-        ...queryMyDelegation(loggedInMember?.account),
-        enabled: !!loggedInMember && !!loggedInMember.account,
-        keepPreviousData: true,
-    });
+    const { data: leadRepresentative } = useHeadDelegate();
+    const myDelegation = useMyDelegation();
 
     if (
         !loggedInMember ||
@@ -98,7 +89,7 @@ export const DelegatesPage = (props: Props) => {
                     Your Delegation is as follows:
                 </Text>
                 <ul>
-                    {myDelegation.reverse().map((delegate) => (
+                    {myDelegation.map((delegate) => (
                         <li key={delegate.account}>
                             {delegate.name}
                             {delegate.account === leadRepresentative &&

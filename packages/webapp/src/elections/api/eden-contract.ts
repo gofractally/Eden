@@ -108,16 +108,7 @@ export const getCurrentElection = async () => {
 
 export const getElectionState = async () => {
     if (devUseFixtureData) return fixtureElectionState;
-
-    const rows = await getTableRows<ElectionState>(
-        CONTRACT_ELECTION_STATE_TABLE
-    );
-
-    if (!rows.length) {
-        return undefined;
-    }
-
-    return rows[0];
+    return getRow<ElectionState>(CONTRACT_ELECTION_STATE_TABLE);
 };
 
 const getMemberElectionParticipationStatus = () => {
