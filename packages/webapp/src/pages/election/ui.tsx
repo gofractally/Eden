@@ -1,13 +1,14 @@
 import React, { useState } from "react";
 import { useQuery } from "react-query";
 import { BiCheck, BiWebcam } from "react-icons/bi";
+import { FaCheckCircle } from "react-icons/fa";
 import { GoSync } from "react-icons/go";
 import { IoIosLink } from "react-icons/io";
 import { RiVideoUploadLine } from "react-icons/ri";
 
 import { FluidLayout, queryMembers } from "_app";
 import { Button, Container, Expander, Heading, Text } from "_app/ui";
-import { VotingMemberChip } from "elections";
+import { DelegateChip, VotingMemberChip } from "elections";
 import { MembersGrid } from "members";
 import { MemberData } from "members/interfaces";
 
@@ -31,8 +32,17 @@ export const OngoingElectionPage = (props: Props) => {
                     <Heading size={1}>Election</Heading>
                     <Text size="sm">In progress until 6:30pm EDT</Text>
                 </Container>
-                <SupportExpander />
-                {members && <RoundExpander members={members} />}
+                <SupportSegment />
+                {members && (
+                    <CompletedRoundSegment round={1} winner={members[4]} />
+                )}
+                {members && (
+                    <OngoingRoundSegment
+                        members={members}
+                        round={2}
+                        time="11:30am - 12:30am"
+                    />
+                )}
             </div>
         </FluidLayout>
     );
@@ -40,7 +50,7 @@ export const OngoingElectionPage = (props: Props) => {
 
 export default OngoingElectionPage;
 
-const SupportExpander = () => (
+const SupportSegment = () => (
     <Expander
         header={
             <div className="flex justify-center items-center space-x-2">
@@ -58,7 +68,45 @@ const SupportExpander = () => (
     </Expander>
 );
 
-const RoundExpander = ({ members }: { members: MemberData[] }) => {
+interface CompletedRoundSegmentProps {
+    round: number;
+    winner: MemberData;
+}
+
+const CompletedRoundSegment = ({
+    round,
+    winner,
+}: CompletedRoundSegmentProps) => (
+    <Expander
+        header={
+            <div className="flex items-center space-x-2">
+                <FaCheckCircle size={22} className="ml-px text-gray-400" />
+                <div>
+                    <Heading size={4}>Round {round}</Heading>
+                    <Text>Delegate elect: {winner.name}</Text>
+                </div>
+            </div>
+        }
+    >
+        <MembersGrid members={[winner]}>
+            {(member) => (
+                <DelegateChip key={`round-${round}-winner`} member={member} />
+            )}
+        </MembersGrid>
+    </Expander>
+);
+
+interface OngoingRoundSegmentProps {
+    members: MemberData[];
+    round: number;
+    time: string;
+}
+
+const OngoingRoundSegment = ({
+    members,
+    round,
+    time,
+}: OngoingRoundSegmentProps) => {
     const [selectedMember, setSelected] = useState<MemberData | null>(null);
     const [votedFor, setVotedFor] = useState<MemberData | null>(null);
 
@@ -75,8 +123,8 @@ const RoundExpander = ({ members }: { members: MemberData[] }) => {
                 <div className="flex items-center space-x-2">
                     <GoSync size={24} className="text-gray-400" />
                     <div>
-                        <Heading size={4}>Round 1</Heading>
-                        <Text>9:30am - 10:30am</Text>
+                        <Heading size={4}>Round {round}</Heading>
+                        <Text>{time}</Text>
                     </div>
                 </div>
             }
