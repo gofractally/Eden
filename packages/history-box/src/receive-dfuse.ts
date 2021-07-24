@@ -71,7 +71,7 @@ const queryString = `(
 const variables = {
     query: queryString,
     cursor: "",
-    low: 183_349_905,
+    low: 1,
     limit: 0,
     irrev: false,
     interval: 1,

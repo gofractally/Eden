@@ -1,0 +1,4 @@
+.next
+.env*.local
+next-env.d.ts
+out
