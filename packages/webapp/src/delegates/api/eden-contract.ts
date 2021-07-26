@@ -32,36 +32,42 @@ export const getMyDelegation = async (
 
     if (!loggedInMemberAccount) return myDelegates;
 
-    const leadRepresentative = await queryClient.fetchQuery(
-        queryHeadDelegate.queryKey,
-        queryHeadDelegate.queryFn
-    );
-
-    const { queryKey, queryFn } = queryMemberByAccountName(
-        loggedInMemberAccount
-    );
-    let nextDelegate: EdenMember = await queryClient.fetchQuery(
-        queryKey,
-        queryFn
-    );
-    if (!nextDelegate || !leadRepresentative) return myDelegates;
-
-    while (
-        nextDelegate!.account !== leadRepresentative &&
-        memberHasRepresentative(nextDelegate)
-    ) {
-        myDelegates.push(nextDelegate);
-        const { queryKey, queryFn } = queryMemberByAccountName(
-            nextDelegate!.representative
+    try {
+        const leadRepresentative = await queryClient.fetchQuery(
+            queryHeadDelegate.queryKey,
+            queryHeadDelegate.queryFn
         );
-        nextDelegate = await queryClient.fetchQuery(queryKey, queryFn);
-        if (!nextDelegate) return myDelegates;
-    }
-    if (
-        nextDelegate.account === leadRepresentative &&
-        memberHasRepresentative(nextDelegate)
-    ) {
-        myDelegates.push(nextDelegate);
+
+        const { queryKey, queryFn } = queryMemberByAccountName(
+            loggedInMemberAccount
+        );
+        let nextDelegate: EdenMember = await queryClient.fetchQuery(
+            queryKey,
+            queryFn
+        );
+        if (!nextDelegate || !leadRepresentative) return myDelegates;
+
+        while (
+            nextDelegate!.account !== leadRepresentative &&
+            memberHasRepresentative(nextDelegate)
+        ) {
+            myDelegates.push(nextDelegate);
+            const { queryKey, queryFn } = queryMemberByAccountName(
+                nextDelegate!.representative
+            );
+            nextDelegate = await queryClient.fetchQuery(queryKey, queryFn);
+            if (!nextDelegate) return myDelegates;
+        }
+        if (
+            nextDelegate.account === leadRepresentative &&
+            memberHasRepresentative(nextDelegate)
+        ) {
+            myDelegates.push(nextDelegate);
+        }
+    } catch (e) {
+        console.error("Error in getMyDelegation:");
+        console.error(e);
+        return [];
     }
     return myDelegates;
 };
