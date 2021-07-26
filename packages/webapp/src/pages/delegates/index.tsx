@@ -11,6 +11,7 @@ import {
     RawLayout,
     Text,
     useCurrentMember,
+    useMyDelegation,
 } from "_app";
 
 export const getServerSideProps: GetServerSideProps = async ({ query }) => {
@@ -32,26 +33,13 @@ const MEMBERS_PAGE_SIZE = 18;
 export const DelegatesPage = (props: Props) => {
     const { data: loggedInMember } = useCurrentMember();
 
-    const { data: members } = useQuery({
-        ...queryMembers(1, MEMBERS_PAGE_SIZE),
-        keepPreviousData: true,
-    });
+    const { data: members } = useQuery(queryMembers(1, MEMBERS_PAGE_SIZE));
 
-    const { data: membersStats } = useQuery({
-        ...queryMembersStats,
-        keepPreviousData: true,
-    });
+    const { data: membersStats } = useQuery(queryMembersStats);
 
-    const { data: leadRepresentative } = useQuery({
-        ...queryHeadDelegate,
-        keepPreviousData: true,
-    });
+    const { data: leadRepresentative } = useQuery(queryHeadDelegate);
 
-    const { data: myDelegation } = useQuery({
-        ...queryMyDelegation(loggedInMember?.account),
-        enabled: !!loggedInMember && !!loggedInMember.account,
-        keepPreviousData: true,
-    });
+    const { data: myDelegation } = useMyDelegation();
 
     if (
         !loggedInMember ||

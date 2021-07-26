@@ -151,3 +151,11 @@ export const useIsCommunityActive = () =>
         ...queryIsCommunityActive,
         refetchOnWindowFocus: false,
     });
+
+export const useMyDelegation = () => {
+    const { data: member } = useCurrentMember();
+    return useQuery({
+        ...queryMyDelegation(member?.account),
+        enabled: Boolean(member?.account),
+    });
+};
