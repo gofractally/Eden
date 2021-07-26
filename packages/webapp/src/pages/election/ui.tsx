@@ -1,5 +1,6 @@
-import React, { useState } from "react";
+import React, { useMemo, useState } from "react";
 import { useQuery } from "react-query";
+import { Flipper, Flipped } from "react-flip-toolkit";
 import { BiCheck, BiWebcam } from "react-icons/bi";
 import { FaCheckCircle } from "react-icons/fa";
 import { GoSync } from "react-icons/go";
@@ -142,6 +143,14 @@ const OngoingRoundSegment = ({
 
     const onSubmitVote = () => setVotedFor(selectedMember);
 
+    // TODO: If we want the list leaderboard flipper animation, we'll want to poll with the query and sort round participants by number of votes.
+    // Then we'll feed that into the Flipper instance below.
+    const sortMembersByVotes = useMemo(() => {
+        const getVoteCount = (m: MemberData) =>
+            m.account === votedFor?.account ? 1 : 0;
+        return [...members].sort((a, b) => getVoteCount(b) - getVoteCount(a));
+    }, [votedFor?.account]);
+
     return (
         <Expander
             header={<RoundHeader roundNum={round} subText={time} isActive />}
@@ -214,24 +223,32 @@ const OngoingRoundSegment = ({
                     </>
                 )}
             </Container>
-            <MembersGrid members={members || []}>
-                {(member) => (
-                    <VotingMemberChip
-                        key={member.account}
-                        member={member}
-                        isSelected={selectedMember?.account === member.account}
-                        onSelect={() => onSelectMember(member)}
-                        votesReceived={
-                            votedFor?.account === member.account ? 1 : 0
-                        }
-                        votingFor={
-                            ualAccount?.accountName === member.account
-                                ? votedFor?.name
-                                : undefined
-                        } // actual data will likely inform changes to the props implementation on this component
-                    />
-                )}
-            </MembersGrid>
+            <Flipper flipKey={sortMembersByVotes}>
+                <MembersGrid members={sortMembersByVotes}>
+                    {(member) => (
+                        <Flipped
+                            key={`leaderboard-${member.account}`}
+                            flipId={`leaderboard-${member.account}`}
+                        >
+                            <VotingMemberChip
+                                member={member}
+                                isSelected={
+                                    selectedMember?.account === member.account
+                                }
+                                onSelect={() => onSelectMember(member)}
+                                votesReceived={
+                                    votedFor?.account === member.account ? 1 : 0
+                                }
+                                votingFor={
+                                    ualAccount?.accountName === member.account
+                                        ? votedFor?.name
+                                        : undefined
+                                } // actual data will likely inform changes to the props implementation on this component.
+                            />
+                        </Flipped>
+                    )}
+                </MembersGrid>
+            </Flipper>
             <Container>
                 {votedFor && (
                     <div className="text-center mb-2">

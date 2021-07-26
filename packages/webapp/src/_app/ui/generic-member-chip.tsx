@@ -19,27 +19,30 @@ export const GenericMemberChip = ({
     actionComponent,
     contentComponent,
     footerComponent,
+    ...rest
 }: Props) => (
-    <div
-        className="relative p-2.5 hover:bg-gray-100 active:bg-gray-200 transition select-none cursor-pointer"
-        style={{ boxShadow: "0 0 0 1px #e5e5e5" }}
-        onClick={onClickChip}
-    >
+    <div {...rest}>
         <div
-            className="flex items-center justify-between"
+            className="relative p-2.5 hover:bg-gray-100 active:bg-gray-200 transition select-none cursor-pointer"
+            style={{ boxShadow: "0 0 0 1px #e5e5e5" }}
             onClick={onClickChip}
         >
-            <div className="flex space-x-2.5">
-                <ProfileImage
-                    imageCid={member.image}
-                    badge={isDelegate && <DelegateBadge size={11} />}
-                    onClick={onClickProfileImage || onClickChip}
-                />
-                {contentComponent}
+            <div
+                className="flex items-center justify-between"
+                onClick={onClickChip}
+            >
+                <div className="flex space-x-2.5">
+                    <ProfileImage
+                        imageCid={member.image}
+                        badge={isDelegate && <DelegateBadge size={11} />}
+                        onClick={onClickProfileImage || onClickChip}
+                    />
+                    {contentComponent}
+                </div>
+                {actionComponent}
             </div>
-            {actionComponent}
+            {footerComponent}
         </div>
-        {footerComponent}
     </div>
 );
 
