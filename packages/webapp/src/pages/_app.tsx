@@ -27,23 +27,18 @@ dayjs.extend(relativeTime.default);
 
 Modal.setAppElement("#__next");
 
-const WebApp = ({ Component, pageProps }: AppProps) => {
-    const queryClientRef = useRef<QueryClient>();
-    if (!queryClientRef.current) {
-        queryClientRef.current = new QueryClient();
-    }
+export const queryClient = new QueryClient();
 
-    return (
-        <QueryClientProvider client={queryClientRef.current}>
-            <Hydrate state={pageProps.dehydratedState}>
-                <EdenUALProvider>
-                    <Component {...pageProps} />
-                </EdenUALProvider>
-            </Hydrate>
-            <ReactQueryDevtools initialIsOpen={false} />
-            <Toaster />
-        </QueryClientProvider>
-    );
-};
+const WebApp = ({ Component, pageProps }: AppProps) => (
+    <QueryClientProvider client={queryClient}>
+        <Hydrate state={pageProps.dehydratedState}>
+            <EdenUALProvider>
+                <Component {...pageProps} />
+            </EdenUALProvider>
+        </Hydrate>
+        <ReactQueryDevtools initialIsOpen={false} />
+        <Toaster />
+    </QueryClientProvider>
+);
 
 export default WebApp;

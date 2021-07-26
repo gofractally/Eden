@@ -135,26 +135,16 @@ export const DelegatesPage = (props: Props) => {
                     -- Raw Table Data --
                 </Text>
                 <Text size="lg" className="bg-gray-200">
+                    Logged-in Member
+                </Text>
+                <pre>{JSON.stringify(loggedInMember, null, 2)}</pre>
+                <Text size="lg" className="bg-gray-200">
                     Members
                 </Text>
                 <Text size="sm" className="mb-4">
-                    <code>{`enum for status { pending = 0, active }`}</code>
+                    See delegates/api/fixtures.ts for more info on what raw
+                    member data looks like.
                 </Text>
-                <Text size="sm" className="mb-4">
-                    <code>
-                        {`enum for election_participation_status { NoDonation = 0, InElection, NotInElection, RecentlyInducted }`}
-                    </code>
-                </Text>
-                <div>
-                    <Text size="sm">Sampling a single member for space...</Text>
-                    <pre>
-                        {JSON.stringify(
-                            (members && members.length && members[0]) || {},
-                            null,
-                            2
-                        )}
-                    </pre>
-                </div>
             </div>
         </RawLayout>
     );
