@@ -9,12 +9,16 @@ interface VotingMemberChipProps {
     member: MemberData;
     onSelect: () => void;
     isSelected: boolean;
+    votesReceived: number;
+    votingFor?: string;
 }
 
 export const VotingMemberChip = ({
     member,
     onSelect,
     isSelected,
+    votesReceived,
+    votingFor,
 }: VotingMemberChipProps) => {
     const router = useRouter();
 
@@ -27,7 +31,22 @@ export const VotingMemberChip = ({
         <GenericMemberChip
             member={member}
             contentComponent={
-                <MemberDetails member={member} onClick={goToMemberPage} />
+                <div
+                    onClick={goToMemberPage}
+                    className="flex-1 flex flex-col justify-center group"
+                >
+                    {votesReceived > 0 && (
+                        <p className="text-xs text-blue-500 font-medium">
+                            Votes Received: {votesReceived}
+                        </p>
+                    )}
+                    <p className="group-hover:underline">{member.name}</p>
+                    {votingFor && (
+                        <p className="text-xs text-gray-500">
+                            Voting for {votingFor}
+                        </p>
+                    )}
+                </div>
             }
             actionComponent={
                 isSelected ? (
@@ -61,31 +80,20 @@ export const DelegateChip = ({ member, level }: DelegateChipProps) => {
         <GenericMemberChip
             member={member}
             isDelegate={true} // TODO: This will be inferred from member
-            contentComponent={<MemberDetails member={member} subText={level} />}
+            contentComponent={
+                <div className="flex-1 flex flex-col justify-center group">
+                    <p className="text-xs text-gray-500 font-light">
+                        @{member.account}
+                    </p>
+                    <p className="group-hover:underline">{member.name}</p>
+                    {level && (
+                        <p className="text-xs text-gray-500 font-light">
+                            {level}
+                        </p>
+                    )}
+                </div>
+            }
             onClickChip={goToMemberPage}
         />
     );
 };
-
-interface MemberDetailsProps {
-    member: MemberData;
-    subText?: string;
-    onClick?: (e: React.MouseEvent) => void;
-}
-
-export const MemberDetails = ({
-    member,
-    subText,
-    onClick,
-}: MemberDetailsProps) => (
-    <div
-        onClick={onClick}
-        className="flex-1 flex flex-col justify-center group"
-    >
-        <p className="text-xs text-gray-500 font-light">@{member.account}</p>
-        <p className="group-hover:underline">{member.name}</p>
-        {subText && (
-            <p className="text-xs text-gray-500 font-light">{subText}</p>
-        )}
-    </div>
-);
