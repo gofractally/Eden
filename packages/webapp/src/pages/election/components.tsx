@@ -53,6 +53,8 @@ export const MembersPage = (props: Props) => {
                         member={member}
                         isSelected={selectedMember === member.account}
                         onSelect={() => setSelected(member.account)}
+                        votesReceived={member.account === "pip.edev" ? 5 : 0}
+                        votingFor="Philip Pip"
                     />
                 )}
             </MembersGrid>
