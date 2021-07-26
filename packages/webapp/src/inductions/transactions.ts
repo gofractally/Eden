@@ -8,6 +8,7 @@ import {
 import { edenContractAccount, minimumDonationAmount } from "config";
 
 import { Induction, NewMemberProfile } from "./interfaces";
+import { EncryptedKey } from "encryption";
 
 export const donationTransaction = (authorizerAccount: string) => ({
     actions: [
@@ -214,6 +215,36 @@ export const cancelInductionTransaction = (
                 data: {
                     account: authorizerAccount,
                     id,
+                },
+            },
+        ],
+    };
+};
+
+export const setInductionMeeting = (
+    authorizerAccount: string,
+    id: string,
+    keys: EncryptedKey[],
+    data: Uint8Array,
+    old_data?: Uint8Array
+) => {
+    return {
+        actions: [
+            {
+                account: edenContractAccount,
+                name: "inductmeetin",
+                authorization: [
+                    {
+                        actor: authorizerAccount,
+                        permission: "active",
+                    },
+                ],
+                data: {
+                    account: authorizerAccount,
+                    id,
+                    keys,
+                    data,
+                    old_data,
                 },
             },
         ],
