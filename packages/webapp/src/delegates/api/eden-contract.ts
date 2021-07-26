@@ -1,5 +1,6 @@
 import { getElectionState } from "elections/api";
 import { EdenMember, getEdenMember, MemberData } from "members";
+import { queryClient } from "pages/_app";
 
 export const getHeadDelegate = async (): Promise<string | undefined> => {
     const electionState = await getElectionState();
@@ -30,8 +31,14 @@ export const getMyDelegation = async (
 
     if (!loggedInMemberAccount) return myDelegates;
 
-    const leadRepresentative = await getHeadDelegate();
-    let nextDelegate = await getEdenMember(loggedInMemberAccount);
+    const leadRepresentative = await queryClient.fetchQuery(
+        "query_head_delegate",
+        getHeadDelegate
+    );
+    let nextDelegate: EdenMember = await queryClient.fetchQuery(
+        ["query_member", loggedInMemberAccount],
+        () => getEdenMember(loggedInMemberAccount)
+    );
     if (!nextDelegate || !leadRepresentative) return myDelegates;
 
     while (
@@ -39,7 +46,11 @@ export const getMyDelegation = async (
         memberHasRepresentative(nextDelegate)
     ) {
         myDelegates.push(nextDelegate);
-        nextDelegate = await getEdenMember(nextDelegate!.representative);
+        const delegateRep = nextDelegate!.representative;
+        nextDelegate = await queryClient.fetchQuery(
+            ["query_member", delegateRep],
+            () => getEdenMember(delegateRep)
+        );
         if (!nextDelegate) return myDelegates;
     }
     if (
