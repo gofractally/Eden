@@ -5,7 +5,7 @@ import { FaCheckCircle } from "react-icons/fa";
 import { GoSync } from "react-icons/go";
 import { RiVideoUploadLine } from "react-icons/ri";
 
-import { FluidLayout, queryMembers, useFormFields } from "_app";
+import { FluidLayout, queryMembers, useFormFields, useUALAccount } from "_app";
 import {
     Button,
     Container,
@@ -40,7 +40,7 @@ export const OngoingElectionPage = (props: Props) => {
                 </Container>
                 <Container darkBg>
                     <Heading size={2}>Today's Election</Heading>
-                    <Text size="sm">In progress until 6:30pm EDT</Text>
+                    <Text>In progress until 6:30pm EDT</Text>
                 </Container>
                 <SupportSegment />
                 {members && (
@@ -91,14 +91,12 @@ const CompletedRoundSegment = ({
 }: CompletedRoundSegmentProps) => (
     <Expander
         header={
-            <div className="flex items-center space-x-2">
-                <FaCheckCircle size={22} className="ml-px text-gray-400" />
-                <div>
-                    <Text className="font-semibold">Round {round}</Text>
-                    <Text>Delegate elect: {winner.name}</Text>
-                </div>
-            </div>
+            <RoundHeader
+                roundNum={round}
+                subText={`Delegate elect: ${winner.name}`}
+            />
         }
+        inactive
     >
         <MembersGrid members={[winner]}>
             {(member) => (
@@ -125,6 +123,7 @@ const OngoingRoundSegment = ({
     round,
     time,
 }: OngoingRoundSegmentProps) => {
+    const [ualAccount] = useUALAccount();
     const [selectedMember, setSelected] = useState<MemberData | null>(null);
     const [votedFor, setVotedFor] = useState<MemberData | null>(null);
     const [
@@ -145,15 +144,7 @@ const OngoingRoundSegment = ({
 
     return (
         <Expander
-            header={
-                <div className="flex items-center space-x-2">
-                    <GoSync size={24} className="text-gray-400" />
-                    <div>
-                        <Text className="font-semibold">Round {round}</Text>
-                        <Text>{time}</Text>
-                    </div>
-                </div>
-            }
+            header={<RoundHeader roundNum={round} subText={time} isActive />}
             startExpanded
         >
             <Container className="space-y-2">
@@ -230,6 +221,14 @@ const OngoingRoundSegment = ({
                         member={member}
                         isSelected={selectedMember?.account === member.account}
                         onSelect={() => onSelectMember(member)}
+                        votesReceived={
+                            votedFor?.account === member.account ? 1 : 0
+                        }
+                        votingFor={
+                            ualAccount?.accountName === member.account
+                                ? votedFor?.name
+                                : undefined
+                        } // actual data will likely inform changes to the props implementation on this component
                     />
                 )}
             </MembersGrid>
@@ -262,6 +261,33 @@ const OngoingRoundSegment = ({
                 close={() => setShowPasswordPrompt(false)}
             />
         </Expander>
+    );
+};
+
+// TODO: Make more data-driven. E.g., infer if round is active based on time passed in, etc. Props will change.
+const RoundHeader = ({
+    roundNum,
+    isActive,
+    subText,
+}: {
+    roundNum: number;
+    isActive?: boolean;
+    subText: string;
+}) => {
+    return (
+        <div className="flex items-center space-x-2">
+            {isActive ? (
+                <GoSync size={24} className="text-gray-400" />
+            ) : (
+                <FaCheckCircle size={22} className="ml-px text-gray-400" />
+            )}
+            <div>
+                <Text size="sm" className="font-semibold">
+                    Round {roundNum}
+                </Text>
+                <Text size="sm">{subText}</Text>
+            </div>
+        </div>
     );
 };
 
