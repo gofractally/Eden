@@ -8,7 +8,7 @@ import * as fs from "fs";
 import { IncomingMessage } from "http";
 import nodeFetch from "node-fetch";
 import WebSocketClient from "ws";
-import { EdenSubchain } from "@edenos/common";
+import { EdenSubchain } from "@edenos/common/dist/subchain";
 import { performance } from "perf_hooks";
 
 // TODO: move constants to config.ts

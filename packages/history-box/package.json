@@ -4,14 +4,14 @@
   "version": "0.1.0",
   "license": "MIT",
   "scripts": {
-    "dev": "ts-node-dev -r tsconfig-paths/register src/index.ts",
-    "start": "NODE_ENV=production node dist/src",
+    "dev": "ts-node-dev -r tsconfig-paths/register src/receive-dfuse.ts",
+    "start": "NODE_ENV=production node dist/receive-dfuse.js",
     "build": "yarn run clean && yarn run compile",
     "clean": "rimraf -rf ./dist",
     "compile": "tsc -p tsconfig.build.json",
     "prepublishOnly": "yarn run build",
     "lint": "eslint --ext .js,.ts src",
-    "test": "yarn run build"
+    "test": "echo"
   },
   "devDependencies": {
     "typescript": "^4.3.5"
