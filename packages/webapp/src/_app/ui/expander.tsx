@@ -5,27 +5,30 @@ import { Container } from "_app";
 
 interface ExpanderProps {
     header: React.ReactNode;
-    hideContentDivider?: boolean;
+    showContentDivider?: boolean;
     startExpanded?: boolean;
+    inactive?: boolean;
     children: React.ReactNode;
 }
 
 export const Expander = ({
     header,
-    hideContentDivider,
+    showContentDivider,
     startExpanded = false,
+    inactive,
     children,
 }: ExpanderProps) => {
     const [isExpanded, setIsExpanded] = useState<boolean>(startExpanded);
     const containerClass =
         "flex justify-between items-center group cursor-pointer hover:bg-gray-100 active:bg-gray-200 select-none";
     const contentDividerClass =
-        !isExpanded || hideContentDivider ? "" : "border-b border-gray-100";
+        isExpanded && showContentDivider ? "border-b border-gray-100" : "";
     return (
-        <div>
+        <div className={inactive ? "bg-gray-50" : ""}>
             <Container
                 className={`${containerClass} ${contentDividerClass}`}
                 onClick={() => setIsExpanded(!isExpanded)}
+                darkBg={inactive}
             >
                 {header}
                 {isExpanded ? (
