@@ -1,5 +1,6 @@
 import { useEffect } from "react";
 import { GetServerSideProps } from "next";
+import { useQueryClient } from "react-query";
 
 import {
     zoomRequestAuth,
@@ -14,7 +15,7 @@ import {
     useUALAccount,
     Button,
     useZoomAccountJWT,
-    publishSecretToChain,
+    encryptSecretForPublishing,
 } from "_app";
 
 export const getServerSideProps: GetServerSideProps = async ({
@@ -75,16 +76,18 @@ export default ZoomOauthPage;
 
 const ZoomTestContainer = ({ ualAccount }: any) => {
     const [zoomAccountJWT, setZoomAccountJWT] = useZoomAccountJWT(undefined);
+    const queryClient = useQueryClient();
 
     const resetZoomAccount = () => {
         setZoomAccountJWT(undefined);
     };
 
     const generateZoomMeetingLink = async () => {
-        const x = await publishSecretToChain(
+        const x = await encryptSecretForPublishing(
             "https://us05web.zoom.us/j/81089675368?pwd=MUFWVkowNmk1SFVLTkJ4eEtyY01ldz09",
             ualAccount.accountName,
             ["participanta", "participantb", "participantc"],
+            queryClient,
             "Super important Meeting!"
         );
         if (x) {
