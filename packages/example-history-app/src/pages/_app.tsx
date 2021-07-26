@@ -10,7 +10,10 @@ async function initEdenChain() {
     try {
         const [, state] = await Promise.all([
             sub!.instantiateStreaming(fetch("demo-micro-chain.wasm")),
-            fetch("state").then((r) => r.arrayBuffer()),
+            fetch("state").then((r) => {
+                if (!r.ok) throw new Error(r.statusText);
+                return r.arrayBuffer();
+            }),
         ]);
         sub!.setMemory(state);
         console.log("wasm state loaded");
