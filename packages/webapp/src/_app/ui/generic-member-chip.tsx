@@ -21,7 +21,7 @@ export const GenericMemberChip = ({
     footerComponent,
 }: Props) => (
     <div
-        className="relative p-2.5 bg-white hover:bg-gray-100 active:bg-gray-200 transition select-none cursor-pointer"
+        className="relative p-2.5 hover:bg-gray-100 active:bg-gray-200 transition select-none cursor-pointer"
         style={{ boxShadow: "0 0 0 1px #e5e5e5" }}
         onClick={onClickChip}
     >
