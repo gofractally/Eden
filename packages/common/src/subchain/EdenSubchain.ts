@@ -116,6 +116,12 @@ export class EdenSubchain {
         });
     }
 
+    trimBlocks() {
+        this.protect(() => {
+            this.exports.trimBlocks();
+        });
+    }
+
     undo(blockId: string) {
         // TODO
     }

@@ -465,6 +465,11 @@ bool add_block(eden_chain::block&& eden_block, uint32_t eosio_irreversible)
    //    printf("%d\n", (int)b->num);
 }
 
+[[clang::export_name("trimBlocks")]] void trimBlocks()
+{
+   block_log.trim();
+}
+
 constexpr const char MemberConnection_name[] = "MemberConnection";
 constexpr const char MemberEdge_name[] = "MemberEdge";
 using MemberConnection =

@@ -119,6 +119,13 @@ namespace eden_chain
          blocks.push_back(std::make_unique<block_with_id>(block));
          return {appended, num_forked};
       }
+
+      // Keep only 1 irreversible block
+      void trim()
+      {
+         auto it = std::lower_bound(blocks.begin(), blocks.end(), irreversible, by_block_num);
+         blocks.erase(blocks.begin(), it);
+      }
    };
    EOSIO_REFLECT2(block_log, blocks, irreversible, method(blockByEosioNum, "num"))
 

@@ -8,27 +8,9 @@ import * as fs from "fs";
 import { IncomingMessage } from "http";
 import nodeFetch from "node-fetch";
 import WebSocketClient from "ws";
-import { EdenSubchain } from "@edenos/common/dist/subchain";
 import { performance } from "perf_hooks";
-
-// TODO: move constants to config.ts
-
-const jsonTrxFile =
-    process.env.DFUSE_JSON_TRX_FILE || "dfuse-transactions.json";
-
-const dfuseApiKey = process.env.DFUSE_API_KEY || "";
-const dfuseApiNetwork =
-    process.env.DFUSE_API_NETWORK || "eos.dfuse.eosnation.io";
-const dfuseAuthNetwork =
-    process.env.DFUSE_AUTH_NETWORK || "https://auth.eosnation.io";
-
-const edenContractAccount =
-    process.env.NEXT_PUBLIC_EDEN_CONTRACT_ACCOUNT || "genesis.eden";
-const tokenContractAccount = "eosio.token";
-const atomicContractAccount =
-    process.env.NEXT_PUBLIC_AA_CONTRACT || "atomicassets";
-const atomicMarketContractAccount =
-    process.env.NEXT_PUBLIC_AA_MARKET_CONTRACT || "atomicmarket";
+import * as config from "./config";
+import { Storage } from "./storage";
 
 const query = `
 subscription ($query: String!, $cursor: String, $limit: Int64, $low: Int64,
@@ -61,17 +43,17 @@ subscription ($query: String!, $cursor: String, $limit: Int64, $low: Int64,
 }`;
 
 const queryString = `(
-    auth:${edenContractAccount} -action:setcode -action:setabi ||
-    receiver:${edenContractAccount} account:${edenContractAccount} ||
-    receiver:${edenContractAccount} account:${tokenContractAccount} ||
-    receiver:${edenContractAccount} account:${atomicContractAccount} ||
-    receiver:${edenContractAccount} account:${atomicMarketContractAccount}
+    auth:${config.edenContractAccount} -action:setcode -action:setabi ||
+    receiver:${config.edenContractAccount} account:${config.edenContractAccount} ||
+    receiver:${config.edenContractAccount} account:${config.tokenContractAccount} ||
+    receiver:${config.edenContractAccount} account:${config.atomicContractAccount} ||
+    receiver:${config.edenContractAccount} account:${config.atomicMarketContractAccount}
 )`;
 
 const variables = {
     query: queryString,
     cursor: "",
-    low: 1,
+    low: config.dfuseFirstBlock,
     limit: 0,
     irrev: false,
     interval: 1,
@@ -105,21 +87,21 @@ interface JsonTrx {
 let jsonTransactions: JsonTrx[] = [];
 let numSaved = 0;
 try {
-    jsonTransactions = JSON.parse(fs.readFileSync(jsonTrxFile, "utf8"));
+    jsonTransactions = JSON.parse(fs.readFileSync(config.jsonTrxFile, "utf8"));
     numSaved = jsonTransactions.length;
 } catch (e) {}
 
 if (jsonTransactions.length)
     variables.cursor = jsonTransactions[jsonTransactions.length - 1].cursor;
 
-let wasm: EdenSubchain;
+let storage: Storage;
 
 let unpushedTransactions: JsonTrx[] = [];
 function pushTrx(trx: JsonTrx) {
     if (unpushedTransactions.length) {
         const prev = unpushedTransactions[unpushedTransactions.length - 1];
         if (trx.undo != prev.undo || trx.block.id != prev.block.id) {
-            if (prev.undo) wasm.undo(prev.block.id);
+            if (prev.undo) storage.undo(prev.block.id);
             else if (prev.trace) {
                 const block = { ...prev.block, transactions: [] };
                 for (let t of unpushedTransactions) {
@@ -134,7 +116,7 @@ function pushTrx(trx: JsonTrx) {
                         })),
                     });
                 }
-                wasm.pushJsonBlock(
+                storage.pushJsonBlock(
                     JSON.stringify(block),
                     prev.irreversibleBlockNum
                 );
@@ -147,24 +129,24 @@ function pushTrx(trx: JsonTrx) {
 
 async function main(): Promise<void> {
     try {
-        wasm = new EdenSubchain();
-        await wasm.instantiate(
-            new Uint8Array(fs.readFileSync("../../build/demo-micro-chain.wasm"))
-        );
-        wasm.initializeMemory();
-
+        storage = new Storage();
+        await storage.instantiate();
         const begin = performance.now();
         console.log("pushing existing blocks...");
         for (let trx of jsonTransactions) pushTrx(trx);
         console.log(performance.now() - begin, "ms");
-        fs.writeFileSync("state.tmp", wasm.uint8Array());
-        fs.renameSync("state.tmp", "state");
-        console.log("state saved");
+        storage.saveState();
+
+        console.log("connecting to", config.dfuseApiNetwork);
+        if (!jsonTransactions.length && config.dfuseFirstBlock === 1)
+            console.warn(
+                "Don't have an existing dfuse cursor and DFUSE_FIRST_BLOCK isn't set; this may take a while before the first result comes..."
+            );
 
         const client = createDfuseClient({
-            apiKey: dfuseApiKey,
-            network: dfuseApiNetwork,
-            authUrl: dfuseAuthNetwork,
+            apiKey: config.dfuseApiKey,
+            network: config.dfuseApiNetwork,
+            authUrl: config.dfuseAuthNetwork,
             httpClientOptions: {
                 fetch: nodeFetch,
             },
@@ -203,17 +185,19 @@ async function main(): Promise<void> {
                     pushTrx(trx);
                     if (jsonTransactions.length - numSaved > 10 || !trx.trace) {
                         console.log(
-                            `save ${jsonTrxFile}:`,
+                            `save ${config.jsonTrxFile}:`,
                             jsonTransactions.length,
                             "transactions and undo entries"
                         );
                         fs.writeFileSync(
-                            jsonTrxFile + ".tmp",
+                            config.jsonTrxFile + ".tmp",
                             JSON.stringify(jsonTransactions)
                         );
-                        fs.renameSync(jsonTrxFile + ".tmp", jsonTrxFile);
-                        fs.writeFileSync("state.tmp", wasm.uint8Array());
-                        fs.renameSync("state.tmp", "state");
+                        fs.renameSync(
+                            config.jsonTrxFile + ".tmp",
+                            config.jsonTrxFile
+                        );
+                        storage.saveState();
                         numSaved = jsonTransactions.length;
                     }
                 }
