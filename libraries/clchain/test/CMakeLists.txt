@@ -1,0 +1,4 @@
+add_executable(test-chainbase test-chainbase.cpp)
+target_include_directories(test-chainbase PUBLIC ../include ../../abieos/include)
+target_link_libraries(test-chainbase catch2)
+target_compile_options(test-chainbase PUBLIC -g -O0)

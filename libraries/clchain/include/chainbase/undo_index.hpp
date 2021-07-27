@@ -256,6 +256,10 @@ namespace chainbase
       using base_type::rbegin;
       using base_type::rend;
       using base_type::size;
+      friend bool operator==(const set_impl& lhs, const set_impl& rhs)
+      {
+         return static_cast<const base_type&>(lhs) == static_cast<const base_type&>(rhs);
+      }
       template <typename T, typename Allocator, typename... Indices>
       friend class undo_index;
    };
@@ -347,7 +351,7 @@ namespace chainbase
          using value_type = T;
          using allocator_type = Allocator;
          template <typename... A>
-         explicit old_node(const T& t) : value_holder<T>{t}
+         explicit old_node(const A&... a) : value_holder<T>{a...}
          {
          }
          uint64_t _mtime = 0;  // Backup of the node's _mtime, to be restored on undo
@@ -1090,6 +1094,153 @@ namespace chainbase
       {
          return static_cast<hook<index0_type, Allocator>&>(to_node(obj))._color;
       }
+
+      // Format:
+      // size: varint
+      // elements: [ T ]
+      // undo_stack_size: varint
+      // undo_stack:
+      //   [
+      //      num_old_values: varint
+      //      old_values: [ T ]
+      //      num_removed_values: varint
+      //      removed_values: [ T ]
+      //      old_next_id: uint64_t
+      //   ]
+      // next_id: uint64_t
+      // revision: uint64_t
+      //
+      template <typename S>
+      void to_bin_impl(S& stream) const
+      {
+         varuint64_to_bin(std::get<0>(_indices).size(), stream);
+         for (const auto& row : std::get<0>(_indices))
+         {
+            to_bin(row, stream);
+         }
+         varuint64_to_bin(_undo_stack.size(), stream);
+         for (auto iter = _undo_stack.begin(), end = _undo_stack.end(); iter != end; ++iter)
+         {
+            auto old_values_iter = _old_values.begin();
+            auto removed_values_iter = _removed_values.begin();
+            auto next = iter;
+            ++next;
+            if (next != end)
+            {
+               old_values_iter = get_old_values_end(*next);
+               removed_values_iter = get_removed_values_end(*next);
+            }
+            auto include_old = [&](auto& old_value) {
+               return to_node(old_value)._mtime < iter->ctime;
+            };
+            const auto& state = *iter;
+            auto old_values_end = get_old_values_end(*iter);
+            varuint64_to_bin(std::count_if(old_values_iter, old_values_end, include_old), stream);
+            for (; old_values_iter != old_values_end; ++old_values_iter)
+            {
+               if (include_old(*old_values_iter))
+               {
+                  to_bin(*old_values_iter, stream);
+               }
+            }
+            auto removed_values_end = get_removed_values_end(*iter);
+            varuint64_to_bin(std::distance(removed_values_iter, removed_values_end), stream);
+            for (; removed_values_iter != removed_values_end; ++removed_values_iter)
+            {
+               to_bin(*removed_values_iter, stream);
+            }
+            to_bin(state.old_next_id, stream);
+         }
+         to_bin(_next_id, stream);
+         to_bin(_revision, stream);
+      }
+
+      template <typename S>
+      void from_bin_impl(S& stream)
+      {
+         uint64_t count = varuint64_from_bin(stream);
+         for (uint64_t i = 0; i < count; ++i)
+         {
+            emplace([&](auto& row) { from_bin(row, stream); });
+         }
+         uint64_t undo_stack_count = varuint64_from_bin(stream);
+         for (uint64_t i = 0; i < undo_stack_count; ++i)
+         {
+            auto monotonic_revision = i + 1;
+            _undo_stack.push_back({_old_values.empty() ? nullptr : &*_old_values.begin(),
+                                   _removed_values.empty() ? nullptr : &*_removed_values.begin(), 0,
+                                   monotonic_revision});
+            auto num_old_values = varuint64_from_bin(stream);
+            for (uint64_t j = 0; j < num_old_values; ++j)
+            {
+               auto p = old_alloc_traits::allocate(_old_values_allocator, 1);
+               auto guard0 = scope_exit{[&] { _old_values_allocator.deallocate(p, 1); }};
+               old_alloc_traits::construct(
+                   _old_values_allocator, &*p, [&](auto& row) { from_bin(row, stream); },
+                   propagate_allocator(_allocator));
+               auto* obj = find(p->_item.id);
+               if (!obj)
+               {
+                  // Temporarily insert into the primary index.
+                  // This node has been erased, but we need to be able to access it
+                  // to set mtime  correctly.  It is safe to insert it in the primary index
+                  // because the primary key is never reused.  It must not be inserted
+                  // in any other index, because that could create a conflict.
+                  // There must be an erase for this node in a later undo state,
+                  // and we will remove it from the primary index when we see the erase.
+                  auto temp_obj = alloc_traits::allocate(_allocator, 1);
+                  auto guard1 =
+                      scope_exit{[&] { alloc_traits::deallocate(_allocator, temp_obj, 1); }};
+                  auto constructor = [&](value_type& v) { v.id = p->_item.id; };
+                  alloc_traits::construct(_allocator, &*temp_obj, constructor,
+                                          propagate_allocator(_allocator));
+                  guard1.cancel();
+                  std::get<0>(_indices).insert_unique(temp_obj->_item);
+                  obj = &temp_obj->_item;
+               }
+               p->_mtime = to_node(*obj)._mtime;
+               p->_current = &to_node(*obj);
+               guard0.cancel();
+               _old_values.push_front(p->_item);
+               to_node(*obj)._mtime = monotonic_revision;
+            }
+            auto num_removed_values = varuint64_from_bin(stream);
+            for (uint64_t j = 0; j < num_removed_values; ++j)
+            {
+               auto p = alloc_traits::allocate(_allocator, 1);
+               auto guard0 = scope_exit{[&] { alloc_traits::deallocate(_allocator, p, 1); }};
+               auto constructor = [&](value_type& v) { from_bin(v, stream); };
+               alloc_traits::construct(_allocator, &*p, constructor,
+                                       propagate_allocator(_allocator));
+               guard0.cancel();
+               if (auto* existing = const_cast<T*>(find(p->_item.id)))
+               {
+                  *existing = std::move(p->_item);
+                  std::get<0>(_indices).erase(std::get<0>(_indices).iterator_to(*existing));
+                  dispose_node(*p);
+                  p = &to_node(*existing);
+               }
+               get_removed_field(p->_item) = erased_flag;
+               _removed_values.push_front(p->_item);
+            }
+            from_bin(_undo_stack.back().old_next_id, stream);
+         }
+         from_bin(_next_id, stream);
+         from_bin(_revision, stream);
+         _monotonic_revision = undo_stack_count;
+      }
+
+      template <typename S>
+      friend void to_bin(const undo_index& self, S& stream)
+      {
+         self.to_bin_impl(stream);
+      }
+      template <typename S>
+      friend void from_bin(undo_index& self, S& stream)
+      {
+         self.from_bin_impl(stream);
+      }
+
       using old_alloc_traits =
           typename std::allocator_traits<Allocator>::template rebind_traits<old_node>;
       indices_type _indices;
