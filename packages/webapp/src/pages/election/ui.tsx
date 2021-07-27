@@ -16,7 +16,7 @@ import {
     Modal,
     Text,
 } from "_app/ui";
-import { DelegateChip, VotingMemberChip } from "elections";
+import { ElectionParticipantChip, VotingMemberChip } from "elections";
 import { MembersGrid } from "members";
 import { MemberData } from "members/interfaces";
 
@@ -45,7 +45,11 @@ export const OngoingElectionPage = (props: Props) => {
                 </Container>
                 <SupportSegment />
                 {members && (
-                    <CompletedRoundSegment round={1} winner={members[4]} />
+                    <CompletedRoundSegment
+                        round={1}
+                        participants={members}
+                        winner={members[4]}
+                    />
                 )}
                 {members && (
                     <OngoingRoundSegment
@@ -83,26 +87,47 @@ const SupportSegment = () => (
 
 interface CompletedRoundSegmentProps {
     round: number;
-    winner: MemberData;
+    participants: MemberData[];
+    winner?: MemberData;
 }
 
 const CompletedRoundSegment = ({
     round,
+    participants,
     winner,
 }: CompletedRoundSegmentProps) => (
     <Expander
         header={
             <RoundHeader
                 roundNum={round}
-                subText={`Delegate elect: ${winner.name}`}
+                subText={
+                    winner
+                        ? `Delegate elect: ${winner.name}`
+                        : "Consensus not achieved"
+                }
             />
         }
         inactive
     >
-        <MembersGrid members={[winner]}>
-            {(member) => (
-                <DelegateChip key={`round-${round}-winner`} member={member} />
-            )}
+        <MembersGrid members={participants}>
+            {(member) => {
+                if (member.account === winner?.account) {
+                    return (
+                        <ElectionParticipantChip
+                            key={`round-${round}-winner`}
+                            member={member}
+                            delegateLevel="Delegate elect"
+                            electionVideoCid="QmeKPeuSai8sbEfvbuVXzQUzYRsntL3KSj5Xok7eRiX5Fp/edenTest2ElectionRoom12.mp4"
+                        />
+                    );
+                }
+                return (
+                    <ElectionParticipantChip
+                        key={`round-${round}-participant-${member.account}`}
+                        member={member}
+                    />
+                );
+            }}
         </MembersGrid>
         <Container>
             <Button size="sm">
@@ -244,6 +269,11 @@ const OngoingRoundSegment = ({
                                         ? votedFor?.name
                                         : undefined
                                 } // actual data will likely inform changes to the props implementation on this component.
+                                electionVideoCid={
+                                    ualAccount?.accountName === member.account
+                                        ? "QmeKPeuSai8sbEfvbuVXzQUzYRsntL3KSj5Xok7eRiX5Fp/edenTest2ElectionRoom12.mp4"
+                                        : undefined
+                                } // TODO: this will obviously change once implemented too
                                 className="bg-white"
                                 style={{ zIndex: 10 + members.length - index }}
                             />

@@ -4,16 +4,11 @@ import dayjs from "dayjs";
 import { FaGavel } from "react-icons/fa";
 
 import { atomicAssets, blockExplorerAccountBaseUrl } from "config";
-import { assetToString } from "_app";
+import { assetToString, openInNewTab } from "_app";
 import { GenericMemberChip } from "_app/ui";
 import { ROUTES } from "_app/config";
 
 import { MemberData } from "../interfaces";
-
-const openInNewTab = (url: string) => {
-    const newWindow = window.open(url, "_blank", "noopener,noreferrer");
-    if (newWindow) newWindow.opener = null;
-};
 
 export const MemberChip = ({ member }: { member: MemberData }) => {
     const router = useRouter();
