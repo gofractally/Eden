@@ -655,11 +655,12 @@ namespace clchain
                            return (ok = error("expected )")), void();
                         input_stream.skip();
                      }
-                     for (int i = 0; i < mf::num_args; ++i)
-                        if (!filled[i])
-                           return (ok = error("function missing required arg '" +
-                                              std::string(std::data({arg_names...})[i]) + "'")),
-                                  void();
+                     if constexpr (mf::num_args > 0)
+                        for (int i = 0; i < mf::num_args; ++i)
+                           if (!filled[i])
+                              return (ok = error("function missing required arg '" +
+                                                 std::string(std::data({arg_names...})[i]) + "'")),
+                                     void();
                      auto result = std::apply(
                          [&](auto&&... args) {
                             return (value.*member(&value))(std::move(args)...);

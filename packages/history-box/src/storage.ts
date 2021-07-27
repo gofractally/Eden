@@ -5,6 +5,8 @@ import * as fs from "fs";
 export class Storage {
     blocksWasm: EdenSubchain;
     stateWasm: EdenSubchain;
+    head = 0;
+    callbacks: (() => void)[] = [];
 
     async instantiate() {
         try {
@@ -30,7 +32,7 @@ export class Storage {
         if (!this.blocksWasm || !this.stateWasm)
             throw new Error("wasm state is corrupt");
         try {
-            f();
+            return f();
         } catch (e) {
             this.blocksWasm = null;
             this.stateWasm = null;
@@ -49,12 +51,41 @@ export class Storage {
         });
     }
 
+    query(q: string): any {
+        return this.protect(() => {
+            return this.blocksWasm.query(q);
+        });
+    }
+
+    getBlock(num: number) {
+        return this.protect(() => this.blocksWasm.getBlock(num));
+    }
+
+    idForNum(num: number): string {
+        return this.query(`{blockLog{blockByNum(num:${num}){id}}}`).data
+            .blockLog.blockByNum.id;
+    }
+
+    changed() {
+        const r = this.query("{blockLog{head{num}}}");
+        this.head = r.data.blockLog.head?.num || 0;
+        const cb = this.callbacks;
+        this.callbacks = [];
+        for (let f of cb) {
+            try {
+                f();
+            } catch (e) {
+                console.error(e);
+            }
+        }
+    }
+
     undo(id: string) {
         // TODO
     }
 
     pushJsonBlock(jsonBlock: string, irreversible: number) {
-        return this.protect(() => {
+        const result = this.protect(() => {
             const result = this.blocksWasm.pushJsonBlock(
                 jsonBlock,
                 irreversible
@@ -63,5 +94,7 @@ export class Storage {
             this.stateWasm.trimBlocks();
             return result;
         });
+        this.changed();
+        return result;
     }
 }

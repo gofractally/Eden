@@ -126,6 +126,13 @@ export class EdenSubchain {
         // TODO
     }
 
+    getBlock(num: number) {
+        return this.protect(() => {
+            if (!this.exports.getBlock(num)) return null;
+            return this.resultAsUint8Array();
+        });
+    }
+
     getSchema() {
         if (!this.schema.length)
             this.schema = this.decodeStr(

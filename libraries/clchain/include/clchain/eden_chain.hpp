@@ -83,6 +83,21 @@ namespace eden_chain
       std::vector<std::unique_ptr<block_with_id>> blocks;
       uint32_t irreversible = 0;
 
+      const block_with_id* head() const
+      {
+         if (blocks.empty())
+            return nullptr;
+         return &*blocks.back();
+      }
+
+      const block_with_id* blockByNum(uint32_t num) const
+      {
+         auto it = std::lower_bound(blocks.begin(), blocks.end(), num, by_block_num);
+         if (it != blocks.end() && get_block_num(*it) == num)
+            return &**it;
+         return nullptr;
+      }
+
       const block_with_id* blockByEosioNum(uint32_t num) const
       {
          auto it = std::lower_bound(blocks.begin(), blocks.end(), num, by_eosio_num);
@@ -127,6 +142,11 @@ namespace eden_chain
          blocks.erase(blocks.begin(), it);
       }
    };
-   EOSIO_REFLECT2(block_log, blocks, irreversible, method(blockByEosioNum, "num"))
+   EOSIO_REFLECT2(block_log,
+                  blocks,
+                  irreversible,
+                  head,
+                  method(blockByNum, "num"),
+                  method(blockByEosioNum, "num"))
 
 }  // namespace eden_chain

@@ -470,6 +470,15 @@ bool add_block(eden_chain::block&& eden_block, uint32_t eosio_irreversible)
    block_log.trim();
 }
 
+[[clang::export_name("getBlock")]] bool getBlock(uint32_t num)
+{
+   auto block = block_log.blockByNum(num);
+   if (!block)
+      return false;
+   result = eosio::convert_to_bin(*block);
+   return true;
+}
+
 constexpr const char MemberConnection_name[] = "MemberConnection";
 constexpr const char MemberEdge_name[] = "MemberEdge";
 using MemberConnection =

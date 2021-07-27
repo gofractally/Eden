@@ -4,8 +4,8 @@
   "version": "0.1.0",
   "license": "MIT",
   "scripts": {
-    "dev": "ts-node-dev -r tsconfig-paths/register src/receive-dfuse.ts",
-    "start": "NODE_ENV=production node dist/receive-dfuse.js",
+    "dev": "ts-node-dev -r tsconfig-paths/register src/server.ts",
+    "start": "NODE_ENV=production node dist/server.js",
     "build": "yarn run clean && yarn run compile",
     "clean": "rimraf -rf ./dist",
     "compile": "tsc -p tsconfig.build.json",
@@ -14,10 +14,14 @@
     "test": "echo"
   },
   "devDependencies": {
+    "@types/express": "^4.17.13",
+    "@types/ws": "^7.4.7",
     "typescript": "^4.3.5"
   },
   "dependencies": {
     "@dfuse/client": "^0.3.20",
-    "@edenos/common": "^0.1.0"
+    "@edenos/common": "^0.1.0",
+    "express": "^4.17.1",
+    "ws": "^7.5.3"
   }
 }
