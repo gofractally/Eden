@@ -19,9 +19,9 @@ interface Props {
 
 export type ButtonSize = "sm" | "md" | "lg";
 const SIZES: { [key in ButtonSize]: string } = {
-    sm: "py-1.5 px-3 text-sm rounded",
-    md: "py-1.5 px-5 font-medium rounded-md",
-    lg: "py-3 px-6 rounded-md text-lg",
+    sm: "py-1.5 px-3 text-sm",
+    md: "py-1.5 px-5 font-medium",
+    lg: "py-3 px-6 text-lg",
 };
 
 export type ButtonType =
