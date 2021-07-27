@@ -13,7 +13,7 @@ interface ExpanderProps {
 
 export const Expander = ({
     header,
-    showContentDivider,
+    showContentDivider = false,
     startExpanded = false,
     inactive,
     children,

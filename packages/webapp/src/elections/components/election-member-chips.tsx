@@ -21,7 +21,7 @@ export const VotingMemberChip = ({
     isSelected,
     votesReceived,
     votingFor,
-    ...rest
+    ...containerProps
 }: VotingMemberChipProps) => {
     const router = useRouter();
 
@@ -62,7 +62,7 @@ export const VotingMemberChip = ({
                 )
             }
             onClickChip={onSelect}
-            {...rest}
+            {...containerProps}
         />
     );
 };
