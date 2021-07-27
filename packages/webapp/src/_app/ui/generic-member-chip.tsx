@@ -19,9 +19,9 @@ export const GenericMemberChip = ({
     actionComponent,
     contentComponent,
     footerComponent,
-    ...rest
+    ...containerProps
 }: Props) => (
-    <div {...rest}>
+    <div {...containerProps}>
         <div
             className="relative p-2.5 hover:bg-gray-100 active:bg-gray-200 transition select-none cursor-pointer"
             style={{ boxShadow: "0 0 0 1px #e5e5e5" }}
