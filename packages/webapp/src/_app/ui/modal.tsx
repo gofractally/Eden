@@ -36,7 +36,7 @@ export const Modal = ({
             className={`${baseClass} ${mobileClass} ${desktopClass}`}
             overlayClassName={{
                 base:
-                    "base fixed inset-0 bg-gray-900 bg-opacity-0 opacity-0 transition ease-in-out duration-200",
+                    "base fixed inset-0 bg-gray-900 bg-opacity-0 opacity-0 transition ease-in-out duration-200 z-50",
                 beforeClose: "bg-opacity-0 opacity-0",
                 afterOpen: props.isOpen ? "bg-opacity-50 opacity-100" : "",
             }}
