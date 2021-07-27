@@ -11,6 +11,8 @@ interface VotingMemberChipProps {
     isSelected: boolean;
     votesReceived: number;
     votingFor?: string;
+    className?: string;
+    style?: React.CSSProperties;
 }
 
 export const VotingMemberChip = ({

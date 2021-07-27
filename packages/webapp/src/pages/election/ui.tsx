@@ -225,7 +225,7 @@ const OngoingRoundSegment = ({
             </Container>
             <Flipper flipKey={sortMembersByVotes}>
                 <MembersGrid members={sortMembersByVotes}>
-                    {(member) => (
+                    {(member, index) => (
                         <Flipped
                             key={`leaderboard-${member.account}`}
                             flipId={`leaderboard-${member.account}`}
@@ -244,6 +244,8 @@ const OngoingRoundSegment = ({
                                         ? votedFor?.name
                                         : undefined
                                 } // actual data will likely inform changes to the props implementation on this component.
+                                className="bg-white"
+                                style={{ zIndex: 10 + members.length - index }}
                             />
                         </Flipped>
                     )}
