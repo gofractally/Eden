@@ -1,4 +1,4 @@
-import { EdenSubchain } from "@edenos/common/dist/subchain";
+import EdenSubchain from "../../common/src/subchain/EdenSubchain";
 import * as config from "./config";
 import * as fs from "fs";
 
@@ -57,7 +57,7 @@ export class Storage {
         });
     }
 
-    getBlock(num: number) {
+    getBlock(num: number): Uint8Array {
         return this.protect(() => this.blocksWasm.getBlock(num));
     }
 

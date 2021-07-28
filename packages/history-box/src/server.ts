@@ -3,26 +3,19 @@ import * as http from "http";
 import * as WebSocket from "ws";
 import { Storage } from "./storage";
 import DfuseReceiver from "./DfuseReceiver";
+import {
+    ClientStatus,
+    ServerMessage,
+} from "../../common/src/subchain/SubchainProtocol";
 
 const app = express();
 const server = http.createServer(app);
 const wss = new WebSocket.Server({
     server,
     path: "/eden-microchain",
-    maxPayload: 8 * 1024,
 });
 const storage = new Storage();
 const dfuseReceiver = new DfuseReceiver(storage);
-
-interface BlockInfo {
-    num: number;
-    id: string;
-}
-
-interface ClientStatus {
-    maxBlocksToSend: number;
-    blocks: BlockInfo[];
-}
 
 // TODO: timeout
 class ConnectionState {
@@ -45,10 +38,13 @@ class ConnectionState {
     }
 
     head() {
-        let head = 0;
         if (this.status.blocks.length)
-            head = this.status.blocks[this.status.blocks.length - 1].num;
-        return head;
+            return this.status.blocks[this.status.blocks.length - 1].num;
+        return 0;
+    }
+
+    sendMsg(msg: ServerMessage) {
+        this.ws.send(JSON.stringify(msg));
     }
 
     update() {
@@ -76,18 +72,17 @@ class ConnectionState {
                 if (!block) throw new Error("Missing block");
                 this.ws.send(block);
                 this.status.maxBlocksToSend--;
-                needHeadUpdate = false;
                 this.status.blocks.push({
                     num: needBlock,
                     id: storage.idForNum(needBlock),
                 });
                 needHeadUpdate = false;
             }
-            this.ws.send(
-                JSON.stringify({ type: "setHead", head: this.head() })
-            );
+            // TODO: trim status.blocks
+            if (needHeadUpdate)
+                this.sendMsg({ type: "setHead", head: this.head() });
             if (!this.status.maxBlocksToSend)
-                this.ws.send(JSON.stringify({ type: "sendStatus" }));
+                this.sendMsg({ type: "sendStatus" });
             else this.addCallback();
         } catch (e) {
             // TODO: report some errors to client
@@ -95,14 +90,14 @@ class ConnectionState {
             this.ws.close();
             this.ws = null;
         }
-    }
-}
+    } // update()
+} // ConnectionState
 
 wss.on("connection", (ws: WebSocket) => {
+    console.log("incoming connection");
     ws.on("message", (message: string) => {
         const wsa = ws as any;
-        if (!wsa.connectionState)
-            wsa.connectionState = new wsa.connectionState(ws);
+        if (!wsa.connectionState) wsa.connectionState = new ConnectionState(ws);
         const cs: ConnectionState = wsa.connectionState;
         try {
             cs.status = JSON.parse(message);

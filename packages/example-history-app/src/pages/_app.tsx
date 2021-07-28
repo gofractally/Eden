@@ -1,34 +1,30 @@
 import { AppProps } from "next/app";
-import { EdenSubchain } from "@edenos/common/dist/subchain";
+import EdenSubchain from "../../../common/src/subchain/EdenSubchain";
+import SubchainClient from "../../../common/src/subchain/SubchainClient";
 import { useState } from "react";
 import "../../../../node_modules/graphiql/graphiql.min.css";
 
 /* global fetch */
 
-let sub: EdenSubchain | null;
+let client: SubchainClient | null;
 async function initEdenChain() {
     try {
-        const [, state] = await Promise.all([
-            sub!.instantiateStreaming(fetch("demo-micro-chain.wasm")),
-            fetch("state").then((r) => {
-                if (!r.ok) throw new Error(r.statusText);
-                return r.arrayBuffer();
-            }),
-        ]);
-        sub!.setMemory(state);
-        console.log("wasm state loaded");
+        await client!.instantiateStreaming(
+            fetch("demo-micro-chain.wasm"),
+            "ws://localhost:3002/eden-microchain"
+        );
     } catch (e) {
         console.error(e);
-        sub = null;
+        client = null;
     }
 }
 
 function MyApp({ Component, pageProps }: AppProps) {
     const [subchain, setSubchain] = useState<EdenSubchain | null>();
-    if (!sub && typeof window !== "undefined") {
-        sub = new EdenSubchain();
+    if (!client && typeof window !== "undefined") {
+        client = new SubchainClient();
         initEdenChain().then(() => {
-            setSubchain(sub);
+            setSubchain(client?.subchain);
         });
     }
     return <Component {...{ ...pageProps, subchain }} />;

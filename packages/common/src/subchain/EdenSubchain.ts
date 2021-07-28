@@ -1,4 +1,4 @@
-export class EdenSubchain {
+export default class EdenSubchain {
     module?: WebAssembly.Module;
     instance?: WebAssembly.Instance;
     memory?: WebAssembly.Memory;
@@ -96,23 +96,42 @@ export class EdenSubchain {
         for (let i = 0; i < u32.length; ++i) dest[i] = u32[i];
     }
 
-    pushJsonBlock(jsonBlock: string, irreversible: number) {
+    withData<T>(data: Uint8Array, f: (addr: number) => T) {
+        const destAddr = this.exports.allocateMemory(data.length);
+        if (!destAddr) throw new Error("allocateMemory failed");
+        const dest = this.uint8Array(destAddr, data.length);
+        for (let i = 0; i < data.length; ++i) dest[i] = data[i];
+        const result = f(destAddr);
+        this.exports.freeMemory(destAddr);
+        return result;
+    }
+
+    pushJsonBlock(jsonBlock: string, eosioIrreversible: number) {
         return this.protect(() => {
             const utf8 = new TextEncoder().encode(jsonBlock);
-            const destAddr = this.exports.allocateMemory(utf8.length);
-            if (!destAddr) throw new Error("allocateMemory failed");
-            const dest = this.uint8Array(destAddr, utf8.length);
-            for (let i = 0; i < utf8.length; ++i) dest[i] = utf8[i];
-            const ok = this.exports.addEosioBlockJson(
-                destAddr,
-                utf8.length,
-                irreversible
+            const ok = !this.withData(utf8, (addr) =>
+                this.exports.addEosioBlockJson(
+                    addr,
+                    utf8.length,
+                    eosioIrreversible
+                )
             );
-            this.exports.freeMemory(destAddr);
             if (!ok) return null;
             const block = new Uint8Array(this.resultAsUint8Array());
             const num = new Uint32Array(block.buffer, 32, 8)[0];
             return { block, num };
+        });
+    }
+
+    pushBlock(block: Uint8Array, eosioIrreversible: number): boolean {
+        return this.protect(() => {
+            return this.withData(block, (addr) => {
+                return this.exports.addBlock(
+                    addr,
+                    block.length,
+                    eosioIrreversible
+                );
+            });
         });
     }
 

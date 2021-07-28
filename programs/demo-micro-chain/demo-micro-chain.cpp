@@ -7,6 +7,7 @@
 #include <clchain/eden_chain.hpp>
 #include <clchain/graphql_connection.hpp>
 #include <eden.hpp>
+#include <eosio/from_bin.hpp>
 #include <eosio/to_bin.hpp>
 
 using namespace eosio::literals;
@@ -463,6 +464,18 @@ bool add_block(eden_chain::block&& eden_block, uint32_t eosio_irreversible)
    //        (int)block_log.blocks.size());
    // for (auto& b : block_log.blocks)
    //    printf("%d\n", (int)b->num);
+}
+
+// TODO: prevent from_bin from aborting
+[[clang::export_name("addBlock")]] bool addBlock(const char* data,
+                                                 uint32_t size,
+                                                 uint32_t eosio_irreversible)
+{
+   // TODO: verify id integrity
+   eosio::input_stream bin{data, size};
+   eden_chain::block_with_id block;
+   eosio::from_bin(block, bin);
+   return add_block(std::move(block), eosio_irreversible);
 }
 
 [[clang::export_name("trimBlocks")]] void trimBlocks()

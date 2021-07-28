@@ -229,7 +229,7 @@ export default class DfuseReceiver {
             }
         );
 
-        console.log("Socket is now connected.");
+        console.log("dfuse is now connected");
     }
     catch(e) {
         console.error(e);
