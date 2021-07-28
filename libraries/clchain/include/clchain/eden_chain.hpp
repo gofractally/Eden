@@ -106,6 +106,14 @@ namespace eden_chain
          return nullptr;
       }
 
+      const block_with_id* block_before_num(uint32_t num) const
+      {
+         auto it = std::lower_bound(blocks.begin(), blocks.end(), num, by_block_num);
+         if (it != blocks.begin())
+            return &*it[-1];
+         return nullptr;
+      }
+
       const block_with_id* block_before_eosio_num(uint32_t num) const
       {
          auto it = std::lower_bound(blocks.begin(), blocks.end(), num, by_eosio_num);

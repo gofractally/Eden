@@ -96,6 +96,12 @@ export default class EdenSubchain {
         for (let i = 0; i < u32.length; ++i) dest[i] = u32[i];
     }
 
+    setIrreversible(eosioIrreversible: number): number {
+        return this.protect(() => {
+            return this.exports.setIrreversible(eosioIrreversible);
+        });
+    }
+
     withData<T>(data: Uint8Array, f: (addr: number) => T) {
         const destAddr = this.exports.allocateMemory(data.length);
         if (!destAddr) throw new Error("allocateMemory failed");

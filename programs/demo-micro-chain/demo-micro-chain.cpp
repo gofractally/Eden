@@ -478,6 +478,14 @@ bool add_block(eden_chain::block&& eden_block, uint32_t eosio_irreversible)
    return add_block(std::move(block), eosio_irreversible);
 }
 
+[[clang::export_name("setIrreversible")]] uint32_t setIrreversible(uint32_t irreversible)
+{
+   if (auto* b = block_log.block_before_num(irreversible + 1))
+      block_log.irreversible = std::max(block_log.irreversible, b->num);
+   db.db.commit(block_log.irreversible);
+   return block_log.irreversible;
+}
+
 [[clang::export_name("trimBlocks")]] void trimBlocks()
 {
    block_log.trim();

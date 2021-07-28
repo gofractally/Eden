@@ -5,10 +5,12 @@ export interface BlockInfo {
 
 export interface ClientStatus {
     maxBlocksToSend: number;
+    irreversible: number;
     blocks: BlockInfo[];
 }
 
 export interface ServerMessage {
     type: string;
     head?: number;
+    irreversible?: number;
 }

@@ -77,6 +77,14 @@ class ConnectionState {
                     id: storage.idForNum(needBlock),
                 });
                 needHeadUpdate = false;
+                let irreversible = Math.min(
+                    storage.blocksWasm.getIrreversible(),
+                    this.head()
+                );
+                if (irreversible > this.status.irreversible) {
+                    this.sendMsg({ type: "setIrreversible", irreversible });
+                    this.status.irreversible = irreversible;
+                }
             }
             // TODO: trim status.blocks
             if (needHeadUpdate)

@@ -35,8 +35,9 @@ export default class SubchainClient {
             .data.blockLog.blocks.edges.map((e: any) => e.node);
         while (blocks.length && blocks[0].num < irreversible) blocks.shift();
         const stat: ClientStatus = {
-            blocks,
             maxBlocksToSend: 1000,
+            irreversible,
+            blocks,
         };
         this.ws.send(JSON.stringify(stat));
     }
@@ -55,7 +56,12 @@ export default class SubchainClient {
                     this.subchain.pushBlock(new Uint8Array(d), 0);
                 } else {
                     const msg: ServerMessage = JSON.parse(data!);
-                    if (msg.type === "sendStatus") await this.sendStatus();
+                    if (msg.type === "sendStatus") {
+                        await this.sendStatus();
+                    } else if (msg.type === "setIrreversible") {
+                        this.subchain.setIrreversible(msg.irreversible!);
+                        this.subchain.trimBlocks();
+                    }
                 }
             }
         } catch (e) {
