@@ -11,10 +11,12 @@
 #include <boost/multi_index_container_fwd.hpp>
 #include <eosio/check.hpp>
 
+#include <algorithm>
 #include <cassert>
 #include <memory>
 #include <sstream>
 #include <type_traits>
+#include <vector>
 
 namespace chainbase
 {
@@ -133,10 +135,59 @@ namespace chainbase
       static void set_previous(node_ptr n, node_ptr previous) { set_left(n, previous); }
    };
 
-   template <typename Node, typename Tag>
+   template <class Tag>
+   struct ptr_node_base
+   {
+      ptr_node_base() = default;
+      ptr_node_base(const ptr_node_base&) {}
+      constexpr ptr_node_base& operator=(const ptr_node_base&) { return *this; }
+      ptr_node_base* _parent;
+      ptr_node_base* _left;
+      ptr_node_base* _right;
+      int _color;
+   };
+
+   template <class Tag>
+   struct ptr_node_traits
+   {
+      using node = ptr_node_base<Tag>;
+      using node_ptr = node*;
+      using const_node_ptr = const node*;
+      using color = int;
+      static node_ptr get_parent(const_node_ptr n) { return n->_parent; }
+      static void set_parent(node_ptr n, node_ptr parent) { n->_parent = parent; }
+      static node_ptr get_left(const_node_ptr n) { return n->_left; }
+      static void set_left(node_ptr n, node_ptr left) { n->_left = left; }
+      static node_ptr get_right(const_node_ptr n) { return n->_right; }
+      static void set_right(node_ptr n, node_ptr right) { n->_right = right; }
+      // red-black tree
+      static color get_color(node_ptr n) { return n->_color; }
+      static void set_color(node_ptr n, color c) { n->_color = c; }
+      static color black() { return 0; }
+      static color red() { return 1; }
+      // avl tree
+      using balance = int;
+      static balance get_balance(node_ptr n) { return n->_color; }
+      static void set_balance(node_ptr n, balance c) { n->_color = c; }
+      static balance negative() { return -1; }
+      static balance zero() { return 0; }
+      static balance positive() { return 1; }
+
+      // list
+      static node_ptr get_next(const_node_ptr n) { return get_right(n); }
+      static void set_next(node_ptr n, node_ptr next) { set_right(n, next); }
+      static node_ptr get_previous(const_node_ptr n) { return get_left(n); }
+      static void set_previous(node_ptr n, node_ptr previous) { set_left(n, previous); }
+   };
+
+   template <typename Tag, bool UseOffset>
+   using choose_node_traits =
+       boost::mp11::mp_if_c<UseOffset, offset_node_traits<Tag>, ptr_node_traits<Tag>>;
+
+   template <typename Node, typename Tag, bool UseOffset>
    struct offset_node_value_traits
    {
-      using node_traits = offset_node_traits<Tag>;
+      using node_traits = choose_node_traits<Tag, UseOffset>;
       using node_ptr = typename node_traits::node_ptr;
       using const_node_ptr = typename node_traits::const_node_ptr;
       using value_type = typename Node::value_type;
@@ -180,13 +231,13 @@ namespace chainbase
    template <typename Tag, typename... Indices>
    using find_tag = boost::mp11::mp_find<boost::mp11::mp_list<index_tag<Indices>...>, Tag>;
 
-   template <typename K, typename Allocator>
-   using hook = offset_node_base<K>;
+   template <typename K, bool UseOffset>
+   using hook = typename choose_node_traits<K, UseOffset>::node;
 
-   template <typename Node, typename OrderedIndex>
+   template <typename Node, typename OrderedIndex, bool UseOffset>
    using set_base = boost::intrusive::avltree<
        typename Node::value_type,
-       boost::intrusive::value_traits<offset_node_value_traits<Node, OrderedIndex>>,
+       boost::intrusive::value_traits<offset_node_value_traits<Node, OrderedIndex, UseOffset>>,
        boost::intrusive::key_of_value<
            get_key<typename OrderedIndex::key_from_value_type, typename Node::value_type>>,
        boost::intrusive::compare<typename OrderedIndex::compare_type>>;
@@ -197,9 +248,9 @@ namespace chainbase
    constexpr bool is_valid_index<boost::multi_index::ordered_unique<T...>> = true;
 
    template <typename Node, typename Tag>
-   using list_base =
-       boost::intrusive::slist<typename Node::value_type,
-                               boost::intrusive::value_traits<offset_node_value_traits<Node, Tag>>>;
+   using list_base = boost::intrusive::slist<
+       typename Node::value_type,
+       boost::intrusive::value_traits<offset_node_value_traits<Node, Tag, Node::use_offset>>>;
 
    template <typename L, typename It, typename Pred, typename Disposer>
    void remove_if_after_and_dispose(L& l, It it, It end, Pred&& p, Disposer&& d)
@@ -224,10 +275,10 @@ namespace chainbase
    template <typename T, typename Allocator, typename... Indices>
    class undo_index;
 
-   template <typename Node, typename OrderedIndex>
-   struct set_impl : private set_base<Node, OrderedIndex>
+   template <typename Node, typename OrderedIndex, bool UseOffset>
+   struct set_impl : private set_base<Node, OrderedIndex, UseOffset>
    {
-      using base_type = set_base<Node, OrderedIndex>;
+      using base_type = set_base<Node, OrderedIndex, UseOffset>;
       // Allow compatible keys to match multi_index
       template <typename K>
       auto find(K&& k) const
@@ -303,6 +354,8 @@ namespace chainbase
       using id_type = std::decay_t<decltype(std::declval<T>().id)>;
       using value_type = T;
       using allocator_type = Allocator;
+      static constexpr bool UseOffset =
+          !std::is_pointer_v<typename std::allocator_traits<Allocator>::pointer>;
 
       static_assert((... && is_valid_index<Indices>), "Only ordered_unique indices are supported");
 
@@ -324,10 +377,11 @@ namespace chainbase
             eosio::check(false, "content of memory does not match data expected by executable");
       }
 
-      struct node : hook<Indices, Allocator>..., value_holder<T>
+      struct node : hook<Indices, UseOffset>..., value_holder<T>
       {
          using value_type = T;
          using allocator_type = Allocator;
+         static constexpr bool use_offset = UseOffset;
          template <typename... A>
          explicit node(A&&... a) : value_holder<T>{static_cast<A&&>(a)...}
          {
@@ -337,7 +391,7 @@ namespace chainbase
       };
       static constexpr int erased_flag = 2;  // 0,1,and -1 are used by the tree
 
-      using indices_type = std::tuple<set_impl<node, Indices>...>;
+      using indices_type = std::tuple<set_impl<node, Indices, UseOffset>...>;
 
       using index0_set_type = std::tuple_element_t<0, indices_type>;
       using alloc_traits = typename std::allocator_traits<Allocator>::template rebind_traits<node>;
@@ -346,10 +400,11 @@ namespace chainbase
                     "first index must be id");
 
       using index0_type = boost::mp11::mp_first<boost::mp11::mp_list<Indices...>>;
-      struct old_node : hook<index0_type, Allocator>, value_holder<T>
+      struct old_node : hook<index0_type, UseOffset>, value_holder<T>
       {
          using value_type = T;
          using allocator_type = Allocator;
+         static constexpr bool use_offset = UseOffset;
          template <typename... A>
          explicit old_node(const A&... a) : value_holder<T>{a...}
          {
@@ -691,9 +746,9 @@ namespace chainbase
       template <int N, typename Iter>
       auto project(Iter iter) const
       {
-         if (iter == get<boost::mp11::mp_find<
-                         boost::mp11::mp_list<typename set_impl<node, Indices>::const_iterator...>,
-                         Iter>::value>()
+         if (iter == get<boost::mp11::mp_find<boost::mp11::mp_list<typename set_impl<
+                                                  node, Indices, UseOffset>::const_iterator...>,
+                                              Iter>::value>()
                          .end())
             return get<N>().end();
          return get<N>().iterator_to(*iter);
@@ -1092,7 +1147,7 @@ namespace chainbase
       // Returns the field indicating whether the node has been removed
       static int& get_removed_field(const value_type& obj)
       {
-         return static_cast<hook<index0_type, Allocator>&>(to_node(obj))._color;
+         return static_cast<hook<index0_type, UseOffset>&>(to_node(obj))._color;
       }
 
       // Format:
@@ -1155,13 +1210,41 @@ namespace chainbase
          to_bin(_revision, stream);
       }
 
+      template <int N = 1>
+      void batch_insert(std::vector<T*>& nodes)
+      {
+         if constexpr (N < sizeof...(Indices))
+         {
+            auto& idx = std::get<N>(_indices);
+            std::sort(nodes.begin(), nodes.end(),
+                      [&](T* lhs, T* rhs) { return idx.value_comp()(*lhs, *rhs); });
+            for (T* node : nodes)
+            {
+               idx.push_back(*node);
+            }
+            batch_insert<N + 1>(nodes);
+         }
+      }
+
       template <typename S>
       void from_bin_impl(S& stream)
       {
          uint64_t count = varuint64_from_bin(stream);
-         for (uint64_t i = 0; i < count; ++i)
          {
-            emplace([&](auto& row) { from_bin(row, stream); });
+            std::vector<T*> nodes;
+            nodes.reserve(count);
+            for (uint64_t i = 0; i < count; ++i)
+            {
+               auto p = alloc_traits::allocate(_allocator, 1);
+               auto guard0 = scope_exit{[&] { alloc_traits::deallocate(_allocator, p, 1); }};
+               auto constructor = [&](value_type& v) { from_bin(v, stream); };
+               alloc_traits::construct(_allocator, &*p, constructor,
+                                       propagate_allocator(_allocator));
+               guard0.cancel();
+               std::get<0>(_indices).push_back(p->_item);
+               nodes.push_back(&p->_item);
+            }
+            batch_insert(nodes);
          }
          uint64_t undo_stack_count = varuint64_from_bin(stream);
          for (uint64_t i = 0; i < undo_stack_count; ++i)
