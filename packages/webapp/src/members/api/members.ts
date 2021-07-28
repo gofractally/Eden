@@ -1,5 +1,4 @@
 import { atomicAssets, devUseFixtureData, edenContractAccount } from "config";
-import { fixtureMemberData } from "delegates/api/fixtures";
 import {
     getAccountCollection,
     getAuctions,
@@ -16,6 +15,7 @@ import {
 
 import { MemberData } from "../interfaces";
 import { getEdenMember } from "./eden-contract";
+import { fixtureMemberData } from "./fixtures";
 
 export const getMember = async (
     account: string

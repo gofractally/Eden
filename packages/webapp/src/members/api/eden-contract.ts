@@ -10,10 +10,7 @@ import {
 import { EdenMember, MemberStats } from "../interfaces";
 import { TreasuryStats } from "../../pages/api/interfaces";
 import { devUseFixtureData } from "config";
-import {
-    fixtureEdenMembers,
-    fixtureMembersStats,
-} from "delegates/api/fixtures";
+import { fixtureEdenMembers, fixtureMembersStats } from "./fixtures";
 
 export const getEdenMember = (account: string) => {
     if (devUseFixtureData)
