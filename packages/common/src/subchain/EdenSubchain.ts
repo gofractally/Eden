@@ -163,12 +163,18 @@ export default class EdenSubchain {
 
     query(q: string) {
         const utf8 = new TextEncoder().encode(q);
-        const destAddr = this.exports.allocateMemory(utf8.length);
-        if (!destAddr) return "allocateMemory failed";
-        const dest = this.uint8Array(destAddr, utf8.length);
-        for (let i = 0; i < utf8.length; ++i) dest[i] = utf8[i];
-        this.exports.query(destAddr, utf8.length);
-        this.exports.freeMemory(destAddr);
-        return JSON.parse(this.resultAsString());
+        return this.protect(() => {
+            return this.withData(utf8, (addr) => {
+                this.exports.query(addr, utf8.length);
+                return JSON.parse(this.resultAsString());
+            });
+        });
+    }
+
+    getIrreversible(): number {
+        return (
+            this.query("{blockLog{irreversible{num}}}").data.blockLog
+                .irreversible?.num || 0
+        );
     }
 } // WrapWasm

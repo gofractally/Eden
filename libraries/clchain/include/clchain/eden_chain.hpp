@@ -1,9 +1,9 @@
 #pragma once
 
+#include <clchain/graphql_connection.hpp>
 #include <eosio/bytes.hpp>
 #include <eosio/fixed_bytes.hpp>
 #include <eosio/name.hpp>
-#include <eosio/reflection2.hpp>
 #include <eosio/time.hpp>
 
 namespace eden_chain
@@ -90,7 +90,7 @@ namespace eden_chain
          return &*blocks.back();
       }
 
-      const block_with_id* blockByNum(uint32_t num) const
+      const block_with_id* block_by_num(uint32_t num) const
       {
          auto it = std::lower_bound(blocks.begin(), blocks.end(), num, by_block_num);
          if (it != blocks.end() && get_block_num(*it) == num)
@@ -98,7 +98,7 @@ namespace eden_chain
          return nullptr;
       }
 
-      const block_with_id* blockByEosioNum(uint32_t num) const
+      const block_with_id* block_by_eosio_num(uint32_t num) const
       {
          auto it = std::lower_bound(blocks.begin(), blocks.end(), num, by_eosio_num);
          if (it != blocks.end() && get_eosio_num(*it) == num)
@@ -142,10 +142,42 @@ namespace eden_chain
          blocks.erase(blocks.begin(), it);
       }
    };
-   EOSIO_REFLECT2(block_log,
-                  blocks,
-                  irreversible,
+   EOSIO_REFLECT2(block_log, blocks, irreversible)
+
+   constexpr inline const char BlockConnection_name[] = "BlockConnection";
+   constexpr inline const char BlockEdge_name[] = "BlockEdge";
+   using BlockConnection =
+       clchain::Connection<clchain::ConnectionConfig<std::reference_wrapper<const block_with_id>,
+                                                     BlockConnection_name,
+                                                     BlockEdge_name>>;
+
+   struct BlockLog
+   {
+      block_log& log;
+
+      BlockConnection blocks(std::optional<int32_t> first, std::optional<std::string> after) const
+      {
+         return clchain::firstAfter<BlockConnection, uint32_t>(
+             first, after, log.blocks,                       //
+             [](auto& block) { return block->num; },         //
+             [](auto& block) { return std::cref(*block); },  //
+             [](auto& blocks, auto block_num) {
+                return std::upper_bound(blocks.begin(), blocks.end(), block_num, by_block_num);
+             });
+      }
+
+      const block_with_id* head() const { return log.head(); }
+      const block_with_id* irreversible() const { return log.block_by_num(log.irreversible); }
+      const block_with_id* blockByNum(uint32_t num) const { return log.block_by_num(num); }
+      const block_with_id* blockByEosioNum(uint32_t num) const
+      {
+         return log.block_by_eosio_num(num);
+      }
+   };
+   EOSIO_REFLECT2(BlockLog,
+                  method(blocks, "first", "after"),
                   head,
+                  irreversible,
                   method(blockByNum, "num"),
                   method(blockByEosioNum, "num"))
 

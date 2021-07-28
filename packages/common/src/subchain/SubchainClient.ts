@@ -29,10 +29,11 @@ export default class SubchainClient {
 
     async sendStatus() {
         if (!this.ws) return;
-        // TODO: trim
-        const blocks: BlockInfo[] = this.subchain.query(
-            "{blockLog{blocks{num,id}}}"
-        ).data.blockLog.blocks;
+        const irreversible: number = this.subchain.getIrreversible();
+        const blocks: BlockInfo[] = this.subchain
+            .query("{blockLog{blocks{edges{node{num id}}}}}")
+            .data.blockLog.blocks.edges.map((e: any) => e.node);
+        while (blocks.length && blocks[0].num < irreversible) blocks.shift();
         const stat: ClientStatus = {
             blocks,
             maxBlocksToSend: 1000,

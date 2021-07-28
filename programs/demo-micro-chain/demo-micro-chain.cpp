@@ -485,7 +485,7 @@ bool add_block(eden_chain::block&& eden_block, uint32_t eosio_irreversible)
 
 [[clang::export_name("getBlock")]] bool getBlock(uint32_t num)
 {
-   auto block = block_log.blockByNum(num);
+   auto block = block_log.block_by_num(num);
    if (!block)
       return false;
    result = eosio::convert_to_bin(*block);
@@ -501,14 +501,15 @@ using MemberConnection =
 
 struct Query
 {
-   std::reference_wrapper<eden_chain::block_log> blockLog;
+   eden_chain::BlockLog blockLog;
 
    MemberConnection members(std::optional<int32_t> first, std::optional<std::string> after) const
    {
       return clchain::firstAfter<MemberConnection, eosio::name>(
-          first, after, db.members.get<by_pk>(),  //
-          [](auto& obj) { return obj.member.account; },
-          [](auto& obj) { return std::cref(obj.member); });
+          first, after, db.members.get<by_pk>(),            //
+          [](auto& obj) { return obj.member.account; },     //
+          [](auto& obj) { return std::cref(obj.member); },  //
+          [](auto& members, auto key) { return members.upper_bound(key); });
    }
 };
 EOSIO_REFLECT2(Query,  //

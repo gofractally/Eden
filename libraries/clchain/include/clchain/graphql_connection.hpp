@@ -2,6 +2,7 @@
 
 #include <clchain/graphql.hpp>
 #include <eosio/from_bin.hpp>
+#include <eosio/reflection2.hpp>
 #include <eosio/to_bin.hpp>
 
 namespace clchain
@@ -61,12 +62,18 @@ namespace clchain
       EOSIO_REFLECT2_FOR_EACH_FIELD(Connection<Config>, edges, pageInfo)
    }
 
-   template <typename Connection, typename Key, typename T, typename To_key, typename To_node>
+   template <typename Connection,
+             typename Key,
+             typename T,
+             typename To_key,
+             typename To_node,
+             typename Upper_bound>
    Connection firstAfter(std::optional<int32_t> first,
                          const std::optional<std::string>& after,
                          const T& container,
                          To_key&& to_key,
-                         To_node&& to_node)
+                         To_node&& to_node,
+                         Upper_bound&& upper_bound)
    {
       auto it = container.begin();
       if (after && !after->empty())
@@ -76,7 +83,7 @@ namespace clchain
          {
             // TODO: prevent from_bin aborting
             auto key = eosio::convert_from_bin<Key>(bytes);
-            it = container.upper_bound(key);
+            it = upper_bound(container, key);
          }
       }
       Connection result;
