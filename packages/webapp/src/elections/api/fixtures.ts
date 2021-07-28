@@ -2,8 +2,8 @@ import { CurrentElection, ElectionState, VoteData } from "elections/interfaces";
 
 // The following fixtures represent the following Election/round layout
 // Round 1:
-//  - Group1: edenmember11, pip.edev (voted up edenmember11)
-//  - Group2: egeon.edev, edenmember12, edenmember13 (voted up edenmember13)
+//  - Group1: egeon.edev, edenmember12, edenmember13 (voted up edenmember13)
+//  - Group2: edenmember11, pip.edev (voted up edenmember11)
 // Round 2 (assumes a full voting / non-sortition round just for the sake of minimal fixture data)
 //  - Group1: edenmember11, edenmember13 (voted up edenmember11)
 // Head Chief: edenmember11
@@ -28,28 +28,39 @@ export const fixtureCurrentElection: CurrentElection = {
     election_threshold: 1000,
 };
 
-// This data represents all members in a group.
-// Because of how we've mocked/used these fixtures,
-// this isn't raw data representing all members.
-// This is, instead, the processed data showing a single group,
-// namely, the group of 3 in round 1
-export const fixtureMemberGroupParticipants: VoteData[] = [
+// This data represents the *first* round (whereas other fixture data represents the *results* of the overall election)
+export const fixtureVoteDataRows: VoteData[] = [
     {
         member: "egeon.edev",
         round: 1,
-        index: 3,
+        index: 1,
         candidate: "edenmember13",
     },
     {
         member: "edenmember12",
         round: 1,
-        index: 4,
+        index: 2,
         candidate: "edenmember13",
     },
     {
         member: "edenmember13",
         round: 1,
-        index: 5,
+        index: 3,
         candidate: "edenmember13",
     },
+    {
+        member: "pip.edev",
+        round: 1,
+        index: 4,
+        candidate: "edenmember11",
+    },
+    {
+        member: "edenmember11",
+        round: 1,
+        index: 5,
+        candidate: "edenmember11",
+    },
 ];
+
+export const fixtureVoteDataRow = (loggedInAccountName: string): VoteData =>
+    fixtureVoteDataRows.find((row) => row.member === loggedInAccountName)!;

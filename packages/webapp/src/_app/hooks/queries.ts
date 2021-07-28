@@ -8,7 +8,6 @@ import {
     getTreasuryStats,
     getNewMembers,
     getMembersStats,
-    MemberData,
 } from "members";
 import { getIsCommunityActive } from "_app/api";
 

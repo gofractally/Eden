@@ -54,7 +54,9 @@ export const ElectionPage = (props: Props) => {
             currentElection?.config
         ),
         keepPreviousData: true,
-        enabled: !!loggedInMember?.account && !!currentElection?.config,
+        enabled:
+            Boolean(loggedInMember?.account) &&
+            Boolean(currentElection?.config),
     });
 
     const {
@@ -91,9 +93,10 @@ export const ElectionPage = (props: Props) => {
         return (
             <>
                 <Text size="lg">
-                    Fetching Data loggedInMember: [{!!loggedInMember}],
+                    Fetching Data loggedInMember: [{Boolean(loggedInMember)}],
                     voteData[
-                    {!!voteData}], currentElection[{!!currentElection}]...
+                    {Boolean(voteData)}], currentElection[
+                    {Boolean(currentElection)}]...
                 </Text>
                 <div>
                     {!loggedInMember?.account &&
@@ -201,7 +204,9 @@ export const ElectionPage = (props: Props) => {
                 electionState 'active'?
                 <pre>[{currentElection.electionState}]</pre>
                 <pre>
-                    If active, here are the participants in your next round:
+                    If active, here are the participants in your
+                    current/in-progress/up-coming round (represents Round 1 of
+                    the election):
                 </pre>
                 <pre>{JSON.stringify(voteData, null, 2)}</pre>
             </div>
