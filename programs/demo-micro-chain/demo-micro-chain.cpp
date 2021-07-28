@@ -511,18 +511,21 @@ struct Query
 {
    eden_chain::BlockLog blockLog;
 
-   MemberConnection members(std::optional<int32_t> first, std::optional<std::string> after) const
+   MemberConnection members(std::optional<eosio::name> ge,
+                            std::optional<int32_t> first,
+                            std::optional<std::string> after) const
    {
       return clchain::firstAfter<MemberConnection, eosio::name>(
-          first, after, db.members.get<by_pk>(),            //
+          ge, first, after, db.members.get<by_pk>(),        //
           [](auto& obj) { return obj.member.account; },     //
           [](auto& obj) { return std::cref(obj.member); },  //
+          [](auto& members, auto key) { return members.lower_bound(key); },
           [](auto& members, auto key) { return members.upper_bound(key); });
    }
 };
 EOSIO_REFLECT2(Query,  //
                blockLog,
-               method(members, "first", "after"))
+               method(members, "ge", "first", "after"))
 
 auto schema = clchain::get_gql_schema<Query>();
 [[clang::export_name("getSchemaSize")]] uint32_t getSchemaSize()

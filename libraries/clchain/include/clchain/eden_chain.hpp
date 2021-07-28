@@ -163,12 +163,17 @@ namespace eden_chain
    {
       block_log& log;
 
-      BlockConnection blocks(std::optional<int32_t> first, std::optional<std::string> after) const
+      BlockConnection blocks(std::optional<uint32_t> ge,
+                             std::optional<int32_t> first,
+                             std::optional<std::string> after) const
       {
          return clchain::firstAfter<BlockConnection, uint32_t>(
-             first, after, log.blocks,                       //
+             ge, first, after, log.blocks,                   //
              [](auto& block) { return block->num; },         //
              [](auto& block) { return std::cref(*block); },  //
+             [](auto& blocks, auto block_num) {
+                return std::lower_bound(blocks.begin(), blocks.end(), block_num, by_block_num);
+             },
              [](auto& blocks, auto block_num) {
                 return std::upper_bound(blocks.begin(), blocks.end(), block_num, by_block_num);
              });
@@ -183,7 +188,7 @@ namespace eden_chain
       }
    };
    EOSIO_REFLECT2(BlockLog,
-                  method(blocks, "first", "after"),
+                  method(blocks, "ge", "first", "after"),
                   head,
                   irreversible,
                   method(blockByNum, "num"),

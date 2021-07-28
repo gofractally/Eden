@@ -67,12 +67,15 @@ namespace clchain
              typename T,
              typename To_key,
              typename To_node,
+             typename Lower_bound,
              typename Upper_bound>
-   Connection firstAfter(std::optional<int32_t> first,
+   Connection firstAfter(const std::optional<Key>& ge,
+                         std::optional<int32_t> first,
                          const std::optional<std::string>& after,
                          const T& container,
                          To_key&& to_key,
                          To_node&& to_node,
+                         Lower_bound&& lower_bound,
                          Upper_bound&& upper_bound)
    {
       auto it = container.begin();
@@ -85,6 +88,10 @@ namespace clchain
             auto key = eosio::convert_from_bin<Key>(bytes);
             it = upper_bound(container, key);
          }
+      }
+      else if (ge)
+      {
+         it = lower_bound(container, *ge);
       }
       Connection result;
       result.pageInfo.hasPreviousPage = it != container.begin();

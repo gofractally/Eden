@@ -752,3 +752,18 @@ namespace clchain
       return gql_query<eosio::pretty_stream<eosio::string_stream>>(value, query);
    }
 }  // namespace clchain
+
+namespace eosio
+{
+   template <typename E>
+   auto gql_parse_arg(eosio::name& arg, clchain::gql_stream& input_stream, const E& error)
+   {
+      if (input_stream.current_type == clchain::gql_stream::string)
+      {
+         arg.value = eosio::string_to_name(input_stream.current_value);
+         input_stream.skip();
+         return true;
+      }
+      return error("expected String");
+   }
+}  // namespace eosio
