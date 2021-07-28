@@ -101,10 +101,6 @@ export const memberDataDefaults = {
     inductionVideo: "",
     attributions: "",
     createdAt: 0,
-    representative: "",
-    status: 0,
-    election_participation_status: 0,
-    election_rank: 0,
 };
 const convertAtomicTemplateToMember = (data: TemplateData): MemberData => ({
     ...memberDataDefaults,

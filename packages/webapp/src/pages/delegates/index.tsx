@@ -1,16 +1,14 @@
 import React from "react";
 import { GetServerSideProps } from "next";
-import { QueryClient, useQuery } from "react-query";
+import { QueryClient } from "react-query";
 import { dehydrate } from "react-query/hydration";
 
 import {
-    queryHeadDelegate,
-    queryMembers,
-    queryMembersStats,
-    queryMyDelegation,
     RawLayout,
     Text,
     useCurrentMember,
+    useHeadDelegate,
+    useMemberStats,
     useMyDelegation,
 } from "_app";
 
@@ -28,22 +26,17 @@ interface Props {
     delegatesPage: number;
 }
 
-const MEMBERS_PAGE_SIZE = 18;
-
 export const DelegatesPage = (props: Props) => {
     const { data: loggedInMember } = useCurrentMember();
 
-    const { data: members } = useQuery(queryMembers(1, MEMBERS_PAGE_SIZE));
+    const { data: membersStats } = useMemberStats();
 
-    const { data: membersStats } = useQuery(queryMembersStats);
-
-    const { data: leadRepresentative } = useQuery(queryHeadDelegate);
+    const { data: leadRepresentative } = useHeadDelegate();
 
     const { data: myDelegation } = useMyDelegation();
 
     if (
         !loggedInMember ||
-        !members ||
         !membersStats ||
         !leadRepresentative ||
         !myDelegation

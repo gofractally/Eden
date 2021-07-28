@@ -158,3 +158,42 @@ export const useMyDelegation = () => {
         enabled: Boolean(member?.account),
     });
 };
+
+export const useHeadDelegate = () =>
+    useQuery({
+        ...queryHeadDelegate,
+        keepPreviousData: true,
+    });
+
+export const useCurrentElection = () =>
+    useQuery({
+        ...queryCurrentElection,
+        keepPreviousData: true,
+    });
+
+export const useMemberGroupParticipants = (
+    loggedInMemberAccount: string | undefined
+) => {
+    const { data: currentElection } = useCurrentElection();
+    return useQuery({
+        ...queryMemberGroupParticipants(
+            loggedInMemberAccount,
+            currentElection?.config
+        ),
+        keepPreviousData: true,
+        enabled:
+            Boolean(loggedInMemberAccount) && Boolean(currentElection?.config),
+    });
+};
+
+export const useElectionState = () =>
+    useQuery({
+        ...queryElectionState,
+        keepPreviousData: true,
+    });
+
+export const useMemberStats = () =>
+    useQuery({
+        ...queryMembersStats,
+        keepPreviousData: true,
+    });
