@@ -5,17 +5,21 @@ import {
     VoteData,
 } from "elections/interfaces";
 import {
+    VoteDataQueryOptionsByField,
+    VoteDataQueryOptionsByGroup,
+} from "members";
+import {
     CONTRACT_CURRENT_ELECTION_TABLE,
     CONTRACT_ELECTION_STATE_TABLE,
     CONTRACT_VOTE_TABLE,
     getRow,
     getTableRawRows,
-    getTableRows,
 } from "_app";
 import {
     fixtureCurrentElection,
     fixtureElectionState,
-    fixtureMemberGroupParticipants,
+    fixtureVoteDataRow,
+    fixtureVoteDataRows,
 } from "./fixtures";
 
 const getMemberGroupFromIndex = (
@@ -44,10 +48,12 @@ const getMemberGroupFromIndex = (
             totalMembersInLargeGroups;
         upperBound = lowerBound + minGroupSize - 1;
     }
+
+    // TODO: see what the actual data looks like and see if we need to do this +1 to match up 0-based and 1-based data
     return {
-        groupNumber,
-        lowerBound,
-        upperBound,
+        groupNumber: groupNumber + 1,
+        lowerBound: lowerBound + 1,
+        upperBound: upperBound + 1,
     };
 };
 
@@ -59,30 +65,66 @@ export const getMemberGroupParticipants = async (
 
     const totalParticipants = config.num_participants;
     const numGroups = config.num_groups;
-    // TODO: consider how to mock this more deeply to test the logic below
-    if (devUseFixtureData) return fixtureMemberGroupParticipants;
 
     // get member index
-    const memberVoteData = await getRow<VoteData>(
-        CONTRACT_VOTE_TABLE,
-        "name",
-        memberAccount
-    );
+    const memberVoteData = await getVoteDataRow({
+        fieldValue: memberAccount,
+    });
     if (!memberVoteData) return [];
 
     // return all indexes that represent members in this member's group
     const { groupNumber, lowerBound, upperBound } = getMemberGroupFromIndex(
-        memberVoteData.index,
+        // TODO: remove this -1 if no conversion is needed between 0=based and 1=based arrays
+        memberVoteData.index - 1,
         totalParticipants,
         numGroups
     );
 
     // get all members in this member's group
-    const rows = await getTableRows<VoteData[]>(CONTRACT_VOTE_TABLE, {
-        index_position: 2,
+    const rows = await getVoteDataRows({
         lowerBound,
         upperBound,
     });
+
+    if (!rows || !rows.length) {
+        return undefined;
+    }
+
+    return rows;
+};
+
+const getVoteDataRow = async (
+    opts: VoteDataQueryOptionsByField
+): Promise<VoteData | undefined> => {
+    if (devUseFixtureData)
+        return Promise.resolve(fixtureVoteDataRow(opts.fieldValue));
+
+    const memberVoteData = await getRow<VoteData>(
+        CONTRACT_VOTE_TABLE,
+        opts.fieldName,
+        opts.fieldValue
+    );
+    return memberVoteData;
+};
+
+const getVoteDataRows = async (
+    opts: VoteDataQueryOptionsByGroup
+): Promise<VoteData[] | undefined> => {
+    if (devUseFixtureData)
+        return Promise.resolve(
+            fixtureVoteDataRows.filter(
+                (vote) =>
+                    vote.index >= opts.lowerBound &&
+                    vote.index <= opts.upperBound
+            )
+        );
+
+    // TODO: see what real data looks like and real use-cases and see if we need the electionState flag;
+    // If not, switch this back to getTableRows()
+    const rawRows = await getTableRawRows<VoteData>(CONTRACT_VOTE_TABLE, opts);
+    // const electionState = rawRows[0][0];
+
+    const rows = rawRows.map((row) => row[1]);
 
     if (!rows.length) {
         return undefined;
@@ -109,15 +151,7 @@ export const getCurrentElection = async () => {
 export const getElectionState = async () => {
     if (devUseFixtureData) return fixtureElectionState;
 
-    const rows = await getTableRows<ElectionState>(
-        CONTRACT_ELECTION_STATE_TABLE
-    );
-
-    if (!rows.length) {
-        return undefined;
-    }
-
-    return rows[0];
+    return await getRow<ElectionState>(CONTRACT_ELECTION_STATE_TABLE);
 };
 
 const getMemberElectionParticipationStatus = () => {

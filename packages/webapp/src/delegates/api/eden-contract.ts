@@ -1,15 +1,31 @@
-import { getElectionState } from "elections/api";
-import { EdenMember, getEdenMember, MemberData } from "members";
+import { EdenMember } from "members";
 import { queryClient } from "pages/_app";
-import { queryHeadDelegate, queryMemberByAccountName } from "_app";
+import {
+    queryElectionState,
+    queryHeadDelegate,
+    queryMemberByAccountName,
+} from "_app";
+
+const queryElectionStateHelper = async () => {
+    try {
+        return await queryClient.fetchQuery(
+            queryElectionState.queryKey,
+            queryElectionState.queryFn
+        );
+    } catch (e) {
+        console.error("Error in getMyDelegation:");
+        console.error(e);
+        return Promise.resolve(undefined);
+    }
+};
 
 export const getHeadDelegate = async (): Promise<string | undefined> => {
-    const electionState = await getElectionState();
+    const electionState = await queryElectionStateHelper();
     return electionState?.lead_representative;
 };
 
 export const getChiefDelegates = async (): Promise<string[] | undefined> => {
-    const electionState = await getElectionState();
+    const electionState = await queryElectionStateHelper();
     return electionState?.board;
 };
 
@@ -37,6 +53,8 @@ export const getMyDelegation = async (
             queryHeadDelegate.queryKey,
             queryHeadDelegate.queryFn
         );
+
+        // NEXT: add fixtures for each of these querys and test the logic (that I couldn't test before)
 
         const { queryKey, queryFn } = queryMemberByAccountName(
             loggedInMemberAccount

@@ -1,6 +1,17 @@
 import { EdenNftSocialHandles } from "nfts/interfaces";
 import { Asset, ElectionParticipationStatus, MemberStatus } from "_app";
 
+export type VoteDataQueryOptionsByGroup = {
+    index_position?: 2;
+    lowerBound: number;
+    upperBound: number;
+};
+
+export type VoteDataQueryOptionsByField = {
+    fieldName?: "name";
+    fieldValue: string;
+};
+
 export interface MemberData {
     templateId: number;
     name: string;
