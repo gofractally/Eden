@@ -16,9 +16,14 @@ import {
     Modal,
     Text,
 } from "_app/ui";
-import { ElectionParticipantChip, VotingMemberChip } from "elections";
+import {
+    ElectionRoundCountdown,
+    ElectionParticipantChip,
+    VotingMemberChip,
+} from "elections";
 import { MembersGrid } from "members";
 import { MemberData } from "members/interfaces";
+import dayjs from "dayjs";
 
 interface Props {
     delegatesPage: number;
@@ -180,6 +185,7 @@ const OngoingRoundSegment = ({
         <Expander
             header={<RoundHeader roundNum={round} subText={time} isActive />}
             startExpanded
+            locked
         >
             <Container className="space-y-2">
                 <Heading size={3}>Meeting group members</Heading>
@@ -323,19 +329,30 @@ const RoundHeader = ({
     isActive?: boolean;
     subText: string;
 }) => {
+    const startTime = useMemo(dayjs, []);
+    const endTime = useMemo(() => dayjs().add(3, "minute"), []);
     return (
-        <div className="flex items-center space-x-2">
-            {isActive ? (
-                <GoSync size={24} className="text-gray-400" />
-            ) : (
-                <FaCheckCircle size={22} className="ml-px text-gray-400" />
-            )}
-            <div>
-                <Text size="sm" className="font-semibold">
-                    Round {roundNum}
-                </Text>
-                <Text size="sm">{subText}</Text>
+        <div className="w-full flex justify-between">
+            <div className="flex items-center space-x-2">
+                {isActive ? (
+                    <GoSync size={24} className="text-gray-400" />
+                ) : (
+                    <FaCheckCircle size={22} className="ml-px text-gray-400" />
+                )}
+                <div>
+                    <Text size="sm" className="font-semibold">
+                        Round {roundNum}
+                    </Text>
+                    <Text size="sm">{subText}</Text>
+                </div>
             </div>
+            {isActive && (
+                <ElectionRoundCountdown
+                    startTime={startTime}
+                    endTime={endTime}
+                    className="mr-16"
+                />
+            )}
         </div>
     );
 };
