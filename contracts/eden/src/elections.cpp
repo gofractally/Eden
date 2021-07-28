@@ -778,6 +778,27 @@ namespace eden
       }
    }
 
+   boost::logic::tribool elections::can_upload_video(uint8_t round, eosio::name voter)
+   {
+      auto iter = vote_tb.find(voter.value);
+      if (iter == vote_tb.end())
+      {
+         auto current_state = state_sing.get();
+         bool valid_state =
+             !std::holds_alternative<current_election_state_init_voters>(current_state);
+         election_state_singleton state{contract, default_scope};
+         auto end_time =
+             std::get<election_state_v0>(state.get()).last_election_time.to_time_point() +
+             eosio::hours(48);
+         return valid_state && eosio::current_time_point() <= end_time &&
+                boost::logic::tribool(boost::logic::indeterminate);
+      }
+      else
+      {
+         return iter->round >= round;
+      }
+   }
+
    uint64_t elections::get_group_id(eosio::name voter, uint8_t round)
    {
       const auto& state = check_active();

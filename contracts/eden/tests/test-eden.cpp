@@ -1256,6 +1256,7 @@ TEST_CASE("election with multiple rounds")
                                       eosio::bytes{}, std::nullopt);
    t.generic_group_vote(t.get_current_groups(), round++);
    CHECK(get_table_size<eden::vote_table_type>() == 48);
+   t.alice.act<actions::electvideo>(0, "alice"_n, "Qmb7WmZiSDXss5HfuKfoSf6jxTDrHzr8AoAUDeDMLNDuws");
    t.alice.act<actions::electmeeting>("alice"_n, 1,
                                       std::vector<eden::encrypted_key>{{}, {}, {}, {}},
                                       eosio::bytes{}, std::nullopt);
@@ -1277,6 +1278,9 @@ TEST_CASE("election with multiple rounds")
    auto result = std::get<eden::election_state_v0>(results.get());
    // alice wins at every level but the last, because everyone votes for the member with the lowest name
    CHECK(std::find(result.board.begin(), result.board.end(), "alice"_n) != result.board.end());
+
+   t.alice.act<actions::electvideo>(1, "alice"_n, "Qmb7WmZiSDXss5HfuKfoSf6jxTDrHzr8AoAUDeDMLNDuws");
+   t.alice.act<actions::electvideo>(2, "alice"_n, "Qmb7WmZiSDXss5HfuKfoSf6jxTDrHzr8AoAUDeDMLNDuws");
 
    CHECK(members("eden.gm"_n).stats().ranks ==
          std::vector<uint16_t>{200 - 48, 48 - 12, 12 - 3, 3 - 1, 1});

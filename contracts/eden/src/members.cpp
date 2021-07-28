@@ -219,6 +219,13 @@ namespace eden
       });
    }
 
+   bool members::can_upload_video(uint8_t round, eosio::name member)
+   {
+      auto iter = member_tb.find(member.value);
+      return iter != member_tb.end() && iter->election_rank() >= round &&
+             iter->representative() != eosio::name(-1);
+   }
+
    struct member_stats_v1 members::stats()
    {
       return std::visit([](const auto& stats) { return member_stats_v1{stats}; },
