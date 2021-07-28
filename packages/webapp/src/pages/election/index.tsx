@@ -1,18 +1,17 @@
 import React from "react";
 import { GetServerSideProps } from "next";
-import { QueryClient, useQuery } from "react-query";
+import { QueryClient } from "react-query";
 import { dehydrate } from "react-query/hydration";
 
 import {
     ElectionParticipationStatus,
-    queryCurrentElection,
-    queryElectionState,
-    queryHeadDelegate,
-    queryMemberGroupParticipants,
-    queryMembers,
     RawLayout,
     Text,
+    useCurrentElection,
     useCurrentMember,
+    useElectionState,
+    useHeadDelegate,
+    useMemberGroupParticipants,
 } from "_app";
 
 export const getServerSideProps: GetServerSideProps = async ({ query }) => {
@@ -29,51 +28,21 @@ interface Props {
     electionPage: number;
 }
 
-export const ElectionPage = (props: Props) => {
+export const ElectionPage = () => {
     const { data: loggedInMember } = useCurrentMember();
 
-    const {
-        isError: isLeadRepresentativeDataFetchError,
-        data: leadRepresentative,
-    } = useQuery({
-        ...queryHeadDelegate,
-        keepPreviousData: true,
-    });
+    const { data: leadRepresentative } = useHeadDelegate();
 
-    const {
-        isError: isCurrentElectionDataFetchError,
-        data: currentElection,
-    } = useQuery({
-        ...queryCurrentElection,
-        keepPreviousData: true,
-    });
+    const { data: currentElection } = useCurrentElection();
 
-    const { isError: isVoteDataFetchError, data: voteData } = useQuery({
-        ...queryMemberGroupParticipants(
-            loggedInMember?.account,
-            currentElection?.config
-        ),
-        keepPreviousData: true,
-        enabled:
-            Boolean(loggedInMember?.account) &&
-            Boolean(currentElection?.config),
-    });
+    const { data: voteData } = useMemberGroupParticipants(
+        loggedInMember?.account
+    );
 
     const {
         isError: isElectionStateDataFetchError,
         data: electionState,
-    } = useQuery({
-        ...queryElectionState,
-        keepPreviousData: true,
-    });
-
-    // TODO: DRY this up
-    const MEMBERS_PAGE_SIZE = 18;
-
-    const { data: members } = useQuery({
-        ...queryMembers(1, MEMBERS_PAGE_SIZE),
-        keepPreviousData: true,
-    });
+    } = useElectionState();
 
     if (isElectionStateDataFetchError) {
         return (
