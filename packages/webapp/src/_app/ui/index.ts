@@ -19,3 +19,4 @@ export * from "./loaders";
 export * from "./profile-image";
 export * from "./delegate-badge";
 export * from "./expander";
+export * from "./pie-chart";

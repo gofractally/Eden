@@ -9,6 +9,7 @@ import Modal from "react-modal";
 import dayjs from "dayjs";
 import * as localizedFormat from "dayjs/plugin/localizedFormat";
 import * as relativeTime from "dayjs/plugin/relativeTime";
+import * as duration from "dayjs/plugin/duration";
 
 import { EdenUALProvider, Toaster } from "_app";
 
@@ -24,6 +25,7 @@ Router.events.on("routeChangeError", () => NProgress.done());
 
 dayjs.extend(localizedFormat.default);
 dayjs.extend(relativeTime.default);
+dayjs.extend(duration.default);
 
 Modal.setAppElement("#__next");
 
