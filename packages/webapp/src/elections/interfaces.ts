@@ -1,5 +1,3 @@
-import { string } from "zod";
-
 export interface ElectionState {
     lead_representative: string;
     board: string[];

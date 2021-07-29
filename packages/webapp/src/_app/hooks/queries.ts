@@ -178,8 +178,7 @@ export const useMemberGroupParticipants = (
             loggedInMemberAccount,
             currentElection?.config
         ),
-        enabled:
-            Boolean(loggedInMemberAccount) && Boolean(currentElection?.config),
+        enabled: Boolean(loggedInMemberAccount && currentElection?.config),
     });
 };
 
