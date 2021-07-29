@@ -7,13 +7,17 @@ import {
 
 export default class SubchainClient {
     subchain = new EdenSubchain();
+    shuttingDown = false;
     ws: WebSocket | null = null;
+    notifications: (() => void)[] = [];
 
     async instantiateStreaming(
         response: Response | PromiseLike<Response>,
         blocksUrl: string
     ) {
+        if (this.shuttingDown) return this.shutdown();
         await this.subchain.instantiateStreaming(response);
+        if (this.shuttingDown) return this.shutdown();
         this.subchain.initializeMemory();
         this.ws = new WebSocket(blocksUrl);
         this.ws.onclose = () => {
@@ -32,6 +36,7 @@ export default class SubchainClient {
     }
 
     async sendStatus() {
+        if (this.shuttingDown) return this.shutdown();
         if (!this.ws) return;
         const irreversible: number = this.subchain.getIrreversible();
         const blocks: BlockInfo[] = this.subchain
@@ -55,6 +60,7 @@ export default class SubchainClient {
         this.processingQueue = true;
         try {
             while (this.messageQueue.length) {
+                if (this.shuttingDown) return this.shutdown();
                 const data = this.messageQueue.shift();
                 if (data instanceof Promise) {
                     const d = await data;
@@ -72,16 +78,28 @@ export default class SubchainClient {
         } catch (e) {
             console.error(e);
         }
+        const n = this.notifications;
+        this.notifications = [];
+        for (let f of n) f();
         this.processingQueue = false;
     }
 
     async onmessage(ev: MessageEvent<any>) {
+        if (this.shuttingDown) return this.shutdown();
         if (ev.data instanceof Blob) {
             this.messageQueue.push(ev.data.arrayBuffer());
             this.processQueue();
         } else if (typeof ev.data === "string") {
             this.messageQueue.push(ev.data);
             this.processQueue();
+        }
+    }
+
+    shutdown() {
+        this.shuttingDown = true;
+        if (this.ws) {
+            this.ws.close();
+            this.ws = null;
         }
     }
 }

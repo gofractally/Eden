@@ -1,8 +1,10 @@
 import Head from "next/head";
-import Link from "next/link";
 import GraphiQL from "graphiql";
+import Header from "../components/header";
 import { buildSchema, GraphQLSchema } from "graphql";
-import { EdenSubchain } from "@edenos/common/dist/subchain";
+import { useContext } from "react";
+import { EdenChainContext } from "../../../common/src/subchain/ReactSubchain";
+import EdenSubchain from "../../../common/src/subchain/EdenSubchain";
 
 function createFetcher(subchain: EdenSubchain) {
     return async ({ query }: { query: string }) => subchain.query(query);
@@ -32,9 +34,10 @@ const defaultQuery = `# GraphiQL is talking to a WASM running in the browser.
 
 let schema: GraphQLSchema | null = null;
 
-export default function GraphiQLPage(props: { subchain?: EdenSubchain }) {
-    if (props.subchain && !schema)
-        schema = buildSchema(props.subchain.getSchema());
+export default function GraphiQLPage() {
+    const client = useContext(EdenChainContext);
+    if (client?.subchain && !schema)
+        schema = buildSchema(client.subchain.getSchema());
     return (
         <div>
             <style global jsx>{`
@@ -60,23 +63,12 @@ export default function GraphiQLPage(props: { subchain?: EdenSubchain }) {
                         height: "100%",
                     }}
                 >
-                    <ul>
-                        <li>
-                            <Link href="/">
-                                <a>Members</a>
-                            </Link>
-                        </li>
-                        <li>
-                            <Link href="/graphiql">
-                                <a>GraphiQL</a>
-                            </Link>
-                        </li>
-                    </ul>
-                    {props.subchain && (
+                    <Header />
+                    {client?.subchain && (
                         <div style={{ flexGrow: 1 }}>
                             <GraphiQL
                                 {...{
-                                    fetcher: createFetcher(props.subchain),
+                                    fetcher: createFetcher(client.subchain),
                                     defaultQuery,
                                     schema: schema!,
                                 }}

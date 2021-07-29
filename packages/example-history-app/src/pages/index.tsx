@@ -1,14 +1,9 @@
 import Head from "next/head";
-import Link from "next/link";
+import Header from "../components/header";
 import { useState } from "react";
-import { buildSchema, GraphQLSchema } from "graphql";
-import { EdenSubchain } from "@edenos/common/dist/subchain";
+import { useQuery } from "../../../common/src/subchain/ReactSubchain";
 
-function createFetcher(subchain: EdenSubchain) {
-    return async ({ query }: { query: string }) => subchain.query(query);
-}
-
-function query(cursor: string) {
+function makeQuery(cursor: string) {
     return `
     {
       members(first: 5, after: "${cursor}") {
@@ -53,11 +48,9 @@ interface QueryResult {
     };
 }
 
-export default function Members(props: { subchain?: EdenSubchain }) {
-    const [queryResult, setQueryResult] = useState<QueryResult>();
-
-    if (props.subchain && !queryResult)
-        setQueryResult(props.subchain.query(query("")));
+export default function Members() {
+    const [query, setQuery] = useState(makeQuery(""));
+    const queryResult = useQuery(query);
     return (
         <div>
             <style global jsx>{`
@@ -83,18 +76,7 @@ export default function Members(props: { subchain?: EdenSubchain }) {
                         height: "100%",
                     }}
                 >
-                    <ul>
-                        <li>
-                            <Link href="/">
-                                <a>Members</a>
-                            </Link>
-                        </li>
-                        <li>
-                            <Link href="/graphiql">
-                                <a>GraphiQL</a>
-                            </Link>
-                        </li>
-                    </ul>
+                    <Header />
                     {!queryResult && (
                         <div style={{ flexGrow: 1, margin: "10px" }}>
                             <h1>Loading micro chain...</h1>
@@ -109,12 +91,10 @@ export default function Members(props: { subchain?: EdenSubchain }) {
                                         .hasNextPage
                                 }
                                 onClick={(e) =>
-                                    setQueryResult(
-                                        props.subchain!.query(
-                                            query(
-                                                queryResult.data.members
-                                                    .pageInfo.endCursor
-                                            )
+                                    setQuery(
+                                        makeQuery(
+                                            queryResult.data.members.pageInfo
+                                                .endCursor
                                         )
                                     )
                                 }
