@@ -413,24 +413,11 @@ namespace eden
          {
             switch (iter->election_participation_status())
             {
-               case no_donation:
-               {
-                  distributions distributions{contract};
-                  max_steps = distributions.on_election_kick(iter->account(), max_steps);
-                  if (max_steps == 0)
-                  {
-                     return max_steps;
-                  }
-                  remove_from_board(iter->account());
-                  iter = members.erase(iter);
-                  continue;
-               }
                case in_election:
                {
                   add_voter(state.rng, 0, state.next_member_idx, iter->account());
                   break;
                }
-               case recently_inducted:
                case not_in_election:
                {
                   members.set_rank(iter->account(), 0, eosio::name(-1));
