@@ -5,7 +5,7 @@ export const fixtureEdenMembers: EdenMember[] = [
     {
         name: "Eden Member 12",
         account: "edenmember12",
-        nft_template_id: 1,
+        nft_template_id: 84431,
         status: MemberStatus.ActiveMember,
         election_participation_status: ElectionParticipationStatus.NoDonation, // See ElectionParticipationStatus for enum values; NoDonation is kinda the default if other special cases don't apply
         election_rank: 1,
@@ -14,7 +14,7 @@ export const fixtureEdenMembers: EdenMember[] = [
     {
         name: "Eden Member 11",
         account: "edenmember11",
-        nft_template_id: 1,
+        nft_template_id: 84432,
         status: MemberStatus.ActiveMember,
         election_participation_status: ElectionParticipationStatus.NoDonation,
         election_rank: 3,
@@ -23,7 +23,7 @@ export const fixtureEdenMembers: EdenMember[] = [
     {
         name: "Eden Member 13",
         account: "edenmember13",
-        nft_template_id: 1,
+        nft_template_id: 84545,
         status: MemberStatus.ActiveMember,
         election_participation_status: ElectionParticipationStatus.NoDonation,
         election_rank: 2,
@@ -32,7 +32,7 @@ export const fixtureEdenMembers: EdenMember[] = [
     {
         name: "Egeon The Great",
         account: "egeon.edev",
-        nft_template_id: 1,
+        nft_template_id: 140784,
         status: MemberStatus.ActiveMember,
         election_participation_status: ElectionParticipationStatus.NoDonation,
         election_rank: 1,
@@ -41,7 +41,7 @@ export const fixtureEdenMembers: EdenMember[] = [
     {
         name: "Philip Pip",
         account: "pip.edev",
-        nft_template_id: 1,
+        nft_template_id: 140785,
         status: MemberStatus.ActiveMember,
         election_participation_status: ElectionParticipationStatus.NoDonation,
         election_rank: 1,
