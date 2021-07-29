@@ -1,7 +1,4 @@
 import React from "react";
-import { GetServerSideProps } from "next";
-import { QueryClient } from "react-query";
-import { dehydrate } from "react-query/hydration";
 
 import {
     RawLayout,
@@ -12,21 +9,7 @@ import {
     useMyDelegation,
 } from "_app";
 
-export const getServerSideProps: GetServerSideProps = async ({ query }) => {
-    const queryClient = new QueryClient();
-
-    return {
-        props: {
-            dehydratedState: dehydrate(queryClient),
-        },
-    };
-};
-
-interface Props {
-    delegatesPage: number;
-}
-
-export const DelegatesPage = (props: Props) => {
+export const DelegatesPage = () => {
     const { data: loggedInMember } = useCurrentMember();
 
     const { data: membersStats } = useMemberStats();
@@ -51,14 +34,6 @@ export const DelegatesPage = (props: Props) => {
             </RawLayout>
         );
     }
-
-    if (!loggedInMember)
-        return (
-            <div>
-                Not logged in or Account doesn't exist in deployed
-                environment...
-            </div>
-        );
 
     return (
         <RawLayout title="Election">

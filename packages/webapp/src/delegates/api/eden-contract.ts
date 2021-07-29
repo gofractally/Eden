@@ -6,18 +6,11 @@ import {
     queryMemberByAccountName,
 } from "_app";
 
-const queryElectionStateHelper = async () => {
-    try {
-        return await queryClient.fetchQuery(
-            queryElectionState.queryKey,
-            queryElectionState.queryFn
-        );
-    } catch (e) {
-        console.error("Error in getMyDelegation:");
-        console.error(e);
-        return Promise.resolve(undefined);
-    }
-};
+const queryElectionStateHelper = async () =>
+    await queryClient.fetchQuery(
+        queryElectionState.queryKey,
+        queryElectionState.queryFn
+    );
 
 export const getHeadDelegate = async (): Promise<string | undefined> => {
     const electionState = await queryElectionStateHelper();
@@ -49,44 +42,37 @@ export const getMyDelegation = async (
 
     if (!loggedInMemberAccount) return myDelegates;
 
-    try {
-        const leadRepresentative = await queryClient.fetchQuery(
-            queryHeadDelegate.queryKey,
-            queryHeadDelegate.queryFn
-        );
+    const leadRepresentative = await queryClient.fetchQuery(
+        queryHeadDelegate.queryKey,
+        queryHeadDelegate.queryFn
+    );
 
-        // NEXT: add fixtures for each of these querys and test the logic (that I couldn't test before)
+    // TODO: add fixtures for each of these querys and test the logic (that I couldn't test before)
+    const { queryKey, queryFn } = queryMemberByAccountName(
+        loggedInMemberAccount
+    );
+    let nextDelegate: EdenMember = await queryClient.fetchQuery(
+        queryKey,
+        queryFn
+    );
+    if (!nextDelegate || !leadRepresentative) return myDelegates;
 
+    while (
+        nextDelegate!.account !== leadRepresentative &&
+        memberHasRepresentative(nextDelegate)
+    ) {
+        myDelegates.push(nextDelegate);
         const { queryKey, queryFn } = queryMemberByAccountName(
-            loggedInMemberAccount
+            nextDelegate!.representative
         );
-        let nextDelegate: EdenMember = await queryClient.fetchQuery(
-            queryKey,
-            queryFn
-        );
-        if (!nextDelegate || !leadRepresentative) return myDelegates;
-
-        while (
-            nextDelegate!.account !== leadRepresentative &&
-            memberHasRepresentative(nextDelegate)
-        ) {
-            myDelegates.push(nextDelegate);
-            const { queryKey, queryFn } = queryMemberByAccountName(
-                nextDelegate!.representative
-            );
-            nextDelegate = await queryClient.fetchQuery(queryKey, queryFn);
-            if (!nextDelegate) return myDelegates;
-        }
-        if (
-            nextDelegate.account === leadRepresentative &&
-            memberHasRepresentative(nextDelegate)
-        ) {
-            myDelegates.push(nextDelegate);
-        }
-    } catch (e) {
-        console.error("Error in getMyDelegation:");
-        console.error(e);
-        return [];
+        nextDelegate = await queryClient.fetchQuery(queryKey, queryFn);
+        if (!nextDelegate) return myDelegates;
+    }
+    if (
+        nextDelegate.account === leadRepresentative &&
+        memberHasRepresentative(nextDelegate)
+    ) {
+        myDelegates.push(nextDelegate);
     }
     return myDelegates;
 };
