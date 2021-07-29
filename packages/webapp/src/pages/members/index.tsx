@@ -53,7 +53,6 @@ export const MembersPage = (props: Props) => {
 
     const { data: memberStats } = useQuery({
         ...queryMembersStats,
-        keepPreviousData: true,
     });
     const totalMembersPages =
         memberStats &&
