@@ -68,7 +68,7 @@ export const VotingMemberChip = ({
 };
 
 interface DelegateChipProps {
-    member: MemberData;
+    member?: MemberData;
     level?: string;
 }
 
@@ -76,9 +76,24 @@ export const DelegateChip = ({ member, level }: DelegateChipProps) => {
     const router = useRouter();
 
     const goToMemberPage = (e: React.MouseEvent) => {
+        if (!member) return;
         e.stopPropagation();
         router.push(`${ROUTES.MEMBERS.href}/${member.account}`);
     };
+
+    if (!member) {
+        return (
+            <div
+                className="p-2.5 select-none"
+                style={{ boxShadow: "0 0 0 1px #e5e5e5" }}
+            >
+                <div className="flex items-center space-x-2.5">
+                    <div className="rounded-full h-14 w-14 bg-gray-300" />
+                    <div className="text-gray-300">No delegates chosen</div>
+                </div>
+            </div>
+        );
+    }
 
     return (
         <GenericMemberChip
