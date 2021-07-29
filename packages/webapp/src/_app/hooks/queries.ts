@@ -162,13 +162,11 @@ export const useMyDelegation = () => {
 export const useHeadDelegate = () =>
     useQuery({
         ...queryHeadDelegate,
-        keepPreviousData: true,
     });
 
 export const useCurrentElection = () =>
     useQuery({
         ...queryCurrentElection,
-        keepPreviousData: true,
     });
 
 export const useMemberGroupParticipants = (
@@ -180,7 +178,6 @@ export const useMemberGroupParticipants = (
             loggedInMemberAccount,
             currentElection?.config
         ),
-        keepPreviousData: true,
         enabled:
             Boolean(loggedInMemberAccount) && Boolean(currentElection?.config),
     });
@@ -189,11 +186,9 @@ export const useMemberGroupParticipants = (
 export const useElectionState = () =>
     useQuery({
         ...queryElectionState,
-        keepPreviousData: true,
     });
 
 export const useMemberStats = () =>
     useQuery({
         ...queryMembersStats,
-        keepPreviousData: true,
     });
