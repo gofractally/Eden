@@ -17,7 +17,9 @@ export const CountdownPieMer = ({
     endTime,
     className = "",
 }: Props) => {
-    const [percent, setPercent] = useState<number>(0);
+    const [percentDecimal, setPercent] = useState<number>(0);
+    const percent = Math.round(percentDecimal * 100);
+
     const delay = percent > 100 ? null : 500;
 
     const durationMs = useMemo(
@@ -27,8 +29,7 @@ export const CountdownPieMer = ({
 
     useInterval(() => {
         const elapsedTimeMs = now().getTime() - startTime.getTime();
-        const percentElapsed = Math.round((elapsedTimeMs / durationMs) * 100);
-        setPercent(percentElapsed);
+        setPercent(elapsedTimeMs / durationMs);
     }, delay);
 
     if (percent > 100) return <></>;
