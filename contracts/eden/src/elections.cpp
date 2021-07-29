@@ -534,6 +534,10 @@ namespace eden
       {
          if (iter->candidate != eosio::name())
          {
+            if (iter->candidate == iter->member)
+            {
+               votes_by_candidate[iter->candidate] += group_size;
+            }
             ++votes_by_candidate[iter->candidate];
             result.voted.push_back(iter->member);
          }
@@ -546,7 +550,7 @@ namespace eden
       auto best = std::max_element(
           votes_by_candidate.begin(), votes_by_candidate.end(),
           [](const auto& lhs, const auto& rhs) { return lhs.second < rhs.second; });
-      if (!votes_by_candidate.empty() && 3 * best->second > 2 * group_size)
+      if (!votes_by_candidate.empty() && 3 * best->second > 5 * group_size)
       {
          result.winner = best->first;
       }
