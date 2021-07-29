@@ -5,7 +5,7 @@ interface Props {
     fillColor?: string;
 }
 
-export const PieChart = ({
+export const PieStatusIndicator = ({
     percent = 0,
     size = 20,
     backgroundColor = "#e5e5e5",

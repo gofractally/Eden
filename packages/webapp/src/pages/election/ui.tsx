@@ -17,13 +17,12 @@ import {
     Text,
 } from "_app/ui";
 import {
-    ElectionRoundCountdown,
+    CountdownPieMer,
     ElectionParticipantChip,
     VotingMemberChip,
 } from "elections";
 import { MembersGrid } from "members";
 import { MemberData } from "members/interfaces";
-import dayjs from "dayjs";
 
 interface Props {
     delegatesPage: number;
@@ -329,8 +328,11 @@ const RoundHeader = ({
     isActive?: boolean;
     subText: string;
 }) => {
-    const startTime = useMemo(dayjs, []);
-    const endTime = useMemo(() => dayjs().add(3, "minute"), []);
+    const startTime = useMemo(() => new Date(), []);
+    const endTime = useMemo(
+        () => new Date(startTime.getTime() + 3 * 60 * 1000), // 3 min
+        []
+    );
     return (
         <div className="w-full flex justify-between">
             <div className="flex items-center space-x-2">
@@ -347,7 +349,7 @@ const RoundHeader = ({
                 </div>
             </div>
             {isActive && (
-                <ElectionRoundCountdown
+                <CountdownPieMer
                     startTime={startTime}
                     endTime={endTime}
                     className="mr-16"
