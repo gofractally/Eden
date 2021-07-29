@@ -1,5 +1,9 @@
 import EdenSubchain from "./EdenSubchain";
-import { BlockInfo, ClientStatus, ServerMessage } from "./SubchainProtocol";
+import {
+    BlockInfo,
+    ClientStatus,
+    sanitizeServerMessage,
+} from "./SubchainProtocol";
 
 export default class SubchainClient {
     subchain = new EdenSubchain();
@@ -56,7 +60,7 @@ export default class SubchainClient {
                     const d = await data;
                     this.subchain.pushBlock(new Uint8Array(d), 0);
                 } else {
-                    const msg: ServerMessage = JSON.parse(data!);
+                    const msg = sanitizeServerMessage(JSON.parse(data!));
                     if (msg.type === "sendStatus") {
                         await this.sendStatus();
                     } else if (msg.type === "setIrreversible") {

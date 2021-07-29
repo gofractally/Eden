@@ -6,6 +6,7 @@ import DfuseReceiver from "./DfuseReceiver";
 import {
     ClientStatus,
     ServerMessage,
+    sanitizeClientStatus,
 } from "../../common/src/subchain/SubchainProtocol";
 
 const app = express();
@@ -54,6 +55,7 @@ class ConnectionState {
             this.ws = null;
             return;
         }
+        if (!this.status) return;
         try {
             let needHeadUpdate = false;
             while (this.status.blocks.length) {
@@ -89,9 +91,12 @@ class ConnectionState {
             // TODO: trim status.blocks
             if (needHeadUpdate)
                 this.sendMsg({ type: "setHead", head: this.head() });
-            if (!this.status.maxBlocksToSend)
+            if (!this.status.maxBlocksToSend) {
                 this.sendMsg({ type: "sendStatus" });
-            else this.addCallback();
+                this.status = null;
+            } else {
+                this.addCallback();
+            }
         } catch (e) {
             // TODO: report some errors to client
             console.error(e);
@@ -108,7 +113,7 @@ wss.on("connection", (ws: WebSocket) => {
         if (!wsa.connectionState) wsa.connectionState = new ConnectionState(ws);
         const cs: ConnectionState = wsa.connectionState;
         try {
-            cs.status = JSON.parse(message);
+            cs.status = sanitizeClientStatus(JSON.parse(message));
             cs.update();
         } catch (e) {
             // TODO: report some errors to client

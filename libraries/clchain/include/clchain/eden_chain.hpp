@@ -131,12 +131,10 @@ namespace eden_chain
          if (it == blocks.begin() && block.num != 1)
             return {unlinkable, 0};
          if (it != blocks.begin())
-         {
             if (block.previous != it[-1]->id || block.num != it[-1]->num + 1)
                return {unlinkable, 0};
-            if (it != blocks.end() && it[0]->num <= irreversible)
-               return {unlinkable, 0};
-         }
+         if (it != blocks.end() && it[0]->num <= irreversible)
+            return {unlinkable, 0};
          num_forked = blocks.end() - it;
          blocks.erase(it, blocks.end());
          blocks.push_back(std::make_unique<block_with_id>(block));
