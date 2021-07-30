@@ -53,13 +53,7 @@ export const DelegatesPage = (props: Props) => {
                         )}
                     </Text>
                 </Container>
-                {myDelegation.length ? (
-                    <Delegates myDelegation={myDelegation} members={members} />
-                ) : (
-                    <div className="-mt-px">
-                        <DelegateChip />
-                    </div>
-                )}
+                <Delegates myDelegation={myDelegation} members={members} />
             </div>
         </FluidLayout>
     );
@@ -73,7 +67,16 @@ const Delegates = ({
     myDelegation: EdenMember[];
 }) => {
     const { data: membersStats } = useMemberStats();
+
+    if (myDelegation?.length === 0) {
+        return (
+            <div className="-mt-px">
+                <DelegateChip />
+            </div>
+        );
+    }
     if (!members || !membersStats) return <></>;
+
     return (
         <>
             {myDelegation.map((delegate, index) => (
