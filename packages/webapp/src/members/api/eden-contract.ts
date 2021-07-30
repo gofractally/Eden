@@ -17,7 +17,7 @@ export const getEdenMember = (account: string) => {
         return Promise.resolve(
             fixtureEdenMembers.find((member) => member.account === account)
         );
-    getRow<EdenMember>(CONTRACT_MEMBER_TABLE, "account", account);
+    return getRow<EdenMember>(CONTRACT_MEMBER_TABLE, "account", account);
 };
 
 export const getMembersStats = async () => {
