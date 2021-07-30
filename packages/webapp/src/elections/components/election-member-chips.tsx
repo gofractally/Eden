@@ -84,11 +84,7 @@ interface DelegateChipProps {
 }
 
 export const DelegateChip = ({ member, level }: DelegateChipProps) => (
-    <ElectionParticipantChip
-        member={member!}
-        delegateLevel={level}
-        isDelegate
-    />
+    <ElectionParticipantChip member={member} delegateLevel={level} isDelegate />
 );
 
 interface ElectionParticipantChipProps {

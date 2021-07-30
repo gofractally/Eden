@@ -1,5 +1,5 @@
 import { EdenMember, MemberData, MemberStats } from "members";
-import { ElectionParticipationStatus, MemberStatus } from "_app";
+import { ElectionParticipationStatus, MemberStatus } from "_app/api/interfaces";
 
 export const fixtureEdenMembers: EdenMember[] = [
     {
