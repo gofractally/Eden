@@ -13,41 +13,12 @@ namespace eden
       elections{get_self()}.set_next_election_time(election_time);
    }
 
-   void eden::electconfig(uint8_t election_day,
-                          const std::string& election_time,
-                          const eosio::asset& election_donation)
+   void eden::electconfig(uint8_t election_day, const std::string& election_time)
    {
       eosio::require_auth(get_self());
 
       elections elections{get_self()};
       elections.set_time(election_day, election_time);
-
-      globals globals{get_self()};
-      eosio::check(election_donation.symbol == globals.default_token(),
-                   "Wrong token for election donation");
-      globals.set_election_donation(election_donation);
-   }
-
-   void eden::electdonate(eosio::name payer, const eosio::asset& quantity)
-   {
-      eosio::require_auth(payer);
-      globals globals{get_self()};
-
-      accounts user_accounts{get_self()};
-
-      eosio::check(quantity == globals.get().election_donation, "incorrect donation");
-      user_accounts.sub_balance(payer, quantity);
-      migrations migrations{get_self()};
-      eosio::check(migrations.is_completed<migrate_account_v0>(), "Please migrate tables first");
-      add_to_pool(get_self(), "master"_n, quantity);
-
-      members members{get_self()};
-      const auto& member = members.get_member(payer);
-      if (member.election_participation_status() != no_donation)
-      {
-         eosio::check(false, "Cannot donate at this time");
-      }
-      members.election_opt(member, true);
    }
 
    void eden::electopt(eosio::name voter, bool participating)
