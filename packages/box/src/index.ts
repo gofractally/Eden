@@ -20,7 +20,7 @@ app.use("/", routes);
 
 app.listen(serverConfig.port, () => {
     logger.info(
-        `Server running at http://${serverConfig.host}:${serverConfig.port}`
+        `Server running at: http://${serverConfig.host}:${serverConfig.port}`
     );
     logger.info(`Environment=${env}`);
 });
