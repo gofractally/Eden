@@ -39,9 +39,9 @@ namespace eden_chain
    {
       uint32_t num = 0;
       eosio::checksum256 previous;
-      eosio_block eosio_block;
+      eosio_block eosioBlock;
    };
-   EOSIO_REFLECT(block, num, previous, eosio_block)
+   EOSIO_REFLECT(block, num, previous, eosioBlock)
 
    struct block_with_id : block
    {
@@ -60,7 +60,7 @@ namespace eden_chain
    inline const block_with_id& deref(const block_with_id& block) { return block; }
    inline const block_with_id& deref(const std::unique_ptr<block_with_id>& block) { return *block; }
    inline uint32_t get_eosio_num(uint32_t num) { return num; }
-   inline uint32_t get_eosio_num(const auto& block) { return deref(block).eosio_block.num; }
+   inline uint32_t get_eosio_num(const auto& block) { return deref(block).eosioBlock.num; }
    inline constexpr auto by_eosio_num = [](const auto& a, const auto& b) {
       return get_eosio_num(a) < get_eosio_num(b);
    };

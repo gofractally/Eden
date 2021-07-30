@@ -264,6 +264,24 @@ void add_genesis_member(const status& status, eosio::name member)
    });
 }
 
+void clearall(auto& table)
+{
+   for (auto it = table.begin(); it != table.end();)
+   {
+      auto next = it;
+      ++next;
+      table.remove(*it);
+      it = next;
+   }
+}
+
+void clearall()
+{
+   clearall(db.status);
+   clearall(db.inductions);
+   clearall(db.members);
+}
+
 void genesis(std::string community,
              eosio::symbol community_symbol,
              eosio::asset minimum_donation,
@@ -378,7 +396,9 @@ void filter_block(const eden_chain::eosio_block& block)
       {
          if (action.firstReceiver == "genesis.eden"_n)
          {
-            if (action.name == "genesis"_n)
+            if (action.name == "clearall"_n)
+               call(clearall, action.hexData.data);
+            else if (action.name == "genesis"_n)
                call(genesis, action.hexData.data);
             else if (action.name == "addtogenesis"_n)
                call(addtogenesis, action.hexData.data);
@@ -413,16 +433,16 @@ bool add_block(eden_chain::block_with_id&& bi, uint32_t eosio_irreversible)
    db.db.commit(block_log.irreversible);
    bool need_undo = bi.num > block_log.irreversible;
    auto session = db.db.start_undo_session(bi.num > block_log.irreversible);
-   filter_block(bi.eosio_block);
+   filter_block(bi.eosioBlock);
    session.push();
    if (!need_undo)
       db.db.set_revision(bi.num);
    // printf("%s block: %d %d log: %d irreversible: %d db: %d-%d %s\n", block_log.status_str[status],
-   //        (int)bi.eosio_block.num, (int)bi.num, (int)block_log.blocks.size(),
+   //        (int)bi.eosioBlock.num, (int)bi.num, (int)block_log.blocks.size(),
    //        block_log.irreversible,  //
    //        (int)db.db.undo_stack_revision_range().first,
    //        (int)db.db.undo_stack_revision_range().second,  //
-   //        to_string(bi.eosio_block.id).c_str());
+   //        to_string(bi.eosioBlock.id).c_str());
    return true;
 }
 
@@ -449,8 +469,8 @@ bool add_block(eden_chain::block&& eden_block, uint32_t eosio_irreversible)
    eosio::from_json(eosio_block, s);
 
    eden_chain::block eden_block;
-   eden_block.eosio_block = std::move(eosio_block);
-   auto* prev = block_log.block_before_eosio_num(eden_block.eosio_block.num);
+   eden_block.eosioBlock = std::move(eosio_block);
+   auto* prev = block_log.block_before_eosio_num(eden_block.eosioBlock.num);
    if (prev)
    {
       eden_block.num = prev->num + 1;
