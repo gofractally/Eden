@@ -47,7 +47,6 @@ export const getMyDelegation = async (
         queryHeadDelegate.queryFn
     );
 
-    // TODO: add fixtures for each of these querys and test the logic (that I couldn't test before)
     const { queryKey, queryFn } = queryMemberByAccountName(
         loggedInMemberAccount
     );
@@ -56,12 +55,14 @@ export const getMyDelegation = async (
         queryFn
     );
     if (!nextDelegate || !leadRepresentative) return myDelegates;
+    console.info("loggedInMember as nextDelegate:");
+    console.info(nextDelegate);
 
     while (
         nextDelegate!.account !== leadRepresentative &&
         memberHasRepresentative(nextDelegate)
     ) {
-        myDelegates.push(nextDelegate);
+        if (nextDelegate.election_rank > 1) myDelegates.push(nextDelegate);
         const { queryKey, queryFn } = queryMemberByAccountName(
             nextDelegate!.representative
         );
