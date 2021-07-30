@@ -531,21 +531,27 @@ struct Query
 {
    eden_chain::BlockLog blockLog;
 
-   MemberConnection members(std::optional<eosio::name> ge,
-                            std::optional<int32_t> first,
+   MemberConnection members(std::optional<eosio::name> gt,
+                            std::optional<eosio::name> ge,
+                            std::optional<eosio::name> lt,
+                            std::optional<eosio::name> le,
+                            std::optional<uint32_t> first,
+                            std::optional<uint32_t> last,
+                            std::optional<std::string> before,
                             std::optional<std::string> after) const
    {
-      return clchain::firstAfter<MemberConnection, eosio::name>(
-          ge, first, after, db.members.get<by_pk>(),        //
+      return clchain::make_connection<MemberConnection, eosio::name>(
+          gt, ge, lt, le, first, last, before, after,       //
+          db.members.get<by_pk>(),                          //
           [](auto& obj) { return obj.member.account; },     //
           [](auto& obj) { return std::cref(obj.member); },  //
           [](auto& members, auto key) { return members.lower_bound(key); },
           [](auto& members, auto key) { return members.upper_bound(key); });
    }
 };
-EOSIO_REFLECT2(Query,  //
+EOSIO_REFLECT2(Query,
                blockLog,
-               method(members, "ge", "first", "after"))
+               method(members, "gt", "ge", "lt", "le", "first", "last", "before", "after"))
 
 auto schema = clchain::get_gql_schema<Query>();
 [[clang::export_name("getSchemaSize")]] uint32_t getSchemaSize()
