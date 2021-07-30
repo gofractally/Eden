@@ -126,6 +126,7 @@ namespace eden
       void clear_ranks();
       void set_rank(eosio::name account, uint8_t rank, eosio::name representative);
       void election_opt(const member& member, bool participating);
+      bool can_upload_video(uint8_t round, eosio::name member);
       // Activates the contract if all genesis members are active
       void maybe_activate_contract();
       member_stats_v1 stats();

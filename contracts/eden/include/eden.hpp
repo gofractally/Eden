@@ -136,6 +136,7 @@ namespace eden
                         const eosio::bytes& data,
                         const std::optional<eosio::bytes>& old_data);
       void electvote(uint8_t round, eosio::name voter, eosio::name candidate);
+      void electvideo(uint8_t round, eosio::name voter, const std::string& video);
       void electprocess(uint32_t max_steps);
 
       void distribute(uint32_t max_steps);
@@ -232,6 +233,7 @@ namespace eden
        action(electseed, btc_header),
        action(electmeeting, account, round, keys, data, old_data),
        action(electvote, round, voter, candidate),
+       action(electvideo, round, voter, video),
        action(electprocess, max_steps),
        action(bylawspropose, proposer, bylaws),
        action(bylawsapprove, approver, bylaws_hash),

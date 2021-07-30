@@ -68,6 +68,23 @@ namespace eden
       elections.vote(round, voter, candidate);
    }
 
+   void eden::electvideo(uint8_t round, eosio::name voter, const std::string& video)
+   {
+      eosio::require_auth(voter);
+      elections elections{get_self()};
+      members members{get_self()};
+      if (auto check = elections.can_upload_video(round, voter); boost::logic::indeterminate(check))
+      {
+         eosio::check(members.can_upload_video(round, voter),
+                      "Cannot upload video for this election round");
+      }
+      else
+      {
+         eosio::check(static_cast<bool>(check), "Cannot upload video for this election round");
+      }
+      atomicassets::validate_ipfs(video);
+   }
+
    void eden::electprocess(uint32_t max_steps)
    {
       elections elections(get_self());
