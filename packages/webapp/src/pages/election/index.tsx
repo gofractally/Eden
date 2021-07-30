@@ -23,6 +23,7 @@ import {
 } from "elections";
 import { MembersGrid } from "members";
 import { MemberData } from "members/interfaces";
+import { EncryptionPasswordAlert } from "encryption";
 
 interface Props {
     delegatesPage: number;
@@ -314,6 +315,7 @@ const OngoingRoundSegment = ({
                 isOpen={showPasswordPrompt}
                 close={() => setShowPasswordPrompt(false)}
             />
+            <EncryptionPasswordAlert promptSetupEncryptionKey />
         </Expander>
     );
 };

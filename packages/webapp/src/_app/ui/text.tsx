@@ -1,6 +1,6 @@
 import React from "react";
 
-export type TextType = "regular" | "note";
+export type TextType = "regular" | "note" | "danger" | "info";
 const TYPES: { [key in TextType]: string } = {
     regular: "text-gray-700",
     note: "text-gray-500",
