@@ -12,35 +12,41 @@ const query = `
 }`;
 
 function Members() {
-    const { result, first, next, previous, last } = usePagedQuery(query, 10);
+    const pagedResult = usePagedQuery(
+        query,
+        10,
+        (result) => result?.data?.members.pageInfo
+    );
     return (
         <Fragment>
             <div>
-                <button disabled={!result?.data} onClick={first}>
+                <button
+                    disabled={!pagedResult.result}
+                    onClick={pagedResult.first}
+                >
                     first
                 </button>
                 <button
-                    disabled={!result?.data?.members.pageInfo.hasPreviousPage}
-                    onClick={() =>
-                        previous(result!.data!.members.pageInfo.startCursor)
-                    }
+                    disabled={!pagedResult.hasPreviousPage}
+                    onClick={pagedResult.previous}
                 >
                     prev
                 </button>
                 <button
-                    disabled={!result?.data?.members.pageInfo.hasNextPage}
-                    onClick={() =>
-                        next(result!.data!.members.pageInfo.endCursor)
-                    }
+                    disabled={!pagedResult.hasNextPage}
+                    onClick={pagedResult.next}
                 >
                     next
                 </button>
-                <button disabled={!result?.data} onClick={last}>
+                <button
+                    disabled={!pagedResult.result}
+                    onClick={pagedResult.last}
+                >
                     last
                 </button>
             </div>
             <ul>
-                {result?.data?.members.edges.map((edge: any) => (
+                {pagedResult.result?.data?.members.edges.map((edge: any) => (
                     <li key={edge.node.account}>{edge.node.account}</li>
                 ))}
             </ul>

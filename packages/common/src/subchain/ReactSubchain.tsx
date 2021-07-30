@@ -68,16 +68,35 @@ export function useQuery<T = any>(query: string): T {
     return state.cachedQueryResult;
 }
 
-export function usePagedQuery<T = any>(query: string, pageSize: number) {
+interface PageInfo {
+    hasPreviousPage: boolean;
+    hasNextPage: boolean;
+    startCursor: string;
+    endCursor: string;
+}
+
+export function usePagedQuery<T = any>(
+    query: string,
+    pageSize: number,
+    getPageInfo: (result: T) => PageInfo | null | undefined
+) {
     const [args, setArgs] = useState(`first:${pageSize}`);
     const result = useQuery<T>(query.replace("@page@", args));
+    const pageInfo = getPageInfo(result) || {
+        hasPreviousPage: false,
+        hasNextPage: false,
+        startCursor: "",
+        endCursor: "",
+    };
     return {
         result,
-        next(cursor: string) {
-            setArgs(`first:${pageSize} after:"${cursor}"`);
+        hasPreviousPage: pageInfo.hasPreviousPage,
+        hasNextPage: pageInfo.hasNextPage,
+        next() {
+            setArgs(`first:${pageSize} after:"${pageInfo.endCursor}"`);
         },
-        previous(cursor: string) {
-            setArgs(`last:${pageSize} before:"${cursor}"`);
+        previous() {
+            setArgs(`last:${pageSize} before:"${pageInfo.startCursor}"`);
         },
         first() {
             setArgs(`first:${pageSize}`);

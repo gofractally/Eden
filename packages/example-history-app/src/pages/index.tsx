@@ -50,36 +50,35 @@ interface QueryResult {
 }
 
 function Members() {
-    const { result, first, next, previous, last } = usePagedQuery<QueryResult>(
+    const pagedResult = usePagedQuery<QueryResult>(
         query,
-        4
+        4,
+        (result) => result?.data?.members.pageInfo
     );
     return (
         <div style={{ flexGrow: 1, margin: "10px" }}>
             <h1>Members</h1>
 
-            <button disabled={!result?.data} onClick={first}>
+            <button disabled={!pagedResult.result} onClick={pagedResult.first}>
                 first
             </button>
             <button
-                disabled={!result?.data?.members.pageInfo.hasPreviousPage}
-                onClick={() =>
-                    previous(result!.data!.members.pageInfo.startCursor)
-                }
+                disabled={!pagedResult.hasPreviousPage}
+                onClick={pagedResult.previous}
             >
-                &lt;
+                prev
             </button>
             <button
-                disabled={!result?.data?.members.pageInfo.hasNextPage}
-                onClick={() => next(result!.data!.members.pageInfo.endCursor)}
+                disabled={!pagedResult.hasNextPage}
+                onClick={pagedResult.next}
             >
-                &gt;
+                next
             </button>
-            <button disabled={!result?.data} onClick={last}>
+            <button disabled={!pagedResult.result} onClick={pagedResult.last}>
                 last
             </button>
 
-            {result?.data?.members.edges.map((edge) => (
+            {pagedResult.result?.data?.members.edges.map((edge) => (
                 <table
                     key={edge.node.account}
                     style={{ margin: 20, borderStyle: "solid" }}
