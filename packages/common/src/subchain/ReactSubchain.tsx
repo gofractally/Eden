@@ -79,5 +79,11 @@ export function usePagedQuery<T = any>(query: string, pageSize: number) {
         previous(cursor: string) {
             setArgs(`last:${pageSize} before:"${cursor}"`);
         },
+        first() {
+            setArgs(`first:${pageSize}`);
+        },
+        last() {
+            setArgs(`last:${pageSize}`);
+        },
     };
 }

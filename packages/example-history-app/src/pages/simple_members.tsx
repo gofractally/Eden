@@ -12,10 +12,13 @@ const query = `
 }`;
 
 function Members() {
-    const { result, next, previous } = usePagedQuery(query, 10);
+    const { result, first, next, previous, last } = usePagedQuery(query, 10);
     return (
         <Fragment>
             <div>
+                <button disabled={!result?.data} onClick={first}>
+                    first
+                </button>
                 <button
                     disabled={!result?.data?.members.pageInfo.hasPreviousPage}
                     onClick={() =>
@@ -32,12 +35,15 @@ function Members() {
                 >
                     next
                 </button>
-                <ul>
-                    {result?.data?.members.edges.map((edge: any) => (
-                        <li key={edge.node.account}>{edge.node.account}</li>
-                    ))}
-                </ul>
+                <button disabled={!result?.data} onClick={last}>
+                    last
+                </button>
             </div>
+            <ul>
+                {result?.data?.members.edges.map((edge: any) => (
+                    <li key={edge.node.account}>{edge.node.account}</li>
+                ))}
+            </ul>
         </Fragment>
     );
 }

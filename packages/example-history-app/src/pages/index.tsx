@@ -49,8 +49,68 @@ interface QueryResult {
     };
 }
 
-export default function Members() {
-    const { result, next, previous } = usePagedQuery<QueryResult>(query, 4);
+function Members() {
+    const { result, first, next, previous, last } = usePagedQuery<QueryResult>(
+        query,
+        4
+    );
+    return (
+        <div style={{ flexGrow: 1, margin: "10px" }}>
+            <h1>Members</h1>
+
+            <button disabled={!result?.data} onClick={first}>
+                first
+            </button>
+            <button
+                disabled={!result?.data?.members.pageInfo.hasPreviousPage}
+                onClick={() =>
+                    previous(result!.data!.members.pageInfo.startCursor)
+                }
+            >
+                &lt;
+            </button>
+            <button
+                disabled={!result?.data?.members.pageInfo.hasNextPage}
+                onClick={() => next(result!.data!.members.pageInfo.endCursor)}
+            >
+                &gt;
+            </button>
+            <button disabled={!result?.data} onClick={last}>
+                last
+            </button>
+
+            {result?.data?.members.edges.map((edge) => (
+                <table
+                    key={edge.node.account}
+                    style={{ margin: 20, borderStyle: "solid" }}
+                >
+                    <tbody>
+                        <tr>
+                            <td>
+                                <b>Name:</b>
+                            </td>
+                            <td>{edge.node.profile.name}</td>
+                        </tr>
+                        <tr>
+                            <td>
+                                <b>Image:</b>
+                            </td>
+                            <td>{edge.node.profile.img}</td>
+                        </tr>
+                        <tr>
+                            <td>
+                                <b>Bio:</b>
+                            </td>
+                            <td>{edge.node.profile.bio}</td>
+                        </tr>
+                    </tbody>
+                </table>
+            ))}
+        </div>
+    );
+}
+
+export default function Page() {
     return (
         <div>
             <style global jsx>{`
@@ -77,72 +137,7 @@ export default function Members() {
                     }}
                 >
                     <Header />
-                    {!result && (
-                        <div style={{ flexGrow: 1, margin: "10px" }}>
-                            <h1>Loading micro chain...</h1>
-                        </div>
-                    )}
-                    {result?.data && (
-                        <div style={{ flexGrow: 1, margin: "10px" }}>
-                            <h1>Members</h1>
-
-                            <button
-                                disabled={
-                                    !result.data.members.pageInfo
-                                        .hasPreviousPage
-                                }
-                                onClick={() =>
-                                    previous(
-                                        result!.data!.members.pageInfo
-                                            .startCursor
-                                    )
-                                }
-                            >
-                                &lt;
-                            </button>
-
-                            <button
-                                disabled={
-                                    !result.data.members.pageInfo.hasNextPage
-                                }
-                                onClick={() =>
-                                    next(
-                                        result!.data!.members.pageInfo.endCursor
-                                    )
-                                }
-                            >
-                                &gt;
-                            </button>
-
-                            {result.data.members.edges.map((edge) => (
-                                <table
-                                    key={edge.node.account}
-                                    style={{ margin: 20, borderStyle: "solid" }}
-                                >
-                                    <tbody>
-                                        <tr>
-                                            <td>
-                                                <b>Name:</b>
-                                            </td>
-                                            <td>{edge.node.profile.name}</td>
-                                        </tr>
-                                        <tr>
-                                            <td>
-                                                <b>Image:</b>
-                                            </td>
-                                            <td>{edge.node.profile.img}</td>
-                                        </tr>
-                                        <tr>
-                                            <td>
-                                                <b>Bio:</b>
-                                            </td>
-                                            <td>{edge.node.profile.bio}</td>
-                                        </tr>
-                                    </tbody>
-                                </table>
-                            ))}
-                        </div>
-                    )}
+                    <Members />
                 </div>
             </main>
         </div>
