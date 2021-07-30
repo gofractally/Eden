@@ -1,7 +1,13 @@
 import { useRouter } from "next/router";
 import { FaCheckSquare, FaPlayCircle, FaRegSquare } from "react-icons/fa";
 
-import { ipfsUrl, openInNewTab, useElectionState, useHeadDelegate } from "_app";
+import {
+    ipfsUrl,
+    openInNewTab,
+    useChiefDelegates,
+    useElectionState,
+    useHeadDelegate,
+} from "_app";
 import { ROUTES } from "_app/config";
 import { GenericMemberChip } from "_app/ui";
 import { MemberData } from "members/interfaces";
@@ -88,11 +94,12 @@ const getDelegateLevelDescription = (
     level: number | undefined
 ) => {
     if (!memberAccount || !level) return "Delegate";
-    const prefix = `D${level} - `;
-    const { data: leadRepresentative } = useHeadDelegate();
-    const { data: electionState } = useElectionState();
-    if (leadRepresentative === memberAccount) return prefix + "Head Chief";
-    if (electionState?.board.includes(memberAccount))
+    const { data: headDelegate } = useHeadDelegate();
+    const { data: chiefDelegates } = useChiefDelegates();
+
+    const prefix = `D${level - 1} - `;
+    if (headDelegate === memberAccount) return prefix + "Head Chief";
+    if (chiefDelegates?.includes(memberAccount))
         return prefix + "Chief Delegate";
     return "Delegate";
 };
