@@ -27,7 +27,7 @@ dayjs.extend(relativeTime.default);
 
 Modal.setAppElement("#__next");
 
-// TODO: reassess this in light of SSR.
+// TODO: reassess this in light of SSR
 // if we want to leverage server-side caching, we should consider a refactor
 // See more here: https://react-query.tanstack.com/guides/ssr#using-hydration
 export const queryClient = new QueryClient();
