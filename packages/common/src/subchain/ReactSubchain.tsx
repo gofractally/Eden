@@ -32,26 +32,38 @@ export const EdenChainContext = createContext<SubchainClient | null>(null);
 
 export function useQuery(query: string): any {
     const client = useContext(EdenChainContext);
-    const [cachedClient, setCachedClient] = useState<SubchainClient | null>();
     const [cachedQuery, setCachedQuery] = useState<string | null>();
-    const [cachedQueryResult, setCachedQueryResult] = useState<any>();
-    const [registeredNotification, setRegisteredNotification] = useState(false);
+    // non-signalling state
+    const [state] = useState({
+        mounted: true,
+        cachedClient: null as SubchainClient | null,
+        subscribed: null as SubchainClient | null,
+        cachedQueryResult: null as any,
+    });
     useEffect(() => {
-        if (client && !registeredNotification) {
-            setRegisteredNotification(true);
-            client.notifications.push(() => {
-                setCachedQuery(null);
-                setRegisteredNotification(false);
+        return () => {
+            state.mounted = false;
+        };
+    }, []);
+    useEffect(() => {
+        if (client && state.subscribed !== client) {
+            state.subscribed = client;
+            client.notifications.push((c) => {
+                if (state.mounted && c === state.subscribed) {
+                    setCachedQuery(null);
+                    state.subscribed = null;
+                }
             });
         }
     });
-    if (cachedClient !== client || query !== cachedQuery) {
-        setCachedClient(client);
+    if (state.cachedClient !== client || query !== cachedQuery) {
+        state.cachedClient = client;
         setCachedQuery(query);
-        setRegisteredNotification(false);
-        if (client?.subchain)
-            setCachedQueryResult(client.subchain.query(query));
-        else setCachedQueryResult(null);
+        if (client?.subchain) {
+            state.cachedQueryResult = client.subchain.query(query);
+        } else {
+            state.cachedQueryResult = null;
+        }
     }
-    return cachedQueryResult;
+    return state.cachedQueryResult;
 }

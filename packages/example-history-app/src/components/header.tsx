@@ -2,7 +2,7 @@ import Link from "next/link";
 import { useQuery } from "../../../common/src/subchain/ReactSubchain";
 
 export default function Header() {
-    const info = useQuery("{blockLog{head{num eosio_block{num}}}}");
+    const info = useQuery("{blockLog{head{num eosioBlock{num}}}}");
     return (
         <div>
             <div style={{ margin: 10 }}>
@@ -14,9 +14,7 @@ export default function Header() {
                         </tr>
                         <tr>
                             <td>eosio block:</td>
-                            <td>
-                                {info?.data?.blockLog.head?.eosio_block.num}
-                            </td>
+                            <td>{info?.data?.blockLog.head?.eosioBlock.num}</td>
                         </tr>
                     </tbody>
                 </table>

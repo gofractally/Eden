@@ -9,7 +9,7 @@ export default class SubchainClient {
     subchain = new EdenSubchain();
     shuttingDown = false;
     ws: WebSocket | null = null;
-    notifications: (() => void)[] = [];
+    notifications: ((client: SubchainClient) => void)[] = [];
 
     async instantiateStreaming(
         response: Response | PromiseLike<Response>,
@@ -80,7 +80,7 @@ export default class SubchainClient {
         }
         const n = this.notifications;
         this.notifications = [];
-        for (let f of n) f();
+        for (let f of n) f(this);
         this.processingQueue = false;
     }
 
