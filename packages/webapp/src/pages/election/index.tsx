@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { useQuery } from "react-query";
 import { Flipper, Flipped } from "react-flip-toolkit";
 import { BiCheck, BiWebcam } from "react-icons/bi";
@@ -7,6 +7,11 @@ import { GoSync } from "react-icons/go";
 import { RiVideoUploadLine } from "react-icons/ri";
 
 import { FluidLayout, queryMembers, useFormFields, useUALAccount } from "_app";
+import {
+    useCurrentMember,
+    useMemberGroupParticipants,
+    useMemberListByAccountNames,
+} from "_app/hooks/queries";
 import {
     Button,
     Container,
@@ -22,21 +27,72 @@ import {
     VotingMemberChip,
 } from "elections";
 import { MembersGrid } from "members";
-import { MemberData } from "members/interfaces";
 import { EncryptionPasswordAlert } from "encryption";
+import { EdenMember, MemberData } from "members/interfaces";
+import { VoteData } from "elections/interfaces";
 
 interface Props {
     delegatesPage: number;
 }
 
-const MEMBERS_PAGE_SIZE = 4;
-
 // TODO: Hook up to real/fixture data; break apart and organize
 export const OngoingElectionPage = (props: Props) => {
+    // TODO: May be able to push a bunch of this fetching down into the OngoingRoundSegment component
+    const [fetchError, setFetchError] = useState<boolean>(false);
+    const { data: loggedInMember } = useCurrentMember();
+    const { data: voteData } = useMemberGroupParticipants(
+        loggedInMember?.account
+    );
+
+    // USE THIS TO PLAY WITH FLIPPER ANIMATION
+    // const voteData: VoteData[] = [
+    //     {
+    //         member: "egeon.edev",
+    //         round: 1,
+    //         index: 1,
+    //         candidate: "edenmember13",
+    //     },
+    //     {
+    //         member: "edenmember12",
+    //         round: 1,
+    //         index: 2,
+    //         candidate: "edenmember12",
+    //     },
+    //     {
+    //         member: "edenmember13",
+    //         round: 1,
+    //         index: 3,
+    //         candidate: "edenmember13",
+    //     },
+    // ];
+
+    const roundEdenMembers = useMemberListByAccountNames(
+        voteData?.map((participant) => participant.member) ?? []
+    );
+
+    useEffect(() => {
+        if (roundEdenMembers.some((res) => res.isError)) {
+            setFetchError(true);
+        }
+    }, [roundEdenMembers]);
+
+    const nftTemplateIds: number[] = roundEdenMembers
+        ?.filter((res) => Boolean(res?.data?.nft_template_id))
+        ?.map((res) => res?.data as EdenMember)
+        .map((em) => em.nft_template_id);
+
     const { data: members } = useQuery({
-        ...queryMembers(1, MEMBERS_PAGE_SIZE),
-        keepPreviousData: true,
+        ...queryMembers(1, 20, nftTemplateIds),
+        staleTime: Infinity,
+        enabled: !fetchError && Boolean(nftTemplateIds.length),
     });
+
+    useEffect(() => {
+        if (voteData?.length === members?.length) return;
+        setFetchError(true);
+    }, [members]);
+
+    // TODO: Handle fetchError;
 
     return (
         <FluidLayout title="Election">
@@ -57,9 +113,10 @@ export const OngoingElectionPage = (props: Props) => {
                         winner={members[4]}
                     />
                 )}
-                {members && (
+                {voteData && members && (
                     <OngoingRoundSegment
                         members={members}
+                        voteData={voteData}
                         round={2}
                         time="11:30am - 12:30am"
                     />
@@ -146,18 +203,20 @@ const CompletedRoundSegment = ({
 
 interface OngoingRoundSegmentProps {
     members: MemberData[];
+    voteData: VoteData[];
     round: number;
     time: string;
 }
 
 const OngoingRoundSegment = ({
     members,
+    voteData,
     round,
     time,
 }: OngoingRoundSegmentProps) => {
     const [ualAccount] = useUALAccount();
     const [selectedMember, setSelected] = useState<MemberData | null>(null);
-    const [votedFor, setVotedFor] = useState<MemberData | null>(null);
+    const [voterStats, setVoterStats] = useState<VoteData[]>(voteData);
     const [
         showZoomLinkPermutations,
         setShowZoomLinkPermutations,
@@ -172,15 +231,35 @@ const OngoingRoundSegment = ({
         setSelected(member);
     };
 
-    const onSubmitVote = () => setVotedFor(selectedMember);
+    const userVoterStats = voterStats.find(
+        (vs) => vs.member === ualAccount?.accountName
+    );
+
+    const userVotingFor = members.find(
+        (m) => m.account === userVoterStats?.candidate
+    );
+
+    // TODO: Sign & push vote action; remove voterStats and switch back to relying on voteData
+    const onSubmitVote = () => {
+        setVoterStats([
+            ...voterStats.filter((vs) => vs.member !== ualAccount?.accountName),
+            {
+                ...userVoterStats!,
+                candidate: selectedMember?.account ?? "",
+            },
+        ]);
+    };
 
     // TODO: If we want the list leaderboard flipper animation, we'll want to poll with the query and sort round participants by number of votes.
     // Then we'll feed that into the Flipper instance below.
-    const sortMembersByVotes = useMemo(() => {
-        const getVoteCount = (m: MemberData) =>
-            m.account === votedFor?.account ? 1 : 0;
-        return [...members].sort((a, b) => getVoteCount(b) - getVoteCount(a));
-    }, [votedFor?.account]);
+    const getVoteCountForMember = (member: MemberData) => {
+        return voterStats.filter((vd) => vd.candidate === member.account)
+            .length;
+    };
+
+    const sortMembersByVotes = [...members].sort(
+        (a, b) => getVoteCountForMember(b) - getVoteCountForMember(a)
+    );
 
     return (
         <Expander
@@ -257,41 +336,47 @@ const OngoingRoundSegment = ({
             </Container>
             <Flipper flipKey={sortMembersByVotes}>
                 <MembersGrid members={sortMembersByVotes}>
-                    {(member, index) => (
-                        <Flipped
-                            key={`leaderboard-${member.account}`}
-                            flipId={`leaderboard-${member.account}`}
-                        >
-                            <VotingMemberChip
-                                member={member}
-                                isSelected={
-                                    selectedMember?.account === member.account
-                                }
-                                onSelect={() => onSelectMember(member)}
-                                votesReceived={
-                                    votedFor?.account === member.account ? 1 : 0
-                                }
-                                votingFor={
-                                    ualAccount?.accountName === member.account
-                                        ? votedFor?.name
-                                        : undefined
-                                } // actual data will likely inform changes to the props implementation on this component.
-                                electionVideoCid={
-                                    ualAccount?.accountName === member.account
-                                        ? "QmeKPeuSai8sbEfvbuVXzQUzYRsntL3KSj5Xok7eRiX5Fp/edenTest2ElectionRoom12.mp4"
-                                        : undefined
-                                } // TODO: this will obviously change once implemented too
-                                className="bg-white"
-                                style={{ zIndex: 10 + members.length - index }}
-                            />
-                        </Flipped>
-                    )}
+                    {(member, index) => {
+                        const voteInfo = voterStats.find(
+                            (vd) => vd.member === member.account
+                        );
+                        const votesReceived = voterStats.filter(
+                            (vd) => vd.candidate === member.account
+                        ).length;
+                        return (
+                            <Flipped
+                                key={`leaderboard-${member.account}`}
+                                flipId={`leaderboard-${member.account}`}
+                            >
+                                <VotingMemberChip
+                                    member={member}
+                                    isSelected={
+                                        selectedMember?.account ===
+                                        member.account
+                                    }
+                                    onSelect={() => onSelectMember(member)}
+                                    votesReceived={votesReceived}
+                                    votingFor={voteInfo?.candidate}
+                                    electionVideoCid={
+                                        ualAccount?.accountName ===
+                                        member.account
+                                            ? "QmeKPeuSai8sbEfvbuVXzQUzYRsntL3KSj5Xok7eRiX5Fp/edenTest2ElectionRoom12.mp4"
+                                            : undefined
+                                    } // TODO: this will obviously change once implemented too
+                                    className="bg-white"
+                                    style={{
+                                        zIndex: 10 + members.length - index,
+                                    }}
+                                />
+                            </Flipped>
+                        );
+                    }}
                 </MembersGrid>
             </Flipper>
             <Container>
-                {votedFor && (
+                {userVotingFor && (
                     <div className="text-center mb-2">
-                        You voted for: {votedFor.name}
+                        You voted for: {userVotingFor.name}
                     </div>
                 )}
                 <div className="flex flex-col xs:flex-row justify-center space-y-2 xs:space-y-0 xs:space-x-2">
@@ -299,12 +384,12 @@ const OngoingRoundSegment = ({
                         size="sm"
                         disabled={
                             !selectedMember ||
-                            votedFor?.account === selectedMember.account
+                            userVotingFor?.account === selectedMember.account
                         }
                         onClick={onSubmitVote}
                     >
                         <BiCheck size={21} className="-mt-1 mr-1" />
-                        {votedFor ? "Change Vote" : "Submit Vote"}
+                        {userVotingFor ? "Change Vote" : "Submit Vote"}
                     </Button>
                     <Button size="sm">
                         <RiVideoUploadLine size={18} className="mr-2" />
