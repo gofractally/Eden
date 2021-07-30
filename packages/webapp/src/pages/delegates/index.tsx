@@ -1,108 +1,88 @@
-import React from "react";
+import { useQuery } from "react-query";
+import { BsArrowDown } from "react-icons/bs";
 
 import {
-    RawLayout,
+    Container,
+    FluidLayout,
+    Heading,
+    MemberStatus,
+    queryMembers,
     Text,
-    useCurrentMember,
-    useHeadDelegate,
     useMemberStats,
     useMyDelegation,
 } from "_app";
+import { DelegateChip } from "elections";
+import { EdenMember, MemberData } from "members/interfaces";
 
-export const DelegatesPage = () => {
-    const { data: loggedInMember } = useCurrentMember();
+interface Props {
+    delegatesPage: number;
+}
 
-    const { data: membersStats } = useMemberStats();
+const MEMBERS_PAGE_SIZE = 4;
 
-    const { data: leadRepresentative } = useHeadDelegate();
+// TODO: Hook up to fixture data
+export const DelegatesPage = (props: Props) => {
+    const { data: members } = useQuery({
+        ...queryMembers(1, MEMBERS_PAGE_SIZE),
+        keepPreviousData: true,
+    });
 
     const { data: myDelegation } = useMyDelegation();
 
-    if (
-        !loggedInMember ||
-        !membersStats ||
-        !leadRepresentative ||
-        !myDelegation
-    ) {
-        return (
-            <RawLayout>
-                <Text size="lg">Fetching Data...</Text>; [
-                <pre>{JSON.stringify(loggedInMember, null, 2)}</pre>] [
-                <pre>{JSON.stringify(membersStats, null, 2)}</pre>] [
-                <pre>{leadRepresentative}</pre>] [
-                <pre>{JSON.stringify(myDelegation, null, 2)}</pre>] [
-            </RawLayout>
-        );
-    }
+    if (!myDelegation) return <div>fetching your Delegation...</div>;
 
     return (
-        <RawLayout title="Election">
-            <Text size="sm" className="mb-8">
-                Note: Data is in square brackets if it's not JSON (to show if
-                something's undefined)
-            </Text>
-            <div>
-                <Text size="lg" className="bg-gray-200">
-                    My Delegation
-                </Text>
-                <Text size="sm" className="mt-4">
-                    You [{loggedInMember.account}] are level (rank){" "}
-                    {loggedInMember.election_rank} out of{" "}
-                    {membersStats.ranks.length}
-                </Text>
-                <Text size="sm" className="mt-4">
-                    Your Delegation is as follows:
-                </Text>
-                <ul>
-                    {myDelegation.reverse().map((delegate) => (
-                        <li key={delegate.account}>
-                            {delegate.name}
-                            {delegate.account === leadRepresentative &&
-                                "<-- Head Chief"}
-                            {delegate.account === loggedInMember.account &&
-                                "<-- you"}
-                        </li>
-                    ))}
-                </ul>
-            </div>
-            <Text size="lg" className="bg-gray-200">
-                -- Raw Table Data --
-            </Text>
-            <div>
-                <Text size="lg" className="mb-4">
-                    Member Stats
-                </Text>
-                <Text size="sm" className="mb-4">
-                    Note: the new field `ranks[]` is{" "}
-                    <span className="font-bold">
-                        not relevant to the frontend
-                    </span>
-                    ; it's a convenience for the smart contract. It's the number
-                    of people at each rank, ranks[ranks.length-1] being 1 for
-                    the Head Chief, ranks[ranks.length-2] being the number of
-                    Chiefs, etc.
-                </Text>
-                <div>
-                    <pre>{JSON.stringify(membersStats || {}, null, 2)}</pre>
+        <FluidLayout title="My Delegation">
+            <div className="divide-y">
+                <Container>
+                    <Heading size={1}>My Delegation</Heading>
+                    <Text size="sm">Elected September 14, 2021</Text>
+                </Container>
+                <Delegates myDelegation={myDelegation} members={members} />
+                <Container>
+                    <Heading size={3}>No delegate example...</Heading>
+                </Container>
+                <div className="-mt-px">
+                    <DelegateChip />
                 </div>
             </div>
-            <div>
-                <Text size="lg" className="mb-4">
-                    -- Raw Table Data --
-                </Text>
-                <Text size="lg" className="bg-gray-200">
-                    Logged-in Member
-                </Text>
-                <pre>{JSON.stringify(loggedInMember, null, 2)}</pre>
-                <Text size="lg" className="bg-gray-200">
-                    Members
-                </Text>
-                <Text size="sm" className="mb-4">
-                    See delegates/api/fixtures.ts for more info on what raw
-                    member data looks like.
-                </Text>
-            </div>
-        </RawLayout>
+        </FluidLayout>
+    );
+};
+
+const Delegates = ({
+    members,
+    myDelegation,
+}: {
+    members?: MemberData[];
+    myDelegation: EdenMember[];
+}) => {
+    const { data: membersStats } = useMemberStats();
+    if (!members || !membersStats) return <></>;
+    return (
+        <>
+            {myDelegation.map((delegate, index) => (
+                <div
+                    className="-mt-px"
+                    key={`my-delegation-${members[index].account}`}
+                >
+                    <DelegateChip
+                        member={members.find(
+                            (d) => d.account === delegate.account
+                        )}
+                        level={delegate.election_rank}
+                    />
+                    {delegate.election_rank < membersStats?.ranks.length && (
+                        <Container className="py-2.5">
+                            <BsArrowDown
+                                size={28}
+                                className="ml-3.5 text-gray-400"
+                            />
+                        </Container>
+                    )}
+                </div>
+            ))}
+        </>
     );
 };
 
