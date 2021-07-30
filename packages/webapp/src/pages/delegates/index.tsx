@@ -22,12 +22,17 @@ const MEMBERS_PAGE_SIZE = 4;
 
 // TODO: Hook up to fixture data
 export const DelegatesPage = (props: Props) => {
-    const { data: members } = useQuery({
-        ...queryMembers(1, MEMBERS_PAGE_SIZE),
-        keepPreviousData: true,
-    });
-
     const { data: myDelegation } = useMyDelegation();
+
+    const nftTemplateIds = myDelegation?.map(
+        (member) => member.nft_template_id
+    );
+
+    const { data: members } = useQuery({
+        ...queryMembers(1, 20, nftTemplateIds),
+        staleTime: Infinity,
+        enabled: Boolean(myDelegation),
+    });
 
     if (!myDelegation) return <div>fetching your Delegation...</div>;
 

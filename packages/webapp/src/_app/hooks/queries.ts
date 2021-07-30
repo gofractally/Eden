@@ -19,7 +19,11 @@ import {
     getInductions,
     getInductionWithEndorsements,
 } from "inductions/api";
-import { getHeadDelegate, getMyDelegation } from "delegates/api";
+import {
+    getChiefDelegates,
+    getHeadDelegate,
+    getMyDelegation,
+} from "delegates/api";
 import {
     getCurrentElection,
     getElectionState,
@@ -30,6 +34,11 @@ import { ActiveStateConfigType } from "elections/interfaces";
 export const queryHeadDelegate = {
     queryKey: "query_head_delegate",
     queryFn: getHeadDelegate,
+};
+
+export const queryChiefDelegates = {
+    queryKey: "query_chief_delegates",
+    queryFn: getChiefDelegates,
 };
 
 export const queryMyDelegation = (
@@ -72,10 +81,17 @@ export const queryIsCommunityActive = {
     queryFn: getIsCommunityActive,
 };
 
-export const queryMembers = (page: number, pageSize: number) => ({
-    queryKey: ["query_members", page, pageSize],
-    queryFn: () => getMembers(page, pageSize),
-});
+export const queryMembers = (
+    page: number,
+    pageSize: number,
+    nftTemplateIds: number[] = []
+) => {
+    const ids = nftTemplateIds.map((id) => id.toString());
+    return {
+        queryKey: ["query_members", page, pageSize, nftTemplateIds],
+        queryFn: () => getMembers(page, pageSize, ids),
+    };
+};
 
 export const queryNewMembers = (page: number, pageSize: number) => ({
     queryKey: ["query_new_members", page, pageSize],
@@ -158,6 +174,11 @@ export const useMyDelegation = () => {
         enabled: Boolean(member?.account),
     });
 };
+
+export const useChiefDelegates = () =>
+    useQuery({
+        ...queryChiefDelegates,
+    });
 
 export const useHeadDelegate = () =>
     useQuery({

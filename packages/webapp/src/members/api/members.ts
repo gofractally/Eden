@@ -34,7 +34,15 @@ export const getMembers = async (
     sortField = "created",
     order = "asc"
 ): Promise<MemberData[]> => {
-    if (devUseFixtureData) return Promise.resolve(fixtureMemberData);
+    if (devUseFixtureData) {
+        let data = fixtureMemberData;
+        if (ids) {
+            data = fixtureMemberData.filter((md) =>
+                ids.includes(md.templateId.toString())
+            );
+        }
+        return Promise.resolve(data);
+    }
     const data = await getTemplates(page, limit, ids, sortField, order);
     return data.map(convertAtomicTemplateToMember);
 };
