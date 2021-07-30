@@ -2,16 +2,20 @@ import { CurrentElection, ElectionState, VoteData } from "elections/interfaces";
 
 // The following fixtures represent the following Election/round layout
 // Round 1:
-//  - Group1: egeon.edev, edenmember12, edenmember13 (voted up edenmember13)
+//  - Group1: egeon.edev, edenmember13 (voted up edenmember13)
 //  - Group2: edenmember11, pip.edev (voted up edenmember11)
+//  - Group3: edenmember12 (no representation -- didn't vote for themsevles)
 // Round 2 (assumes a full voting / non-sortition round just for the sake of minimal fixture data)
+//  - Group1: edenmember11 (voted up edenmember11)
+//  - Group1: edenmember13 (voted up edenmember13)
+// Round 3 (assumes a full voting / non-sortition round just for the sake of minimal fixture data)
 //  - Group1: edenmember11, edenmember13 (voted up edenmember11)
 // Head Chief: edenmember11
 
 export const fixtureElectionState: ElectionState = {
     lead_representative: "edenmember11",
     board: ["edenmember11", "edenmember13"],
-    last_election_time: "2022-01-16T16:00:00.000",
+    last_election_time: "2021-01-16T16:00:00.000",
 };
 
 // This data reflects an in-progress election round and, therefore,
@@ -22,7 +26,7 @@ export const fixtureCurrentElection: CurrentElection = {
     electionState: "active",
     config: {
         num_participants: 5,
-        num_groups: 2,
+        num_groups: 3,
     },
     start_time: "2022-01-16T16:00:00.000",
     election_threshold: 1000,
@@ -37,16 +41,16 @@ export const fixtureVoteDataRows: VoteData[] = [
         candidate: "edenmember13",
     },
     {
-        member: "edenmember12",
+        member: "edenmember13",
         round: 1,
         index: 2,
         candidate: "edenmember13",
     },
     {
-        member: "edenmember13",
+        member: "edenmember11",
         round: 1,
         index: 3,
-        candidate: "edenmember13",
+        candidate: "edenmember11",
     },
     {
         member: "pip.edev",
@@ -55,10 +59,10 @@ export const fixtureVoteDataRows: VoteData[] = [
         candidate: "edenmember11",
     },
     {
-        member: "edenmember11",
+        member: "edenmember12",
         round: 1,
         index: 5,
-        candidate: "edenmember11",
+        candidate: "",
     },
 ];
 
