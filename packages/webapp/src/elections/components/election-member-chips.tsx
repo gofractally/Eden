@@ -88,7 +88,7 @@ export const DelegateChip = ({ member, level }: DelegateChipProps) => (
 );
 
 interface ElectionParticipantChipProps {
-    member: MemberData;
+    member?: MemberData;
     delegateLevel?: string;
     isDelegate?: boolean;
     electionVideoCid?: string;
