@@ -30,7 +30,7 @@ export function useCreateEdenChain(): SubchainClient | null {
 
 export const EdenChainContext = createContext<SubchainClient | null>(null);
 
-export function useQuery(query: string): any {
+export function useQuery<T = any>(query: string): T {
     const client = useContext(EdenChainContext);
     const [cachedQuery, setCachedQuery] = useState<string | null>();
     // non-signalling state
@@ -66,4 +66,18 @@ export function useQuery(query: string): any {
         }
     }
     return state.cachedQueryResult;
+}
+
+export function usePagedQuery<T = any>(query: string, pageSize: number) {
+    const [args, setArgs] = useState(`first:${pageSize}`);
+    const result = useQuery<T>(query.replace("@page@", args));
+    return {
+        result,
+        next(cursor: string) {
+            setArgs(`first:${pageSize} after:"${cursor}"`);
+        },
+        previous(cursor: string) {
+            setArgs(`last:${pageSize} before:"${cursor}"`);
+        },
+    };
 }

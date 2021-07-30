@@ -1,35 +1,36 @@
 import Head from "next/head";
 import Header from "../components/header";
-import { useState } from "react";
-import { useQuery } from "../../../common/src/subchain/ReactSubchain";
+import { usePagedQuery } from "../../../common/src/subchain/ReactSubchain";
 
-function makeQuery(cursor: string) {
-    return `
-    {
-      members(first: 5, after: "${cursor}") {
-        pageInfo {
-          hasNextPage
-          endCursor
-        }
-        edges {
-          node {
-            account
-            profile {
-              name
-              img
-              bio
-            }
-          }
+const query = `
+{
+  members(@page@) {
+    pageInfo {
+      hasPreviousPage
+      hasNextPage
+      startCursor
+      endCursor
+    }
+    edges {
+      node {
+        account
+        profile {
+          name
+          img
+          bio
         }
       }
-    }`;
-}
+    }
+  }
+}`;
 
 interface QueryResult {
-    data: {
+    data?: {
         members: {
             pageInfo: {
+                hasPreviousPage: boolean;
                 hasNextPage: boolean;
+                startCursor: string;
                 endCursor: string;
             };
             edges: [
@@ -49,8 +50,7 @@ interface QueryResult {
 }
 
 export default function Members() {
-    const [query, setQuery] = useState(makeQuery(""));
-    const queryResult = useQuery(query);
+    const { result, next, previous } = usePagedQuery<QueryResult>(query, 4);
     return (
         <div>
             <style global jsx>{`
@@ -77,31 +77,44 @@ export default function Members() {
                     }}
                 >
                     <Header />
-                    {!queryResult && (
+                    {!result && (
                         <div style={{ flexGrow: 1, margin: "10px" }}>
                             <h1>Loading micro chain...</h1>
                         </div>
                     )}
-                    {queryResult && (
+                    {result?.data && (
                         <div style={{ flexGrow: 1, margin: "10px" }}>
                             <h1>Members</h1>
+
                             <button
                                 disabled={
-                                    !queryResult.data.members.pageInfo
-                                        .hasNextPage
+                                    !result.data.members.pageInfo
+                                        .hasPreviousPage
                                 }
-                                onClick={(e) =>
-                                    setQuery(
-                                        makeQuery(
-                                            queryResult.data.members.pageInfo
-                                                .endCursor
-                                        )
+                                onClick={() =>
+                                    previous(
+                                        result!.data!.members.pageInfo
+                                            .startCursor
                                     )
                                 }
                             >
-                                More
+                                &lt;
                             </button>
-                            {queryResult.data.members.edges.map((edge) => (
+
+                            <button
+                                disabled={
+                                    !result.data.members.pageInfo.hasNextPage
+                                }
+                                onClick={() =>
+                                    next(
+                                        result!.data!.members.pageInfo.endCursor
+                                    )
+                                }
+                            >
+                                &gt;
+                            </button>
+
+                            {result.data.members.edges.map((edge) => (
                                 <table
                                     key={edge.node.account}
                                     style={{ margin: 20, borderStyle: "solid" }}

@@ -26,6 +26,11 @@ export default function Header() {
                     </Link>
                 </li>
                 <li>
+                    <Link href="/simple_members">
+                        <a>Simple Members</a>
+                    </Link>
+                </li>
+                <li>
                     <Link href="/graphiql">
                         <a>GraphiQL</a>
                     </Link>
