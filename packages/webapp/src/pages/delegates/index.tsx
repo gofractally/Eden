@@ -5,51 +5,61 @@ import {
     Container,
     FluidLayout,
     Heading,
-    MemberStatus,
     queryMembers,
     Text,
+    useCurrentElection,
+    useElectionState,
     useMemberStats,
     useMyDelegation,
+    useUALAccount,
 } from "_app";
 import { DelegateChip } from "elections";
 import { EdenMember, MemberData } from "members/interfaces";
+import dayjs from "dayjs";
 
 interface Props {
     delegatesPage: number;
 }
 
-const MEMBERS_PAGE_SIZE = 4;
-
-// TODO: Hook up to fixture data
 export const DelegatesPage = (props: Props) => {
+    const [activeUser] = useUALAccount();
     const { data: myDelegation } = useMyDelegation();
+    const { data: currentElection } = useCurrentElection();
+    const { data: electionState } = useElectionState();
 
     const nftTemplateIds = myDelegation?.map(
         (member) => member.nft_template_id
     );
 
     const { data: members } = useQuery({
-        ...queryMembers(1, 20, nftTemplateIds),
+        ...queryMembers(1, myDelegation?.length, nftTemplateIds),
         staleTime: Infinity,
-        enabled: Boolean(myDelegation),
+        enabled: Boolean(myDelegation?.length),
     });
 
-    if (!myDelegation) return <div>fetching your Delegation...</div>;
+    if (!activeUser) return <div>must be logged in</div>;
+    if (!myDelegation || !currentElection)
+        return <div>fetching your Delegation...</div>;
 
     return (
         <FluidLayout title="My Delegation">
             <div className="divide-y">
                 <Container>
                     <Heading size={1}>My Delegation</Heading>
-                    <Text size="sm">Elected September 14, 2021</Text>
+                    <Text size="sm">
+                        Elected{" "}
+                        {dayjs(electionState?.last_election_time).format(
+                            "MMMM D, YYYY"
+                        )}
+                    </Text>
                 </Container>
-                <Delegates myDelegation={myDelegation} members={members} />
-                <Container>
-                    <Heading size={3}>No delegate example...</Heading>
-                </Container>
-                <div className="-mt-px">
-                    <DelegateChip />
-                </div>
+                {myDelegation.length ? (
+                    <Delegates myDelegation={myDelegation} members={members} />
+                ) : (
+                    <div className="-mt-px">
+                        <DelegateChip />
+                    </div>
+                )}
             </div>
         </FluidLayout>
     );

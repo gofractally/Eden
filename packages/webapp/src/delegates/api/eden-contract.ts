@@ -55,8 +55,6 @@ export const getMyDelegation = async (
         queryFn
     );
     if (!nextDelegate || !leadRepresentative) return myDelegates;
-    console.info("loggedInMember as nextDelegate:");
-    console.info(nextDelegate);
 
     while (
         nextDelegate!.account !== leadRepresentative &&

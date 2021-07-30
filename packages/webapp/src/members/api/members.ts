@@ -28,15 +28,15 @@ export const getMember = async (
 };
 
 export const getMembers = async (
-    page = 1,
-    limit = 200,
+    page: number,
+    limit: number,
     ids: string[] = [],
     sortField = "created",
     order = "asc"
 ): Promise<MemberData[]> => {
     if (devUseFixtureData) {
         let data = fixtureMemberData;
-        if (ids) {
+        if (ids.length) {
             data = fixtureMemberData.filter((md) =>
                 ids.includes(md.templateId.toString())
             );

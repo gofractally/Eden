@@ -82,8 +82,8 @@ export const queryIsCommunityActive = {
 };
 
 export const queryMembers = (
-    page: number,
-    pageSize: number,
+    page: number = 1,
+    pageSize: number = 200,
     nftTemplateIds: number[] = []
 ) => {
     const ids = nftTemplateIds.map((id) => id.toString());
