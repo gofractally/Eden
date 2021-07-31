@@ -9,13 +9,15 @@ import {
     Text,
     useCurrentElection,
     useElectionState,
+    useMemberListByAccountNames,
     useMemberStats,
     useMyDelegation,
     useUALAccount,
 } from "_app";
 import { DelegateChip } from "elections";
-import { EdenMember, MemberData } from "members/interfaces";
+import { EdenMember, MemberData, MemberStats } from "members/interfaces";
 import dayjs from "dayjs";
+import { isValidDelegate } from "delegates/api";
 
 interface Props {
     delegatesPage: number;
@@ -59,6 +61,9 @@ export const DelegatesPage = (props: Props) => {
     );
 };
 
+const isDelegateNonChief = (delegateRank: number, membersStats: MemberStats) =>
+    delegateRank <= membersStats.ranks.length - 2;
+
 const Delegates = ({
     members,
     myDelegation,
@@ -66,40 +71,74 @@ const Delegates = ({
     members?: MemberData[];
     myDelegation: EdenMember[];
 }) => {
-    const { data: membersStats } = useMemberStats();
+    const { data: membersStats, isLoading } = useMemberStats();
 
-    if (myDelegation?.length === 0) {
-        return (
-            <div className="-mt-px">
-                <DelegateChip />
-            </div>
-        );
-    }
-    if (!members || !membersStats) return <></>;
+    console.info(
+        `members[${Boolean(members)}], membersStats[${Boolean(membersStats)}]`
+    );
+    if (isLoading) return <div>Loading...</div>;
+    if (!membersStats) return <div>Error fetching member data...</div>;
 
     return (
         <>
             {myDelegation.map((delegate, index) => (
                 <div
                     className="-mt-px"
-                    key={`my-delegation-${members[index].account}`}
+                    key={`my-delegation-${members![index].account}`}
                 >
                     <DelegateChip
-                        member={members.find(
+                        member={members!.find(
                             (d) => d.account === delegate.account
                         )}
                         level={delegate.election_rank}
                     />
-                    {delegate.election_rank < membersStats?.ranks.length && (
-                        <Container className="py-2.5">
-                            <BsArrowDown
-                                size={28}
-                                className="ml-3.5 text-gray-400"
-                            />
-                        </Container>
-                    )}
+                    {isDelegateNonChief(delegate.election_rank, membersStats) &&
+                        isValidDelegate(delegate.representative) && (
+                            <Container className="py-2.5">
+                                <BsArrowDown
+                                    size={28}
+                                    className="ml-3.5 text-gray-400"
+                                />
+                            </Container>
+                        )}
                 </div>
             ))}
+            <Chiefs />
+        </>
+    );
+};
+
+const Chiefs = () => {
+    const { data: electionState } = useElectionState();
+
+    const allChiefs = electionState?.board || [];
+    // electionState?.board.concat([electionState?.lead_representative]) || [];
+    console.info("allChiefs:");
+    console.info(allChiefs);
+    const { data: chiefsAsMembers } = useMemberListByAccountNames(
+        allChiefs,
+        Boolean(allChiefs?.length)
+    );
+    console.info("chiefsAsMembers:");
+    console.info(chiefsAsMembers);
+
+    const nftTemplateIds = chiefsAsMembers?.map(
+        (member) => member.nft_template_id
+    );
+
+    const { data: members } = useQuery({
+        ...queryMembers(1, allChiefs.length, nftTemplateIds),
+        staleTime: Infinity,
+        enabled: Boolean(chiefsAsMembers?.length),
+    });
+
+    console.info("members:");
+    console.info(members);
+
+    return (
+        <>
+            <div>PLACEHOLDER: Chiefs and Head Chief here</div>
+            <pre>{JSON.stringify(members, null, 2)}</pre>
         </>
     );
 };
