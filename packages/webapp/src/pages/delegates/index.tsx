@@ -18,6 +18,7 @@ import { DelegateChip } from "elections";
 import { EdenMember, MemberData, MemberStats } from "members/interfaces";
 import dayjs from "dayjs";
 import { isValidDelegate } from "delegates/api";
+import { filter } from "cypress/types/bluebird";
 
 interface Props {
     delegatesPage: number;
@@ -74,10 +75,13 @@ const Delegates = ({
     const { data: membersStats, isLoading } = useMemberStats();
 
     console.info(
-        `members[${Boolean(members)}], membersStats[${Boolean(membersStats)}]`
+        `<Delegates/>() -- members[${Boolean(members)}], membersStats[${Boolean(
+            membersStats
+        )}]`
     );
     if (isLoading) return <div>Loading...</div>;
-    if (!membersStats) return <div>Error fetching member data...</div>;
+    if (!membersStats || !members)
+        return <div>Error fetching member data...</div>;
 
     return (
         <>
@@ -110,20 +114,26 @@ const Delegates = ({
 
 const Chiefs = () => {
     const { data: electionState } = useElectionState();
+    const { data: membersStats } = useMemberStats();
 
     const allChiefs = electionState?.board || [];
     // electionState?.board.concat([electionState?.lead_representative]) || [];
-    console.info("allChiefs:");
-    console.info(allChiefs);
-    const { data: chiefsAsMembers } = useMemberListByAccountNames(
+    // console.info("allChiefs:");
+    // console.info(allChiefs);
+    const chiefsAsMembersAsQueryResults = useMemberListByAccountNames(
         allChiefs,
         Boolean(allChiefs?.length)
     );
-    console.info("chiefsAsMembers:");
-    console.info(chiefsAsMembers);
+    // console.info("chiefsAsMembersAsQueryResults:");
+    // console.info(chiefsAsMembersAsQueryResults);
+    const chiefsAsMembers = chiefsAsMembersAsQueryResults
+        .map((chiefQR) => chiefQR.data)
+        .filter((el) => Boolean(el));
+    // console.info("chiefsAsMembers:");
+    // console.info(chiefsAsMembers);
 
-    const nftTemplateIds = chiefsAsMembers?.map(
-        (member) => member.nft_template_id
+    const nftTemplateIds = chiefsAsMembers.map(
+        (member) => member!.nft_template_id
     );
 
     const { data: members } = useQuery({
@@ -132,13 +142,42 @@ const Chiefs = () => {
         enabled: Boolean(chiefsAsMembers?.length),
     });
 
-    console.info("members:");
-    console.info(members);
+    // console.info("members:");
+    // console.info(members);
+
+    if (!members || !membersStats) return <div>fetching data</div>;
 
     return (
         <>
-            <div>PLACEHOLDER: Chiefs and Head Chief here</div>
-            <pre>{JSON.stringify(members, null, 2)}</pre>
+            <Text>Chief Delegates</Text>
+            {chiefsAsMembers.map((delegate, index) => {
+                if (!delegate) return <></>;
+                return (
+                    <div
+                        className="-mt-px"
+                        key={`my-delegation-${delegate.account}`}
+                    >
+                        <DelegateChip
+                            member={members!.find(
+                                (d) => d.account === delegate.account
+                            )}
+                            level={delegate.election_rank}
+                        />
+                        {isDelegateNonChief(
+                            delegate.election_rank,
+                            membersStats
+                        ) &&
+                            isValidDelegate(delegate.representative) && (
+                                <Container className="py-2.5">
+                                    <BsArrowDown
+                                        size={28}
+                                        className="ml-3.5 text-gray-400"
+                                    />
+                                </Container>
+                            )}
+                    </div>
+                );
+            })}
         </>
     );
 };
