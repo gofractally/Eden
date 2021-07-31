@@ -7,14 +7,15 @@ import { CurrentElection, ElectionState, VoteData } from "elections/interfaces";
 //  - Group3: edenmember12 (no representation -- didn't vote for themsevles)
 // Round 2 (assumes a full voting / non-sortition round just for the sake of minimal fixture data)
 //  - Group1: edenmember11 (voted up edenmember11)
-//  - Group1: edenmember13 (voted up edenmember13)
+//  - Group2: edenmember13 (voted up edenmember13)
 // Round 3 (assumes a full voting / non-sortition round just for the sake of minimal fixture data)
 //  - Group1: edenmember11, edenmember13 (voted up edenmember11)
+//
 // Head Chief: edenmember11
 
 export const fixtureElectionState: ElectionState = {
     lead_representative: "edenmember11",
-    board: ["edenmember11", "edenmember13"],
+    board: ["edenmember11"],
     last_election_time: "2021-01-16T16:00:00.000",
 };
 
@@ -44,7 +45,7 @@ export const fixtureVoteDataRows: VoteData[] = [
         member: "edenmember13",
         round: 1,
         index: 2,
-        candidate: "edenmember13",
+        candidate: "",
     },
     {
         member: "edenmember11",

@@ -17,8 +17,8 @@ export const fixtureEdenMembers: EdenMember[] = [
         nft_template_id: 84545,
         status: MemberStatus.ActiveMember,
         election_participation_status: ElectionParticipationStatus.NoDonation,
-        election_rank: 3,
-        representative: "edenmember11",
+        election_rank: 2,
+        representative: "",
     },
     {
         name: "Eden Member 11",
@@ -144,5 +144,5 @@ export const fixtureMembersStats: MemberStats = {
     completed_waiting_inductions: 0,
     // # representatives at each level, in order of Delegate Levels (bottom up),
     // ie. 3 members who never became delegates (idx=0), 1 Chief Delegates (idx=1) who didn't make it further, and 1 Head Chief (idx=2);
-    ranks: [3, 0, 1, 1],
+    ranks: [3, 1, 0, 1],
 };

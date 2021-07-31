@@ -93,15 +93,23 @@ const getDelegateLevelDescription = (
     memberAccount: string | undefined,
     level: number | undefined
 ) => {
+    console.info(
+        `getDelegateLevelDescription(memberAccount[${memberAccount}], level[${level}])`
+    );
     if (!memberAccount || !level) return "Delegate";
     const { data: headDelegate } = useHeadDelegate();
     const { data: chiefDelegates } = useChiefDelegates();
 
-    const prefix = `D${level - 1} - `;
-    if (headDelegate === memberAccount) return prefix + "Head Chief";
+    const prefix = "D" + (level - 1);
+    if (headDelegate === memberAccount) return prefix + " - Head Chief";
     if (chiefDelegates?.includes(memberAccount))
-        return prefix + "Chief Delegate";
-    return "Delegate";
+        return prefix + " - Chief Delegate";
+    console.info(
+        `memberAccount[${memberAccount}], headDelegate[${headDelegate}], chiefDelegates[${chiefDelegates?.join(
+            ", "
+        )}]`
+    );
+    return prefix;
 };
 
 export const DelegateChip = ({ member, level }: DelegateChipProps) => (

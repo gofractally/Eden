@@ -147,12 +147,15 @@ export const useMemberByAccountName = (accountName: string) =>
         enabled: Boolean(accountName),
     });
 
-export const useMemberListByAccountNames = (accountNames: string[]) =>
+export const useMemberListByAccountNames = (
+    accountNames: string[],
+    enabled: boolean = true
+) =>
     useQueries(
         accountNames.map((accountName) => ({
             ...queryMemberByAccountName(accountName),
             staleTime: Infinity,
-            enabled: Boolean(accountName),
+            enabled: Boolean(accountName) && enabled,
         }))
     ) as UseQueryResult<EdenMember | undefined>[];
 
