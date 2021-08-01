@@ -41,6 +41,7 @@ export const OngoingElectionPage = (props: Props) => {
     return (
         <FluidLayout title="Election">
             <div className="divide-y">
+                <EncryptionPasswordAlert promptSetupEncryptionKey />
                 <Container>
                     <Heading size={1}>Election</Heading>
                 </Container>
@@ -315,7 +316,6 @@ const OngoingRoundSegment = ({
                 isOpen={showPasswordPrompt}
                 close={() => setShowPasswordPrompt(false)}
             />
-            <EncryptionPasswordAlert promptSetupEncryptionKey />
         </Expander>
     );
 };

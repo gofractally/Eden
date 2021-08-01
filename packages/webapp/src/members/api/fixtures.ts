@@ -37,6 +37,8 @@ export const fixtureEdenMembers: EdenMember[] = [
         election_participation_status: ElectionParticipationStatus.NoDonation,
         election_rank: 1,
         representative: "edenmember13",
+        encryption_key: "EOS87dKR7L6D4jZPj9XNN4H2pQavaAvWHdasFZZQCdu8Vn9ro5aDf",
+        // PK for above key is: 5J6YvXREKBypzFYVC2uEcw3sLE1dUrYwGZ1yatMArJRgRCN8S81
     },
     {
         name: "Philip Pip",

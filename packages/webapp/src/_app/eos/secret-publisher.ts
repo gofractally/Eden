@@ -43,7 +43,7 @@ export const encryptSecretForPublishing = async (
         recipientAccounts
     );
 
-    const transientKeyPair = generateKeyPair(KeyType.k1, { secureEnv: true });
+    const transientKeyPair = generateEncryptionKey();
     console.info(transientKeyPair);
 
     const keks = await ecdhRecipientsKeyEncriptionKeys(
@@ -103,6 +103,9 @@ export const decryptPublishedMessage = async (
     console.info("decrypted message:", message);
     return message;
 };
+
+export const generateEncryptionKey = () =>
+    generateKeyPair(KeyType.k1, { secureEnv: true });
 
 const retrieveRecipientPrivateKey = (publicKey: string): PrivateKey => {
     // TODO: find the corresponding private key in the localstorage, or else throw
