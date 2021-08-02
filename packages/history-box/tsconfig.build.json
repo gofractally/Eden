@@ -2,5 +2,6 @@
     "extends": "../../tsconfig.build.json",
     "compilerOptions": {
         "outDir": "./dist",
+        "resolveJsonModule": true
     }
 }

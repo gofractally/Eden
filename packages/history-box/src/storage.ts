@@ -1,6 +1,7 @@
 import { EdenSubchain } from "@edenos/common/dist/subchain";
 import * as config from "./config";
 import * as fs from "fs";
+import logger from "./logger";
 
 export class Storage {
     blocksWasm: EdenSubchain;
@@ -12,13 +13,13 @@ export class Storage {
         try {
             this.blocksWasm = new EdenSubchain();
             await this.blocksWasm.instantiate(
-                new Uint8Array(fs.readFileSync(config.wasmFile))
+                new Uint8Array(fs.readFileSync(config.subchainConfig.wasmFile))
             );
             this.blocksWasm.initializeMemory();
 
             this.stateWasm = new EdenSubchain();
             await this.stateWasm.instantiate(
-                new Uint8Array(fs.readFileSync(config.wasmFile))
+                new Uint8Array(fs.readFileSync(config.subchainConfig.wasmFile))
             );
             this.stateWasm.initializeMemory();
         } catch (e) {
@@ -43,11 +44,14 @@ export class Storage {
     saveState() {
         return this.protect(() => {
             fs.writeFileSync(
-                config.stateFile + ".tmp",
+                config.subchainConfig.stateFile + ".tmp",
                 this.stateWasm.uint8Array()
             );
-            fs.renameSync(config.stateFile + ".tmp", config.stateFile);
-            console.log("saved", config.stateFile);
+            fs.renameSync(
+                config.subchainConfig.stateFile + ".tmp",
+                config.subchainConfig.stateFile
+            );
+            logger.info("saved", config.subchainConfig.stateFile);
         });
     }
 
@@ -75,7 +79,7 @@ export class Storage {
             try {
                 f();
             } catch (e) {
-                console.error(e);
+                logger.error(e);
             }
         }
     }

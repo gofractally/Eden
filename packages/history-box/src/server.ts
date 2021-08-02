@@ -4,6 +4,9 @@ import * as WebSocket from "ws";
 import path from "path";
 import cors from "cors";
 import { Storage } from "./storage";
+import { setupExpressLogger } from "./logger";
+import logger from "./logger";
+import { serverConfig } from "./config";
 import DfuseReceiver from "./DfuseReceiver";
 import {
     ClientStatus,
@@ -19,6 +22,8 @@ const wss = new WebSocket.Server({
 });
 const storage = new Storage();
 const dfuseReceiver = new DfuseReceiver(storage);
+
+setupExpressLogger(app);
 
 app.get("/micro-chain.wasm", cors(), function (req, res) {
     res.sendFile(path.resolve("../../build/demo-micro-chain.wasm"));
@@ -113,7 +118,7 @@ class ConnectionState {
             }
         } catch (e) {
             // TODO: report some errors to client
-            console.error(e);
+            logger.error(e);
             this.ws.close();
             this.ws = null;
         }
@@ -121,7 +126,7 @@ class ConnectionState {
 } // ConnectionState
 
 wss.on("connection", (ws: WebSocket) => {
-    console.log("incoming connection");
+    logger.info("incoming ws connection");
     ws.on("message", (message: string) => {
         const wsa = ws as any;
         if (!wsa.connectionState) wsa.connectionState = new ConnectionState(ws);
@@ -131,7 +136,7 @@ wss.on("connection", (ws: WebSocket) => {
             cs.update();
         } catch (e) {
             // TODO: report some errors to client
-            console.error(e);
+            logger.error(e);
             cs.ws = null;
             ws.close();
         }
@@ -141,8 +146,8 @@ wss.on("connection", (ws: WebSocket) => {
 async function start() {
     await storage.instantiate();
     await dfuseReceiver.start();
-    server.listen(process.env.PORT || 3002, () => {
-        console.log(`Server started on port ${(server.address() as any).port}`);
+    server.listen(serverConfig.port, () => {
+        logger.info(`Server started on port ${(server.address() as any).port}`);
     });
 }
 start();

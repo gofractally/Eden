@@ -3,8 +3,9 @@ import * as fs from "fs";
 import nodeFetch from "node-fetch";
 import WebSocketClient from "ws";
 import { performance } from "perf_hooks";
-import * as config from "./config";
+import { contractAccounts, dfuseConfig, subchainConfig } from "./config";
 import { Storage } from "./storage";
+import logger from "./logger";
 
 const query = `
 subscription ($query: String!, $cursor: String, $limit: Int64, $low: Int64,
@@ -79,26 +80,26 @@ export default class DfuseReceiver {
     numSaved = 0;
 
     queryString = `(
-        auth:${config.edenContractAccount} -action:setcode -action:setabi ||
-        receiver:${config.edenContractAccount} account:${config.edenContractAccount} ||
-        receiver:${config.edenContractAccount} account:${config.tokenContractAccount} ||
-        receiver:${config.edenContractAccount} account:${config.atomicContractAccount} ||
-        receiver:${config.edenContractAccount} account:${config.atomicMarketContractAccount}
+        auth:${contractAccounts.eden} -action:setcode -action:setabi ||
+        receiver:${contractAccounts.eden} account:${contractAccounts.eden} ||
+        receiver:${contractAccounts.eden} account:${contractAccounts.token} ||
+        receiver:${contractAccounts.eden} account:${contractAccounts.atomic} ||
+        receiver:${contractAccounts.eden} account:${contractAccounts.atomicMarket}
     )`;
 
     variables = {
         query: this.queryString,
         cursor: "",
-        low: config.dfuseFirstBlock,
+        low: dfuseConfig.firstBlock,
         limit: 0,
         irrev: false,
         interval: 1,
     };
 
     dfuseClient = createDfuseClient({
-        apiKey: config.dfuseApiKey,
-        network: config.dfuseApiNetwork,
-        authUrl: config.dfuseAuthNetwork,
+        apiKey: dfuseConfig.apiKey,
+        network: dfuseConfig.apiNetwork,
+        authUrl: dfuseConfig.authNetwork,
         httpClientOptions: {
             fetch: nodeFetch,
         },
@@ -158,10 +159,12 @@ export default class DfuseReceiver {
                 this.jsonTransactions.length > 0
                     ? this.jsonTransactions[this.jsonTransactions.length - 1]
                     : null;
-            console.log(
-                trx.undo ? "undo block" : "recv block",
-                trx.block.num,
-                trx.trace ? "trx " + trx.trace.id : "no matching transactions"
+            logger.info(
+                `${trx.undo ? "undo block" : "recv block"} ${trx.block.num} ${
+                    trx.trace
+                        ? "trx " + trx.trace.id
+                        : "no matching transactions"
+                }`
             );
             if (trx.trace || (prev && prev.trace)) {
                 this.jsonTransactions.push(trx);
@@ -170,18 +173,16 @@ export default class DfuseReceiver {
                     this.jsonTransactions.length - this.numSaved > 10 ||
                     !trx.trace
                 ) {
-                    console.log(
-                        `save ${config.jsonTrxFile}:`,
-                        this.jsonTransactions.length,
-                        "transactions and undo entries"
+                    logger.info(
+                        `save ${subchainConfig.jsonTrxFile}: ${this.jsonTransactions.length} transactions and undo entries`
                     );
                     fs.writeFileSync(
-                        config.jsonTrxFile + ".tmp",
+                        subchainConfig.jsonTrxFile + ".tmp",
                         JSON.stringify(this.jsonTransactions)
                     );
                     fs.renameSync(
-                        config.jsonTrxFile + ".tmp",
-                        config.jsonTrxFile
+                        subchainConfig.jsonTrxFile + ".tmp",
+                        subchainConfig.jsonTrxFile
                     );
                     this.storage.saveState();
                     this.numSaved = this.jsonTransactions.length;
@@ -192,13 +193,13 @@ export default class DfuseReceiver {
             });
         }
         if (message.type === "error")
-            console.error(JSON.stringify(message, null, 4));
+            logger.error(JSON.stringify(message, null, 4));
     }
 
     async start() {
         try {
             this.jsonTransactions = JSON.parse(
-                fs.readFileSync(config.jsonTrxFile, "utf8")
+                fs.readFileSync(subchainConfig.jsonTrxFile, "utf8")
             );
             this.numSaved = this.jsonTransactions.length;
         } catch (e) {}
@@ -209,14 +210,14 @@ export default class DfuseReceiver {
             ].cursor;
 
         const begin = performance.now();
-        console.log("pushing existing blocks...");
+        logger.info("pushing existing blocks...");
         for (let trx of this.jsonTransactions) this.pushTrx(trx);
-        console.log(performance.now() - begin, "ms");
+        logger.info(`${performance.now() - begin} ms`);
         this.storage.saveState();
 
-        console.log("connecting to", config.dfuseApiNetwork);
-        if (!this.jsonTransactions.length && config.dfuseFirstBlock === 1)
-            console.warn(
+        logger.info("connecting to", dfuseConfig.apiNetwork);
+        if (!this.jsonTransactions.length && dfuseConfig.firstBlock === 1)
+            logger.warn(
                 "Don't have an existing dfuse cursor and DFUSE_FIRST_BLOCK isn't set; this may take a while before the first result comes..."
             );
 
@@ -229,10 +230,10 @@ export default class DfuseReceiver {
             }
         );
 
-        console.log("dfuse is now connected");
+        logger.info("dfuse is now connected");
     }
     catch(e) {
-        console.error(e);
+        logger.error(e);
         process.exit(1);
     }
 }
