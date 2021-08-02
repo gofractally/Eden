@@ -437,17 +437,8 @@ namespace eden
 
    void inductions::clear_all()
    {
-      auto inductions_itr = induction_tb.lower_bound(0);
-      while (inductions_itr != induction_tb.end())
-      {
-         induction_tb.erase(inductions_itr++);
-      }
-
-      auto endorsements_itr = endorsement_tb.lower_bound(0);
-      while (endorsements_itr != endorsement_tb.end())
-      {
-         endorsement_tb.erase(endorsements_itr++);
-      }
+      clear_table(induction_tb);
+      clear_table(endorsement_tb);
    }
 
 }  // namespace eden

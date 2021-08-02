@@ -229,9 +229,7 @@ namespace eden
 
    void members::clear_all()
    {
-      auto members_itr = member_tb.lower_bound(0);
-      while (members_itr != member_tb.end())
-         member_tb.erase(members_itr++);
-      member_stats.remove();
+      clear_table(member_tb);
+      clear_singleton(member_stats, contract);
    }
 }  // namespace eden

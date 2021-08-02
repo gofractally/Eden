@@ -821,8 +821,9 @@ namespace eden
    void elections::clear_all()
    {
       clear_table(vote_tb);
-      state_sing.remove();
-      election_state_singleton{contract, default_scope}.remove();
+      clear_singleton(state_sing, contract);
+      election_state_singleton state{contract, default_scope};
+      clear_singleton(state, contract);
    }
 
 }  // namespace eden
