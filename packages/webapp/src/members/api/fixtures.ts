@@ -3,13 +3,22 @@ import { ElectionParticipationStatus, MemberStatus } from "_app/api/interfaces";
 
 export const fixtureEdenMembers: EdenMember[] = [
     {
-        name: "Egeon The Great",
-        account: "egeon.edev",
-        nft_template_id: 140784,
+        name: "Eden Member 12",
+        account: "edenmember12",
+        nft_template_id: 84431,
+        status: MemberStatus.ActiveMember,
+        election_participation_status: ElectionParticipationStatus.NoDonation, // See ElectionParticipationStatus for enum values; NoDonation is kinda the default if other special cases don't apply
+        election_rank: 1,
+        representative: "edenmember13", // "parent" field
+    },
+    {
+        name: "Eden Member 11",
+        account: "edenmember11",
+        nft_template_id: 84432,
         status: MemberStatus.ActiveMember,
         election_participation_status: ElectionParticipationStatus.NoDonation,
-        election_rank: 1,
-        representative: "edenmember13",
+        election_rank: 3,
+        representative: "edenmember11",
     },
     {
         name: "Eden Member 13",
@@ -18,16 +27,16 @@ export const fixtureEdenMembers: EdenMember[] = [
         status: MemberStatus.ActiveMember,
         election_participation_status: ElectionParticipationStatus.NoDonation,
         election_rank: 2,
-        representative: "",
+        representative: "edenmember11",
     },
     {
-        name: "Eden Member 11",
-        account: "edenmember11",
-        nft_template_id: 84432,
+        name: "Egeon The Great",
+        account: "egeon.edev",
+        nft_template_id: 140784,
         status: MemberStatus.ActiveMember,
         election_participation_status: ElectionParticipationStatus.NoDonation,
-        election_rank: 4,
-        representative: "edenmember11",
+        election_rank: 1,
+        representative: "edenmember13",
     },
     {
         name: "Philip Pip",
@@ -39,15 +48,6 @@ export const fixtureEdenMembers: EdenMember[] = [
         representative: "edenmember11",
         encryption_key: "EOS87dKR7L6D4jZPj9XNN4H2pQavaAvWHdasFZZQCdu8Vn9ro5aDf",
         // PK for above key is: 5J6YvXREKBypzFYVC2uEcw3sLE1dUrYwGZ1yatMArJRgRCN8S81
-    },
-    {
-        name: "Eden Member 12",
-        account: "edenmember12",
-        nft_template_id: 84431,
-        status: MemberStatus.ActiveMember,
-        election_participation_status: ElectionParticipationStatus.NoDonation, // See ElectionParticipationStatus for enum values; NoDonation is kinda the default if other special cases don't apply
-        election_rank: 1,
-        representative: "", // "parent" field
     },
 ];
 export const fixtureMemberData: MemberData[] = [
@@ -144,5 +144,5 @@ export const fixtureMembersStats: MemberStats = {
     completed_waiting_inductions: 0,
     // # representatives at each level, in order of Delegate Levels (bottom up),
     // ie. 3 members who never became delegates (idx=0), 1 Chief Delegates (idx=1) who didn't make it further, and 1 Head Chief (idx=2);
-    ranks: [3, 1, 0, 1],
+    ranks: [3, 1, 1],
 };

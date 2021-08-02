@@ -7,7 +7,6 @@ import {
     Heading,
     queryMembers,
     Text,
-    useCurrentElection,
     useElectionState,
     useMemberListByAccountNames,
     useMemberStats,
@@ -18,7 +17,6 @@ import { DelegateChip } from "elections";
 import { EdenMember, MemberData, MemberStats } from "members/interfaces";
 import dayjs from "dayjs";
 import { isValidDelegate } from "delegates/api";
-import { filter } from "cypress/types/bluebird";
 
 interface Props {
     delegatesPage: number;
@@ -27,12 +25,12 @@ interface Props {
 export const DelegatesPage = (props: Props) => {
     const [activeUser] = useUALAccount();
     const { data: myDelegation } = useMyDelegation();
-    const { data: currentElection } = useCurrentElection();
     const { data: electionState } = useElectionState();
 
-    const nftTemplateIds = myDelegation?.map(
-        (member) => member.nft_template_id
-    );
+    let nftTemplateIds: number[] = [];
+    if (myDelegation?.length) {
+        nftTemplateIds = myDelegation?.map((member) => member.nft_template_id);
+    }
 
     const { data: members } = useQuery({
         ...queryMembers(1, myDelegation?.length, nftTemplateIds),
@@ -41,8 +39,8 @@ export const DelegatesPage = (props: Props) => {
     });
 
     if (!activeUser) return <div>must be logged in</div>;
-    if (!myDelegation || !currentElection)
-        return <div>fetching your Delegation...</div>;
+    if (!myDelegation || (myDelegation?.length > 0 && !members))
+        return <div>fetching your Delegation and members...</div>;
 
     return (
         <FluidLayout title="My Delegation">
@@ -74,14 +72,8 @@ const Delegates = ({
 }) => {
     const { data: membersStats, isLoading } = useMemberStats();
 
-    console.info(
-        `<Delegates/>() -- members[${Boolean(members)}], membersStats[${Boolean(
-            membersStats
-        )}]`
-    );
     if (isLoading) return <div>Loading...</div>;
-    if (!membersStats || !members)
-        return <div>Error fetching member data...</div>;
+    if (!membersStats) return <div>Error fetching member data...</div>;
 
     return (
         <>
@@ -117,20 +109,12 @@ const Chiefs = () => {
     const { data: membersStats } = useMemberStats();
 
     const allChiefs = electionState?.board || [];
-    // electionState?.board.concat([electionState?.lead_representative]) || [];
-    // console.info("allChiefs:");
-    // console.info(allChiefs);
-    const chiefsAsMembersAsQueryResults = useMemberListByAccountNames(
+    const chiefsAsMembers = useMemberListByAccountNames(
         allChiefs,
         Boolean(allChiefs?.length)
-    );
-    // console.info("chiefsAsMembersAsQueryResults:");
-    // console.info(chiefsAsMembersAsQueryResults);
-    const chiefsAsMembers = chiefsAsMembersAsQueryResults
+    )
         .map((chiefQR) => chiefQR.data)
         .filter((el) => Boolean(el));
-    // console.info("chiefsAsMembers:");
-    // console.info(chiefsAsMembers);
 
     const nftTemplateIds = chiefsAsMembers.map(
         (member) => member!.nft_template_id
@@ -142,21 +126,29 @@ const Chiefs = () => {
         enabled: Boolean(chiefsAsMembers?.length),
     });
 
-    // console.info("members:");
-    // console.info(members);
-
     if (!members || !membersStats) return <div>fetching data</div>;
+
+    const headChiefAsEdenMember = chiefsAsMembers!.find(
+        (d) => d?.account === electionState?.lead_representative
+    );
+    const headChiefAsMemberData = members!.find(
+        (d) => d?.account === electionState?.lead_representative
+    );
+
+    if (!headChiefAsEdenMember || !headChiefAsMemberData)
+        return <div>Error fetching data</div>;
 
     return (
         <>
             <Text>Chief Delegates</Text>
-            {chiefsAsMembers.map((delegate, index) => {
-                if (!delegate) return <></>;
+            {chiefsAsMembers.map((delegate) => {
+                if (
+                    !delegate ||
+                    delegate.account === electionState?.lead_representative
+                )
+                    return null;
                 return (
-                    <div
-                        className="-mt-px"
-                        key={`my-delegation-${delegate.account}`}
-                    >
+                    <div className="-mt-px" key={`chiefs-${delegate.account}`}>
                         <DelegateChip
                             member={members!.find(
                                 (d) => d.account === delegate.account
@@ -178,6 +170,11 @@ const Chiefs = () => {
                     </div>
                 );
             })}
+            <Text>Head Chief</Text>
+            <DelegateChip
+                member={headChiefAsMemberData}
+                level={headChiefAsEdenMember.election_rank}
+            />
         </>
     );
 };
