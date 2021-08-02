@@ -20,10 +20,8 @@ namespace eden
    using election_participation_status_type = uint8_t;
    enum election_participation_status : election_participation_status_type
    {
-      no_donation,
-      in_election,
       not_in_election,
-      recently_inducted
+      in_election
    };
 
    struct member_v0
@@ -33,7 +31,7 @@ namespace eden
       member_status_type status;
       uint64_t nft_template_id;
       // Only reflected in v1
-      election_participation_status_type election_participation_status = in_election;
+      election_participation_status_type election_participation_status = not_in_election;
       uint8_t election_rank = 0;
       eosio::name representative{uint64_t(-1)};
       std::optional<eosio::public_key> encryption_key;
@@ -128,6 +126,7 @@ namespace eden
       void clear_ranks();
       void set_rank(eosio::name account, uint8_t rank, eosio::name representative);
       void election_opt(const member& member, bool participating);
+      bool can_upload_video(uint8_t round, eosio::name member);
       // Activates the contract if all genesis members are active
       void maybe_activate_contract();
       member_stats_v1 stats();

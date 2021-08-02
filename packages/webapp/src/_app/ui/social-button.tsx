@@ -22,7 +22,12 @@ export const SocialButton = ({ handle, icon, href, className }: Props) => {
     });
 
     return (
-        <a href={href} className={buttonClass} target="_blank">
+        <a
+            href={href}
+            className={buttonClass}
+            target="_blank"
+            rel="noopener noreferrer"
+        >
             {formattedIcon}
             <span>{handle}</span>
             <OpensInNewTabIcon />

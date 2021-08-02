@@ -93,10 +93,6 @@ namespace eden
       {
          // TODO: create another global
          auto minimum_donation = globals.get().minimum_donation;
-         if (globals.get().election_donation.symbol != eosio::symbol())
-         {
-            minimum_donation = std::min(minimum_donation, globals.get().election_donation);
-         }
          eosio::check(account_tb.get_scope() != default_scope || quantity >= minimum_donation,
                       "insufficient deposit to open an account");
          account_tb.emplace(

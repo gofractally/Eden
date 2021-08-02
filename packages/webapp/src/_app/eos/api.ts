@@ -11,6 +11,7 @@ export const CONTRACT_MEMBERSTATS_TABLE = "memberstats";
 export const CONTRACT_ACCOUNT_TABLE = "account";
 export const CONTRACT_ELECTION_STATE_TABLE = "elect.state";
 export const CONTRACT_CURRENT_ELECTION_TABLE = "elect.curr";
+export const CONTRACT_VOTE_TABLE = "votes";
 export const CONTRACT_INDUCTION_TABLE = "induction";
 export const CONTRACT_ENDORSEMENT_TABLE = "endorsement";
 
@@ -25,6 +26,7 @@ const TABLE_PARAM_DEFAULTS = {
     lowerBound: "0",
     upperBound: null,
     limit: 1,
+    index_position: 1,
 };
 
 export const getRow = async <T>(
@@ -52,12 +54,22 @@ export const getTableRows = async <T = any>(
     table: string,
     options?: TableQueryOptions
 ): Promise<T[]> => {
+    const rows = await getTableRawRows(table, options);
+    // variants are structured as such: array[type: string, <object the variant contains>]
+    // this line is reducing the data to just the data part
+    return rows.map((row) => row[1]);
+};
+
+export const getTableRawRows = async <T = any>(
+    table: string,
+    options?: TableQueryOptions
+): Promise<[string, T][]> => {
     options = { ...TABLE_PARAM_DEFAULTS, ...options };
     const reverse = Boolean(options.lowerBound === "0" && options.upperBound);
 
     const requestBody = {
         code: edenContractAccount,
-        index_position: 1,
+        index_position: options.index_position,
         json: true,
         key_type: "",
         limit: `${options.limit}`,
@@ -82,8 +94,7 @@ export const getTableRows = async <T = any>(
         throw new Error("Invalid table results");
     }
 
-    const rows = reverse ? data.rows.reverse() : data.rows;
-    return rows.map((row) => row[1]);
+    return reverse ? data.rows.reverse() : data.rows;
 };
 
 export const getTableIndexRows = async (

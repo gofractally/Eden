@@ -19,16 +19,33 @@ import {
     getInductions,
     getInductionWithEndorsements,
 } from "inductions/api";
-import { getHeadDelegate } from "delegates/api";
+import { getHeadDelegate, getMyDelegation } from "delegates/api";
 import {
     getCurrentElection,
     getElectionState,
+    getMemberGroupParticipants,
 } from "elections/api/eden-contract";
+import { ActiveStateConfigType } from "elections/interfaces";
 
 export const queryHeadDelegate = {
     queryKey: "query_head_delegate",
     queryFn: getHeadDelegate,
 };
+
+export const queryMyDelegation = (
+    loggedInMemberAccount: string | undefined
+) => ({
+    queryKey: ["query_my_delegation", loggedInMemberAccount],
+    queryFn: () => getMyDelegation(loggedInMemberAccount),
+});
+
+export const queryMemberGroupParticipants = (
+    memberAccount: string | undefined,
+    config: ActiveStateConfigType
+) => ({
+    queryKey: ["query_member_group_participants", memberAccount, config],
+    queryFn: () => getMemberGroupParticipants(memberAccount, config),
+});
 
 export const queryCurrentElection = {
     queryKey: "query_current_election",
@@ -132,4 +149,45 @@ export const useIsCommunityActive = () =>
     useQuery({
         ...queryIsCommunityActive,
         refetchOnWindowFocus: false,
+    });
+
+export const useMyDelegation = () => {
+    const { data: member } = useCurrentMember();
+    return useQuery({
+        ...queryMyDelegation(member?.account),
+        enabled: Boolean(member?.account),
+    });
+};
+
+export const useHeadDelegate = () =>
+    useQuery({
+        ...queryHeadDelegate,
+    });
+
+export const useCurrentElection = () =>
+    useQuery({
+        ...queryCurrentElection,
+    });
+
+export const useMemberGroupParticipants = (
+    loggedInMemberAccount: string | undefined
+) => {
+    const { data: currentElection } = useCurrentElection();
+    return useQuery({
+        ...queryMemberGroupParticipants(
+            loggedInMemberAccount,
+            currentElection?.config
+        ),
+        enabled: Boolean(loggedInMemberAccount && currentElection?.config),
+    });
+};
+
+export const useElectionState = () =>
+    useQuery({
+        ...queryElectionState,
+    });
+
+export const useMemberStats = () =>
+    useQuery({
+        ...queryMembersStats,
     });

@@ -12,7 +12,7 @@ export const Container = ({
     className = "",
 }: Props) => (
     <div
-        className={`p-2.5 ${darkBg ? "bg-gray-100" : ""} ${className}`}
+        className={`p-2.5 ${darkBg ? "bg-gray-50" : ""} ${className}`}
         onClick={onClick}
     >
         {children}

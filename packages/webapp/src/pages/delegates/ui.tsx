@@ -26,6 +26,12 @@ export const DelegatesPage = (props: Props) => {
                     <Text size="sm">Elected September 14, 2021</Text>
                 </Container>
                 <Delegates members={members} />
+                <Container>
+                    <Heading size={3}>No delegate example...</Heading>
+                </Container>
+                <div className="-mt-px">
+                    <DelegateChip />
+                </div>
             </div>
         </FluidLayout>
     );

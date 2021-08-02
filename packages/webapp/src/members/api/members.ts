@@ -1,5 +1,4 @@
 import { atomicAssets, devUseFixtureData, edenContractAccount } from "config";
-import { fixtureMembers } from "delegates/api/fixtures";
 import {
     getAccountCollection,
     getAuctions,
@@ -16,6 +15,7 @@ import {
 
 import { MemberData } from "../interfaces";
 import { getEdenMember } from "./eden-contract";
+import { fixtureMemberData } from "./fixtures";
 
 export const getMember = async (
     account: string
@@ -34,7 +34,7 @@ export const getMembers = async (
     sortField = "created",
     order = "asc"
 ): Promise<MemberData[]> => {
-    if (devUseFixtureData) return Promise.resolve(fixtureMembers);
+    if (devUseFixtureData) return Promise.resolve(fixtureMemberData);
     const data = await getTemplates(page, limit, ids, sortField, order);
     return data.map(convertAtomicTemplateToMember);
 };
@@ -91,7 +91,19 @@ export const getCollectedBy = async (
     return { members, unknownOwners };
 };
 
+export const memberDataDefaults = {
+    templateId: 0,
+    name: "",
+    image: "",
+    account: "",
+    bio: "",
+    socialHandles: {},
+    inductionVideo: "",
+    attributions: "",
+    createdAt: 0,
+};
 const convertAtomicTemplateToMember = (data: TemplateData): MemberData => ({
+    ...memberDataDefaults,
     templateId: parseInt(data.template_id),
     createdAt: parseInt(data.created_at_time),
     name: data.immutable_data.name,

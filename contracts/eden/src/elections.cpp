@@ -413,24 +413,11 @@ namespace eden
          {
             switch (iter->election_participation_status())
             {
-               case no_donation:
-               {
-                  distributions distributions{contract};
-                  max_steps = distributions.on_election_kick(iter->account(), max_steps);
-                  if (max_steps == 0)
-                  {
-                     return max_steps;
-                  }
-                  remove_from_board(iter->account());
-                  iter = members.erase(iter);
-                  continue;
-               }
                case in_election:
                {
                   add_voter(state.rng, 0, state.next_member_idx, iter->account());
                   break;
                }
-               case recently_inducted:
                case not_in_election:
                {
                   members.set_rank(iter->account(), 0, eosio::name(-1));
@@ -530,11 +517,17 @@ namespace eden
       // count votes
       group_result result;
       std::map<eosio::name, uint8_t> votes_by_candidate;
+      uint8_t total_votes = 0;
       for (uint32_t i = 0; i < group_size; ++i)
       {
          if (iter->candidate != eosio::name())
          {
+            if (iter->candidate == iter->member)
+            {
+               votes_by_candidate[iter->candidate] += group_size;
+            }
             ++votes_by_candidate[iter->candidate];
+            ++total_votes;
             result.voted.push_back(iter->member);
          }
          else
@@ -546,7 +539,7 @@ namespace eden
       auto best = std::max_element(
           votes_by_candidate.begin(), votes_by_candidate.end(),
           [](const auto& lhs, const auto& rhs) { return lhs.second < rhs.second; });
-      if (!votes_by_candidate.empty() && 3 * best->second > 2 * group_size)
+      if (!votes_by_candidate.empty() && 3 * best->second > (2 * total_votes + 3 * group_size))
       {
          result.winner = best->first;
       }
@@ -775,6 +768,27 @@ namespace eden
       if (remove_from_board(member))
       {
          trigger_election();
+      }
+   }
+
+   boost::logic::tribool elections::can_upload_video(uint8_t round, eosio::name voter)
+   {
+      auto iter = vote_tb.find(voter.value);
+      if (iter == vote_tb.end())
+      {
+         auto current_state = state_sing.get();
+         bool valid_state =
+             !std::holds_alternative<current_election_state_init_voters>(current_state);
+         election_state_singleton state{contract, default_scope};
+         auto end_time =
+             std::get<election_state_v0>(state.get()).last_election_time.to_time_point() +
+             eosio::hours(48);
+         return valid_state && eosio::current_time_point() <= end_time &&
+                boost::logic::tribool(boost::logic::indeterminate);
+      }
+      else
+      {
+         return iter->round >= round;
       }
    }
 

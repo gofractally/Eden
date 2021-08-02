@@ -27,23 +27,21 @@ dayjs.extend(relativeTime.default);
 
 Modal.setAppElement("#__next");
 
-const WebApp = ({ Component, pageProps }: AppProps) => {
-    const queryClientRef = useRef<QueryClient>();
-    if (!queryClientRef.current) {
-        queryClientRef.current = new QueryClient();
-    }
+// TODO: reassess this in light of SSR
+// if we want to leverage server-side caching, we should consider a refactor
+// See more here: https://react-query.tanstack.com/guides/ssr#using-hydration
+export const queryClient = new QueryClient();
 
-    return (
-        <QueryClientProvider client={queryClientRef.current}>
-            <Hydrate state={pageProps.dehydratedState}>
-                <EdenUALProvider>
-                    <Component {...pageProps} />
-                </EdenUALProvider>
-            </Hydrate>
-            <ReactQueryDevtools initialIsOpen={false} />
-            <Toaster />
-        </QueryClientProvider>
-    );
-};
+const WebApp = ({ Component, pageProps }: AppProps) => (
+    <QueryClientProvider client={queryClient}>
+        <Hydrate state={pageProps.dehydratedState}>
+            <EdenUALProvider>
+                <Component {...pageProps} />
+            </EdenUALProvider>
+        </Hydrate>
+        <ReactQueryDevtools initialIsOpen={false} />
+        <Toaster />
+    </QueryClientProvider>
+);
 
 export default WebApp;

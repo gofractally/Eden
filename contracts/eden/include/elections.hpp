@@ -1,5 +1,6 @@
 #pragma once
 
+#include <boost/logic/tribool.hpp>
 #include <constants.hpp>
 #include <eosio/bytes.hpp>
 #include <eosio/multi_index.hpp>
@@ -226,6 +227,7 @@ namespace eden
       void on_resign(eosio::name member);
       // \pre voter and candidate are members of the same group
       void vote(uint8_t round, eosio::name voter, eosio::name candidate);
+      boost::logic::tribool can_upload_video(uint8_t round, eosio::name voter);
       uint64_t get_group_id(eosio::name voter, uint8_t round);
       std::vector<eosio::name> get_group_members(uint64_t group_id);
       void clear_all();
