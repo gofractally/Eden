@@ -2,7 +2,7 @@ import { AppProps } from "next/app";
 import {
     useCreateEdenChain,
     EdenChainContext,
-} from "../../../common/src/subchain/ReactSubchain";
+} from "@edenos/common/dist/subchain";
 import "../../../../node_modules/graphiql/graphiql.min.css";
 
 function MyApp({ Component, pageProps }: AppProps) {

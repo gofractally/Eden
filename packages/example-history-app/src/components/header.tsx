@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { useQuery } from "../../../common/src/subchain/ReactSubchain";
+import { useQuery } from "@edenos/common/dist/subchain";
 
 export default function Header() {
     const info = useQuery("{blockLog{head{num eosioBlock{num}}}}");

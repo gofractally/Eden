@@ -1,4 +1,4 @@
-export default class EdenSubchain {
+export class EdenSubchain {
     module?: WebAssembly.Module;
     instance?: WebAssembly.Instance;
     memory?: WebAssembly.Memory;

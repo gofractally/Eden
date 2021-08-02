@@ -1,6 +1,6 @@
 import Head from "next/head";
 import Header from "../components/header";
-import { usePagedQuery } from "../../../common/src/subchain/ReactSubchain";
+import { usePagedQuery } from "@edenos/common/dist/subchain";
 
 const query = `
 {

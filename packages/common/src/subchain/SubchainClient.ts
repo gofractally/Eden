@@ -1,4 +1,4 @@
-import EdenSubchain from "./EdenSubchain";
+import { EdenSubchain } from "./EdenSubchain";
 import {
     BlockInfo,
     ClientStatus,

@@ -1,5 +1,5 @@
 {
-    "name": "eden",
+    "name": "edenos",
     "private": true,
     "workspaces": [
         "packages/*"
