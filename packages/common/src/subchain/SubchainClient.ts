@@ -8,29 +8,55 @@ import {
 export default class SubchainClient {
     subchain = new EdenSubchain();
     shuttingDown = false;
+    blocksUrl = "";
+    slowmo = false;
     ws: WebSocket | null = null;
     notifications: ((client: SubchainClient) => void)[] = [];
 
     async instantiateStreaming(
-        response: Response | PromiseLike<Response>,
-        blocksUrl: string
+        wasmResponse: PromiseLike<Response>,
+        stateResponse: PromiseLike<Response>,
+        blocksUrl: string,
+        slowmo = false
     ) {
+        this.blocksUrl = blocksUrl;
+        this.slowmo = slowmo;
         if (this.shuttingDown) return this.shutdown();
-        await this.subchain.instantiateStreaming(response);
+        const [, state] = await Promise.all([
+            this.subchain.instantiateStreaming(wasmResponse),
+            stateResponse.then((resp) => {
+                if (resp.ok) return resp.arrayBuffer();
+                return null;
+            }),
+        ]);
         if (this.shuttingDown) return this.shutdown();
-        this.subchain.initializeMemory();
-        this.ws = new WebSocket(blocksUrl);
+        if (state) {
+            this.subchain.setMemory(state);
+        } else {
+            this.subchain.initializeMemory();
+        }
+        this.connect();
+    }
+
+    connect() {
+        if (this.shuttingDown) return this.shutdown();
+        this.ws = new WebSocket(this.blocksUrl);
         this.ws.onclose = () => {
-            console.error("Sever closed connection to " + blocksUrl);
+            console.error("Closed connection to " + this.blocksUrl);
             this.ws = null;
+            if (!this.shuttingDown) setTimeout(() => this.connect(), 500);
         };
         this.ws.onerror = () => {
-            console.error("Error connecting to " + blocksUrl);
+            console.error("Error connecting to " + this.blocksUrl);
             this.ws = null;
         };
         this.ws.onopen = () => {
-            console.log("Connected to " + blocksUrl);
-            this.sendStatus();
+            console.log("Connected to " + this.blocksUrl);
+            if (this.slowmo) {
+                setTimeout(() => this.sendStatus(), 1000);
+            } else {
+                this.sendStatus();
+            }
         };
         this.ws.onmessage = (ev: MessageEvent<any>) => this.onmessage(ev);
     }
@@ -45,11 +71,13 @@ export default class SubchainClient {
             )
             .data.blockLog.blocks.edges.map((e: any) => e.node);
         const stat: ClientStatus = {
-            maxBlocksToSend: 1000,
+            maxBlocksToSend: this.slowmo ? 1 : 1000,
             irreversible,
             blocks,
         };
-        this.ws.send(JSON.stringify(stat));
+        if (this.slowmo)
+            setTimeout(() => this.ws?.send(JSON.stringify(stat)), 50);
+        else this.ws.send(JSON.stringify(stat));
     }
 
     messageQueue: (Promise<ArrayBuffer> | string)[] = [];

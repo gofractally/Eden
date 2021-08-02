@@ -1,6 +1,8 @@
 import express from "express";
 import * as http from "http";
 import * as WebSocket from "ws";
+import path from "path";
+import cors from "cors";
 import { Storage } from "./storage";
 import DfuseReceiver from "./DfuseReceiver";
 import {
@@ -17,6 +19,18 @@ const wss = new WebSocket.Server({
 });
 const storage = new Storage();
 const dfuseReceiver = new DfuseReceiver(storage);
+
+app.get("/micro-chain.wasm", cors(), function (req, res) {
+    res.sendFile(path.resolve("../../build/demo-micro-chain.wasm"));
+});
+
+app.get("/state", cors(), function (req, res) {
+    res.sendFile(path.resolve("./state"));
+});
+
+app.use(cors(), function (req, res, next) {
+    res.status(404).send("404");
+});
 
 // TODO: timeout
 class ConnectionState {

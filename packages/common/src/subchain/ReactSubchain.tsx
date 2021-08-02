@@ -11,8 +11,10 @@ export function useCreateEdenChain(): SubchainClient | null {
                     console.log("create SubchainClient");
                     client = new SubchainClient();
                     await client!.instantiateStreaming(
-                        fetch("demo-micro-chain.wasm"),
-                        "ws://localhost:3002/eden-microchain"
+                        fetch("http://localhost:3002/micro-chain.wasm"),
+                        fetch("http://localhost:3002/state"),
+                        "ws://localhost:3002/eden-microchain",
+                        false
                     );
                     setSubchain(client);
                 } catch (e) {
