@@ -517,6 +517,7 @@ namespace eden
       // count votes
       group_result result;
       std::map<eosio::name, uint8_t> votes_by_candidate;
+      uint8_t total_votes = 0;
       for (uint32_t i = 0; i < group_size; ++i)
       {
          if (iter->candidate != eosio::name())
@@ -526,6 +527,7 @@ namespace eden
                votes_by_candidate[iter->candidate] += group_size;
             }
             ++votes_by_candidate[iter->candidate];
+            ++total_votes;
             result.voted.push_back(iter->member);
          }
          else
@@ -537,7 +539,7 @@ namespace eden
       auto best = std::max_element(
           votes_by_candidate.begin(), votes_by_candidate.end(),
           [](const auto& lhs, const auto& rhs) { return lhs.second < rhs.second; });
-      if (!votes_by_candidate.empty() && 3 * best->second > 5 * group_size)
+      if (!votes_by_candidate.empty() && 3 * best->second > (2 * total_votes + 3 * group_size))
       {
          result.winner = best->first;
       }
