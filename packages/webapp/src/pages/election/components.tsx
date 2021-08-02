@@ -68,7 +68,7 @@ export const MembersPage = (props: Props) => {
                     <DelegateChip
                         key={member.account}
                         member={member}
-                        level="D3 - Chief Delegate"
+                        level={3}
                     />
                 )}
             </MembersGrid>
