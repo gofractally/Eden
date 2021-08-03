@@ -62,8 +62,8 @@ export const DelegatesPage = (props: Props) => {
     );
 };
 
-const isDelegateNonChief = (delegateRank: number, membersStats: MemberStats) =>
-    delegateRank <= membersStats.ranks.length - 2;
+const isDelegateAChief = (delegateRank: number, membersStats: MemberStats) =>
+    delegateRank > membersStats.ranks.length - 2;
 
 const Delegates = ({
     members,
@@ -73,34 +73,15 @@ const Delegates = ({
     myDelegation: EdenMember[];
 }) => {
     const { data: membersStats, isLoading } = useMemberStats();
-    const { data: loggedInUser } = useCurrentMember();
+    const { data: loggedInMember } = useCurrentMember();
 
     if (isLoading) return <div>Loading...</div>;
-    if (!loggedInUser || !membersStats)
+    if (!loggedInMember || !membersStats)
         return <div>Error fetching member data...</div>;
 
-    console.info("myDelegation:");
-    console.info(myDelegation);
-    console.info(
-        `(myDelegation?.length[${
-            myDelegation?.length
-        }] + (loggedInUser.election_rank - 1)[${
-            loggedInUser.election_rank - 1
-        }]) < (membersStats.ranks.length - 3)[${
-            membersStats.ranks.length - 3
-        }] ==> ${myDelegation?.length} + ${loggedInUser.election_rank - 1} < ${
-            membersStats.ranks.length - 3
-        } ==> ${myDelegation?.length + loggedInUser.election_rank - 1} < ${
-            membersStats.ranks.length - 3
-        }`
-    );
-
-    const highestLevelOfRepresentation =
-        myDelegation?.length + loggedInUser.election_rank - 1;
-    const numRanksExcludingLoggedInMemberAndChiefs =
-        membersStats.ranks.length - 3;
-    const isGapInRepresentation =
-        highestLevelOfRepresentation < numRanksExcludingLoggedInMemberAndChiefs;
+    const highestRankedMemberInDelegation = myDelegation.length
+        ? myDelegation[myDelegation.length - 1]
+        : loggedInMember;
     return (
         <>
             {myDelegation.map((delegate, index) => (
@@ -114,27 +95,31 @@ const Delegates = ({
                         )}
                         level={delegate.election_rank}
                     />
-                    {/* {isValidDelegate(delegate.representative) && ( */}
                     <Container className="py-2.5">
                         <BsArrowDown
                             size={28}
                             className="ml-3.5 text-gray-400"
                         />
                     </Container>
-                    {/* )} */}
                 </div>
             ))}
-            {isGapInRepresentation && (
-                <>
-                    <DelegateChip />
-                    <Container className="py-2.5">
-                        <BsArrowDown
-                            size={28}
-                            className="ml-3.5 text-gray-400"
-                        />
-                    </Container>
-                </>
-            )}
+            {!isDelegateAChief(
+                highestRankedMemberInDelegation.election_rank + 1,
+                membersStats
+            ) &&
+                !isValidDelegate(
+                    highestRankedMemberInDelegation.representative
+                ) && (
+                    <>
+                        <DelegateChip />
+                        <Container className="py-2.5">
+                            <BsArrowDown
+                                size={28}
+                                className="ml-3.5 text-gray-400"
+                            />
+                        </Container>
+                    </>
+                )}
             <Chiefs />
         </>
     );
@@ -171,11 +156,6 @@ const Chiefs = () => {
         (d) => d?.account === electionState?.lead_representative
     );
 
-    console.info("headChiefAsEdenMember:");
-    console.info(headChiefAsEdenMember);
-    console.info("headChiefAsMemberData:");
-    console.info(headChiefAsMemberData);
-
     if (!headChiefAsEdenMember || !headChiefAsMemberData)
         return <div>Error fetching data</div>;
 
@@ -196,21 +176,12 @@ const Chiefs = () => {
                             )}
                             level={delegate.election_rank}
                         />
-                        {isDelegateNonChief(
-                            delegate.election_rank,
-                            membersStats
-                        ) &&
-                            isValidDelegate(delegate.representative) && (
-                                <Container className="py-2.5">
-                                    <BsArrowDown
-                                        size={28}
-                                        className="ml-3.5 text-gray-400"
-                                    />
-                                </Container>
-                            )}
                     </div>
                 );
             })}
+            <Container className="py-2.5">
+                <BsArrowDown size={28} className="ml-3.5 text-gray-400" />
+            </Container>
             <Text>Head Chief</Text>
             <DelegateChip
                 member={headChiefAsMemberData}
