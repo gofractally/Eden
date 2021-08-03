@@ -1,4 +1,4 @@
-import React, { useRef } from "react";
+import React from "react";
 import { AppProps } from "next/app";
 import Router from "next/router";
 import { QueryClient, QueryClientProvider } from "react-query";
@@ -9,6 +9,8 @@ import Modal from "react-modal";
 import dayjs from "dayjs";
 import * as localizedFormat from "dayjs/plugin/localizedFormat";
 import * as relativeTime from "dayjs/plugin/relativeTime";
+import * as timezone from "dayjs/plugin/timezone";
+import * as advancedFormat from "dayjs/plugin/advancedFormat";
 
 import { EdenUALProvider, Toaster } from "_app";
 
@@ -24,6 +26,8 @@ Router.events.on("routeChangeError", () => NProgress.done());
 
 dayjs.extend(localizedFormat.default);
 dayjs.extend(relativeTime.default);
+dayjs.extend(advancedFormat.default);
+dayjs.extend(timezone.default);
 
 Modal.setAppElement("#__next");
 
