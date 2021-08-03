@@ -25,13 +25,13 @@ function MyApp({ Component, pageProps }: AppProps) {
         process.env.NEXT_PUBLIC_AA_CONTRACT || "atomicassets",
         process.env.NEXT_PUBLIC_AA_MARKET_CONTRACT || "atomicmarket",
         process.env.NEXT_PUBLIC_SUBCHAIN_WASM_URL ||
-            "http://localhost:3002/eden-micro-chain.wasm",
+            "http://localhost:3032/subchain/eden-micro-chain.wasm",
         process.env.NEXT_PUBLIC_SUBCHAIN_SLOW_MO === "true"
             ? "bad_state_file_name_for_slow_mo"
             : process.env.NEXT_PUBLIC_SUBCHAIN_STATE_URL ||
-                  "http://localhost:3002/state",
+                  "http://localhost:3032/subchain/state",
         process.env.NEXT_PUBLIC_SUBCHAIN_WS_URL ||
-            "ws://localhost:3002/eden-microchain",
+            "ws://localhost:3032/subchain/eden-microchain",
         process.env.NEXT_PUBLIC_SUBCHAIN_SLOW_MO === "true"
     );
     return (

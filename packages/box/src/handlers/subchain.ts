@@ -2,46 +2,37 @@ import express from "express";
 import * as http from "http";
 import * as WebSocket from "ws";
 import path from "path";
-import cors from "cors";
-import { Storage } from "./storage";
-import { setupExpressLogger } from "./logger";
-import logger from "./logger";
-import { contractAccounts, serverConfig } from "./config";
-import DfuseReceiver from "./dfuse-receiver";
+import { Storage } from "../subchain-storage";
+import logger from "../logger";
+import { subchainConfig } from "../config";
+import DfuseReceiver from "../dfuse-receiver";
 import {
     ClientStatus,
     ServerMessage,
     sanitizeClientStatus,
 } from "@edenos/common/dist/subchain/SubchainProtocol";
 
-const app = express();
-const server = http.createServer(app);
-const wss = new WebSocket.Server({
-    server,
-    path: "/eden-microchain",
-});
 const storage = new Storage();
 const dfuseReceiver = new DfuseReceiver(storage);
+export const subchainHandler = express.Router();
 
-setupExpressLogger(app);
-
-app.get("/eden-micro-chain.wasm", cors(), function (req, res) {
+subchainHandler.get("/eden-micro-chain.wasm", (req, res) => {
     res.sendFile(path.resolve("../../build/eden-micro-chain.wasm"));
 });
 
-app.get("/state", cors(), function (req, res) {
+subchainHandler.get("/state", (req, res) => {
     res.sendFile(path.resolve("./state"));
 });
 
-app.use(cors(), function (req, res, next) {
+subchainHandler.use((req, res, next) => {
     res.status(404).send("404");
 });
 
 // TODO: timeout
 class ConnectionState {
-    ws: WebSocket;
+    ws: WebSocket | null;
     haveCallback = false;
-    status: ClientStatus;
+    status: ClientStatus | null = null;
 
     constructor(ws: WebSocket) {
         this.ws = ws;
@@ -58,13 +49,13 @@ class ConnectionState {
     }
 
     head() {
-        if (this.status.blocks.length)
+        if (this.status?.blocks.length)
             return this.status.blocks[this.status.blocks.length - 1].num;
         return 0;
     }
 
     sendMsg(msg: ServerMessage) {
-        this.ws.send(JSON.stringify(msg));
+        this.ws!.send(JSON.stringify(msg));
     }
 
     update() {
@@ -99,7 +90,7 @@ class ConnectionState {
                 });
                 needHeadUpdate = false;
                 let irreversible = Math.min(
-                    storage.blocksWasm.getIrreversible(),
+                    storage.blocksWasm!.getIrreversible(),
                     this.head()
                 );
                 if (irreversible > this.status.irreversible) {
@@ -125,34 +116,42 @@ class ConnectionState {
     } // update()
 } // ConnectionState
 
-wss.on("connection", (ws: WebSocket) => {
-    logger.info("incoming ws connection");
-    ws.on("message", (message: string) => {
-        const wsa = ws as any;
-        if (!wsa.connectionState) wsa.connectionState = new ConnectionState(ws);
-        const cs: ConnectionState = wsa.connectionState;
-        try {
-            cs.status = sanitizeClientStatus(JSON.parse(message));
-            cs.update();
-        } catch (e) {
-            // TODO: report some errors to client
-            logger.error(e);
-            cs.ws = null;
-            ws.close();
-        }
+export function createWSServer(path: string, server: http.Server) {
+    const wss = new WebSocket.Server({
+        server,
+        path: `${path}/eden-microchain`,
     });
-});
 
-async function start() {
-    await storage.instantiate(
-        contractAccounts.eden,
-        contractAccounts.token,
-        contractAccounts.atomic,
-        contractAccounts.atomicMarket
-    );
-    await dfuseReceiver.start();
-    server.listen(serverConfig.port, () => {
-        logger.info(`Server started on port ${(server.address() as any).port}`);
+    wss.on("connection", (ws: WebSocket) => {
+        logger.info("incoming ws connection");
+        ws.on("message", (message: string) => {
+            const wsa = ws as any;
+            if (!wsa.connectionState)
+                wsa.connectionState = new ConnectionState(ws);
+            const cs: ConnectionState = wsa.connectionState;
+            try {
+                cs.status = sanitizeClientStatus(JSON.parse(message));
+                cs.update();
+            } catch (e) {
+                // TODO: report some errors to client
+                logger.error(e);
+                cs.ws = null;
+                ws.close();
+            }
+        });
     });
 }
-start();
+
+export async function startSubchain() {
+    try {
+        await storage.instantiate(
+            subchainConfig.eden,
+            subchainConfig.token,
+            subchainConfig.atomic,
+            subchainConfig.atomicMarket
+        );
+        await dfuseReceiver.start();
+    } catch (e: any) {
+        logger.error(e);
+    }
+}

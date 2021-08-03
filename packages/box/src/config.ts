@@ -51,4 +51,24 @@ logger.info(
         JSON.stringify(validUploadActions, undefined, 2)
 );
 
+export const subchainConfig = {
+    eden: process.env.SUBCHAIN_EDEN_CONTRACT || "genesis.eden",
+    token: process.env.SUBCHAIN_TOKEN_CONTRACT || "eosio.token",
+    atomic: process.env.SUBCHAIN_AA_CONTRACT || "atomicassets",
+    atomicMarket: process.env.SUBCHAIN_AA_MARKET_CONTRACT || "atomicmarket",
+    wasmFile: process.env.SUBCHAIN_WASM || "../../build/eden-micro-chain.wasm",
+    stateFile: process.env.SUBCHAIN_STATE || "state",
+};
+console.info(subchainConfig);
+
+export const dfuseConfig = {
+    apiKey: process.env.DFUSE_API_KEY || "",
+    apiNetwork: process.env.DFUSE_API_NETWORK || "eos.dfuse.eosnation.io",
+    authNetwork: process.env.DFUSE_AUTH_NETWORK || "https://auth.eosnation.io",
+    firstBlock: +(process.env.DFUSE_FIRST_BLOCK as any) || 1,
+    jsonTrxFile:
+        process.env.SUBCHAIN_DFUSE_JSON_TRX_FILE || "dfuse-transactions.json",
+};
+console.info({ ...dfuseConfig, apiKey: "<secret>" });
+
 logger.info("<== Env Configs Loaded!");

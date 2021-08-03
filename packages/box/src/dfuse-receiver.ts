@@ -3,8 +3,8 @@ import * as fs from "fs";
 import nodeFetch from "node-fetch";
 import WebSocketClient from "ws";
 import { performance } from "perf_hooks";
-import { contractAccounts, dfuseConfig, subchainConfig } from "./config";
-import { Storage } from "./storage";
+import { dfuseConfig, subchainConfig } from "./config";
+import { Storage } from "./subchain-storage";
 import logger from "./logger";
 
 const query = `
@@ -80,11 +80,11 @@ export default class DfuseReceiver {
     numSaved = 0;
 
     queryString = `(
-        auth:${contractAccounts.eden} -action:setcode -action:setabi ||
-        receiver:${contractAccounts.eden} account:${contractAccounts.eden} ||
-        receiver:${contractAccounts.eden} account:${contractAccounts.token} ||
-        receiver:${contractAccounts.eden} account:${contractAccounts.atomic} ||
-        receiver:${contractAccounts.eden} account:${contractAccounts.atomicMarket}
+        auth:${subchainConfig.eden} -action:setcode -action:setabi ||
+        receiver:${subchainConfig.eden} account:${subchainConfig.eden} ||
+        receiver:${subchainConfig.eden} account:${subchainConfig.token} ||
+        receiver:${subchainConfig.eden} account:${subchainConfig.atomic} ||
+        receiver:${subchainConfig.eden} account:${subchainConfig.atomicMarket}
     )`;
 
     variables = {
@@ -128,7 +128,7 @@ export default class DfuseReceiver {
             if (trx.undo != prev.undo || trx.block.id != prev.block.id) {
                 if (prev.undo) this.storage.undo(prev.block.id);
                 else if (prev.trace) {
-                    const block = { ...prev.block, transactions: [] };
+                    const block = { ...prev.block, transactions: [] as any[] };
                     for (let t of this.unpushedTransactions) {
                         block.transactions.push({
                             id: t.trace.id,
@@ -174,15 +174,15 @@ export default class DfuseReceiver {
                     !trx.trace
                 ) {
                     logger.info(
-                        `save ${subchainConfig.jsonTrxFile}: ${this.jsonTransactions.length} transactions and undo entries`
+                        `save ${dfuseConfig.jsonTrxFile}: ${this.jsonTransactions.length} transactions and undo entries`
                     );
                     fs.writeFileSync(
-                        subchainConfig.jsonTrxFile + ".tmp",
+                        dfuseConfig.jsonTrxFile + ".tmp",
                         JSON.stringify(this.jsonTransactions)
                     );
                     fs.renameSync(
-                        subchainConfig.jsonTrxFile + ".tmp",
-                        subchainConfig.jsonTrxFile
+                        dfuseConfig.jsonTrxFile + ".tmp",
+                        dfuseConfig.jsonTrxFile
                     );
                     this.storage.saveState();
                     this.numSaved = this.jsonTransactions.length;
@@ -199,7 +199,7 @@ export default class DfuseReceiver {
     async start() {
         try {
             this.jsonTransactions = JSON.parse(
-                fs.readFileSync(subchainConfig.jsonTrxFile, "utf8")
+                fs.readFileSync(dfuseConfig.jsonTrxFile, "utf8")
             );
             this.numSaved = this.jsonTransactions.length;
         } catch (e) {}
@@ -232,7 +232,7 @@ export default class DfuseReceiver {
 
         logger.info("dfuse is now connected");
     }
-    catch(e) {
+    catch(e: Error) {
         logger.error(e);
         process.exit(1);
     }

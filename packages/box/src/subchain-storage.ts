@@ -4,8 +4,8 @@ import * as fs from "fs";
 import logger from "./logger";
 
 export class Storage {
-    blocksWasm: EdenSubchain;
-    stateWasm: EdenSubchain;
+    blocksWasm: EdenSubchain | null = null;
+    stateWasm: EdenSubchain | null = null;
     head = 0;
     callbacks: (() => void)[] = [];
 
@@ -60,7 +60,7 @@ export class Storage {
         return this.protect(() => {
             fs.writeFileSync(
                 config.subchainConfig.stateFile + ".tmp",
-                this.stateWasm.uint8Array()
+                this.stateWasm!.uint8Array()
             );
             fs.renameSync(
                 config.subchainConfig.stateFile + ".tmp",
@@ -72,12 +72,12 @@ export class Storage {
 
     query(q: string): any {
         return this.protect(() => {
-            return this.blocksWasm.query(q);
+            return this.blocksWasm!.query(q);
         });
     }
 
     getBlock(num: number): Uint8Array {
-        return this.protect(() => this.blocksWasm.getBlock(num));
+        return this.protect(() => this.blocksWasm!.getBlock(num))!;
     }
 
     idForNum(num: number): string {
@@ -105,12 +105,12 @@ export class Storage {
 
     pushJsonBlock(jsonBlock: string, irreversible: number) {
         const result = this.protect(() => {
-            const result = this.blocksWasm.pushJsonBlock(
+            const result = this.blocksWasm!.pushJsonBlock(
                 jsonBlock,
                 irreversible
             );
-            this.stateWasm.pushJsonBlock(jsonBlock, irreversible);
-            this.stateWasm.trimBlocks();
+            this.stateWasm!.pushJsonBlock(jsonBlock, irreversible);
+            this.stateWasm!.trimBlocks();
             return result;
         });
         this.changed();
