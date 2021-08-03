@@ -7,12 +7,12 @@ import { Storage } from "./storage";
 import { setupExpressLogger } from "./logger";
 import logger from "./logger";
 import { serverConfig } from "./config";
-import DfuseReceiver from "./DfuseReceiver";
+import DfuseReceiver from "./dfuse-receiver";
 import {
     ClientStatus,
     ServerMessage,
     sanitizeClientStatus,
-} from "../../common/src/subchain/SubchainProtocol";
+} from "@edenos/common/dist/subchain/SubchainProtocol";
 
 const app = express();
 const server = http.createServer(app);
@@ -25,8 +25,8 @@ const dfuseReceiver = new DfuseReceiver(storage);
 
 setupExpressLogger(app);
 
-app.get("/micro-chain.wasm", cors(), function (req, res) {
-    res.sendFile(path.resolve("../../build/demo-micro-chain.wasm"));
+app.get("/eden-micro-chain.wasm", cors(), function (req, res) {
+    res.sendFile(path.resolve("../../build/eden-micro-chain.wasm"));
 });
 
 app.get("/state", cors(), function (req, res) {

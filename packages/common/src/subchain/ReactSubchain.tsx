@@ -1,7 +1,12 @@
 import SubchainClient from "./SubchainClient";
 import { useContext, useEffect, useState, createContext } from "react";
 
-export function useCreateEdenChain(): SubchainClient | null {
+export function useCreateEdenChain(
+    wasmUrl: string,
+    stateUrl: string,
+    wsUrl: string,
+    slowMo: boolean
+): SubchainClient | null {
     const [subchain, setSubchain] = useState<SubchainClient | null>(null);
     useEffect(() => {
         if (typeof window !== "undefined") {
@@ -11,10 +16,10 @@ export function useCreateEdenChain(): SubchainClient | null {
                     console.log("create SubchainClient");
                     client = new SubchainClient();
                     await client!.instantiateStreaming(
-                        fetch("http://localhost:3002/micro-chain.wasm"),
-                        fetch("http://localhost:3002/state"),
-                        "ws://localhost:3002/eden-microchain",
-                        false
+                        fetch(wasmUrl),
+                        fetch(stateUrl),
+                        wsUrl,
+                        slowMo
                     );
                     setSubchain(client);
                 } catch (e) {

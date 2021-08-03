@@ -93,7 +93,7 @@ export default class DfuseReceiver {
         low: dfuseConfig.firstBlock,
         limit: 0,
         irrev: false,
-        interval: 1,
+        interval: 30,
     };
 
     dfuseClient = createDfuseClient({

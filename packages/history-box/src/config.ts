@@ -25,7 +25,7 @@ export const serverConfig = {
 console.info(serverConfig);
 
 export const subchainConfig = {
-    wasmFile: process.env.SUBCHAIN_WASM || "../../build/demo-micro-chain.wasm",
+    wasmFile: process.env.SUBCHAIN_WASM || "../../build/eden-micro-chain.wasm",
     stateFile: process.env.SUBCHAIN_STATE || "state",
     jsonTrxFile:
         process.env.SUBCHAIN_DFUSE_JSON_TRX_FILE || "dfuse-transactions.json",

@@ -4,5 +4,5 @@ if(DEFINED IS_NATIVE)
 endif()
 
 if(DEFINED IS_WASM)
-    add_subdirectory(demo-micro-chain)
+    add_subdirectory(eden-micro-chain)
 endif()
