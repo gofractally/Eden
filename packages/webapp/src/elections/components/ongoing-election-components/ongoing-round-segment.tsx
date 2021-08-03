@@ -3,7 +3,6 @@ import { useQuery } from "react-query";
 import { Flipper, Flipped } from "react-flip-toolkit";
 import { BiCheck, BiWebcam } from "react-icons/bi";
 import { RiVideoUploadLine } from "react-icons/ri";
-import dayjs from "dayjs";
 
 import { queryMembers } from "_app";
 import {
@@ -58,31 +57,25 @@ export const OngoingRoundSegment = ({
         ?.map((res) => res?.data as EdenMember)
         .map((em) => em.nft_template_id);
 
+    useEffect(() => {
+        const roundMemberError = roundEdenMembers.some((res) => res.isError);
+        if (roundMemberError) {
+            setFetchError(true);
+        } else {
+            setFetchError(false);
+        }
+    }, [roundEdenMembers]);
+
     const { data: members } = useQuery({
         ...queryMembers(1, 20, nftTemplateIds),
         staleTime: Infinity,
         enabled: !fetchError && Boolean(nftTemplateIds.length),
     });
 
-    useEffect(() => {
-        const roundMemberError = roundEdenMembers.some((res) => res.isError);
-        const memberDataError = voteData?.length === members?.length;
-        if (roundMemberError || memberDataError) {
-            setFetchError(true);
-        } else {
-            setFetchError(false);
-        }
-    }, [members, roundEdenMembers]);
-
     // TODO: Handle Fetch Errors;
     if (fetchError) return <Text>Fetch Error</Text>;
-    if (!members) return <Text>No Members Fetched</Text>;
-
-    const endDateTime = dayjs(roundData.round_end + "Z"); // TODO: append Z at API level
-    const startDateTime = endDateTime.subtract(40, "minute");
-
-    // console.log(end.format("LT"));
-    // console.log(end.subtract(40, "minute").format("LT"));
+    if (!members || members?.length !== voteData?.length)
+        return <Text>Error Fetching Members</Text>;
 
     const onSelectMember = (member: MemberData) => {
         if (member.account === selectedMember?.account) return;
@@ -121,17 +114,7 @@ export const OngoingRoundSegment = ({
 
     return (
         <Expander
-            header={
-                <RoundHeader
-                    roundNum={roundData.round}
-                    subText={`${startDateTime.format(
-                        "LT"
-                    )} - ${endDateTime.format("LT z")}`}
-                    endDateTime={endDateTime}
-                    startDateTime={startDateTime}
-                    isActive // TODO: Move much of this logic into component
-                />
-            }
+            header={<RoundHeader roundData={roundData} />}
             startExpanded
             locked
         >
