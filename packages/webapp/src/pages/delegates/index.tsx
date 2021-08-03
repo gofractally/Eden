@@ -7,7 +7,6 @@ import {
     Heading,
     queryMembers,
     Text,
-    useCurrentElection,
     useCurrentMember,
     useElectionState,
     useMemberListByAccountNames,
@@ -23,6 +22,18 @@ import { isValidDelegate } from "delegates/api";
 interface Props {
     delegatesPage: number;
 }
+
+const isDelegateAChief = (delegateRank: number, membersStats: MemberStats) =>
+    delegateRank > membersStats.ranks.length - 2;
+
+const isGapInRepresentation = (
+    highestRankedMemberInDelegation: EdenMember,
+    membersStats: MemberStats
+) =>
+    !isDelegateAChief(
+        highestRankedMemberInDelegation.election_rank + 1,
+        membersStats
+    ) && !isValidDelegate(highestRankedMemberInDelegation.representative);
 
 export const DelegatesPage = (props: Props) => {
     const [activeUser] = useUALAccount();
@@ -62,9 +73,6 @@ export const DelegatesPage = (props: Props) => {
     );
 };
 
-const isDelegateAChief = (delegateRank: number, membersStats: MemberStats) =>
-    delegateRank > membersStats.ranks.length - 2;
-
 const Delegates = ({
     members,
     myDelegation,
@@ -82,6 +90,7 @@ const Delegates = ({
     const highestRankedMemberInDelegation = myDelegation.length
         ? myDelegation[myDelegation.length - 1]
         : loggedInMember;
+
     return (
         <>
             {myDelegation.map((delegate, index) => (
@@ -103,23 +112,20 @@ const Delegates = ({
                     </Container>
                 </div>
             ))}
-            {!isDelegateAChief(
-                highestRankedMemberInDelegation.election_rank + 1,
+            {isGapInRepresentation(
+                highestRankedMemberInDelegation,
                 membersStats
-            ) &&
-                !isValidDelegate(
-                    highestRankedMemberInDelegation.representative
-                ) && (
-                    <>
-                        <DelegateChip />
-                        <Container className="py-2.5">
-                            <BsArrowDown
-                                size={28}
-                                className="ml-3.5 text-gray-400"
-                            />
-                        </Container>
-                    </>
-                )}
+            ) && (
+                <>
+                    <DelegateChip />
+                    <Container className="py-2.5">
+                        <BsArrowDown
+                            size={28}
+                            className="ml-3.5 text-gray-400"
+                        />
+                    </Container>
+                </>
+            )}
             <Chiefs />
         </>
     );
@@ -130,6 +136,7 @@ const Chiefs = () => {
     const { data: membersStats } = useMemberStats();
 
     const allChiefs = electionState?.board || [];
+    // Get EdenMember data, unwrap the QueryResults[] into an EdenMember[], and filter out non-existent members
     const chiefsAsMembers = useMemberListByAccountNames(
         allChiefs,
         Boolean(allChiefs?.length)
@@ -147,13 +154,14 @@ const Chiefs = () => {
         enabled: Boolean(chiefsAsMembers?.length),
     });
 
-    if (!members || !membersStats) return <div>fetching data</div>;
+    if (!electionState || !members || !membersStats)
+        return <div>fetching data</div>;
 
     const headChiefAsEdenMember = chiefsAsMembers!.find(
-        (d) => d?.account === electionState?.lead_representative
+        (d) => d?.account === electionState.lead_representative
     );
-    const headChiefAsMemberData = members!.find(
-        (d) => d?.account === electionState?.lead_representative
+    const headChiefAsMemberData = members.find(
+        (d) => d?.account === electionState.lead_representative
     );
 
     if (!headChiefAsEdenMember || !headChiefAsMemberData)
@@ -165,13 +173,13 @@ const Chiefs = () => {
             {chiefsAsMembers.map((delegate) => {
                 if (
                     !delegate ||
-                    delegate.account === electionState?.lead_representative
+                    delegate.account === electionState.lead_representative
                 )
                     return null;
                 return (
                     <div className="-mt-px" key={`chiefs-${delegate.account}`}>
                         <DelegateChip
-                            member={members!.find(
+                            member={members.find(
                                 (d) => d.account === delegate.account
                             )}
                             level={delegate.election_rank}
