@@ -37,44 +37,7 @@ import { EncryptionPasswordAlert } from "encryption";
 // TODO: Hook up to real/fixture data; break apart and organize
 // TODO: Make sure time zone changes during election are handled properly
 export const OngoingElection = () => {
-    const [fetchError, setFetchError] = useState<boolean>(false);
     const { data: currentElection } = useCurrentElection();
-    const { data: loggedInMember } = useCurrentMember();
-
-    // TODO: May be able to push some of this fetching down into the OngoingRoundSegment component
-    const { data: voteData } = useMemberGroupParticipants(
-        loggedInMember?.account
-    );
-
-    const roundEdenMembers = useMemberListByAccountNames(
-        voteData?.map((participant) => participant.member) ?? []
-    );
-
-    useEffect(() => {
-        if (roundEdenMembers.some((res) => res.isError)) {
-            setFetchError(true);
-        } else {
-            setFetchError(false);
-        }
-    }, [roundEdenMembers]);
-
-    const nftTemplateIds: number[] = roundEdenMembers
-        ?.filter((res) => Boolean(res?.data?.nft_template_id))
-        ?.map((res) => res?.data as EdenMember)
-        .map((em) => em.nft_template_id);
-
-    const { data: members } = useQuery({
-        ...queryMembers(1, 20, nftTemplateIds),
-        staleTime: Infinity,
-        enabled: !fetchError && Boolean(nftTemplateIds.length),
-    });
-
-    useEffect(() => {
-        if (voteData?.length === members?.length) return;
-        setFetchError(true);
-    }, [members]);
-
-    // TODO: Handle fetchError;
 
     return (
         <FluidLayout title="Election">
@@ -90,21 +53,14 @@ export const OngoingElection = () => {
                 <SupportSegment />
                 {/* TODO: How do we get previous round info? Do that here. */}
                 {currentElection?.round &&
-                    members &&
                     [...Array(currentElection.round - 1)].map((_, i) => (
                         <CompletedRoundSegment
                             key={`election-round-${i + 1}`}
                             round={i + 1}
-                            participants={members}
-                            winner={members[0]}
                         />
                     ))}
-                {currentElection && voteData && members && (
-                    <OngoingRoundSegment
-                        members={members}
-                        voteData={voteData}
-                        roundData={currentElection}
-                    />
+                {currentElection && (
+                    <OngoingRoundSegment roundData={currentElection} />
                 )}
             </div>
         </FluidLayout>
@@ -135,71 +91,71 @@ const SupportSegment = () => (
 
 interface CompletedRoundSegmentProps {
     round: number;
-    participants: MemberData[];
-    winner?: MemberData;
 }
 
-const CompletedRoundSegment = ({
-    round,
-    participants,
-    winner,
-}: CompletedRoundSegmentProps) => (
-    <Expander
-        header={
-            <RoundHeader
-                roundNum={round}
-                subText={
-                    winner
-                        ? `Delegate elect: ${winner.name}`
-                        : "Consensus not achieved"
-                }
-            />
-        }
-        inactive
-    >
-        <MembersGrid members={participants}>
-            {(member) => {
-                if (member.account === winner?.account) {
+const CompletedRoundSegment = ({ round }: CompletedRoundSegmentProps) => {
+    // TODO: The number of completed rounds is generated based on fixture data, but the contents are still mocked. Fill in contents!
+    const { data: participants } = useQuery({
+        ...queryMembers(1, 5),
+        staleTime: Infinity,
+    });
+
+    if (!participants) return <></>;
+
+    const winner = participants[2];
+
+    return (
+        <Expander
+            header={
+                <RoundHeader
+                    roundNum={round}
+                    subText={
+                        winner
+                            ? `Delegate elect: ${winner.name}`
+                            : "Consensus not achieved"
+                    }
+                />
+            }
+            inactive
+        >
+            <MembersGrid members={participants}>
+                {(member) => {
+                    if (member.account === winner?.account) {
+                        return (
+                            <ElectionParticipantChip
+                                key={`round-${round}-winner`}
+                                member={member}
+                                delegateLevel="Delegate elect"
+                                electionVideoCid="QmeKPeuSai8sbEfvbuVXzQUzYRsntL3KSj5Xok7eRiX5Fp/edenTest2ElectionRoom12.mp4"
+                            />
+                        );
+                    }
                     return (
                         <ElectionParticipantChip
-                            key={`round-${round}-winner`}
+                            key={`round-${round}-participant-${member.account}`}
                             member={member}
-                            delegateLevel="Delegate elect"
-                            electionVideoCid="QmeKPeuSai8sbEfvbuVXzQUzYRsntL3KSj5Xok7eRiX5Fp/edenTest2ElectionRoom12.mp4"
                         />
                     );
-                }
-                return (
-                    <ElectionParticipantChip
-                        key={`round-${round}-participant-${member.account}`}
-                        member={member}
-                    />
-                );
-            }}
-        </MembersGrid>
-        <Container>
-            <Button size="sm">
-                <RiVideoUploadLine size={18} className="mr-2" />
-                Upload round {round} recording
-            </Button>
-        </Container>
-    </Expander>
-);
+                }}
+            </MembersGrid>
+            <Container>
+                <Button size="sm">
+                    <RiVideoUploadLine size={18} className="mr-2" />
+                    Upload round {round} recording
+                </Button>
+            </Container>
+        </Expander>
+    );
+};
 
 interface OngoingRoundSegmentProps {
-    members: MemberData[];
-    voteData: VoteData[];
     roundData: any;
 }
 
-const OngoingRoundSegment = ({
-    members,
-    voteData,
-    roundData,
-}: OngoingRoundSegmentProps) => {
-    const [ualAccount] = useUALAccount();
+const OngoingRoundSegment = ({ roundData }: OngoingRoundSegmentProps) => {
+    const [fetchError, setFetchError] = useState<boolean>(false);
+    const [voterStats, setVoterStats] = useState<VoteData[]>([]);
     const [selectedMember, setSelected] = useState<MemberData | null>(null);
-    const [voterStats, setVoterStats] = useState<VoteData[]>(voteData);
     const [
         showZoomLinkPermutations,
         setShowZoomLinkPermutations,
@@ -208,6 +164,45 @@ const OngoingRoundSegment = ({
     const [showPasswordPrompt, setShowPasswordPrompt] = useState<boolean>(
         false
     );
+
+    const { data: loggedInMember } = useCurrentMember();
+
+    const { data: voteData } = useMemberGroupParticipants(
+        loggedInMember?.account
+    );
+
+    useEffect(() => {
+        if (voteData) setVoterStats(voteData);
+    }, [voteData]);
+
+    const roundEdenMembers = useMemberListByAccountNames(
+        voteData?.map((participant) => participant.member) ?? []
+    );
+
+    const nftTemplateIds: number[] = roundEdenMembers
+        ?.filter((res) => Boolean(res?.data?.nft_template_id))
+        ?.map((res) => res?.data as EdenMember)
+        .map((em) => em.nft_template_id);
+
+    const { data: members } = useQuery({
+        ...queryMembers(1, 20, nftTemplateIds),
+        staleTime: Infinity,
+        enabled: !fetchError && Boolean(nftTemplateIds.length),
+    });
+
+    useEffect(() => {
+        const roundMemberError = roundEdenMembers.some((res) => res.isError);
+        const memberDataError = voteData?.length === members?.length;
+        if (roundMemberError || memberDataError) {
+            setFetchError(true);
+        } else {
+            setFetchError(false);
+        }
+    }, [members, roundEdenMembers]);
+
+    // TODO: Handle fetchError;
+
+    if (!members) return <></>;
 
     const endDateTime = dayjs(roundData.round_end + "Z");
     const startDateTime = endDateTime.subtract(40, "minute");
@@ -221,7 +216,7 @@ const OngoingRoundSegment = ({
     };
 
     const userVoterStats = voterStats.find(
-        (vs) => vs.member === ualAccount?.accountName
+        (vs) => vs.member === loggedInMember?.account
     );
 
     const userVotingFor = members.find(
@@ -231,7 +226,7 @@ const OngoingRoundSegment = ({
     // TODO: Sign & push vote action; remove voterStats and switch back to relying on voteData
     const onSubmitVote = () => {
         setVoterStats([
-            ...voterStats.filter((vs) => vs.member !== ualAccount?.accountName),
+            ...voterStats.filter((vs) => vs.member !== loggedInMember?.account),
             {
                 ...userVoterStats!,
                 candidate: selectedMember?.account ?? "",
@@ -357,7 +352,7 @@ const OngoingRoundSegment = ({
                                     votesReceived={votesReceived}
                                     votingFor={voteInfo?.candidate}
                                     electionVideoCid={
-                                        ualAccount?.accountName ===
+                                        loggedInMember?.account ===
                                         member.account
                                             ? "QmeKPeuSai8sbEfvbuVXzQUzYRsntL3KSj5Xok7eRiX5Fp/edenTest2ElectionRoom12.mp4"
                                             : undefined

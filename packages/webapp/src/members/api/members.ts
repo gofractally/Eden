@@ -41,7 +41,7 @@ export const getMembers = async (
                 ids.includes(md.templateId.toString())
             );
         }
-        return Promise.resolve(data);
+        return Promise.resolve(data.slice(0, limit));
     }
     const data = await getTemplates(page, limit, ids, sortField, order);
     return data.map(convertAtomicTemplateToMember);
