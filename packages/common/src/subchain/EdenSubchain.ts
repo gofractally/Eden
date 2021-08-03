@@ -1,3 +1,5 @@
+import { Serialize } from "eosjs";
+
 export class EdenSubchain {
     module?: WebAssembly.Module;
     instance?: WebAssembly.Instance;
@@ -76,11 +78,38 @@ export class EdenSubchain {
         }
     }
 
-    initializeMemory() {
+    initializeMemory(
+        edenAccount: string,
+        tokenAccount: string,
+        atomicAccount: string,
+        atomicmarketAccount: string
+    ) {
         if (this.initialized)
             throw new Error("wasm memory is already initialized");
+        const buf = new Serialize.SerialBuffer();
+        buf.pushName(edenAccount);
+        buf.pushName(tokenAccount);
+        buf.pushName(atomicAccount);
+        buf.pushName(atomicmarketAccount);
+        const edenAccountLow = buf.getUint32();
+        const edenAccountHigh = buf.getUint32();
+        const tokenAccountLow = buf.getUint32();
+        const tokenAccountHigh = buf.getUint32();
+        const atomicAccountLow = buf.getUint32();
+        const atomicAccountHigh = buf.getUint32();
+        const atomicmarketAccountLow = buf.getUint32();
+        const atomicmarketAccountHigh = buf.getUint32();
         this.protect(() => {
-            this.exports.initialize();
+            this.exports.initialize(
+                edenAccountLow,
+                edenAccountHigh,
+                tokenAccountLow,
+                tokenAccountHigh,
+                atomicAccountLow,
+                atomicAccountHigh,
+                atomicmarketAccountLow,
+                atomicmarketAccountHigh
+            );
             this.initialized = true;
         });
     }

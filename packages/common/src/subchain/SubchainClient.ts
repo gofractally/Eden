@@ -14,6 +14,10 @@ export default class SubchainClient {
     notifications: ((client: SubchainClient) => void)[] = [];
 
     async instantiateStreaming(
+        edenAccount: string,
+        tokenAccount: string,
+        atomicAccount: string,
+        atomicmarketAccount: string,
         wasmResponse: PromiseLike<Response>,
         stateResponse: PromiseLike<Response>,
         blocksUrl: string,
@@ -33,7 +37,12 @@ export default class SubchainClient {
         if (state) {
             this.subchain.setMemory(state);
         } else {
-            this.subchain.initializeMemory();
+            this.subchain.initializeMemory(
+                edenAccount,
+                tokenAccount,
+                atomicAccount,
+                atomicmarketAccount
+            );
         }
         this.connect();
     }

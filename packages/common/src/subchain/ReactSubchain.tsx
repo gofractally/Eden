@@ -2,6 +2,10 @@ import SubchainClient from "./SubchainClient";
 import { useContext, useEffect, useState, createContext } from "react";
 
 export function useCreateEdenChain(
+    edenAccount: string,
+    tokenAccount: string,
+    atomicAccount: string,
+    atomicmarketAccount: string,
     wasmUrl: string,
     stateUrl: string,
     wsUrl: string,
@@ -16,6 +20,10 @@ export function useCreateEdenChain(
                     console.log("create SubchainClient");
                     client = new SubchainClient();
                     await client!.instantiateStreaming(
+                        edenAccount,
+                        tokenAccount,
+                        atomicAccount,
+                        atomicmarketAccount,
                         fetch(wasmUrl),
                         fetch(stateUrl),
                         wsUrl,

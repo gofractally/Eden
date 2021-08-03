@@ -6,7 +6,7 @@ import cors from "cors";
 import { Storage } from "./storage";
 import { setupExpressLogger } from "./logger";
 import logger from "./logger";
-import { serverConfig } from "./config";
+import { contractAccounts, serverConfig } from "./config";
 import DfuseReceiver from "./dfuse-receiver";
 import {
     ClientStatus,
@@ -144,7 +144,12 @@ wss.on("connection", (ws: WebSocket) => {
 });
 
 async function start() {
-    await storage.instantiate();
+    await storage.instantiate(
+        contractAccounts.eden,
+        contractAccounts.token,
+        contractAccounts.atomic,
+        contractAccounts.atomicMarket
+    );
     await dfuseReceiver.start();
     server.listen(serverConfig.port, () => {
         logger.info(`Server started on port ${(server.address() as any).port}`);

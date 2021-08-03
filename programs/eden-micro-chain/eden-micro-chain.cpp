@@ -12,10 +12,28 @@
 
 using namespace eosio::literals;
 
+eosio::name eden_account;
+eosio::name token_account;
+eosio::name atomic_account;
+eosio::name atomicmarket_account;
+
+// TODO: switch to uint64_t (js BigInt) after we upgrade to nodejs >= 15
 extern "C" void __wasm_call_ctors();
-[[clang::export_name("initialize")]] void initialize()
+[[clang::export_name("initialize")]] void initialize(uint32_t eden_account_low,
+                                                     uint32_t eden_account_high,
+                                                     uint32_t token_account_low,
+                                                     uint32_t token_account_high,
+                                                     uint32_t atomic_account_low,
+                                                     uint32_t atomic_account_high,
+                                                     uint32_t atomicmarket_account_low,
+                                                     uint32_t atomicmarket_account_high)
 {
    __wasm_call_ctors();
+   eden_account.value = (uint64_t(eden_account_high) << 32) | eden_account_low;
+   token_account.value = (uint64_t(token_account_high) << 32) | token_account_low;
+   atomic_account.value = (uint64_t(atomic_account_high) << 32) | atomic_account_low;
+   atomicmarket_account.value =
+       (uint64_t(atomicmarket_account_high) << 32) | atomicmarket_account_low;
 }
 
 [[clang::export_name("allocateMemory")]] void* allocateMemory(uint32_t size)
@@ -256,7 +274,7 @@ void add_genesis_member(const status& status, eosio::name member)
 {
    db.inductions.emplace([&](auto& obj) {
       obj.induction.id = available_pk(db.inductions, 1);
-      obj.induction.inviter = "genesis.eden"_n;  // TODO
+      obj.induction.inviter = eden_account;
       obj.induction.invitee = member;
       for (auto witness : status.initialMembers)
          if (witness != member)
@@ -394,7 +412,7 @@ void filter_block(const eden_chain::eosio_block& block)
    {
       for (auto& action : trx.actions)
       {
-         if (action.firstReceiver == "genesis.eden"_n)
+         if (action.firstReceiver == eden_account)
          {
             if (action.name == "clearall"_n)
                call(clearall, action.hexData.data);

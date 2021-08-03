@@ -9,19 +9,34 @@ export class Storage {
     head = 0;
     callbacks: (() => void)[] = [];
 
-    async instantiate() {
+    async instantiate(
+        edenAccount: string,
+        tokenAccount: string,
+        atomicAccount: string,
+        atomicmarketAccount: string
+    ) {
         try {
             this.blocksWasm = new EdenSubchain();
             await this.blocksWasm.instantiate(
                 new Uint8Array(fs.readFileSync(config.subchainConfig.wasmFile))
             );
-            this.blocksWasm.initializeMemory();
+            this.blocksWasm.initializeMemory(
+                edenAccount,
+                tokenAccount,
+                atomicAccount,
+                atomicmarketAccount
+            );
 
             this.stateWasm = new EdenSubchain();
             await this.stateWasm.instantiate(
                 new Uint8Array(fs.readFileSync(config.subchainConfig.wasmFile))
             );
-            this.stateWasm.initializeMemory();
+            this.stateWasm.initializeMemory(
+                edenAccount,
+                tokenAccount,
+                atomicAccount,
+                atomicmarketAccount
+            );
         } catch (e) {
             this.blocksWasm = null;
             this.stateWasm = null;
