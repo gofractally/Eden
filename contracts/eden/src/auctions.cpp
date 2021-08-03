@@ -167,14 +167,6 @@ namespace eden
       return max_steps;
    }
 
-   void auctions::clear_all()
-   {
-      auto iter = auction_tb.begin();
-      auto end = auction_tb.end();
-      while (iter != end)
-      {
-         iter = auction_tb.erase(iter);
-      }
-   }
+   void auctions::clear_all() { clear_table(auction_tb); }
 
 }  // namespace eden

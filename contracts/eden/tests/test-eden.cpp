@@ -1545,6 +1545,15 @@ TEST_CASE("pre-genesis balance")
    CHECK(get_token_balance("eden.gm"_n) == t.get_total_balance());
 }
 
+TEST_CASE("clearall")
+{
+   eden_tester t;
+   t.genesis();
+   t.eden_gm.act<actions::clearall>();
+   t.chain.start_block();
+   t.genesis();
+}
+
 TEST_CASE("account migration")
 {
    eden_tester t;

@@ -115,12 +115,7 @@ namespace eden
          account_tb.modify(record, contract, [&](auto& r) { r.balance() -= quantity; });
    }
 
-   void accounts::clear_all()
-   {
-      auto accounts_itr = account_tb.lower_bound(0);
-      while (accounts_itr != account_tb.end())
-         account_tb.erase(accounts_itr++);
-   }
+   void accounts::clear_all() { clear_table(account_tb); }
 
    void add_to_pool(eosio::name contract, eosio::name pool, eosio::asset amount)
    {
