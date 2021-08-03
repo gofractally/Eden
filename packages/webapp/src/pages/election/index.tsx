@@ -5,9 +5,11 @@ import { BiCheck, BiWebcam } from "react-icons/bi";
 import { FaCheckCircle } from "react-icons/fa";
 import { GoSync } from "react-icons/go";
 import { RiVideoUploadLine } from "react-icons/ri";
+import dayjs, { Dayjs } from "dayjs";
 
 import { FluidLayout, queryMembers, useFormFields, useUALAccount } from "_app";
 import {
+    useCurrentElection,
     useCurrentMember,
     useMemberGroupParticipants,
     useMemberListByAccountNames,
@@ -35,36 +37,18 @@ interface Props {
     delegatesPage: number;
 }
 
+// TODO: Much of the building up of the data shouldn't be done in the UI layer. What do we want the API to provide. What data does this UI really need? We can define a new OngoingElection type to provide to this UI.
 // TODO: Hook up to real/fixture data; break apart and organize
+// TODO: Make sure time zone changes during election are handled properly
 export const OngoingElectionPage = (props: Props) => {
-    // TODO: May be able to push a bunch of this fetching down into the OngoingRoundSegment component
     const [fetchError, setFetchError] = useState<boolean>(false);
+    const { data: currentElection } = useCurrentElection();
     const { data: loggedInMember } = useCurrentMember();
+
+    // TODO: May be able to push some of this fetching down into the OngoingRoundSegment component
     const { data: voteData } = useMemberGroupParticipants(
         loggedInMember?.account
     );
-
-    // USE THIS TO PLAY WITH FLIPPER ANIMATION
-    // const voteData: VoteData[] = [
-    //     {
-    //         member: "egeon.edev",
-    //         round: 1,
-    //         index: 1,
-    //         candidate: "edenmember13",
-    //     },
-    //     {
-    //         member: "edenmember12",
-    //         round: 1,
-    //         index: 2,
-    //         candidate: "edenmember12",
-    //     },
-    //     {
-    //         member: "edenmember13",
-    //         round: 1,
-    //         index: 3,
-    //         candidate: "edenmember13",
-    //     },
-    // ];
 
     const roundEdenMembers = useMemberListByAccountNames(
         voteData?.map((participant) => participant.member) ?? []
@@ -73,6 +57,8 @@ export const OngoingElectionPage = (props: Props) => {
     useEffect(() => {
         if (roundEdenMembers.some((res) => res.isError)) {
             setFetchError(true);
+        } else {
+            setFetchError(false);
         }
     }, [roundEdenMembers]);
 
@@ -106,19 +92,22 @@ export const OngoingElectionPage = (props: Props) => {
                     <Text>In progress until 6:30pm EDT</Text>
                 </Container>
                 <SupportSegment />
-                {members && (
-                    <CompletedRoundSegment
-                        round={1}
-                        participants={members}
-                        winner={members[4]}
-                    />
-                )}
-                {voteData && members && (
+                {/* TODO: How do we get previous round info? Do that here. */}
+                {currentElection?.round &&
+                    members &&
+                    [...Array(currentElection.round - 1)].map((_, i) => (
+                        <CompletedRoundSegment
+                            key={`election-round-${i + 1}`}
+                            round={i + 1}
+                            participants={members}
+                            winner={members[0]}
+                        />
+                    ))}
+                {currentElection && voteData && members && (
                     <OngoingRoundSegment
                         members={members}
                         voteData={voteData}
-                        round={2}
-                        time="11:30am - 12:30am"
+                        roundData={currentElection}
                     />
                 )}
             </div>
@@ -204,15 +193,13 @@ const CompletedRoundSegment = ({
 interface OngoingRoundSegmentProps {
     members: MemberData[];
     voteData: VoteData[];
-    round: number;
-    time: string;
+    roundData: any;
 }
 
 const OngoingRoundSegment = ({
     members,
     voteData,
-    round,
-    time,
+    roundData,
 }: OngoingRoundSegmentProps) => {
     const [ualAccount] = useUALAccount();
     const [selectedMember, setSelected] = useState<MemberData | null>(null);
@@ -225,6 +212,12 @@ const OngoingRoundSegment = ({
     const [showPasswordPrompt, setShowPasswordPrompt] = useState<boolean>(
         false
     );
+
+    const endDateTime = dayjs(roundData.round_end + "Z");
+    const startDateTime = endDateTime.subtract(40, "minute");
+
+    // console.log(end.format("LT"));
+    // console.log(end.subtract(40, "minute").format("LT"));
 
     const onSelectMember = (member: MemberData) => {
         if (member.account === selectedMember?.account) return;
@@ -263,7 +256,17 @@ const OngoingRoundSegment = ({
 
     return (
         <Expander
-            header={<RoundHeader roundNum={round} subText={time} isActive />}
+            header={
+                <RoundHeader
+                    roundNum={roundData.round}
+                    subText={`${startDateTime.format(
+                        "LT"
+                    )} - ${endDateTime.format("LT z")}`}
+                    endDateTime={endDateTime}
+                    startDateTime={startDateTime}
+                    isActive
+                />
+            }
             startExpanded
             locked
         >
@@ -393,7 +396,7 @@ const OngoingRoundSegment = ({
                     </Button>
                     <Button size="sm">
                         <RiVideoUploadLine size={18} className="mr-2" />
-                        Upload round {round} recording
+                        Upload round {roundData.round} recording
                     </Button>
                 </div>
             </Container>
@@ -409,17 +412,16 @@ const OngoingRoundSegment = ({
 const RoundHeader = ({
     roundNum,
     isActive,
+    startDateTime,
+    endDateTime,
     subText,
 }: {
     roundNum: number;
     isActive?: boolean;
+    startDateTime?: Dayjs;
+    endDateTime?: Dayjs;
     subText: string;
 }) => {
-    const startTime = useMemo(() => new Date(), []);
-    const endTime = useMemo(
-        () => new Date(startTime.getTime() + 3 * 60 * 1000), // 3 min
-        []
-    );
     return (
         <div className="w-full flex justify-between">
             <div className="flex items-center space-x-2">
@@ -432,14 +434,15 @@ const RoundHeader = ({
                     <Text size="sm" className="font-semibold">
                         Round {roundNum}
                     </Text>
-                    <Text size="sm">{subText}</Text>
+                    <Text size="sm" className="tracking-tight">
+                        {subText}
+                    </Text>
                 </div>
             </div>
-            {isActive && (
+            {isActive && startDateTime && endDateTime && (
                 <CountdownPieMer
-                    startTime={startTime}
-                    endTime={endTime}
-                    className="mr-16"
+                    startTime={startDateTime.toDate()}
+                    endTime={endDateTime.toDate()}
                 />
             )}
         </div>
