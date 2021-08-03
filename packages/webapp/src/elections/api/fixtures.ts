@@ -1,3 +1,4 @@
+import { getChiefDelegates } from "delegates/api";
 import { CurrentElection, ElectionState, VoteData } from "elections/interfaces";
 
 // The following fixtures represent the following Election/round layout
@@ -20,6 +21,9 @@ import { CurrentElection, ElectionState, VoteData } from "elections/interfaces";
 // Round 4 (D3s voted up): Chiefs (assumes a full voting / non-sortition round just for the sake of minimal fixture data)
 //  - Group1: alice.edev, edenmember25 (voted up alice.edev)
 // Round 5 (D4s voted up): Head Chief: alice.edev
+
+// Open Questions:
+// edenmember22: they voted for who ultimately became the Head Chief. What whould their Delegation look like?
 
 export const fixtureElectionState: ElectionState = {
     lead_representative: "alice.edev",

@@ -26,7 +26,7 @@ export const fixtureEdenMembers: EdenMember[] = [
         nft_template_id: 147802,
         status: MemberStatus.ActiveMember,
         election_participation_status: ElectionParticipationStatus.NoDonation,
-        election_rank: 3,
+        election_rank: 2,
         representative: "egeon.edev",
     },
     {
