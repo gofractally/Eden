@@ -2,15 +2,28 @@ import { CurrentElection, ElectionState, VoteData } from "elections/interfaces";
 
 // The following fixtures represent the following Election/round layout
 // Round 1:
-//  - Group1: egeon.edev, edenmember12, edenmember13 (voted up edenmember13)
-//  - Group2: edenmember11, pip.edev (voted up edenmember11)
-// Round 2 (assumes a full voting / non-sortition round just for the sake of minimal fixture data)
-//  - Group1: edenmember11, edenmember13 (voted up edenmember11)
-// Head Chief: edenmember11
+//  - Group1: edenmember11, edenmember12, (voted up edenmember12)
+//  - Group2: edenmember13, edenmember14 (voted up edenmember14)
+//  - Group3: edenmember15, egeon.edev (voted up egeon.edev)
+//  - Group4: edenmember21, pip.edev (voted up pip.edev)
+//  - Group5: edenmember22, alice.edev (voted up alice.edev)
+//  - Group6: edenmember23 (voted no one)
+//  - Group7: edenmember24, edenmember25 (voted up edenmember25)
+// Round 2 (D1s voted up) (assumes a full voting / non-sortition round just for the sake of minimal fixture data)
+//  - Group1: edenmember12 (voted up no one)
+//  - Group2: egeon.edev, pip.edev (voted up egeon.edev)
+//  - Group3: edenmember14, alice.edev (voted up alice.edev)
+//  - Group4: edenmember25 (voted up edenmember25)
+// Round 3 (D2s voted up) (assumes a full voting / non-sortition round just for the sake of minimal fixture data)
+//  - Group1: egeon.edev, alice.edev (voted up alice.edev)
+//  - Group2: edenmember25 (voted up edenmember25)
+// Round 4 (D3s voted up): Chiefs (assumes a full voting / non-sortition round just for the sake of minimal fixture data)
+//  - Group1: alice.edev, edenmember25 (voted up alice.edev)
+// Round 5 (D4s voted up): Head Chief: alice.edev
 
 export const fixtureElectionState: ElectionState = {
-    lead_representative: "edenmember11",
-    board: ["edenmember11", "edenmember13"],
+    lead_representative: "alice.edev",
+    board: ["edenmember25", "alice.edev"],
     last_election_time: "2022-01-16T16:00:00.000",
 };
 
@@ -21,11 +34,12 @@ export const fixtureElectionState: ElectionState = {
 export const fixtureCurrentElection: CurrentElection = {
     electionState: "active",
     config: {
-        num_participants: 5,
-        num_groups: 2,
+        num_participants: 13,
+        num_groups: 7,
     },
-    start_time: "2022-01-16T16:00:00.000",
-    election_threshold: 1000,
+    round: 1,
+    saved_seed: "some seed",
+    round_end: "time string",
 };
 
 // This data represents the *first* round (whereas other fixture data represents the *results* of the overall election)
