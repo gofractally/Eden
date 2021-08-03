@@ -63,6 +63,8 @@ export const getMyDelegation = async (
         queryFn
     );
     if (!nextDelegate) return myDelegates;
+    console.info("nextDelegate:");
+    console.info(nextDelegate);
 
     while (await isSubChiefDelegate(nextDelegate.representative)) {
         const { queryKey, queryFn } = queryMemberByAccountName(
@@ -71,6 +73,8 @@ export const getMyDelegation = async (
         nextDelegate = await queryClient.fetchQuery(queryKey, queryFn);
 
         if (!nextDelegate) return myDelegates;
+        console.info("nextDelegate:");
+        console.info(nextDelegate);
         myDelegates.push(nextDelegate);
     }
 

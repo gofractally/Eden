@@ -7,6 +7,8 @@ import {
     Heading,
     queryMembers,
     Text,
+    useCurrentElection,
+    useCurrentMember,
     useElectionState,
     useMemberListByAccountNames,
     useMemberStats,
@@ -71,10 +73,34 @@ const Delegates = ({
     myDelegation: EdenMember[];
 }) => {
     const { data: membersStats, isLoading } = useMemberStats();
+    const { data: loggedInUser } = useCurrentMember();
 
     if (isLoading) return <div>Loading...</div>;
-    if (!membersStats) return <div>Error fetching member data...</div>;
+    if (!loggedInUser || !membersStats)
+        return <div>Error fetching member data...</div>;
 
+    console.info("myDelegation:");
+    console.info(myDelegation);
+    console.info(
+        `(myDelegation?.length[${
+            myDelegation?.length
+        }] + (loggedInUser.election_rank - 1)[${
+            loggedInUser.election_rank - 1
+        }]) < (membersStats.ranks.length - 3)[${
+            membersStats.ranks.length - 3
+        }] ==> ${myDelegation?.length} + ${loggedInUser.election_rank - 1} < ${
+            membersStats.ranks.length - 3
+        } ==> ${myDelegation?.length + loggedInUser.election_rank - 1} < ${
+            membersStats.ranks.length - 3
+        }`
+    );
+
+    const highestLevelOfRepresentation =
+        myDelegation?.length + loggedInUser.election_rank - 1;
+    const numRanksExcludingLoggedInMemberAndChiefs =
+        membersStats.ranks.length - 3;
+    const isGapInRepresentation =
+        highestLevelOfRepresentation < numRanksExcludingLoggedInMemberAndChiefs;
     return (
         <>
             {myDelegation.map((delegate, index) => (
@@ -88,17 +114,27 @@ const Delegates = ({
                         )}
                         level={delegate.election_rank}
                     />
-                    {isDelegateNonChief(delegate.election_rank, membersStats) &&
-                        isValidDelegate(delegate.representative) && (
-                            <Container className="py-2.5">
-                                <BsArrowDown
-                                    size={28}
-                                    className="ml-3.5 text-gray-400"
-                                />
-                            </Container>
-                        )}
+                    {/* {isValidDelegate(delegate.representative) && ( */}
+                    <Container className="py-2.5">
+                        <BsArrowDown
+                            size={28}
+                            className="ml-3.5 text-gray-400"
+                        />
+                    </Container>
+                    {/* )} */}
                 </div>
             ))}
+            {isGapInRepresentation && (
+                <>
+                    <DelegateChip />
+                    <Container className="py-2.5">
+                        <BsArrowDown
+                            size={28}
+                            className="ml-3.5 text-gray-400"
+                        />
+                    </Container>
+                </>
+            )}
             <Chiefs />
         </>
     );
@@ -134,6 +170,11 @@ const Chiefs = () => {
     const headChiefAsMemberData = members!.find(
         (d) => d?.account === electionState?.lead_representative
     );
+
+    console.info("headChiefAsEdenMember:");
+    console.info(headChiefAsEdenMember);
+    console.info("headChiefAsMemberData:");
+    console.info(headChiefAsMemberData);
 
     if (!headChiefAsEdenMember || !headChiefAsMemberData)
         return <div>Error fetching data</div>;
