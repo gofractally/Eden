@@ -2,6 +2,7 @@ import { getEncryptionKey } from "encryption";
 import { PrivateKey, PublicKey } from "eosjs/dist/eosjs-jssig";
 import { generateKeyPair } from "eosjs/dist/eosjs-key-conversions";
 import { KeyType } from "eosjs/dist/eosjs-numeric";
+import { queryClient } from "pages/_app";
 import { QueryClient } from "react-query";
 
 import { queryMemberByAccountName } from "_app/hooks";
@@ -27,7 +28,6 @@ export const encryptSecretForPublishing = async (
     message: string,
     publisherAccount: string,
     recipientAccounts: string[],
-    queryClient: QueryClient,
     info?: string
 ) => {
     // TODO: Remove all the print messages

@@ -5,9 +5,11 @@ import {
     Button,
     Container,
     Form,
+    MemberStatus,
     Modal,
     onError,
     Text,
+    useCurrentMember,
     useFormFields,
     useUALAccount,
 } from "_app";
@@ -29,7 +31,14 @@ export const EncryptionPasswordAlert = ({
         updateEncryptionPassword,
     } = useEncryptionPassword();
 
-    if (!encryptionPassword) {
+    const [ualAccount] = useUALAccount();
+    const { data: currentMember } = useCurrentMember();
+
+    if (
+        !encryptionPassword ||
+        !ualAccount ||
+        currentMember?.status === MemberStatus.ActiveMember
+    ) {
         return null;
     }
 
@@ -170,7 +179,7 @@ const PromptNewKeyModal = ({
             const publicKey = PrivateKey.fromString(
                 fields.password
             ).getPublicKey();
-            console.info(publicKey, publicKey.toLegacyString());
+
             const authorizerAccount = ualAccount.accountName;
             const transaction = setEncryptionPublicKeyTransaction(
                 authorizerAccount,
