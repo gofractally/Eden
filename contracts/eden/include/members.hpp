@@ -37,6 +37,10 @@ namespace eden
       std::optional<eosio::public_key> encryption_key;
 
       uint64_t primary_key() const { return account.value; }
+      uint128_t by_representative() const
+      {
+         return (static_cast<uint128_t>(election_rank) << 64) | representative.value;
+      }
    };
    EOSIO_REFLECT(member_v0, account, name, status, nft_template_id)
 
@@ -68,11 +72,15 @@ namespace eden
                            election_rank,
                            representative,
                            encryption_key);
-      EDEN_FORWARD_FUNCTIONS(value, primary_key)
+      EDEN_FORWARD_FUNCTIONS(value, primary_key, by_representative)
    };
    EOSIO_REFLECT(member, value)
 
-   using member_table_type = eosio::multi_index<"member"_n, member>;
+   using member_table_type = eosio::multi_index<
+       "member"_n,
+       member,
+       eosio::indexed_by<"byrep"_n,
+                         eosio::const_mem_fun<member, uint128_t, &member::by_representative>>>;
 
    struct member_stats_v0
    {
