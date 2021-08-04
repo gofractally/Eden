@@ -23,6 +23,7 @@ import {
 } from "elections";
 import { MembersGrid } from "members";
 import { MemberData } from "members/interfaces";
+import { EncryptionPasswordAlert } from "encryption";
 
 interface Props {
     delegatesPage: number;
@@ -40,6 +41,7 @@ export const OngoingElectionPage = (props: Props) => {
     return (
         <FluidLayout title="Election">
             <div className="divide-y">
+                <EncryptionPasswordAlert promptSetupEncryptionKey />
                 <Container>
                     <Heading size={1}>Election</Heading>
                 </Container>

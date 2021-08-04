@@ -14,7 +14,7 @@ import {
     useUALAccount,
     Button,
     useZoomAccountJWT,
-    publishSecretToChain,
+    encryptSecretForPublishing,
 } from "_app";
 
 export const getServerSideProps: GetServerSideProps = async ({
@@ -81,7 +81,7 @@ const ZoomTestContainer = ({ ualAccount }: any) => {
     };
 
     const generateZoomMeetingLink = async () => {
-        const x = await publishSecretToChain(
+        const x = await encryptSecretForPublishing(
             "https://us05web.zoom.us/j/81089675368?pwd=MUFWVkowNmk1SFVLTkJ4eEtyY01ldz09",
             ualAccount.accountName,
             ["participanta", "participantb", "participantc"],
