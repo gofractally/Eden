@@ -1,5 +1,11 @@
+.git
+.vscode
+**/.env.local
+**/dfuse-transactions.json
+**/dist
+**/node_modules
+**/state
 build
 build-dbg
 build-docker
-.vscode
-**/.env.local
+!build/eden-micro-chain.wasm
