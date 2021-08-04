@@ -148,6 +148,15 @@ jobs:
                   name: Eden Smart Contract
                   path: build
 
+            - name: diag
+              run: |
+                pwd
+                ls -la
+                echo .........
+                ls -la build
+                echo .........
+                ls -la build/eden-micro-chain.wasm
+
             - name: Image Preparation
               id: prep
               run: |

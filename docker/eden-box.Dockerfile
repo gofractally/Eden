@@ -23,7 +23,7 @@ COPY .eslintignore .eslintrc.js .prettierrc.json lerna.json package.json tsconfi
 COPY --from=deps /app/node_modules ./node_modules
 COPY --from=deps /app/packages/common/node_modules ./packages/common/node_modules
 COPY --from=deps /app/packages/box/node_modules ./packages/box/node_modules
-COPY build/eden-micro-chain.wasm /app/build/eden-micro-chain.wasm
+COPY ./build/eden-micro-chain.wasm /app/build/
 
 RUN yarn build --stream
 
