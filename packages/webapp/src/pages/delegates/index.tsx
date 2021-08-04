@@ -7,7 +7,6 @@ import {
     FluidLayout,
     Heading,
     queryMembers,
-    Link,
     Text,
     useCurrentMember,
     useElectionState,
