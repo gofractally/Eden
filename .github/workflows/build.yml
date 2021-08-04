@@ -179,3 +179,38 @@ jobs:
                   # push: true # TODO: follow up on this... https://github.community/t/403-error-on-container-registry-push-from-github-action/173071/5
                   file: docker/eden-box.Dockerfile
                   tags: ${{ steps.prep.outputs.tags }}
+
+    webapp-e2e:
+        needs: build-cpp
+        name: WebApp E2E Tests
+        runs-on: ubuntu-latest
+
+        steps:
+            - name: ✅ Checkout code
+              uses: actions/checkout@v2
+
+            - name: Download Eden Smart Contract
+              uses: actions/download-artifact@v2
+              with:
+                  name: Eden Smart Contract
+                  path: build
+
+            - name: 🛠 Build and Start WebApp
+              run: |
+                  export SUBCHAIN_DFUSE_PREVENT_CONNECT=1
+                  yarn
+                  yarn build --stream
+                  yarn start --stream --ignore example-history-app &
+
+            - name: 🧪 Run E2E
+              run: |
+                  yarn test --stream
+
+            - name: 🎥 Upload Cypress Results
+              uses: actions/upload-artifact@v2
+              if: always()
+              with:
+                  name: Cypress E2E Videos and Screenshots
+                  path: |
+                      packages/webapp/cypress/screenshots
+                      packages/webapp/cypress/videos
