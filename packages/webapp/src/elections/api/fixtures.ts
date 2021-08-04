@@ -27,7 +27,7 @@ import { CurrentElection, ElectionState, VoteData } from "elections/interfaces";
 export const fixtureElectionState: ElectionState = {
     lead_representative: "alice.edev",
     board: ["edenmember25", "alice.edev"],
-    last_election_time: "2022-01-16T16:00:00.000",
+    last_election_time: "2021-01-16T16:00:00.000",
 };
 
 // This data reflects an in-progress election round and, therefore,
@@ -40,9 +40,9 @@ export const fixtureCurrentElection: CurrentElection = {
         num_participants: 13,
         num_groups: 7,
     },
-    round: 1,
+    round: 2,
     saved_seed: "some seed",
-    round_end: "2021-08-03T16:50:00.000",
+    round_end: "2021-08-04T18:34:45.000",
 };
 
 // This data represents the *in-progress*, *first* round (whereas other fixture data represents the *results* of the overall election)
