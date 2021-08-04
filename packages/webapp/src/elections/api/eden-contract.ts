@@ -60,10 +60,17 @@ const getMemberGroupFromIndex = (
 };
 
 export const getMemberGroupParticipants = async (
-    memberAccount: string | undefined,
-    config: ActiveStateConfigType
+    memberAccount?: string,
+    config?: ActiveStateConfigType
 ) => {
-    if (!memberAccount || !config) return undefined;
+    if (!config)
+        throw new Error(
+            "getMemberGroupParticipants requires a config object (got 'undefined')"
+        );
+    if (!memberAccount)
+        throw new Error(
+            "getMemberGroupParticipants requires an account (got 'undefined')"
+        );
 
     const totalParticipants = config.num_participants;
     const numGroups = config.num_groups;
@@ -96,9 +103,8 @@ export const getMemberGroupParticipants = async (
 };
 
 export const getVoteDataRow = async (
-    opts?: VoteDataQueryOptionsByField
+    opts: VoteDataQueryOptionsByField
 ): Promise<VoteData | undefined> => {
-    if (!opts) return undefined;
     if (devUseFixtureData)
         return Promise.resolve(fixtureVoteDataRow(opts.fieldValue));
 
