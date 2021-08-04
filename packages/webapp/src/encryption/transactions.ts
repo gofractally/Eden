@@ -17,8 +17,8 @@ export const setEncryptionPublicKeyTransaction = (
                 },
             ],
             data: {
-                member: authorizerAccount,
-                key: encryptionPublicKey.toString(),
+                account: authorizerAccount,
+                key: encryptionPublicKey.toLegacyString(),
             },
         },
     ],

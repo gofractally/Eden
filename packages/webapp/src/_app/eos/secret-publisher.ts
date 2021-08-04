@@ -1,20 +1,30 @@
+import { getEncryptionKey } from "encryption";
 import { PrivateKey, PublicKey } from "eosjs/dist/eosjs-jssig";
 import { generateKeyPair } from "eosjs/dist/eosjs-key-conversions";
 import { KeyType } from "eosjs/dist/eosjs-numeric";
+import { queryClient } from "pages/_app";
+import { QueryClient } from "react-query";
+
+import { queryMemberByAccountName } from "_app/hooks";
+
+interface AccountKeys {
+    [account: string]: string | undefined;
+}
 
 /**
  * Provides a way to encrypt data to be published on chain. Useful for
- * secretly sharing any temporal data. Eg. induction meeting links, election
+ * secretly sharing any temporary data. Eg. induction meeting links, election
  * room links.
  *
  * IMPORTANT NOTES:
- * - Any data on chain will eventually be decrypted. Never use it for PII (read the
- * above description for reasanoble use cases).
+ * - Never use it for encrypting PII or sensitive data. Read the above
+ * description for reasanoble use cases. Attackers will eventually be able to
+ * decrypt yout messages.
  * - The key curve for all participants need to be the same. EdenOS interface
  * ensures that all generated encryption public keys are K1.
  * - ECDH secrets derived bytes are in Big Endianess order.
  */
-export const publishSecretToChain = async (
+export const encryptSecretForPublishing = async (
     message: string,
     publisherAccount: string,
     recipientAccounts: string[],
@@ -22,15 +32,18 @@ export const publishSecretToChain = async (
 ) => {
     // TODO: Remove all the print messages
     console.info("encrypting message", message);
-    const [publisherKey, ...recipientKeys] = await fetchRecipientKeys([
+    const accountKeys = await fetchAccountKeys(
+        [publisherAccount, ...recipientAccounts],
+        queryClient
+    );
+
+    const [publisherKey, ...recipientKeys] = validateFetchedKeys(
+        accountKeys,
         publisherAccount,
-        ...recipientAccounts,
-    ]);
-    console.info(publisherKey, recipientKeys);
+        recipientAccounts
+    );
 
-    // TODO: check publisherkey matches the current one in browser
-
-    const transientKeyPair = generateKeyPair(KeyType.k1, { secureEnv: true });
+    const transientKeyPair = generateEncryptionKey();
     console.info(transientKeyPair);
 
     const keks = await ecdhRecipientsKeyEncriptionKeys(
@@ -48,14 +61,6 @@ export const publishSecretToChain = async (
 
     const encryptedMessage = await encryptMessage(sessionKey, message);
 
-    // TODO: prepare publish trx to eos chain with all the prepared material
-    // eden.publishelection(
-    //     publisher = logged_in_user
-    //     round_no = '2',
-    //     encrypted_link,
-    //   // for each recipient
-    //     [(encrypted_session_keyN, recipient_keyN, transient_ecc_pubkey)]
-    //   )
     console.info({
         encryptedSessionKeys,
         publisherKey,
@@ -99,6 +104,9 @@ export const decryptPublishedMessage = async (
     return message;
 };
 
+export const generateEncryptionKey = () =>
+    generateKeyPair(KeyType.k1, { secureEnv: true });
+
 const retrieveRecipientPrivateKey = (publicKey: string): PrivateKey => {
     // TODO: find the corresponding private key in the localstorage, or else throw
     console.info("retrieving publicKey...");
@@ -106,19 +114,51 @@ const retrieveRecipientPrivateKey = (publicKey: string): PrivateKey => {
     return PrivateKey.fromString(rawPrivateKey);
 };
 
-const fetchRecipientKeys = async (accounts: string[]) => {
-    // TODO: real implementation
-    // fetch eden.members( where account = each account item )
+const fetchAccountKeys = async (
+    accounts: string[],
+    queryClient: QueryClient
+): Promise<AccountKeys> => {
+    const keys = await Promise.all(
+        accounts.map(async (account) => {
+            const { queryKey, queryFn } = queryMemberByAccountName(account);
+            const member = await queryClient.fetchQuery(queryKey, queryFn);
+            return member?.encryption_key;
+        })
+    );
 
-    const mockedKeysLen = accounts.length;
-    const mockedKeys = [];
-    for (let i = 0; i < mockedKeysLen; i++) {
-        mockedKeys.push(
-            "EOS5wGY8RcG8PuGYTPU9QwmiEm9XReBkK4SGtSuS4f1oeX4TNGaHT"
-        );
-        // temp PK: 5KcMypBPGByXbeBphsVzyyzUvg31tWNKsgrfXs2MmanYgYf4gao
+    const accountKeys: AccountKeys = {};
+    keys.forEach((key, i) => (accountKeys[accounts[i]] = key));
+    return accountKeys;
+};
+
+const validateFetchedKeys = (
+    accountKeys: AccountKeys,
+    publisherAccount: string,
+    recipientAccounts: string[]
+) => {
+    const publisherKey = accountKeys[publisherAccount];
+    if (!publisherKey) {
+        throw new Error("Publisher has not defined an encryption key");
     }
-    return mockedKeys;
+
+    if (!getEncryptionKey(publisherKey)) {
+        throw new Error(
+            "Publisher encryption key could not be found in this browser"
+        );
+    }
+
+    const recipientKeys: string[] = [];
+    for (const recipientAccount of recipientAccounts) {
+        const recipientKey = accountKeys[recipientAccount];
+        if (!recipientKey) {
+            throw new Error(
+                `Recipient ${recipientAccount} has not set an encryption key`
+            );
+        }
+        recipientKeys.push(recipientKey);
+    }
+
+    return [publisherKey, ...recipientKeys];
 };
 
 const ecdhRecipientsKeyEncriptionKeys = async (
