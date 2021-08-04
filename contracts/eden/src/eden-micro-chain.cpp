@@ -4,8 +4,8 @@
 #include <boost/multi_index_container.hpp>
 #include <chainbase/chainbase.hpp>
 #include <clchain/crypto.hpp>
-#include <clchain/eden_chain.hpp>
 #include <clchain/graphql_connection.hpp>
+#include <clchain/subchain.hpp>
 #include <eden.hpp>
 #include <eosio/from_bin.hpp>
 #include <eosio/to_bin.hpp>
@@ -406,7 +406,7 @@ void call(void (*f)(Args...), const std::vector<char>& data)
 }
 
 // TODO: configurable contract accounts
-void filter_block(const eden_chain::eosio_block& block)
+void filter_block(const subchain::eosio_block& block)
 {
    for (auto& trx : block.transactions)
    {
@@ -435,9 +435,9 @@ void filter_block(const eden_chain::eosio_block& block)
    }
 }
 
-eden_chain::block_log block_log;
+subchain::block_log block_log;
 
-bool add_block(eden_chain::block_with_id&& bi, uint32_t eosio_irreversible)
+bool add_block(subchain::block_with_id&& bi, uint32_t eosio_irreversible)
 {
    auto [status, num_forked] = block_log.add_block(bi);
    if (status)
@@ -464,11 +464,11 @@ bool add_block(eden_chain::block_with_id&& bi, uint32_t eosio_irreversible)
    return true;
 }
 
-bool add_block(eden_chain::block&& eden_block, uint32_t eosio_irreversible)
+bool add_block(subchain::block&& eden_block, uint32_t eosio_irreversible)
 {
    auto bin = eosio::convert_to_bin(eden_block);
-   eden_chain::block_with_id bi;
-   static_cast<eden_chain::block&>(bi) = std::move(eden_block);
+   subchain::block_with_id bi;
+   static_cast<subchain::block&>(bi) = std::move(eden_block);
    bi.id = clchain::sha256(bin.data(), bin.size());
    auto bin_with_id = eosio::convert_to_bin(bi.id);
    bin_with_id.insert(bin_with_id.end(), bin.begin(), bin.end());
@@ -483,10 +483,10 @@ bool add_block(eden_chain::block&& eden_block, uint32_t eosio_irreversible)
 {
    std::string str(json, size);
    eosio::json_token_stream s(str.data());
-   eden_chain::eosio_block eosio_block;
+   subchain::eosio_block eosio_block;
    eosio::from_json(eosio_block, s);
 
-   eden_chain::block eden_block;
+   subchain::block eden_block;
    eden_block.eosioBlock = std::move(eosio_block);
    auto* prev = block_log.block_before_eosio_num(eden_block.eosioBlock.num);
    if (prev)
@@ -511,7 +511,7 @@ bool add_block(eden_chain::block&& eden_block, uint32_t eosio_irreversible)
 {
    // TODO: verify id integrity
    eosio::input_stream bin{data, size};
-   eden_chain::block_with_id block;
+   subchain::block_with_id block;
    eosio::from_bin(block, bin);
    return add_block(std::move(block), eosio_irreversible);
 }
@@ -547,7 +547,7 @@ using MemberConnection =
 
 struct Query
 {
-   eden_chain::BlockLog blockLog;
+   subchain::BlockLog blockLog;
 
    MemberConnection members(std::optional<eosio::name> gt,
                             std::optional<eosio::name> ge,

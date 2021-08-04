@@ -6,7 +6,7 @@
 #include <eosio/name.hpp>
 #include <eosio/time.hpp>
 
-namespace eden_chain
+namespace subchain
 {
    struct action
    {
@@ -198,4 +198,4 @@ namespace eden_chain
                   method(blockByNum, "num"),
                   method(blockByEosioNum, "num"))
 
-}  // namespace eden_chain
+}  // namespace subchain
