@@ -8,6 +8,8 @@ on:
     pull_request:
         types: [assigned, opened, synchronize, reopened, labeled]
         paths:
+            # C++
+            - ".github/workflows/build.yml"
             - "CMakeLists.txt"
             - "contracts/**"
             - "external/CMakeLists.txt"
@@ -15,11 +17,28 @@ on:
             - "native/**"
             - "programs/**"
             - "wasm/**"
-            - ".github/workflows/build.yml"
 
+            # box, webapp
+            - ".eslintignore"
+            - ".eslintrc.js"
+            - ".prettierrc.json"
+            - "lerna.json"
+            - "package.json"
+            - "packages/common/**"
+            - "tsconfig.build.json"
+            - "tsconfig.json"
+            - "yarn.lock"
+
+            # box
+            - "docker/eden-box.Dockerfile"
+            - "packages/box/**"
+
+            # webapp
+            - "docker/eden-webapp.Dockerfile"
+            - "packages/webapp/**"
 jobs:
-    build:
-        name: Build Eden Community Contracts and WASMs
+    build-cpp:
+        name: Build C++
         runs-on: ubuntu-latest
         container: ghcr.io/eoscommunity/eden-builder:latest
 
@@ -45,13 +64,6 @@ jobs:
                   key: ${{ runner.os }}-ccache-${{ steps.ccache_cache_timestamp.outputs.timestamp }}
                   restore-keys: |
                       ${{ runner.os }}-ccache-
-
-            - name: testing...
-              run: |
-                  pwd
-                  echo ${GITHUB_WORKSPACE}
-                  ls -l
-                  ls -l ${GITHUB_WORKSPACE}
 
             - name: 🛠 Build
               run: |
@@ -90,3 +102,36 @@ jobs:
                   path: |
                       build/eden.abi
                       build/eden.wasm
+                      build/eden-micro-chain.wasm
+
+    box-e2e:
+        needs: build-cpp
+        name: Eden Box E2E Tests
+        runs-on: ubuntu-latest
+
+        steps:
+            - name: ✅ Checkout code
+              uses: actions/checkout@v2
+
+            - name: Download Eden Smart Contract
+              uses: actions/download-artifact@v2
+              with:
+                  name: Eden Smart Contract
+                  path: build
+
+            - name: testing...
+              run: |
+                  ls -la
+                  ls -la build
+
+            - name: 🛠 Build and Start Box
+              run: |
+                  yarn
+                  yarn build --stream
+                  cd packages/box
+                  yarn start &
+
+            - name: 🧪 Run E2E
+              # TODO: add real E2E tests... for now it's just a shameless curl ping
+              run: |
+                  curl localhost:3032
