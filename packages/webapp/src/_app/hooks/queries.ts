@@ -42,7 +42,7 @@ export const queryChiefDelegates = {
     queryFn: getChiefDelegates,
 };
 
-export const queryMyDelegation = (memberAccount: string) => ({
+export const queryMyDelegation = (memberAccount?: string) => ({
     queryKey: ["query_my_delegation", memberAccount],
     queryFn: () => getMyDelegation(memberAccount),
 });
