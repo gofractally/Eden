@@ -16,14 +16,25 @@ import {
     useVoteDataRow,
 } from "_app";
 
+const getMembersInGroupWithThisMember = (
+    round: number,
+    commonDelegate: string
+) => {
+    // query members table by election_rank=round, representative=commonDelegate
+    // if commonDelegate was not winner of that round, add round winner
+};
+
 export const ElectionPage = () => {
+    const targetRound = 1;
     const { data: loggedInMember } = useCurrentMember();
 
     const { data: leadRepresentative } = useHeadDelegate();
 
     const { data: currentElection } = useCurrentElection();
 
-    const { data: rawVoteDataRow } = useVoteDataRow(loggedInMember?.account);
+    const { data: voteRowForLoggedInMember } = useVoteDataRow(
+        loggedInMember?.account
+    );
 
     const { data: membersInGroup } = useMemberGroupParticipants(
         loggedInMember?.account
@@ -53,7 +64,7 @@ export const ElectionPage = () => {
                 <Text size="lg">
                     Fetching Data loggedInMember: [{Boolean(loggedInMember)}],
                     rawVoteData[
-                    {Boolean(rawVoteDataRow)}], currentElection[
+                    {Boolean(voteRowForLoggedInMember)}], currentElection[
                     {Boolean(currentElection)}]...
                 </Text>
                 <div>
@@ -168,12 +179,14 @@ export const ElectionPage = () => {
                     voteRow for currently-logged-in member [
                     {loggedInMember.account}]:
                 </Text>
-                <pre>{JSON.stringify(rawVoteDataRow || {}, null, 2)}</pre>
+                <pre>
+                    {JSON.stringify(voteRowForLoggedInMember || {}, null, 2)}
+                </pre>
                 <Text>
                     if member is found in `vote` table, take their `index` and
                     search for others with `index` values that have been
                     assigned to the same group. member.index [
-                    {rawVoteDataRow?.index}]
+                    {voteRowForLoggedInMember?.index}]
                 </Text>
                 <Text>
                     if member is found in `vote` table, search for others in
@@ -182,29 +195,72 @@ export const ElectionPage = () => {
                 </Text>
                 <pre>{JSON.stringify(membersInGroup || {}, null, 2)}</pre>
             </DataExpander>
-            {/* <DataExpander
-                title="Who's in what Round? -- inter-election"
+            <DataExpander
+                title="Who was in a particular previous Round? -- post-round group data"
                 startExpanded={true}
             >
-                <Text>All grouping info comes from members table</Text>
-                <Text>Target Round: {targetElectionRound}</Text>
-                <pre>{JSON.stringify(data, null, 2)}</pre>
-            </DataExpander> */}
-            <DataExpander title="Who was in a particular previous Round? -- post-round group data">
                 <Text>The Logic:</Text>
                 <Text>
-                    if member isn't in the vote, table, that means they're no
+                    If member isn't in the vote, table, that means they're no
                     longer participating in a round, and we'll find their group
                     data in the `members` table
                 </Text>
                 <Text>
-                    results from `vote` table where row is member.name[
+                    Results from `vote` table where row is loggedInMember.name[
                     {loggedInMember.account}]
                 </Text>
-                <Text>
-                    Then look in the members table to build their group from
-                    members data
-                </Text>
+                <pre>
+                    {JSON.stringify(voteRowForLoggedInMember || {}, null, 2)}
+                </pre>
+                {!Boolean(voteRowForLoggedInMember) && (
+                    <>
+                        <Text>
+                            Since we didn't find vote data for loggedInMember...
+                        </Text>
+                        <Text>
+                            ON HOLD: 1) **Failed Consensus** Did the group come
+                            to consensus?
+                        </Text>
+                        <Text>
+                            2.1) **Member has advanced** Is sought round lower
+                            than loggedUser's election_rank, ie. has
+                            loggedInUser advanced beyond that target level?
+                        </Text>
+                        <Text>
+                            targetRound[{targetRound}],
+                            loggedInUser.election_rank[
+                            {loggedInMember.election_rank}]
+                        </Text>
+                        <Text>
+                            2.2) **Member didn't advance** loggedInMember was in
+                            a group that did come to consensus but
+                            loggedInMember was not the one made a delegate.
+                        </Text>
+                        <Text>
+                            Use loggedInMember.representative[
+                            {loggedInMember.representative}] to find others with
+                            the same representative.
+                        </Text>
+                        <Text>
+                            commonDelegate = [2.1] loggedInMember.account[
+                            {loggedInMember.account}] OR [2.2]
+                            loggedInMember.representative
+                        </Text>
+                        <Text>
+                            Then we can get this member's group info at the
+                            sought round simply by querying the members table by
+                            `representative`-`election_rank` to build list of
+                            members in the group, where
+                        </Text>
+                        {/* <pre> {JSON.stringify(getMembersInGroupWithThisMember(targetRound, commonDelegate) || {}, null, 2)} </pre> */}
+                    </>
+                )}
+                {Boolean(voteRowForLoggedInMember) && (
+                    <Text>
+                        loggedInUser in `vote` table; see intra-round
+                        instructions above.
+                    </Text>
+                )}
             </DataExpander>
             <div>
                 <Text size="lg" className="bg-gray-200 mt-16">
