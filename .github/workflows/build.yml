@@ -46,6 +46,13 @@ jobs:
                   restore-keys: |
                       ${{ runner.os }}-ccache-
 
+            - name: testing...
+              run: |
+                  pwd
+                  echo ${GITHUB_WORKSPACE}
+                  ls -l
+                  ls -l ${GITHUB_WORKSPACE}
+
             - name: 🛠 Build
               run: |
                   set -e
