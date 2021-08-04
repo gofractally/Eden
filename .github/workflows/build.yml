@@ -199,8 +199,8 @@ jobs:
               run: |
                   export SUBCHAIN_DFUSE_PREVENT_CONNECT=1
                   yarn
-                  yarn build --stream
-                  yarn start --stream --ignore example-history-app &
+                  yarn build --stream --ignore @edenos/example-history-app
+                  yarn start --stream --ignore @edenos/example-history-app &
 
             - name: 🧪 Run E2E
               run: |

@@ -14,7 +14,7 @@
         "compile": "tsc -p tsconfig.build.json",
         "prepublishOnly": "yarn run build",
         "lint": "eslint --ext .js,.ts src",
-        "test": "yarn run build"
+        "test": "echo"
     },
     "dependencies": {
         "cids": "^1.1.6",
