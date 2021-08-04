@@ -42,28 +42,29 @@ export const queryChiefDelegates = {
     queryFn: getChiefDelegates,
 };
 
-export const queryMyDelegation = (
-    loggedInMemberAccount: string | undefined
-) => ({
-    queryKey: ["query_my_delegation", loggedInMemberAccount],
-    queryFn: () => getMyDelegation(loggedInMemberAccount),
+export const queryMyDelegation = (memberAccount: string) => ({
+    queryKey: ["query_my_delegation", memberAccount],
+    queryFn: () => getMyDelegation(memberAccount),
 });
 
 export const queryMemberGroupParticipants = (
-    memberAccount: string | undefined,
-    config: ActiveStateConfigType
+    memberAccount?: string,
+    config?: ActiveStateConfigType
 ) => ({
     queryKey: ["query_member_group_participants", memberAccount, config],
     queryFn: () => getMemberGroupParticipants(memberAccount, config),
-    enabled: Boolean(memberAccount),
+    enabled: Boolean(memberAccount && config),
 });
 
-export const queryVoteDataRow = (account: string | undefined) => ({
+export const queryVoteDataRow = (account?: string) => ({
     queryKey: ["query_vote_data_row", account],
-    queryFn: () =>
-        getVoteDataRow(
-            account ? { fieldName: "member", fieldValue: account } : undefined
-        ),
+    queryFn: () => {
+        if (!account)
+            throw new Error(
+                "getVoteDataRow requires an account (got 'undefined')"
+            );
+        return getVoteDataRow({ fieldName: "member", fieldValue: account });
+    },
 });
 export const queryCurrentElection = {
     queryKey: "query_current_election",
@@ -202,16 +203,11 @@ export const useCurrentElection = () =>
         ...queryCurrentElection,
     });
 
-export const useMemberGroupParticipants = (
-    loggedInMemberAccount: string | undefined
-) => {
+export const useMemberGroupParticipants = (memberAccount?: string) => {
     const { data: currentElection } = useCurrentElection();
     return useQuery({
-        ...queryMemberGroupParticipants(
-            loggedInMemberAccount,
-            currentElection?.config
-        ),
-        enabled: Boolean(loggedInMemberAccount && currentElection?.config),
+        ...queryMemberGroupParticipants(memberAccount, currentElection?.config),
+        enabled: Boolean(memberAccount && currentElection?.config),
     });
 };
 
@@ -225,7 +221,7 @@ export const useMemberStats = () =>
         ...queryMembersStats,
     });
 
-export const useVoteDataRow = (account: string | undefined) => {
+export const useVoteDataRow = (account?: string) => {
     return useQuery({
         ...queryVoteDataRow(account),
         enabled: Boolean(account),
