@@ -22,10 +22,6 @@ export const ElectionPage = () => {
 
     const { data: currentElection } = useCurrentElection();
 
-    const { data: voteData } = useMemberGroupParticipants(
-        loggedInMember?.account
-    );
-
     const { data: rawVoteDataRow } = useVoteDataRow(loggedInMember?.account);
 
     const { data: membersInGroup } = useMemberGroupParticipants(
@@ -53,13 +49,13 @@ export const ElectionPage = () => {
             currentElection.election_seeder.end_time) ||
             currentElection.start_time);
 
-    if (!loggedInMember || !currentElection || !voteData) {
+    if (!loggedInMember || !currentElection) {
         return (
             <FluidLayout>
                 <Text size="lg">
                     Fetching Data loggedInMember: [{Boolean(loggedInMember)}],
-                    voteData[
-                    {Boolean(voteData)}], currentElection[
+                    rawVoteData[
+                    {Boolean(rawVoteDataRow)}], currentElection[
                     {Boolean(currentElection)}]...
                 </Text>
                 <div>
@@ -67,7 +63,6 @@ export const ElectionPage = () => {
                         "The logged-in member is not part of the deployed member base. Log in as another user, eg. pip.edev, egeon.edev"}
                 </div>
                 [<pre>{JSON.stringify(loggedInMember, null, 2)}</pre>] [
-                <pre>{JSON.stringify(voteData, null, 2)}</pre>] [
                 <pre>{JSON.stringify(currentElection, null, 2)}</pre>]
             </FluidLayout>
         );
@@ -146,9 +141,26 @@ export const ElectionPage = () => {
                 startExpanded={true}
             >
                 <Text>All grouping info comes from `vote` table</Text>
-                {/* <Text>Target Round: {targetElectionRound}</Text> */}
-
-                <Text>We know the *current* round from this field</Text>
+                <Text size="sm">
+                    Who voted for whom is *only* available during the active
+                    round. That info is *not* stored long-term in tables. We'll
+                    need a history solution to look at the history of who voted
+                    for whom. So as soon as a round is over (during an election
+                    or long after), this scenario will apply.
+                </Text>
+                <Text size="sm">
+                    And... vote info will only be available while the property
+                    'electionState' is 'active'. NOTE: this 'active' field is
+                    the underlying variant type. It's meta info... the first
+                    field in the array-encoding we get back for table rows. See
+                    code for details if interested; or be thankful you don't
+                    need to know more than this note... :)
+                </Text>
+                Is there leaderboard / voting info available right now? ie. is
+                electionState 'active'?
+                <pre>[{currentElection.electionState}]</pre>
+                <Text>Everything below assume `electionState === active`</Text>
+                <Text>We know the *current* round from this field:</Text>
                 <Text>
                     currentElectionState[active].round[{currentElection.round}]
                 </Text>
@@ -183,45 +195,16 @@ export const ElectionPage = () => {
                 <Text>Target Round: {targetElectionRound}</Text>
                 <pre>{JSON.stringify(data, null, 2)}</pre>
             </DataExpander> */}
-            <DataExpander title="Who's in the current Round? -- post-round group data">
-                <Text size="sm">
-                    Who voted for whom is *only* available during the active
-                    round. That info is *not* stored long-term in tables. We'll
-                    need a history solution to look at the history of who voted
-                    for whom. So as soon as a round is over (during an election
-                    or long after), this scenario will apply.
-                </Text>
-                <Text size="sm">
-                    And... vote info will only be available while the property
-                    'electionState' is 'active'. NOTE: this 'active' field is
-                    the underlying variant type. It's meta info... the first
-                    field in the array-encoding we get back for table rows. See
-                    code for details if interested; or be thankful you don't
-                    need to know more than this note... :)
-                </Text>
-                Is there leaderboard / voting info available right now? ie. is
-                electionState 'active'?
-                <pre>[{currentElection.electionState}]</pre>
-                <pre>
-                    If active, here are the participants in your
-                    current/in-progress/up-coming round (represents Round 1 of
-                    the election):
-                </pre>
-                <pre>{JSON.stringify(voteData, null, 2)}</pre>
-                {/* <pre>{`voteData.isLoading[${isLoading}], isError[${isError}]`}</pre> */}
+            <DataExpander title="Who was in a particular previous Round? -- post-round group data">
                 <Text>The Logic:</Text>
                 <Text>
                     if member isn't in the vote, table, that means they're no
                     longer participating in a round, and we'll find their group
-                    data in the `membrers` table
+                    data in the `members` table
                 </Text>
-                <pre>
-                    results from `vote` table where row is member.name ={" "}
-                    {loggedInMember.account}
-                </pre>
                 <Text>
-                    Then look in the members table to build their group from
-                    members data
+                    results from `vote` table where row is member.name[
+                    {loggedInMember.account}]
                 </Text>
                 <Text>
                     Then look in the members table to build their group from
