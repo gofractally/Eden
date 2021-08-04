@@ -1,6 +1,7 @@
+import { useState } from "react";
+import dayjs from "dayjs";
 import { FaCheckCircle } from "react-icons/fa";
 import { GoSync } from "react-icons/go";
-import dayjs, { Dayjs } from "dayjs";
 
 import { Text } from "_app/ui";
 import { CountdownPieMer } from "elections";
@@ -15,9 +16,16 @@ export const RoundHeader = ({
     subText,
 }: RoundHeaderProps) => {
     const isActive = Boolean(roundData);
-    const endsAt = isActive && dayjs(roundData.round_end + "Z");
+    const endsAt = isActive ? dayjs(roundData.round_end + "Z") : undefined;
     const startsAt = endsAt && endsAt.subtract(40, "minute");
     let subHeader = subText;
+
+    const now = dayjs();
+    const [shouldShowTimer, setShouldShowTimer] = useState<boolean>(
+        Boolean(
+            startsAt && endsAt && now.isAfter(startsAt) && now.isBefore(endsAt)
+        )
+    );
 
     if (!subText && startsAt && endsAt) {
         subHeader = `${startsAt.format("LT")} - ${endsAt.format("LT z")}`;
@@ -40,10 +48,11 @@ export const RoundHeader = ({
                     </Text>
                 </div>
             </div>
-            {isActive && startsAt && endsAt && (
+            {shouldShowTimer && (
                 <CountdownPieMer
-                    startTime={startsAt.toDate()}
-                    endTime={endsAt.toDate()}
+                    startTime={startsAt!.toDate()}
+                    endTime={endsAt!.toDate()}
+                    onEnd={() => setShouldShowTimer(false)}
                 />
             )}
         </div>
