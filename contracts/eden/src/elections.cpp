@@ -515,7 +515,7 @@ namespace eden
                                     uint8_t group_size)
    {
       // count votes
-      group_result result;
+      group_result result{eosio::name{~iter->member.value}};
       std::map<eosio::name, uint8_t> votes_by_candidate;
       uint8_t total_votes = 0;
       for (uint32_t i = 0; i < group_size; ++i)
@@ -662,7 +662,7 @@ namespace eden
          encrypt.erase((data.prev_round << 16) |
                        data.prev_config.member_index_to_group(group_start->index));
          auto result = finish_group(data, vote_idx, group_start, group_size);
-         if (result.winner != eosio::name())
+         if ((result.winner.value & 0xFull) == 0)
          {
             add_voter(data.rng, data.prev_round + 1, data.next_output_index, result.winner);
          }
