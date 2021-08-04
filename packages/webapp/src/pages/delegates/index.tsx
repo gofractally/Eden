@@ -1,11 +1,13 @@
 import { useQuery } from "react-query";
 import { BsArrowDown } from "react-icons/bs";
+import dayjs from "dayjs";
 
 import {
     Container,
     FluidLayout,
     Heading,
     queryMembers,
+    Link,
     Text,
     useCurrentMember,
     useElectionState,
@@ -16,7 +18,6 @@ import {
 } from "_app";
 import { DelegateChip } from "elections";
 import { EdenMember, MemberData, MemberStats } from "members/interfaces";
-import dayjs from "dayjs";
 import { isValidDelegate } from "delegates/api";
 
 interface Props {
@@ -37,6 +38,7 @@ const isGapInRepresentation = (
 
 export const DelegatesPage = (props: Props) => {
     const [activeUser] = useUALAccount();
+    const currentMember = useCurrentMember();
     const { data: myDelegation } = useMyDelegation();
     const { data: electionState } = useElectionState();
 
@@ -51,9 +53,24 @@ export const DelegatesPage = (props: Props) => {
         enabled: Boolean(myDelegation?.length),
     });
 
-    if (!activeUser) return <div>must be logged in</div>;
+    if (!activeUser)
+        return (
+            <FluidLayout>
+                <div>must be logged in</div>
+            </FluidLayout>
+        );
+    if (!currentMember)
+        return (
+            <FluidLayout>
+                <div>not an Eden Member</div>
+            </FluidLayout>
+        );
     if (!myDelegation || (myDelegation?.length > 0 && !members))
-        return <div>fetching your Delegation and members...</div>;
+        return (
+            <FluidLayout>
+                <div>fetching your Delegation and members...</div>
+            </FluidLayout>
+        );
 
     return (
         <FluidLayout title="My Delegation">
@@ -62,9 +79,7 @@ export const DelegatesPage = (props: Props) => {
                     <Heading size={1}>My Delegation</Heading>
                     <Text size="sm">
                         Elected{" "}
-                        {dayjs(electionState?.last_election_time).format(
-                            "MMMM D, YYYY"
-                        )}
+                        {dayjs(electionState?.last_election_time).format("LL")}
                     </Text>
                 </Container>
                 <Delegates myDelegation={myDelegation} members={members} />
@@ -72,6 +87,12 @@ export const DelegatesPage = (props: Props) => {
         </FluidLayout>
     );
 };
+
+const MyDelegationArrow = () => (
+    <Container className="py-2.5">
+        <BsArrowDown size={28} className="ml-3.5 text-gray-400" />
+    </Container>
+);
 
 const Delegates = ({
     members,
@@ -104,27 +125,17 @@ const Delegates = ({
                         )}
                         level={delegate.election_rank}
                     />
-                    <Container className="py-2.5">
-                        <BsArrowDown
-                            size={28}
-                            className="ml-3.5 text-gray-400"
-                        />
-                    </Container>
+                    <MyDelegationArrow />
                 </div>
             ))}
             {isGapInRepresentation(
                 highestRankedMemberInDelegation,
                 membersStats
             ) && (
-                <>
+                <div className="-mt-px">
                     <DelegateChip />
-                    <Container className="py-2.5">
-                        <BsArrowDown
-                            size={28}
-                            className="ml-3.5 text-gray-400"
-                        />
-                    </Container>
-                </>
+                    <MyDelegationArrow />
+                </div>
             )}
             <Chiefs />
         </>
@@ -169,7 +180,9 @@ const Chiefs = () => {
 
     return (
         <>
-            <Text>Chief Delegates</Text>
+            <Container>
+                <Text>Chief Delegates</Text>
+            </Container>
             {chiefsAsMembers.map((delegate) => {
                 if (
                     !delegate ||
@@ -187,10 +200,10 @@ const Chiefs = () => {
                     </div>
                 );
             })}
-            <Container className="py-2.5">
-                <BsArrowDown size={28} className="ml-3.5 text-gray-400" />
+            <MyDelegationArrow />
+            <Container>
+                <Text>Head Chief</Text>
             </Container>
-            <Text>Head Chief</Text>
             <DelegateChip
                 member={headChiefAsMemberData}
                 level={headChiefAsEdenMember.election_rank}

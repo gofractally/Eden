@@ -1,10 +1,6 @@
 import { EdenMember } from "members";
 import { queryClient } from "pages/_app";
-import {
-    queryElectionState,
-    queryHeadDelegate,
-    queryMemberByAccountName,
-} from "_app";
+import { queryElectionState, queryMemberByAccountName } from "_app";
 
 const queryElectionStateHelper = async () =>
     await queryClient.fetchQuery(
