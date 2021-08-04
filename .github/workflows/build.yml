@@ -1,4 +1,4 @@
-name: build eosio contracts
+name: Build
 
 on:
     push:
@@ -69,6 +69,7 @@ jobs:
               run: |
                   set -e
                   export CCACHE_DIR=${GITHUB_WORKSPACE}/.ccache
+                  export CCACHE_CONFIGPATH=${GITHUB_WORKSPACE}/ccache.conf
                   echo =====
                   ccache -s
                   echo =====
@@ -126,6 +127,7 @@ jobs:
 
             - name: 🛠 Build and Start Box
               run: |
+                  export SUBCHAIN_DFUSE_PREVENT_CONNECT=1
                   yarn
                   yarn build --stream
                   cd packages/box

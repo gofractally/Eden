@@ -215,6 +215,8 @@ export default class DfuseReceiver {
         logger.info(`${performance.now() - begin} ms`);
         this.storage.saveState();
 
+        if (dfuseConfig.preventConnect) return;
+
         logger.info("connecting to", dfuseConfig.apiNetwork);
         if (!this.jsonTransactions.length && dfuseConfig.firstBlock === 1)
             logger.warn(

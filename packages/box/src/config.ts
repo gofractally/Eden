@@ -68,6 +68,7 @@ export const dfuseConfig = {
     firstBlock: +(process.env.DFUSE_FIRST_BLOCK as any) || 1,
     jsonTrxFile:
         process.env.SUBCHAIN_DFUSE_JSON_TRX_FILE || "dfuse-transactions.json",
+    preventConnect: "SUBCHAIN_DFUSE_PREVENT_CONNECT" in process.env,
 };
 console.info({ ...dfuseConfig, apiKey: "<secret>" });
 
