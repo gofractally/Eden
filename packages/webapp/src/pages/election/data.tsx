@@ -134,10 +134,7 @@ export const ElectionPage = () => {
                     ]
                 </pre>
             </DataExpander>
-            <DataExpander
-                title="Who's in the current Round? -- INTRA-round group data"
-                startExpanded={true}
-            >
+            <DataExpander title="Who's in the current Round? -- INTRA-round group data">
                 <Text>All grouping info comes from `vote` table</Text>
                 <Text size="sm">
                     Who voted for whom is *only* available during the active
