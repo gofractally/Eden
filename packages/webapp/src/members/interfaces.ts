@@ -8,7 +8,7 @@ export type VoteDataQueryOptionsByGroup = {
 };
 
 export type VoteDataQueryOptionsByField = {
-    fieldName?: "name";
+    fieldName?: string;
     fieldValue: string;
 };
 

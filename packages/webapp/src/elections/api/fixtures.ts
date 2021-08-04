@@ -1,4 +1,3 @@
-import { getChiefDelegates } from "delegates/api";
 import { CurrentElection, ElectionState, VoteData } from "elections/interfaces";
 
 // The following fixtures represent the following Election/round layout
@@ -46,37 +45,55 @@ export const fixtureCurrentElection: CurrentElection = {
     round_end: "time string",
 };
 
-// This data represents the *first* round (whereas other fixture data represents the *results* of the overall election)
+// This data represents the *in-progress*, *first* round (whereas other fixture data represents the *results* of the overall election)
 export const fixtureVoteDataRows: VoteData[] = [
     {
-        member: "egeon.edev",
+        member: "edenmember11",
         round: 1,
-        index: 1,
-        candidate: "edenmember13",
+        index: 0,
+        candidate: "edenmember12",
     },
     {
         member: "edenmember12",
         round: 1,
-        index: 2,
-        candidate: "edenmember13",
+        index: 1,
+        candidate: "edenmember12",
     },
     {
         member: "edenmember13",
         round: 1,
+        index: 2,
+        candidate: "edenmember14",
+    },
+    {
+        member: "edenmember14",
+        round: 1,
         index: 3,
+        candidate: "edenmember14",
+    },
+    {
+        member: "edenmember15",
+        round: 1,
+        index: 4,
+        candidate: "egeon.edev",
+    },
+    {
+        member: "egeon.edev",
+        round: 1,
+        index: 5,
         candidate: "edenmember13",
+    },
+    {
+        member: "edenmember21",
+        round: 1,
+        index: 6,
+        candidate: "pip.edev",
     },
     {
         member: "pip.edev",
         round: 1,
-        index: 4,
-        candidate: "edenmember11",
-    },
-    {
-        member: "edenmember11",
-        round: 1,
-        index: 5,
-        candidate: "edenmember11",
+        index: 7,
+        candidate: "pip.edev",
     },
 ];
 

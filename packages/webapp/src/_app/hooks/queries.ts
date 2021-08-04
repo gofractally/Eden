@@ -28,6 +28,8 @@ import {
     getCurrentElection,
     getElectionState,
     getMemberGroupParticipants,
+    getVoteData,
+    getVoteDataRow,
 } from "elections/api/eden-contract";
 import { ActiveStateConfigType } from "elections/interfaces";
 
@@ -54,8 +56,21 @@ export const queryMemberGroupParticipants = (
 ) => ({
     queryKey: ["query_member_group_participants", memberAccount, config],
     queryFn: () => getMemberGroupParticipants(memberAccount, config),
+    enabled: Boolean(memberAccount),
 });
 
+export const queryVoteData = {
+    queryKey: "query_vote_data",
+    queryFn: getVoteData,
+};
+
+export const queryVoteDataRow = (account: string | undefined) => ({
+    queryKey: ["query_vote_data_row", account],
+    queryFn: () =>
+        getVoteDataRow(
+            account ? { fieldName: "member", fieldValue: account } : undefined
+        ),
+});
 export const queryCurrentElection = {
     queryKey: "query_current_election",
     queryFn: getCurrentElection,
@@ -215,3 +230,15 @@ export const useMemberStats = () =>
     useQuery({
         ...queryMembersStats,
     });
+
+export const useVoteData = () =>
+    useQuery({
+        ...queryCurrentElection,
+    });
+
+export const useVoteDataRow = (account: string | undefined) => {
+    return useQuery({
+        ...queryVoteDataRow(account),
+        enabled: Boolean(account),
+    });
+};
