@@ -27,11 +27,14 @@ const getMemberGroupFromIndex = (
     totalParticipants: number,
     numGroups: number
 ) => {
-    const maxGroupSize = (totalParticipants + numGroups - 1) / numGroups;
+    const maxGroupSize = Math.floor(
+        (totalParticipants + numGroups - 1) / numGroups
+    );
     const numShortGroups = maxGroupSize * numGroups - totalParticipants;
     const numLargeGroups = numGroups - numShortGroups;
     const minGroupSize = maxGroupSize - 1;
     const totalMembersInLargeGroups = (minGroupSize + 1) * numLargeGroups;
+
     let groupNumber = -1;
     let lowerBound = -1;
     let upperBound = -1;
@@ -49,11 +52,10 @@ const getMemberGroupFromIndex = (
         upperBound = lowerBound + minGroupSize - 1;
     }
 
-    // TODO: see what the actual data looks like and see if we need to do this +1 to match up 0-based and 1-based data
     return {
-        groupNumber: groupNumber + 1,
-        lowerBound: lowerBound + 1,
-        upperBound: upperBound + 1,
+        groupNumber: groupNumber,
+        lowerBound: lowerBound,
+        upperBound: upperBound,
     };
 };
 
@@ -75,7 +77,7 @@ export const getMemberGroupParticipants = async (
     // return all indexes that represent members in this member's group
     const { groupNumber, lowerBound, upperBound } = getMemberGroupFromIndex(
         // TODO: remove this -1 if no conversion is needed between 0=based and 1=based arrays
-        memberVoteData.index - 1,
+        memberVoteData.index,
         totalParticipants,
         numGroups
     );
@@ -93,15 +95,16 @@ export const getMemberGroupParticipants = async (
     return rows;
 };
 
-const getVoteDataRow = async (
-    opts: VoteDataQueryOptionsByField
+export const getVoteDataRow = async (
+    opts?: VoteDataQueryOptionsByField
 ): Promise<VoteData | undefined> => {
+    if (!opts) return undefined;
     if (devUseFixtureData)
         return Promise.resolve(fixtureVoteDataRow(opts.fieldValue));
 
     const memberVoteData = await getRow<VoteData>(
         CONTRACT_VOTE_TABLE,
-        opts.fieldName,
+        opts.fieldName || "name",
         opts.fieldValue
     );
     return memberVoteData;
@@ -132,6 +135,8 @@ const getVoteDataRows = async (
 
     return rows;
 };
+
+export const getVoteData = getVoteDataRows;
 
 export const getCurrentElection = async () => {
     if (devUseFixtureData) return fixtureCurrentElection;
