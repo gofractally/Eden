@@ -153,11 +153,13 @@ export const ElectionPage = () => {
                     currentElectionState[active].round[{currentElection.round}]
                 </Text>
                 <Text>
+                    If this member not in `vote` table then their participation
+                    in the election is complete, and you can find their group
+                    (hierarchical arrangement) data in the `member`.
+                </Text>
+                <Text>
                     voteRow for currently-logged-in member [
-                    {loggedInMember.account}]. If this member not in `vote`
-                    table then their participation in the election is complete,
-                    and you can find their group (hierarchical arrangement) data
-                    in the member table:
+                    {loggedInMember.account}]:
                 </Text>
                 <pre>{JSON.stringify(rawVoteDataRow || {}, null, 2)}</pre>
                 <Text>
@@ -181,12 +183,13 @@ export const ElectionPage = () => {
                 <Text>Target Round: {targetElectionRound}</Text>
                 <pre>{JSON.stringify(data, null, 2)}</pre>
             </DataExpander> */}
-            <DataExpander title="Who's in the current Round? -- INTER-round group data">
+            <DataExpander title="Who's in the current Round? -- post-round group data">
                 <Text size="sm">
                     Who voted for whom is *only* available during the active
                     round. That info is *not* stored long-term in tables. We'll
                     need a history solution to look at the history of who voted
-                    for whom.
+                    for whom. So as soon as a round is over (during an election
+                    or long after), this scenario will apply.
                 </Text>
                 <Text size="sm">
                     And... vote info will only be available while the property
