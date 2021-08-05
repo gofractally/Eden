@@ -37,7 +37,7 @@ export const EncryptionPasswordAlert = ({
     if (
         !encryptionPassword ||
         !ualAccount ||
-        currentMember?.status === MemberStatus.ActiveMember
+        currentMember?.status !== MemberStatus.ActiveMember
     ) {
         return null;
     }
