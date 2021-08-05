@@ -16,24 +16,11 @@ import {
     useUALAccount,
 } from "_app";
 import { DelegateChip } from "elections";
-import { EdenMember, MemberData, MemberStats } from "members/interfaces";
-import { isValidDelegate } from "delegates/api";
+import { EdenMember, MemberData } from "members/interfaces";
 
 interface Props {
     delegatesPage: number;
 }
-
-const isDelegateAChief = (delegateRank: number, membersStats: MemberStats) =>
-    delegateRank > membersStats.ranks.length - 2;
-
-const isGapInRepresentation = (
-    highestRankedMemberInDelegation: EdenMember,
-    membersStats: MemberStats
-) =>
-    !isDelegateAChief(
-        highestRankedMemberInDelegation.election_rank + 1,
-        membersStats
-    ) && !isValidDelegate(highestRankedMemberInDelegation.representative);
 
 export const DelegatesPage = (props: Props) => {
     const [activeUser] = useUALAccount();
@@ -107,40 +94,28 @@ const Delegates = ({
     if (!loggedInMember || !membersStats)
         return <div>Error fetching member data...</div>;
 
-    const highestRankedMemberInDelegation = myDelegation.length
-        ? myDelegation[myDelegation.length - 1]
-        : loggedInMember;
-
-    console.info("members:");
-    console.info(members);
-
     const heightOfDelegationWithoutChiefs = membersStats.ranks.length - 2;
     const diff = heightOfDelegationWithoutChiefs - myDelegation.length;
     const numLevelsWithNoRepresentation = diff > 0 ? diff : 0;
-    console.info("numLevelsWithNoRepresentation:");
-    console.info(numLevelsWithNoRepresentation);
 
     return (
         <>
-            {myDelegation.map((delegate, index) => {
-                console.info(`index[${index}`);
-                console.info("delegate:");
-                console.info(delegate);
-                return (
+            {myDelegation
+                .slice(0, membersStats.ranks.length - 2)
+                .map((delegate, index) => (
                     <div
                         className="-mt-px"
-                        key={`my-delegation-${members![index].account}`}
+                        key={`my-delegation-${index}-${delegate.account}`}
                     >
                         <DelegateChip
                             member={members!.find(
                                 (d) => d.account === delegate.account
                             )}
-                            level={delegate.election_rank}
+                            level={index + 1}
                         />
                         <MyDelegationArrow />
                     </div>
-                );
-            })}
+                ))}
             {[...Array(numLevelsWithNoRepresentation)].map((v, idx) => (
                 <div className="-mt-px" key={idx}>
                     <DelegateChip />
@@ -195,8 +170,8 @@ const Chiefs = () => {
             </Container>
             {chiefsAsMembers.map((delegate) => {
                 if (
-                    !delegate ||
-                    delegate.account === electionState.lead_representative
+                    !delegate // ||
+                    // delegate.account === electionState.lead_representative
                 )
                     return null;
                 return (
@@ -205,7 +180,7 @@ const Chiefs = () => {
                             member={members.find(
                                 (d) => d.account === delegate.account
                             )}
-                            level={delegate.election_rank}
+                            level={membersStats.ranks.length - 1}
                         />
                     </div>
                 );

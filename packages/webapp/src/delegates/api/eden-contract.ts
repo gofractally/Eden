@@ -26,35 +26,14 @@ const getMemberBudgetBalance = () => {
 const MEMBER_REPRESENTATIVE_IF_NOT_PARTICIPATED_IN_RECENT_ELECTION =
     "zzzzzzzzzzzzj";
 const MEMBER_REPRESENTATIVE_IF_FAILED_TO_REACH_CONSENSUS = "";
-export const isValidDelegate = (memberRep: string) =>
+const isValidDelegate = (memberRep: string) =>
     memberRep !== MEMBER_REPRESENTATIVE_IF_FAILED_TO_REACH_CONSENSUS &&
     memberRep !== MEMBER_REPRESENTATIVE_IF_NOT_PARTICIPATED_IN_RECENT_ELECTION;
-
-export const isSubChiefDelegate = async (memberRep: string) => {
-    const electionState = await queryClient.fetchQuery(
-        queryElectionState.queryKey,
-        queryElectionState.queryFn
-    );
-    if (!electionState) return Promise.resolve(isValidDelegate(memberRep));
-
-    return Promise.resolve(
-        isValidDelegate(memberRep) &&
-            electionState.lead_representative !== memberRep &&
-            !electionState.board.includes(memberRep)
-    );
-};
 
 const getMemberWrapper = async (account: string) => {
     const { queryKey, queryFn } = queryMemberByAccountName(account);
     return await queryClient.fetchQuery(queryKey, queryFn);
 };
-
-// export const getMyDelegation2 = async (account: string | undefined
-// ): Promise<EdenMember[]> => {
-//     for(let idx=0; idx < numLevels;) {
-
-//     }
-// }
 
 export const getMyDelegation = async (
     loggedInMemberAccount: string | undefined
@@ -64,35 +43,21 @@ export const getMyDelegation = async (
     if (!loggedInMemberAccount) return myDelegates;
 
     let nextMemberAccount = loggedInMemberAccount;
-    console.info("1.nextMemberAccount:");
-    console.info(nextMemberAccount);
     let isHeadChief: Boolean;
     do {
-        console.info("myDelegates.top:");
-        console.info(myDelegates);
-        //  member = getMember(nextMemberAccount)
         let member = await getMemberWrapper(nextMemberAccount);
         if (!member)
             throw new Error(
                 `Member record not found for provided account[${nextMemberAccount}].`
             );
 
-        //  Fill the array from idx=0 up to member.election_rank with member
-        console.info("for.member:");
-        console.info(member);
-        console.info(
-            `myDelegates.length[${myDelegates.length}], election_rank[${member?.election_rank}]`
-        );
+        // Fill the array from next available position up to member.election_rank with member,
+        // in case this delegate got voted up through multiple levels
         for (let idx = myDelegates.length; idx < member?.election_rank; idx++) {
             myDelegates.push(member);
         }
-        //  nextMemberAccount = member.rep
         isHeadChief = member.account === member.representative;
         nextMemberAccount = member.representative;
-        console.info("2.nextMemberAccount:");
-        console.info(nextMemberAccount);
-        console.info("myDelegates.bottom:");
-        console.info(myDelegates);
     } while (isValidDelegate(nextMemberAccount) && !isHeadChief);
 
     return myDelegates;
