@@ -53,7 +53,6 @@ export const queryMemberGroupParticipants = (
 ) => ({
     queryKey: ["query_member_group_participants", memberAccount, config],
     queryFn: () => getMemberGroupParticipants(memberAccount, config),
-    enabled: Boolean(memberAccount && config),
 });
 
 export const queryVoteDataRow = (account?: string) => ({
