@@ -95,17 +95,17 @@ if(NOT EXISTS ${DEP_PREFIX}/lib/libz.a)
     execute_process(
         WORKING_DIRECTORY ${DEP_PREFIX}
         COMMAND bash -c "\
-               rm -rf ${ZLIB_EXTRACTED}                                         \
-            && tar xf ${ZLIB_ARCHIVE}                                           \
-            && cd ${ZLIB_EXTRACTED}                                             \
-            && export CC=${CMAKE_C_COMPILER}                                    \
-            && export CXX=${CMAKE_CXX_COMPILER}                                 \
-            && export AR=${CMAKE_AR}                                            \
-            && export RANLIB=${CMAKE_RANLIB}                                    \
-            && export CFLAGS=\"--sysroot=${CMAKE_SYSROOT}\"                     \
-            && ./configure --prefix=${DEP_PREFIX} --static                      \
-            && make -j                                                          \
-            && make -j install                                                  \
+               rm -rf ${ZLIB_EXTRACTED}                                             \
+            && tar xf ${ZLIB_ARCHIVE}                                               \
+            && cd ${ZLIB_EXTRACTED}                                                 \
+            && export CC=\"${CMAKE_C_COMPILER_LAUNCHER} ${CMAKE_C_COMPILER}\"       \
+            && export CXX=\"${CMAKE_CXX_COMPILER_LAUNCHER} ${CMAKE_CXX_COMPILER}\"  \
+            && export AR=${CMAKE_AR}                                                \
+            && export RANLIB=${CMAKE_RANLIB}                                        \
+            && export CFLAGS=\"--sysroot=${CMAKE_SYSROOT}\"                         \
+            && ./configure --prefix=${DEP_PREFIX} --static                          \
+            && make -j                                                              \
+            && make -j install                                                      \
         "
     )
 endif()
@@ -120,7 +120,7 @@ if(NOT EXISTS ${DEP_PREFIX}/lib/libgmp.a)
             && tar xf ${GMP_ARCHIVE}                                                        \
             && cd ${GMP_EXTRACTED}                                                          \
             && ./configure                                                                  \
-                CC=${CMAKE_C_COMPILER}                                                      \
+                CC=\"${CMAKE_C_COMPILER_LAUNCHER} ${CMAKE_C_COMPILER}\"                     \
                 CFLAGS=\"--sysroot=${CMAKE_SYSROOT} -D_WASI_EMULATED_SIGNAL\"               \
                 LDFLAGS=-lwasi-emulated-signal                                              \
                 --prefix=${DEP_PREFIX}                                                      \
@@ -145,8 +145,8 @@ if(NOT EXISTS ${DEP_PREFIX}/lib/libssl.a)
             && ./Configure linux-generic32                                                  \
                 --prefix=${DEP_PREFIX}                                                      \
                 no-afalgeng no-asm no-dso no-shared no-sock no-tests no-threads no-ui       \
-                CC=${CMAKE_C_COMPILER}                                                      \
-                CXX=${CMAKE_CXX_COMPILER}                                                   \
+                CC=\"${CMAKE_C_COMPILER_LAUNCHER} ${CMAKE_C_COMPILER}\"                     \
+                CXX=\"${CMAKE_CXX_COMPILER_LAUNCHER} ${CMAKE_CXX_COMPILER}\"                \
                 AR=${CMAKE_AR}                                                              \
                 RANLIB=${CMAKE_RANLIB}                                                      \
                 CFLAGS=\"${OPENSSL_BUILD_FLAGS}\"                                           \
