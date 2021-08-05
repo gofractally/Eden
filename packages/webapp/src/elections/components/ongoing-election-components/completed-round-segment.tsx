@@ -23,7 +23,7 @@ export const CompletedRoundSegment = ({
 
     if (!participants) return <></>;
 
-    const winner = participants[2];
+    const winner = participants[2]; // TODO: This should be the real winner; I'm just picking a random one for now.
 
     return (
         <Expander
