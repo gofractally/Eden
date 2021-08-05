@@ -1,5 +1,6 @@
 import { PrivateKey } from "eosjs/dist/PrivateKey";
 import { useState } from "react";
+import { BsExclamationTriangle } from "react-icons/bs";
 
 import {
     Button,
@@ -29,6 +30,7 @@ export const EncryptionPasswordAlert = ({
     const {
         encryptionPassword,
         updateEncryptionPassword,
+        isLoading: isLoadingPassword,
     } = useEncryptionPassword();
 
     const [ualAccount] = useUALAccount();
@@ -43,27 +45,25 @@ export const EncryptionPasswordAlert = ({
     }
 
     const promptNewKey =
-        promptSetupEncryptionKey && !encryptionPassword.publicKey;
+        promptSetupEncryptionKey &&
+        !isLoadingPassword &&
+        !encryptionPassword.publicKey;
     if (promptNewKey) {
         return (
-            <Container>
-                <PromptNewKey
-                    updateEncryptionPassword={updateEncryptionPassword}
-                />
-            </Container>
+            <PromptNewKey updateEncryptionPassword={updateEncryptionPassword} />
         );
     }
 
     const warnKeyNotPresent =
-        encryptionPassword.publicKey && !encryptionPassword.privateKey;
+        !isLoadingPassword &&
+        encryptionPassword.publicKey &&
+        !encryptionPassword.privateKey;
     if (warnKeyNotPresent) {
         return (
-            <Container>
-                <NotPresentKeyWarning
-                    expectedPublicKey={encryptionPassword.publicKey!}
-                    updateEncryptionPassword={updateEncryptionPassword}
-                />
-            </Container>
+            <NotPresentKeyWarning
+                expectedPublicKey={encryptionPassword.publicKey!}
+                updateEncryptionPassword={updateEncryptionPassword}
+            />
         );
     }
 
@@ -77,20 +77,21 @@ interface PromptNewKeyProps {
 const PromptNewKey = ({ updateEncryptionPassword }: PromptNewKeyProps) => {
     const [showNewKeyModal, setShowNewKeyModal] = useState(false);
     return (
-        <div>
-            <Text>You have not setup your password yet.</Text>
+        <Container className="flex justify-center bg-yellow-500">
             <Button
-                type="neutral"
+                type="caution"
+                size="sm"
                 onClick={() => setShowNewKeyModal(!showNewKeyModal)}
             >
-                Setup Password
+                <BsExclamationTriangle className="mr-1 mb-px" />
+                Create Election Password
             </Button>
             <PromptNewKeyModal
                 updateEncryptionPassword={updateEncryptionPassword}
                 isOpen={showNewKeyModal}
                 close={() => setShowNewKeyModal(false)}
             />
-        </div>
+        </Container>
     );
 };
 
@@ -105,16 +106,14 @@ const NotPresentKeyWarning = ({
 }: NotPresentKeyWarningProps) => {
     const [showReenterKeyModal, setShowReenterKeyModal] = useState(false);
     return (
-        <div>
-            <Text type="danger">
-                Warning! Your election password is not present in the current
-                browser.
-            </Text>
+        <Container className="flex justify-center bg-yellow-500">
             <Button
-                type="neutral"
+                type="caution"
+                size="sm"
                 onClick={() => setShowReenterKeyModal(!showReenterKeyModal)}
             >
-                Re-enter Password
+                <BsExclamationTriangle className="mr-1 mb-px" />
+                Enter Election Password
             </Button>
             <PromptReenterKeyModal
                 updateEncryptionPassword={updateEncryptionPassword}
@@ -122,7 +121,7 @@ const NotPresentKeyWarning = ({
                 close={() => setShowReenterKeyModal(false)}
                 expectedPublicKey={expectedPublicKey}
             />
-        </div>
+        </Container>
     );
 };
 
