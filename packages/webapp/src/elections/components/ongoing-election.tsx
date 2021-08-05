@@ -11,9 +11,11 @@ export const OngoingElection = () => {
     const { data: currentElection } = useCurrentElection();
 
     return (
-        <FluidLayout title="Election">
+        <FluidLayout
+            title="Election"
+            banner={<EncryptionPasswordAlert promptSetupEncryptionKey />}
+        >
             <div className="divide-y">
-                <EncryptionPasswordAlert promptSetupEncryptionKey />
                 <Container>
                     <Heading size={1}>Election</Heading>
                 </Container>
