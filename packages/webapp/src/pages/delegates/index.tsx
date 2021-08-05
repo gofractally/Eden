@@ -84,7 +84,7 @@ const Delegates = ({
     members,
     myDelegation,
 }: {
-    members?: MemberData[];
+    members: MemberData[];
     myDelegation: EdenMember[];
 }) => {
     const { data: membersStats, isLoading } = useMemberStats();
@@ -108,7 +108,7 @@ const Delegates = ({
                         key={`my-delegation-${index}-${delegate.account}`}
                     >
                         <DelegateChip
-                            member={members!.find(
+                            member={members.find(
                                 (d) => d.account === delegate.account
                             )}
                             level={index + 1}
