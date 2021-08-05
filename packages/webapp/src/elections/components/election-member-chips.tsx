@@ -98,6 +98,7 @@ const getDelegateLevelDescription = (
     const { data: chiefDelegates } = useChiefDelegates();
 
     const prefix = "D" + (level - 1);
+    if (level === 1) return "Member";
     if (headDelegate === memberAccount) return prefix + " - Head Chief";
     if (chiefDelegates?.includes(memberAccount))
         return prefix + " - Chief Delegate";
