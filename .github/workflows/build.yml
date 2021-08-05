@@ -55,15 +55,15 @@ jobs:
 
             - name: show_cache
               id: show_cache
-              run: echo "${{ runner.os }}-ccache-${{ steps.ccache_cache_timestamp.outputs.timestamp }}"
+              run: echo "${{ runner.os }}-ccache_whole-${{ steps.ccache_cache_timestamp.outputs.timestamp }}"
 
             - name: ccache cache files
               uses: actions/cache@v1.1.0
               with:
                   path: .ccache
-                  key: ${{ runner.os }}-ccache-${{ steps.ccache_cache_timestamp.outputs.timestamp }}
+                  key: ${{ runner.os }}-ccache_whole-${{ steps.ccache_cache_timestamp.outputs.timestamp }}
                   restore-keys: |
-                      ${{ runner.os }}-ccache-
+                      ${{ runner.os }}-ccache_whole-
 
             - name: 🛠 Build
               run: |
