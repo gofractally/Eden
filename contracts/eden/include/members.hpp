@@ -24,6 +24,13 @@ namespace eden
       in_election
    };
 
+   struct migrate_member_v0
+   {
+      uint64_t next_primary_key = 0;
+      uint32_t migrate_some(eosio::name contract, uint32_t max_steps);
+   };
+   EOSIO_REFLECT(migrate_member_v0, next_primary_key)
+
    struct member_v0
    {
       eosio::name account;

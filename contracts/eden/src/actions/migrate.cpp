@@ -15,5 +15,6 @@ namespace eden
       migrations{get_self()}.clear_all();
       auctions{get_self()}.clear_all();
       accounts{get_self(), "owned"_n}.clear_all();
+      clear_secondary_index(member_table_type{get_self(), default_scope}.get_index<"byrep"_n>());
    }
 }  // namespace eden
