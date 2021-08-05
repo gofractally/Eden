@@ -131,15 +131,15 @@ jobs:
 
             - name: show_cache
               id: show_cache
-              run: echo "${{ runner.os }}-ccache-microchain-${{ steps.ccache_cache_timestamp.outputs.timestamp }}"
+              run: echo "${{ runner.os }}-ccache_microchain-${{ steps.ccache_cache_timestamp.outputs.timestamp }}"
 
             - name: ccache cache files
               uses: actions/cache@v1.1.0
               with:
                   path: .ccache
-                  key: ${{ runner.os }}-ccache-microchain-${{ steps.ccache_cache_timestamp.outputs.timestamp }}
+                  key: ${{ runner.os }}-ccache_microchain-${{ steps.ccache_cache_timestamp.outputs.timestamp }}
                   restore-keys: |
-                      ${{ runner.os }}-ccache-microchain-
+                      ${{ runner.os }}-ccache_microchain-
 
             - name: 🛠 Build
               run: |
