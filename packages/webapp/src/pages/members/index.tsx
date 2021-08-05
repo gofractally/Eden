@@ -107,7 +107,7 @@ export const MembersPage = (props: Props) => {
                         >
                             {(member) => (
                                 <MemberChip
-                                    key={member.account}
+                                    key={`new-members-${member.account}`}
                                     member={member}
                                 />
                             )}
@@ -138,7 +138,7 @@ export const MembersPage = (props: Props) => {
                         >
                             {(member) => (
                                 <MemberChip
-                                    key={member.account}
+                                    key={`all-members-${member.account}`}
                                     member={member}
                                 />
                             )}

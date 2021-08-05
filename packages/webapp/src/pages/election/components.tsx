@@ -49,7 +49,7 @@ export const MembersPage = (props: Props) => {
             <MembersGrid members={members.data}>
                 {(member) => (
                     <VotingMemberChip
-                        key={member.account}
+                        key={`voting-chips-${member.account}`}
                         member={member}
                         isSelected={selectedMember === member.account}
                         onSelect={() => setSelected(member.account)}
@@ -66,7 +66,7 @@ export const MembersPage = (props: Props) => {
             <MembersGrid members={members.data?.slice(1, 2)}>
                 {(member) => (
                     <DelegateChip
-                        key={member.account}
+                        key={`delegate-chip-${member.account}`}
                         member={member}
                         level={3}
                     />
