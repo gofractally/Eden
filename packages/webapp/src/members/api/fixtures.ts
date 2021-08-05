@@ -7,9 +7,9 @@ export const fixtureEdenMembers: EdenMember[] = [
         account: "alice.edev",
         nft_template_id: 147800,
         status: MemberStatus.ActiveMember,
-        election_participation_status: ElectionParticipationStatus.NoDonation,
+        election_participation_status: ElectionParticipationStatus.NoDonation, // See ElectionParticipationStatus for enum values; NoDonation is kinda the default if other special cases don't apply
         election_rank: 5,
-        representative: "alice.edev",
+        representative: "alice.edev", // "parent" field
     },
     {
         name: "Egeon The Great",
@@ -43,18 +43,18 @@ export const fixtureEdenMembers: EdenMember[] = [
         account: "edenmember12",
         nft_template_id: 147806,
         status: MemberStatus.ActiveMember,
-        election_participation_status: ElectionParticipationStatus.NoDonation, // See ElectionParticipationStatus for enum values; NoDonation is kinda the default if other special cases don't apply
+        election_participation_status: ElectionParticipationStatus.NoDonation,
         election_rank: 2,
-        representative: "", // "parent" field
+        representative: "",
     },
     {
         name: "Eden Member 13",
         account: "edenmember13",
         nft_template_id: 147807,
         status: MemberStatus.ActiveMember,
-        election_participation_status: ElectionParticipationStatus.NoDonation, // See ElectionParticipationStatus for enum values; NoDonation is kinda the default if other special cases don't apply
+        election_participation_status: ElectionParticipationStatus.NoDonation,
         election_rank: 1,
-        representative: "edenmember14", // "parent" field
+        representative: "edenmember14",
     },
     {
         name: "Eden Member 14",

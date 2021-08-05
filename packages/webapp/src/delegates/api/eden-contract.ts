@@ -44,6 +44,18 @@ export const isSubChiefDelegate = async (memberRep: string) => {
     );
 };
 
+const getMemberWrapper = async (account: string) => {
+    const { queryKey, queryFn } = queryMemberByAccountName(account);
+    return await queryClient.fetchQuery(queryKey, queryFn);
+};
+
+// export const getMyDelegation2 = async (account: string | undefined
+// ): Promise<EdenMember[]> => {
+//     for(let idx=0; idx < numLevels;) {
+
+//     }
+// }
+
 export const getMyDelegation = async (
     loggedInMemberAccount: string | undefined
 ): Promise<EdenMember[]> => {
@@ -51,24 +63,37 @@ export const getMyDelegation = async (
 
     if (!loggedInMemberAccount) return myDelegates;
 
-    const { queryKey, queryFn } = queryMemberByAccountName(
-        loggedInMemberAccount
-    );
-    let nextDelegate: EdenMember = await queryClient.fetchQuery(
-        queryKey,
-        queryFn
-    );
-    if (!nextDelegate) return myDelegates;
+    let nextMemberAccount = loggedInMemberAccount;
+    console.info("1.nextMemberAccount:");
+    console.info(nextMemberAccount);
+    let isHeadChief: Boolean;
+    do {
+        console.info("myDelegates.top:");
+        console.info(myDelegates);
+        //  member = getMember(nextMemberAccount)
+        let member = await getMemberWrapper(nextMemberAccount);
+        if (!member)
+            throw new Error(
+                `Member record not found for provided account[${nextMemberAccount}].`
+            );
 
-    while (await isSubChiefDelegate(nextDelegate.representative)) {
-        const { queryKey, queryFn } = queryMemberByAccountName(
-            nextDelegate!.representative
+        //  Fill the array from idx=0 up to member.election_rank with member
+        console.info("for.member:");
+        console.info(member);
+        console.info(
+            `myDelegates.length[${myDelegates.length}], election_rank[${member?.election_rank}]`
         );
-        nextDelegate = await queryClient.fetchQuery(queryKey, queryFn);
-
-        if (!nextDelegate) return myDelegates;
-        myDelegates.push(nextDelegate);
-    }
+        for (let idx = myDelegates.length; idx < member?.election_rank; idx++) {
+            myDelegates.push(member);
+        }
+        //  nextMemberAccount = member.rep
+        isHeadChief = member.account === member.representative;
+        nextMemberAccount = member.representative;
+        console.info("2.nextMemberAccount:");
+        console.info(nextMemberAccount);
+        console.info("myDelegates.bottom:");
+        console.info(myDelegates);
+    } while (isValidDelegate(nextMemberAccount) && !isHeadChief);
 
     return myDelegates;
 };

@@ -64,7 +64,7 @@ export const DelegatesPage = (props: Props) => {
                 <div>not an Eden Member</div>
             </FluidLayout>
         );
-    if (!myDelegation || (myDelegation?.length > 0 && !members))
+    if (!myDelegation || !members || (myDelegation?.length > 0 && !members))
         return (
             <FluidLayout>
                 <div>fetching your Delegation and members...</div>
@@ -111,31 +111,42 @@ const Delegates = ({
         ? myDelegation[myDelegation.length - 1]
         : loggedInMember;
 
+    console.info("members:");
+    console.info(members);
+
+    const heightOfDelegationWithoutChiefs = membersStats.ranks.length - 2;
+    const diff = heightOfDelegationWithoutChiefs - myDelegation.length;
+    const numLevelsWithNoRepresentation = diff > 0 ? diff : 0;
+    console.info("numLevelsWithNoRepresentation:");
+    console.info(numLevelsWithNoRepresentation);
+
     return (
         <>
-            {myDelegation.map((delegate, index) => (
-                <div
-                    className="-mt-px"
-                    key={`my-delegation-${members![index].account}`}
-                >
-                    <DelegateChip
-                        member={members!.find(
-                            (d) => d.account === delegate.account
-                        )}
-                        level={delegate.election_rank}
-                    />
-                    <MyDelegationArrow />
-                </div>
-            ))}
-            {isGapInRepresentation(
-                highestRankedMemberInDelegation,
-                membersStats
-            ) && (
-                <div className="-mt-px">
+            {myDelegation.map((delegate, index) => {
+                console.info(`index[${index}`);
+                console.info("delegate:");
+                console.info(delegate);
+                return (
+                    <div
+                        className="-mt-px"
+                        key={`my-delegation-${members![index].account}`}
+                    >
+                        <DelegateChip
+                            member={members!.find(
+                                (d) => d.account === delegate.account
+                            )}
+                            level={delegate.election_rank}
+                        />
+                        <MyDelegationArrow />
+                    </div>
+                );
+            })}
+            {[...Array(numLevelsWithNoRepresentation)].map((v, idx) => (
+                <div className="-mt-px" key={idx}>
                     <DelegateChip />
                     <MyDelegationArrow />
                 </div>
-            )}
+            ))}
             <Chiefs />
         </>
     );
