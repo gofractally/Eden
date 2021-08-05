@@ -40,7 +40,7 @@ jobs:
     build-cpp:
         name: Build C++
         runs-on: ubuntu-latest
-        container: ghcr.io/eoscommunity/eden-builder:latest
+        container: ghcr.io/eoscommunity/eden-builder:sub-chain
 
         steps:
             - name: ✅ Checkout code
