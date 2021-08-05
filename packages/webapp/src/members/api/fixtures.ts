@@ -9,6 +9,8 @@ export const fixtureEdenMembers: EdenMember[] = [
         status: MemberStatus.ActiveMember,
         election_participation_status: ElectionParticipationStatus.NoDonation, // See ElectionParticipationStatus for enum values; NoDonation is kinda the default if other special cases don't apply
         election_rank: 5,
+        // representative field will be same as account field for Head Chief
+        // see isValidDelegate() for other special values and their meaning
         representative: "alice.edev", // "parent" field
     },
     {

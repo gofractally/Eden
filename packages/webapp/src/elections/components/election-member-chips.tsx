@@ -5,7 +5,6 @@ import {
     ipfsUrl,
     openInNewTab,
     useChiefDelegates,
-    useElectionState,
     useHeadDelegate,
 } from "_app";
 import { ROUTES } from "_app/config";
