@@ -16,6 +16,7 @@ import { MembersGrid } from "members";
 import { EdenMember, MemberData } from "members/interfaces";
 import { VoteData } from "elections/interfaces";
 
+import Consensometer from "./consensometer";
 import PasswordPromptModal from "./password-prompt-modal";
 import RoundHeader from "./round-header";
 
@@ -184,6 +185,12 @@ export const OngoingRoundSegment = ({
                         </div>
                     </>
                 )}
+            </Container>
+            <Container className="flex justify-between items-center">
+                <Heading size={4} className="inline-block">
+                    Consensus
+                </Heading>
+                <Consensometer voteData={voterStats} />
             </Container>
             <Flipper flipKey={sortMembersByVotes}>
                 <MembersGrid members={sortMembersByVotes}>
