@@ -125,6 +125,9 @@ if(IS_NATIVE)
         BINARY_DIR rocksdb-ext
         TEST_EXCLUDE_FROM_MAIN 1
         EXCLUDE_FROM_ALL 1
+        BUILD_COMMAND sed -i s/@@//g ${CMAKE_CURRENT_SOURCE_DIR}/rocksdb/util/build_version.cc.in
+        COMMAND sed -i "s/__DATE__/\"\"/g" ${CMAKE_CURRENT_SOURCE_DIR}/rocksdb/util/build_version.cc.in
+        COMMAND cmake --build . -j ${NUM_PROCS}
         CMAKE_ARGS
             -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
             -DCMAKE_TARGET_MESSAGES=${CMAKE_TARGET_MESSAGES}
