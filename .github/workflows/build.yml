@@ -70,6 +70,7 @@ jobs:
                   set -e
                   export CCACHE_DIR=${GITHUB_WORKSPACE}/.ccache
                   export CCACHE_CONFIGPATH=${GITHUB_WORKSPACE}/ccache.conf
+                  export CCACHE_LOGFILE=${GITHUB_WORKSPACE}/ccache.log
                   echo =====
                   ccache -s
                   echo =====
@@ -88,6 +89,13 @@ jobs:
 
             - name: 🧪 Run tests with CTest
               run: cd build && ctest -j$(nproc) -V
+
+            - name: 📃 Upload ccache.log
+              uses: actions/upload-artifact@v2
+              with:
+                  name: ccache_log
+                  path: |
+                      ${GITHUB_WORKSPACE}/ccache.log
 
             - name: 📃 Upload clsdk
               uses: actions/upload-artifact@v2
