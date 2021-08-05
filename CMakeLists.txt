@@ -18,7 +18,7 @@ option(BUILD_NATIVE "Build native code" ON)
 if(BUILD_NATIVE)
     add_subdirectory(native)
     file(APPEND ${CMAKE_BINARY_DIR}/CTestTestfile.cmake "subdirs(\"native\")\n")
-    set(DEPEND_TESTER "DEPENDS cltester")
+    set(DEPEND_TESTER cltester)
 endif()
 
 if(DEFINED WASI_SDK_PREFIX)
@@ -29,7 +29,7 @@ if(DEFINED WASI_SDK_PREFIX)
 
     ExternalProject_Add(wasm
         SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/wasm
-        ${DEPEND_TESTER} # for abi generation
+        DEPENDS ${DEPEND_TESTER} # for abi generation
         BINARY_DIR wasm
         INSTALL_COMMAND ""
         BUILD_ALWAYS 1
