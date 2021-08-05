@@ -30,6 +30,12 @@ export const fixtureElectionState: ElectionState = {
     last_election_time: "2021-01-16T16:00:00.000",
 };
 
+export const fixtureRegistrationElection: CurrentElection = {
+    electionState: "registration?", // TODO: confirm?
+    start_time: "2022-01-16T16:00:00.000Z",
+    election_threshold: 100,
+};
+
 // This data reflects an in-progress election round and, therefore,
 // won't be consistent with other fixture data
 // In the grand scheme of other fixture data,
