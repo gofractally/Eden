@@ -31,8 +31,8 @@ export const fixtureElectionState: ElectionState = {
 };
 
 export const fixtureRegistrationElection: CurrentElection = {
-    electionState: "registration?", // TODO: confirm?
-    start_time: "2022-01-16T16:00:00.000Z",
+    electionState: "current_election_state_registration",
+    start_time: "2022-01-16T16:00:00.000",
     election_threshold: 100,
 };
 

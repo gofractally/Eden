@@ -1,5 +1,4 @@
 import { useState } from "react";
-import dayjs from "dayjs";
 
 import {
     Button,
@@ -15,21 +14,12 @@ import {
     useCurrentMember,
     useUALAccount,
 } from "_app";
-// import { generateEncryptionKey } from "_app/eos/secret-publisher";
-// import { setEncryptionPublicKeyTransaction } from "encryption/transactions";
 
-// import { UpdateEncryptionPassword, useEncryptionPassword } from "../hooks";
-import { useEffect } from "react";
-import { getElectionStartDateTime } from "elections/utils";
-import { setElectionParticipation } from "elections/transactions";
+import { extractElectionDates } from "../../utils";
+import { setElectionParticipation } from "../../transactions";
 import { useQueryClient } from "react-query";
 
-interface Props {
-    promptSetupEncryptionKey?: boolean;
-}
-
-export const ParticipationCard = ({ promptSetupEncryptionKey }: Props) => {
-    const [ualAccount] = useUALAccount();
+export const ParticipationCard = () => {
     const { data: currentMember } = useCurrentMember();
     const { data: election } = useCurrentElection();
 
@@ -46,29 +36,20 @@ export const ParticipationCard = ({ promptSetupEncryptionKey }: Props) => {
         return null;
     }
 
-    const electionStartDateTime = getElectionStartDateTime(election);
-
-    if (!electionStartDateTime) {
-        return <Text>Error parsing the Election start date.</Text>;
+    let electionDates = null;
+    try {
+        electionDates = extractElectionDates(election);
+    } catch (e) {
+        return <Text>{e.message}</Text>;
     }
 
-    const parsedElectionStartDateTime = dayjs(electionStartDateTime);
-    const parsedParticipationTimeLimit = parsedElectionStartDateTime.subtract(
-        24,
-        "hour"
-    );
-    const parsedEstimatedElectionEndDateTime = parsedElectionStartDateTime.add(
-        10, // TODO: is it dynamic?
-        "hour"
-    );
-
-    const electionDate = parsedElectionStartDateTime.format("L");
-    const electionStartTime = parsedElectionStartDateTime.format("LT");
-    const electionEstimatedEndTime = parsedEstimatedElectionEndDateTime.format(
+    const electionDate = electionDates.startDateTime.format("LL");
+    const electionStartTime = electionDates.startDateTime.format("LT");
+    const electionEstimatedEndTime = electionDates.estimatedEndDateTime.format(
         "LT"
     );
-    const electionParticipationLimitTime = parsedParticipationTimeLimit.format(
-        "LT"
+    const electionParticipationLimitTime = electionDates.participationTimeLimit.format(
+        "LLL"
     );
 
     let statusLabel = "";
