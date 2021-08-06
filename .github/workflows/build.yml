@@ -47,7 +47,6 @@ jobs:
             - uses: dorny/paths-filter@v2
               id: filter
               with:
-                  list-files: "csv"
                   filters: |
                       src:
                         - ".github/workflows/build.yml"
@@ -59,10 +58,6 @@ jobs:
                         - "native/**"
                         - "programs/**"
                         - "wasm/**"
-
-            - name: Show Changes
-              id: show_changes
-              run: echo "${{ steps.filter.outputs.src_files }}"
 
             - name: ✅ Checkout code
               if: steps.filter.outputs.src == 'true'
@@ -223,16 +218,39 @@ jobs:
         runs-on: ubuntu-latest
 
         steps:
+            - uses: dorny/paths-filter@v2
+              id: filter
+              with:
+                  filters: |
+                      src:
+                        - ".github/workflows/build.yml"
+
+                        - ".eslintignore"
+                        - ".eslintrc.js"
+                        - ".prettierrc.json"
+                        - "lerna.json"
+                        - "package.json"
+                        - "packages/common/**"
+                        - "tsconfig.build.json"
+                        - "tsconfig.json"
+                        - "yarn.lock"
+
+                        - "docker/eden-box.Dockerfile"
+                        - "packages/box/**"
+
             - name: ✅ Checkout code
+              if: steps.filter.outputs.src == 'true'
               uses: actions/checkout@v2
 
             - name: Download Eden Microchain
+              if: steps.filter.outputs.src == 'true'
               uses: actions/download-artifact@v2
               with:
                   name: Eden Microchain
                   path: build
 
             - name: 🛠 Build and Start Box
+              if: steps.filter.outputs.src == 'true'
               run: |
                   export SUBCHAIN_DFUSE_PREVENT_CONNECT=1
                   yarn
@@ -241,6 +259,7 @@ jobs:
                   yarn start &
 
             - name: 🧪 Run E2E
+              if: steps.filter.outputs.src == 'true'
               # TODO: add real E2E tests... for now it's just a shameless curl ping
               run: |
                   curl localhost:3032
@@ -251,16 +270,39 @@ jobs:
         runs-on: ubuntu-latest
 
         steps:
+            - uses: dorny/paths-filter@v2
+              id: filter
+              with:
+                  filters: |
+                      src:
+                        - ".github/workflows/build.yml"
+
+                        - ".eslintignore"
+                        - ".eslintrc.js"
+                        - ".prettierrc.json"
+                        - "lerna.json"
+                        - "package.json"
+                        - "packages/common/**"
+                        - "tsconfig.build.json"
+                        - "tsconfig.json"
+                        - "yarn.lock"
+
+                        - "docker/eden-box.Dockerfile"
+                        - "packages/box/**"
+
             - name: ✅ Checkout code
+              if: steps.filter.outputs.src == 'true'
               uses: actions/checkout@v2
 
             - name: Download Eden Microchain
+              if: steps.filter.outputs.src == 'true'
               uses: actions/download-artifact@v2
               with:
                   name: Eden Microchain
                   path: build
 
             - name: Image Preparation
+              if: steps.filter.outputs.src == 'true'
               id: prep
               run: |
                   REGISTRY="ghcr.io"
@@ -272,13 +314,16 @@ jobs:
                   echo ::set-output name=tags::${TAGS,,}
 
             - name: Showtag
+              if: steps.filter.outputs.src == 'true'
               id: showtag
               run: echo ${{ steps.prep.outputs.tags }}
 
             - name: Docker Buildx setup
+              if: steps.filter.outputs.src == 'true'
               uses: docker/setup-buildx-action@v1
 
             - name: Login in to registry
+              if: steps.filter.outputs.src == 'true'
               uses: docker/login-action@v1
               with:
                   registry: ghcr.io
@@ -286,6 +331,7 @@ jobs:
                   password: ${{ secrets.GITHUB_TOKEN }}
 
             - name: 🛠 Build & Publish Image
+              if: steps.filter.outputs.src == 'true'
               uses: docker/build-push-action@v2
               with:
                   # push: true # TODO: follow up on this... https://github.community/t/403-error-on-container-registry-push-from-github-action/173071/5
@@ -299,16 +345,39 @@ jobs:
         runs-on: ubuntu-latest
 
         steps:
+            - uses: dorny/paths-filter@v2
+              id: filter
+              with:
+                  filters: |
+                      src:
+                        - ".github/workflows/build.yml"
+
+                        - ".eslintignore"
+                        - ".eslintrc.js"
+                        - ".prettierrc.json"
+                        - "lerna.json"
+                        - "package.json"
+                        - "packages/common/**"
+                        - "tsconfig.build.json"
+                        - "tsconfig.json"
+                        - "yarn.lock"
+
+                        - "docker/eden-webapp.Dockerfile"
+                        - "packages/webapp/**"
+
             - name: ✅ Checkout code
+              if: steps.filter.outputs.src == 'true'
               uses: actions/checkout@v2
 
             - name: Download Eden Microchain
+              if: steps.filter.outputs.src == 'true'
               uses: actions/download-artifact@v2
               with:
                   name: Eden Microchain
                   path: build
 
             - name: 🛠 Build and Start WebApp
+              if: steps.filter.outputs.src == 'true'
               run: |
                   export SUBCHAIN_DFUSE_PREVENT_CONNECT=1
                   yarn
@@ -316,12 +385,13 @@ jobs:
                   yarn start --stream --ignore @edenos/example-history-app &
 
             - name: 🧪 Run E2E
+              if: steps.filter.outputs.src == 'true'
               run: |
                   yarn test --stream
 
             - name: 🎥 Upload Cypress Results
+              if: always() && steps.filter.outputs.src == 'true'
               uses: actions/upload-artifact@v2
-              if: always()
               with:
                   name: Cypress E2E Videos and Screenshots
                   path: |
@@ -334,10 +404,32 @@ jobs:
         runs-on: ubuntu-latest
 
         steps:
+            - uses: dorny/paths-filter@v2
+              id: filter
+              with:
+                  filters: |
+                      src:
+                        - ".github/workflows/build.yml"
+
+                        - ".eslintignore"
+                        - ".eslintrc.js"
+                        - ".prettierrc.json"
+                        - "lerna.json"
+                        - "package.json"
+                        - "packages/common/**"
+                        - "tsconfig.build.json"
+                        - "tsconfig.json"
+                        - "yarn.lock"
+
+                        - "docker/eden-webapp.Dockerfile"
+                        - "packages/webapp/**"
+
             - name: ✅ Checkout code
+              if: steps.filter.outputs.src == 'true'
               uses: actions/checkout@v2
 
             - name: Image Preparation
+              if: steps.filter.outputs.src == 'true'
               id: prep
               run: |
                   REGISTRY="ghcr.io"
@@ -349,13 +441,16 @@ jobs:
                   echo ::set-output name=tags::${TAGS,,}
 
             - name: Showtag
+              if: steps.filter.outputs.src == 'true'
               id: showtag
               run: echo ${{ steps.prep.outputs.tags }}
 
             - name: Docker Buildx setup
+              if: steps.filter.outputs.src == 'true'
               uses: docker/setup-buildx-action@v1
 
             - name: Login in to registry
+              if: steps.filter.outputs.src == 'true'
               uses: docker/login-action@v1
               with:
                   registry: ghcr.io
@@ -363,6 +458,7 @@ jobs:
                   password: ${{ secrets.GITHUB_TOKEN }}
 
             - name: 🛠 Build & Publish Image
+              if: steps.filter.outputs.src == 'true'
               uses: docker/build-push-action@v2
               with:
                   # push: true # TODO: follow up on this... https://github.community/t/403-error-on-container-registry-push-from-github-action/173071/5
