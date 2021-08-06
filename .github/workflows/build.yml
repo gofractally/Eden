@@ -208,7 +208,7 @@ jobs:
                   curl localhost:3032
 
     box-build:
-        needs: box-e2e
+        needs: build-micro-chain
         name: Build Eden Box
         runs-on: ubuntu-latest
 
@@ -291,7 +291,7 @@ jobs:
                       packages/webapp/cypress/videos
 
     webapp-build:
-        needs: webapp-e2e
+        needs: build-micro-chain
         name: Build Eden Community WebApp
         runs-on: ubuntu-latest
 
