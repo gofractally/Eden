@@ -28,6 +28,7 @@ import {
     getCurrentElection,
     getElectionState,
     getMemberGroupParticipants,
+    getParticipantsInCompletedRound,
     getVoteDataRow,
 } from "elections/api/eden-contract";
 import { ActiveStateConfigType } from "elections/interfaces";
@@ -65,6 +66,21 @@ export const queryVoteDataRow = (account?: string) => ({
         return getVoteDataRow({ fieldName: "member", fieldValue: account });
     },
 });
+
+export const queryParticipantsInCompletedRound = (
+    electionRound?: number,
+    member?: EdenMember
+) => ({
+    queryKey: ["query_current_election", electionRound, member],
+    queryFn: () => {
+        if (!electionRound || !member)
+            throw new Error(
+                "useParticipantsInCompletedRound() requires a value for 'memberAccount' and 'electionRound'"
+            );
+        return getParticipantsInCompletedRound(electionRound, member);
+    },
+});
+
 export const queryCurrentElection = {
     queryKey: "query_current_election",
     queryFn: getCurrentElection,
@@ -196,6 +212,16 @@ export const useHeadDelegate = () =>
     useQuery({
         ...queryHeadDelegate,
     });
+
+export const useParticipantsInCompletedRound = (
+    electionRound?: number,
+    member?: EdenMember
+) => {
+    return useQuery({
+        ...queryParticipantsInCompletedRound(electionRound, member),
+        enabled: Boolean(electionRound && member),
+    });
+};
 
 export const useCurrentElection = () =>
     useQuery({

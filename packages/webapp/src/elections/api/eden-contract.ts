@@ -1,3 +1,6 @@
+import * as eosjsSerialize from "eosjs/dist/eosjs-serialize";
+import * as eosjsNumeric from "eosjs/dist/eosjs-numeric";
+
 import { devUseFixtureData } from "config";
 import {
     ActiveStateConfigType,
@@ -5,20 +8,23 @@ import {
     VoteData,
 } from "elections/interfaces";
 import {
+    EdenMember,
     VoteDataQueryOptionsByField,
     VoteDataQueryOptionsByGroup,
 } from "members";
 import {
     CONTRACT_CURRENT_ELECTION_TABLE,
     CONTRACT_ELECTION_STATE_TABLE,
+    CONTRACT_MEMBER_TABLE,
     CONTRACT_VOTE_TABLE,
     getRow,
     getTableRawRows,
+    getTableRows,
+    isValidDelegate,
 } from "_app";
 import {
     fixtureCurrentElection,
     fixtureElectionState,
-    fixtureRegistrationElection,
     fixtureVoteDataRow,
     fixtureVoteDataRows,
 } from "./fixtures";
@@ -144,6 +150,47 @@ const getVoteDataRows = async (
 };
 
 export const getVoteData = getVoteDataRows;
+
+const getCommonDelegateAccountForGroupWithThisMember = (
+    round: number,
+    member?: EdenMember
+) => {
+    if (!member) {
+        return "";
+    }
+    // query members table by election_rank=round, representative=commonDelegate
+    // if commonDelegate was not winner of that round, add round winner
+    const commonDelegate =
+        member.election_rank > round ? member.account : member.representative;
+    if (isValidDelegate(commonDelegate)) return commonDelegate;
+    else return "";
+};
+
+export const getParticipantsInCompletedRound = async (
+    electionRound: number,
+    member: EdenMember
+) => {
+    const commonDelegate = getCommonDelegateAccountForGroupWithThisMember(
+        electionRound,
+        member
+    );
+
+    const serialBuffer = new eosjsSerialize.SerialBuffer();
+    serialBuffer.pushName(commonDelegate);
+    serialBuffer.pushNumberAsUint64(electionRound);
+
+    const bytes = serialBuffer.getUint8Array(16);
+    const lowerBound: string = eosjsNumeric
+        .signedBinaryToDecimal(bytes)
+        .toString();
+
+    return await getTableRows(CONTRACT_MEMBER_TABLE, {
+        index_position: 2,
+        key_type: "i128",
+        lowerBound,
+        limit: 6,
+    });
+};
 
 export const getCurrentElection = async () => {
     // 1. When testing Registration phase
