@@ -169,13 +169,9 @@ const Chiefs = () => {
                 <Text>Chief Delegates</Text>
             </Container>
             {chiefsAsMembers.map((delegate) => {
-                if (
-                    !delegate // ||
-                    // delegate.account === electionState.lead_representative
-                )
-                    return null;
+                if (!delegate) return null;
                 return (
-                    <div className="-mt-px" key={`chiefs-${delegate.account}`}>
+                    <div key={`chiefs-${delegate.account}`}>
                         <DelegateChip
                             member={members.find(
                                 (d) => d.account === delegate.account

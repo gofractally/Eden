@@ -48,7 +48,7 @@ export const getMyDelegation = async (
         let member = await getMemberWrapper(nextMemberAccount);
         if (!member)
             throw new Error(
-                `Member record not found for provided account[${nextMemberAccount}].`
+                `Member record not found for provided account [${nextMemberAccount}].`
             );
 
         // Fill the array from next available position up to member.election_rank with member,
