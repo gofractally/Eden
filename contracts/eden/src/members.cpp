@@ -6,7 +6,8 @@ namespace eden
    uint32_t migrate_member_v0::migrate_some(eosio::name contract, uint32_t max_steps)
    {
       member_table_type member_tb{contract, default_scope};
-      return member_tb.update_index<"byrep"_n>(contract, next_primary_key, max_steps);
+      member_tb.update_index<"byrep"_n>(contract, next_primary_key, max_steps);
+      return max_steps;
    }
 
    const member& members::get_member(eosio::name account)

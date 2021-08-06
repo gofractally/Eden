@@ -2330,11 +2330,16 @@ namespace eosio
       /**
        * Updates the table for a newly added index.  Updates at most max_steps rows.
        * next_primary_key should start at 0.
+       * Returns true if the update is complete.
        */
       template <eosio::name::raw IndexName>
-      uint32_t update_index(eosio::name payer, uint64_t& next_primary_key, uint32_t max_steps)
+      bool update_index(eosio::name payer, uint64_t& next_primary_key, uint32_t& max_steps)
       {
          using namespace _multi_index_detail;
+         if (max_steps == 0)
+         {
+            return false;
+         }
 
          using index_type = decltype(get_index<IndexName>());
          for (auto iter = lower_bound(next_primary_key), end = this->end();
@@ -2354,7 +2359,7 @@ namespace eosio
             }
             next_primary_key = iter->primary_key() + 1;
          }
-         return max_steps;
+         return max_steps > 0 || next_primary_key == 0;
       }
    };
 }  // namespace eosio
