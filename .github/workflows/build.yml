@@ -8,8 +8,9 @@ on:
     pull_request:
         types: [assigned, opened, synchronize, reopened, labeled]
         paths:
-            # C++
             - ".github/workflows/build.yml"
+
+            # C++
             - "CMakeLists.txt"
             - "contracts/**"
             - "external/CMakeLists.txt"
@@ -43,10 +44,32 @@ jobs:
         container: ghcr.io/eoscommunity/eden-builder:sub-chain
 
         steps:
+            - uses: dorny/paths-filter@v2
+              id: changes
+              with:
+                  list-files: "csv"
+                  filters: |
+                      src:
+                        - ".github/workflows/build.yml"
+
+                        - "CMakeLists.txt"
+                        - "contracts/**"
+                        - "external/CMakeLists.txt"
+                        - "libraries/**"
+                        - "native/**"
+                        - "programs/**"
+                        - "wasm/**"
+
+            - name: Show Changes
+              id: show_changes
+              run: echo "${{ steps.filter.outputs.src_files }}"
+
             - name: ✅ Checkout code
+              if: steps.filter.outputs.src == 'true'
               uses: actions/checkout@v2
 
             - name: Prepare ccache timestamp
+              if: steps.filter.outputs.src == 'true'
               id: ccache_cache_timestamp
               shell: cmake -P {0}
               run: |
@@ -54,10 +77,12 @@ jobs:
                   message("::set-output name=timestamp::${current_date}")
 
             - name: show_cache
+              if: steps.filter.outputs.src == 'true'
               id: show_cache
               run: echo "${{ runner.os }}-ccache_whole-${{ steps.ccache_cache_timestamp.outputs.timestamp }}"
 
             - name: ccache cache files
+              if: steps.filter.outputs.src == 'true'
               uses: actions/cache@v1.1.0
               with:
                   path: .ccache
@@ -66,6 +91,7 @@ jobs:
                       ${{ runner.os }}-ccache_whole-
 
             - name: 🛠 Build
+              if: steps.filter.outputs.src == 'true'
               run: |
                   set -e
                   export CCACHE_DIR=${GITHUB_WORKSPACE}/.ccache
@@ -92,9 +118,11 @@ jobs:
                   echo =====
 
             - name: 🧪 Run tests with CTest
+              if: steps.filter.outputs.src == 'true'
               run: cd build && ctest -j$(nproc) -V
 
             - name: 📃 Upload ccache.log
+              if: steps.filter.outputs.src == 'true'
               uses: actions/upload-artifact@v2
               with:
                   name: ccache_log
@@ -102,6 +130,7 @@ jobs:
                       ccache.log
 
             - name: 📃 Upload clsdk
+              if: steps.filter.outputs.src == 'true'
               uses: actions/upload-artifact@v2
               with:
                   name: clsdk
@@ -109,6 +138,7 @@ jobs:
                       build/clsdk-ubuntu-20-04.tar.gz
 
             - name: 📃 Upload Eden Smart Contract
+              if: steps.filter.outputs.src == 'true'
               uses: actions/upload-artifact@v2
               with:
                   name: Eden Smart Contract
