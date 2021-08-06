@@ -45,7 +45,7 @@ jobs:
 
         steps:
             - uses: dorny/paths-filter@v2
-              id: changes
+              id: filter
               with:
                   list-files: "csv"
                   filters: |
