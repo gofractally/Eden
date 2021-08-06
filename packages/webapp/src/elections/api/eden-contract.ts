@@ -18,6 +18,7 @@ import {
 import {
     fixtureCurrentElection,
     fixtureElectionState,
+    fixtureRegistrationElection,
     fixtureVoteDataRow,
     fixtureVoteDataRows,
 } from "./fixtures";
@@ -145,6 +146,10 @@ const getVoteDataRows = async (
 export const getVoteData = getVoteDataRows;
 
 export const getCurrentElection = async () => {
+    // 1. When testing Registration phase
+    // if (devUseFixtureData) return fixtureRegistrationElection;
+
+    // 2. When testing Current election phase
     if (devUseFixtureData) return fixtureCurrentElection;
 
     const rawRows = await getTableRawRows<any>(CONTRACT_CURRENT_ELECTION_TABLE);
@@ -163,12 +168,4 @@ export const getElectionState = async () => {
     if (devUseFixtureData) return fixtureElectionState;
 
     return await getRow<ElectionState>(CONTRACT_ELECTION_STATE_TABLE);
-};
-
-const getMemberElectionParticipationStatus = () => {
-    return {}; // TODO
-};
-
-const hasMemberRSVPed = () => {
-    return false; // TODO
 };

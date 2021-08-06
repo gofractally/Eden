@@ -1,3 +1,4 @@
+import { extractElectionDates } from "elections/utils";
 import React from "react";
 
 import {
@@ -43,11 +44,8 @@ export const ElectionPage = () => {
         );
     }
 
-    const electionStartDateTime =
-        currentElection &&
-        ((currentElection.election_seeder &&
-            currentElection.election_seeder.end_time) ||
-            currentElection.start_time);
+    const electionStartDateTime = extractElectionDates(currentElection)
+        .rawStartDateTime;
 
     if (!loggedInMember || !currentElection) {
         return (
