@@ -7,10 +7,9 @@ interface Props {
     voteData: VoteData[];
 }
 
-// TODO: Improve naming of variables below. Consider adding comments.
 // TODO: What displays when there are no votes?
 const tallyVotes = (participantVoteData: VoteData[]) => {
-    const votes = participantVoteData.filter((vd) => vd.candidate);
+    const votes = participantVoteData.filter((pv) => pv.candidate);
     const threshold = Math.floor(votes.length * (2 / 3) + 1);
 
     const voteRecipients = new Set(
@@ -18,15 +17,14 @@ const tallyVotes = (participantVoteData: VoteData[]) => {
     );
 
     const candidatesByVotesReceived: { [key: number]: string[] } = {};
-
     Array.from(voteRecipients).forEach((candidate) => {
-        const numberOfVotesReceived = participantVoteData.filter(
+        const numVotesReceived = participantVoteData.filter(
             (vote) => vote.candidate === candidate
         ).length;
-        if (candidatesByVotesReceived[numberOfVotesReceived]) {
-            candidatesByVotesReceived[numberOfVotesReceived].push(candidate);
+        if (candidatesByVotesReceived[numVotesReceived]) {
+            candidatesByVotesReceived[numVotesReceived].push(candidate);
         } else {
-            candidatesByVotesReceived[numberOfVotesReceived] = [candidate];
+            candidatesByVotesReceived[numVotesReceived] = [candidate];
         }
     });
 
@@ -35,15 +33,15 @@ const tallyVotes = (participantVoteData: VoteData[]) => {
         : 0;
 
     const candidatesWithMostVotes = candidatesByVotesReceived[leadTally] ?? [];
+    const thereIsOneLeader = candidatesWithMostVotes.length === 1;
 
-    const leaderIsVotingForSelf = Boolean(
-        candidatesWithMostVotes.length === 1 &&
-            participantVoteData.find(
-                (participant) =>
-                    participant.member === candidatesWithMostVotes[0] &&
-                    participant.candidate === candidatesWithMostVotes[0]
-            )
-    );
+    const leaderIsVotingForSelf =
+        thereIsOneLeader &&
+        participantVoteData.some(
+            (participant) =>
+                participant.member === candidatesWithMostVotes[0] &&
+                participant.candidate === candidatesWithMostVotes[0]
+        );
 
     const didReachConsensus = leadTally >= threshold && leaderIsVotingForSelf;
 
@@ -97,7 +95,7 @@ export const Consensometer = ({ voteData }: Props) => {
         votesRequiredForConsensus,
         leaderIsVotingForSelf,
         isThereConsensus,
-    } = tallyVotes(testVotes);
+    } = tallyVotes(voteData);
 
     return (
         <div className="flex space-x-1">
