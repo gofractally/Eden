@@ -96,7 +96,7 @@ jobs:
               with:
                   name: ccache_log
                   path: |
-                      ${GITHUB_WORKSPACE}/ccache.log
+                      ccache.log
 
             - name: 📃 Upload clsdk
               uses: actions/upload-artifact@v2
@@ -172,7 +172,7 @@ jobs:
               with:
                   name: microchain_ccache_log
                   path: |
-                      ${GITHUB_WORKSPACE}/ccache.log
+                      ccache.log
 
             - name: 📃 Upload Eden Microchain
               uses: actions/upload-artifact@v2
