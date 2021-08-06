@@ -20,6 +20,7 @@ import { setElectionParticipation } from "../../transactions";
 import { useQueryClient } from "react-query";
 
 export const ParticipationCard = () => {
+    const [ualAccount, _, ualShowModal] = useUALAccount();
     const { data: currentMember } = useCurrentMember();
     const { data: election } = useCurrentElection();
 
@@ -58,7 +59,10 @@ export const ParticipationCard = () => {
     let participationOpenModalFn = () => {};
     let statusButton = null;
 
-    if (currentMember) {
+    if (!ualAccount) {
+        participationCallLabel = "Sign in to reserve your spot.";
+        statusButton = <Button onClick={ualShowModal}>Sign in</Button>;
+    } else if (currentMember) {
         if (
             currentMember.election_participation_status !==
             ElectionParticipationStatus.InElection
@@ -80,20 +84,29 @@ export const ParticipationCard = () => {
                 {participationActionLabel}
             </Button>
         );
+    } else {
+        participationCallLabel = "Join Eden to participate!";
+        statusButton = <Button href="/induction">Become a member</Button>;
     }
 
     return (
-        <Container>
-            <Heading size={2}>{statusLabel}</Heading>
-            <div className="space-y-2">
-                <Text>
-                    The next election will be held on {electionDate} between{" "}
-                    {electionStartTime} and approximately{" "}
-                    {electionEstimatedEndTime}.{" "}
-                    <strong>{participationCallLabel}</strong>
-                </Text>
-                {statusButton}
+        <Container className="space-y-2.5">
+            <div className="flex justify-between">
+                <Heading size={2} className="inline-block">
+                    Upcoming Election
+                </Heading>
+                <Heading size={2} className="inline-block">
+                    {electionDates.startDateTime.format("MMM D")}
+                </Heading>
             </div>
+            <Heading size={3}>{statusLabel}</Heading>
+            <Text>
+                The next election will be held on {electionDate} between{" "}
+                {electionStartTime} and approximately {electionEstimatedEndTime}
+                .{" "}
+                <span className="font-semibold">{participationCallLabel}</span>
+            </Text>
+            {statusButton}
             <ConfirmParticipationModal
                 isOpen={showConfirmParticipationModal}
                 close={() => setShowConfirmParticipationModal(false)}
