@@ -13,16 +13,9 @@ import {
     useElectionState,
     useHeadDelegate,
     useMemberGroupParticipants,
+    useParticipantsInCompletedRound,
     useVoteDataRow,
 } from "_app";
-
-const getMembersInGroupWithThisMember = (
-    round: number,
-    commonDelegate: string
-) => {
-    // query members table by election_rank=round, representative=commonDelegate
-    // if commonDelegate was not winner of that round, add round winner
-};
 
 export const ElectionPage = () => {
     const targetRound = 1;
@@ -31,6 +24,10 @@ export const ElectionPage = () => {
     const { data: leadRepresentative } = useHeadDelegate();
 
     const { data: currentElection } = useCurrentElection();
+
+    const {
+        data: participantsInCompletedRound,
+    } = useParticipantsInCompletedRound(targetRound, loggedInMember);
 
     const { data: voteRowForLoggedInMember } = useVoteDataRow(
         loggedInMember?.account
@@ -212,7 +209,7 @@ export const ElectionPage = () => {
                 <pre>
                     {JSON.stringify(voteRowForLoggedInMember || {}, null, 2)}
                 </pre>
-                {!Boolean(voteRowForLoggedInMember) && (
+                {(true || !Boolean(voteRowForLoggedInMember)) && (
                     <>
                         <Text>
                             Since we didn't find vote data for loggedInMember...
@@ -250,9 +247,15 @@ export const ElectionPage = () => {
                             Then we can get this member's group info at the
                             sought round simply by querying the members table by
                             `representative`-`election_rank` to build list of
-                            members in the group, where
+                            members in the group
                         </Text>
-                        {/* <pre> {JSON.stringify(getMembersInGroupWithThisMember(targetRound, commonDelegate) || {}, null, 2)} </pre> */}
+                        <pre>
+                            {JSON.stringify(
+                                participantsInCompletedRound || [],
+                                null,
+                                2
+                            )}
+                        </pre>
                     </>
                 )}
                 {Boolean(voteRowForLoggedInMember) && (
