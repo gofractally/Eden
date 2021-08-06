@@ -232,11 +232,6 @@ export const OngoingRoundSegment = ({
                 </MembersGrid>
             </Flipper>
             <Container>
-                {userVotingFor && (
-                    <div className="text-center mb-2">
-                        You voted for: {userVotingFor.name}
-                    </div>
-                )}
                 <div className="flex flex-col xs:flex-row justify-center space-y-2 xs:space-y-0 xs:space-x-2">
                     <Button
                         size="sm"

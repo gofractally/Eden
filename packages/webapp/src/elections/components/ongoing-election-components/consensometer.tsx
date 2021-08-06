@@ -3,93 +3,46 @@ import { FaStar } from "react-icons/fa";
 
 import { Text } from "_app/ui";
 import { VoteData } from "elections/interfaces";
+import { tallyVotesFromVoteData } from "elections/utils";
 
 interface Props {
     voteData: VoteData[];
 }
 
-const tallyVotes = (participantVoteData: VoteData[]) => {
-    const votes = participantVoteData.filter((pv) => pv.candidate);
-    const threshold = Math.floor(votes.length * (2 / 3) + 1);
-
-    const voteRecipients = new Set(
-        participantVoteData.map((v) => v.candidate).filter((c) => c)
-    );
-
-    const candidatesByVotesReceived: { [key: number]: string[] } = {};
-    Array.from(voteRecipients).forEach((candidate) => {
-        const numVotesReceived = participantVoteData.filter(
-            (vote) => vote.candidate === candidate
-        ).length;
-        if (candidatesByVotesReceived[numVotesReceived]) {
-            candidatesByVotesReceived[numVotesReceived].push(candidate);
-        } else {
-            candidatesByVotesReceived[numVotesReceived] = [candidate];
-        }
-    });
-
-    const leadTally = Object.keys(candidatesByVotesReceived).length
-        ? Math.max(...Object.keys(candidatesByVotesReceived).map(Number))
-        : 0;
-
-    const candidatesWithMostVotes = candidatesByVotesReceived[leadTally] ?? [];
-    const thereIsOneLeader = candidatesWithMostVotes.length === 1;
-
-    const leaderIsVotingForSelf =
-        thereIsOneLeader &&
-        participantVoteData.some(
-            (participant) =>
-                participant.member === candidatesWithMostVotes[0] &&
-                participant.candidate === candidatesWithMostVotes[0]
-        );
-
-    const didReachConsensus = leadTally >= threshold && leaderIsVotingForSelf;
-
-    return {
-        totalVotesCast: votes.length,
-        leadCandidates: candidatesWithMostVotes,
-        leadTally,
-        totalVotesRequiredForConsensus: threshold,
-        remainingVotesRequiredForConsensus: threshold - leadTally,
-        leaderIsVotingForSelf,
-        isThereConsensus: didReachConsensus,
-    };
-};
-
 export const Consensometer = ({ voteData }: Props) => {
     // we could use fixtures, but inlining this means we see results without reloads
-    const testVotes = [
-        {
-            member: "edenmember11",
-            round: 1,
-            index: 0,
-            candidate: "edenmember13",
-        },
-        {
-            member: "egeon.edev",
-            round: 1,
-            index: 0,
-            candidate: "edenmember13",
-        },
-        {
-            member: "edenmember13",
-            round: 1,
-            index: 0,
-            candidate: "edenmember13",
-        },
-        {
-            member: "edenmember14",
-            round: 1,
-            index: 0,
-            candidate: "edenmember13",
-        },
-        {
-            member: "edenmember15",
-            round: 1,
-            index: 0,
-            candidate: "edenmember14",
-        },
-    ];
+    // const testVotes = [
+    //     {
+    //         member: "edenmember11",
+    //         round: 1,
+    //         index: 0,
+    //         candidate: "edenmember13",
+    //     },
+    //     {
+    //         member: "egeon.edev",
+    //         round: 1,
+    //         index: 0,
+    //         candidate: "edenmember13",
+    //     },
+    //     {
+    //         member: "edenmember13",
+    //         round: 1,
+    //         index: 0,
+    //         candidate: "edenmember13",
+    //     },
+    //     {
+    //         member: "edenmember14",
+    //         round: 1,
+    //         index: 0,
+    //         candidate: "edenmember13",
+    //     },
+    //     {
+    //         member: "edenmember15",
+    //         round: 1,
+    //         index: 0,
+    //         candidate: "edenmember14",
+    //     },
+    // ];
 
     const {
         isThereConsensus,
@@ -99,7 +52,7 @@ export const Consensometer = ({ voteData }: Props) => {
         totalVotesCast,
         totalVotesRequiredForConsensus,
         remainingVotesRequiredForConsensus,
-    } = tallyVotes(voteData);
+    } = tallyVotesFromVoteData(voteData);
 
     let helpText = "Waiting for votes";
     if (isThereConsensus) {
@@ -108,7 +61,7 @@ export const Consensometer = ({ voteData }: Props) => {
         leadTally >= totalVotesRequiredForConsensus &&
         !leaderIsVotingForSelf
     ) {
-        helpText = "Leader must vote for themself!";
+        helpText = "Leader must vote for themself";
     } else if (leadCandidates.length === 1) {
         helpText = `Leader needs ${
             remainingVotesRequiredForConsensus > 1
