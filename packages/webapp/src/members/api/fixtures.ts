@@ -26,7 +26,7 @@ export const fixtureEdenMembers: EdenMember[] = [
     },
     {
         name: "Philip Pip",
-        account: "pip2.edev",
+        account: "pip.edev",
         nft_template_id: 147802,
         status: MemberStatus.ActiveMember,
         election_participation_status:
@@ -445,4 +445,20 @@ export const fixtureMembersStats: MemberStats = {
     // # representatives at each level, in order of Delegate Levels (bottom up),
     // ie. 6 members who never became delegates (idx=0), 3 who Level 1 Delegates (idx=1), 1 Chief Delegates (idx=2) who didn't make it further, and 1 Head Chief (idx=3);
     ranks: [7, 4, 1, 1, 1],
+};
+
+export const fixtureMembersInGroup = (
+    round: number,
+    delegateAccount: string
+) => {
+    console.info(
+        `fixtureMembersInGroup().round[${round}], delegateAccount[${delegateAccount}]`
+    );
+    return delegateAccount === ""
+        ? []
+        : fixtureEdenMembers.filter(
+              (member) =>
+                  member.election_rank === round &&
+                  member.representative === delegateAccount
+          );
 };

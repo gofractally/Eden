@@ -28,6 +28,7 @@ import {
     fixtureVoteDataRow,
     fixtureVoteDataRows,
 } from "./fixtures";
+import { fixtureMembersInGroup } from "members/api/fixtures";
 
 const getMemberGroupFromIndex = (
     memberIdx: number,
@@ -158,12 +159,14 @@ const getCommonDelegateAccountForGroupWithThisMember = (
     if (!member) {
         return "";
     }
-    // query members table by election_rank=round, representative=commonDelegate
-    // if commonDelegate was not winner of that round, add round winner
+    console.info(
+        `getCommonDelegateAccountForGroupWithThisMember().round[${round}], member.account[${member.account}]`
+    );
+    console.info("getCommonDelegateAccountForGroupWithThisMember().member:");
+    console.info(member);
     const commonDelegate =
         member.election_rank > round ? member.account : member.representative;
-    if (isValidDelegate(commonDelegate)) return commonDelegate;
-    else return "";
+    return isValidDelegate(commonDelegate) ? commonDelegate : "";
 };
 
 export const getParticipantsInCompletedRound = async (
@@ -174,6 +177,8 @@ export const getParticipantsInCompletedRound = async (
         electionRound,
         member
     );
+    if (devUseFixtureData)
+        return fixtureMembersInGroup(electionRound, commonDelegate);
 
     const serialBuffer = new eosjsSerialize.SerialBuffer();
     serialBuffer.pushName(commonDelegate);

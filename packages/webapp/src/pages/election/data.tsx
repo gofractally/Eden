@@ -209,6 +209,7 @@ export const ElectionPage = () => {
                 <pre>
                     {JSON.stringify(voteRowForLoggedInMember || {}, null, 2)}
                 </pre>
+                {/* TODO: remove the true below once done */}
                 {(true || !Boolean(voteRowForLoggedInMember)) && (
                     <>
                         <Text>
@@ -216,7 +217,8 @@ export const ElectionPage = () => {
                         </Text>
                         <Text>
                             ON HOLD: 1) **Failed Consensus** Did the group come
-                            to consensus?
+                            to consensus? edenmember23 demonstrates this; no way
+                            yet to discover their group partciipants
                         </Text>
                         <Text>
                             2.1) **Member has advanced** Is sought round lower
