@@ -69,8 +69,7 @@ jobs:
               run: |
                   set -e
                   export CCACHE_DIR=${GITHUB_WORKSPACE}/.ccache
-                  export CCACHE_CONFIGPATH=${GITHUB_WORKSPACE}/ccache.conf
-                  export CCACHE_LOGFILE=${GITHUB_WORKSPACE}/ccache.log
+                  export CCACHE_CONFIGPATH=${GITHUB_WORKSPACE}/.github/ccache.conf
                   echo =====
                   ccache -s
                   echo =====
@@ -83,6 +82,8 @@ jobs:
 
                   tar czf clsdk-ubuntu-20-04.tar.gz clsdk
 
+                  echo =====
+                  ls -la ${GITHUB_WORKSPACE}
                   echo =====
                   ccache -s
                   echo =====
@@ -145,8 +146,7 @@ jobs:
               run: |
                   set -e
                   export CCACHE_DIR=${GITHUB_WORKSPACE}/.ccache
-                  export CCACHE_CONFIGPATH=${GITHUB_WORKSPACE}/ccache.conf
-                  export CCACHE_LOGFILE=${GITHUB_WORKSPACE}/ccache.log
+                  export CCACHE_CONFIGPATH=${GITHUB_WORKSPACE}/.github/ccache.conf
                   echo =====
                   ccache -s
                   echo =====
@@ -161,6 +161,8 @@ jobs:
                   make -j$(nproc) wasm-configure
                   bash -c "cd wasm && make -j$(nproc) eden-micro-chain"
 
+                  echo =====
+                  ls -la ${GITHUB_WORKSPACE}
                   echo =====
                   ccache -s
                   echo =====
