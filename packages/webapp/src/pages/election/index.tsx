@@ -3,9 +3,9 @@ import { useCurrentElection } from "_app";
 
 export const ElectionPage = () => {
     const { data: currentElection } = useCurrentElection();
-    return currentElection &&
-        currentElection.electionState ===
-            "current_election_state_registration" ? (
+    // TODO: Enum for election states?
+    return currentElection?.electionState ===
+        "current_election_state_registration" ? (
         <RegistrationElection />
     ) : (
         <OngoingElection />

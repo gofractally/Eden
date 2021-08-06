@@ -87,7 +87,7 @@ export const fixtureVoteDataRows: VoteData[] = [
         member: "egeon.edev",
         round: 1,
         index: 5,
-        candidate: "edenmember13",
+        candidate: "",
     },
     {
         member: "edenmember21",
