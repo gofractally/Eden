@@ -147,7 +147,7 @@ export const getVoteData = getVoteDataRows;
 
 export const getCurrentElection = async () => {
     // 1. When testing Registration phase
-    if (devUseFixtureData) return fixtureRegistrationElection;
+    // if (devUseFixtureData) return fixtureRegistrationElection;
 
     // 2. When testing Current election phase
     if (devUseFixtureData) return fixtureCurrentElection;
