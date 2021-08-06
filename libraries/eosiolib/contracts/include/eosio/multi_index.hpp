@@ -2340,14 +2340,15 @@ namespace eosio
          for (auto iter = lower_bound(next_primary_key), end = this->end();
               max_steps > 0 && iter != end; --max_steps, ++iter)
          {
-            auto secondary = index_type::extract_secondary_key(*iter);
+            typename index_type::secondary_key_type dummy;
             auto existing = secondary_index_db_functions<
                 typename index_type::secondary_key_type>::db_idx_find_primary(_code.value, _scope,
                                                                               index_type::name(),
                                                                               iter->primary_key(),
-                                                                              secondary);
+                                                                              dummy);
             if (existing < 0)
             {
+               auto secondary = index_type::extract_secondary_key(*iter);
                secondary_index_db_functions<typename index_type::secondary_key_type>::db_idx_store(
                    _scope, index_type::name(), payer.value, iter->primary_key(), secondary);
             }
