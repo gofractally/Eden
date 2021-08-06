@@ -86,7 +86,7 @@ export const ParticipationCard = () => {
         );
     } else {
         participationCallLabel = "Join Eden to participate!";
-        statusButton = <Button href="/induction">Become a member</Button>;
+        statusButton = <Button href="/induction">Join Eden</Button>;
     }
 
     return (
