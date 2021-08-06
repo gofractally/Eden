@@ -186,7 +186,7 @@ export const OngoingRoundSegment = ({
                     </>
                 )}
             </Container>
-            <Container className="flex justify-between items-center">
+            <Container className="flex justify-between">
                 <Heading size={4} className="inline-block">
                     Consensus
                 </Heading>
