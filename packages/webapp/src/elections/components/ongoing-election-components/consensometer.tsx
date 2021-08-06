@@ -1,5 +1,5 @@
 import { GiCheckeredFlag } from "react-icons/gi";
-// import { FaFlagCheckered } from "react-icons/fa";
+import { FaStar } from "react-icons/fa";
 
 import { VoteData } from "elections/interfaces";
 
@@ -7,9 +7,7 @@ interface Props {
     voteData: VoteData[];
 }
 
-// TODO: Decide on flag icon and black/white color options
 // TODO: Improve naming of variables below. Consider adding comments.
-// TODO: Should the flag disappear when you hae enough votes but the leader isn't voting for themselves (no consensus)?
 // TODO: What displays when there are no votes?
 const tallyVotes = (participantVoteData: VoteData[]) => {
     const votes = participantVoteData.filter((vd) => vd.candidate);
@@ -32,13 +30,11 @@ const tallyVotes = (participantVoteData: VoteData[]) => {
         }
     });
 
-    const mostVotesCastForOneCandidate = Object.keys(candidatesByVotesReceived)
-        .length
+    const leadTally = Object.keys(candidatesByVotesReceived).length
         ? Math.max(...Object.keys(candidatesByVotesReceived).map(Number))
         : 0;
 
-    const candidatesWithMostVotes =
-        candidatesByVotesReceived[mostVotesCastForOneCandidate] ?? [];
+    const candidatesWithMostVotes = candidatesByVotesReceived[leadTally] ?? [];
 
     const leaderIsVotingForSelf = Boolean(
         candidatesWithMostVotes.length === 1 &&
@@ -49,14 +45,14 @@ const tallyVotes = (participantVoteData: VoteData[]) => {
             )
     );
 
-    const didReachConsensus =
-        mostVotesCastForOneCandidate >= threshold && leaderIsVotingForSelf;
+    const didReachConsensus = leadTally >= threshold && leaderIsVotingForSelf;
 
     return {
         totalVotesCast: votes.length,
         leadCandidates: candidatesWithMostVotes,
-        mostVotesCastForOneCandidate,
+        leadTally,
         votesRequiredForConsensus: threshold,
+        leaderIsVotingForSelf,
         isThereConsensus: didReachConsensus,
     };
 };
@@ -67,13 +63,13 @@ export const Consensometer = ({ voteData }: Props) => {
             member: "edenmember11",
             round: 1,
             index: 0,
-            candidate: "edenmember13",
+            candidate: "edenmember11",
         },
         {
             member: "egeon.edev",
             round: 1,
             index: 0,
-            candidate: "edenmember13",
+            candidate: "edenmember11",
         },
         {
             member: "edenmember13",
@@ -85,48 +81,68 @@ export const Consensometer = ({ voteData }: Props) => {
             member: "edenmember14",
             round: 1,
             index: 0,
-            candidate: "edenmember13",
+            candidate: "edenmember11",
         },
         {
             member: "edenmember15",
             round: 1,
             index: 0,
-            candidate: "edenmember13",
+            candidate: "edenmember11",
         },
     ];
 
     const {
         totalVotesCast,
-        mostVotesCastForOneCandidate,
+        leadTally,
         votesRequiredForConsensus,
+        leaderIsVotingForSelf,
         isThereConsensus,
-    } = tallyVotes(voteData);
+    } = tallyVotes(testVotes);
 
     return (
         <div className="flex space-x-1">
             {Array.from({ length: totalVotesCast }).map((_, i) => {
+                let thisBlock = i + 1;
                 let color = "bg-gray-300";
-                if (i + 1 <= mostVotesCastForOneCandidate && isThereConsensus) {
-                    color = "bg-green-500";
-                } else if (i + 1 <= mostVotesCastForOneCandidate) {
-                    color = "bg-blue-500";
+
+                // Blocks represent votes cast
+                // Number of blue blocks represents votes cast for leading candidate(s)
+                // Green blocks are votes cast for the leading candidate once consensus is reached
+                // Finish line/flag block represents number of votes required to reach consensus
+                // Finish line/flag block is skipped if number of votes to reach consensus is attained but lead candidate is not voting for themself
+
+                if (leaderIsVotingForSelf) {
+                    if (thisBlock <= leadTally && isThereConsensus) {
+                        color = "bg-green-500";
+                    } else if (thisBlock <= leadTally) {
+                        color = "bg-blue-500";
+                    }
+                } else if (thisBlock !== votesRequiredForConsensus) {
+                    // apply blue blocks like before but skip/ignore the finish line block
+                    if (thisBlock > votesRequiredForConsensus) {
+                        thisBlock = i;
+                    }
+                    if (thisBlock <= leadTally) {
+                        color = "bg-blue-500";
+                    }
                 }
+
                 return (
                     <div
                         key={"consensometer - " + i}
                         className={`flex justify-center items-center w-9 h-5 rounded ${color}`}
                     >
                         {i + 1 === votesRequiredForConsensus && (
-                            <GiCheckeredFlag
+                            <GiCheckeredFlag // TODO: becomes gold star when filled?
                                 size={16}
                                 color={
-                                    mostVotesCastForOneCandidate >=
-                                    votesRequiredForConsensus
-                                        ? "white"
+                                    leadTally >= votesRequiredForConsensus
+                                        ? "white" // TODO: white only on blue
                                         : "black"
                                 }
                             />
                         )}
+                        {/* TODO: add explainer text */}
                     </div>
                 );
             })}
