@@ -8,6 +8,7 @@ import {
     getTreasuryStats,
     getNewMembers,
     getMembersStats,
+    VoteDataQueryOptionsByGroup,
 } from "members";
 import { getIsCommunityActive } from "_app/api";
 
@@ -29,6 +30,7 @@ import {
     getElectionState,
     getMemberGroupParticipants,
     getParticipantsInCompletedRound,
+    getVoteData,
     getVoteDataRow,
 } from "elections/api/eden-contract";
 import { ActiveStateConfigType } from "elections/interfaces";
@@ -65,6 +67,11 @@ export const queryVoteDataRow = (account?: string) => ({
             );
         return getVoteDataRow({ fieldName: "member", fieldValue: account });
     },
+});
+
+export const queryVoteData = (options: VoteDataQueryOptionsByGroup = {}) => ({
+    queryKey: ["query_vote_data"],
+    queryFn: () => getVoteData(options),
 });
 
 export const queryParticipantsInCompletedRound = (
@@ -253,3 +260,12 @@ export const useVoteDataRow = (account?: string) => {
         enabled: Boolean(account),
     });
 };
+
+export const useVoteData = (
+    voteQueryConfig: VoteDataQueryOptionsByGroup,
+    queryOptions = {}
+) =>
+    useQuery({
+        ...queryVoteData(voteQueryConfig),
+        ...queryOptions,
+    });

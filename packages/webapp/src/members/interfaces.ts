@@ -4,8 +4,8 @@ import { TableQueryOptions } from "_app/eos/interfaces";
 
 export type VoteDataQueryOptionsByGroup = TableQueryOptions & {
     index_position?: 2;
-    lowerBound: number;
-    upperBound: number;
+    lowerBound?: number;
+    upperBound?: number;
 };
 
 export type VoteDataQueryOptionsByField = {
