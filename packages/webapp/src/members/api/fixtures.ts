@@ -53,6 +53,7 @@ export const fixtureEdenMembers: EdenMember[] = [
             ElectionParticipationStatus.NotInElection,
         election_rank: 2,
         // group didn't come to consensus, so a non-EOS-account string is put in the `representative` field
+        // see isARepresentativeResultingFromConsensus() for more details
         representative: "abcdefghijkl2",
     },
     {
