@@ -75,6 +75,7 @@ export const queryVoteData = (options: VoteDataQueryOptionsByGroup = {}) => ({
 });
 
 export const queryParticipantsInCompletedRound = (
+    isStillParticipating: boolean,
     electionRound?: number,
     member?: EdenMember
 ) => ({
@@ -84,7 +85,11 @@ export const queryParticipantsInCompletedRound = (
             throw new Error(
                 "useParticipantsInCompletedRound() requires a value for 'memberAccount' and 'electionRound'"
             );
-        return getParticipantsInCompletedRound(electionRound, member);
+        return getParticipantsInCompletedRound(
+            electionRound,
+            member,
+            isStillParticipating
+        );
     },
 });
 
@@ -224,8 +229,17 @@ export const useParticipantsInCompletedRound = (
     electionRound?: number,
     member?: EdenMember
 ) => {
+    const { data: voteData } = useVoteDataRow(member?.account);
+    console.info("voteData:", voteData);
+
+    const isStillParticipating = Boolean(voteData);
+    console.info(`isStillParticipating[${isStillParticipating}]`);
     return useQuery({
-        ...queryParticipantsInCompletedRound(electionRound, member),
+        ...queryParticipantsInCompletedRound(
+            isStillParticipating,
+            electionRound,
+            member
+        ),
         enabled: typeof electionRound === "number" && Boolean(member),
     });
 };
