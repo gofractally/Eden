@@ -60,7 +60,7 @@ export const getTableRows = async <T = any>(
     const rows = await getTableRawRows(table, options);
     // variants are structured as such: array[type: string, <object the variant contains>]
     // this line is reducing the data to just the data part
-    if (rows?.[0].length) return rows.map((row) => row[1]);
+    if (rows?.[0]?.length) return rows.map((row) => row[1]);
     return rows;
 };
 

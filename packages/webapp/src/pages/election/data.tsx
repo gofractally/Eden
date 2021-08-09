@@ -209,10 +209,23 @@ export const ElectionPage = () => {
                 <pre>
                     {JSON.stringify(voteRowForLoggedInMember || {}, null, 2)}
                 </pre>
-                {/* TODO: remove the true below once done */}
+                <Text className="mt-8">
+                    Let's start by knowing if we're going to display a
+                    delegation or just show the user an "Election is in
+                    progress" screen
+                </Text>
+                <Text>
+                    We check the electionState.status field for registration,
+                    which is the state the contract is in between elections
+                </Text>
+                <Text>
+                    electionState.status[{currentElection.electionState}]; we're
+                    *not* in an active election is the `electionState` is
+                    `current_election_state_registration`
+                </Text>
                 {!Boolean(voteRowForLoggedInMember) && (
                     <>
-                        <Text className="mt-4">
+                        <Text className="mt-8">
                             Since we didn't find vote data for loggedInMember...
                         </Text>
                         <Text className="font-bold">
