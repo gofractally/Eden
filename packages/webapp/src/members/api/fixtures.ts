@@ -52,7 +52,7 @@ export const fixtureEdenMembers: EdenMember[] = [
         election_participation_status:
             ElectionParticipationStatus.NotInElection,
         election_rank: 2,
-        representative: "",
+        representative: "abcdefghijkl2",
     },
     {
         name: "Eden Member 13",
@@ -114,7 +114,7 @@ export const fixtureEdenMembers: EdenMember[] = [
         election_participation_status:
             ElectionParticipationStatus.NotInElection,
         election_rank: 1,
-        representative: "",
+        representative: "abcdefghijkl1",
     },
     {
         name: "Eden Member 24",

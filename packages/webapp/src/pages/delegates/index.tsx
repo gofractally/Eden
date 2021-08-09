@@ -94,6 +94,9 @@ const Delegates = ({
     if (!loggedInMember || !membersStats)
         return <div>Error fetching member data...</div>;
 
+    console.info("myDelegation:");
+    console.info(myDelegation);
+
     const heightOfDelegationWithoutChiefs = membersStats.ranks.length - 2;
     const diff = heightOfDelegationWithoutChiefs - myDelegation.length;
     const numLevelsWithNoRepresentation = diff > 0 ? diff : 0;
