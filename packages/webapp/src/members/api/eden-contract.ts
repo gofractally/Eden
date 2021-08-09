@@ -13,13 +13,10 @@ import { devUseFixtureData } from "config";
 import { fixtureEdenMembers, fixtureMembersStats } from "./fixtures";
 
 export const getEdenMember = (account: string) => {
-    // console.info(`getEdenMember().account[${account}]`);
     if (devUseFixtureData) {
         const edenMember = fixtureEdenMembers.find(
             (member) => member.account === account
         );
-        // console.info(`devFixtureData; edenMember:`);
-        // console.info(edenMember);
         if (edenMember) {
             return Promise.resolve(edenMember);
         }
