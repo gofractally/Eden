@@ -80,7 +80,7 @@ export const queryParticipantsInCompletedRound = (
 ) => ({
     queryKey: ["query_current_election", electionRound, member],
     queryFn: () => {
-        if (!electionRound || !member)
+        if (typeof electionRound !== "number" || !member)
             throw new Error(
                 "useParticipantsInCompletedRound() requires a value for 'memberAccount' and 'electionRound'"
             );
@@ -226,7 +226,7 @@ export const useParticipantsInCompletedRound = (
 ) => {
     return useQuery({
         ...queryParticipantsInCompletedRound(electionRound, member),
-        enabled: Boolean(electionRound && member),
+        enabled: typeof electionRound === "number" && Boolean(member),
     });
 };
 
