@@ -210,7 +210,7 @@ export const ElectionPage = () => {
                     {JSON.stringify(voteRowForLoggedInMember || {}, null, 2)}
                 </pre>
                 {/* TODO: remove the true below once done */}
-                {(true || !Boolean(voteRowForLoggedInMember)) && (
+                {!Boolean(voteRowForLoggedInMember) && (
                     <>
                         <Text className="mt-4">
                             Since we didn't find vote data for loggedInMember...
