@@ -154,11 +154,8 @@ export const getVoteData = getVoteDataRows;
 
 const getCommonDelegateAccountForGroupWithThisMember = (
     round: number,
-    member?: EdenMember
+    member: EdenMember
 ) => {
-    if (!member) {
-        return "";
-    }
     console.info(
         `getCommonDelegateAccountForGroupWithThisMember().round[${round}], member.account[${member.account}]`
     );
