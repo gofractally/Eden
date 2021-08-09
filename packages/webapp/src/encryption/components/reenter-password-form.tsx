@@ -1,4 +1,3 @@
-import { useState } from "react";
 import { PrivateKey } from "eosjs/dist/eosjs-key-conversions";
 
 import { Button, Form, onError, Text, useFormFields } from "_app";

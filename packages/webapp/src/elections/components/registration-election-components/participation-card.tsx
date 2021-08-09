@@ -22,8 +22,7 @@ import {
     setEncryptionPublicKeyTransaction,
     useEncryptionPassword,
 } from "encryption";
-import { NewPasswordForm } from "encryption/components/new-password-form";
-import { ReenterPasswordForm } from "encryption/components/reenter-password-form";
+import { NewPasswordForm, ReenterPasswordForm } from "encryption";
 
 export const ParticipationCard = () => {
     const [ualAccount, _, ualShowModal] = useUALAccount();

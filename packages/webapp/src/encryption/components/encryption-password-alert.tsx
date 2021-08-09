@@ -1,24 +1,18 @@
-import { PrivateKey } from "eosjs/dist/PrivateKey";
 import { useState } from "react";
 import { BsExclamationTriangle } from "react-icons/bs";
 
 import {
     Button,
     Container,
-    Form,
     MemberStatus,
     Modal,
     onError,
-    Text,
     useCurrentMember,
-    useFormFields,
     useUALAccount,
 } from "_app";
-import { generateEncryptionKey } from "_app/eos/secret-publisher";
-import { setEncryptionPublicKeyTransaction } from "encryption/transactions";
 
+import { setEncryptionPublicKeyTransaction } from "../transactions";
 import { UpdateEncryptionPassword, useEncryptionPassword } from "../hooks";
-import { useEffect } from "react";
 import { NewPasswordForm } from "./new-password-form";
 import { ReenterPasswordForm } from "./reenter-password-form";
 
