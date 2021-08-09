@@ -16,15 +16,25 @@ export const ElectionPage = () => {
                 <Container>
                     <Heading size={1}>Election</Heading>
                 </Container>
-                {currentElection?.electionState ===
-                "current_election_state_registration" ? (
-                    <RegistrationElection />
-                ) : (
-                    <OngoingElection />
-                )}
+                <ElectionBody electionState={currentElection?.electionState} />
             </div>
         </FluidLayout>
     );
+};
+
+const ElectionBody = ({ electionState }: { electionState?: string }) => {
+    switch (electionState) {
+        case "current_election_state_registration":
+            return <RegistrationElection />;
+        case "current_election_state_active":
+            return <OngoingElection />;
+        default:
+            return (
+                <Container>
+                    <Heading size={2}>Unhandled state</Heading>
+                </Container>
+            );
+    }
 };
 
 export default ElectionPage;
