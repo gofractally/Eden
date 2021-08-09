@@ -86,6 +86,7 @@ export const getMemberGroupParticipants = async (
     // get member index
     const memberVoteData = await getVoteDataRow({
         fieldValue: memberAccount,
+        fieldName: "member",
     });
     if (!memberVoteData) return [];
 
@@ -101,6 +102,9 @@ export const getMemberGroupParticipants = async (
     const rows = await getVoteDataRows({
         lowerBound,
         upperBound,
+        limit: upperBound - lowerBound,
+        key_type: "i64",
+        index_position: 2,
     });
 
     if (!rows || !rows.length) {
@@ -138,16 +142,10 @@ const getVoteDataRows = async (
 
     // TODO: see what real data looks like and real use-cases and see if we need the electionState flag;
     // If not, switch this back to getTableRows()
-    const rawRows = await getTableRawRows<VoteData>(CONTRACT_VOTE_TABLE, opts);
-    // const electionState = rawRows[0][0];
+    const rawRows = await getTableRawRows(CONTRACT_VOTE_TABLE, opts);
 
-    const rows = rawRows.map((row) => row[1]);
-
-    if (!rows.length) {
-        return undefined;
-    }
-
-    return rows;
+    if (rawRows?.[0].length) return rawRows.map((row) => row[1]);
+    return rawRows;
 };
 
 export const getVoteData = getVoteDataRows;

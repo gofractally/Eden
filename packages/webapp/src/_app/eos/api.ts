@@ -15,8 +15,10 @@ export const CONTRACT_VOTE_TABLE = "votes";
 export const CONTRACT_INDUCTION_TABLE = "induction";
 export const CONTRACT_ENDORSEMENT_TABLE = "endorsement";
 
+type TableResponseRow<T> = [string, T] | T;
+
 interface TableResponse<T> {
-    rows: [string, T][];
+    rows: TableResponseRow<T>[];
     more: boolean;
     next_key: string;
 }
@@ -58,13 +60,14 @@ export const getTableRows = async <T = any>(
     const rows = await getTableRawRows(table, options);
     // variants are structured as such: array[type: string, <object the variant contains>]
     // this line is reducing the data to just the data part
-    return rows.map((row) => row[1]);
+    if (rows?.[0].length) return rows.map((row) => row[1]);
+    return rows;
 };
 
 export const getTableRawRows = async <T = any>(
     table: string,
     options?: TableQueryOptions
-): Promise<[string, T][]> => {
+): Promise<TableResponseRow<T>[]> => {
     options = { ...TABLE_PARAM_DEFAULTS, ...options };
     const reverse = Boolean(options.lowerBound === "0" && options.upperBound);
 
