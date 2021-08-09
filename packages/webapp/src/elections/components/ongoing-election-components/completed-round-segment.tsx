@@ -5,6 +5,7 @@ import {
     queryMembers,
     useCurrentMember,
     useParticipantsInCompletedRound,
+    useVoteDataRow,
 } from "_app";
 import { Button, Container, Expander } from "_app/ui";
 import { ElectionParticipantChip } from "elections";
@@ -20,6 +21,10 @@ export const CompletedRoundSegment = ({
     roundIndex,
 }: CompletedRoundSegmentProps) => {
     const { data: loggedInMember } = useCurrentMember();
+    console.info(
+        `roundIndex[${roundIndex}], loggedInMember[${loggedInMember}]`
+    );
+
     const { data: roundParticipants } = useParticipantsInCompletedRound(
         roundIndex,
         loggedInMember

@@ -21,6 +21,7 @@ import {
     getTableRawRows,
     getTableRows,
     isValidDelegate,
+    useVoteDataRow,
 } from "_app";
 import {
     fixtureCurrentElection,
@@ -154,21 +155,39 @@ export const getVoteData = getVoteDataRows;
 
 const getCommonDelegateAccountForGroupWithThisMember = (
     round: number,
-    member: EdenMember
+    member: EdenMember,
+    isStillParticipating: boolean
 ) => {
-    const commonDelegate =
+    console.info(
+        `getCommonDelegateAccountForGroupWithThisMember(round[${round}], isStillParticipating[${isStillParticipating}]).top member:`
+    );
+    console.info(member);
+
+    const commonDelegateIfDoneParticipating =
         member.election_rank > round ? member.account : member.representative;
+    const commonDelegate = isStillParticipating
+        ? member.account
+        : commonDelegateIfDoneParticipating;
+
     return isValidDelegate(commonDelegate) ? commonDelegate : "";
 };
 
 export const getParticipantsInCompletedRound = async (
     electionRound: number,
-    member: EdenMember
+    member: EdenMember,
+    isStillParticipating: boolean
 ) => {
+    console.info(
+        `getParticipantsInCompletedRound(isStillParticipating[${isStillParticipating}]).top`
+    );
     const commonDelegate = getCommonDelegateAccountForGroupWithThisMember(
         electionRound,
-        member
+        member,
+        isStillParticipating
     );
+    console.info(`commonDelegate[${commonDelegate}]`);
+    if (!commonDelegate) return undefined;
+
     if (devUseFixtureData)
         return fixtureMembersInGroup(electionRound, commonDelegate);
 
@@ -181,12 +200,16 @@ export const getParticipantsInCompletedRound = async (
         .signedBinaryToDecimal(bytes)
         .toString();
 
-    return await getTableRows(CONTRACT_MEMBER_TABLE, {
-        index_position: 2,
-        key_type: "i128",
-        lowerBound,
-        limit: 6,
-    });
+    const addWinner = isStillParticipating ? [member] : [];
+
+    return addWinner.concat(
+        await getTableRows(CONTRACT_MEMBER_TABLE, {
+            index_position: 2,
+            key_type: "i128",
+            lowerBound,
+            limit: 6,
+        })
+    );
 };
 
 export const getCurrentElection = async () => {
