@@ -98,11 +98,13 @@ export const getMemberGroupParticipants = async (
         numGroups
     );
 
+    const GET_VOTE_DATA_ROWS_LIMIT = 20;
+
     // get all members in this member's group
     const rows = await getVoteDataRows({
         lowerBound,
         upperBound,
-        limit: upperBound - lowerBound,
+        limit: GET_VOTE_DATA_ROWS_LIMIT,
         key_type: "i64",
         index_position: 2,
     });
