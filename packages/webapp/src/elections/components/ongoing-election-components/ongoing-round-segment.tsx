@@ -246,7 +246,7 @@ export const OngoingRoundSegment = ({
                     </Button>
                     <Button size="sm">
                         <RiVideoUploadLine size={18} className="mr-2" />
-                        Upload round {roundData.round} recording
+                        Upload round {roundData.round + 1} recording
                     </Button>
                 </div>
             </Container>

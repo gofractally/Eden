@@ -41,7 +41,7 @@ export const RoundHeader = ({
                 )}
                 <div>
                     <Text size="sm" className="font-semibold">
-                        Round {roundNum ?? roundData.round}
+                        Round {roundNum ?? roundData.round + 1}
                     </Text>
                     <Text size="sm" className="tracking-tight">
                         {subHeader}

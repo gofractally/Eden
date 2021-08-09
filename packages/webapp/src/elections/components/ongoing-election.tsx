@@ -16,8 +16,8 @@ export const OngoingElection = () => {
             </Container>
             <Ongoing.SupportSegment />
             {/* TODO: How do we get previous round info? Do that here. */}
-            {currentElection?.round &&
-                [...Array(currentElection.round - 1)].map((_, i) => (
+            {currentElection?.round > 0 &&
+                [...Array(currentElection.round)].map((_, i) => (
                     <Ongoing.CompletedRoundSegment
                         key={`election-round-${i + 1}`}
                         round={i + 1}
