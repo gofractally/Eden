@@ -90,7 +90,7 @@ export const getMemberGroupParticipants = async (
     if (!memberVoteData) return [];
 
     // return all indexes that represent members in this member's group
-    const { groupNumber, lowerBound, upperBound } = getMemberGroupFromIndex(
+    const { lowerBound, upperBound } = getMemberGroupFromIndex(
         // TODO: remove this -1 if no conversion is needed between 0=based and 1=based arrays
         memberVoteData.index,
         totalParticipants,
@@ -156,11 +156,11 @@ const getCommonDelegateAccountForGroupWithThisMember = (
     round: number,
     member: EdenMember
 ) => {
-    console.info(
-        `getCommonDelegateAccountForGroupWithThisMember().round[${round}], member.account[${member.account}]`
-    );
-    console.info("getCommonDelegateAccountForGroupWithThisMember().member:");
-    console.info(member);
+    // console.info(
+    //     `getCommonDelegateAccountForGroupWithThisMember().round[${round}], member.account[${member.account}]`
+    // );
+    // console.info("getCommonDelegateAccountForGroupWithThisMember().member:");
+    // console.info(member);
     const commonDelegate =
         member.election_rank > round ? member.account : member.representative;
     return isValidDelegate(commonDelegate) ? commonDelegate : "";

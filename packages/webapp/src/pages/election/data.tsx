@@ -212,15 +212,23 @@ export const ElectionPage = () => {
                 {/* TODO: remove the true below once done */}
                 {(true || !Boolean(voteRowForLoggedInMember)) && (
                     <>
-                        <Text>
+                        <Text className="mt-4">
                             Since we didn't find vote data for loggedInMember...
                         </Text>
-                        <Text>
-                            ON HOLD: 1) **Failed Consensus** Did the group come
-                            to consensus? edenmember23 demonstrates this; no way
-                            yet to discover their group partciipants
+                        <Text className="font-bold">
+                            1) **Failed Consensus** Did the group come to
+                            consensus? edenmember12 (Round 2) and edenmember23
+                            (Round 1) demonstrate this.
                         </Text>
-                        <Text>
+                        <Text className="mb-4">
+                            NOTE : This scenario is identical algorithmically to
+                            a group who *did* come to consensus, difference
+                            being that the representative is a 13-character
+                            string (invalid eos account). So to know if the
+                            group came to consensus, you just need to verify if
+                            the representative account is 13 characters long.
+                        </Text>
+                        <Text className="font-bold">
                             2.1) **Member has advanced** Is sought round lower
                             than loggedUser's election_rank, ie. has
                             loggedInUser advanced beyond that target level?
@@ -230,7 +238,7 @@ export const ElectionPage = () => {
                             loggedInUser.election_rank[
                             {loggedInMember.election_rank}]
                         </Text>
-                        <Text>
+                        <Text className="font-bold">
                             2.2) **Member didn't advance** loggedInMember was in
                             a group that did come to consensus but
                             loggedInMember was not the one made a delegate.
@@ -261,7 +269,7 @@ export const ElectionPage = () => {
                     </>
                 )}
                 {Boolean(voteRowForLoggedInMember) && (
-                    <Text>
+                    <Text className="mt-8">
                         loggedInUser in `vote` table; see intra-round
                         instructions above.
                     </Text>
