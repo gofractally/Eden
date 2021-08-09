@@ -41,7 +41,6 @@ export const getMyDelegation = async (
     let nextMemberAccount = loggedInMemberAccount;
     let isHeadChief: Boolean;
     do {
-        console.info(`getting nextMemberAccount [${nextMemberAccount}]`);
         let member = await getMemberWrapper(nextMemberAccount);
         if (!member)
             throw new Error(
@@ -57,7 +56,5 @@ export const getMyDelegation = async (
         nextMemberAccount = member.representative;
     } while (isValidDelegate(nextMemberAccount) && !isHeadChief);
 
-    console.info("getMyDelegation().returning myDelegates:");
-    console.info(myDelegates);
     return myDelegates;
 };

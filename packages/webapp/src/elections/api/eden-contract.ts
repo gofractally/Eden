@@ -156,11 +156,6 @@ const getCommonDelegateAccountForGroupWithThisMember = (
     round: number,
     member: EdenMember
 ) => {
-    // console.info(
-    //     `getCommonDelegateAccountForGroupWithThisMember().round[${round}], member.account[${member.account}]`
-    // );
-    // console.info("getCommonDelegateAccountForGroupWithThisMember().member:");
-    // console.info(member);
     const commonDelegate =
         member.election_rank > round ? member.account : member.representative;
     return isValidDelegate(commonDelegate) ? commonDelegate : "";
