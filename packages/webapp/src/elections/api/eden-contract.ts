@@ -1,3 +1,6 @@
+import * as eosjsSerialize from "eosjs/dist/eosjs-serialize";
+import * as eosjsNumeric from "eosjs/dist/eosjs-numeric";
+
 import { devUseFixtureData } from "config";
 import {
     ActiveStateConfigType,
@@ -5,15 +8,19 @@ import {
     VoteData,
 } from "elections/interfaces";
 import {
+    EdenMember,
     VoteDataQueryOptionsByField,
     VoteDataQueryOptionsByGroup,
 } from "members";
 import {
     CONTRACT_CURRENT_ELECTION_TABLE,
     CONTRACT_ELECTION_STATE_TABLE,
+    CONTRACT_MEMBER_TABLE,
     CONTRACT_VOTE_TABLE,
     getRow,
     getTableRawRows,
+    getTableRows,
+    isValidDelegate,
 } from "_app";
 import {
     fixtureCurrentElection,
@@ -21,17 +28,21 @@ import {
     fixtureVoteDataRow,
     fixtureVoteDataRows,
 } from "./fixtures";
+import { fixtureMembersInGroup } from "members/api/fixtures";
 
 const getMemberGroupFromIndex = (
     memberIdx: number,
     totalParticipants: number,
     numGroups: number
 ) => {
-    const maxGroupSize = (totalParticipants + numGroups - 1) / numGroups;
+    const maxGroupSize = Math.floor(
+        (totalParticipants + numGroups - 1) / numGroups
+    );
     const numShortGroups = maxGroupSize * numGroups - totalParticipants;
     const numLargeGroups = numGroups - numShortGroups;
     const minGroupSize = maxGroupSize - 1;
     const totalMembersInLargeGroups = (minGroupSize + 1) * numLargeGroups;
+
     let groupNumber = -1;
     let lowerBound = -1;
     let upperBound = -1;
@@ -49,19 +60,25 @@ const getMemberGroupFromIndex = (
         upperBound = lowerBound + minGroupSize - 1;
     }
 
-    // TODO: see what the actual data looks like and see if we need to do this +1 to match up 0-based and 1-based data
     return {
-        groupNumber: groupNumber + 1,
-        lowerBound: lowerBound + 1,
-        upperBound: upperBound + 1,
+        groupNumber: groupNumber,
+        lowerBound: lowerBound,
+        upperBound: upperBound,
     };
 };
 
 export const getMemberGroupParticipants = async (
-    memberAccount: string | undefined,
-    config: ActiveStateConfigType
+    memberAccount?: string,
+    config?: ActiveStateConfigType
 ) => {
-    if (!memberAccount || !config) return undefined;
+    if (!config)
+        throw new Error(
+            "getMemberGroupParticipants requires a config object (got 'undefined')"
+        );
+    if (!memberAccount)
+        throw new Error(
+            "getMemberGroupParticipants requires an account (got 'undefined')"
+        );
 
     const totalParticipants = config.num_participants;
     const numGroups = config.num_groups;
@@ -75,7 +92,7 @@ export const getMemberGroupParticipants = async (
     // return all indexes that represent members in this member's group
     const { groupNumber, lowerBound, upperBound } = getMemberGroupFromIndex(
         // TODO: remove this -1 if no conversion is needed between 0=based and 1=based arrays
-        memberVoteData.index - 1,
+        memberVoteData.index,
         totalParticipants,
         numGroups
     );
@@ -93,7 +110,7 @@ export const getMemberGroupParticipants = async (
     return rows;
 };
 
-const getVoteDataRow = async (
+export const getVoteDataRow = async (
     opts: VoteDataQueryOptionsByField
 ): Promise<VoteData | undefined> => {
     if (devUseFixtureData)
@@ -101,7 +118,7 @@ const getVoteDataRow = async (
 
     const memberVoteData = await getRow<VoteData>(
         CONTRACT_VOTE_TABLE,
-        opts.fieldName,
+        opts.fieldName || "name",
         opts.fieldValue
     );
     return memberVoteData;
@@ -133,7 +150,55 @@ const getVoteDataRows = async (
     return rows;
 };
 
+export const getVoteData = getVoteDataRows;
+
+const getCommonDelegateAccountForGroupWithThisMember = (
+    round: number,
+    member: EdenMember
+) => {
+    console.info(
+        `getCommonDelegateAccountForGroupWithThisMember().round[${round}], member.account[${member.account}]`
+    );
+    console.info("getCommonDelegateAccountForGroupWithThisMember().member:");
+    console.info(member);
+    const commonDelegate =
+        member.election_rank > round ? member.account : member.representative;
+    return isValidDelegate(commonDelegate) ? commonDelegate : "";
+};
+
+export const getParticipantsInCompletedRound = async (
+    electionRound: number,
+    member: EdenMember
+) => {
+    const commonDelegate = getCommonDelegateAccountForGroupWithThisMember(
+        electionRound,
+        member
+    );
+    if (devUseFixtureData)
+        return fixtureMembersInGroup(electionRound, commonDelegate);
+
+    const serialBuffer = new eosjsSerialize.SerialBuffer();
+    serialBuffer.pushName(commonDelegate);
+    serialBuffer.pushNumberAsUint64(electionRound);
+
+    const bytes = serialBuffer.getUint8Array(16);
+    const lowerBound: string = eosjsNumeric
+        .signedBinaryToDecimal(bytes)
+        .toString();
+
+    return await getTableRows(CONTRACT_MEMBER_TABLE, {
+        index_position: 2,
+        key_type: "i128",
+        lowerBound,
+        limit: 6,
+    });
+};
+
 export const getCurrentElection = async () => {
+    // 1. When testing Registration phase
+    // if (devUseFixtureData) return fixtureRegistrationElection;
+
+    // 2. When testing Current election phase
     if (devUseFixtureData) return fixtureCurrentElection;
 
     const rawRows = await getTableRawRows<any>(CONTRACT_CURRENT_ELECTION_TABLE);
@@ -152,12 +217,4 @@ export const getElectionState = async () => {
     if (devUseFixtureData) return fixtureElectionState;
 
     return await getRow<ElectionState>(CONTRACT_ELECTION_STATE_TABLE);
-};
-
-const getMemberElectionParticipationStatus = () => {
-    return {}; // TODO
-};
-
-const hasMemberRSVPed = () => {
-    return false; // TODO
 };

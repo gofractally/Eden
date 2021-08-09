@@ -4,7 +4,7 @@ export interface ElectionState {
     last_election_time: string;
 }
 
-interface CurrentElection_registationState {
+interface CurrentElection_registrationState {
     start_time: string;
     election_threshold?: number;
 }
@@ -61,7 +61,7 @@ export type CurrentElection = CurrentElectionBase &
         | CurrentElection_activeState
         | CurrentElection_initVotersState
         | CurrentElection_postRoundState
-        | CurrentElection_registationState
+        | CurrentElection_registrationState
         | CurrentElection_seedingState
     );
 

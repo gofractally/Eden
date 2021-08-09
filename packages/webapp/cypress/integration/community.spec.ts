@@ -19,7 +19,9 @@ describe("Community", () => {
             .first();
         firstMember.click();
 
-        const memberCard = cy.get(`[data-testid^="member-card-"]`);
+        const memberCard = cy.get(`[data-testid^="member-card-"]`, {
+            timeout: 30000,
+        });
         expect(memberCard).to.exist;
 
         cy.get("head title").should("contain", `'s Profile`);

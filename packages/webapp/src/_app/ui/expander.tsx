@@ -7,6 +7,7 @@ interface ExpanderProps {
     header: React.ReactNode;
     showContentDivider?: boolean;
     startExpanded?: boolean;
+    darkBg?: boolean;
     inactive?: boolean;
     locked?: boolean;
     children: React.ReactNode;
@@ -16,6 +17,7 @@ export const Expander = ({
     header,
     showContentDivider = false,
     startExpanded = false,
+    darkBg,
     inactive,
     locked = false,
     children,
@@ -35,11 +37,11 @@ export const Expander = ({
     };
 
     return (
-        <div className={inactive ? "bg-gray-50" : ""}>
+        <div className={darkBg || inactive ? "bg-gray-50" : ""}>
             <Container
                 className={`${containerClass} ${interactionClass} ${contentDividerClass}`}
                 onClick={onExpand}
-                darkBg={inactive}
+                darkBg={darkBg || inactive}
             >
                 {header}
                 <ExpansionIndicator isExpanded={isExpanded} locked={locked} />

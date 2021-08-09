@@ -17,6 +17,7 @@ export const useEncryptionPassword = () => {
         encryptionPassword,
         setEncryptionPassword,
     ] = useState<EncryptionPassword>({});
+    const [isInitialized, setIsInitialized] = useState(false);
     const { data: currentMember, isLoading, error } = useCurrentMember();
 
     useEffect(() => {
@@ -29,8 +30,12 @@ export const useEncryptionPassword = () => {
                 publicKey,
                 privateKey,
             });
-        } else {
+            setIsInitialized(true);
+        } else if (Object.keys(encryptionPassword).length) {
+            // We needlessly update state causing extra hook updates if we set the password to {} when it's already {}.
+            // This prevents extra hook updates/renders and helps prevent the banner from flickering when loading.
             setEncryptionPassword({});
+            setIsInitialized(true);
         }
     }, [currentMember]);
 
@@ -45,7 +50,7 @@ export const useEncryptionPassword = () => {
     return {
         encryptionPassword,
         updateEncryptionPassword,
-        isLoading,
+        isLoading: isLoading || !isInitialized, // prevent flicker
         error,
     };
 };

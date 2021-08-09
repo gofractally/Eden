@@ -20,7 +20,7 @@ interface Props {
 export type ButtonSize = "sm" | "md" | "lg";
 const SIZES: { [key in ButtonSize]: string } = {
     sm: "py-1.5 px-3 text-sm",
-    md: "py-1.5 px-5 font-medium",
+    md: "py-1.5 px-5",
     lg: "py-3 px-6 text-lg",
 };
 
@@ -28,6 +28,7 @@ export type ButtonType =
     | "primary"
     | "disabled"
     | "neutral"
+    | "caution"
     | "danger"
     | "dangerOutline"
     | "inductionStatusProfile"
@@ -38,6 +39,7 @@ const TYPES: { [key in ButtonType]: string } = {
     primary: "bg-blue-500 border-blue-500 text-white hover:bg-blue-600",
     disabled: "border-gray-400 bg-gray-300 text-gray-500",
     neutral: "bg-gray-50 text-gray-800 hover:bg-gray-200",
+    caution: "bg-yellow-500 text-white hover:bg-yellow-600 border-white",
     danger: "bg-red-500 text-white hover:bg-red-600",
     dangerOutline: "text-gray-500 hover:text-red-500 border-none",
     link: "border-transparent text-blue-500 hover:text-yellow-500",

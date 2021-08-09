@@ -19,11 +19,17 @@ import {
     getInductions,
     getInductionWithEndorsements,
 } from "inductions/api";
-import { getHeadDelegate, getMyDelegation } from "delegates/api";
+import {
+    getChiefDelegates,
+    getHeadDelegate,
+    getMyDelegation,
+} from "delegates/api";
 import {
     getCurrentElection,
     getElectionState,
     getMemberGroupParticipants,
+    getParticipantsInCompletedRound,
+    getVoteDataRow,
 } from "elections/api/eden-contract";
 import { ActiveStateConfigType } from "elections/interfaces";
 
@@ -32,19 +38,47 @@ export const queryHeadDelegate = {
     queryFn: getHeadDelegate,
 };
 
-export const queryMyDelegation = (
-    loggedInMemberAccount: string | undefined
-) => ({
-    queryKey: ["query_my_delegation", loggedInMemberAccount],
-    queryFn: () => getMyDelegation(loggedInMemberAccount),
+export const queryChiefDelegates = {
+    queryKey: "query_chief_delegates",
+    queryFn: getChiefDelegates,
+};
+
+export const queryMyDelegation = (memberAccount?: string) => ({
+    queryKey: ["query_my_delegation", memberAccount],
+    queryFn: () => getMyDelegation(memberAccount),
 });
 
 export const queryMemberGroupParticipants = (
-    memberAccount: string | undefined,
-    config: ActiveStateConfigType
+    memberAccount?: string,
+    config?: ActiveStateConfigType
 ) => ({
     queryKey: ["query_member_group_participants", memberAccount, config],
     queryFn: () => getMemberGroupParticipants(memberAccount, config),
+});
+
+export const queryVoteDataRow = (account?: string) => ({
+    queryKey: ["query_vote_data_row", account],
+    queryFn: () => {
+        if (!account)
+            throw new Error(
+                "getVoteDataRow requires an account (got 'undefined')"
+            );
+        return getVoteDataRow({ fieldName: "member", fieldValue: account });
+    },
+});
+
+export const queryParticipantsInCompletedRound = (
+    electionRound?: number,
+    member?: EdenMember
+) => ({
+    queryKey: ["query_current_election", electionRound, member],
+    queryFn: () => {
+        if (!electionRound || !member)
+            throw new Error(
+                "useParticipantsInCompletedRound() requires a value for 'memberAccount' and 'electionRound'"
+            );
+        return getParticipantsInCompletedRound(electionRound, member);
+    },
 });
 
 export const queryCurrentElection = {
@@ -72,10 +106,17 @@ export const queryIsCommunityActive = {
     queryFn: getIsCommunityActive,
 };
 
-export const queryMembers = (page: number, pageSize: number) => ({
-    queryKey: ["query_members", page, pageSize],
-    queryFn: () => getMembers(page, pageSize),
-});
+export const queryMembers = (
+    page: number = 1,
+    pageSize: number = 200,
+    nftTemplateIds: number[] = []
+) => {
+    const ids = nftTemplateIds.map((id) => id.toString());
+    return {
+        queryKey: ["query_members", page, pageSize, nftTemplateIds],
+        queryFn: () => getMembers(page, pageSize, ids),
+    };
+};
 
 export const queryNewMembers = (page: number, pageSize: number) => ({
     queryKey: ["query_new_members", page, pageSize],
@@ -131,12 +172,15 @@ export const useMemberByAccountName = (accountName: string) =>
         enabled: Boolean(accountName),
     });
 
-export const useMemberListByAccountNames = (accountNames: string[]) =>
+export const useMemberListByAccountNames = (
+    accountNames: string[],
+    enabled: boolean = true
+) =>
     useQueries(
         accountNames.map((accountName) => ({
             ...queryMemberByAccountName(accountName),
             staleTime: Infinity,
-            enabled: Boolean(accountName),
+            enabled: Boolean(accountName) && enabled,
         }))
     ) as UseQueryResult<EdenMember | undefined>[];
 
@@ -159,26 +203,36 @@ export const useMyDelegation = () => {
     });
 };
 
+export const useChiefDelegates = () =>
+    useQuery({
+        ...queryChiefDelegates,
+    });
+
 export const useHeadDelegate = () =>
     useQuery({
         ...queryHeadDelegate,
     });
+
+export const useParticipantsInCompletedRound = (
+    electionRound?: number,
+    member?: EdenMember
+) => {
+    return useQuery({
+        ...queryParticipantsInCompletedRound(electionRound, member),
+        enabled: Boolean(electionRound && member),
+    });
+};
 
 export const useCurrentElection = () =>
     useQuery({
         ...queryCurrentElection,
     });
 
-export const useMemberGroupParticipants = (
-    loggedInMemberAccount: string | undefined
-) => {
+export const useMemberGroupParticipants = (memberAccount?: string) => {
     const { data: currentElection } = useCurrentElection();
     return useQuery({
-        ...queryMemberGroupParticipants(
-            loggedInMemberAccount,
-            currentElection?.config
-        ),
-        enabled: Boolean(loggedInMemberAccount && currentElection?.config),
+        ...queryMemberGroupParticipants(memberAccount, currentElection?.config),
+        enabled: Boolean(memberAccount && currentElection?.config),
     });
 };
 
@@ -191,3 +245,10 @@ export const useMemberStats = () =>
     useQuery({
         ...queryMembersStats,
     });
+
+export const useVoteDataRow = (account?: string) => {
+    return useQuery({
+        ...queryVoteDataRow(account),
+        enabled: Boolean(account),
+    });
+};

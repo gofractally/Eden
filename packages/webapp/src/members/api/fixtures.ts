@@ -3,51 +3,138 @@ import { ElectionParticipationStatus, MemberStatus } from "_app/api/interfaces";
 
 export const fixtureEdenMembers: EdenMember[] = [
     {
-        name: "Eden Member 12",
-        account: "edenmember12",
-        nft_template_id: 147806,
+        name: "Alice",
+        account: "alice.edev",
+        nft_template_id: 147800,
         status: MemberStatus.ActiveMember,
-        election_participation_status: ElectionParticipationStatus.NoDonation, // See ElectionParticipationStatus for enum values; NoDonation is kinda the default if other special cases don't apply
-        election_rank: 1,
-        representative: "edenmember13", // "parent" field
-    },
-    {
-        name: "Eden Member 11",
-        account: "edenmember11",
-        nft_template_id: 147805,
-        status: MemberStatus.ActiveMember,
-        election_participation_status: ElectionParticipationStatus.NoDonation,
-        election_rank: 3,
-        representative: "edenmember11",
-    },
-    {
-        name: "Eden Member 13",
-        account: "edenmember13",
-        nft_template_id: 147807,
-        status: MemberStatus.ActiveMember,
-        election_participation_status: ElectionParticipationStatus.NoDonation,
-        election_rank: 2,
-        representative: "edenmember11",
+        election_participation_status:
+            ElectionParticipationStatus.NotInElection,
+        election_rank: 5,
+        // representative field will be same as account field for Head Chief
+        // see isValidDelegate() for other special values and their meaning
+        representative: "alice.edev", // "parent" field
     },
     {
         name: "Egeon The Great",
         account: "egeon.edev",
         nft_template_id: 147803,
         status: MemberStatus.ActiveMember,
-        election_participation_status: ElectionParticipationStatus.NoDonation,
-        election_rank: 1,
-        representative: "edenmember13",
-        encryption_key: "EOS87dKR7L6D4jZPj9XNN4H2pQavaAvWHdasFZZQCdu8Vn9ro5aDf",
-        // PK for above key is: 5J6YvXREKBypzFYVC2uEcw3sLE1dUrYwGZ1yatMArJRgRCN8S81
+        election_participation_status:
+            ElectionParticipationStatus.NotInElection,
+        election_rank: 3,
+        representative: "alice.edev",
     },
     {
         name: "Philip Pip",
         account: "pip.edev",
         nft_template_id: 147802,
         status: MemberStatus.ActiveMember,
-        election_participation_status: ElectionParticipationStatus.NoDonation,
+        election_participation_status:
+            ElectionParticipationStatus.NotInElection,
+        election_rank: 2,
+        representative: "egeon.edev",
+    },
+    {
+        name: "Eden Member 11",
+        account: "edenmember11",
+        nft_template_id: 147805,
+        status: MemberStatus.ActiveMember,
+        election_participation_status:
+            ElectionParticipationStatus.NotInElection,
         election_rank: 1,
-        representative: "edenmember11",
+        representative: "edenmember12",
+    },
+    {
+        name: "Eden Member 12",
+        account: "edenmember12",
+        nft_template_id: 147806,
+        status: MemberStatus.ActiveMember,
+        election_participation_status:
+            ElectionParticipationStatus.NotInElection,
+        election_rank: 2,
+        representative: "",
+    },
+    {
+        name: "Eden Member 13",
+        account: "edenmember13",
+        nft_template_id: 147807,
+        status: MemberStatus.ActiveMember,
+        election_participation_status:
+            ElectionParticipationStatus.NotInElection,
+        election_rank: 1,
+        representative: "edenmember14",
+    },
+    {
+        name: "Eden Member 14",
+        account: "edenmember14",
+        nft_template_id: 147808,
+        status: MemberStatus.ActiveMember,
+        election_participation_status:
+            ElectionParticipationStatus.NotInElection,
+        election_rank: 2,
+        representative: "alice.edev",
+    },
+    {
+        name: "Eden Member 15",
+        account: "edenmember15",
+        nft_template_id: 147809,
+        status: MemberStatus.ActiveMember,
+        election_participation_status:
+            ElectionParticipationStatus.NotInElection,
+        election_rank: 1,
+        representative: "egeon.edev",
+    },
+    {
+        name: "Eden Member 21",
+        account: "edenmember21",
+        nft_template_id: 147810,
+        status: MemberStatus.ActiveMember,
+        election_participation_status:
+            ElectionParticipationStatus.NotInElection,
+        election_rank: 1,
+        representative: "pip.edev",
+    },
+    {
+        name: "Eden Member 22",
+        account: "edenmember22",
+        nft_template_id: 147811,
+        status: MemberStatus.ActiveMember,
+        election_participation_status:
+            ElectionParticipationStatus.NotInElection,
+        election_rank: 1,
+        representative: "alice.edev",
+        encryption_key: "EOS87dKR7L6D4jZPj9XNN4H2pQavaAvWHdasFZZQCdu8Vn9ro5aDf",
+        // PK for above key is: 5J6YvXREKBypzFYVC2uEcw3sLE1dUrYwGZ1yatMArJRgRCN8S81
+    },
+    {
+        name: "Eden Member 23",
+        account: "edenmember23",
+        nft_template_id: 147812,
+        status: MemberStatus.ActiveMember,
+        election_participation_status:
+            ElectionParticipationStatus.NotInElection,
+        election_rank: 1,
+        representative: "",
+    },
+    {
+        name: "Eden Member 24",
+        account: "edenmember24",
+        nft_template_id: 147813,
+        status: MemberStatus.ActiveMember,
+        election_participation_status:
+            ElectionParticipationStatus.NotInElection,
+        election_rank: 1,
+        representative: "edenmember25",
+    },
+    {
+        name: "Eden Member 25",
+        account: "edenmember25",
+        nft_template_id: 147814,
+        status: MemberStatus.ActiveMember,
+        election_participation_status:
+            ElectionParticipationStatus.NotInElection,
+        election_rank: 4,
+        representative: "",
     },
 ];
 
@@ -356,6 +443,22 @@ export const fixtureMembersStats: MemberStats = {
     pending_members: 0,
     completed_waiting_inductions: 0,
     // # representatives at each level, in order of Delegate Levels (bottom up),
-    // ie. 3 members who never became delegates (idx=0), 1 Chief Delegates (idx=1) who didn't make it further, and 1 Head Chief (idx=2);
-    ranks: [3, 1, 1],
+    // ie. 6 members who never became delegates (idx=0), 3 who Level 1 Delegates (idx=1), 1 Chief Delegates (idx=2) who didn't make it further, and 1 Head Chief (idx=3);
+    ranks: [7, 4, 1, 1, 1],
+};
+
+export const fixtureMembersInGroup = (
+    round: number,
+    delegateAccount: string
+) => {
+    console.info(
+        `fixtureMembersInGroup().round[${round}], delegateAccount[${delegateAccount}]`
+    );
+    return delegateAccount === ""
+        ? []
+        : fixtureEdenMembers.filter(
+              (member) =>
+                  member.election_rank === round &&
+                  member.representative === delegateAccount
+          );
 };

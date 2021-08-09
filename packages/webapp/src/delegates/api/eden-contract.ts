@@ -1,8 +1,8 @@
 import { EdenMember } from "members";
 import { queryClient } from "pages/_app";
 import {
+    isValidDelegate,
     queryElectionState,
-    queryHeadDelegate,
     queryMemberByAccountName,
 } from "_app";
 
@@ -26,14 +26,10 @@ const getMemberBudgetBalance = () => {
     return {}; // TODO
 };
 
-// check that member has participated in an election (if there's been one yet) (!="zzz...") and came to consensus with their group in the last election (!=0)
-const MEMBER_REPRESENTATIVE_IF_NOT_PARTICIPATED_IN_RECENT_ELECTION =
-    "zzzzzzzzzzzzj";
-const MEMBER_REPRESENTATIVE_IF_FAILED_TO_REACH_CONSENSUS = "";
-const memberHasRepresentative = (member: EdenMember) =>
-    member.account !== MEMBER_REPRESENTATIVE_IF_FAILED_TO_REACH_CONSENSUS &&
-    member.account !==
-        MEMBER_REPRESENTATIVE_IF_NOT_PARTICIPATED_IN_RECENT_ELECTION;
+const getMemberWrapper = async (account: string) => {
+    const { queryKey, queryFn } = queryMemberByAccountName(account);
+    return await queryClient.fetchQuery(queryKey, queryFn);
+};
 
 export const getMyDelegation = async (
     loggedInMemberAccount: string | undefined
@@ -42,37 +38,23 @@ export const getMyDelegation = async (
 
     if (!loggedInMemberAccount) return myDelegates;
 
-    const leadRepresentative = await queryClient.fetchQuery(
-        queryHeadDelegate.queryKey,
-        queryHeadDelegate.queryFn
-    );
+    let nextMemberAccount = loggedInMemberAccount;
+    let isHeadChief: Boolean;
+    do {
+        let member = await getMemberWrapper(nextMemberAccount);
+        if (!member)
+            throw new Error(
+                `Member record not found for provided account [${nextMemberAccount}].`
+            );
 
-    // TODO: add fixtures for each of these querys and test the logic (that I couldn't test before)
-    const { queryKey, queryFn } = queryMemberByAccountName(
-        loggedInMemberAccount
-    );
-    let nextDelegate: EdenMember = await queryClient.fetchQuery(
-        queryKey,
-        queryFn
-    );
-    if (!nextDelegate || !leadRepresentative) return myDelegates;
+        // Fill the array from next available position up to member.election_rank with member,
+        // in case this delegate got voted up through multiple levels
+        for (let idx = myDelegates.length; idx < member?.election_rank; idx++) {
+            myDelegates.push(member);
+        }
+        isHeadChief = member.account === member.representative;
+        nextMemberAccount = member.representative;
+    } while (isValidDelegate(nextMemberAccount) && !isHeadChief);
 
-    while (
-        nextDelegate!.account !== leadRepresentative &&
-        memberHasRepresentative(nextDelegate)
-    ) {
-        myDelegates.push(nextDelegate);
-        const { queryKey, queryFn } = queryMemberByAccountName(
-            nextDelegate!.representative
-        );
-        nextDelegate = await queryClient.fetchQuery(queryKey, queryFn);
-        if (!nextDelegate) return myDelegates;
-    }
-    if (
-        nextDelegate.account === leadRepresentative &&
-        memberHasRepresentative(nextDelegate)
-    ) {
-        myDelegates.push(nextDelegate);
-    }
     return myDelegates;
 };

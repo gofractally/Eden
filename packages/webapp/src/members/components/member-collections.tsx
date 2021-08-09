@@ -76,7 +76,10 @@ export const MemberCollections = ({ member }: Props) => {
             ) : (
                 <MembersGrid members={members || []}>
                     {(member) => (
-                        <MemberChip key={member.account} member={member} />
+                        <MemberChip
+                            key={`member-collection-${member.account}`}
+                            member={member}
+                        />
                     )}
                 </MembersGrid>
             )}

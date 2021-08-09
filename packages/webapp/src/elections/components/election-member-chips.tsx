@@ -1,7 +1,12 @@
 import { useRouter } from "next/router";
 import { FaCheckSquare, FaPlayCircle, FaRegSquare } from "react-icons/fa";
 
-import { ipfsUrl, openInNewTab } from "_app";
+import {
+    ipfsUrl,
+    openInNewTab,
+    useChiefDelegates,
+    useHeadDelegate,
+} from "_app";
 import { ROUTES } from "_app/config";
 import { GenericMemberChip } from "_app/ui";
 import { MemberData } from "members/interfaces";
@@ -80,11 +85,32 @@ export const VotingMemberChip = ({
 
 interface DelegateChipProps {
     member?: MemberData;
-    level?: string;
+    level?: number;
 }
 
+const getDelegateLevelDescription = (
+    memberAccount: string | undefined,
+    level: number | undefined
+) => {
+    if (!memberAccount || !level) return "Delegate";
+    const { data: headDelegate } = useHeadDelegate();
+    const { data: chiefDelegates } = useChiefDelegates();
+
+    const prefix = "D" + (level - 1);
+    if (level === 1) return "Member";
+    if (headDelegate === memberAccount) return prefix + " - Head Chief";
+    if (chiefDelegates?.includes(memberAccount))
+        return prefix + " - Chief Delegate";
+
+    return prefix;
+};
+
 export const DelegateChip = ({ member, level }: DelegateChipProps) => (
-    <ElectionParticipantChip member={member} delegateLevel={level} isDelegate />
+    <ElectionParticipantChip
+        member={member}
+        delegateLevel={getDelegateLevelDescription(member?.account, level)}
+        isDelegate
+    />
 );
 
 interface ElectionParticipantChipProps {

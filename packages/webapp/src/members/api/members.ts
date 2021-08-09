@@ -28,13 +28,21 @@ export const getMember = async (
 };
 
 export const getMembers = async (
-    page = 1,
-    limit = 200,
+    page: number,
+    limit: number,
     ids: string[] = [],
     sortField = "created",
     order = "asc"
 ): Promise<MemberData[]> => {
-    if (devUseFixtureData) return Promise.resolve(fixtureMemberData);
+    if (devUseFixtureData) {
+        let data = fixtureMemberData;
+        if (ids.length) {
+            data = fixtureMemberData.filter((md) =>
+                ids.includes(md.templateId.toString())
+            );
+        }
+        return Promise.resolve(data.slice(0, limit));
+    }
     const data = await getTemplates(page, limit, ids, sortField, order);
     return data.map(convertAtomicTemplateToMember);
 };
