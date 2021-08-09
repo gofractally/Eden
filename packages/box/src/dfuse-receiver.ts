@@ -220,7 +220,8 @@ export default class DfuseReceiver {
         logger.info("connecting to", dfuseConfig.apiNetwork);
         if (!this.jsonTransactions.length && dfuseConfig.firstBlock === 1)
             logger.warn(
-                "Don't have an existing dfuse cursor and DFUSE_FIRST_BLOCK isn't set; this may take a while before the first result comes..."
+                "Don't have an existing dfuse cursor and DFUSE_FIRST_BLOCK isn't greator than 1; " +
+                    "this may take a while before the first result comes..."
             );
 
         const stream = await this.dfuseClient.graphql(

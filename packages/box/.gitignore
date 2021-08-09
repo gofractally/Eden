@@ -1,4 +1,4 @@
 tmp/
 .env.local
-dfuse-transactions.json
+dfuse-transactions*.json
 state
