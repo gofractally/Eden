@@ -108,6 +108,7 @@ export const OngoingRoundSegment = ({
             console.info("electopt trx", signedTrx);
 
             // invalidate current member query to update participating status
+            await new Promise((resolve) => setTimeout(resolve, 3000));
             queryClient.invalidateQueries(
                 queryMemberGroupParticipants(
                     loggedInMember?.account,
@@ -115,6 +116,7 @@ export const OngoingRoundSegment = ({
                 ).queryKey
             );
         } catch (error) {
+            // TODO: Alert of failure...e.g., vote comes in after voting closes.
             console.error(error);
         }
         setIsLoading(false);
@@ -260,7 +262,9 @@ export const OngoingRoundSegment = ({
                         onClick={onSubmitVote}
                         isLoading={isLoading}
                     >
-                        <BiCheck size={21} className="-mt-1 mr-1" />
+                        {!isLoading && (
+                            <BiCheck size={21} className="-mt-1 mr-1" />
+                        )}
                         {userVotingFor ? "Change Vote" : "Submit Vote"}
                     </Button>
                     <Button size="sm">
