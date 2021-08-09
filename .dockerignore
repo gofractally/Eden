@@ -1,7 +1,7 @@
 .git
 .vscode
 **/.env.local
-**/dfuse-transactions.json
+**/dfuse-transactions*.json
 **/dist
 **/node_modules
 **/state

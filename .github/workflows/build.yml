@@ -334,7 +334,7 @@ jobs:
               if: steps.filter.outputs.src == 'true'
               uses: docker/build-push-action@v2
               with:
-                  # push: true # TODO: follow up on this... https://github.community/t/403-error-on-container-registry-push-from-github-action/173071/5
+                  push: true
                   file: docker/eden-box.Dockerfile
                   tags: ${{ steps.prep.outputs.tags }}
                   context: .
@@ -461,7 +461,7 @@ jobs:
               if: steps.filter.outputs.src == 'true'
               uses: docker/build-push-action@v2
               with:
-                  # push: true # TODO: follow up on this... https://github.community/t/403-error-on-container-registry-push-from-github-action/173071/5
+                  push: true
                   file: docker/eden-webapp.Dockerfile
                   tags: ${{ steps.prep.outputs.tags }}
                   context: .
