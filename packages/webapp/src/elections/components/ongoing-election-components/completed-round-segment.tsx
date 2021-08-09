@@ -1,7 +1,11 @@
 import { useQuery } from "react-query";
 import { RiVideoUploadLine } from "react-icons/ri";
 
-import { queryMembers } from "_app";
+import {
+    queryMembers,
+    useCurrentMember,
+    useParticipantsInCompletedRound,
+} from "_app";
 import { Button, Container, Expander } from "_app/ui";
 import { ElectionParticipantChip } from "elections";
 import { MembersGrid } from "members";
@@ -9,12 +13,18 @@ import { MembersGrid } from "members";
 import RoundHeader from "./round-header";
 
 interface CompletedRoundSegmentProps {
-    round: number;
+    roundIndex: number;
 }
 
 export const CompletedRoundSegment = ({
-    round,
+    roundIndex,
 }: CompletedRoundSegmentProps) => {
+    const { data: loggedInMember } = useCurrentMember();
+    const { data: roundParticipants } = useParticipantsInCompletedRound(
+        roundIndex,
+        loggedInMember
+    );
+    console.log("ROUND PARTICIPANTS:", roundParticipants);
     // TODO: The number of completed rounds is generated based on fixture data, but the contents are still mocked. Fill in contents!
     const { data: participants } = useQuery({
         ...queryMembers(1, 5),
@@ -29,7 +39,7 @@ export const CompletedRoundSegment = ({
         <Expander
             header={
                 <RoundHeader
-                    roundNum={round}
+                    roundNum={roundIndex + 1}
                     subText={
                         winner
                             ? `Delegate elect: ${winner.name}`
@@ -44,7 +54,7 @@ export const CompletedRoundSegment = ({
                     if (member.account === winner?.account) {
                         return (
                             <ElectionParticipantChip
-                                key={`round-${round}-winner`}
+                                key={`round-${roundIndex + 1}-winner`}
                                 member={member}
                                 delegateLevel="Delegate elect"
                                 electionVideoCid="QmeKPeuSai8sbEfvbuVXzQUzYRsntL3KSj5Xok7eRiX5Fp/edenTest2ElectionRoom12.mp4"
@@ -53,7 +63,9 @@ export const CompletedRoundSegment = ({
                     }
                     return (
                         <ElectionParticipantChip
-                            key={`round-${round}-participant-${member.account}`}
+                            key={`round-${roundIndex + 1}-participant-${
+                                member.account
+                            }`}
                             member={member}
                         />
                     );
@@ -62,7 +74,7 @@ export const CompletedRoundSegment = ({
             <Container>
                 <Button size="sm">
                     <RiVideoUploadLine size={18} className="mr-2" />
-                    Upload round {round} recording
+                    Upload round {roundIndex + 1} recording
                 </Button>
             </Container>
         </Expander>

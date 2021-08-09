@@ -40,7 +40,7 @@ export const OngoingElection = () => {
                 [...Array(roundData.round)].map((_, i) => (
                     <Ongoing.CompletedRoundSegment
                         key={`election-round-${i + 1}`}
-                        round={i + 1}
+                        roundIndex={i}
                     />
                 ))}
             {currentElection && (
