@@ -1,11 +1,12 @@
 import React, { useEffect, useState } from "react";
-import { useQuery } from "react-query";
+import { useQuery, useQueryClient } from "react-query";
 import { Flipper, Flipped } from "react-flip-toolkit";
 import { BiCheck, BiWebcam } from "react-icons/bi";
 import { RiVideoUploadLine } from "react-icons/ri";
 
-import { queryMembers } from "_app";
+import { queryMembers, useUALAccount } from "_app";
 import {
+    queryMemberGroupParticipants,
     useCurrentMember,
     useMemberGroupParticipants,
     useMemberListByAccountNames,
@@ -14,7 +15,7 @@ import { Button, Container, Expander, Heading, Text } from "_app/ui";
 import { VotingMemberChip } from "elections";
 import { MembersGrid } from "members";
 import { EdenMember, MemberData } from "members/interfaces";
-import { VoteData } from "elections/interfaces";
+import { setVote } from "../../transactions";
 
 import Consensometer from "./consensometer";
 import PasswordPromptModal from "./password-prompt-modal";
@@ -28,9 +29,11 @@ interface OngoingRoundSegmentProps {
 export const OngoingRoundSegment = ({
     roundData,
 }: OngoingRoundSegmentProps) => {
+    const queryClient = useQueryClient();
+
     const [fetchError, setFetchError] = useState<boolean>(false);
-    const [voterStats, setVoterStats] = useState<VoteData[]>([]); // TODO: Remove; only here to facilitate mock voting
     const [selectedMember, setSelected] = useState<MemberData | null>(null);
+    const [isLoading, setIsLoading] = useState<boolean>(false);
     const [
         showZoomLinkPermutations,
         setShowZoomLinkPermutations,
@@ -39,15 +42,12 @@ export const OngoingRoundSegment = ({
         false
     ); // TODO: Hook up to the real password prompt
 
+    const [ualAccount] = useUALAccount();
     const { data: loggedInMember } = useCurrentMember();
 
     const { data: voteData } = useMemberGroupParticipants(
         loggedInMember?.account
     );
-
-    useEffect(() => {
-        if (voteData) setVoterStats(voteData);
-    }, [voteData]);
 
     const roundEdenMembers = useMemberListByAccountNames(
         voteData?.map((participant) => participant.member) ?? []
@@ -83,7 +83,7 @@ export const OngoingRoundSegment = ({
         setSelected(member);
     };
 
-    const userVoterStats = voterStats.find(
+    const userVoterStats = voteData.find(
         (vs) => vs.member === loggedInMember?.account
     );
 
@@ -91,22 +91,39 @@ export const OngoingRoundSegment = ({
         (m) => m.account === userVoterStats?.candidate
     );
 
-    // TODO: Sign & push vote action; remove voterStats and switch back to relying on voteData
-    const onSubmitVote = () => {
-        setVoterStats([
-            ...voterStats.filter((vs) => vs.member !== loggedInMember?.account),
-            {
-                ...userVoterStats!,
-                candidate: selectedMember?.account ?? "",
-            },
-        ]);
+    const onSubmitVote = async () => {
+        if (!selectedMember) return;
+        setIsLoading(true);
+        try {
+            const authorizerAccount = ualAccount.accountName;
+            const transaction = setVote(
+                authorizerAccount,
+                roundData.round,
+                selectedMember?.account
+            );
+            console.info("signing trx", transaction);
+            const signedTrx = await ualAccount.signTransaction(transaction, {
+                broadcast: true,
+            });
+            console.info("electopt trx", signedTrx);
+
+            // invalidate current member query to update participating status
+            queryClient.invalidateQueries(
+                queryMemberGroupParticipants(
+                    loggedInMember?.account,
+                    roundData?.config
+                ).queryKey
+            );
+        } catch (error) {
+            console.error(error);
+        }
+        setIsLoading(false);
     };
 
     // TODO: If we want the list leaderboard flipper animation, we'll want to poll with the query and sort round participants by number of votes.
     // Then we'll feed that into the Flipper instance below.
     const getVoteCountForMember = (member: MemberData) => {
-        return voterStats.filter((vd) => vd.candidate === member.account)
-            .length;
+        return voteData.filter((vd) => vd.candidate === member.account).length;
     };
 
     const sortMembersByVotes = [...members].sort(
@@ -190,15 +207,15 @@ export const OngoingRoundSegment = ({
                 <Heading size={4} className="inline-block">
                     Consensus
                 </Heading>
-                <Consensometer voteData={voterStats} />
+                <Consensometer voteData={voteData} />
             </Container>
             <Flipper flipKey={sortMembersByVotes}>
                 <MembersGrid members={sortMembersByVotes}>
                     {(member, index) => {
-                        const voteInfo = voterStats.find(
+                        const voteInfo = voteData.find(
                             (vd) => vd.member === member.account
                         );
-                        const votesReceived = voterStats.filter(
+                        const votesReceived = voteData.filter(
                             (vd) => vd.candidate === member.account
                         ).length;
                         return (
@@ -237,9 +254,11 @@ export const OngoingRoundSegment = ({
                         size="sm"
                         disabled={
                             !selectedMember ||
+                            isLoading ||
                             userVotingFor?.account === selectedMember.account
                         }
                         onClick={onSubmitVote}
+                        isLoading={isLoading}
                     >
                         <BiCheck size={21} className="-mt-1 mr-1" />
                         {userVotingFor ? "Change Vote" : "Submit Vote"}

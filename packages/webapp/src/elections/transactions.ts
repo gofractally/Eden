@@ -50,3 +50,27 @@ export const setElectionParticipation = (
         },
     ],
 });
+
+export const setVote = (
+    authorizerAccount: string,
+    round: number,
+    candidate: string
+) => ({
+    actions: [
+        {
+            account: edenContractAccount,
+            name: "electvote",
+            authorization: [
+                {
+                    actor: authorizerAccount,
+                    permission: "active",
+                },
+            ],
+            data: {
+                round,
+                voter: authorizerAccount,
+                candidate,
+            },
+        },
+    ],
+});
