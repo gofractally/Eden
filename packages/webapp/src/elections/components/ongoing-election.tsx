@@ -1,5 +1,6 @@
-import { useCurrentElection } from "_app";
+import { useCurrentElection, useMemberStats } from "_app";
 import { Container, Heading, Text } from "_app/ui";
+import { ElectionRoundData } from "elections/interfaces";
 
 import * as Ongoing from "./ongoing-election-components";
 
@@ -7,6 +8,25 @@ import * as Ongoing from "./ongoing-election-components";
 // TODO: Make sure time zone changes during election are handled properly
 export const OngoingElection = () => {
     const { data: currentElection } = useCurrentElection();
+    const { data: memberStats } = useMemberStats();
+
+    if (!currentElection || !memberStats) {
+        return (
+            <Container>
+                <Heading size={2}>Loading</Heading>
+            </Container>
+        );
+    }
+
+    let roundData = currentElection as ElectionRoundData;
+    if (currentElection?.electionState === "current_election_state_final") {
+        roundData = {
+            electionState: currentElection?.electionState,
+            round: memberStats?.ranks.length,
+            // TODO: Reduce time for sortition round to two hours in contract
+            round_end: currentElection?.seed.end_time,
+        };
+    }
 
     return (
         <div className="divide-y">
@@ -16,15 +36,15 @@ export const OngoingElection = () => {
             </Container>
             <Ongoing.SupportSegment />
             {/* TODO: How do we get previous round info? Do that here. */}
-            {currentElection?.round > 0 &&
-                [...Array(currentElection.round)].map((_, i) => (
+            {roundData?.round > 0 &&
+                [...Array(roundData.round)].map((_, i) => (
                     <Ongoing.CompletedRoundSegment
                         key={`election-round-${i + 1}`}
                         round={i + 1}
                     />
                 ))}
             {currentElection && (
-                <Ongoing.OngoingRoundSegment roundData={currentElection} />
+                <Ongoing.OngoingRoundSegment roundData={roundData} />
             )}
         </div>
     );

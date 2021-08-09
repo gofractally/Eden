@@ -10,9 +10,11 @@ import {
     useCurrentMember,
     useMemberGroupParticipants,
     useMemberListByAccountNames,
+    useVoteData,
 } from "_app/hooks/queries";
 import { Button, Container, Expander, Heading, Text } from "_app/ui";
 import { VotingMemberChip } from "elections";
+import { ElectionRoundData } from "elections/interfaces";
 import { MembersGrid } from "members";
 import { EdenMember, MemberData } from "members/interfaces";
 import { setVote } from "../../transactions";
@@ -22,7 +24,7 @@ import PasswordPromptModal from "./password-prompt-modal";
 import RoundHeader from "./round-header";
 
 interface OngoingRoundSegmentProps {
-    roundData: any;
+    roundData: ElectionRoundData;
 }
 
 // TODO: Much of the building up of the data shouldn't be done in the UI layer. What do we want the API to provide? What data does this UI really need? We could even define a new OngoingElection type to provide to this UI.
@@ -45,9 +47,18 @@ export const OngoingRoundSegment = ({
     const [ualAccount] = useUALAccount();
     const { data: loggedInMember } = useCurrentMember();
 
-    const { data: voteData } = useMemberGroupParticipants(
+    const { data: memberGroup } = useMemberGroupParticipants(
         loggedInMember?.account
     );
+
+    const { data: allVoteData } = useVoteData(
+        { limit: 20 },
+        {
+            enabled: roundData.electionState === "current_election_state_final", // TODO: Enum!
+        }
+    );
+
+    const voteData = memberGroup ?? allVoteData;
 
     const roundEdenMembers = useMemberListByAccountNames(
         voteData?.map((participant) => participant.member) ?? []

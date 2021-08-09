@@ -71,3 +71,10 @@ export interface VoteData {
     index: number;
     candidate: string;
 }
+
+export interface ElectionRoundData {
+    electionState: string;
+    round: number;
+    round_end: string;
+    config?: ActiveStateConfigType;
+}

@@ -27,6 +27,7 @@ const ElectionBody = ({ electionState }: { electionState?: string }) => {
         case "current_election_state_registration":
             return <RegistrationElection />;
         case "current_election_state_active":
+        case "current_election_state_final": // TODO: This is one state where there's a board but no satoshi. UI should reflect that.
             return <OngoingElection />;
         default:
             return (
