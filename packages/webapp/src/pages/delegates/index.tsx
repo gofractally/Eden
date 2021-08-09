@@ -8,6 +8,7 @@ import {
     Heading,
     queryMembers,
     Text,
+    useCurrentElection,
     useCurrentMember,
     useElectionState,
     useMemberListByAccountNames,
@@ -25,20 +26,39 @@ interface Props {
 export const DelegatesPage = (props: Props) => {
     const [activeUser] = useUALAccount();
     const currentMember = useCurrentMember();
-    const { data: myDelegation } = useMyDelegation();
+
+    const { data: currentElection } = useCurrentElection();
+    const isElectionInProgress =
+        currentElection?.electionState !==
+        "current_election_state_registration";
+
+    const { data: myDelegation } = useMyDelegation(!isElectionInProgress);
     const { data: electionState } = useElectionState();
 
     let nftTemplateIds: number[] = [];
-    if (myDelegation?.length) {
+    if (!isElectionInProgress && myDelegation?.length) {
         nftTemplateIds = myDelegation?.map((member) => member.nft_template_id);
     }
 
     const { data: members } = useQuery({
         ...queryMembers(1, myDelegation?.length, nftTemplateIds),
         staleTime: Infinity,
-        enabled: Boolean(myDelegation?.length),
+        enabled: !isElectionInProgress && Boolean(myDelegation?.length),
     });
 
+    if (isElectionInProgress) {
+        return (
+            <FluidLayout title="My Delegation">
+                <Container>
+                    <Heading size={1}>Election in Progress</Heading>
+                    <Heading size={2}>
+                        Come back after the election is complete to see your
+                        delegation.
+                    </Heading>
+                </Container>
+            </FluidLayout>
+        );
+    }
     if (!activeUser)
         return (
             <FluidLayout>

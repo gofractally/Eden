@@ -204,11 +204,11 @@ export const useIsCommunityActive = () =>
         refetchOnWindowFocus: false,
     });
 
-export const useMyDelegation = () => {
+export const useMyDelegation = (enabled: boolean = true) => {
     const { data: member } = useCurrentMember();
     return useQuery({
         ...queryMyDelegation(member?.account),
-        enabled: Boolean(member?.account),
+        enabled: enabled && Boolean(member?.account),
     });
 };
 
