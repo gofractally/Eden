@@ -42,7 +42,12 @@ export const OngoingElection = () => {
                         roundIndex={i}
                     />
                 ))}
-            {currentElection && (
+            {currentElection?.electionState === ElectionStatus.Final ? (
+                <Ongoing.ChiefsRoundSegment
+                    roundIndex={roundData.round}
+                    roundEndTime={roundData.round_end}
+                />
+            ) : (
                 <Ongoing.OngoingRoundSegment
                     electionState={roundData.electionState}
                     roundIndex={roundData.round}
