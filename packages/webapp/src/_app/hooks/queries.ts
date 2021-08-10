@@ -79,7 +79,12 @@ export const queryParticipantsInCompletedRound = (
     electionRound?: number,
     member?: EdenMember
 ) => ({
-    queryKey: ["query_current_election", electionRound, member],
+    queryKey: [
+        "query_current_election",
+        electionRound,
+        member,
+        isStillParticipating,
+    ],
     queryFn: () => {
         if (typeof electionRound !== "number" || !member)
             throw new Error(
@@ -225,10 +230,8 @@ export const useHeadDelegate = () =>
         ...queryHeadDelegate,
     });
 
-export const useParticipantsInCompletedRound = (
-    electionRound?: number,
-    member?: EdenMember
-) => {
+export const useParticipantsInCompletedRound = (electionRound?: number) => {
+    const { data: member } = useCurrentMember();
     const { data: voteData } = useVoteDataRow(member?.account);
     console.info("voteData:", voteData);
 

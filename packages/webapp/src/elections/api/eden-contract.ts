@@ -21,7 +21,6 @@ import {
     getTableRawRows,
     getTableRows,
     isValidDelegate,
-    useVoteDataRow,
 } from "_app";
 import {
     fixtureCurrentElection,

@@ -20,14 +20,8 @@ interface CompletedRoundSegmentProps {
 export const CompletedRoundSegment = ({
     roundIndex,
 }: CompletedRoundSegmentProps) => {
-    const { data: loggedInMember } = useCurrentMember();
-    console.info(
-        `roundIndex[${roundIndex}], loggedInMember[${loggedInMember}]`
-    );
-
     const { data: roundParticipants } = useParticipantsInCompletedRound(
-        roundIndex,
-        loggedInMember
+        roundIndex
     );
     console.log("ROUND PARTICIPANTS:", roundParticipants);
     // TODO: The number of completed rounds is generated based on fixture data, but the contents are still mocked. Fill in contents!
