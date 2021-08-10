@@ -155,20 +155,24 @@ const getVoteDataRows = async (
 export const getVoteData = getVoteDataRows;
 
 const getCommonDelegateAccountForGroupWithThisMember = (
-    round: number,
+    roundRequested: number,
     member: EdenMember,
-    isStillParticipating: boolean
+    voteData?: VoteData
 ) => {
-    console.info(
-        `getCommonDelegateAccountForGroupWithThisMember(round[${round}], isStillParticipating[${isStillParticipating}]).top member:`
-    );
-    console.info(member);
+    let electionRank = member.election_rank;
+    // if the member has an open voteData record (i.e., still participating), get their election rank from that
+    if (voteData?.member === member.account) {
+        electionRank = voteData.round;
+    }
 
-    const commonDelegateIfDoneParticipating =
-        member.election_rank > round ? member.account : member.representative;
-    const commonDelegate = isStillParticipating
-        ? member.account
-        : commonDelegateIfDoneParticipating;
+    let commonDelegate = member.representative;
+    if (electionRank > roundRequested) {
+        commonDelegate = member.account;
+    } else if (electionRank < roundRequested) {
+        throw new Error(
+            "Cannot fetch round participants in round member did not participate in."
+        );
+    }
 
     return isValidDelegate(commonDelegate) ? commonDelegate : "";
 };
@@ -176,14 +180,13 @@ const getCommonDelegateAccountForGroupWithThisMember = (
 export const getParticipantsInCompletedRound = async (
     electionRound: number,
     member: EdenMember,
-    isStillParticipating: boolean
+    voteData?: VoteData
 ): Promise<{ participants: EdenMember[]; delegate?: string } | undefined> => {
     const commonDelegate = getCommonDelegateAccountForGroupWithThisMember(
         electionRound,
         member,
-        isStillParticipating
+        voteData
     );
-    console.info(`commonDelegate[${commonDelegate}]`);
     if (!commonDelegate) return undefined;
 
     if (devUseFixtureData)

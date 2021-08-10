@@ -2,7 +2,7 @@ import { RiVideoUploadLine } from "react-icons/ri";
 
 import {
     useMemberDataFromEdenMembers,
-    useParticipantsInCompletedRound,
+    useParticipantsInMyCompletedRound,
 } from "_app";
 import { Button, Container, Expander } from "_app/ui";
 import { ElectionParticipantChip } from "elections";
@@ -18,7 +18,7 @@ export const CompletedRoundSegment = ({
     roundIndex,
 }: CompletedRoundSegmentProps) => {
     // TODO: Participants should be limited to only those in the round (we're getting extras right now)
-    const { data } = useParticipantsInCompletedRound(roundIndex);
+    const { data } = useParticipantsInMyCompletedRound(roundIndex);
     const { data: participantsMemberData } = useMemberDataFromEdenMembers(
         data?.participants
     );
