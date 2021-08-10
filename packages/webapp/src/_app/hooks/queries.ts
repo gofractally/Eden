@@ -43,6 +43,7 @@ import {
     VoteData,
 } from "elections/interfaces";
 import { EncryptionScope, getEncryptedData } from "encryption/api";
+import { TableQueryOptions } from "_app/eos/interfaces";
 
 export const queryHeadDelegate = {
     queryKey: "query_head_delegate",
@@ -85,7 +86,7 @@ export const queryVoteDataRow = (account?: string) => ({
     },
 });
 
-export const queryVoteData = (options: VoteDataQueryOptionsByGroup = {}) => ({
+export const queryVoteData = (options: TableQueryOptions = {}) => ({
     queryKey: ["query_vote_data"],
     queryFn: () => getVoteData(options),
 });
@@ -354,7 +355,7 @@ export const useVoteDataRow = (account?: string) => {
 };
 
 export const useVoteData = (
-    voteQueryConfig: VoteDataQueryOptionsByGroup,
+    voteQueryConfig: TableQueryOptions,
     queryOptions = {}
 ) =>
     useQuery({

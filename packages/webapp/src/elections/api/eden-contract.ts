@@ -14,16 +14,11 @@ import {
     getTableRows,
     isValidDelegate,
     queryMemberByAccountName,
-    queryMemberData,
     queryMembers,
     queryParticipantsInCompletedRound,
+    TABLE_INDEXES,
 } from "_app";
-import {
-    EdenMember,
-    MemberData,
-    VoteDataQueryOptionsByField,
-    VoteDataQueryOptionsByGroup,
-} from "members";
+import { EdenMember, MemberData, VoteDataQueryOptionsByField } from "members";
 import {
     ActiveStateConfigType,
     CONFIG_SORTITION_ROUND_DEFAULTS,
@@ -39,9 +34,10 @@ import {
     fixtureVoteDataRow,
     fixtureVoteDataRows,
 } from "./fixtures";
-import { fixtureEdenMembersInGroup } from "members/api/fixtures";
 
 const CONSENSUS_RESULT_NO_DELEGATE = "no delegate";
+import { TableQueryOptions } from "_app/eos/interfaces";
+import { fixtureEdenMembersInGroup } from "members/api/fixtures";
 
 export const getMemberGroupFromIndex = (
     memberIdx: number,
@@ -118,9 +114,8 @@ export const getMemberGroupParticipants = async (
         lowerBound: (roundIndex << 16) + lowerBound,
         upperBound: (roundIndex << 16) + upperBound,
         limit: GET_VOTE_DATA_ROWS_LIMIT,
-        key_type: "i64",
-        index_position: 2,
-    });
+        ...TABLE_INDEXES[CONTRACT_VOTE_TABLE],
+    } as TableQueryOptions);
 
     if (!rows || !rows.length) {
         return undefined;
@@ -144,14 +139,14 @@ export const getVoteDataRow = async (
 };
 
 const getVoteDataRows = async (
-    opts: VoteDataQueryOptionsByGroup
+    opts: TableQueryOptions
 ): Promise<VoteData[] | undefined> => {
     if (devUseFixtureData)
         return Promise.resolve(
             fixtureVoteDataRows.filter(
                 (vote) =>
-                    vote.index >= opts.lowerBound &&
-                    vote.index <= opts.upperBound
+                    vote.index >= opts.lowerBound! &&
+                    vote.index <= opts.upperBound!
             )
         );
 
@@ -228,11 +223,10 @@ export const getParticipantsInCompletedRound = async (
     const bounds: string = eosjsNumeric.signedBinaryToDecimal(bytes).toString();
 
     const participants = await getTableRows(CONTRACT_MEMBER_TABLE, {
-        index_position: 2,
-        key_type: "i128",
         lowerBound: bounds,
         upperBound: bounds,
         limit: 20,
+        ...TABLE_INDEXES[CONTRACT_MEMBER_TABLE],
     });
 
     const delegateAccountName = participants?.[0].representative;
