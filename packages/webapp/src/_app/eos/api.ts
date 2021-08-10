@@ -86,32 +86,12 @@ export const getTableRawRows = async <T = any>(
 
     const requestBody = {
         code: edenContractAccount,
-        index_position: options.index_position,
         json: true,
-        key_type: options.key_type,
-        limit: `${options.limit}`,
-        lower_bound: options.lowerBound,
-        upper_bound: options.upperBound,
-        reverse,
-        scope: options.scope,
-        show_payer: false,
-        table: table,
-    };
-
-    const requestBody2 = {
-        code: edenContractAccount,
-        json: true,
-        key_type: options.key_type,
-        limit: `${options.limit}`,
         reverse,
         show_payer: false,
         table: table,
         ...options,
     };
-
-    console.info("request bodies match?");
-    console.info(requestBody);
-    console.info(requestBody2);
 
     const response = await fetch(RPC_GET_TABLE_ROWS, {
         method: "POST",
