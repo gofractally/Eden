@@ -14,7 +14,7 @@ import {
 } from "_app/hooks/queries";
 import { Button, Container, Expander, Heading, Text } from "_app/ui";
 import { VotingMemberChip } from "elections";
-import { ElectionRoundData } from "elections/interfaces";
+import { ActiveStateConfigType, ElectionStatus } from "elections/interfaces";
 import { MembersGrid } from "members";
 import { MemberData } from "members/interfaces";
 import { setVote } from "../../transactions";
@@ -23,14 +23,20 @@ import Consensometer from "./consensometer";
 import PasswordPromptModal from "./password-prompt-modal";
 import RoundHeader from "./round-header";
 
-interface OngoingRoundSegmentProps {
-    roundData: ElectionRoundData;
+export interface RoundSegmentProps {
+    electionState: string;
+    roundIndex: number;
+    roundEndTime: string;
+    electionConfig?: ActiveStateConfigType;
 }
 
 // TODO: Much of the building up of the data shouldn't be done in the UI layer. What do we want the API to provide? What data does this UI really need? We could even define a new OngoingElection type to provide to this UI.
 export const OngoingRoundSegment = ({
-    roundData,
-}: OngoingRoundSegmentProps) => {
+    electionState,
+    roundIndex,
+    roundEndTime,
+    electionConfig,
+}: RoundSegmentProps) => {
     const queryClient = useQueryClient();
 
     const [selectedMember, setSelected] = useState<MemberData | null>(null);
@@ -53,7 +59,7 @@ export const OngoingRoundSegment = ({
     const { data: allVoteData } = useVoteData(
         { limit: 20 },
         {
-            enabled: roundData.electionState === "current_election_state_final", // TODO: Enum!
+            enabled: electionState === ElectionStatus.Final, // TODO: Enum!
         }
     );
 
@@ -84,7 +90,7 @@ export const OngoingRoundSegment = ({
             const authorizerAccount = ualAccount.accountName;
             const transaction = setVote(
                 authorizerAccount,
-                roundData.round,
+                roundIndex,
                 selectedMember?.account
             );
             console.info("signing trx", transaction);
@@ -98,7 +104,7 @@ export const OngoingRoundSegment = ({
             queryClient.invalidateQueries(
                 queryMemberGroupParticipants(
                     loggedInMember?.account,
-                    roundData?.config
+                    electionConfig
                 ).queryKey
             );
         } catch (error) {
@@ -120,7 +126,12 @@ export const OngoingRoundSegment = ({
 
     return (
         <Expander
-            header={<RoundHeader roundData={roundData} />}
+            header={
+                <RoundHeader
+                    roundEndTime={roundEndTime}
+                    roundIndex={roundIndex}
+                />
+            }
             startExpanded
             locked
         >
@@ -255,7 +266,7 @@ export const OngoingRoundSegment = ({
                     </Button>
                     <Button size="sm">
                         <RiVideoUploadLine size={18} className="mr-2" />
-                        Upload round {roundData.round + 1} recording
+                        Upload round {roundIndex + 1} recording
                     </Button>
                 </div>
             </Container>

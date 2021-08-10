@@ -22,7 +22,6 @@ export const CompletedRoundSegment = ({
     const { data: participantsMemberData } = useMemberDataFromEdenMembers(
         data?.participants
     );
-    console.log("ROUND PARTICIPANTS:", data);
 
     if (!participantsMemberData || !participantsMemberData.length) return <></>; // TODO: Return something here.
 
@@ -32,7 +31,7 @@ export const CompletedRoundSegment = ({
         <Expander
             header={
                 <RoundHeader
-                    roundNum={roundIndex + 1}
+                    roundIndex={roundIndex}
                     subText={
                         winner
                             ? `Delegate elect: ${winner.name}`
