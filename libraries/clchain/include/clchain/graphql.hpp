@@ -663,7 +663,6 @@ namespace clchain
                      using mf = eosio::member_fn<member_type>;
                      eosio::tuple_from_type_list<typename mf::arg_types> args;
                      bool filled[mf::num_args] = {};
-                     gql_mark_optional<0>(args, filled);
                      if (input_stream.current_puncuator == '(')
                      {
                         input_stream.skip();
@@ -684,6 +683,7 @@ namespace clchain
                            return (ok = error("expected )")), void();
                         input_stream.skip();
                      }
+                     gql_mark_optional<0>(args, filled);
                      if constexpr (mf::num_args > 0)
                         for (int i = 0; i < mf::num_args; ++i)
                            if (!filled[i])
