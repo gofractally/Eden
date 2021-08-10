@@ -1,22 +1,22 @@
-import React, { useEffect, useState } from "react";
-import { useQuery, useQueryClient } from "react-query";
+import React, { useState } from "react";
+import { useQueryClient } from "react-query";
 import { Flipper, Flipped } from "react-flip-toolkit";
 import { BiCheck, BiWebcam } from "react-icons/bi";
 import { RiVideoUploadLine } from "react-icons/ri";
 
-import { queryMembers, useUALAccount } from "_app";
+import { useUALAccount } from "_app";
 import {
     queryMemberGroupParticipants,
     useCurrentMember,
+    useMemberDataFromVoteData,
     useMemberGroupParticipants,
-    useMemberListByAccountNames,
     useVoteData,
 } from "_app/hooks/queries";
 import { Button, Container, Expander, Heading, Text } from "_app/ui";
 import { VotingMemberChip } from "elections";
 import { ElectionRoundData } from "elections/interfaces";
 import { MembersGrid } from "members";
-import { EdenMember, MemberData } from "members/interfaces";
+import { MemberData } from "members/interfaces";
 import { setVote } from "../../transactions";
 
 import Consensometer from "./consensometer";
@@ -33,7 +33,6 @@ export const OngoingRoundSegment = ({
 }: OngoingRoundSegmentProps) => {
     const queryClient = useQueryClient();
 
-    const [fetchError, setFetchError] = useState<boolean>(false);
     const [selectedMember, setSelected] = useState<MemberData | null>(null);
     const [isLoading, setIsLoading] = useState<boolean>(false);
     const [
@@ -59,33 +58,9 @@ export const OngoingRoundSegment = ({
     );
 
     const voteData = memberGroup ?? allVoteData;
-
-    const roundEdenMembers = useMemberListByAccountNames(
-        voteData?.map((participant) => participant.member) ?? []
-    );
-
-    const nftTemplateIds: number[] = roundEdenMembers
-        ?.filter((res) => Boolean(res?.data?.nft_template_id))
-        ?.map((res) => res?.data as EdenMember)
-        .map((em) => em.nft_template_id);
-
-    useEffect(() => {
-        const roundMemberError = roundEdenMembers.some((res) => res.isError);
-        if (roundMemberError) {
-            setFetchError(true);
-        } else {
-            setFetchError(false);
-        }
-    }, [roundEdenMembers]);
-
-    const { data: members } = useQuery({
-        ...queryMembers(1, 20, nftTemplateIds),
-        staleTime: Infinity,
-        enabled: !fetchError && Boolean(nftTemplateIds.length),
-    });
+    const { data: members } = useMemberDataFromVoteData(voteData);
 
     // TODO: Handle Fetch Errors;
-    if (fetchError) return <Text>Fetch Error</Text>;
     if (!members || members?.length !== voteData?.length)
         return <Text>Error Fetching Members</Text>;
 

@@ -1,11 +1,8 @@
-import { useQuery } from "react-query";
 import { RiVideoUploadLine } from "react-icons/ri";
 
 import {
-    queryMembers,
-    useCurrentMember,
+    useMemberDataFromEdenMembers,
     useParticipantsInCompletedRound,
-    useVoteDataRow,
 } from "_app";
 import { Button, Container, Expander } from "_app/ui";
 import { ElectionParticipantChip } from "elections";
@@ -20,19 +17,14 @@ interface CompletedRoundSegmentProps {
 export const CompletedRoundSegment = ({
     roundIndex,
 }: CompletedRoundSegmentProps) => {
-    const { data: roundParticipants } = useParticipantsInCompletedRound(
-        roundIndex
-    );
-    console.log("ROUND PARTICIPANTS:", roundParticipants);
-    // TODO: The number of completed rounds is generated based on fixture data, but the contents are still mocked. Fill in contents!
-    const { data: participants } = useQuery({
-        ...queryMembers(1, 5),
-        staleTime: Infinity,
-    });
+    // TODO: Participants should be limited to only those in the round (we're getting extras right now)
+    const { data } = useParticipantsInCompletedRound(roundIndex);
+    const { data: participantsMemberData } = useMemberDataFromEdenMembers(data);
+    console.log("ROUND PARTICIPANTS:", data);
 
-    if (!participants) return <></>;
+    if (!participantsMemberData || !participantsMemberData.length) return <></>; // TODO: Return something here.
 
-    const winner = participants[2]; // TODO: This should be the real winner; I'm just picking a random one for now.
+    const winner = participantsMemberData[2]; // TODO: This should be the real winner; I'm just picking a random one for now.
 
     return (
         <Expander
@@ -48,7 +40,7 @@ export const CompletedRoundSegment = ({
             }
             inactive
         >
-            <MembersGrid members={participants}>
+            <MembersGrid members={participantsMemberData}>
                 {(member) => {
                     if (member.account === winner?.account) {
                         return (
