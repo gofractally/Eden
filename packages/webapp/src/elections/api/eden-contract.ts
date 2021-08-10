@@ -2,16 +2,7 @@ import * as eosjsSerialize from "eosjs/dist/eosjs-serialize";
 import * as eosjsNumeric from "eosjs/dist/eosjs-numeric";
 
 import { devUseFixtureData } from "config";
-import {
-    ActiveStateConfigType,
-    ElectionState,
-    VoteData,
-} from "elections/interfaces";
-import {
-    EdenMember,
-    VoteDataQueryOptionsByField,
-    VoteDataQueryOptionsByGroup,
-} from "members";
+import { queryClient } from "pages/_app";
 import {
     CONTRACT_CURRENT_ELECTION_TABLE,
     CONTRACT_ELECTION_STATE_TABLE,
@@ -21,7 +12,18 @@ import {
     getTableRawRows,
     getTableRows,
     isValidDelegate,
+    queryMemberByAccountName,
 } from "_app";
+import {
+    EdenMember,
+    VoteDataQueryOptionsByField,
+    VoteDataQueryOptionsByGroup,
+} from "members";
+import {
+    ActiveStateConfigType,
+    ElectionState,
+    VoteData,
+} from "elections/interfaces";
 import {
     fixtureCurrentElection,
     fixtureElectionState,
@@ -175,11 +177,7 @@ export const getParticipantsInCompletedRound = async (
     electionRound: number,
     member: EdenMember,
     isStillParticipating: boolean
-) => {
-    // TODO: For non-winner user, grab winner from their rep field and add it in below
-    console.info(
-        `getParticipantsInCompletedRound(isStillParticipating[${isStillParticipating}]).top`
-    );
+): Promise<{ participants: EdenMember[]; delegate?: string } | undefined> => {
     const commonDelegate = getCommonDelegateAccountForGroupWithThisMember(
         electionRound,
         member,
@@ -189,27 +187,35 @@ export const getParticipantsInCompletedRound = async (
     if (!commonDelegate) return undefined;
 
     if (devUseFixtureData)
-        return fixtureMembersInGroup(electionRound, commonDelegate);
+        return {
+            participants: fixtureMembersInGroup(electionRound, commonDelegate),
+            delegate: commonDelegate,
+        };
 
     const serialBuffer = new eosjsSerialize.SerialBuffer();
     serialBuffer.pushName(commonDelegate);
     serialBuffer.pushNumberAsUint64(electionRound);
 
     const bytes = serialBuffer.getUint8Array(16);
-    const lowerBound: string = eosjsNumeric
-        .signedBinaryToDecimal(bytes)
-        .toString();
+    const bounds: string = eosjsNumeric.signedBinaryToDecimal(bytes).toString();
 
-    const addWinner = isStillParticipating ? [member] : [];
+    const participants = await getTableRows(CONTRACT_MEMBER_TABLE, {
+        index_position: 2,
+        key_type: "i128",
+        lowerBound: bounds,
+        upperBound: bounds,
+        limit: 20,
+    });
 
-    return addWinner.concat(
-        await getTableRows(CONTRACT_MEMBER_TABLE, {
-            index_position: 2,
-            key_type: "i128",
-            lowerBound,
-            limit: 6,
-        })
-    );
+    const delegateAccountName = participants?.[0].representative;
+    if (!isValidDelegate(delegateAccountName)) return { participants };
+
+    const { queryKey, queryFn } = queryMemberByAccountName(delegateAccountName);
+    const delegate = await queryClient.fetchQuery(queryKey, queryFn);
+    return {
+        participants: [delegate, ...participants],
+        delegate: delegateAccountName,
+    };
 };
 
 export const getCurrentElection = async () => {
