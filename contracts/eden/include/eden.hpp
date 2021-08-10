@@ -218,7 +218,7 @@ namespace eden
               invitee,
               witnesses,
               ricardian_contract(inductinit_ricardian)),
-       action(inductmeetin, id, keys, data, old_data),
+       action(inductmeetin, account, id, keys, data, old_data),
        action(inductprofil, id, new_member_profile, ricardian_contract(inductprofil_ricardian)),
        action(inductvideo, account, id, video, ricardian_contract(inductvideo_ricardian)),
        action(inductendors,
