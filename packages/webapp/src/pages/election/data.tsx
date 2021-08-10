@@ -13,7 +13,7 @@ import {
     useElectionState,
     useHeadDelegate,
     useMemberGroupParticipants,
-    useParticipantsInCompletedRound,
+    useParticipantsInMyCompletedRound,
     useVoteDataRow,
 } from "_app";
 
@@ -27,7 +27,7 @@ export const ElectionPage = () => {
 
     const {
         data: participantsInCompletedRound,
-    } = useParticipantsInCompletedRound(targetRound, loggedInMember);
+    } = useParticipantsInMyCompletedRound(targetRound);
 
     const { data: voteRowForLoggedInMember } = useVoteDataRow(
         loggedInMember?.account
