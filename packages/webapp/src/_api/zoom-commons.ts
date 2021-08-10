@@ -62,7 +62,7 @@ export const zoomResponseIsInvalidAccess = (response: any) => {
 
 export const generateZoomMeetingLink = async (
     zoomAccountJWT: any,
-    setZoomAccountJWT: () => void,
+    setZoomAccountJWT: (updatedJwt: any) => void,
     topic: string,
     durationInMinutes: number,
     startTime: string
