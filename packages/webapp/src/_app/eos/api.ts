@@ -1,5 +1,5 @@
 import { edenContractAccount, rpcEndpoint } from "config";
-import { TableQueryOptions } from "./interfaces";
+import { TableKeyType, TableQueryOptions } from "./interfaces";
 
 const RPC_URL = `${rpcEndpoint.protocol}://${rpcEndpoint.host}:${rpcEndpoint.port}`;
 export const RPC_GET_TABLE_ROWS = `${RPC_URL}/v1/chain/get_table_rows`;
@@ -16,6 +16,17 @@ export const CONTRACT_VOTE_TABLE = "votes";
 export const CONTRACT_INDUCTION_TABLE = "induction";
 export const CONTRACT_ENDORSEMENT_TABLE = "endorsement";
 
+export const TABLE_INDEXES = {
+    [CONTRACT_MEMBER_TABLE]: {
+        index_position: 2,
+        key_type: "i128" as TableKeyType,
+    },
+    [CONTRACT_VOTE_TABLE]: {
+        key_type: "i64" as TableKeyType,
+        index_position: 2,
+    },
+};
+
 type TableResponseRow<T> = [string, T] | T;
 
 interface TableResponse<T> {
@@ -30,8 +41,7 @@ const TABLE_PARAM_DEFAULTS = {
     upperBound: null,
     limit: 1,
     index_position: 1,
-    key_type: "",
-};
+} as TableQueryOptions;
 
 export const getRow = async <T>(
     table: string,
@@ -86,8 +96,22 @@ export const getTableRawRows = async <T = any>(
         scope: options.scope,
         show_payer: false,
         table: table,
-        table_key: "",
     };
+
+    const requestBody2 = {
+        code: edenContractAccount,
+        json: true,
+        key_type: options.key_type,
+        limit: `${options.limit}`,
+        reverse,
+        show_payer: false,
+        table: table,
+        ...options,
+    };
+
+    console.info("request bodies match?");
+    console.info(requestBody);
+    console.info(requestBody2);
 
     const response = await fetch(RPC_GET_TABLE_ROWS, {
         method: "POST",
@@ -107,15 +131,7 @@ export const getTableRawRows = async <T = any>(
 export const getTableIndexRows = async (
     table: string,
     indexPosition: number,
-    keyType:
-        | "name"
-        | "i64"
-        | "i128"
-        | "i256"
-        | "float64"
-        | "float128"
-        | "sha256"
-        | "ripemd160",
+    keyType: TableKeyType,
     lowerBound: any,
     upperBound?: any,
     limit = 100
