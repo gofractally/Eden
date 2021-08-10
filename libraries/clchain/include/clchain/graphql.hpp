@@ -253,7 +253,7 @@ namespace clchain
                current_type = eof;
                return;
             }
-            switch (input.pos[0])
+            switch ((uint8_t)input.pos[0])
             {
                case '\n':
                case '\r':
@@ -262,7 +262,17 @@ namespace clchain
                case ',':
                   ++input.pos;
                   continue;
+               case 0xEF:
+                  // BOM
+                  if (input.remaining() >= 3 && (uint8_t)input.pos[1] == 0xBB &&
+                      (uint8_t)input.pos[2] == 0xBF)
+                  {
+                     input.pos += 3;
+                     continue;
+                  }
+                  break;
                case '#':
+                  // note: Doesn't detect and reject code points that the GraphQL spec prohibits
                   while (input.remaining() && (input.pos[0] != '\n' && input.pos[0] != '\r'))
                      ++input.pos;
                   continue;
@@ -295,6 +305,18 @@ namespace clchain
                   }
                   break;
                case '"':
+                  // Notes:
+                  // * Block strings (""") not currently supported and escape processing not
+                  //   currently done; we may have to revisit this if we add either mutation
+                  //   support or searches through text fields, or if clients or client
+                  //   libraries end up using them unnecessarily
+                  // * Doesn't detect and reject unescaped code points that the GraphQL
+                  //   spec prohibits
+                  if (input.remaining() >= 3 && input.pos[1] == '"' && input.pos[2] == '"')
+                  {
+                     current_type = error;
+                     return;
+                  }
                   ++input.pos;
                   while (input.remaining() && input.pos[0] != '"')
                   {
@@ -469,6 +491,8 @@ namespace clchain
       input_stream.skip();
       if (input_stream.current_puncuator != ':')
          return error("expected :");
+      if (filled[i])
+         return error("duplicate arg");
       input_stream.skip();
       if constexpr (is_optional)
       {
@@ -643,6 +667,8 @@ namespace clchain
                      if (input_stream.current_puncuator == '(')
                      {
                         input_stream.skip();
+                        if (input_stream.current_puncuator == ')')
+                           return (ok = error("empty arg list")), void();
                         while (input_stream.current_type == gql_stream::name)
                         {
                            bool found = false;
@@ -698,7 +724,21 @@ namespace clchain
       if (input_stream.current_type == gql_stream::name)
       {
          if (input_stream.current_value == "query")
+         {
             input_stream.skip();
+            if (input_stream.current_type == gql_stream::name)
+               return error("query names not supported");
+            if (input_stream.current_puncuator == '(')
+               return error("variables not supported");
+            if (input_stream.current_puncuator == '@')
+               return error("directives not supported");
+         }
+         else if (input_stream.current_value == "subscriptions")
+            return error("subscriptions not supported");
+         else if (input_stream.current_value == "mutation")
+            return error("mutations not supported");
+         else if (input_stream.current_value == "fragment")
+            return error("fragments not supported");
          else
             return error("expected query");
       }
@@ -706,6 +746,17 @@ namespace clchain
          return false;
       if (input_stream.current_type == gql_stream::eof)
          return true;
+      if (input_stream.current_type == gql_stream::name)
+      {
+         if (input_stream.current_value == "query")
+            return error("multiple queries not supported");
+         if (input_stream.current_value == "fragment")
+            return error("fragments not supported");
+         if (input_stream.current_value == "subscription")
+            return error("subscriptions not supported");
+         if (input_stream.current_value == "mutation")
+            return error("mutations not supported");
+      }
       return error("expected end of input");
    }
 
