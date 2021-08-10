@@ -93,11 +93,9 @@ export const OngoingRoundSegment = ({
                 roundIndex,
                 selectedMember?.account
             );
-            console.info("signing trx", transaction);
             const signedTrx = await ualAccount.signTransaction(transaction, {
                 broadcast: true,
             });
-            console.info("electopt trx", signedTrx);
 
             // invalidate current member query to update participating status
             await new Promise((resolve) => setTimeout(resolve, 3000));
