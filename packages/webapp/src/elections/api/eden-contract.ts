@@ -176,6 +176,7 @@ export const getParticipantsInCompletedRound = async (
     member: EdenMember,
     isStillParticipating: boolean
 ) => {
+    // TODO: For non-winner user, grab winner from their rep field and add it in below
     console.info(
         `getParticipantsInCompletedRound(isStillParticipating[${isStillParticipating}]).top`
     );
