@@ -474,9 +474,12 @@ namespace clchain
       {
          if (input_stream.current_type == gql_stream::name && input_stream.current_value == "null")
             input_stream.skip();
-         std::get<i>(args).emplace();
-         if (!gql_parse_arg(*std::get<i>(args), input_stream, error))
-            return false;
+         else
+         {
+            std::get<i>(args).emplace();
+            if (!gql_parse_arg(*std::get<i>(args), input_stream, error))
+               return false;
+         }
       }
       else if (!gql_parse_arg(std::get<i>(args), input_stream, error))
          return false;
