@@ -49,7 +49,11 @@ export const getMyDelegation = async (
 
         // Fill the array from next available position up to member.election_rank with member,
         // in case this delegate got voted up through multiple levels
-        for (let idx = myDelegates.length; idx < member?.election_rank; idx++) {
+        for (
+            let idx = myDelegates.length;
+            idx <= member?.election_rank;
+            idx++
+        ) {
             myDelegates.push(member);
         }
         isHeadChief = member.account === member.representative;

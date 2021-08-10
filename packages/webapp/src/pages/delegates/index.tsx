@@ -101,7 +101,7 @@ const Delegates = ({
     return (
         <>
             {myDelegation
-                .slice(0, membersStats.ranks.length - 2)
+                .slice(0, heightOfDelegationWithoutChiefs)
                 .map((delegate, index) => (
                     <div
                         className="-mt-px"
@@ -187,7 +187,7 @@ const Chiefs = () => {
             </Container>
             <DelegateChip
                 member={headChiefAsMemberData}
-                level={headChiefAsEdenMember.election_rank}
+                level={headChiefAsEdenMember.election_rank + 1}
             />
         </>
     );
