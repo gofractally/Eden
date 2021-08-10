@@ -174,7 +174,10 @@ const getCommonDelegateAccountForGroupWithThisMember = (
         );
     }
 
-    return isValidDelegate(commonDelegate) ? commonDelegate : "";
+    if (isValidDelegate(commonDelegate)) return commonDelegate;
+    throw new Error(
+        "Could not find a valid common delegate. Maybe your group did not come to consensus?"
+    );
 };
 
 export const getParticipantsInCompletedRound = async (
@@ -187,7 +190,6 @@ export const getParticipantsInCompletedRound = async (
         member,
         voteData
     );
-    if (!commonDelegate) return undefined;
 
     if (devUseFixtureData)
         return {
