@@ -258,6 +258,7 @@ export const useMemberGroupParticipants = (memberAccount?: string) => {
         ...queryMemberGroupParticipants(memberAccount, currentElection?.config),
         enabled: Boolean(memberAccount && currentElection?.config),
         refetchInterval: 10000,
+        refetchIntervalInBackground: true,
     });
 };
 
