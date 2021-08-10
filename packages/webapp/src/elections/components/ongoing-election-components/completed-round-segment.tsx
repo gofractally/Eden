@@ -19,12 +19,14 @@ export const CompletedRoundSegment = ({
 }: CompletedRoundSegmentProps) => {
     // TODO: Participants should be limited to only those in the round (we're getting extras right now)
     const { data } = useParticipantsInCompletedRound(roundIndex);
-    const { data: participantsMemberData } = useMemberDataFromEdenMembers(data);
+    const { data: participantsMemberData } = useMemberDataFromEdenMembers(
+        data?.participants
+    );
     console.log("ROUND PARTICIPANTS:", data);
 
     if (!participantsMemberData || !participantsMemberData.length) return <></>; // TODO: Return something here.
 
-    const winner = participantsMemberData[2]; // TODO: This should be the real winner; I'm just picking a random one for now.
+    const winner = data?.participants.find((p) => p.account === data.delegate);
 
     return (
         <Expander
