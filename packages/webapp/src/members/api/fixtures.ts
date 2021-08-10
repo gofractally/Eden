@@ -30,7 +30,7 @@ export const fixtureEdenMembers: EdenMember[] = [
     },
     {
         name: "Philip Pip",
-        account: "pip2.edev",
+        account: "pip.edev",
         nft_template_id: 147802,
         status: MemberStatus.ActiveMember,
         election_participation_status:
