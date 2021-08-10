@@ -1,5 +1,4 @@
-#include <boost/multi_index/mem_fun.hpp>
-#include <boost/multi_index/member.hpp>
+#include <boost/multi_index/key.hpp>
 #include <boost/multi_index/ordered_index.hpp>
 #include <boost/multi_index_container.hpp>
 #include <chainbase/chainbase.hpp>
@@ -84,26 +83,19 @@ using mic = boost::
 template <typename T>
 using ordered_by_id = boost::multi_index::ordered_unique<  //
     boost::multi_index::tag<by_id>,
-    boost::multi_index::member<T, typename T::id_type, &T::id>>;
+    boost::multi_index::key<&T::id>>;
 
 template <typename T>
 using ordered_by_pk = boost::multi_index::ordered_unique<  //
     boost::multi_index::tag<by_pk>,
-    boost::multi_index::const_mem_fun<
-        T,
-        eosio::remove_cvref_t<typename eosio::member_fn<decltype(&T::pk)>::return_type>,
-        &T::pk>>;
+    boost::multi_index::key<&T::pk>>;
 
 template <typename T>
 using ordered_by_invitee = boost::multi_index::ordered_unique<  //
     boost::multi_index::tag<by_invitee>,
-    boost::multi_index::const_mem_fun<
-        T,
-        eosio::remove_cvref_t<typename eosio::member_fn<decltype(&T::invitee)>::return_type>,
-        &T::invitee>>;
+    boost::multi_index::key<&T::invitee>>;
 
-auto available_pk(const auto& table, const auto& first)
-    -> eosio::remove_cvref_t<decltype(table.begin()->pk())>
+uint64_t available_pk(const auto& table, const auto& first)
 {
    auto& idx = table.template get<by_pk>();
    if (idx.empty())
