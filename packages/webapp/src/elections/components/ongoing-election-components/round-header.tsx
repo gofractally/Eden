@@ -7,16 +7,16 @@ import { Text } from "_app/ui";
 import { CountdownPieMer } from "elections";
 
 type RoundHeaderProps =
-    | { roundData: any; roundNum?: number; subText?: string }
-    | { roundData?: any; roundNum: number; subText: string };
+    | { roundEndTime: string; roundIndex: number; subText?: string }
+    | { roundEndTime?: string; roundIndex: number; subText: string };
 
 export const RoundHeader = ({
-    roundData,
-    roundNum,
+    roundEndTime,
+    roundIndex,
     subText,
 }: RoundHeaderProps) => {
-    const isActive = Boolean(roundData);
-    const endsAt = isActive ? dayjs(roundData.round_end + "Z") : undefined;
+    const isActive = Boolean(roundEndTime);
+    const endsAt = isActive ? dayjs(roundEndTime + "Z") : undefined;
     const startsAt = endsAt && endsAt.subtract(40, "minute");
     let subHeader = subText;
 
@@ -41,7 +41,7 @@ export const RoundHeader = ({
                 )}
                 <div>
                     <Text size="sm" className="font-semibold">
-                        Round {roundNum ?? roundData.round + 1}
+                        Round {roundIndex + 1}
                     </Text>
                     <Text size="sm" className="tracking-tight">
                         {subHeader}

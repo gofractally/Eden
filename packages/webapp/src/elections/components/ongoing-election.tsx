@@ -1,10 +1,9 @@
 import { useCurrentElection, useMemberStats } from "_app";
 import { Container, Heading, Text } from "_app/ui";
-import { ElectionRoundData } from "elections/interfaces";
+import { ElectionRoundData, ElectionStatus } from "elections/interfaces";
 
 import * as Ongoing from "./ongoing-election-components";
 
-// TODO: Hook up to real/fixture data; break apart and organize
 // TODO: Make sure time zone changes during election are handled properly
 export const OngoingElection = () => {
     const { data: currentElection } = useCurrentElection();
@@ -19,7 +18,7 @@ export const OngoingElection = () => {
     }
 
     let roundData = currentElection as ElectionRoundData;
-    if (currentElection?.electionState === "current_election_state_final") {
+    if (currentElection?.electionState === ElectionStatus.Final) {
         roundData = {
             electionState: currentElection?.electionState,
             round: memberStats?.ranks.length,
@@ -35,7 +34,7 @@ export const OngoingElection = () => {
                 <Text>In progress until 6:30pm EDT</Text>
             </Container>
             <Ongoing.SupportSegment />
-            {/* TODO: How do we get previous round info? Do that here. */}
+            {/* TODO: How do we get previous round info for rounds that didn't come to consensus? Do that here. */}
             {roundData?.round > 0 &&
                 [...Array(roundData.round)].map((_, i) => (
                     <Ongoing.CompletedRoundSegment
@@ -44,7 +43,12 @@ export const OngoingElection = () => {
                     />
                 ))}
             {currentElection && (
-                <Ongoing.OngoingRoundSegment roundData={roundData} />
+                <Ongoing.OngoingRoundSegment
+                    electionState={roundData.electionState}
+                    roundIndex={roundData.round}
+                    roundEndTime={roundData.round_end}
+                    electionConfig={roundData.config}
+                />
             )}
         </div>
     );

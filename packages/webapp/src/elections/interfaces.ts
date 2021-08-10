@@ -4,6 +4,16 @@ export interface ElectionState {
     last_election_time: string;
 }
 
+export enum ElectionStatus {
+    PendingDate = "current_election_state_pending_date",
+    Registration = "current_election_state_registration",
+    Seeding = "current_election_state_seeding",
+    Voters = "current_election_state_init_voters",
+    Active = "current_election_state_active",
+    Round = "current_election_state_post_round",
+    Final = "current_election_state_final",
+}
+
 interface CurrentElection_registrationState {
     start_time: string;
     election_threshold?: number;

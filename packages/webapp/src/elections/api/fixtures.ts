@@ -1,4 +1,9 @@
-import { CurrentElection, ElectionState, VoteData } from "elections/interfaces";
+import {
+    CurrentElection,
+    ElectionState,
+    ElectionStatus,
+    VoteData,
+} from "elections/interfaces";
 
 // The following fixtures represent the following Election/round layout
 // Round 1:
@@ -31,7 +36,7 @@ export const fixtureElectionState: ElectionState = {
 };
 
 export const fixtureRegistrationElection: CurrentElection = {
-    electionState: "current_election_state_registration",
+    electionState: ElectionStatus.Registration,
     start_time: "2022-01-16T16:00:00.000",
     election_threshold: 100,
 };
