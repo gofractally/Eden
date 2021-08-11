@@ -12,7 +12,7 @@ import {
     VoteDataQueryOptionsByGroup,
     MemberStats,
 } from "members";
-import { Election, getCommunityGlobals } from "_app/api";
+import { getCommunityGlobals } from "_app/api";
 
 import { useUALAccount } from "../eos";
 import {
@@ -40,8 +40,10 @@ import {
     ActiveStateConfigType,
     CurrentElection,
     CurrentElection_activeState,
+    Election,
     VoteData,
 } from "elections/interfaces";
+import { EncryptionScope } from "encryption/api";
 
 export const queryHeadDelegate = {
     queryKey: "query_head_delegate",
@@ -330,6 +332,7 @@ export const useMemberGroupParticipants = (
             currentActiveElection?.config
         ),
         ...queryOptions,
+        enabled,
     });
 };
 
@@ -411,9 +414,9 @@ export const useEncryptedData = (scope: EncryptionScope, id: string) =>
         ...queryEncryptedData(scope, id),
         enabled: Boolean(id),
     });
-export const useOngoingElectionData = (
-    queryOptions: any = {}
-): UseQueryResult<Election | undefined> => {
+export const useOngoingElectionData = (): UseQueryResult<
+    Election | undefined
+> => {
     const { data: loggedInMember } = useCurrentMember();
     // GET highestRandIndexParticipatedIn
     const { data: memberStats } = useMemberStats();
