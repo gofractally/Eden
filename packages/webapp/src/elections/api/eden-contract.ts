@@ -111,6 +111,7 @@ export const getMemberGroupParticipants = async (
     const GET_VOTE_DATA_ROWS_LIMIT = 20;
 
     // get all members in this member's group
+    console.info("getVoteDRs()", { lowerBound, upperBound });
     const rows = await getVoteDataRows({
         lowerBound,
         upperBound,
@@ -155,6 +156,7 @@ const getVoteDataRows = async (
     // TODO: see what real data looks like and real use-cases and see if we need the electionState flag;
     // If not, switch this back to getTableRows()
     const rawRows = await getTableRawRows(CONTRACT_VOTE_TABLE, opts);
+    console.info("rawRows:", rawRows);
 
     if (rawRows?.[0].length) return rawRows.map((row) => row[1]);
     return rawRows;

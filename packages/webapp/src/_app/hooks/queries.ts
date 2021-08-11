@@ -39,6 +39,7 @@ import {
 import {
     ActiveStateConfigType,
     CurrentElection,
+    CurrentElection_activeState,
     VoteData,
 } from "elections/interfaces";
 
@@ -287,7 +288,7 @@ export const useParticipantsInMyCompletedRound = (electionRound: number) => {
 };
 
 export const useCurrentElection = (queryOptions: any = {}) =>
-    useQuery<any, Error>({
+    useQuery<CurrentElection, Error>({
         ...queryCurrentElection,
         ...queryOptions,
     });
@@ -297,18 +298,21 @@ export const useMemberGroupParticipants = (
     queryOptions: any = {}
 ) => {
     const { data: currentElection } = useCurrentElection();
+    // ASSUMPTION: this use method will only be called by *non*-Chief ongoing rounds
+    const currentActiveElection = currentElection as CurrentElection_activeState;
 
-    // TODO: do we still need this? config doesn't exist sometimes
-    // let enabled = Boolean(memberAccount && currentElection?.config);
-    // if ("enabled" in queryOptions) {
-    //     enabled = enabled && queryOptions.enabled;
-    // }
+    let enabled = Boolean(memberAccount && currentActiveElection?.config);
+    if ("enabled" in queryOptions) {
+        enabled = enabled && queryOptions.enabled;
+    }
 
     return useQuery<VoteData[], Error>({
-        ...queryMemberGroupParticipants(memberAccount, currentElection?.config),
+        ...queryMemberGroupParticipants(
+            memberAccount,
+            currentActiveElection?.config
+        ),
         ...queryOptions,
-        // TODO: Research this. TS wasn't happy with it
-        // enabled,
+        enabled,
     });
 };
 

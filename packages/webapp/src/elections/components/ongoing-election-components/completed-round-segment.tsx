@@ -34,7 +34,7 @@ export const CompletedRoundSegment = ({
             header={
                 <RoundHeader
                     isRoundActive={false}
-                    headlineComponent={<div>"Round "{roundIndex + 1}</div>}
+                    headlineComponent={<div>Round {roundIndex + 1}</div>}
                     sublineComponent={
                         isValidDelegate(commonDelegate?.account)
                             ? `Delegate elect: ${commonDelegate!.name}`
