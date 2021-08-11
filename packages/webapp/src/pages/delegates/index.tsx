@@ -18,6 +18,7 @@ import {
 } from "_app";
 import { DelegateChip } from "elections";
 import { EdenMember, MemberData } from "members/interfaces";
+import { ElectionStatus } from "elections/interfaces";
 
 interface Props {
     delegatesPage: number;
@@ -29,8 +30,7 @@ export const DelegatesPage = (props: Props) => {
 
     const { data: currentElection } = useCurrentElection();
     const isElectionInProgress =
-        currentElection?.electionState !==
-        "current_election_state_registration";
+        currentElection?.electionState !== ElectionStatus.Registration;
 
     const { data: myDelegation } = useMyDelegation(!isElectionInProgress);
     const { data: electionState } = useElectionState();
