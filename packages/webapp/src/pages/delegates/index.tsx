@@ -35,11 +35,11 @@ export const DelegatesPage = (props: Props) => {
     const { data: myDelegation } = useMyDelegation(!isElectionInProgress);
     const { data: electionState } = useElectionState();
 
+    // TODO: useMemberDataFromEdenMembers(myDelegation); will replace next 4 lines
     let nftTemplateIds: number[] = [];
     if (!isElectionInProgress && myDelegation?.length) {
         nftTemplateIds = myDelegation?.map((member) => member.nft_template_id);
     }
-
     const { data: members } = useQuery({
         ...queryMembers(1, myDelegation?.length, nftTemplateIds),
         staleTime: Infinity,
