@@ -3,6 +3,16 @@ set -e
 
 CLEOS="cleos -u https://wax-test.eosdac.io"
 CONTRACT="test.edev"
+
+for PARMS in $(cat ./genesis_accounts); do
+  ACCOUNT_NAME=$(echo $PARMS | cut -d "," -f1);
+  INDUCTION_ID=$(echo $PARMS | cut -d "," -f2);
+  IMAGE=$(echo $PARMS | cut -d "," -f3);
+  GENESIS_MEMBERS="$GENESIS_MEMBERS, \"$ACCOUNT_NAME\""
+done
+GENESIS_MEMBERS=$(echo $GENESIS_MEMBERS | cut -c 3-)
+GENESIS_MEMBERS="'$GENESIS_MEMBERS'"
+
 COMMUNITY_NAME="Eden Test"
 COMMUNITY_DESCRIPTION="Eden is a community working to maximize the power and independence of its members and thereby securing life, liberty, property, and justice for all."
 COMMUNITY_LOGO="QmZQ11KWvfj2NkKUMJfsTfvfbyUNQpLYCu8uxSbFTQ2zbA"

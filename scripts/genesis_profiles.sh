@@ -32,6 +32,6 @@ for PARMS in $(cat ./genesis_accounts); do
     }
   }"
 
-echo push action $CONTRACT inductprofil "$PROFILE_ACTION_DATA" -p $INVITEE@active
+$CLOES push action $CONTRACT inductprofil "$PROFILE_ACTION_DATA" -p $INVITEE@active
 
 done;
