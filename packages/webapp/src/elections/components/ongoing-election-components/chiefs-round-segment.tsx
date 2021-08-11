@@ -33,7 +33,6 @@ export const ChiefsRoundSegment = ({
         (participant) => participant.member === currentMember?.account
     );
 
-    // TODO: DelegateChip: Add configurable string of subtext ("Chief Delegate Elect")
     return (
         <Expander
             header={
@@ -46,16 +45,21 @@ export const ChiefsRoundSegment = ({
             locked
         >
             <Container className="space-y-2">
-                <Heading size={3}>Chief Delegates Elect</Heading>
+                <Heading size={3}>Chief Delegates</Heading>
                 <Text>
                     In this round, the newly-elected Chief Delegates meet to
                     discuss their vision for the community. There is no voting
                     during this round, as the Head Chief is selected randomly in
-                    order to compensate for incumbent advantage.
+                    order to mitigate incumbent advantage.
                 </Text>
             </Container>
             <MembersGrid members={members}>
-                {(member) => <DelegateChip member={member} />}
+                {(member) => (
+                    <DelegateChip
+                        member={member}
+                        delegateTitle="Elected Chief Delegate"
+                    />
+                )}
             </MembersGrid>
             {isUserParticipant && (
                 <Container>

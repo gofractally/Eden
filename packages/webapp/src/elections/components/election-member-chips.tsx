@@ -83,11 +83,6 @@ export const VotingMemberChip = ({
     );
 };
 
-interface DelegateChipProps {
-    member?: MemberData;
-    level?: number;
-}
-
 const getDelegateLevelDescription = (
     memberAccount: string | undefined,
     level: number | undefined
@@ -105,10 +100,22 @@ const getDelegateLevelDescription = (
     return prefix;
 };
 
-export const DelegateChip = ({ member, level }: DelegateChipProps) => (
+interface DelegateChipProps {
+    member?: MemberData;
+    level?: number;
+    delegateTitle?: string;
+}
+
+export const DelegateChip = ({
+    member,
+    level,
+    delegateTitle,
+}: DelegateChipProps) => (
     <ElectionParticipantChip
         member={member}
-        delegateLevel={getDelegateLevelDescription(member?.account, level)}
+        delegateLevel={
+            delegateTitle ?? getDelegateLevelDescription(member?.account, level)
+        }
         isDelegate
     />
 );
