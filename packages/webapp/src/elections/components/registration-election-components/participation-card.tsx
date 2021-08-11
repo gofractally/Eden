@@ -1,4 +1,4 @@
-import { useState } from "react";
+import React, { useState } from "react";
 
 import {
     Button,
@@ -18,6 +18,11 @@ import {
 import { extractElectionDates } from "../../utils";
 import { setElectionParticipation } from "../../transactions";
 import { useQueryClient } from "react-query";
+import {
+    setEncryptionPublicKeyTransaction,
+    useEncryptionPassword,
+} from "encryption";
+import { NewPasswordForm, ReenterPasswordForm } from "encryption";
 
 export const ParticipationCard = () => {
     const [ualAccount, _, ualShowModal] = useUALAccount();
@@ -124,14 +129,30 @@ interface ModalProps {
     close: () => void;
 }
 
+enum ParticipationStep {
+    ConfirmParticipation,
+    ConfirmPassword,
+}
+
+interface SetEncryptionPasswordAction {
+    privateKey: string;
+    publicKey: string;
+    trx: any;
+}
+
 const ConfirmParticipationModal = ({ isOpen, close }: ModalProps) => {
     const [isLoading, setIsLoading] = useState<boolean>(false);
     const [ualAccount] = useUALAccount();
     const queryClient = useQueryClient();
+    const [step, setStep] = useState(ParticipationStep.ConfirmParticipation);
+    const {
+        encryptionPassword,
+        updateEncryptionPassword,
+    } = useEncryptionPassword();
 
-    const onSubmit = async (e: React.FormEvent) => {
-        e.preventDefault();
-
+    const onSubmit = async (
+        setEncryptionPasswordAction?: SetEncryptionPasswordAction
+    ) => {
         setIsLoading(true);
 
         try {
@@ -142,10 +163,24 @@ const ConfirmParticipationModal = ({ isOpen, close }: ModalProps) => {
             );
             console.info("signing trx", transaction);
 
+            if (setEncryptionPasswordAction) {
+                transaction.actions = [
+                    ...transaction.actions,
+                    ...setEncryptionPasswordAction.trx.actions,
+                ];
+            }
+
             const signedTrx = await ualAccount.signTransaction(transaction, {
                 broadcast: true,
             });
             console.info("electopt trx", signedTrx);
+
+            if (setEncryptionPasswordAction) {
+                updateEncryptionPassword(
+                    setEncryptionPasswordAction.publicKey,
+                    setEncryptionPasswordAction.privateKey
+                );
+            }
 
             // invalidate current member query to update participating status
             queryClient.invalidateQueries(
@@ -161,6 +196,20 @@ const ConfirmParticipationModal = ({ isOpen, close }: ModalProps) => {
         setIsLoading(false);
     };
 
+    const submitParticipationConfirmation = () => {
+        if (!encryptionPassword.privateKey) {
+            setStep(ParticipationStep.ConfirmPassword);
+        } else {
+            onSubmit();
+        }
+    };
+
+    const submitPasswordConfirmation = async (
+        setEncryptionPasswordTrx?: any
+    ) => {
+        await onSubmit(setEncryptionPasswordTrx);
+    };
+
     return (
         <Modal
             isOpen={isOpen}
@@ -171,43 +220,129 @@ const ConfirmParticipationModal = ({ isOpen, close }: ModalProps) => {
             shouldCloseOnOverlayClick={!isLoading}
             shouldCloseOnEsc={!isLoading}
         >
-            <form onSubmit={onSubmit}>
-                <div className="space-y-4">
-                    <Text>
-                        You are committing to participate in the upcoming
-                        election. Not showing up could impact your standing and
-                        reputation in the community. If for some reason you
-                        cannot participate in the election, please update your
-                        status more than 24 hours from the election.
-                    </Text>
-                    <div className="p-3 border rounded">
-                        <Form.Checkbox
-                            id="confirm-checkbox"
-                            label="I agree to keep my participation status up to date."
-                            disabled={isLoading}
-                            required
-                        />
-                    </div>
-                    <div className="flex space-x-3">
-                        <Button
-                            type="neutral"
-                            onClick={close}
-                            disabled={isLoading}
-                        >
-                            Cancel
-                        </Button>
-                        <Button
-                            isSubmit
-                            isLoading={isLoading}
-                            disabled={isLoading}
-                        >
-                            {isLoading ? "Submitting..." : "Confirm"}
-                        </Button>
-                    </div>
-                </div>
-            </form>
+            {step === ParticipationStep.ConfirmParticipation && (
+                <ConfirmParticipationStep
+                    onSubmit={submitParticipationConfirmation}
+                    isLoading={isLoading}
+                    onCancel={close}
+                />
+            )}
+            {step === ParticipationStep.ConfirmPassword && (
+                <ConfirmPasswordStep
+                    onSubmit={submitPasswordConfirmation}
+                    isLoading={isLoading}
+                    onCancel={close}
+                />
+            )}
         </Modal>
     );
+};
+
+interface ConfirmParticipationStepProps {
+    onSubmit: () => void;
+    isLoading?: boolean;
+    onCancel: () => void;
+}
+
+const ConfirmParticipationStep = ({
+    onSubmit,
+    isLoading,
+    onCancel,
+}: ConfirmParticipationStepProps) => {
+    const doSubmit = (e: React.FormEvent) => {
+        e.preventDefault();
+        onSubmit();
+    };
+
+    return (
+        <form onSubmit={doSubmit}>
+            <div className="space-y-4">
+                <Text>
+                    You are committing to participate in the upcoming election.
+                    Not showing up could impact your standing and reputation in
+                    the community. If for some reason you cannot participate in
+                    the election, please update your status more than 24 hours
+                    from the election.
+                </Text>
+                <div className="p-3 border rounded">
+                    <Form.Checkbox
+                        id="confirm-checkbox"
+                        label="I agree to keep my participation status up to date."
+                        disabled={isLoading}
+                        required
+                    />
+                </div>
+                <div className="flex space-x-3">
+                    <Button
+                        type="neutral"
+                        onClick={onCancel}
+                        disabled={isLoading}
+                    >
+                        Cancel
+                    </Button>
+                    <Button isSubmit isLoading={isLoading} disabled={isLoading}>
+                        {isLoading ? "Submitting..." : "Confirm"}
+                    </Button>
+                </div>
+            </div>
+        </form>
+    );
+};
+
+interface ConfirmPasswordStepProps {
+    onSubmit: (
+        setEncryptionPasswordAction?: SetEncryptionPasswordAction
+    ) => void;
+    isLoading?: boolean;
+    onCancel: () => void;
+}
+
+const ConfirmPasswordStep = ({
+    onSubmit,
+    isLoading,
+    onCancel,
+}: ConfirmPasswordStepProps) => {
+    const [ualAccount] = useUALAccount();
+    const {
+        encryptionPassword,
+        updateEncryptionPassword,
+    } = useEncryptionPassword();
+
+    if (encryptionPassword.publicKey) {
+        // public key present, user needs to re-enter password
+        const doSubmit = async (
+            publicKey: string,
+            privateKey: string
+        ): Promise<void> => {
+            await onSubmit({ trx: { actions: [] }, publicKey, privateKey });
+        };
+        return (
+            <ReenterPasswordForm
+                expectedPublicKey={encryptionPassword.publicKey}
+                onSubmit={doSubmit}
+                onCancel={onCancel}
+            />
+        );
+    } else {
+        const doSubmit = async (
+            publicKey: string,
+            privateKey: string
+        ): Promise<void> => {
+            const authorizerAccount = ualAccount.accountName;
+            const trx = setEncryptionPublicKeyTransaction(
+                authorizerAccount,
+                publicKey
+            );
+            await onSubmit({ trx, publicKey, privateKey });
+        };
+        return (
+            <NewPasswordForm
+                isLoading={isLoading}
+                onSubmit={doSubmit}
+                onCancel={onCancel}
+            />
+        );
+    }
 };
 
 const CancelParticipationModal = ({ isOpen, close }: ModalProps) => {
