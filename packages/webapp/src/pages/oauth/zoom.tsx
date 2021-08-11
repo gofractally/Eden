@@ -2,20 +2,22 @@ import { useEffect } from "react";
 import { GetServerSideProps } from "next";
 
 import {
-    zoomRequestAuth,
-    zoomConnectAccountLink,
-    zoomAccountJWTIsExpired,
-    zoomResponseIsInvalidAccess,
-} from "_api/zoom-commons";
-import { AvailableMeetingClients } from "_api/schemas";
-import {
     SingleColLayout,
     CallToAction,
     useUALAccount,
     Button,
     useZoomAccountJWT,
     encryptSecretForPublishing,
+    onError,
 } from "_app";
+
+import { setElectionMeeting } from "elections";
+
+import {
+    zoomRequestAuth,
+    zoomConnectAccountLink,
+    generateZoomMeetingLink,
+} from "_api/zoom-commons";
 
 export const getServerSideProps: GetServerSideProps = async ({
     query,
@@ -76,58 +78,53 @@ export default ZoomOauthPage;
 const ZoomTestContainer = ({ ualAccount }: any) => {
     const [zoomAccountJWT, setZoomAccountJWT] = useZoomAccountJWT(undefined);
 
-    const resetZoomAccount = () => {
-        setZoomAccountJWT(undefined);
-    };
+    const doGenerateZoomMeetingLink = async () => {
+        try {
+            const responseData = await generateZoomMeetingLink(
+                zoomAccountJWT,
+                setZoomAccountJWT,
+                `Test Eden Election #${Math.floor(
+                    Math.random() * 100_000_000
+                )}`,
+                40,
+                `2025-08-15T${Math.floor(Math.random() * 23)}:${Math.floor(
+                    Math.random() * 59
+                )}:00Z`
+            );
 
-    const generateZoomMeetingLink = async () => {
-        const x = await encryptSecretForPublishing(
-            "https://us05web.zoom.us/j/81089675368?pwd=MUFWVkowNmk1SFVLTkJ4eEtyY01ldz09",
-            ualAccount.accountName,
-            ["participanta", "participantb", "participantc"],
-            "Super important Meeting!"
-        );
-        if (x) {
-            return;
-        }
-
-        let accessToken = zoomAccountJWT.access_token;
-        if (!accessToken) {
-            return alert("Invalid AccessToken");
-        }
-
-        if (zoomAccountJWTIsExpired(zoomAccountJWT)) {
-            const newTokensResponse = await fetch(`/api/refresh-zoom`, {
-                method: "POST",
-                body: JSON.stringify({
-                    refreshToken: zoomAccountJWT.refresh_token,
-                }),
-            });
-
-            const newTokens = await newTokensResponse.json();
-            if (!newTokensResponse.ok) {
-                resetZoomAccount();
+            console.info(responseData);
+            if (!responseData.meeting || !responseData.meeting.join_url) {
+                throw new Error("Invalid generated Meeting Link URL");
             }
 
-            setZoomAccountJWT(newTokens);
-            accessToken = newTokens.access_token;
+            const encryptedMeetingData = await encryptSecretForPublishing(
+                responseData.meeting.join_url,
+                ualAccount.accountName,
+                ["alice.edev", "egeon.edev"]
+                // info is optional, if the info is present in the encryption
+                // process, it also needs to be present during the decryption
+            );
+
+            const authorizerAccount = ualAccount.accountName;
+            const transaction = setElectionMeeting(
+                authorizerAccount,
+                1, // round number
+                encryptedMeetingData.contractFormatEncryptedKeys,
+                encryptedMeetingData.encryptedMessage
+                // old data is optional in case we are overwriting
+            );
+            console.info("signing trx", transaction);
+
+            const signedTrx = await ualAccount.signTransaction(transaction, {
+                broadcast: true,
+            });
+            console.info("inductmeetin trx", signedTrx);
+
+            alert(JSON.stringify(responseData, undefined, 2));
+        } catch (error) {
+            console.error(error);
+            onError(error);
         }
-
-        const response = await fetch(`/api/meeting-links`, {
-            method: "POST",
-            body: JSON.stringify({
-                accessToken,
-                client: AvailableMeetingClients.Zoom,
-            }),
-        });
-
-        const responseData = await response.json();
-        if (zoomResponseIsInvalidAccess(responseData)) {
-            resetZoomAccount();
-        }
-
-        console.info(responseData);
-        alert(JSON.stringify(responseData, undefined, 2));
     };
 
     return (
@@ -137,8 +134,8 @@ const ZoomTestContainer = ({ ualAccount }: any) => {
                     Thanks for connecting Eden to your Zoom account.
                     <p>
                         Next step is to create a meeting. <br />
-                        <Button onClick={generateZoomMeetingLink}>
-                            Create a new Meeting
+                        <Button onClick={doGenerateZoomMeetingLink}>
+                            Dummy Election Meeting
                         </Button>
                     </p>
                 </div>

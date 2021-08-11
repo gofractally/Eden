@@ -13,6 +13,8 @@ export const fixtureEdenMembers: EdenMember[] = [
         // representative field will be same as account field for Head Chief
         // see isValidDelegate() for other special values and their meaning
         representative: "alice.edev", // "parent" field
+        encryption_key: "EOS87dKR7L6D4jZPj9XNN4H2pQavaAvWHdasFZZQCdu8Vn9ro5aDf",
+        // PK for above key is: 5J6YvXREKBypzFYVC2uEcw3sLE1dUrYwGZ1yatMArJRgRCN8S81
     },
     {
         name: "Egeon The Great",
@@ -23,6 +25,8 @@ export const fixtureEdenMembers: EdenMember[] = [
             ElectionParticipationStatus.NotInElection,
         election_rank: 3,
         representative: "alice.edev",
+        encryption_key: "EOS85AkeYxLXd3FHb9fk9R4xJfxm8PjLSbDosW33cviiKpm2HUJBT",
+        // pk for above key is: 5Jkoj5KXqQ6mHaLs4QMH4YktfsEZK86hxtXdJ78qXxkBHnVBftE
     },
     {
         name: "Philip Pip",

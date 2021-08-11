@@ -1,4 +1,4 @@
-import { getEncryptionKey } from "encryption";
+import { EncryptedKey, getEncryptionKey } from "encryption";
 import { PrivateKey, PublicKey } from "eosjs/dist/eosjs-jssig";
 import { generateKeyPair } from "eosjs/dist/eosjs-key-conversions";
 import { KeyType } from "eosjs/dist/eosjs-numeric";
@@ -37,7 +37,7 @@ export const encryptSecretForPublishing = async (
         queryClient
     );
 
-    const [publisherKey, ...recipientKeys] = validateFetchedKeys(
+    const publicKeys = validateFetchedKeys(
         accountKeys,
         publisherAccount,
         recipientAccounts
@@ -46,12 +46,12 @@ export const encryptSecretForPublishing = async (
     const transientKeyPair = generateEncryptionKey();
     console.info(transientKeyPair);
 
-    const keks = await ecdhRecipientsKeyEncriptionKeys(
-        [publisherKey, ...recipientKeys],
+    const keks = await ecdhRecipientsKeyEncryptionKeys(
+        publicKeys,
         transientKeyPair.privateKey,
         info
     );
-    console.info(keks);
+    console.info(publicKeys, keks);
 
     const sessionKey = await generateRandomSessionKey();
     console.info("session key", sessionKey);
@@ -61,25 +61,40 @@ export const encryptSecretForPublishing = async (
 
     const encryptedMessage = await encryptMessage(sessionKey, message);
 
-    console.info({
-        encryptedSessionKeys,
-        publisherKey,
-        recipientKeys,
-        transientKeyPair,
-        encryptedMessage,
-    });
+    const publisherKey = publicKeys[0];
+    const contractFormatEncryptedKeys: EncryptedKey[] = encryptedSessionKeys.map(
+        (encryptedKey, i) => ({
+            sender_key: publisherKey,
+            recipient_key: publicKeys[i],
+            key: encryptedKey,
+        })
+    );
 
-    // TODO: remove this test
-    console.info("testing decryption...");
-    await decryptPublishedMessage(
+    const decryptedMessage = await decryptPublishedMessage(
         encryptedMessage,
         publisherKey,
         transientKeyPair.publicKey.toString(),
         encryptedSessionKeys[0],
         info
     );
+    if (decryptedMessage !== message) {
+        throw new Error(
+            "an error occurred during encryption/decryption of the data"
+        );
+    }
 
-    return {};
+    console.info({
+        encryptedSessionKeys,
+        contractFormatEncryptedKeys,
+        publicKeys,
+        transientKeyPair,
+        encryptedMessage,
+    });
+
+    return {
+        contractFormatEncryptedKeys,
+        encryptedMessage,
+    };
 };
 
 export const decryptPublishedMessage = async (
@@ -108,9 +123,10 @@ export const generateEncryptionKey = () =>
     generateKeyPair(KeyType.k1, { secureEnv: true });
 
 const retrieveRecipientPrivateKey = (publicKey: string): PrivateKey => {
-    // TODO: find the corresponding private key in the localstorage, or else throw
-    console.info("retrieving publicKey...");
-    const rawPrivateKey = "5KcMypBPGByXbeBphsVzyyzUvg31tWNKsgrfXs2MmanYgYf4gao";
+    const rawPrivateKey = getEncryptionKey(publicKey);
+    if (!rawPrivateKey) {
+        throw new Error("fail to retrieve private key for decrypting message");
+    }
     return PrivateKey.fromString(rawPrivateKey);
 };
 
@@ -161,7 +177,7 @@ const validateFetchedKeys = (
     return [publisherKey, ...recipientKeys];
 };
 
-const ecdhRecipientsKeyEncriptionKeys = async (
+const ecdhRecipientsKeyEncryptionKeys = async (
     recipientPublicKeys: string[],
     transientPrivateKey: PrivateKey,
     info?: string
