@@ -2,8 +2,7 @@
 set -xe
 
 CLEOS="cleos -u https://wax-test.eosdac.io"
-CLEOS="cleos -u https://wax-test.eosdac.io"
-CONTRACT="edenmembersd"
+CONTRACT="test2.edev"
 
 for PARMS in $(cat ./genesis_accounts); do
   ACCOUNT_NAME=$(echo $PARMS | cut -d "," -f1);
