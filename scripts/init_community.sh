@@ -23,7 +23,6 @@ MINIMUM_DONATION="10.00000000 WAX"
 AUCTION_STARTING_BID="1.00000000 WAX"
 AUCTION_DURATION=604800
 GENESIS_MEMO="A community is born."
-GENESIS_MEMBERS='"alice.edev", "pip.edev", "egeon.edev","edenmember11", "edenmember12", "edenmember13", "edenmember14", "edenmember15","edenmember21", "edenmember22", "edenmember23", "edenmember24", "edenmember25","edenmember31", "edenmember32", "edenmember33", "edenmember34", "edenmember35","edenmember41", "edenmember42"'
 ELECTION_DAY="0"
 ELECTION_TIME="16:00"
 
