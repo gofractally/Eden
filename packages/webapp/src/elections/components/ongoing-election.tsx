@@ -4,7 +4,6 @@ import { BsInfoCircle } from "react-icons/bs";
 import {
     useUALAccount,
     useCommunityGlobals,
-    useCurrentElection,
     useCurrentMember,
     useMemberStats,
     useMyDelegation,
@@ -28,7 +27,6 @@ export const OngoingElection = ({ election }: { election: any }) => {
         isLoading: isLoadingGlobals,
         isError: isErrorGlobals,
     } = useCommunityGlobals();
-    const { data: currentElection } = useCurrentElection();
     const {
         data: memberStats,
         isLoading: isLoadingMemberStats,
@@ -40,8 +38,13 @@ export const OngoingElection = ({ election }: { election: any }) => {
         enabled: Boolean(loggedInUser) && Boolean(memberStats),
     });
 
-    const isLoading = isLoadingGlobals || isLoadingMemberStats;
-    if (isLoading) {
+    console.info(
+        "isLoadingGlobals: ",
+        isLoadingGlobals,
+        "isLoadingMemberStats:",
+        isLoadingMemberStats
+    );
+    if (isLoadingGlobals || isLoadingMemberStats) {
         return (
             <Container>
                 <Loader />
@@ -56,7 +59,7 @@ export const OngoingElection = ({ election }: { election: any }) => {
     // console.info("currentElection:", currentElection);
 
     const showNoConsensusInPreviousRoundMessage =
-        (myDelegationSoFar?.length || 0) < currentElection.round;
+        (myDelegationSoFar?.length || 0) < election.round;
 
     // TODO: Model all this data to be self-consistent and to abstract the frontend from the complexities of the backend logic
     // start with logged-in user
@@ -74,8 +77,6 @@ export const OngoingElection = ({ election }: { election: any }) => {
     const roundStartTime = dayjs(roundEndTime).subtract(roundDurationMs);
     const loggedInRank = isStillParticipating ? 0 : loggedInUser?.election_rank;
 
-    if (!ongoingRoundData) return <>No Ongoing Round data yet</>;
-
     return (
         <div className="divide-y">
             <Container darkBg>
@@ -85,13 +86,13 @@ export const OngoingElection = ({ election }: { election: any }) => {
             <Ongoing.SupportSegment />
 
             <CompletedRounds
-                numCompletedRounds={ongoingRoundData.completedRounds.length}
+                numCompletedRounds={ongoingRoundData?.completedRounds?.length}
             />
             <SignInContainer />
             <SignUpContainer />
             <NoFurtherParticipationInRoundsMessage
                 areRoundsWithNoParticipation={
-                    ongoingRoundData.areRoundsWithNoParticipation
+                    ongoingRoundData?.areRoundsWithNoParticipation
                 }
             />
             <CurrentRound
@@ -107,7 +108,7 @@ export const OngoingElection = ({ election }: { election: any }) => {
 };
 
 interface NoFurtherParticipationProps {
-    areRoundsWithNoParticipation: boolean;
+    areRoundsWithNoParticipation?: boolean;
 }
 
 const NoFurtherParticipationInRoundsMessage = ({
@@ -140,12 +141,12 @@ const NoFurtherParticipationInRoundsMessage = ({
 export default OngoingElection;
 
 interface CompletedRoundsProps {
-    numCompletedRounds: number;
+    numCompletedRounds?: number;
 }
 
 const CompletedRounds = ({ numCompletedRounds }: CompletedRoundsProps) => {
     const { data: currentMember } = useCurrentMember();
-    if (!currentMember) return null;
+    if (!currentMember || !numCompletedRounds) return null;
     return (
         <>
             {[...Array(numCompletedRounds)].map((_, i) => {

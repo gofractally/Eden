@@ -71,7 +71,13 @@ export const DelegatesPage = (props: Props) => {
     if (!myDelegation || !myDelegationMemberData)
         return (
             <FluidLayout>
-                <div>fetching your Delegation and members...</div>
+                <Container className="flex flex-col justify-center items-center py-16 text-center">
+                    <Heading size={4}>No Delegation to display</Heading>
+                    <Text>
+                        Your delegation will appear here after the first
+                        election completes.
+                    </Text>
+                </Container>
             </FluidLayout>
         );
 
