@@ -46,7 +46,7 @@ export const encryptSecretForPublishing = async (
     const transientKeyPair = generateEncryptionKey();
     console.info(transientKeyPair);
 
-    const keks = await ecdhRecipientsKeyEncriptionKeys(
+    const keks = await ecdhRecipientsKeyEncryptionKeys(
         publicKeys,
         transientKeyPair.privateKey,
         info
@@ -177,7 +177,7 @@ const validateFetchedKeys = (
     return [publisherKey, ...recipientKeys];
 };
 
-const ecdhRecipientsKeyEncriptionKeys = async (
+const ecdhRecipientsKeyEncryptionKeys = async (
     recipientPublicKeys: string[],
     transientPrivateKey: PrivateKey,
     info?: string
