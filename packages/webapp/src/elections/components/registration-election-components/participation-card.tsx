@@ -210,27 +210,6 @@ const ConfirmParticipationModal = ({ isOpen, close }: ModalProps) => {
         await onSubmit(setEncryptionPasswordTrx);
     };
 
-    const renderStep = () => {
-        switch (step) {
-            case ParticipationStep.ConfirmParticipation:
-                return (
-                    <ConfirmParticipationStep
-                        onSubmit={submitParticipationConfirmation}
-                        isLoading={isLoading}
-                        onCancel={close}
-                    />
-                );
-            case ParticipationStep.ConfirmPassword:
-                return (
-                    <ConfirmPasswordStep
-                        onSubmit={submitPasswordConfirmation}
-                        isLoading={isLoading}
-                        onCancel={close}
-                    />
-                );
-        }
-    };
-
     return (
         <Modal
             isOpen={isOpen}
@@ -241,7 +220,20 @@ const ConfirmParticipationModal = ({ isOpen, close }: ModalProps) => {
             shouldCloseOnOverlayClick={!isLoading}
             shouldCloseOnEsc={!isLoading}
         >
-            {renderStep()}
+            {step === ParticipationStep.ConfirmParticipation && (
+                <ConfirmParticipationStep
+                    onSubmit={submitParticipationConfirmation}
+                    isLoading={isLoading}
+                    onCancel={close}
+                />
+            )}
+            {step === ParticipationStep.ConfirmPassword && (
+                <ConfirmPasswordStep
+                    onSubmit={submitPasswordConfirmation}
+                    isLoading={isLoading}
+                    onCancel={close}
+                />
+            )}
         </Modal>
     );
 };
