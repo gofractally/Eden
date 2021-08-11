@@ -183,15 +183,20 @@ export const useMemberByAccountName = (accountName: string) =>
 
 export const useMemberListByAccountNames = (
     accountNames: string[],
-    enabled: boolean = true
-) =>
-    useQueries(
+    queryOptions: any = {}
+) => {
+    // use queryOptions.enabled unless unspecified, in which case, ensure we don't disable the internal `enabled`
+    let enabled = "enabled" in queryOptions ? queryOptions.enabled : true;
+    return useQueries(
         accountNames.map((accountName) => ({
             ...queryMemberByAccountName(accountName),
             staleTime: Infinity,
-            enabled: Boolean(accountName) && enabled,
+            ...queryOptions,
+            // want this to fail if queryOpts.enabled is disabled and merge if enabled; ignore not specified
+            enabled: enabled && Boolean(accountName),
         }))
     ) as UseQueryResult<EdenMember | undefined>[];
+};
 
 export const useCurrentMember = () => {
     const [ualAccount] = useUALAccount();
@@ -204,8 +209,11 @@ export const useIsCommunityActive = () =>
         refetchOnWindowFocus: false,
     });
 
-export const useMyDelegation = (enabled: boolean = true) => {
+export const useMyDelegation = (queryOptions: any = {}) => {
     const { data: member } = useCurrentMember();
+    // use queryOptions.enabled unless unspecified, in which case, ensure we don't disable the internal `enabled`
+    let enabled = "enabled" in queryOptions ? queryOptions.enabled : true;
+
     return useQuery({
         ...queryMyDelegation(member?.account),
         enabled: enabled && Boolean(member?.account),
