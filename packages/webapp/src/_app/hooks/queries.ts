@@ -193,7 +193,7 @@ export const useMemberListByAccountNames = (
             staleTime: Infinity,
             ...queryOptions,
             // want this to fail if queryOpts.enabled is disabled and merge if enabled; ignore not specified
-            enabled: enabled && Boolean(accountName),
+            enabled: enabled && accountNames.length && Boolean(accountName),
         }))
     ) as UseQueryResult<EdenMember | undefined>[];
 };

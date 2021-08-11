@@ -11,6 +11,7 @@ import {
     useCurrentElection,
     useCurrentMember,
     useElectionState,
+    useMemberDataFromEdenMembers,
     useMemberListByAccountNames,
     useMemberStats,
     useMyDelegation,
@@ -32,19 +33,14 @@ export const DelegatesPage = (props: Props) => {
     const isElectionInProgress =
         currentElection?.electionState !== ElectionStatus.Registration;
 
-    const { data: myDelegation } = useMyDelegation(!isElectionInProgress);
+    const { data: myDelegation } = useMyDelegation({
+        enabled: !isElectionInProgress,
+    });
     const { data: electionState } = useElectionState();
 
-    // TODO: useMemberDataFromEdenMembers(myDelegation); will replace next 4 lines
-    let nftTemplateIds: number[] = [];
-    if (!isElectionInProgress && myDelegation?.length) {
-        nftTemplateIds = myDelegation?.map((member) => member.nft_template_id);
-    }
-    const { data: members } = useQuery({
-        ...queryMembers(1, myDelegation?.length, nftTemplateIds),
-        staleTime: Infinity,
-        enabled: !isElectionInProgress && Boolean(myDelegation?.length),
-    });
+    const { data: myDelegationMemberData } = useMemberDataFromEdenMembers(
+        myDelegation
+    );
 
     if (isElectionInProgress) {
         return (
@@ -71,7 +67,11 @@ export const DelegatesPage = (props: Props) => {
                 <div>not an Eden Member</div>
             </FluidLayout>
         );
-    if (!myDelegation || !members || (myDelegation?.length > 0 && !members))
+    if (
+        !myDelegation ||
+        !myDelegationMemberData ||
+        (myDelegation?.length > 0 && !myDelegationMemberData)
+    )
         return (
             <FluidLayout>
                 <div>fetching your Delegation and members...</div>
@@ -88,7 +88,10 @@ export const DelegatesPage = (props: Props) => {
                         {dayjs(electionState?.last_election_time).format("LL")}
                     </Text>
                 </Container>
-                <Delegates myDelegation={myDelegation} members={members} />
+                <Delegates
+                    myDelegation={myDelegation}
+                    members={myDelegationMemberData}
+                />
             </div>
         </FluidLayout>
     );
@@ -151,12 +154,9 @@ const Chiefs = () => {
     const { data: electionState } = useElectionState();
     const { data: membersStats } = useMemberStats();
 
-    const allChiefs = electionState?.board || [];
+    const allChiefAccountNames = electionState?.board || [];
     // Get EdenMember data, unwrap the QueryResults[] into an EdenMember[], and filter out non-existent members
-    const chiefsAsMembers = useMemberListByAccountNames(
-        allChiefs,
-        Boolean(allChiefs?.length)
-    )
+    const chiefsAsMembers = useMemberListByAccountNames(allChiefAccountNames)
         .map((chiefQR) => chiefQR.data)
         .filter((el) => Boolean(el));
 
@@ -164,19 +164,19 @@ const Chiefs = () => {
         (member) => member!.nft_template_id
     );
 
-    const { data: members } = useQuery({
-        ...queryMembers(1, allChiefs.length, nftTemplateIds),
+    const { data: memberData } = useQuery({
+        ...queryMembers(1, allChiefAccountNames.length, nftTemplateIds),
         staleTime: Infinity,
         enabled: Boolean(chiefsAsMembers?.length),
     });
 
-    if (!electionState || !members || !membersStats)
+    if (!electionState || !memberData || !membersStats)
         return <div>fetching data</div>;
 
     const headChiefAsEdenMember = chiefsAsMembers!.find(
         (d) => d?.account === electionState.lead_representative
     );
-    const headChiefAsMemberData = members.find(
+    const headChiefAsMemberData = memberData.find(
         (d) => d?.account === electionState.lead_representative
     );
 
@@ -193,7 +193,7 @@ const Chiefs = () => {
                 return (
                     <div key={`chiefs-${delegate.account}`}>
                         <DelegateChip
-                            member={members.find(
+                            member={memberData.find(
                                 (d) => d.account === delegate.account
                             )}
                             level={membersStats.ranks.length - 1}
