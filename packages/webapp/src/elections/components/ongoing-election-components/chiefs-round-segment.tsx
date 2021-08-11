@@ -39,6 +39,7 @@ export const ChiefsRoundSegment = ({
                 <RoundHeader
                     roundEndTime={roundEndTime}
                     roundIndex={roundIndex}
+                    headlineText="Chief Delegates Elected - Finalizing"
                 />
             }
             startExpanded
@@ -47,10 +48,15 @@ export const ChiefsRoundSegment = ({
             <Container className="space-y-2">
                 <Heading size={3}>Chief Delegates</Heading>
                 <Text>
-                    In this round, the newly-elected Chief Delegates meet to
-                    discuss their vision for the community. There is no voting
-                    during this round, as the Head Chief is selected randomly in
-                    order to mitigate incumbent advantage.
+                    The new slate of Chief Delegates have officially been
+                    selected! During this time, they may meet to discuss their
+                    vision for the community.
+                </Text>
+                <Text>
+                    There is, however, no voting during this round, as the Head
+                    Chief is selected randomly in order to mitigate incumbent
+                    advantage. That process of randomization is currently
+                    underway.
                 </Text>
             </Container>
             <MembersGrid members={members}>
