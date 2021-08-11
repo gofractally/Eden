@@ -4,7 +4,6 @@ import { BsInfoCircle } from "react-icons/bs";
 import {
     useUALAccount,
     useCommunityGlobals,
-    useCurrentElection,
     useCurrentMember,
     useMemberStats,
     useMyDelegation,
@@ -28,7 +27,6 @@ export const OngoingElection = ({ election }: { election: any }) => {
         isLoading: isLoadingGlobals,
         isError: isErrorGlobals,
     } = useCommunityGlobals();
-    const { data: currentElection } = useCurrentElection();
     const {
         data: memberStats,
         isLoading: isLoadingMemberStats,
@@ -36,9 +34,7 @@ export const OngoingElection = ({ election }: { election: any }) => {
     } = useMemberStats();
     const { data: loggedInVoteData } = useVoteDataRow(loggedInUser?.account);
     const { data: myDelegationSoFar } = useMyDelegation();
-    const { data: ongoingRoundData } = useOngoingElectionData({
-        enabled: Boolean(loggedInUser) && Boolean(memberStats),
-    });
+    const { data: ongoingRoundData } = useOngoingElectionData();
 
     if (isLoadingGlobals || isLoadingMemberStats) {
         return (
