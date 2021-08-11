@@ -11,7 +11,7 @@ for PARMS in $(cat ./genesis_accounts); do
   GENESIS_MEMBERS="$GENESIS_MEMBERS, \"$ACCOUNT_NAME\""
 done
 GENESIS_MEMBERS=$(echo $GENESIS_MEMBERS | cut -c 3-)
-GENESIS_MEMBERS="'$GENESIS_MEMBERS'"
+GENESIS_MEMBERS="$GENESIS_MEMBERS"
 
 COMMUNITY_NAME="Eden Test"
 COMMUNITY_DESCRIPTION="Eden is a community working to maximize the power and independence of its members and thereby securing life, liberty, property, and justice for all."
