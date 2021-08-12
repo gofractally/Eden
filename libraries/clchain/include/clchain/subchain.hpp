@@ -51,12 +51,6 @@ namespace subchain
 
    inline const block& deref(const block& block) { return block; }
    inline const block& deref(const std::unique_ptr<block>& block) { return *block; }
-   inline uint32_t get_block_num(uint32_t num) { return num; }
-   inline uint32_t get_block_num(const auto& block) { return deref(block).num; }
-   inline constexpr auto by_block_num = [](const auto& a, const auto& b) {
-      return get_block_num(a) < get_block_num(b);
-   };
-
    inline const block_with_id& deref(const block_with_id& block) { return block; }
    inline const block_with_id& deref(const std::unique_ptr<block_with_id>& block) { return *block; }
    inline uint32_t get_eosio_num(uint32_t num) { return num; }
@@ -83,6 +77,25 @@ namespace subchain
       std::vector<std::unique_ptr<block_with_id>> blocks;
       uint32_t irreversible = 0;
 
+      auto lower_bound_by_num(uint32_t num) const
+      {
+         if (blocks.empty())
+            return blocks.end();
+         auto head = blocks.front()->num;
+         if (num <= head)
+            return blocks.begin();
+         if (num - head < blocks.size())
+            return blocks.begin() + (num - head);
+         return blocks.end();
+      }
+
+      auto upper_bound_by_num(uint32_t num) const
+      {
+         if (num == ~uint32_t(0))
+            return blocks.end();
+         return lower_bound_by_num(num + 1);
+      }
+
       const block_with_id* head() const
       {
          if (blocks.empty())
@@ -92,8 +105,8 @@ namespace subchain
 
       const block_with_id* block_by_num(uint32_t num) const
       {
-         auto it = std::lower_bound(blocks.begin(), blocks.end(), num, by_block_num);
-         if (it != blocks.end() && get_block_num(*it) == num)
+         auto it = lower_bound_by_num(num);
+         if (it != blocks.end() && (*it)->num == num)
             return &**it;
          return nullptr;
       }
@@ -108,7 +121,7 @@ namespace subchain
 
       const block_with_id* block_before_num(uint32_t num) const
       {
-         auto it = std::lower_bound(blocks.begin(), blocks.end(), num, by_block_num);
+         auto it = lower_bound_by_num(num);
          if (it != blocks.begin())
             return &*it[-1];
          return nullptr;
@@ -125,7 +138,7 @@ namespace subchain
       std::pair<status, size_t> add_block(const block_with_id& block)
       {
          size_t num_forked = 0;
-         auto it = std::lower_bound(blocks.begin(), blocks.end(), block, by_block_num);
+         auto it = lower_bound_by_num(block.num);
          if (it != blocks.end() && block.id == it[0]->id)
             return {duplicate, 0};
          if (it == blocks.begin() && block.num != 1)
@@ -144,7 +157,7 @@ namespace subchain
       // Keep only 1 irreversible block
       void trim()
       {
-         auto it = std::lower_bound(blocks.begin(), blocks.end(), irreversible, by_block_num);
+         auto it = lower_bound_by_num(irreversible);
          blocks.erase(blocks.begin(), it);
       }
    };
@@ -175,12 +188,8 @@ namespace subchain
              log.blocks,                                     //
              [](auto& block) { return block->num; },         //
              [](auto& block) { return std::cref(*block); },  //
-             [](auto& blocks, auto block_num) {
-                return std::lower_bound(blocks.begin(), blocks.end(), block_num, by_block_num);
-             },
-             [](auto& blocks, auto block_num) {
-                return std::upper_bound(blocks.begin(), blocks.end(), block_num, by_block_num);
-             });
+             [&](auto& blocks, auto block_num) { return log.lower_bound_by_num(block_num); },
+             [&](auto& blocks, auto block_num) { return log.upper_bound_by_num(block_num); });
       }
 
       const block_with_id* head() const { return log.head(); }

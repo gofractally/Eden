@@ -62,6 +62,7 @@ namespace clchain
       EOSIO_REFLECT2_FOR_EACH_FIELD(Connection<Config>, edges, pageInfo)
    }
 
+   // To enable cursors to function correctly, container must not have duplicate keys
    template <typename Connection,
              typename Key,
              typename T,
