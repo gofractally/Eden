@@ -21,7 +21,7 @@ export const useInterval = (callback: () => void, delay: number | null) => {
 };
 
 const now = () => new Date();
-const padTime = (time: number) => (time < 10 ? `0${time}` : time);
+const padTime = (time: number) => time.toString().padStart(2, "0");
 
 interface Countdown {
     startTime: Date;
