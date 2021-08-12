@@ -191,6 +191,10 @@ export const OngoingRoundSegment = ({
                         const votesReceived = voteData.filter(
                             (vd) => vd.candidate === member.account
                         ).length;
+                        const votingFor =
+                            members.find(
+                                (m) => m.account === voteInfo?.candidate
+                            )?.name ?? voteInfo?.candidate;
                         return (
                             <Flipped
                                 key={`leaderboard-${member.account}`}
@@ -204,7 +208,7 @@ export const OngoingRoundSegment = ({
                                     }
                                     onSelect={() => onSelectMember(member)}
                                     votesReceived={votesReceived}
-                                    votingFor={voteInfo?.candidate}
+                                    votingFor={votingFor}
                                     electionVideoCid={
                                         loggedInMember?.account ===
                                         member.account
