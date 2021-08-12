@@ -307,12 +307,20 @@ export const useMemberDataFromVoteData = (voteData?: VoteData[]) => {
     );
     const isFetchError = responses.some((res) => res.isError);
     const areQueriesComplete = responses.every((res) => res.isSuccess);
+    const isLoading = responses.some((res) => res.isLoading);
 
     const edenMembers = responses
         .filter((res) => Boolean(res?.data?.nft_template_id))
         .map((res) => res.data as EdenMember);
 
-    return useMemberDataFromEdenMembers(edenMembers, {
+    const memberDataRes = useMemberDataFromEdenMembers(edenMembers, {
         enabled: !isFetchError && areQueriesComplete,
     });
+
+    return {
+        ...memberDataRes,
+        isLoading: memberDataRes.isLoading || isLoading,
+        isError: memberDataRes.isError || isFetchError,
+        isSuccess: memberDataRes.isSuccess || areQueriesComplete,
+    };
 };
