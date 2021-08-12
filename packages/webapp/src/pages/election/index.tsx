@@ -1,24 +1,38 @@
 import { FluidLayout, useCurrentElection } from "_app";
-import { Container, Heading } from "_app/ui";
+import { Container, Heading, Loader } from "_app/ui";
 import { OngoingElection, RegistrationElection } from "elections";
 import { ElectionStatus } from "elections/interfaces";
 import { EncryptionPasswordAlert } from "encryption";
 
 export const ElectionPage = () => {
-    const { data: currentElection } = useCurrentElection();
+    const { data: currentElection, isLoading } = useCurrentElection();
 
-    // TODO: Enum for election states?
     return (
         <FluidLayout
             title="Election"
-            banner={<EncryptionPasswordAlert promptSetupEncryptionKey />}
+            banner={
+                <EncryptionPasswordAlert
+                    promptSetupEncryptionKey={
+                        currentElection?.electionState !==
+                        ElectionStatus.Registration
+                    }
+                />
+            }
         >
-            <div className="divide-y">
+            {isLoading ? (
                 <Container>
-                    <Heading size={1}>Election</Heading>
+                    <Loader />
                 </Container>
-                <ElectionBody electionState={currentElection?.electionState} />
-            </div>
+            ) : (
+                <div className="divide-y">
+                    <Container>
+                        <Heading size={1}>Election</Heading>
+                    </Container>
+                    <ElectionBody
+                        electionState={currentElection?.electionState}
+                    />
+                </div>
+            )}
         </FluidLayout>
     );
 };
