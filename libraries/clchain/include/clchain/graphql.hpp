@@ -153,46 +153,47 @@ namespace clchain
                   fill_gql_schema((ret*)nullptr, stream, defined_types);
                }
             });
-            stream.write_str("type ");
-            stream.write_str(generate_gql_partial_name((Raw*)nullptr));
-            stream.write_str(" {\n");
+            write_str("type ", stream);
+            write_str(generate_gql_partial_name((Raw*)nullptr), stream);
+            write_str(" {\n", stream);
             eosio::for_each_field<T>([&](const char* name, auto member) {
-               stream.write_str("    ");
-               stream.write_str(name);
-               stream.write_str(": ");
-               stream.write_str(generate_gql_whole_name(
-                   (eosio::remove_cvref_t<decltype(member((T*)nullptr))>*)nullptr));
-               stream.write_str("\n");
+               write_str("    ", stream);
+               write_str(name, stream);
+               write_str(": ", stream);
+               write_str(generate_gql_whole_name(
+                             (eosio::remove_cvref_t<decltype(member((T*)nullptr))>*)nullptr),
+                         stream);
+               write_str("\n", stream);
             });
             eosio::for_each_method<T>([&](const char* name, auto member, auto... arg_names) {
                using mf = eosio::member_fn<decltype(member)>;
                using ret = eosio::remove_cvref_t<typename mf::return_type>;
                if constexpr (mf::is_const)
                {
-                  stream.write_str("    ");
-                  stream.write_str(name);
+                  write_str("    ", stream);
+                  write_str(name, stream);
                   if constexpr (mf::arg_types::size > 0)
                   {
-                     stream.write_str("(");
+                     write_str("(", stream);
                      bool first = true;
                      eosio::for_each_named_type(
                          [&](auto* p, const char* name) {
                             if (!first)
-                               stream.write_str(" ");
-                            stream.write_str(name);
-                            stream.write_str(": ");
-                            stream.write_str(generate_gql_whole_name(p));
+                               write_str(" ", stream);
+                            write_str(name, stream);
+                            write_str(": ", stream);
+                            write_str(generate_gql_whole_name(p), stream);
                             first = false;
                          },
                          typename mf::arg_types{}, arg_names...);
-                     stream.write_str(")");
+                     write_str(")", stream);
                   }
-                  stream.write_str(": ");
-                  stream.write_str(generate_gql_whole_name((ret*)nullptr));
-                  stream.write_str("\n");
+                  write_str(": ", stream);
+                  write_str(generate_gql_whole_name((ret*)nullptr), stream);
+                  write_str("\n", stream);
                }
             });
-            stream.write_str("}\n");
+            write_str("}\n", stream);
          }
       }
    }
@@ -564,7 +565,7 @@ namespace clchain
    {
       if (value)
          return gql_query(*value, input_stream, output_stream, error);
-      output_stream.write_str("null");
+      write_str("null", output_stream);
       return gql_skip_selection_set(input_stream, error);
    }
 
@@ -760,7 +761,7 @@ namespace clchain
       return error("expected end of input");
    }
 
-   template <typename Stream = eosio::string_stream, typename T>
+   template <typename Stream = eosio::time_point_include_z_stream<eosio::string_stream>, typename T>
    std::string gql_query(const T& value, std::string_view query)
    {
       gql_stream input_stream{query};
@@ -769,7 +770,7 @@ namespace clchain
       output_stream.write('{');
       increase_indent(output_stream);
       write_newline(output_stream);
-      output_stream.write_str("\"data\": ");
+      write_str("\"data\": ", output_stream);
       std::string error;
       if (!gql_query_root(value, input_stream, output_stream, [&](const auto& e) {
              error = e;
@@ -781,10 +782,10 @@ namespace clchain
          error_stream.write('{');
          increase_indent(error_stream);
          write_newline(error_stream);
-         error_stream.write_str("\"errors\": {");
+         write_str("\"errors\": {", error_stream);
          increase_indent(error_stream);
          write_newline(error_stream);
-         error_stream.write_str("\"message\": ");
+         write_str("\"message\": ", error_stream);
          eosio::to_json(error, error_stream);
          decrease_indent(error_stream);
          write_newline(error_stream);
@@ -803,7 +804,9 @@ namespace clchain
    template <typename T>
    std::string format_gql_query(const T& value, std::string_view query)
    {
-      return gql_query<eosio::pretty_stream<eosio::string_stream>>(value, query);
+      return gql_query<
+          eosio::time_point_include_z_stream<eosio::pretty_stream<eosio::string_stream>>>(value,
+                                                                                          query);
    }
 }  // namespace clchain
 

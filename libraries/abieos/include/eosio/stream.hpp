@@ -81,12 +81,7 @@ namespace eosio
       void reverse() { std::reverse(data, pos); }
    };
 
-   struct stream_base
-   {
-      static constexpr bool time_point_include_z = false;
-   };
-
-   struct vector_stream : stream_base
+   struct vector_stream
    {
       std::vector<char>& data;
       vector_stream(std::vector<char>& data) : data(data) {}
@@ -97,7 +92,6 @@ namespace eosio
          auto s = reinterpret_cast<const char*>(src);
          data.insert(data.end(), s, s + sz);
       }
-      void write_str(std::string_view s) { write(s.data(), s.size()); }
       template <typename T>
       void write_raw(const T& v)
       {
@@ -105,7 +99,7 @@ namespace eosio
       }
    };
 
-   struct string_stream : stream_base
+   struct string_stream
    {
       std::string& data;
       string_stream(std::string& data) : data(data) {}
@@ -116,7 +110,6 @@ namespace eosio
          auto s = reinterpret_cast<const char*>(src);
          data.insert(data.end(), s, s + sz);
       }
-      void write_str(std::string_view s) { write(s.data(), s.size()); }
       template <typename T>
       void write_raw(const T& v)
       {
@@ -124,7 +117,7 @@ namespace eosio
       }
    };
 
-   struct fixed_buf_stream : stream_base
+   struct fixed_buf_stream
    {
       char* pos;
       char* end;
@@ -144,8 +137,6 @@ namespace eosio
          pos += sz;
       }
 
-      void write_str(std::string_view s) { write(s.data(), s.size()); }
-
       template <typename T>
       void write_raw(const T& v)
       {
@@ -153,7 +144,7 @@ namespace eosio
       }
    };
 
-   struct size_stream : stream_base
+   struct size_stream
    {
       size_t size = 0;
 
@@ -161,14 +152,18 @@ namespace eosio
 
       void write(const void* src, std::size_t sz) { size += sz; }
 
-      void write_str(std::string_view s) { write(s.data(), s.size()); }
-
       template <typename T>
       void write_raw(const T& v)
       {
          size += sizeof(v);
       }
    };
+
+   template <typename S>
+   void write_str(std::string_view str, S& stream)
+   {
+      stream.write(str.data(), str.size());
+   }
 
    template <typename S>
    void increase_indent(S&)

@@ -65,16 +65,10 @@ namespace eosio
       }
    };
 
-   template <typename F>
-   void for_each_named_type(F&& f, type_list<>)
+   template <typename F, typename... Args, typename... Names>
+   void for_each_named_type(F&& f, type_list<Args...>, Names... names)
    {
-   }
-
-   template <typename F, typename Arg, typename... Args, typename... Names>
-   void for_each_named_type(F&& f, type_list<Arg, Args...>, const char* name, Names... names)
-   {
-      f((remove_cvref_t<Arg>*)nullptr, name);
-      for_each_named_type(f, type_list<Args...>{}, names...);
+      (f((remove_cvref_t<Args>*)nullptr, names), ...);
    }
 
    template <typename T>
