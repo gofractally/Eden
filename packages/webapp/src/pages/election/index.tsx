@@ -40,6 +40,7 @@ export const ElectionPage = () => {
 const ElectionBody = ({ electionState }: { electionState?: string }) => {
     switch (electionState) {
         case ElectionStatus.Registration:
+        case ElectionStatus.Seeding:
             return <RegistrationElection />;
         case ElectionStatus.Active:
         case ElectionStatus.Final: // TODO: This is one state where there's a board but no satoshi. UI should reflect that.
@@ -47,7 +48,7 @@ const ElectionBody = ({ electionState }: { electionState?: string }) => {
         default:
             return (
                 <Container>
-                    <Heading size={2}>Unhandled state</Heading>
+                    <Heading size={2}>Processing election</Heading>
                 </Container>
             );
     }
