@@ -3,10 +3,10 @@ import dayjs from "dayjs";
 import { VoteData } from "elections/interfaces";
 
 export const extractElectionDates = (election: any) => {
-    const rawStartDateTime = `${
-        (election?.election_seeder && election.election_seeder.end_time) ||
-        election?.start_time
-    }Z`;
+    const rawStartDateTime =
+        (election?.election_seeder?.end_time ||
+            election?.start_time ||
+            election?.seed?.start_time) + "Z";
 
     if (!rawStartDateTime) {
         throw new Error("Error parsing the Election start date.");

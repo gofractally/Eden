@@ -240,9 +240,10 @@ export const useParticipantsInMyCompletedRound = (electionRound: number) => {
     });
 };
 
-export const useCurrentElection = () =>
-    useQuery({
+export const useCurrentElection = (queryOptions: any = {}) =>
+    useQuery<any, Error>({
         ...queryCurrentElection,
+        ...queryOptions,
     });
 
 export const useMemberGroupParticipants = (memberAccount?: string) => {

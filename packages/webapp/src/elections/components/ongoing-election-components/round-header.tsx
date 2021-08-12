@@ -4,7 +4,7 @@ import { FaCheckCircle } from "react-icons/fa";
 import { GoSync } from "react-icons/go";
 
 import { Text } from "_app/ui";
-import { CountdownPieMer } from "elections";
+import { VotePieMer } from "elections";
 
 type RoundHeaderProps =
     | {
@@ -60,7 +60,7 @@ export const RoundHeader = ({
                 </div>
             </div>
             {shouldShowTimer && (
-                <CountdownPieMer
+                <VotePieMer
                     startTime={startsAt!.toDate()}
                     endTime={endsAt!.toDate()}
                     onEnd={() => setShouldShowTimer(false)}

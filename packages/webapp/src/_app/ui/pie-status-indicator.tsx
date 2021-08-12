@@ -9,7 +9,7 @@ export const PieStatusIndicator = ({
     percent = 0,
     size = 20,
     backgroundColor = "#e5e5e5",
-    fillColor = "#a3a3a3",
+    fillColor = "#13B981",
 }: Props) => {
     const fillPercent = Math.min(percent, 100);
     return (

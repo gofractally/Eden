@@ -1,33 +1,44 @@
 import React, { useState } from "react";
+import { useQueryClient } from "react-query";
+import dayjs from "dayjs";
 
 import {
-    Button,
-    Container,
     ElectionParticipationStatus,
-    Form,
-    Heading,
-    Modal,
     onError,
     queryMemberByAccountName,
-    Text,
+    useCountdown,
     useCurrentElection,
     useCurrentMember,
     useUALAccount,
 } from "_app";
-
-import { extractElectionDates } from "../../utils";
-import { setElectionParticipation } from "../../transactions";
-import { useQueryClient } from "react-query";
+import {
+    Button,
+    Container,
+    Form,
+    Heading,
+    Modal,
+    PieStatusIndicator,
+    Text,
+} from "_app/ui";
 import {
     setEncryptionPublicKeyTransaction,
     useEncryptionPassword,
+    NewPasswordForm,
+    ReenterPasswordForm,
 } from "encryption";
-import { NewPasswordForm, ReenterPasswordForm } from "encryption";
+
+import { extractElectionDates } from "../../utils";
+import { setElectionParticipation } from "../../transactions";
 
 export const ParticipationCard = () => {
+    const [electionIsAboutToStart, setElectionIsAboutToStart] = useState(false);
+
     const [ualAccount, _, ualShowModal] = useUALAccount();
     const { data: currentMember } = useCurrentMember();
-    const { data: election } = useCurrentElection();
+    const { data: election } = useCurrentElection({
+        refetchInterval: electionIsAboutToStart ? 5000 : false,
+        refetchIntervalInBackground: true,
+    });
 
     const [
         showConfirmParticipationModal,
@@ -58,6 +69,16 @@ export const ParticipationCard = () => {
     const electionParticipationLimitTime = electionDates.participationTimeLimit.format(
         "LLL (z)"
     );
+
+    const isPastElectionParticipationTimeLimit = dayjs().isAfter(
+        electionDates.participationTimeLimit
+    );
+
+    const countdown = useCountdown({
+        startTime: electionDates.startDateTime.subtract(1, "day").toDate(),
+        endTime: electionDates.startDateTime.toDate(),
+        onEnd: () => setElectionIsAboutToStart(true),
+    });
 
     let statusLabel = "";
     let participationActionLabel = "";
@@ -110,13 +131,48 @@ export const ParticipationCard = () => {
                 </Heading>
             </div>
             <Heading size={3}>{statusLabel}</Heading>
-            <Text>
-                The next election will be held on {electionDate} between{" "}
-                {electionStartTime} and approximately {electionEstimatedEndTime}{" "}
-                ({electionStartTimeZone}).{" "}
-                <span className="font-semibold">{participationCallLabel}</span>
-            </Text>
-            {statusButton}
+            {isPastElectionParticipationTimeLimit ? (
+                <>
+                    <div className="flex items-center space-x-2">
+                        <PieStatusIndicator
+                            percent={countdown.percentDecimal * 100}
+                            size={24}
+                        />
+                        {electionIsAboutToStart ? (
+                            <Text className="font-semibold">
+                                The election will begin momentarily
+                            </Text>
+                        ) : (
+                            <Text>
+                                <span className="font-semibold">
+                                    The election starts in:
+                                </span>{" "}
+                                {countdown.hmmss}
+                            </Text>
+                        )}
+                    </div>
+                    <Text>
+                        <span className="font-semibold">
+                            Registration is closed. Waiting for the election to
+                            begin{" "}
+                        </span>
+                        {electionDate} at {electionStartTime}{" "}
+                        {electionStartTimeZone}, until approximately{" "}
+                        {electionEstimatedEndTime}.
+                    </Text>
+                </>
+            ) : (
+                <Text>
+                    The next election will be held on {electionDate} between{" "}
+                    {electionStartTime} and approximately{" "}
+                    {electionEstimatedEndTime} ({electionStartTimeZone}).{" "}
+                    <span className="font-semibold">
+                        {participationCallLabel}
+                    </span>
+                </Text>
+            )}
+
+            {!isPastElectionParticipationTimeLimit && statusButton}
             <ConfirmParticipationModal
                 isOpen={showConfirmParticipationModal}
                 close={() => setShowConfirmParticipationModal(false)}
