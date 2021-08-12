@@ -1,6 +1,5 @@
 import React, { useState } from "react";
 import { useQueryClient } from "react-query";
-import { Flipper, Flipped } from "react-flip-toolkit";
 import { BiCheck } from "react-icons/bi";
 import { RiVideoUploadLine } from "react-icons/ri";
 
@@ -13,9 +12,7 @@ import {
     useVoteData,
 } from "_app/hooks/queries";
 import { Button, Container, Expander, Heading, Loader, Text } from "_app/ui";
-import { VotingMemberChip } from "elections";
 import { ActiveStateConfigType, ElectionStatus } from "elections/interfaces";
-import { MembersGrid } from "members";
 import { MemberData } from "members/interfaces";
 import { setVote } from "../../transactions";
 
@@ -24,6 +21,7 @@ import ErrorLoadingElection from "./error-loading-election";
 import PasswordPromptModal from "./password-prompt-modal";
 import RoundHeader from "./round-header";
 import { RequestElectionMeetingLinkButton } from "./request-election-meeting-link-button";
+import VotingRoundParticipants from "./voting-round-participants";
 
 export interface RoundSegmentProps {
     electionState: string;
@@ -43,10 +41,6 @@ export const OngoingRoundSegment = ({
 
     const [selectedMember, setSelected] = useState<MemberData | null>(null);
     const [isSubmittingVote, setIsSubmittingVote] = useState<boolean>(false);
-    const [
-        showZoomLinkPermutations,
-        setShowZoomLinkPermutations,
-    ] = useState<boolean>(false); // TODO: Replace with real meeting link functionality
     const [showPasswordPrompt, setShowPasswordPrompt] = useState<boolean>(
         false
     ); // TODO: Hook up to the real password prompt
@@ -107,11 +101,6 @@ export const OngoingRoundSegment = ({
         return <ErrorLoadingElection />;
     }
 
-    const onSelectMember = (member: MemberData) => {
-        if (member.account === selectedMember?.account) return;
-        setSelected(member);
-    };
-
     const userVoterStats = voteData.find(
         (vs) => vs.member === loggedInMember?.account
     );
@@ -130,7 +119,7 @@ export const OngoingRoundSegment = ({
                 roundIndex,
                 selectedMember?.account
             );
-            const signedTrx = await ualAccount.signTransaction(transaction, {
+            await ualAccount.signTransaction(transaction, {
                 broadcast: true,
             });
 
@@ -148,14 +137,6 @@ export const OngoingRoundSegment = ({
         }
         setIsSubmittingVote(false);
     };
-
-    const getVoteCountForMember = (member: MemberData) => {
-        return voteData.filter((vd) => vd.candidate === member.account).length;
-    };
-
-    const sortMembersByVotes = [...members].sort(
-        (a, b) => getVoteCountForMember(b) - getVoteCountForMember(a)
-    );
 
     return (
         <Expander
@@ -182,49 +163,12 @@ export const OngoingRoundSegment = ({
                 </Heading>
                 <Consensometer voteData={voteData} />
             </Container>
-            <Flipper flipKey={sortMembersByVotes}>
-                <MembersGrid members={sortMembersByVotes}>
-                    {(member, index) => {
-                        const voteInfo = voteData.find(
-                            (vd) => vd.member === member.account
-                        );
-                        const votesReceived = voteData.filter(
-                            (vd) => vd.candidate === member.account
-                        ).length;
-                        const votingFor =
-                            members.find(
-                                (m) => m.account === voteInfo?.candidate
-                            )?.name ?? voteInfo?.candidate;
-                        return (
-                            <Flipped
-                                key={`leaderboard-${member.account}`}
-                                flipId={`leaderboard-${member.account}`}
-                            >
-                                <VotingMemberChip
-                                    member={member}
-                                    isSelected={
-                                        selectedMember?.account ===
-                                        member.account
-                                    }
-                                    onSelect={() => onSelectMember(member)}
-                                    votesReceived={votesReceived}
-                                    votingFor={votingFor}
-                                    electionVideoCid={
-                                        loggedInMember?.account ===
-                                        member.account
-                                            ? "QmeKPeuSai8sbEfvbuVXzQUzYRsntL3KSj5Xok7eRiX5Fp/edenTest2ElectionRoom12.mp4"
-                                            : undefined
-                                    } // TODO: this will obviously change once implemented too
-                                    className="bg-white"
-                                    style={{
-                                        zIndex: 10 + members.length - index,
-                                    }}
-                                />
-                            </Flipped>
-                        );
-                    }}
-                </MembersGrid>
-            </Flipper>
+            <VotingRoundParticipants
+                members={members}
+                voteData={voteData}
+                selectedMember={selectedMember}
+                onSelectMember={(m) => setSelected(m)}
+            />
             <Container>
                 <div className="flex flex-col xs:flex-row justify-center space-y-2 xs:space-y-0 xs:space-x-2">
                     <Button
