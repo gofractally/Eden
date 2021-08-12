@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { PrivateKey } from "eosjs/dist/eosjs-key-conversions";
+import { IoMdCopy } from "react-icons/io";
 
 import {
     Button,
@@ -17,7 +18,7 @@ interface Props {
 }
 
 export const NewPasswordForm = ({ isLoading, onSubmit, onCancel }: Props) => {
-    const [copyText, setCopyText] = useState("Copy");
+    const [didCopyText, setDidCopyText] = useState<boolean>(false);
     const [fields, setFields] = useFormFields({
         password: generateEncryptionKey().privateKey.toLegacyString(),
         passwordConfirmation: "",
@@ -46,33 +47,44 @@ export const NewPasswordForm = ({ isLoading, onSubmit, onCancel }: Props) => {
 
     const copyPassword = () => {
         navigator.clipboard.writeText(fields.password);
-        setCopyText("Copied!");
+        setDidCopyText(true);
     };
 
     return (
         <div className="space-y-4">
             <Text>
                 It looks like you don’t have a password set to participate in
-                the election. Please copy your password and confirm it here.
+                the election. Please copy and save your password somewhere safe,
+                and confirm it below.
             </Text>
-            <Text>Copy Password</Text>
             <form onSubmit={doSubmit} className="space-y-3">
                 <Form.LabeledSet
                     label="Your Election Password"
                     htmlFor="password"
                     className="col-span-6 sm:col-span-3"
                 >
-                    <Form.Input
-                        id="password"
-                        type="text"
-                        disabled
-                        required
-                        value={fields.password}
-                        onChange={onChangeFields}
-                    />
-                    <Button onClick={copyPassword}>{copyText}</Button>
+                    <div className="flex space-x-2">
+                        <Form.Input
+                            id="password"
+                            type="text"
+                            disabled
+                            required
+                            value={fields.password}
+                            onChange={onChangeFields}
+                        />
+                        <Button onClick={copyPassword}>
+                            {didCopyText ? (
+                                "Copied!"
+                            ) : (
+                                <IoMdCopy
+                                    color="white"
+                                    size={22}
+                                    className="-mx-2"
+                                />
+                            )}
+                        </Button>
+                    </div>
                 </Form.LabeledSet>
-                <Text>Please paste your password below.</Text>
                 <Form.LabeledSet
                     label="Confirm Your Election Password"
                     htmlFor="passwordConfirmation"
