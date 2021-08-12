@@ -51,11 +51,12 @@ export const ParticipationCard = () => {
 
     const electionDate = electionDates.startDateTime.format("LL");
     const electionStartTime = electionDates.startDateTime.format("LT");
+    const electionStartTimeZone = electionDates.startDateTime.format("z");
     const electionEstimatedEndTime = electionDates.estimatedEndDateTime.format(
         "LT"
     );
     const electionParticipationLimitTime = electionDates.participationTimeLimit.format(
-        "LLL"
+        "LLL (z)"
     );
 
     let statusLabel = "";
@@ -65,8 +66,10 @@ export const ParticipationCard = () => {
     let statusButton = null;
 
     if (!ualAccount) {
-        participationCallLabel = "Sign in to reserve your spot.";
-        statusButton = <Button onClick={ualShowModal}>Sign in</Button>;
+        participationCallLabel = "Sign in to participate.";
+        statusButton = (
+            <Button onClick={ualShowModal}>Sign in to participate</Button>
+        );
     } else if (currentMember) {
         if (
             currentMember.election_participation_status !==
@@ -91,7 +94,9 @@ export const ParticipationCard = () => {
         );
     } else {
         participationCallLabel = "Join Eden to participate!";
-        statusButton = <Button href="/induction">Join Eden</Button>;
+        statusButton = (
+            <Button href="/induction">Join Eden to participate</Button>
+        );
     }
 
     return (
@@ -107,8 +112,8 @@ export const ParticipationCard = () => {
             <Heading size={3}>{statusLabel}</Heading>
             <Text>
                 The next election will be held on {electionDate} between{" "}
-                {electionStartTime} and approximately {electionEstimatedEndTime}
-                .{" "}
+                {electionStartTime} and approximately {electionEstimatedEndTime}{" "}
+                ({electionStartTimeZone}).{" "}
                 <span className="font-semibold">{participationCallLabel}</span>
             </Text>
             {statusButton}
@@ -183,6 +188,7 @@ const ConfirmParticipationModal = ({ isOpen, close }: ModalProps) => {
             }
 
             // invalidate current member query to update participating status
+            await new Promise((resolve) => setTimeout(resolve, 3000));
             queryClient.invalidateQueries(
                 queryMemberByAccountName(ualAccount.accountName).queryKey
             );
@@ -217,8 +223,10 @@ const ConfirmParticipationModal = ({ isOpen, close }: ModalProps) => {
             onRequestClose={close}
             contentLabel="Election Participation Modal - Confirming Participation"
             preventScroll
-            shouldCloseOnOverlayClick={!isLoading}
-            shouldCloseOnEsc={!isLoading}
+            shouldCloseOnOverlayClick={
+                step !== ParticipationStep.ConfirmPassword
+            }
+            shouldCloseOnEsc={step !== ParticipationStep.ConfirmPassword}
         >
             {step === ParticipationStep.ConfirmParticipation && (
                 <ConfirmParticipationStep
@@ -262,7 +270,7 @@ const ConfirmParticipationStep = ({
                     Not showing up could impact your standing and reputation in
                     the community. If for some reason you cannot participate in
                     the election, please update your status more than 24 hours
-                    from the election.
+                    prior to the start of the election.
                 </Text>
                 <div className="p-3 border rounded">
                     <Form.Checkbox
