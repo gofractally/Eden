@@ -12,7 +12,7 @@ import {
     useMemberGroupParticipants,
     useVoteData,
 } from "_app/hooks/queries";
-import { Button, Container, Expander, Heading, Text } from "_app/ui";
+import { Button, Container, Expander, Heading, Loader, Text } from "_app/ui";
 import { VotingMemberChip } from "elections";
 import { ActiveStateConfigType, ElectionStatus } from "elections/interfaces";
 import { MembersGrid } from "members";
@@ -20,6 +20,7 @@ import { MemberData } from "members/interfaces";
 import { setVote } from "../../transactions";
 
 import Consensometer from "./consensometer";
+import ErrorLoadingElection from "./error-loading-election";
 import PasswordPromptModal from "./password-prompt-modal";
 import RoundHeader from "./round-header";
 import { RequestElectionMeetingLinkButton } from "./request-election-meeting-link-button";
@@ -41,31 +42,70 @@ export const OngoingRoundSegment = ({
     const queryClient = useQueryClient();
 
     const [selectedMember, setSelected] = useState<MemberData | null>(null);
-    const [isLoading, setIsLoading] = useState<boolean>(false);
+    const [isSubmittingVote, setIsSubmittingVote] = useState<boolean>(false);
+    const [
+        showZoomLinkPermutations,
+        setShowZoomLinkPermutations,
+    ] = useState<boolean>(false); // TODO: Replace with real meeting link functionality
     const [showPasswordPrompt, setShowPasswordPrompt] = useState<boolean>(
         false
     ); // TODO: Hook up to the real password prompt
 
     const [ualAccount] = useUALAccount();
-    const { data: loggedInMember } = useCurrentMember();
+    const {
+        data: loggedInMember,
+        isLoading: isLoadingCurrentMember,
+        isError: isErrorCurrentMember,
+    } = useCurrentMember();
 
-    const { data: memberGroup } = useMemberGroupParticipants(
-        loggedInMember?.account
-    );
+    const {
+        data: participants,
+        isLoading: isLoadingParticipants,
+        isError: isErrorParticipants,
+    } = useMemberGroupParticipants(loggedInMember?.account);
 
-    const { data: allVoteData } = useVoteData(
+    const {
+        data: chiefs,
+        isLoading: isLoadingChiefs,
+        isError: isErrorChiefs,
+    } = useVoteData(
         { limit: 20 },
         {
-            enabled: electionState === ElectionStatus.Final, // TODO: Enum!
+            enabled: electionState === ElectionStatus.Final,
         }
     );
 
-    const voteData = memberGroup ?? allVoteData;
-    const { data: members } = useMemberDataFromVoteData(voteData);
+    const voteData = participants ?? chiefs;
+    const {
+        data: members,
+        isLoading: isLoadingMemberData,
+        isError: isErrorMemberData,
+    } = useMemberDataFromVoteData(voteData);
 
-    // TODO: Handle Fetch Errors;
-    if (!members || members?.length !== voteData?.length)
-        return <Text>Error Fetching Members</Text>;
+    const isLoading =
+        isLoadingParticipants ||
+        isLoadingChiefs ||
+        isLoadingMemberData ||
+        isLoadingCurrentMember;
+
+    if (isLoading) {
+        return (
+            <Container>
+                <Loader />
+            </Container>
+        );
+    }
+
+    const isError =
+        isErrorParticipants ||
+        isErrorChiefs ||
+        isErrorMemberData ||
+        isErrorCurrentMember ||
+        members?.length !== voteData?.length;
+
+    if (isError || !members || !voteData) {
+        return <ErrorLoadingElection />;
+    }
 
     const onSelectMember = (member: MemberData) => {
         if (member.account === selectedMember?.account) return;
@@ -82,7 +122,7 @@ export const OngoingRoundSegment = ({
 
     const onSubmitVote = async () => {
         if (!selectedMember) return;
-        setIsLoading(true);
+        setIsSubmittingVote(true);
         try {
             const authorizerAccount = ualAccount.accountName;
             const transaction = setVote(
@@ -106,11 +146,9 @@ export const OngoingRoundSegment = ({
             // TODO: Alert of failure...e.g., vote comes in after voting closes.
             console.error(error);
         }
-        setIsLoading(false);
+        setIsSubmittingVote(false);
     };
 
-    // TODO: If we want the list leaderboard flipper animation, we'll want to poll with the query and sort round participants by number of votes.
-    // Then we'll feed that into the Flipper instance below.
     const getVoteCountForMember = (member: MemberData) => {
         return voteData.filter((vd) => vd.candidate === member.account).length;
     };
@@ -189,13 +227,13 @@ export const OngoingRoundSegment = ({
                         size="sm"
                         disabled={
                             !selectedMember ||
-                            isLoading ||
+                            isSubmittingVote ||
                             userVotingFor?.account === selectedMember.account
                         }
                         onClick={onSubmitVote}
-                        isLoading={isLoading}
+                        isLoading={isSubmittingVote}
                     >
-                        {!isLoading && (
+                        {!isSubmittingVote && (
                             <BiCheck size={21} className="-mt-1 mr-1" />
                         )}
                         {userVotingFor ? "Change Vote" : "Submit Vote"}

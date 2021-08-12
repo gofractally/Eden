@@ -1,20 +1,34 @@
 import { useCurrentElection, useMemberStats } from "_app";
-import { Container, Heading, Text } from "_app/ui";
+import { Container, Heading, Loader, Text } from "_app/ui";
 import { ElectionRoundData, ElectionStatus } from "elections/interfaces";
 
 import * as Ongoing from "./ongoing-election-components";
 
 // TODO: Make sure time zone changes during election are handled properly
 export const OngoingElection = () => {
-    const { data: currentElection } = useCurrentElection();
-    const { data: memberStats } = useMemberStats();
+    const {
+        data: currentElection,
+        isLoading: isLoadingCurrentElection,
+        isError: isErrorCurrentElection,
+    } = useCurrentElection();
+    const {
+        data: memberStats,
+        isLoading: isLoadingMemberStats,
+        isError: isErrorMemberStats,
+    } = useMemberStats();
 
-    if (!currentElection || !memberStats) {
+    const isLoading = isLoadingCurrentElection || isLoadingMemberStats;
+    if (isLoading) {
         return (
             <Container>
-                <Heading size={2}>Loading</Heading>
+                <Loader />
             </Container>
         );
+    }
+
+    const isError = isErrorCurrentElection || isErrorMemberStats;
+    if (isError || !currentElection || !memberStats) {
+        return <Ongoing.ErrorLoadingElection />;
     }
 
     let roundData = currentElection as ElectionRoundData;
