@@ -728,7 +728,7 @@ namespace clchain
          {
             input_stream.skip();
             if (input_stream.current_type == gql_stream::name)
-               return error("query names not supported");
+               input_stream.skip();
             if (input_stream.current_puncuator == '(')
                return error("variables not supported");
             if (input_stream.current_puncuator == '@')
