@@ -5,32 +5,43 @@ import { GoSync } from "react-icons/go";
 
 import { Text } from "_app/ui";
 import { VotePieMer } from "elections";
+import { RoundStage } from "elections/interfaces";
 
+// TODO: Refactor this component. It's becoming unwieldy.
 type RoundHeaderProps =
     | {
           roundStartTime: Dayjs;
           roundEndTime: Dayjs;
+          roundStage?: RoundStage;
+          meetingStartTime?: Dayjs;
+          meetingEndTime?: Dayjs;
           roundIndex: number;
           subText?: string;
-          headlineText?: string;
+          headlineComponent?: React.ReactNode;
       }
     | {
           roundStartTime?: Dayjs;
           roundEndTime?: Dayjs;
+          roundStage?: RoundStage;
+          meetingStartTime?: Dayjs;
+          meetingEndTime?: Dayjs;
           roundIndex: number;
           subText: string;
-          headlineText?: string;
+          headlineComponent?: React.ReactNode;
       };
 
 export const RoundHeader = ({
+    roundIndex,
+    roundStage,
     roundStartTime,
     roundEndTime,
-    roundIndex,
+    meetingStartTime,
+    meetingEndTime,
     subText,
-    headlineText,
+    headlineComponent,
 }: RoundHeaderProps) => {
     const now = dayjs();
-    const isActive = Boolean(
+    const isRoundActive = Boolean(
         roundStartTime &&
             roundEndTime &&
             now.isAfter(roundStartTime) &&
@@ -39,7 +50,9 @@ export const RoundHeader = ({
 
     let subHeader = subText;
 
-    const [shouldShowTimer, setShouldShowTimer] = useState<boolean>(isActive);
+    const [shouldShowTimer, setShouldShowTimer] = useState<boolean>(
+        roundStage === RoundStage.Meeting
+    );
 
     if (!subText && roundStartTime && roundEndTime) {
         subHeader = `${roundStartTime.format("LT")} - ${roundEndTime.format(
@@ -50,15 +63,17 @@ export const RoundHeader = ({
     return (
         <div className="w-full flex justify-between">
             <div className="flex items-center space-x-2">
-                {isActive ? (
+                {isRoundActive ? (
                     <GoSync size={24} className="text-gray-400" />
                 ) : (
                     <FaCheckCircle size={22} className="ml-px text-gray-400" />
                 )}
                 <div>
-                    <Text size="sm" className="font-semibold">
-                        {headlineText ?? `Round ${roundIndex + 1}`}
-                    </Text>
+                    {headlineComponent ?? (
+                        <Text size="sm" className="font-semibold">
+                            Round {roundIndex + 1}
+                        </Text>
+                    )}
                     <Text size="sm" className="tracking-tight">
                         {subHeader}
                     </Text>
@@ -66,8 +81,8 @@ export const RoundHeader = ({
             </div>
             {shouldShowTimer && (
                 <VotePieMer
-                    startTime={roundStartTime!.toDate()}
-                    endTime={roundEndTime!.toDate()}
+                    startTime={meetingStartTime!.toDate()}
+                    endTime={meetingEndTime!.toDate()}
                     onEnd={() => setShouldShowTimer(false)}
                 />
             )}
