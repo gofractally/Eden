@@ -63,20 +63,15 @@ export const ZoomOauthPage = ({ newZoomAccountJWT, oauthState }: Props) => {
 
     useEffect(() => {
         if (newZoomAccountJWT) {
-            console.info("setting zoom jwt", newZoomAccountJWT);
             setZoomAccountJWT(newZoomAccountJWT);
 
             if (oauthState === "request-election-link") {
-                router.push("/election");
                 setRedirectMessage(
                     "Thanks for linking your Zoom Account. Redirecting back to your Election page..."
                 );
+                router.push("/election");
             }
         }
-
-        return () => {
-            console.info("whatevs");
-        };
     }, []);
 
     return (
