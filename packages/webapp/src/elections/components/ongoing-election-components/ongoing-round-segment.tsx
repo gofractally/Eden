@@ -5,7 +5,7 @@ import { BiCheck } from "react-icons/bi";
 import { RiVideoUploadLine } from "react-icons/ri";
 
 import { electionMeetingDurationMs as meetingDurationMs } from "config";
-import { useCountdown, useTimeout, useUALAccount } from "_app";
+import { onError, useCountdown, useTimeout, useUALAccount } from "_app";
 import {
     queryMemberGroupParticipants,
     useCurrentElection,
@@ -83,14 +83,6 @@ export const OngoingRoundSegment = ({
     const isVotingOpen = [RoundStage.Meeting, RoundStage.PostMeeting].includes(
         stage
     );
-
-    // TODO: Remove these logs
-    console.log(
-        "===========TIME REMAINING==========",
-        timeRemainingToNextStageMs
-    );
-
-    console.log("===========ROUND STAGE==========", stage);
 
     useTimeout(() => {
         setStage(stage + 1);
@@ -196,8 +188,8 @@ export const OngoingRoundSegment = ({
                 ).queryKey
             );
         } catch (error) {
-            // TODO: Alert of failure...e.g., vote comes in after voting closes.
             console.error(error);
+            onError(error);
         }
         setIsSubmittingVote(false);
     };
