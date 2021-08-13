@@ -1,11 +1,14 @@
 import React, { useState } from "react";
 import { useQueryClient } from "react-query";
+import dayjs, { Dayjs } from "dayjs";
 import { BiCheck } from "react-icons/bi";
 import { RiVideoUploadLine } from "react-icons/ri";
 
-import { useUALAccount } from "_app";
+import { electionMeetingDurationMs as meetingDurationMs } from "config";
+import { useTimeout, useUALAccount } from "_app";
 import {
     queryMemberGroupParticipants,
+    useCurrentElection,
     useCurrentMember,
     useMemberDataFromVoteData,
     useMemberGroupParticipants,
@@ -23,10 +26,19 @@ import RoundHeader from "./round-header";
 import { RequestElectionMeetingLinkButton } from "./request-election-meeting-link-button";
 import VotingRoundParticipants from "./voting-round-participants";
 
+enum RoundStage {
+    PreMeeting,
+    Meeting,
+    PostMeeting,
+    Complete,
+}
+
 export interface RoundSegmentProps {
     electionState: string;
     roundIndex: number;
-    roundEndTime: string;
+    roundStartTime: Dayjs;
+    roundEndTime: Dayjs;
+    roundDurationMs: number;
     electionConfig?: ActiveStateConfigType;
 }
 
@@ -34,10 +46,58 @@ export interface RoundSegmentProps {
 export const OngoingRoundSegment = ({
     electionState,
     roundIndex,
+    roundStartTime,
     roundEndTime,
+    roundDurationMs,
     electionConfig,
 }: RoundSegmentProps) => {
     const queryClient = useQueryClient();
+
+    // duration of time periods before and after election meeting call
+    // stages: meeting prep -> meeting -> post-meeting finalization -> round end
+    const meetingBreakDurationMs = (roundDurationMs - meetingDurationMs) / 2;
+
+    const now = dayjs();
+
+    const preMeetingStartTime = roundStartTime;
+    const meetingStartTime = roundStartTime.add(meetingBreakDurationMs);
+    const postMeetingStartTime = meetingStartTime.add(meetingDurationMs);
+
+    let currentStage = RoundStage.PreMeeting;
+    let timeRemainingToNextStageMs: number | null = meetingStartTime.diff(now);
+
+    if (now.isAfter(roundEndTime)) {
+        currentStage = RoundStage.Complete;
+        timeRemainingToNextStageMs = null;
+    } else if (now.isAfter(postMeetingStartTime)) {
+        currentStage = RoundStage.PostMeeting;
+        timeRemainingToNextStageMs = roundEndTime.diff(now);
+    } else if (now.isAfter(meetingStartTime)) {
+        currentStage = RoundStage.Meeting;
+        timeRemainingToNextStageMs = postMeetingStartTime.diff(now);
+    } else if (now.isAfter(preMeetingStartTime)) {
+        currentStage = RoundStage.PreMeeting;
+        timeRemainingToNextStageMs = meetingStartTime.diff(now);
+    }
+
+    const [stage, setStage] = useState<RoundStage>(currentStage);
+
+    console.log(
+        "===========TIME REMAINING==========",
+        timeRemainingToNextStageMs
+    );
+
+    console.log("===========ROUND STAGE==========", stage);
+
+    useTimeout(() => {
+        setStage(stage + 1);
+    }, timeRemainingToNextStageMs);
+
+    const { isLoading: isLoadingCurrentElection } = useCurrentElection({
+        enabled: stage === RoundStage.Complete,
+        refetchInterval: 5000,
+        refetchIntervalInBackground: true,
+    });
 
     const [selectedMember, setSelected] = useState<MemberData | null>(null);
     const [isSubmittingVote, setIsSubmittingVote] = useState<boolean>(false);
@@ -56,7 +116,14 @@ export const OngoingRoundSegment = ({
         data: participants,
         isLoading: isLoadingParticipants,
         isError: isErrorParticipants,
-    } = useMemberGroupParticipants(loggedInMember?.account);
+    } = useMemberGroupParticipants(loggedInMember?.account, {
+        refetchInterval: [RoundStage.Meeting, RoundStage.PostMeeting].includes(
+            stage
+        )
+            ? 10000
+            : null,
+        refetchIntervalInBackground: true,
+    });
 
     const {
         data: chiefs,
@@ -80,6 +147,7 @@ export const OngoingRoundSegment = ({
         isLoadingParticipants ||
         isLoadingChiefs ||
         isLoadingMemberData ||
+        isLoadingCurrentElection ||
         isLoadingCurrentMember;
 
     if (isLoading) {
@@ -142,6 +210,7 @@ export const OngoingRoundSegment = ({
         <Expander
             header={
                 <RoundHeader
+                    roundStartTime={roundStartTime}
                     roundEndTime={roundEndTime}
                     roundIndex={roundIndex}
                 />
@@ -151,6 +220,7 @@ export const OngoingRoundSegment = ({
         >
             <Container className="space-y-2">
                 <Heading size={3}>Meeting group members</Heading>
+                <Text>Stage {stage}</Text>
                 <Text>
                     Meet with your group. Align on a leader &gt;2/3 majority.
                     Select your leader and submit your vote below.
