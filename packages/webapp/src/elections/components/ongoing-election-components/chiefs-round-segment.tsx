@@ -11,6 +11,7 @@ import { DelegateChip } from "elections";
 import { MembersGrid } from "members";
 
 import RoundHeader from "./round-header";
+import { useCountdown } from "_app";
 
 interface RoundSegmentProps {
     roundIndex: number;
@@ -38,18 +39,7 @@ export const ChiefsRoundSegment = ({
 
     return (
         <Expander
-            header={
-                <RoundHeader
-                    roundStartTime={roundStartTime}
-                    roundEndTime={roundEndTime}
-                    roundIndex={roundIndex}
-                    headlineComponent={
-                        <Text size="sm" className="font-semibold">
-                            Chief Delegates Elected - Finalizing
-                        </Text>
-                    }
-                />
-            }
+            header={<Header roundEndTime={roundEndTime} />}
             startExpanded
             locked
         >
@@ -90,3 +80,27 @@ export const ChiefsRoundSegment = ({
 };
 
 export default ChiefsRoundSegment;
+
+interface HeaderProps {
+    roundEndTime: Dayjs;
+}
+
+const Header = ({ roundEndTime }: HeaderProps) => {
+    const { hmmss } = useCountdown({ endTime: roundEndTime.toDate() });
+    return (
+        <RoundHeader
+            isRoundActive
+            headlineComponent={
+                <Text size="sm" className="font-semibold">
+                    Chief Delegates elected
+                </Text>
+            }
+            sublineComponent={
+                <Text size="sm" className="font-semibold">
+                    Head Chief elected in:{" "}
+                    <span className="font-normal">{hmmss}</span>
+                </Text>
+            }
+        />
+    );
+};

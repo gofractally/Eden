@@ -15,21 +15,21 @@ import {
     useVoteData,
 } from "_app/hooks/queries";
 import { Button, Container, Expander, Heading, Loader, Text } from "_app/ui";
+import { MembersGrid } from "members";
+import { MemberData } from "members/interfaces";
+import { ElectionParticipantChip, VotePieMer } from "elections";
 import {
     ActiveStateConfigType,
     ElectionStatus,
     RoundStage,
 } from "elections/interfaces";
-import { MemberData } from "members/interfaces";
-import { setVote } from "../../transactions";
 
 import Consensometer from "./consensometer";
 import ErrorLoadingElection from "./error-loading-election";
 import RoundHeader from "./round-header";
 import { RequestElectionMeetingLinkButton } from "./request-election-meeting-link-button";
 import VotingRoundParticipants from "./voting-round-participants";
-import { MembersGrid } from "members";
-import { ElectionParticipantChip } from "elections";
+import { setVote } from "../../transactions";
 
 export interface RoundSegmentProps {
     electionState: string;
@@ -205,20 +205,14 @@ export const OngoingRoundSegment = ({
     return (
         <Expander
             header={
-                <RoundHeader
+                <Header
+                    stage={stage}
                     roundIndex={roundIndex}
-                    roundStage={stage}
+                    currentStageEndTime={currentStageEndTime}
                     roundStartTime={roundStartTime}
                     roundEndTime={roundEndTime}
                     meetingStartTime={meetingStartTime}
-                    meetingEndTime={postMeetingStartTime}
-                    headlineComponent={
-                        <RoundHeaderHeadline
-                            roundIndex={roundIndex}
-                            stage={stage}
-                            currentStageEndTime={currentStageEndTime}
-                        />
-                    }
+                    postMeetingStartTime={postMeetingStartTime}
                 />
             }
             startExpanded
@@ -288,6 +282,52 @@ export const OngoingRoundSegment = ({
     );
 };
 
+interface HeaderProps {
+    stage: RoundStage;
+    roundIndex: number;
+    roundStartTime: Dayjs;
+    roundEndTime: Dayjs;
+    currentStageEndTime: Dayjs;
+    meetingStartTime: Dayjs;
+    postMeetingStartTime: Dayjs;
+}
+
+const Header = ({
+    stage,
+    roundIndex,
+    roundStartTime,
+    roundEndTime,
+    currentStageEndTime,
+    meetingStartTime,
+    postMeetingStartTime,
+}: HeaderProps) => {
+    return (
+        <RoundHeader
+            isRoundActive={stage !== RoundStage.Complete}
+            headlineComponent={
+                <RoundHeaderHeadline
+                    roundIndex={roundIndex}
+                    stage={stage}
+                    currentStageEndTime={currentStageEndTime}
+                />
+            }
+            sublineComponent={
+                <Text size="sm" className="tracking-tight">
+                    {roundStartTime.format("LT")} -{" "}
+                    {roundEndTime.format("LT z")}
+                </Text>
+            }
+        >
+            {stage === RoundStage.Meeting && (
+                <VotePieMer
+                    startTime={meetingStartTime.toDate()}
+                    endTime={postMeetingStartTime.toDate()}
+                />
+            )}
+        </RoundHeader>
+    );
+};
+
 interface HeadlineProps {
     roundIndex: number;
     stage: RoundStage;
@@ -312,10 +352,14 @@ const RoundHeaderHeadline = ({
         case RoundStage.PostMeeting:
             return (
                 <Text size="sm" className="font-semibold">
-                    Round {roundNum} ends in:{" "}
+                    Round {roundNum} finalizes in:{" "}
                     <span className="font-normal">{hmmss}</span>
                 </Text>
             );
     }
-    return null;
+    return (
+        <Text size="sm" className="font-semibold">
+            Round {roundIndex + 1} in progress
+        </Text>
+    );
 };
