@@ -11,7 +11,7 @@ import {
     VoteDataQueryOptionsByGroup,
     MemberData,
 } from "members";
-import { getIsCommunityActive } from "_app/api";
+import { getCommunityGlobals } from "_app/api";
 
 import { useUALAccount } from "../eos";
 import {
@@ -110,9 +110,9 @@ export const queryTreasuryStats = {
     queryFn: getTreasuryStats,
 };
 
-export const queryIsCommunityActive = {
-    queryKey: "query_is_community_active",
-    queryFn: getIsCommunityActive,
+export const queryCommunityGlobals = {
+    queryKey: "query_community_globals",
+    queryFn: getCommunityGlobals,
 };
 
 export const queryMembers = (
@@ -203,11 +203,21 @@ export const useCurrentMember = () => {
     return useMemberByAccountName(ualAccount?.accountName);
 };
 
-export const useIsCommunityActive = () =>
-    useQuery({
-        ...queryIsCommunityActive,
+export const useCommunityGlobals = () => {
+    return useQuery({
+        ...queryCommunityGlobals,
+        staleTime: Infinity,
         refetchOnWindowFocus: false,
     });
+};
+
+export const useIsCommunityActive = () => {
+    const response = useCommunityGlobals();
+    return {
+        ...response,
+        data: response.data ? response.data.stage > 0 : undefined,
+    };
+};
 
 export const useMyDelegation = (queryOptions: any = {}) => {
     const { data: member } = useCurrentMember();

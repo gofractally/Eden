@@ -15,12 +15,9 @@ export const isValidDelegate = (memberRep: string) =>
         MEMBER_REPRESENTATIVE_IF_NOT_PARTICIPATED_IN_RECENT_ELECTION &&
     isARepresentativeResultingFromConsensus(memberRep);
 
-export const getIsCommunityActive = async (): Promise<boolean> => {
+export const getCommunityGlobals = async () => {
     const rows = await getTableRows(CONTRACT_GLOBAL_TABLE, {
         lowerBound: "community",
     });
-    if (rows?.length) {
-        return rows[0].stage > 0;
-    }
-    return false;
+    return rows?.[0];
 };
