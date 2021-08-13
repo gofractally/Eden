@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { RiVideoUploadLine } from "react-icons/ri";
 import { Dayjs } from "dayjs";
 
@@ -11,7 +12,7 @@ import { DelegateChip } from "elections";
 import { MembersGrid } from "members";
 
 import RoundHeader from "./round-header";
-import { useCountdown } from "_app";
+import { useCountdown, useCurrentElection } from "_app";
 import ErrorLoadingElection from "./error-loading-election";
 
 interface RoundSegmentProps {
@@ -19,6 +20,7 @@ interface RoundSegmentProps {
 }
 
 export const ChiefsRoundSegment = ({ roundEndTime }: RoundSegmentProps) => {
+    const [timeIsUp, setTimeIsUp] = useState(false);
     const {
         data: currentMember,
         isLoading: isLoadingCurrentMember,
@@ -34,6 +36,12 @@ export const ChiefsRoundSegment = ({ roundEndTime }: RoundSegmentProps) => {
         isLoading: isLoadingMembers,
         isError: isErrorMembers,
     } = useMemberDataFromVoteData(participantData);
+
+    useCurrentElection({
+        enabled: timeIsUp,
+        refetchInterval: 5000,
+        refetchIntervalInBackground: true,
+    });
 
     const isLoading =
         isLoadingCurrentMember || isLoadingParticipantData || isLoadingMembers;
@@ -61,14 +69,20 @@ export const ChiefsRoundSegment = ({ roundEndTime }: RoundSegmentProps) => {
 
     return (
         <Expander
-            header={<Header roundEndTime={roundEndTime} />}
+            header={
+                <Header
+                    roundEndTime={roundEndTime}
+                    onEndCountdown={() => setTimeIsUp(true)}
+                    timeIsUp={timeIsUp}
+                />
+            }
             startExpanded
             locked
         >
             <Container className="space-y-2">
                 <Heading size={3}>Chief Delegates</Heading>
                 <Text>
-                    The new slate of Chief Delegates have officially been
+                    The new slate of Chief Delegates has officially been
                     selected! During this time, they may meet to discuss their
                     vision for the community.
                 </Text>
@@ -105,10 +119,16 @@ export default ChiefsRoundSegment;
 
 interface HeaderProps {
     roundEndTime: Dayjs;
+    onEndCountdown: () => void;
+    timeIsUp: boolean;
 }
 
-const Header = ({ roundEndTime }: HeaderProps) => {
-    const { hmmss } = useCountdown({ endTime: roundEndTime.toDate() });
+const Header = ({
+    roundEndTime,
+    onEndCountdown: onEnd,
+    timeIsUp,
+}: HeaderProps) => {
+    const { hmmss } = useCountdown({ endTime: roundEndTime.toDate(), onEnd });
     return (
         <RoundHeader
             isRoundActive
@@ -118,7 +138,11 @@ const Header = ({ roundEndTime }: HeaderProps) => {
                 </Text>
             }
             sublineComponent={
-                <Text size="sm">Head Chief elected in: {hmmss}</Text>
+                <Text size="sm">
+                    {timeIsUp
+                        ? `Head Chief elected in: ${hmmss}`
+                        : "Finalizing election..."}
+                </Text>
             }
         />
     );
