@@ -23,12 +23,6 @@ export const useInterval = (callback: () => void, delay: number | null) => {
 const now = () => new Date();
 const padTime = (time: number) => time.toString().padStart(2, "0");
 
-interface Countdown {
-    startTime: Date;
-    endTime: Date;
-    onEnd?: () => void;
-}
-
 export const useTimeout = (callback: () => void, delay: number | null) => {
     const savedCallback = useRef(callback);
 
@@ -50,7 +44,17 @@ export const useTimeout = (callback: () => void, delay: number | null) => {
     }, [delay]);
 };
 
-export const useCountdown = ({ startTime, endTime, onEnd }: Countdown) => {
+interface Countdown {
+    startTime?: Date;
+    endTime: Date;
+    onEnd?: () => void;
+}
+
+export const useCountdown = ({
+    startTime = new Date(),
+    endTime,
+    onEnd,
+}: Countdown) => {
     const [percentDecimal, setPercent] = useState<number>(0);
 
     const intervalDelay = percentDecimal > 1 ? null : 500;
