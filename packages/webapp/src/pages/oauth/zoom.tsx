@@ -18,12 +18,15 @@ import {
     zoomConnectAccountLink,
     generateZoomMeetingLink,
 } from "_api/zoom-commons";
+import { useRouter } from "next/router";
+import { useState } from "react";
 
 export const getServerSideProps: GetServerSideProps = async ({
     query,
     req,
 }) => {
     const oauthCode = (query.code as string) || "";
+    const oauthState = (query.state as string) || "";
     let newZoomAccountJWT = null;
 
     if (oauthCode) {
@@ -42,27 +45,46 @@ export const getServerSideProps: GetServerSideProps = async ({
     return {
         props: {
             newZoomAccountJWT,
+            oauthState,
         },
     };
 };
 
 interface Props {
     newZoomAccountJWT: any;
+    oauthState: string;
 }
 
-export const ZoomOauthPage = ({ newZoomAccountJWT }: Props) => {
+export const ZoomOauthPage = ({ newZoomAccountJWT, oauthState }: Props) => {
     const [ualAccount, _, ualShowModal] = useUALAccount();
     const [_zoomAccountJWT, setZoomAccountJWT] = useZoomAccountJWT(undefined);
+    const router = useRouter();
+    const [redirectMessage, setRedirectMessage] = useState("");
 
     useEffect(() => {
         if (newZoomAccountJWT) {
+            console.info("setting zoom jwt", newZoomAccountJWT);
             setZoomAccountJWT(newZoomAccountJWT);
+
+            if (oauthState === "request-election-link") {
+                router.push("/election");
+                setRedirectMessage(
+                    "Thanks for linking your Zoom Account. Redirecting back to your Election page..."
+                );
+            }
         }
-    }, [newZoomAccountJWT]);
+
+        return () => {
+            console.info("whatevs");
+        };
+    }, []);
 
     return (
         <SingleColLayout title="Zoom Test">
-            {ualAccount ? (
+            {redirectMessage ? (
+                <p>{redirectMessage}</p>
+            ) : ualAccount ? ( // TODO: maybe we can even remove the
+                // ualaccount guard from this to allow the Zoom Marketplace review
                 <ZoomTestContainer ualAccount={ualAccount} />
             ) : (
                 <CallToAction buttonLabel="Sign in" onClick={ualShowModal}>

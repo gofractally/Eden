@@ -1,0 +1,128 @@
+import { BiWebcam } from "react-icons/bi";
+import dayjs from "dayjs";
+
+import {
+    Button,
+    encryptSecretForPublishing,
+    onError,
+    Text,
+    useCurrentElection,
+    useMemberGroupParticipants,
+    useMemberStats,
+    useUALAccount,
+    useZoomAccountJWT,
+} from "_app";
+import {
+    generateZoomMeetingLink,
+    zoomConnectAccountLink,
+} from "_api/zoom-commons";
+import { setElectionMeeting } from "elections/transactions";
+import { ElectionRoundData, ElectionStatus } from "elections/interfaces";
+
+export const RequestElectionMeetingLinkButton = () => {
+    const { data: currentElection } = useCurrentElection();
+    const { data: memberStats } = useMemberStats();
+
+    const [ualAccount] = useUALAccount();
+    const [zoomAccountJWT, setZoomAccountJWT] = useZoomAccountJWT(undefined);
+    const { data: memberGroup } = useMemberGroupParticipants(
+        ualAccount?.accountName
+    );
+
+    if (!currentElection || !memberStats || !memberGroup) {
+        return null;
+    }
+
+    let roundData = currentElection as ElectionRoundData;
+    if (currentElection?.electionState === ElectionStatus.Final) {
+        roundData = {
+            electionState: currentElection?.electionState,
+            round: memberStats?.ranks.length,
+            // TODO: Reduce time for sortition round to two hours in contract
+            round_end: currentElection?.seed.end_time,
+        };
+    }
+    const participantAccounts = memberGroup.map((member) => member.member);
+
+    const roundMeetingLink = undefined; // todo: get the round meeting link if generated
+
+    const linkZoomAccount = () => {
+        window.location.href =
+            zoomConnectAccountLink + "&state=request-election-link";
+    };
+
+    const requestMeetingLink = async () => {
+        try {
+            // check all the participants keys are ready to be encrypted
+            // if this dummy encryption fails we know we can't create the meeting
+            await encryptSecretForPublishing(
+                "dummy-encryption-test",
+                ualAccount.accountName,
+                participantAccounts
+            );
+
+            const topic = `Eden Election - Round #${roundData.round + 1}`;
+            const durationInMinutes = 40;
+
+            const startTime = dayjs(roundData.round_end + "Z")
+                .subtract(40, "minute")
+                .toISOString();
+
+            const responseData = await generateZoomMeetingLink(
+                zoomAccountJWT,
+                setZoomAccountJWT,
+                topic,
+                durationInMinutes,
+                startTime
+            );
+
+            console.info("generated meeting data", responseData);
+            if (!responseData.meeting || !responseData.meeting.join_url) {
+                throw new Error("Invalid generated Meeting Link URL");
+            }
+
+            const encryptedMeetingData = await encryptSecretForPublishing(
+                responseData.meeting.join_url,
+                ualAccount.accountName,
+                participantAccounts
+            );
+
+            const authorizerAccount = ualAccount.accountName;
+            const transaction = setElectionMeeting(
+                authorizerAccount,
+                1, // round number
+                encryptedMeetingData.contractFormatEncryptedKeys,
+                encryptedMeetingData.encryptedMessage
+                // old data is optional in case we are overwriting
+            );
+            console.info("signing trx", transaction);
+
+            const signedTrx = await ualAccount.signTransaction(transaction, {
+                broadcast: true,
+            });
+            console.info("inductmeetin trx", signedTrx);
+
+            // todo: refetch the round data to set the new defined roundMeetingLink
+        } catch (error) {
+            console.error(error);
+            onError(error);
+        }
+    };
+
+    return roundMeetingLink ? (
+        <Button size="sm" href={roundMeetingLink} target="_blank">
+            <BiWebcam className="mr-1" />
+            Join meeting
+        </Button>
+    ) : zoomAccountJWT ? (
+        <Button size="sm" onClick={requestMeetingLink}>
+            <BiWebcam className="mr-1" />
+            Request meeting link
+        </Button>
+    ) : (
+        <Button size="sm" onClick={linkZoomAccount}>
+            <BiWebcam className="mr-1" />
+            Link Zoom Account to Request a meeting link
+        </Button>
+    );
+};
