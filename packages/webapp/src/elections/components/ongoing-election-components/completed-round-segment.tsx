@@ -4,7 +4,7 @@ import {
     useMemberDataFromEdenMembers,
     useParticipantsInMyCompletedRound,
 } from "_app";
-import { Button, Container, Expander } from "_app/ui";
+import { Button, Container, Expander, Text } from "_app/ui";
 import { ElectionParticipantChip } from "elections";
 import { MembersGrid } from "members";
 
@@ -29,16 +29,7 @@ export const CompletedRoundSegment = ({
 
     return (
         <Expander
-            header={
-                <RoundHeader
-                    roundIndex={roundIndex}
-                    subText={
-                        winner
-                            ? `Delegate elect: ${winner.name}`
-                            : "Consensus not achieved"
-                    }
-                />
-            }
+            header={<Header roundIndex={roundIndex} winner={winner?.name} />}
             inactive
         >
             <MembersGrid members={participantsMemberData}>
@@ -74,3 +65,28 @@ export const CompletedRoundSegment = ({
 };
 
 export default CompletedRoundSegment;
+
+interface HeaderProps {
+    roundIndex: number;
+    winner?: string;
+}
+
+const Header = ({ roundIndex, winner }: HeaderProps) => {
+    return (
+        <RoundHeader
+            isRoundActive={false}
+            headlineComponent={
+                <Text size="sm" className="font-semibold">
+                    Round {roundIndex + 1} completed
+                </Text>
+            }
+            sublineComponent={
+                <Text size="sm" className="tracking-tight">
+                    {winner
+                        ? `Delegate elect: ${winner}`
+                        : "Consensus not achieved"}
+                </Text>
+            }
+        />
+    );
+};
