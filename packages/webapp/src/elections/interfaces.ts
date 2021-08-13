@@ -81,3 +81,10 @@ export interface VoteData {
     index: number;
     candidate: string;
 }
+
+export enum RoundStage {
+    PreMeeting,
+    Meeting,
+    PostMeeting,
+    Complete,
+}

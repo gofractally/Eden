@@ -43,7 +43,11 @@ export const ChiefsRoundSegment = ({
                     roundStartTime={roundStartTime}
                     roundEndTime={roundEndTime}
                     roundIndex={roundIndex}
-                    headlineText="Chief Delegates Elected - Finalizing"
+                    headlineComponent={
+                        <Text size="sm" className="font-semibold">
+                            Chief Delegates Elected - Finalizing
+                        </Text>
+                    }
                 />
             }
             startExpanded

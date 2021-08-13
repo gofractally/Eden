@@ -28,7 +28,7 @@ export const VotePieMer = ({
             />
             <div className="flex-1 ml-2">
                 <Text size="sm" className="font-semibold">
-                    Vote Timer
+                    Meeting Timer
                 </Text>
                 <Text size="sm">{countdown.hmmss}</Text>
             </div>
