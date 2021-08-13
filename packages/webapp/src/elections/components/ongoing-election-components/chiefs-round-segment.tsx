@@ -6,32 +6,54 @@ import {
     useMemberDataFromVoteData,
     useVoteData,
 } from "_app/hooks/queries";
-import { Button, Container, Expander, Heading, Text } from "_app/ui";
+import { Button, Container, Expander, Heading, Loader, Text } from "_app/ui";
 import { DelegateChip } from "elections";
 import { MembersGrid } from "members";
 
 import RoundHeader from "./round-header";
 import { useCountdown } from "_app";
+import ErrorLoadingElection from "./error-loading-election";
 
 interface RoundSegmentProps {
-    roundIndex: number;
-    roundStartTime: Dayjs;
     roundEndTime: Dayjs;
 }
 
-// TODO: Much of the building up of the data shouldn't be done in the UI layer. What do we want the API to provide? What data does this UI really need? We could even define a new OngoingElection type to provide to this UI.
-export const ChiefsRoundSegment = ({
-    roundIndex,
-    roundStartTime,
-    roundEndTime,
-}: RoundSegmentProps) => {
-    const { data: currentMember } = useCurrentMember();
-    const { data: participantData } = useVoteData({ limit: 20 });
-    const { data: members } = useMemberDataFromVoteData(participantData);
+export const ChiefsRoundSegment = ({ roundEndTime }: RoundSegmentProps) => {
+    const {
+        data: currentMember,
+        isLoading: isLoadingCurrentMember,
+        isError: isErrorCurrentMember,
+    } = useCurrentMember();
+    const {
+        data: participantData,
+        isLoading: isLoadingParticipantData,
+        isError: isErrorParticipantData,
+    } = useVoteData({ limit: 20 });
+    const {
+        data: members,
+        isLoading: isLoadingMembers,
+        isError: isErrorMembers,
+    } = useMemberDataFromVoteData(participantData);
 
-    // TODO: Handle Fetch Errors;
-    if (!members || members?.length !== participantData?.length)
-        return <Text>Error Fetching Members</Text>;
+    const isLoading =
+        isLoadingCurrentMember || isLoadingParticipantData || isLoadingMembers;
+
+    if (isLoading) {
+        return (
+            <Container>
+                <Loader />
+            </Container>
+        );
+    }
+
+    const isError =
+        isErrorCurrentMember ||
+        isErrorParticipantData ||
+        isErrorMembers ||
+        !members ||
+        members?.length !== participantData?.length;
+
+    if (isError) return <ErrorLoadingElection />;
 
     const isUserParticipant = participantData?.some(
         (participant) => participant.member === currentMember?.account
@@ -96,10 +118,7 @@ const Header = ({ roundEndTime }: HeaderProps) => {
                 </Text>
             }
             sublineComponent={
-                <Text size="sm" className="font-semibold">
-                    Head Chief elected in:{" "}
-                    <span className="font-normal">{hmmss}</span>
-                </Text>
+                <Text size="sm">Head Chief elected in: {hmmss}</Text>
             }
         />
     );
