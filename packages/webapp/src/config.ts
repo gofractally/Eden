@@ -115,6 +115,10 @@ export const validUploadActions: ValidUploadActions = {
     },
 };
 
+export const electionMeetingDurationMs =
+    Number(process.env.NEXT_PUBLIC_ELECTION_MEETING_DURATION_MS) ||
+    40 * 60 * 1000; // 40 min default
+
 // SECRETS CONFIG
 if (
     typeof window === "undefined" &&
