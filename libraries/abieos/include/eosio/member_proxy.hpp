@@ -107,4 +107,7 @@ namespace eosio
                  */
    };
 
+   // TODO
+   template <uint32_t I, typename T, typename Base, typename ObjectProxy>
+   struct base_proxy;
 }  // namespace eosio
