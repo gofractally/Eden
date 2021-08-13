@@ -1,23 +1,25 @@
-import { useCurrentElection, useMemberStats } from "_app";
+import dayjs from "dayjs";
+
+import { useCommunityGlobals, useMemberStats } from "_app";
 import { Container, Heading, Loader, Text } from "_app/ui";
-import { ElectionRoundData, ElectionStatus } from "elections/interfaces";
+import { ElectionStatus } from "elections/interfaces";
 
 import * as Ongoing from "./ongoing-election-components";
 
 // TODO: Make sure time zone changes during election are handled properly
-export const OngoingElection = () => {
+export const OngoingElection = ({ election }: { election: any }) => {
     const {
-        data: currentElection,
-        isLoading: isLoadingCurrentElection,
-        isError: isErrorCurrentElection,
-    } = useCurrentElection();
+        data: globals,
+        isLoading: isLoadingGlobals,
+        isError: isErrorGlobals,
+    } = useCommunityGlobals();
     const {
         data: memberStats,
         isLoading: isLoadingMemberStats,
         isError: isErrorMemberStats,
     } = useMemberStats();
 
-    const isLoading = isLoadingCurrentElection || isLoadingMemberStats;
+    const isLoading = isLoadingGlobals || isLoadingMemberStats;
     if (isLoading) {
         return (
             <Container>
@@ -26,20 +28,18 @@ export const OngoingElection = () => {
         );
     }
 
-    const isError = isErrorCurrentElection || isErrorMemberStats;
-    if (isError || !currentElection || !memberStats) {
+    const isError = isErrorGlobals || isErrorMemberStats;
+    if (isError || !memberStats) {
         return <Ongoing.ErrorLoadingElection />;
     }
 
-    let roundData = currentElection as ElectionRoundData;
-    if (currentElection?.electionState === ElectionStatus.Final) {
-        roundData = {
-            electionState: currentElection?.electionState,
-            round: memberStats?.ranks.length,
-            // TODO: Reduce time for sortition round to two hours in contract
-            round_end: currentElection?.seed.end_time,
-        };
-    }
+    const { election_round_time_sec, election_break_time_sec } = globals;
+    const roundDurationSec = election_round_time_sec + election_break_time_sec;
+    const roundDurationMs = roundDurationSec * 1000;
+    const roundIndex = election.round ?? memberStats.ranks.length;
+    const roundEndTimeRaw = election.round_end ?? election.seed.end_time;
+    const roundEndTime = dayjs(roundEndTimeRaw + "Z");
+    const roundStartTime = dayjs(roundEndTime).subtract(roundDurationMs);
 
     return (
         <div className="divide-y">
@@ -49,24 +49,27 @@ export const OngoingElection = () => {
             </Container>
             <Ongoing.SupportSegment />
             {/* TODO: How do we get previous round info for rounds that didn't come to consensus? Do that here. */}
-            {roundData?.round > 0 &&
-                [...Array(roundData.round)].map((_, i) => (
+            {roundIndex > 0 &&
+                [...Array(roundIndex)].map((_, i) => (
                     <Ongoing.CompletedRoundSegment
                         key={`election-round-${i + 1}`}
                         roundIndex={i}
                     />
                 ))}
-            {currentElection?.electionState === ElectionStatus.Final ? (
+            {election?.electionState === ElectionStatus.Final ? (
                 <Ongoing.ChiefsRoundSegment
-                    roundIndex={roundData.round}
-                    roundEndTime={roundData.round_end}
+                    roundIndex={roundIndex}
+                    roundStartTime={roundStartTime}
+                    roundEndTime={roundEndTime}
                 />
             ) : (
                 <Ongoing.OngoingRoundSegment
-                    electionState={roundData.electionState}
-                    roundIndex={roundData.round}
-                    roundEndTime={roundData.round_end}
-                    electionConfig={roundData.config}
+                    electionState={election.electionState}
+                    roundIndex={roundIndex}
+                    roundStartTime={roundStartTime}
+                    roundEndTime={roundEndTime}
+                    roundDurationMs={roundDurationMs}
+                    electionConfig={election.config}
                 />
             )}
         </div>

@@ -20,38 +20,36 @@ export const ElectionPage = () => {
             }
         >
             {isLoading ? (
-                <Container>
-                    <Loader />
-                </Container>
+                <LoaderSection />
             ) : (
                 <div className="divide-y">
                     <Container>
                         <Heading size={1}>Election</Heading>
                     </Container>
-                    <ElectionBody
-                        electionState={currentElection?.electionState}
-                    />
+                    <ElectionBody election={currentElection} />
                 </div>
             )}
         </FluidLayout>
     );
 };
 
-const ElectionBody = ({ electionState }: { electionState?: string }) => {
-    switch (electionState) {
+export default ElectionPage;
+
+const ElectionBody = ({ election }: { election: any }) => {
+    switch (election.electionState) {
         case ElectionStatus.Registration:
         case ElectionStatus.Seeding:
             return <RegistrationElection />;
         case ElectionStatus.Active:
         case ElectionStatus.Final: // TODO: This is one state where there's a board but no satoshi. UI should reflect that.
-            return <OngoingElection />;
+            return <OngoingElection election={election} />;
         default:
-            return (
-                <Container>
-                    <Heading size={2}>Processing election</Heading>
-                </Container>
-            );
+            return <LoaderSection />;
     }
 };
 
-export default ElectionPage;
+const LoaderSection = () => (
+    <Container>
+        <Loader />
+    </Container>
+);

@@ -1,5 +1,5 @@
 import { useState } from "react";
-import dayjs from "dayjs";
+import dayjs, { Dayjs } from "dayjs";
 import { FaCheckCircle } from "react-icons/fa";
 import { GoSync } from "react-icons/go";
 
@@ -8,38 +8,43 @@ import { VotePieMer } from "elections";
 
 type RoundHeaderProps =
     | {
-          roundEndTime: string;
+          roundStartTime: Dayjs;
+          roundEndTime: Dayjs;
           roundIndex: number;
           subText?: string;
           headlineText?: string;
       }
     | {
-          roundEndTime?: string;
+          roundStartTime?: Dayjs;
+          roundEndTime?: Dayjs;
           roundIndex: number;
           subText: string;
           headlineText?: string;
       };
 
 export const RoundHeader = ({
+    roundStartTime,
     roundEndTime,
     roundIndex,
     subText,
     headlineText,
 }: RoundHeaderProps) => {
-    const isActive = Boolean(roundEndTime);
-    const endsAt = isActive ? dayjs(roundEndTime + "Z") : undefined;
-    const startsAt = endsAt && endsAt.subtract(40, "minute");
-    let subHeader = subText;
-
     const now = dayjs();
-    const [shouldShowTimer, setShouldShowTimer] = useState<boolean>(
-        Boolean(
-            startsAt && endsAt && now.isAfter(startsAt) && now.isBefore(endsAt)
-        )
+    const isActive = Boolean(
+        roundStartTime &&
+            roundEndTime &&
+            now.isAfter(roundStartTime) &&
+            now.isBefore(roundEndTime)
     );
 
-    if (!subText && startsAt && endsAt) {
-        subHeader = `${startsAt.format("LT")} - ${endsAt.format("LT z")}`;
+    let subHeader = subText;
+
+    const [shouldShowTimer, setShouldShowTimer] = useState<boolean>(isActive);
+
+    if (!subText && roundStartTime && roundEndTime) {
+        subHeader = `${roundStartTime.format("LT")} - ${roundEndTime.format(
+            "LT z"
+        )}`;
     }
 
     return (
@@ -61,8 +66,8 @@ export const RoundHeader = ({
             </div>
             {shouldShowTimer && (
                 <VotePieMer
-                    startTime={startsAt!.toDate()}
-                    endTime={endsAt!.toDate()}
+                    startTime={roundStartTime!.toDate()}
+                    endTime={roundEndTime!.toDate()}
                     onEnd={() => setShouldShowTimer(false)}
                 />
             )}

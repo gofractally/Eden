@@ -256,13 +256,21 @@ export const useCurrentElection = (queryOptions: any = {}) =>
         ...queryOptions,
     });
 
-export const useMemberGroupParticipants = (memberAccount?: string) => {
+export const useMemberGroupParticipants = (
+    memberAccount?: string,
+    queryOptions: any = {}
+) => {
     const { data: currentElection } = useCurrentElection();
-    return useQuery({
+
+    let enabled = Boolean(memberAccount && currentElection?.config);
+    if ("enabled" in queryOptions) {
+        enabled = enabled && queryOptions.enabled;
+    }
+
+    return useQuery<VoteData[], Error>({
         ...queryMemberGroupParticipants(memberAccount, currentElection?.config),
-        enabled: Boolean(memberAccount && currentElection?.config),
-        refetchInterval: 10000,
-        refetchIntervalInBackground: true,
+        ...queryOptions,
+        enabled,
     });
 };
 

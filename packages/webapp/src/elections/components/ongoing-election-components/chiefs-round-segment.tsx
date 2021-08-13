@@ -1,4 +1,5 @@
 import { RiVideoUploadLine } from "react-icons/ri";
+import { Dayjs } from "dayjs";
 
 import {
     useCurrentMember,
@@ -13,12 +14,14 @@ import RoundHeader from "./round-header";
 
 interface RoundSegmentProps {
     roundIndex: number;
-    roundEndTime: string;
+    roundStartTime: Dayjs;
+    roundEndTime: Dayjs;
 }
 
 // TODO: Much of the building up of the data shouldn't be done in the UI layer. What do we want the API to provide? What data does this UI really need? We could even define a new OngoingElection type to provide to this UI.
 export const ChiefsRoundSegment = ({
     roundIndex,
+    roundStartTime,
     roundEndTime,
 }: RoundSegmentProps) => {
     const { data: currentMember } = useCurrentMember();
@@ -37,6 +40,7 @@ export const ChiefsRoundSegment = ({
         <Expander
             header={
                 <RoundHeader
+                    roundStartTime={roundStartTime}
                     roundEndTime={roundEndTime}
                     roundIndex={roundIndex}
                     headlineText="Chief Delegates Elected - Finalizing"
