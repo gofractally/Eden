@@ -691,7 +691,8 @@ namespace eden
          {
             auto now = eosio::current_time_point();
             state = current_election_state_final{
-                {.start_time = now, .end_time = now + eosio::seconds(election_seeding_window)}};
+                {.start_time = now,
+                 .end_time = now + eosio::seconds(election_final_seeding_window)}};
          }
          else
          {
