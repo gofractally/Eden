@@ -8,12 +8,11 @@ import {
     useVoteData,
 } from "_app/hooks/queries";
 import { Button, Container, Expander, Heading, Loader, Text } from "_app/ui";
-import { DelegateChip } from "elections";
+import { DelegateChip, ErrorLoadingElection } from "elections";
 import { MembersGrid } from "members";
 
 import RoundHeader from "./round-header";
 import { useCountdown, useCurrentElection } from "_app";
-import ErrorLoadingElection from "./error-loading-election";
 
 interface RoundSegmentProps {
     roundEndTime: Dayjs;

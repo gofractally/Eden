@@ -17,7 +17,11 @@ import {
 import { Button, Container, Expander, Heading, Loader, Text } from "_app/ui";
 import { MembersGrid } from "members";
 import { MemberData } from "members/interfaces";
-import { ElectionParticipantChip, VotePieMer } from "elections";
+import {
+    ErrorLoadingElection,
+    ElectionParticipantChip,
+    VotePieMer,
+} from "elections";
 import {
     ActiveStateConfigType,
     ElectionStatus,
@@ -25,7 +29,6 @@ import {
 } from "elections/interfaces";
 
 import Consensometer from "./consensometer";
-import ErrorLoadingElection from "./error-loading-election";
 import RoundHeader from "./round-header";
 import { RequestElectionMeetingLinkButton } from "./request-election-meeting-link-button";
 import VotingRoundParticipants from "./voting-round-participants";

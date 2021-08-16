@@ -1,5 +1,6 @@
 import { useEffect, useState, useRef } from "react";
 
+// From: https://overreacted.io/making-setinterval-declarative-with-react-hooks
 export const useInterval = (callback: () => void, delay: number | null) => {
     const savedCallback = useRef<() => void>(() => {});
 
@@ -23,6 +24,7 @@ export const useInterval = (callback: () => void, delay: number | null) => {
 const now = () => new Date();
 const padTime = (time: number) => time.toString().padStart(2, "0");
 
+// From: https://usehooks-typescript.com/react-hook/use-timeout
 export const useTimeout = (callback: () => void, delay: number | null) => {
     const savedCallback = useRef(callback);
 

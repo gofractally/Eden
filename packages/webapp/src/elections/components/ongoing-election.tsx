@@ -2,6 +2,7 @@ import dayjs from "dayjs";
 
 import { useCommunityGlobals, useMemberStats } from "_app";
 import { Container, Heading, Loader, Text } from "_app/ui";
+import { ErrorLoadingElection } from "elections";
 import { ElectionStatus } from "elections/interfaces";
 
 import * as Ongoing from "./ongoing-election-components";
@@ -30,7 +31,7 @@ export const OngoingElection = ({ election }: { election: any }) => {
 
     const isError = isErrorGlobals || isErrorMemberStats;
     if (isError || !memberStats) {
-        return <Ongoing.ErrorLoadingElection />;
+        return <ErrorLoadingElection />;
     }
 
     const { election_round_time_sec, election_break_time_sec } = globals;
