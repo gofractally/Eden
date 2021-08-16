@@ -74,12 +74,6 @@ export const ParticipationCard = () => {
         electionDates.participationTimeLimit
     );
 
-    const countdown = useCountdown({
-        startTime: electionDates.startDateTime.subtract(1, "day").toDate(),
-        endTime: electionDates.startDateTime.toDate(),
-        onEnd: () => setElectionIsAboutToStart(true),
-    });
-
     let statusLabel = "";
     let participationActionLabel = "";
     let participationCallLabel = "";
@@ -133,24 +127,11 @@ export const ParticipationCard = () => {
             <Heading size={3}>{statusLabel}</Heading>
             {isPastElectionParticipationTimeLimit ? (
                 <>
-                    <div className="flex items-center space-x-2">
-                        <PieStatusIndicator
-                            percent={countdown.percentDecimal * 100}
-                            size={24}
-                        />
-                        {electionIsAboutToStart ? (
-                            <Text className="font-semibold">
-                                The election will begin momentarily
-                            </Text>
-                        ) : (
-                            <Text>
-                                <span className="font-semibold">
-                                    The election starts in:
-                                </span>{" "}
-                                {countdown.hmmss}
-                            </Text>
-                        )}
-                    </div>
+                    <ParticipationCardCountdown
+                        electionDates={electionDates}
+                        onEnd={() => setElectionIsAboutToStart(true)}
+                        electionIsAboutToStart={electionIsAboutToStart}
+                    />
                     <Text>
                         <span className="font-semibold">
                             Registration is closed. Waiting for the election to
@@ -182,6 +163,45 @@ export const ParticipationCard = () => {
                 close={() => setShowCancelParticipationModal(false)}
             />
         </Container>
+    );
+};
+
+interface CountdownProps {
+    electionDates: any;
+    onEnd: () => void;
+    electionIsAboutToStart: boolean;
+}
+
+const ParticipationCardCountdown = ({
+    electionDates,
+    onEnd,
+    electionIsAboutToStart,
+}: CountdownProps) => {
+    const countdown = useCountdown({
+        startTime: electionDates.startDateTime.subtract(1, "day").toDate(),
+        endTime: electionDates.startDateTime.toDate(),
+        onEnd,
+    });
+
+    return (
+        <div className="flex items-center space-x-2">
+            <PieStatusIndicator
+                percent={countdown.percentDecimal * 100}
+                size={24}
+            />
+            {electionIsAboutToStart ? (
+                <Text className="font-semibold">
+                    The election will begin momentarily
+                </Text>
+            ) : (
+                <Text>
+                    <span className="font-semibold">
+                        The election starts in:
+                    </span>{" "}
+                    {countdown.hmmss}
+                </Text>
+            )}
+        </div>
     );
 };
 
