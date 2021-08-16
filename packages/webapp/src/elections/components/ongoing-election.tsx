@@ -12,6 +12,9 @@ import { ActiveStateConfigType, ElectionStatus } from "elections/interfaces";
 
 import * as Ongoing from "./ongoing-election-components";
 
+// TODO: How do we get previous round info for rounds that didn't come to consensus? Do that here.
+// TODO: Non-participating-eden-member currently sees error.
+// TODO: Specifically, what happens to CompletedRound component when non-participating-eden-member logs in?
 // TODO: Make sure time zone changes during election are handled properly
 export const OngoingElection = ({ election }: { election: any }) => {
     const {
@@ -54,9 +57,6 @@ export const OngoingElection = ({ election }: { election: any }) => {
                 <Text>In progress until 6:30pm EDT</Text>
             </Container>
             <Ongoing.SupportSegment />
-            {/* TODO: How do we get previous round info for rounds that didn't come to consensus? Do that here. */}
-            {/* TODO: Non-participating-eden-member currently sees error. */}
-            {/* TODO: Specifically, what happens to CompletedRound component when non-participating-eden-member logs in? */}
             <CompletedRounds roundIndex={roundIndex} />
             <SignInContainer />
             <SignUpContainer />
