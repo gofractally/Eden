@@ -17,13 +17,12 @@ interface CompletedRoundSegmentProps {
 export const CompletedRoundSegment = ({
     roundIndex,
 }: CompletedRoundSegmentProps) => {
-    // TODO: Participants should be limited to only those in the round (we're getting extras right now)
     const { data } = useParticipantsInMyCompletedRound(roundIndex);
     const { data: participantsMemberData } = useMemberDataFromEdenMembers(
         data?.participants
     );
 
-    if (!participantsMemberData || !participantsMemberData.length) return <></>; // TODO: Return something here.
+    if (!participantsMemberData || !participantsMemberData.length) return null;
 
     const winner = data?.participants.find((p) => p.account === data.delegate);
 
