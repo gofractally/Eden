@@ -57,7 +57,7 @@ export const RequestElectionMeetingLinkButton = ({
             );
 
             const topic = `Eden Election - Round #${roundIndex + 1}`;
-            const durationInMinutes = meetingDurationMs * 1000 * 60;
+            const durationInMinutes = meetingDurationMs / 1000 / 60;
 
             const responseData = await generateZoomMeetingLink(
                 zoomAccountJWT,
@@ -81,7 +81,7 @@ export const RequestElectionMeetingLinkButton = ({
             const authorizerAccount = ualAccount.accountName;
             const transaction = setElectionMeeting(
                 authorizerAccount,
-                1, // round number
+                roundIndex, // round number
                 encryptedMeetingData.contractFormatEncryptedKeys,
                 encryptedMeetingData.encryptedMessage
                 // old data is optional in case we are overwriting
