@@ -10,7 +10,7 @@ import {
 const router: Router = Router();
 
 router.get("/", infoHandler);
-router.use("/subchain", subchainHandler);
+router.use("/v1/subchain", subchainHandler);
 router.post("/v1/ipfs-upload", ipfsUploadConfigHandler, ipfsUploadHandler);
 
 export default router;

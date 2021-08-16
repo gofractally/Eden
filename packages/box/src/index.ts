@@ -28,5 +28,5 @@ server.listen(serverConfig.port, () => {
     logger.info(`Environment=${env}`);
 });
 
-createWSServer("/subchain", server);
+createWSServer("/v1/subchain", server);
 startSubchain();

@@ -207,9 +207,13 @@ export class EdenSubchain {
     }
 
     getIrreversible(): number {
-        return (
-            this.query("{blockLog{irreversible{num}}}").data.blockLog
-                .irreversible?.num || 0
-        );
+        const q = this.query(`{
+            blockLog{
+                irreversible{
+                    num
+                }
+            }
+        }`);
+        return q.data.blockLog.irreversible?.num || 0;
     }
 } // WrapWasm
