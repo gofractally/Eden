@@ -37,7 +37,7 @@ for PARMS in $(cat ./genesis_accounts); do
 
   SETENCPUBKEY_ACTION_DATA="{
     \"account\": \"$ACCOUNT_NAME\",
-    \"key\": $PUB_KEY
+    \"key\": \"$PUB_KEY\"
   }"
 
   SETENCPUBKEY_ACTION="{
