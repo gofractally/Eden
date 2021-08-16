@@ -216,7 +216,13 @@ export const OngoingRoundSegment = ({
             <Container className="space-y-2">
                 {[RoundStage.PreMeeting, RoundStage.Meeting].includes(
                     stage
-                ) && <RequestElectionMeetingLinkButton />}
+                ) && (
+                    <RequestElectionMeetingLinkButton
+                        roundIndex={roundIndex}
+                        meetingStartTime={meetingStartTime}
+                        meetingDurationMs={meetingDurationMs}
+                    />
+                )}
                 <Heading size={3}>Meeting group members</Heading>
                 <Text>
                     {stage === RoundStage.PreMeeting
