@@ -93,4 +93,11 @@ namespace eden
       eosio::check(remaining != max_steps, "Nothing to do");
    }
 
+   void eden::electreport(eosio::ignore<uint8_t>,
+                          eosio::ignore<std::vector<vote_report>>,
+                          eosio::ignore<eosio::name>)
+   {
+      eosio::require_auth(get_self());
+   }
+
 }  // namespace eden

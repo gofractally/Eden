@@ -59,6 +59,13 @@ namespace eden
                                                 std::variant<vote>>;
 #endif
 
+   struct vote_report
+   {
+      eosio::name voter;
+      eosio::name candidate;
+   };
+   EOSIO_REFLECT(vote_report, voter, candidate);
+
    class eden : public eosio::contract
    {
      public:
@@ -138,6 +145,9 @@ namespace eden
       void electvote(uint8_t round, eosio::name voter, eosio::name candidate);
       void electvideo(uint8_t round, eosio::name voter, const std::string& video);
       void electprocess(uint32_t max_steps);
+      void electreport(eosio::ignore<uint8_t> round,
+                       eosio::ignore<std::vector<vote_report>>,
+                       eosio::ignore<eosio::name>);
 
       void distribute(uint32_t max_steps);
 
@@ -235,6 +245,7 @@ namespace eden
        action(electvote, round, voter, candidate),
        action(electvideo, round, voter, video),
        action(electprocess, max_steps),
+       action(electreport, round, votes, winner),
        action(bylawspropose, proposer, bylaws),
        action(bylawsapprove, approver, bylaws_hash),
        action(bylawsratify, approver, bylaws_hash),
