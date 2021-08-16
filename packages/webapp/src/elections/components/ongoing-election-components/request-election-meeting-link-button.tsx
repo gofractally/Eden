@@ -1,14 +1,11 @@
 import { BiWebcam } from "react-icons/bi";
-import dayjs from "dayjs";
+import { Dayjs } from "dayjs";
 
 import {
     Button,
     encryptSecretForPublishing,
     onError,
-    Text,
-    useCurrentElection,
     useMemberGroupParticipants,
-    useMemberStats,
     useUALAccount,
     useZoomAccountJWT,
 } from "_app";
@@ -17,31 +14,29 @@ import {
     zoomConnectAccountLink,
 } from "_api/zoom-commons";
 import { setElectionMeeting } from "elections/transactions";
-import { ElectionRoundData, ElectionStatus } from "elections/interfaces";
 
-export const RequestElectionMeetingLinkButton = () => {
-    const { data: currentElection } = useCurrentElection();
-    const { data: memberStats } = useMemberStats();
+interface MeetingLinkProps {
+    roundIndex: number;
+    meetingStartTime: Dayjs;
+    meetingDurationMs: number;
+}
 
+export const RequestElectionMeetingLinkButton = ({
+    roundIndex,
+    meetingStartTime,
+    meetingDurationMs,
+}: MeetingLinkProps) => {
     const [ualAccount] = useUALAccount();
     const [zoomAccountJWT, setZoomAccountJWT] = useZoomAccountJWT(undefined);
     const { data: memberGroup } = useMemberGroupParticipants(
         ualAccount?.accountName
     );
 
-    if (!currentElection || !memberStats || !memberGroup) {
+    if (!memberGroup) {
         return null;
     }
 
-    let roundData = currentElection as ElectionRoundData;
-    if (currentElection?.electionState === ElectionStatus.Final) {
-        roundData = {
-            electionState: currentElection?.electionState,
-            round: memberStats?.ranks.length,
-            // TODO: Reduce time for sortition round to two hours in contract
-            round_end: currentElection?.seed.end_time,
-        };
-    }
+    // TODO: Should we just pass the participants into this component?
     const participantAccounts = memberGroup.map((member) => member.member);
 
     const roundMeetingLink = undefined; // todo: get the round meeting link if generated
@@ -61,19 +56,15 @@ export const RequestElectionMeetingLinkButton = () => {
                 participantAccounts
             );
 
-            const topic = `Eden Election - Round #${roundData.round + 1}`;
-            const durationInMinutes = 40;
-
-            const startTime = dayjs(roundData.round_end + "Z")
-                .subtract(40, "minute")
-                .toISOString();
+            const topic = `Eden Election - Round #${roundIndex + 1}`;
+            const durationInMinutes = meetingDurationMs * 1000 * 60;
 
             const responseData = await generateZoomMeetingLink(
                 zoomAccountJWT,
                 setZoomAccountJWT,
                 topic,
                 durationInMinutes,
-                startTime
+                meetingStartTime.toISOString()
             );
 
             console.info("generated meeting data", responseData);
