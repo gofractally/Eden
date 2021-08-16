@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { RiVideoUploadLine } from "react-icons/ri";
-import { Dayjs } from "dayjs";
+import dayjs, { Dayjs } from "dayjs";
 
 import {
     useCurrentMember,
@@ -138,9 +138,9 @@ const Header = ({
             }
             sublineComponent={
                 <Text size="sm">
-                    {timeIsUp
-                        ? `Head Chief elected in: ${hmmss}`
-                        : "Finalizing election..."}
+                    {timeIsUp || dayjs().isAfter(roundEndTime)
+                        ? "Finalizing election..." // TODO: This should show even after post-time-up refresh
+                        : `Head Chief elected in: ${hmmss}`}
                 </Text>
             }
         />
