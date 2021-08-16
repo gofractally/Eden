@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { RiVideoUploadLine } from "react-icons/ri";
 import dayjs, { Dayjs } from "dayjs";
 
@@ -41,6 +41,12 @@ export const ChiefsRoundSegment = ({ roundEndTime }: RoundSegmentProps) => {
         refetchInterval: 5000,
         refetchIntervalInBackground: true,
     });
+
+    useEffect(() => {
+        if (dayjs().isAfter(roundEndTime)) {
+            setTimeIsUp(true);
+        }
+    }, []);
 
     const isLoading =
         isLoadingCurrentMember || isLoadingParticipantData || isLoadingMembers;
@@ -138,8 +144,8 @@ const Header = ({
             }
             sublineComponent={
                 <Text size="sm">
-                    {timeIsUp || dayjs().isAfter(roundEndTime)
-                        ? "Finalizing election..." // TODO: This should show even after post-time-up refresh
+                    {timeIsUp
+                        ? "Finalizing election..."
                         : `Head Chief elected in: ${hmmss}`}
                 </Text>
             }
