@@ -52,6 +52,7 @@ logger.info(
 );
 
 export const subchainConfig = {
+    enable: !("SUBCHAIN_DISABLE" in process.env),
     eden: process.env.SUBCHAIN_EDEN_CONTRACT || "genesis.eden",
     token: process.env.SUBCHAIN_TOKEN_CONTRACT || "eosio.token",
     atomic: process.env.SUBCHAIN_AA_CONTRACT || "atomicassets",
