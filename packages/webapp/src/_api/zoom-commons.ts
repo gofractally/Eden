@@ -53,7 +53,15 @@ export const zoomRefreshAuth = async (refreshToken: string) => {
 };
 
 export const zoomAccountJWTIsExpired = (zoomAccountJWT: ZoomAccountJWT) => {
-    return false; // TODO: fix and calculate it properly
+    const accessTokenEncodedData = zoomAccountJWT.access_token.split(".");
+    if (accessTokenEncodedData.length !== 3)
+        throw new Error("invalid zoom jwt payload");
+
+    const accessTokenData = JSON.parse(atob(accessTokenEncodedData[1]));
+    if (!accessTokenData.exp) {
+        throw new Error("can't parse zoom jwt expiration date");
+    }
+    return Date.now() > accessTokenData.exp * 1000;
 };
 
 export const zoomResponseIsInvalidAccess = (response: any) => {

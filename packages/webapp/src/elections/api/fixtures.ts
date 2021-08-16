@@ -46,14 +46,14 @@ export const fixtureRegistrationElection: CurrentElection = {
 // In the grand scheme of other fixture data,
 // this would represent the Round 1 election, where there were 5 people in 2 groups
 export const fixtureCurrentElection: CurrentElection = {
-    electionState: "active",
+    electionState: ElectionStatus.Active,
     config: {
         num_participants: 13,
         num_groups: 7,
     },
     round: 2,
     saved_seed: "some seed",
-    round_end: "2021-08-04T18:34:45.000",
+    round_end: "2021-08-15T18:34:45.000",
 };
 
 // This data represents the *in-progress*, *first* round (whereas other fixture data represents the *results* of the overall election)

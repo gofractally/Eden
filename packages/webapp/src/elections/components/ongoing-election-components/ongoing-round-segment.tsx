@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { useQueryClient } from "react-query";
 import { Flipper, Flipped } from "react-flip-toolkit";
-import { BiCheck, BiWebcam } from "react-icons/bi";
+import { BiCheck } from "react-icons/bi";
 import { RiVideoUploadLine } from "react-icons/ri";
 
 import { useUALAccount } from "_app";
@@ -22,6 +22,7 @@ import { setVote } from "../../transactions";
 import Consensometer from "./consensometer";
 import PasswordPromptModal from "./password-prompt-modal";
 import RoundHeader from "./round-header";
+import { RequestElectionMeetingLinkButton } from "./request-election-meeting-link-button";
 
 export interface RoundSegmentProps {
     electionState: string;
@@ -41,10 +42,6 @@ export const OngoingRoundSegment = ({
 
     const [selectedMember, setSelected] = useState<MemberData | null>(null);
     const [isLoading, setIsLoading] = useState<boolean>(false);
-    const [
-        showZoomLinkPermutations,
-        setShowZoomLinkPermutations,
-    ] = useState<boolean>(false); // TODO: Replace with real meeting link functionality
     const [showPasswordPrompt, setShowPasswordPrompt] = useState<boolean>(
         false
     ); // TODO: Hook up to the real password prompt
@@ -139,66 +136,7 @@ export const OngoingRoundSegment = ({
                     Meet with your group. Align on a leader &gt;2/3 majority.
                     Select your leader and submit your vote below.
                 </Text>
-                {!showZoomLinkPermutations ? (
-                    <Button
-                        size="sm"
-                        onClick={() => setShowZoomLinkPermutations(true)}
-                    >
-                        <BiWebcam className="mr-1" />
-                        Request meeting link
-                    </Button>
-                ) : (
-                    <>
-                        <div className="flex items-center space-x-2">
-                            <Button size="sm">
-                                <BiWebcam className="mr-1" />
-                                Request meeting link
-                            </Button>
-                            <Text
-                                size="xs"
-                                type="note"
-                                className="leading-tight"
-                            >
-                                [Not implemented] No one has created
-                                <br />a link yet. Should trigger Zoom Oauth.
-                            </Text>
-                        </div>
-                        <div className="flex items-center space-x-2">
-                            <Button
-                                size="sm"
-                                onClick={() => setShowPasswordPrompt(true)}
-                            >
-                                <BiWebcam className="mr-1" />
-                                Request meeting link
-                            </Button>
-                            <Text
-                                size="xs"
-                                type="note"
-                                className="leading-tight"
-                            >
-                                [Opens modal UI] Link created,
-                                <br />
-                                but password not set in browser.
-                            </Text>
-                        </div>
-                        <div className="flex items-center space-x-2">
-                            <Button size="sm">
-                                <BiWebcam className="mr-1" />
-                                Join meeting
-                            </Button>
-                            <Text
-                                size="xs"
-                                type="note"
-                                className="leading-tight"
-                            >
-                                [Not implemented] Poll for encrypted link. If
-                                found
-                                <br />
-                                automatically decrypt and show join button.
-                            </Text>
-                        </div>
-                    </>
-                )}
+                <RequestElectionMeetingLinkButton />
             </Container>
             <Container className="flex justify-between">
                 <Heading size={4} className="inline-block">
