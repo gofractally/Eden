@@ -59,6 +59,13 @@ namespace eden
                                                 std::variant<vote>>;
 #endif
 
+   struct vote_report
+   {
+      eosio::name voter;
+      eosio::name candidate;
+   };
+   EOSIO_REFLECT(vote_report, voter, candidate);
+
    class eden : public eosio::contract
    {
      public:
@@ -125,7 +132,9 @@ namespace eden
 
       void electsettime(eosio::time_point_sec election_time);
 
-      void electconfig(uint8_t election_day, const std::string& election_time);
+      void electconfig(uint8_t election_day,
+                       const std::string& election_time,
+                       uint32_t round_duration_sec);
 
       void electopt(eosio::name member, bool participating);
 
@@ -138,6 +147,9 @@ namespace eden
       void electvote(uint8_t round, eosio::name voter, eosio::name candidate);
       void electvideo(uint8_t round, eosio::name voter, const std::string& video);
       void electprocess(uint32_t max_steps);
+      void electreport(eosio::ignore<uint8_t> round,
+                       eosio::ignore<std::vector<vote_report>>,
+                       eosio::ignore<eosio::name>);
 
       void distribute(uint32_t max_steps);
 
@@ -228,13 +240,14 @@ namespace eden
               ricardian_contract(inductendors_ricardian)),
        action(setencpubkey, account, key),
        action(electsettime, election_time),
-       action(electconfig, day, time),
+       action(electconfig, day, time, round_duration),
        action(electopt, member, participating),
        action(electseed, btc_header),
        action(electmeeting, account, round, keys, data, old_data),
        action(electvote, round, voter, candidate),
        action(electvideo, round, voter, video),
        action(electprocess, max_steps),
+       action(electreport, round, votes, winner),
        action(bylawspropose, proposer, bylaws),
        action(bylawsapprove, approver, bylaws_hash),
        action(bylawsratify, approver, bylaws_hash),
