@@ -21,7 +21,8 @@ if (
     !process.env.NEXT_PUBLIC_ENABLED_WALLETS ||
     !process.env.NEXT_PUBLIC_BOX_UPLOAD_IPFS ||
     !process.env.NEXT_PUBLIC_BOX_ADDRESS ||
-    !process.env.NEXT_PUBLIC_ZOOM_CLIENT_ID
+    !process.env.NEXT_PUBLIC_ZOOM_CLIENT_ID ||
+    !process.env.NEXT_PUBLIC_ELECTION_MEETING_DURATION_MS
 ) {
     throw new Error("Eden WebApp Environment Variables are not set");
 }
@@ -52,6 +53,9 @@ ENABLED_WALLETS="${process.env.NEXT_PUBLIC_ENABLED_WALLETS}"
 BOX_UPLOAD_IPFS="${process.env.NEXT_PUBLIC_BOX_UPLOAD_IPFS}"
 BOX_ADDRESS="${process.env.NEXT_PUBLIC_BOX_ADDRESS}"
 ZOOM_CLIENT_ID="${process.env.NEXT_PUBLIC_ZOOM_CLIENT_ID}"
+ELECTION_MEETING_DURATION_MS="${
+    process.env.NEXT_PUBLIC_ELECTION_MEETING_DURATION_MS
+}"
 `);
 
 console.info(`>>> Dev Configs:
