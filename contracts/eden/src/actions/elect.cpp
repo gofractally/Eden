@@ -13,12 +13,17 @@ namespace eden
       elections{get_self()}.set_next_election_time(election_time);
    }
 
-   void eden::electconfig(uint8_t election_day, const std::string& election_time)
+   void eden::electconfig(uint8_t election_day,
+                          const std::string& election_time,
+                          uint32_t round_duration)
    {
       eosio::require_auth(get_self());
 
       elections elections{get_self()};
       elections.set_time(election_day, election_time);
+
+      globals globals{get_self()};
+      globals.set_election_round_duration(round_duration);
    }
 
    void eden::electopt(eosio::name voter, bool participating)

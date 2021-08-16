@@ -470,8 +470,7 @@ namespace eden
                state_variant = current_election_state_active{
                    0, configs.front(), state->rng.seed(),
                    eosio::current_time_point() +
-                       eosio::seconds(globals.get().election_round_time_sec +
-                                      globals.get().election_break_time_sec)};
+                       eosio::seconds(globals.get().election_round_time_sec)};
             }
             --max_steps;
          }
@@ -707,8 +706,7 @@ namespace eden
             auto g = globals.get();
             state = current_election_state_active{
                 static_cast<uint8_t>(data.prev_round + 1), config.front(), data.rng.seed(),
-                eosio::current_time_point() +
-                    eosio::seconds(g.election_round_time_sec + g.election_break_time_sec)};
+                eosio::current_time_point() + eosio::seconds(g.election_round_time_sec)};
          }
          --max_steps;
       }

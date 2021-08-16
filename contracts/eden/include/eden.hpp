@@ -132,7 +132,9 @@ namespace eden
 
       void electsettime(eosio::time_point_sec election_time);
 
-      void electconfig(uint8_t election_day, const std::string& election_time);
+      void electconfig(uint8_t election_day,
+                       const std::string& election_time,
+                       uint32_t round_duration_sec);
 
       void electopt(eosio::name member, bool participating);
 
@@ -238,7 +240,7 @@ namespace eden
               ricardian_contract(inductendors_ricardian)),
        action(setencpubkey, account, key),
        action(electsettime, election_time),
-       action(electconfig, day, time),
+       action(electconfig, day, time, round_duration),
        action(electopt, member, participating),
        action(electseed, btc_header),
        action(electmeeting, account, round, keys, data, old_data),

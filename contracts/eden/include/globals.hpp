@@ -35,15 +35,10 @@ namespace eden
    struct global_data_v1 : global_data_v0
    {
       uint32_t election_start_time = 0xffffffffu;  // seconds from the start of Sunday
-      uint32_t election_round_time_sec = 60 * 60;
-      uint32_t election_break_time_sec = 60 * 60;
+      uint32_t election_round_time_sec = 2 * 60 * 60;
       auto upgrade() const { return *this; }
    };
-   EOSIO_REFLECT(global_data_v1,
-                 base global_data_v0,
-                 election_start_time,
-                 election_round_time_sec,
-                 election_break_time_sec);
+   EOSIO_REFLECT(global_data_v1, base global_data_v0, election_start_time, election_round_time_sec);
 
    using global_variant = std::variant<global_data_v0, global_data_v1>;
    using global_singleton = eosio::singleton<"global"_n, global_variant>;
@@ -67,5 +62,6 @@ namespace eden
       eosio::symbol default_token() const { return data.minimum_donation.symbol; }
       void set_stage(contract_stage stage);
       void set_election_start_time(uint32_t time);
+      void set_election_round_duration(uint32_t duration);
    };
 }  // namespace eden
