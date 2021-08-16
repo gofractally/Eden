@@ -46,7 +46,7 @@ export const fixtureRegistrationElection: CurrentElection = {
 // In the grand scheme of other fixture data,
 // this would represent the Round 1 election, where there were 5 people in 2 groups
 export const fixtureCurrentElection: CurrentElection = {
-    electionState: "current_election_state_active",
+    electionState: ElectionStatus.Active,
     config: {
         num_participants: 13,
         num_groups: 7,

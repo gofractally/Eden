@@ -100,7 +100,7 @@ export const RequestElectionMeetingLinkButton = () => {
             const signedTrx = await ualAccount.signTransaction(transaction, {
                 broadcast: true,
             });
-            console.info("inductmeetin trx", signedTrx);
+            console.info("electmeeting trx", signedTrx);
 
             // todo: refetch the round data to set the new defined roundMeetingLink
         } catch (error) {

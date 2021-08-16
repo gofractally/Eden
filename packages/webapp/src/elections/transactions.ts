@@ -3,7 +3,7 @@ import { EncryptedKey } from "encryption";
 
 export const setElectionMeeting = (
     authorizerAccount: string,
-    id: number,
+    round: number,
     keys: EncryptedKey[],
     data: Uint8Array,
     old_data?: Uint8Array
@@ -11,7 +11,7 @@ export const setElectionMeeting = (
     actions: [
         {
             account: edenContractAccount,
-            name: "inductmeetin",
+            name: "electmeeting",
             authorization: [
                 {
                     actor: authorizerAccount,
@@ -20,7 +20,7 @@ export const setElectionMeeting = (
             ],
             data: {
                 account: authorizerAccount,
-                id,
+                round,
                 keys,
                 data,
                 old_data,
