@@ -42,7 +42,6 @@ import {
     CurrentElection_activeState,
     VoteData,
 } from "elections/interfaces";
-import { EncryptionScope, getEncryptedData } from "encryption";
 
 export const queryHeadDelegate = {
     queryKey: "query_head_delegate",
@@ -331,7 +330,6 @@ export const useMemberGroupParticipants = (
             currentActiveElection?.config
         ),
         ...queryOptions,
-        enabled,
     });
 };
 

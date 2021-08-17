@@ -8,7 +8,6 @@ import {
     CONTRACT_ELECTION_STATE_TABLE,
     CONTRACT_MEMBER_TABLE,
     CONTRACT_VOTE_TABLE,
-    Election,
     getRow,
     getTableRawRows,
     getTableRows,
@@ -27,6 +26,7 @@ import {
 import {
     ActiveStateConfigType,
     CurrentElection,
+    Election,
     ElectionState,
     ElectionStatus,
     VoteData,
@@ -338,7 +338,6 @@ export const getOngoingElectionData = async (
     myDelegation: EdenMember[] = []
 ) => {
     console.info("getOngoingElectionData().top");
-    if (!votingMemberData) throw new Error("no votingMemberData");
     console.info("getOED().votingMemberData:", votingMemberData);
 
     // Calculate highestRoundIndexInWhichMemberWasRepresented and areRoundsWithNoParticipation
