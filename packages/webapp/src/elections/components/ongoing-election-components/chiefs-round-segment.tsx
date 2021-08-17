@@ -101,6 +101,7 @@ export const ChiefsRoundSegment = ({ roundEndTime }: RoundSegmentProps) => {
             <MembersGrid members={members}>
                 {(member) => (
                     <DelegateChip
+                        key={`${member.account}-chief-delegate`}
                         member={member}
                         delegateTitle="Elected Chief Delegate"
                     />
