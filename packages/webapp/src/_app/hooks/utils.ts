@@ -84,3 +84,12 @@ export const useCountdown = ({
         )}:${padTime(secRemaining)}`,
     };
 };
+
+// This gives us the ability to check prevProps
+export const usePrevious = <T>(value: T): T => {
+    const ref: any = useRef<T>();
+    useEffect(() => {
+        ref.current = value;
+    }, [value]);
+    return ref.current;
+};

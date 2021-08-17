@@ -1,4 +1,8 @@
-import { FluidLayout, useCurrentElection } from "_app";
+import { useEffect, useState } from "react";
+import { useRouter } from "next/router";
+
+import { FluidLayout, useCurrentElection, usePrevious } from "_app";
+import { ROUTES } from "_app/config";
 import { Container, Heading, Loader } from "_app/ui";
 import {
     ErrorLoadingElection,
@@ -9,7 +13,18 @@ import { ElectionStatus } from "elections/interfaces";
 import { EncryptionPasswordAlert } from "encryption";
 
 export const ElectionPage = () => {
+    const router = useRouter();
+    const [isElectionComplete, setIsElectionComplete] = useState(false);
     const { data: currentElection, isLoading, isError } = useCurrentElection();
+    const prevElectionState = usePrevious(currentElection?.electionState);
+
+    useEffect(() => {
+        if (prevElectionState !== ElectionStatus.Final) return;
+        if (currentElection?.electionState === ElectionStatus.Registration) {
+            setIsElectionComplete(true);
+            router.push(ROUTES.DELEGATION.href);
+        }
+    }, [currentElection]);
 
     if (isError) return <ErrorLoadingElection />;
 
@@ -25,7 +40,7 @@ export const ElectionPage = () => {
                 />
             }
         >
-            {isLoading ? (
+            {isLoading || isElectionComplete ? (
                 <LoaderSection />
             ) : (
                 <div className="divide-y">
