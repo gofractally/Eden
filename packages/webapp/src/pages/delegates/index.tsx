@@ -67,11 +67,8 @@ export const DelegatesPage = (props: Props) => {
                 <div>not an Eden Member</div>
             </FluidLayout>
         );
-    if (
-        !myDelegation ||
-        !myDelegationMemberData ||
-        (myDelegation?.length > 0 && !myDelegationMemberData)
-    )
+    // TODO: Handle the no-election-has-ever-happened scenario (just after genesis induction is complete)
+    if (!myDelegation || !myDelegationMemberData)
         return (
             <FluidLayout>
                 <div>fetching your Delegation and members...</div>
@@ -170,6 +167,7 @@ const Chiefs = () => {
         enabled: Boolean(chiefsAsMembers?.length),
     });
 
+    // TODO: Handle the no-election-has-ever-happened scenario (just after genesis induction is complete)
     if (!electionState || !memberData || !membersStats)
         return <div>fetching data</div>;
 

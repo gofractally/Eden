@@ -4,6 +4,11 @@ import {
     ElectionStatus,
     VoteData,
 } from "elections/interfaces";
+import { MemberData } from "members";
+import {
+    getFixtureEdenMember,
+    getFixtureMemberData,
+} from "members/api/fixtures";
 
 // The following fixtures represent the following Election/round layout
 // Round 1:
@@ -51,7 +56,7 @@ export const fixtureCurrentElection: CurrentElection = {
         num_participants: 13,
         num_groups: 7,
     },
-    round: 2,
+    round: 3,
     saved_seed: "some seed",
     round_end: "2021-08-15T18:34:45.000",
 };
@@ -59,54 +64,111 @@ export const fixtureCurrentElection: CurrentElection = {
 // This data represents the *in-progress*, *first* round (whereas other fixture data represents the *results* of the overall election)
 export const fixtureVoteDataRows: VoteData[] = [
     {
-        member: "edenmember11",
-        round: 1,
-        index: 0,
-        candidate: "edenmember12",
-    },
-    {
         member: "edenmember12",
         round: 1,
-        index: 1,
-        candidate: "edenmember12",
+        index: 0,
+        candidate: "jshdkflshkdjf",
     },
-    {
-        member: "edenmember13",
-        round: 1,
-        index: 2,
-        candidate: "edenmember14",
-    },
-    {
-        member: "edenmember14",
-        round: 1,
-        index: 3,
-        candidate: "edenmember14",
-    },
-    {
-        member: "edenmember15",
-        round: 1,
-        index: 4,
-        candidate: "egeon.edev",
-    },
+    // {
+    //     member: "edenmember12",
+    //     round: 1,
+    //     index: 1,
+    //     candidate: "edenmember12",
+    // },
+    // {
+    //     member: "edenmember13",
+    //     round: 1,
+    //     index: 2,
+    //     candidate: "edenmember14",
+    // },
+    // {
+    //     member: "edenmember14",
+    //     round: 1,
+    //     index: 3,
+    //     candidate: "edenmember14",
+    // },
+    // {
+    //     member: "edenmember15",
+    //     round: 1,
+    //     index: 4,
+    //     candidate: "egeon.edev",
+    // },
     {
         member: "egeon.edev",
-        round: 1,
+        round: 2,
+        index: 4,
+        candidate: "alice.edev",
+    },
+    // {
+    //     member: "edenmember21",
+    //     round: 1,
+    //     index: 6,
+    //     candidate: "pip.edev",
+    // },
+    // {
+    //     member: "pip.edev",
+    //     round: 1,
+    //     index: 7,
+    //     candidate: "pip.edev",
+    // },
+    {
+        member: "edenmember25",
+        round: 2,
+        index: 8,
+        candidate: "edenmember25",
+    },
+    {
+        member: "alice.edev",
+        round: 4,
         index: 5,
-        candidate: "",
-    },
-    {
-        member: "edenmember21",
-        round: 1,
-        index: 6,
-        candidate: "pip.edev",
-    },
-    {
-        member: "pip.edev",
-        round: 1,
-        index: 7,
-        candidate: "pip.edev",
+        candidate: "alice.edev",
     },
 ];
+
+export const fixtureCompletedRounds = [
+    {
+        participants: [
+            getFixtureEdenMember("edenmember22"),
+            getFixtureEdenMember("alice.edev"),
+        ], // .length will be number of participants and empty if no round happened
+        participantsMemberData: [
+            getFixtureMemberData("edenmember22"),
+            getFixtureMemberData("alice.edev"),
+        ],
+        didReachConsensus: true,
+        // delegate: undefined,
+    },
+    {
+        participants: [
+            getFixtureEdenMember("edenmember14"),
+            getFixtureEdenMember("alice.edev"),
+        ], // .length will be number of participants and empty if no round happened
+        participantsMemberData: [
+            getFixtureMemberData("edenmember14"),
+            getFixtureMemberData("alice.edev"),
+        ],
+        didReachConsensus: true,
+        // delegate: undefined,
+    },
+    {
+        participants: [
+            getFixtureEdenMember("egeon.edev"),
+            getFixtureMemberData("alice.edev"),
+        ], // .length will be number of participants and empty if no round happened
+        participantsMemberData: [
+            getFixtureMemberData("egeon.edev"),
+            getFixtureMemberData("alice.edev"),
+        ],
+        didReachConsensus: true,
+        // delegate: undefined,
+    },
+];
+export const fixtureOngoingRound = (votingMemberData: MemberData[]) => ({
+    // participants: [],
+    // participantsMemberData: [],
+    // participants: membersInOngoingRound,
+    participantsMemberData: votingMemberData,
+});
 
 export const fixtureVoteDataRow = (loggedInAccountName: string): VoteData =>
     fixtureVoteDataRows.find((row) => row.member === loggedInAccountName)!;

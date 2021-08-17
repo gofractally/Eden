@@ -20,6 +20,8 @@ import { fixtureMemberData } from "./fixtures";
 export const getMember = async (
     account: string
 ): Promise<MemberData | undefined> => {
+    if (devUseFixtureData)
+        return fixtureMemberData.find((member) => member.account === account);
     const member = await getEdenMember(account);
     if (member && member.nft_template_id > 0) {
         const template = await getTemplate(`${member.nft_template_id}`);

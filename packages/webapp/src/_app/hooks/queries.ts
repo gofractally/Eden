@@ -8,10 +8,11 @@ import {
     getTreasuryStats,
     getNewMembers,
     getMembersStats,
-    VoteDataQueryOptionsByGroup,
     MemberData,
+    VoteDataQueryOptionsByGroup,
+    MemberStats,
 } from "members";
-import { getCommunityGlobals } from "_app/api";
+import { Election, getCommunityGlobals } from "_app/api";
 
 import { useUALAccount } from "../eos";
 import {
@@ -30,11 +31,16 @@ import {
     getCurrentElection,
     getElectionState,
     getMemberGroupParticipants,
+    getOngoingElectionData,
     getParticipantsInCompletedRound,
     getVoteData,
     getVoteDataRow,
 } from "elections/api/eden-contract";
-import { ActiveStateConfigType, VoteData } from "elections/interfaces";
+import {
+    ActiveStateConfigType,
+    CurrentElection,
+    VoteData,
+} from "elections/interfaces";
 
 export const queryHeadDelegate = {
     queryKey: "query_head_delegate",
@@ -80,7 +86,12 @@ export const queryParticipantsInCompletedRound = (
     member?: EdenMember,
     voteData?: VoteData
 ) => ({
-    queryKey: ["query_current_election", member, voteData, electionRound],
+    queryKey: [
+        "query_participants_in_completed_round",
+        member,
+        voteData,
+        electionRound,
+    ],
     queryFn: () => {
         if (!member)
             throw new Error(
@@ -114,6 +125,31 @@ export const queryCommunityGlobals = {
     queryKey: "query_community_globals",
     queryFn: getCommunityGlobals,
 };
+
+export const queryOngoingElectionData = (
+    memberStats?: MemberStats,
+    votingMemberData?: MemberData[],
+    currentElection?: CurrentElection,
+    myDelegation?: EdenMember[],
+    queryOptions: any = {}
+) => ({
+    queryKey: [
+        "query_ongoing_round",
+        memberStats,
+        currentElection,
+        votingMemberData,
+    ],
+    queryFn: () => {
+        return getOngoingElectionData(
+            memberStats,
+            votingMemberData,
+            currentElection,
+            myDelegation
+        );
+    },
+    // TODO: ensure adding this bad didn't break anything
+    ...queryOptions,
+});
 
 export const queryMembers = (
     page: number = 1,
@@ -262,15 +298,17 @@ export const useMemberGroupParticipants = (
 ) => {
     const { data: currentElection } = useCurrentElection();
 
-    let enabled = Boolean(memberAccount && currentElection?.config);
-    if ("enabled" in queryOptions) {
-        enabled = enabled && queryOptions.enabled;
-    }
+    // TODO: do we still need this? config doesn't exist sometimes
+    // let enabled = Boolean(memberAccount && currentElection?.config);
+    // if ("enabled" in queryOptions) {
+    //     enabled = enabled && queryOptions.enabled;
+    // }
 
     return useQuery<VoteData[], Error>({
         ...queryMemberGroupParticipants(memberAccount, currentElection?.config),
         ...queryOptions,
-        enabled,
+        // TODO: Research this. TS wasn't happy with it
+        // enabled,
     });
 };
 
@@ -341,4 +379,38 @@ export const useMemberDataFromVoteData = (voteData?: VoteData[]) => {
         isError: memberDataRes.isError || isFetchError,
         isSuccess: memberDataRes.isSuccess || areQueriesComplete,
     };
+};
+
+export const useOngoingElectionData = (
+    queryOptions: any = {}
+): UseQueryResult<Election | undefined> => {
+    const { data: loggedInMember } = useCurrentMember();
+    // GET highestRandIndexParticipatedIn
+    const { data: memberStats } = useMemberStats();
+    const { data: electionState } = useCurrentElection();
+    const { data: myDelegation } = useMyDelegation();
+
+    // GET participants for ongoing round
+    const { data: membersInOngoingRound } = useMemberGroupParticipants(
+        loggedInMember?.account
+    );
+    let { data: votingMemberData } = useMemberDataFromVoteData(
+        membersInOngoingRound
+    );
+
+    const { queryKey, queryFn } = queryOngoingElectionData(
+        memberStats,
+        votingMemberData,
+        electionState,
+        myDelegation
+    );
+    return useQuery<Election, Error>({
+        queryKey,
+        queryFn,
+        enabled:
+            Boolean(loggedInMember) &&
+            Boolean(memberStats) &&
+            Boolean(electionState) &&
+            Boolean(myDelegation),
+    });
 };

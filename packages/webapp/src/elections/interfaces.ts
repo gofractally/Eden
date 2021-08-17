@@ -42,7 +42,9 @@ export interface ActiveStateConfigType {
     num_participants: number;
     num_groups: number;
 }
-interface CurrentElection_activeState {
+
+// TODO: reconsider the TS error I was getting that forced me to export this. Preferably, we don't export it
+export interface CurrentElection_activeState {
     round: number;
     config: ActiveStateConfigType;
     saved_seed: string;
