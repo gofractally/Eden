@@ -4,6 +4,7 @@ import { BsInfoCircle } from "react-icons/bs";
 import {
     useUALAccount,
     useCommunityGlobals,
+    useCurrentElection,
     useCurrentMember,
     useMemberStats,
     useMyDelegation,
@@ -27,6 +28,7 @@ export const OngoingElection = ({ election }: { election: any }) => {
         isLoading: isLoadingGlobals,
         isError: isErrorGlobals,
     } = useCommunityGlobals();
+    const { data: currentElection } = useCurrentElection();
     const {
         data: memberStats,
         isLoading: isLoadingMemberStats,
