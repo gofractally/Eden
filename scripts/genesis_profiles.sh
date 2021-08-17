@@ -4,7 +4,7 @@ set -xe
 CLEOS="cleos -u https://wax-test.eosdac.io"
 CONTRACT="test2.edev"
 
-for PARMS in $(cat ./genesis_accounts); do
+for PARMS in $(cat ./genesis_accounts_long_list); do
   ACCOUNT_NAME=$(echo $PARMS | cut -d "," -f1);
   INDUCTION_ID=$(echo $PARMS | cut -d "," -f2);
   IMAGE=$(echo $PARMS | cut -d "," -f3);
@@ -31,6 +31,6 @@ for PARMS in $(cat ./genesis_accounts); do
     }
   }"
 
-$CLEOS push action $CONTRACT inductprofil "$PROFILE_ACTION_DATA" -p $INVITEE@active
+$CLEOS push action $CONTRACT inductprofil "$PROFILE_ACTION_DATA" -p "$INVITEE@active"
 
 done;
