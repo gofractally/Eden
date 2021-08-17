@@ -1,6 +1,9 @@
 import dayjs from "dayjs";
+import * as eosjsSerialize from "eosjs/dist/eosjs-serialize";
+import * as eosjsNumeric from "eosjs/dist/eosjs-numeric";
 
-import { VoteData } from "elections/interfaces";
+import { ActiveStateConfigType, VoteData } from "./interfaces";
+import { getMemberGroupFromIndex } from "./api";
 
 export const extractElectionDates = (election: any) => {
     const rawStartDateTime =
@@ -73,4 +76,25 @@ export const tallyVotesFromVoteData = (participantVoteData: VoteData[]) => {
         leaderIsVotingForSelf,
         isThereConsensus: didReachConsensus,
     };
+};
+
+export const calculateGroupId = (
+    round: number,
+    voterIndex: number,
+    config: ActiveStateConfigType
+): string => {
+    const totalParticipants = config.num_participants;
+    const numGroups = config.num_groups;
+
+    const { groupNumber } = getMemberGroupFromIndex(
+        voterIndex,
+        totalParticipants,
+        numGroups
+    );
+
+    const serialBuffer = new eosjsSerialize.SerialBuffer();
+    serialBuffer.pushUint32(round << 16);
+    serialBuffer.pushUint32(groupNumber);
+    const bytes = serialBuffer.getUint8Array(8);
+    return eosjsNumeric.binaryToDecimal(bytes);
 };

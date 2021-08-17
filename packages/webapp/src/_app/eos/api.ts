@@ -7,6 +7,7 @@ export const RPC_GET_TABLE_ROWS = `${RPC_URL}/v1/chain/get_table_rows`;
 export const CONTRACT_SCOPE = "0";
 export const CONTRACT_GLOBAL_TABLE = "global";
 export const CONTRACT_MEMBER_TABLE = "member";
+export const CONTRACT_ENCRYPTED_TABLE = "encrypted";
 export const CONTRACT_MEMBERSTATS_TABLE = "memberstats";
 export const CONTRACT_ACCOUNT_TABLE = "account";
 export const CONTRACT_ELECTION_STATE_TABLE = "elect.state";
