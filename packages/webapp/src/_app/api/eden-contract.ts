@@ -10,7 +10,8 @@ const MEMBER_REPRESENTATIVE_IF_NOT_PARTICIPATED_IN_RECENT_ELECTION =
 const isARepresentativeResultingFromConsensus = (representativeValue: string) =>
     representativeValue.length !== 13;
 
-export const isValidDelegate = (memberRep: string) =>
+export const isValidDelegate = (memberRep?: string) =>
+    memberRep &&
     memberRep !==
         MEMBER_REPRESENTATIVE_IF_NOT_PARTICIPATED_IN_RECENT_ELECTION &&
     isARepresentativeResultingFromConsensus(memberRep);

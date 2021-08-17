@@ -1,6 +1,7 @@
 import { RiVideoUploadLine } from "react-icons/ri";
 
 import {
+    isValidDelegate,
     useMemberDataFromEdenMembers,
     useParticipantsInMyCompletedRound,
 } from "_app";
@@ -24,16 +25,28 @@ export const CompletedRoundSegment = ({
 
     if (!participantsMemberData || !participantsMemberData.length) return null;
 
-    const winner = data?.participants.find((p) => p.account === data.delegate);
+    const commonDelegate = data?.participants.find(
+        (p) => p.account === data.delegate
+    );
 
     return (
         <Expander
-            header={<Header roundIndex={roundIndex} winner={winner?.name} />}
+            header={
+                <RoundHeader
+                    isRoundActive={false}
+                    headlineComponent={<div>"Round "{roundIndex + 1}</div>}
+                    sublineComponent={
+                        isValidDelegate(commonDelegate?.account)
+                            ? `Delegate elect: ${commonDelegate!.name}`
+                            : "Consensus not achieved"
+                    }
+                />
+            }
             inactive
         >
             <MembersGrid members={participantsMemberData}>
                 {(member) => {
-                    if (member.account === winner?.account) {
+                    if (member.account === commonDelegate?.account) {
                         return (
                             <ElectionParticipantChip
                                 key={`round-${roundIndex + 1}-winner`}

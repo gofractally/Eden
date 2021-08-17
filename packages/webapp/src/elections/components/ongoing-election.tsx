@@ -1,12 +1,17 @@
 import dayjs, { Dayjs } from "dayjs";
+import { BsInfoCircle } from "react-icons/bs";
 
 import {
+    useUALAccount,
     useCommunityGlobals,
+    useCurrentElection,
     useCurrentMember,
     useMemberStats,
-    useUALAccount,
+    useMyDelegation,
+    useOngoingElectionData as useOngoingElectionData,
+    useVoteDataRow,
 } from "_app";
-import { Button, Container, Heading, Loader, Text } from "_app/ui";
+import { Button, Container, Heading, Loader, Link, Text } from "_app/ui";
 import { ErrorLoadingElection } from "elections";
 import { ActiveStateConfigType, ElectionStatus } from "elections/interfaces";
 
@@ -17,16 +22,23 @@ import * as Ongoing from "./ongoing-election-components";
 // TODO: Specifically, what happens to CompletedRound component when non-participating-eden-member logs in?
 // TODO: Make sure time zone changes during election are handled properly
 export const OngoingElection = ({ election }: { election: any }) => {
+    const { data: loggedInUser } = useCurrentMember();
     const {
         data: globals,
         isLoading: isLoadingGlobals,
         isError: isErrorGlobals,
     } = useCommunityGlobals();
+    const { data: currentElection } = useCurrentElection();
     const {
         data: memberStats,
         isLoading: isLoadingMemberStats,
         isError: isErrorMemberStats,
     } = useMemberStats();
+    const { data: loggedInVoteData } = useVoteDataRow(loggedInUser?.account);
+    const { data: myDelegationSoFar } = useMyDelegation();
+    const { data: ongoingRoundData } = useOngoingElectionData({
+        enabled: Boolean(loggedInUser) && Boolean(memberStats),
+    });
 
     const isLoading = isLoadingGlobals || isLoadingMemberStats;
     if (isLoading) {
@@ -41,6 +53,17 @@ export const OngoingElection = ({ election }: { election: any }) => {
     if (isError || !memberStats) {
         return <ErrorLoadingElection />;
     }
+    // console.info("currentElection:", currentElection);
+
+    const showNoConsensusInPreviousRoundMessage =
+        (myDelegationSoFar?.length || 0) < currentElection.round;
+
+    // TODO: Model all this data to be self-consistent and to abstract the frontend from the complexities of the backend logic
+    // start with logged-in user
+    // check that they registered for the election (and cast at least one vote?)
+    // see if they're still participating
+    const isStillParticipating = Boolean(loggedInVoteData);
+    // Below in the UI, iterate through myDelegation *only* up to the level of currentElection.round (to avoid old member data)
 
     const { election_round_time_sec, election_break_time_sec } = globals;
     const roundDurationSec = election_round_time_sec + election_break_time_sec;
@@ -49,6 +72,9 @@ export const OngoingElection = ({ election }: { election: any }) => {
     const roundEndTimeRaw = election.round_end ?? election.seed.end_time;
     const roundEndTime = dayjs(roundEndTimeRaw + "Z");
     const roundStartTime = dayjs(roundEndTime).subtract(roundDurationMs);
+    const loggedInRank = isStillParticipating ? 0 : loggedInUser?.election_rank;
+
+    if (!ongoingRoundData) return <>No Ongoing Round data yet</>;
 
     return (
         <div className="divide-y">
@@ -57,9 +83,17 @@ export const OngoingElection = ({ election }: { election: any }) => {
                 <Text>In progress until 6:30pm EDT</Text>
             </Container>
             <Ongoing.SupportSegment />
-            <CompletedRounds roundIndex={roundIndex} />
+
+            <CompletedRounds
+                numCompletedRounds={ongoingRoundData.completedRounds.length}
+            />
             <SignInContainer />
             <SignUpContainer />
+            <NoFurtherParticipationInRoundsMessage
+                areRoundsWithNoParticipation={
+                    ongoingRoundData.areRoundsWithNoParticipation
+                }
+            />
             <CurrentRound
                 electionState={election.electionState}
                 roundIndex={roundIndex}
@@ -72,23 +106,56 @@ export const OngoingElection = ({ election }: { election: any }) => {
     );
 };
 
+interface NoFurtherParticipationProps {
+    areRoundsWithNoParticipation: boolean;
+}
+
+const NoFurtherParticipationInRoundsMessage = ({
+    areRoundsWithNoParticipation,
+}: NoFurtherParticipationProps) => {
+    if (!areRoundsWithNoParticipation) {
+        return null;
+    }
+    return (
+        <Container className="flex items-center space-x-2 pr-8">
+            <BsInfoCircle
+                size={22}
+                className="ml-px text-gray-400 place-self-start mt-1"
+            />
+            <div className="flex-1">
+                <Text size="sm">
+                    You did not advance a delegate to participate in further
+                    rounds. Please{" "}
+                    <Link href={""}>join the Community Room</Link> &amp; Support
+                    for news and updates of the ongoing election. The results
+                    will be displayed in the My Delegation area after the
+                    election is complete. Once the Chief Delegates are selected,
+                    they are displayed below.
+                </Text>
+            </div>
+        </Container>
+    );
+};
+
 export default OngoingElection;
 
 interface CompletedRoundsProps {
-    roundIndex: number;
+    numCompletedRounds: number;
 }
 
-const CompletedRounds = ({ roundIndex }: CompletedRoundsProps) => {
+const CompletedRounds = ({ numCompletedRounds }: CompletedRoundsProps) => {
     const { data: currentMember } = useCurrentMember();
     if (!currentMember) return null;
     return (
         <>
-            {[...Array(roundIndex)].map((_, i) => (
-                <Ongoing.CompletedRoundSegment
-                    key={`election-round-${i + 1}`}
-                    roundIndex={i}
-                />
-            ))}
+            {[...Array(numCompletedRounds)].map((_, i) => {
+                return (
+                    <Ongoing.CompletedRoundSegment
+                        key={`election-round-${i + 1}`}
+                        roundIndex={i}
+                    />
+                );
+            })}
         </>
     );
 };

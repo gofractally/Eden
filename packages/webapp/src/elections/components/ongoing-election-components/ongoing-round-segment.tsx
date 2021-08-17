@@ -197,7 +197,16 @@ export const OngoingRoundSegment = ({
         setIsSubmittingVote(false);
     };
 
+    // TODO: this needs more attention once we have sufficient test data to test it
+    if (!participants?.length) {
+        return (
+            <div>
+                You nor a delegate of yours is participating in this round.
+            </div>
+        );
+    }
     return (
+        // TODO: Move this out into a separate component to simplify and make this more readable
         <Expander
             header={
                 <Header
