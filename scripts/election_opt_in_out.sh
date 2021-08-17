@@ -15,7 +15,7 @@ PUB_KEY="PUB_K1_6aB7nuqWvrD4oKEi6pcr3PRis9UiMoRKmkQRKT7MF9jyxhEaxQ"
   # PVT_K1_pVwv4xcJdkKweWE6Ba1hPwUUDcu6EsM56t7pXJkh89kk5Wn1s
   # 5JdnXbX3gmCjax2nGHdU6k94h53Y7E6x4tAfLza3zZynvHQzCWw
 
-for PARMS in $(cat ./genesis_accounts); do
+for PARMS in $(cat ./genesis_accounts_long_list); do
   ACCOUNT_NAME=$(echo $PARMS | cut -d "," -f1);
 
   AUTHORIZATION="[{
