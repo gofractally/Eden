@@ -44,7 +44,6 @@ export const encryptSecretForPublishing = async (
     );
 
     const transientKeyPair = generateEncryptionKey();
-    console.info(transientKeyPair);
 
     const keks = await ecdhRecipientsKeyEncryptionKeys(
         publicKeys,
@@ -83,6 +82,23 @@ export const encryptSecretForPublishing = async (
             "an error occurred during encryption/decryption of the data"
         );
     }
+
+    // FLAW!! Any public key can decrypt the message!
+    const decryptedLink2 = await decryptPublishedMessage(
+        encryptedMessage,
+        "EOS7vz6S1LVdztSk7fViBzD2LP2TPvED5K49iDQskSzJ42i75Kg19",
+        senderKey,
+        encryptedSessionKeys[0],
+        info
+    );
+
+    const decryptedLink3 = await decryptPublishedMessage(
+        encryptedMessage,
+        "EOS5RnzPAmomUi4wwby8fD5V16QSvvNVkTNNuzdodtrLfLmWew8Sp",
+        senderKey,
+        encryptedSessionKeys[0],
+        info
+    );
 
     console.info({
         encryptedSessionKeys,
@@ -183,22 +199,26 @@ const ecdhRecipientsKeyEncryptionKeys = async (
     transientPrivateKey: PrivateKey,
     info?: string
 ): Promise<CryptoKey[]> => {
-    return Promise.all(
-        recipientPublicKeys.map(async (publicKey: string) => {
-            const ecdhSecret = deriveEcdhSecret(
-                transientPrivateKey,
-                PublicKey.fromString(publicKey)
-            );
-            console.info(ecdhSecret);
-            return await hkdfSha256FromEcdh(ecdhSecret, info);
-        })
-    );
+    const keks = [];
+    for (const publicKey of recipientPublicKeys) {
+        console.info("making kek", publicKey);
+        const ecdhSecret = deriveEcdhSecret(
+            transientPrivateKey,
+            PublicKey.fromString(publicKey)
+        );
+        console.info(ecdhSecret);
+        keks.push(await hkdfSha256FromEcdh(ecdhSecret, info));
+    }
+    return keks;
 };
 
 const deriveEcdhSecret = (
     eosPrivateKeyA: PrivateKey,
     eosPublicKeyB: PublicKey
 ) => {
+    console.info("ecdh derivation");
+    console.info("pk", eosPrivateKeyA.toElliptic().inspect());
+    console.info("pubk", eosPublicKeyB.toElliptic().inspect());
     return eosPrivateKeyA
         .toElliptic()
         .derive(eosPublicKeyB.toElliptic().getPublic())
@@ -216,6 +236,17 @@ const hkdfSha256FromEcdh = async (
         false,
         ["deriveKey", "deriveBits"]
     );
+
+    const derivedEcdhSecret = await window.crypto.subtle.deriveBits(
+        {
+            name: "HKDF",
+            hash: "SHA-256",
+        },
+        sharedSecretKey,
+        256
+    );
+    const buffer = new Uint8Array(derivedEcdhSecret);
+    console.info(buffer); // todo: ALWAYS THE SAME BITS... why?
 
     const encodedInfo = info ? new TextEncoder().encode(info) : [];
     const derivedKey = await crypto.subtle.deriveKey(
