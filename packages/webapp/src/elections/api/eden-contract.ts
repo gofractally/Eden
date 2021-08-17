@@ -32,7 +32,7 @@ import {
 } from "./fixtures";
 import { fixtureMembersInGroup } from "members/api/fixtures";
 
-const getMemberGroupFromIndex = (
+export const getMemberGroupFromIndex = (
     memberIdx: number,
     totalParticipants: number,
     numGroups: number

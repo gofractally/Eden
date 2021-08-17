@@ -61,19 +61,20 @@ export const encryptSecretForPublishing = async (
 
     const encryptedMessage = await encryptMessage(sessionKey, message);
 
-    const publisherKey = publicKeys[0];
+    const senderKey = transientKeyPair.publicKey.toString();
     const contractFormatEncryptedKeys: EncryptedKey[] = encryptedSessionKeys.map(
         (encryptedKey, i) => ({
-            sender_key: publisherKey,
+            sender_key: senderKey,
             recipient_key: publicKeys[i],
             key: encryptedKey,
         })
     );
 
+    const publisherKey = publicKeys[0];
     const decryptedMessage = await decryptPublishedMessage(
         encryptedMessage,
         publisherKey,
-        transientKeyPair.publicKey.toString(),
+        senderKey,
         encryptedSessionKeys[0],
         info
     );
@@ -294,7 +295,7 @@ const unwrapSessionKey = async (
 const decryptMessage = async (
     sessionKey: CryptoKey,
     encryptedMessage: Uint8Array
-): Promise<String> => {
+): Promise<string> => {
     const encodedMessage = await crypto.subtle.decrypt(
         {
             name: "AES-GCM",
