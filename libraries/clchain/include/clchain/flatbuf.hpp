@@ -3,12 +3,19 @@
 #pragma once
 
 #include <eosio/for_each_field.hpp>
+#include <eosio/name.hpp>
 #include <eosio/reflection2.hpp>
 #include <eosio/stream.hpp>
 #include <eosio/types.hpp>
 
 namespace clio
 {
+   template <typename T>
+   constexpr uint64_t get_type_hashname()
+   {
+      return eosio::hash_name(get_type_name((T*)nullptr));
+   }
+
    struct flat_view_proxy_impl;
 
    template <typename T>

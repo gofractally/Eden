@@ -12,8 +12,10 @@ RUN export DEBIAN_FRONTEND=noninteractive \
         libgmp-dev              \
         libssl-dev              \
         libusb-1.0-0-dev        \
+        libz-dev                \
         libzstd-dev             \
         pkg-config              \
+        python                  \
     && apt-get clean -yq \
     && rm -rf /var/lib/apt/lists/*
 
@@ -41,7 +43,7 @@ RUN cd /root \
     && tar xf boost_1_75_0.tar.bz2 \
     && cd boost_1_75_0 \
     && ./bootstrap.sh \
-    && ./b2 install \
+    && ./b2 --without-python install \
     && cd /root \
     && rm -rf boost_*
 

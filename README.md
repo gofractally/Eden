@@ -46,7 +46,9 @@ sudo apt-get install -yq    \
     libnss3-dev             \
     libssl-dev              \
     libusb-1.0-0-dev        \
+    libz-dev                \
     pkg-config              \
+    python                  \
     wget
 
 export WASI_SDK_PREFIX=~/work/wasi-sdk-12.0
@@ -66,5 +68,5 @@ tar xf boost_1_75_0.tar.bz2
 cd boost_1_75_0
 ./bootstrap.sh
 ./b2
-sudo ./b2 install
+sudo ./b2 --without-python install
 ```
