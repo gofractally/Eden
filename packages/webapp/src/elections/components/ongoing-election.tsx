@@ -62,8 +62,7 @@ export const OngoingElection = ({ election }: { election: any }) => {
     const isStillParticipating = Boolean(loggedInVoteData);
     // Below in the UI, iterate through myDelegation *only* up to the level of currentElection.round (to avoid old member data)
 
-    const { election_round_time_sec, election_break_time_sec } = globals;
-    const roundDurationSec = election_round_time_sec + election_break_time_sec;
+    const roundDurationSec = globals.election_round_time_sec;
     const roundDurationMs = roundDurationSec * 1000;
     const roundIndex = election.round ?? memberStats.ranks.length;
     const roundEndTimeRaw = election.round_end ?? election.seed.end_time;
