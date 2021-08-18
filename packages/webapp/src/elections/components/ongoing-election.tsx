@@ -6,7 +6,7 @@ import {
     useCommunityGlobals,
     useCurrentMember,
     useMemberStats,
-    useOngoingElectionData as useOngoingElectionData,
+    useOngoingElectionData,
 } from "_app";
 import { Button, Container, Heading, Loader, Link, Text } from "_app/ui";
 import { ErrorLoadingElection } from "elections";

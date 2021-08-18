@@ -77,7 +77,6 @@ const Header = ({ roundIndex, winner }: HeaderProps) => {
     const subText = isValidDelegate(winner?.account)
         ? `Delegate elect: ${winner?.name}`
         : "Consensus not achieved";
-
     return (
         <RoundHeader
             isRoundActive={false}

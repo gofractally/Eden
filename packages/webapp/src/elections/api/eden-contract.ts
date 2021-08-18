@@ -385,7 +385,7 @@ export const getOngoingElectionData = async (
         myDelegation
     );
 
-    const electionData: Election = {
+    const electionData = {
         ...ELECTION_DEFAULTS,
         isMemberStillParticipating,
         highestRoundIndexInWhichMemberWasRepresented, //: 2,
