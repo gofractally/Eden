@@ -12,6 +12,7 @@ import {
     queryElectionState,
     queryMemberByAccountName,
     queryMembersStats,
+    queryVoteDataRow,
     useElectionState,
 } from "_app";
 
@@ -62,6 +63,12 @@ export const getMyDelegation = async (
             throw new Error(
                 `Member record not found for provided account [${nextMemberAccount}].`
             );
+        const memberVoteData = await queryClient.fetchQuery(
+            queryVoteDataRow(nextMemberAccount)
+        );
+        const memberRankIndex = memberVoteData
+            ? memberVoteData.round
+            : member.election_rank;
 
         // Fill the array from next available position up to member.election_rank with member,
         // in case this delegate got voted up through multiple levels
@@ -74,7 +81,7 @@ export const getMyDelegation = async (
         // TODO: handle highestRank*whereRepresented*
         for (
             let idx = myDelegates.length;
-            idx <= member?.election_rank && idx <= highestCompletedRoundIndex;
+            idx < memberRankIndex && idx <= highestCompletedRoundIndex;
             idx++
         ) {
             myDelegates.push(member);
