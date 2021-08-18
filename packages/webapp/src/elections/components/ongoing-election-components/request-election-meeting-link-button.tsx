@@ -1,11 +1,14 @@
 import { BiWebcam } from "react-icons/bi";
 import { Dayjs } from "dayjs";
+import { useEffect, useState } from "react";
+import { useQueryClient } from "react-query";
 
 import {
     Button,
     decryptPublishedMessage,
     encryptSecretForPublishing,
     onError,
+    queryVoteDataRow,
     useEncryptedData,
     useMemberGroupParticipants,
     useUALAccount,
@@ -17,7 +20,6 @@ import {
     zoomConnectAccountLink,
 } from "_api/zoom-commons";
 import { setElectionMeeting } from "elections/transactions";
-import { useEffect, useState } from "react";
 import { calculateGroupId } from "elections/utils";
 import { ActiveStateConfigType } from "elections/interfaces";
 import { getEncryptionKey } from "encryption";
@@ -35,6 +37,7 @@ export const RequestElectionMeetingLinkButton = ({
     meetingDurationMs,
     electionConfig,
 }: RequestMeetingLinkProps) => {
+    const queryClient = useQueryClient();
     const [ualAccount] = useUALAccount();
     const [zoomAccountJWT, setZoomAccountJWT] = useZoomAccountJWT(undefined);
     const { data: memberGroup } = useMemberGroupParticipants(
@@ -44,23 +47,14 @@ export const RequestElectionMeetingLinkButton = ({
         ualAccount?.accountName
     );
 
-    if (!memberGroup || !currentVoteDataRow) {
-        return null;
-    }
-
-    // TODO: Should we just pass the participants into this component?
-    const participantAccounts = memberGroup.map((member) => member.member);
-
-    const groupId = calculateGroupId(
-        roundIndex,
-        currentVoteDataRow.index,
-        electionConfig
-    );
+    const groupId = currentVoteDataRow
+        ? calculateGroupId(roundIndex, currentVoteDataRow.index, electionConfig)
+        : "";
 
     const {
         data: encryptedData,
         isLoading: loadingEncryptedData,
-    } = useEncryptedData(groupId);
+    } = useEncryptedData("election", groupId);
 
     const [roundMeetingLink, setRoundMeetingLink] = useState("");
 
@@ -69,7 +63,6 @@ export const RequestElectionMeetingLinkButton = ({
     }, [encryptedData]);
 
     const decryptMeetingLink = async () => {
-        console.info("got encrypted data", encryptedData);
         if (encryptedData) {
             try {
                 const encryptionKey = encryptedData.keys.find((k) =>
@@ -89,7 +82,6 @@ export const RequestElectionMeetingLinkButton = ({
                     encryptionKey.key
                 );
 
-                console.info(decryptedLink);
                 setRoundMeetingLink(decryptedLink);
             } catch (e) {
                 console.error("fail to decrypt meeting link", e);
@@ -99,6 +91,10 @@ export const RequestElectionMeetingLinkButton = ({
         }
     };
 
+    if (!memberGroup || !currentVoteDataRow) {
+        return null;
+    }
+
     const linkZoomAccount = () => {
         window.location.href =
             zoomConnectAccountLink + "&state=request-election-link";
@@ -106,9 +102,10 @@ export const RequestElectionMeetingLinkButton = ({
 
     const requestMeetingLink = async () => {
         try {
-            const recipientAccounts = participantAccounts.filter(
-                (account) => account !== ualAccount.accountName
-            );
+            // TODO: Should we just pass the participants/recipients into this component?
+            const recipientAccounts = memberGroup
+                .map((member) => member.member)
+                .filter((account) => account !== ualAccount.accountName);
 
             // check all the participants keys are ready to be encrypted
             // if this dummy encryption fails we know we can't create the meeting
@@ -155,7 +152,9 @@ export const RequestElectionMeetingLinkButton = ({
             });
             console.info("electmeeting trx", signedTrx);
 
-            // todo: refetch the round data to set the new defined roundMeetingLink
+            queryClient.invalidateQueries(
+                queryVoteDataRow(ualAccount.accountName).queryKey
+            );
         } catch (error) {
             console.error(error);
             onError(error);

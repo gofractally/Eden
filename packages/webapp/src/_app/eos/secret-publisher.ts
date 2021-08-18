@@ -137,24 +137,27 @@ const validateFetchedKeys = (
 ) => {
     const publisherKey = accountKeys[publisherAccount];
     if (!publisherKey) {
-        throw new Error("Publisher has not defined an encryption key");
+        throw new Error("You have not defined an encryption key");
     }
 
     if (!getEncryptionKey(publisherKey)) {
         throw new Error(
-            "Publisher encryption key could not be found in this browser"
+            "Your encryption key could not be found in this browser"
         );
     }
 
     const recipientKeys: string[] = [];
     for (const recipientAccount of recipientAccounts) {
         const recipientKey = accountKeys[recipientAccount];
-        if (!recipientKey) {
-            throw new Error(
-                `Recipient ${recipientAccount} has not set an encryption key`
-            );
+        if (recipientKey) {
+            recipientKeys.push(recipientKey);
         }
-        recipientKeys.push(recipientKey);
+    }
+
+    if (recipientKeys.length < 1) {
+        throw new Error(
+            "No other recipients have enabled a valid encryption key"
+        );
     }
 
     return [publisherKey, ...recipientKeys];

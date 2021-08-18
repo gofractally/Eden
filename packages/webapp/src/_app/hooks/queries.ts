@@ -35,7 +35,7 @@ import {
     getVoteDataRow,
 } from "elections/api/eden-contract";
 import { ActiveStateConfigType, VoteData } from "elections/interfaces";
-import { getEncryptedData } from "encryption";
+import { EncryptionScope, getEncryptedData } from "encryption";
 
 export const queryHeadDelegate = {
     queryKey: "query_head_delegate",
@@ -76,9 +76,9 @@ export const queryVoteData = (options: VoteDataQueryOptionsByGroup = {}) => ({
     queryFn: () => getVoteData(options),
 });
 
-export const queryEncryptedData = (id: string) => ({
+export const queryEncryptedData = (scope: EncryptionScope, id: string) => ({
     queryKey: ["query_encrypted_data"],
-    queryFn: () => getEncryptedData(id),
+    queryFn: () => getEncryptedData(scope, id),
 });
 
 export const queryParticipantsInCompletedRound = (
@@ -349,8 +349,8 @@ export const useMemberDataFromVoteData = (voteData?: VoteData[]) => {
     };
 };
 
-export const useEncryptedData = (id: string) =>
+export const useEncryptedData = (scope: EncryptionScope, id: string) =>
     useQuery({
-        ...queryEncryptedData(id),
+        ...queryEncryptedData(scope, id),
         enabled: Boolean(id),
     });

@@ -92,9 +92,5 @@ export const calculateGroupId = (
         numGroups
     );
 
-    const serialBuffer = new eosjsSerialize.SerialBuffer();
-    serialBuffer.pushUint32(round << 16);
-    serialBuffer.pushUint32(groupNumber);
-    const bytes = serialBuffer.getUint8Array(8);
-    return eosjsNumeric.binaryToDecimal(bytes);
+    return `${(round << 16) | groupNumber}`;
 };
