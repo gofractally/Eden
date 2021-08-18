@@ -362,14 +362,6 @@ export const getOngoingElectionData = async (
               myDelegation[myDelegation.length - 1].representative
           );
     console.info("myDelegation:", myDelegation);
-    const isGapInDelegation = isMemberStillParticipating
-        ? false
-        : heightOfMyDelegationMinusChiefs < roundsCompleted;
-
-    bDebug &&
-        console.info(
-            `getOED() isGapInDelegation[${isGapInDelegation}], isMemberStillParticipating[${isMemberStillParticipating}], areRoundsWithNoParticipation[${areRoundsWithNoParticipation}], roundsCompleted[${roundsCompleted}], heightOfDelegationMinusChiefs[${heightOfMyDelegationMinusChiefs}]`
-        );
 
     // Ongoing Round info: this is unfiltered/unmodified vote table data.
     // This can be refactored to be more tailored to the frontend eventually.
@@ -380,6 +372,14 @@ export const getOngoingElectionData = async (
         myDelegation
     );
 
+    const isGapInDelegation = isMemberStillParticipating
+        ? false
+        : Boolean(completedRounds.find((r) => !r.didReachConsensus));
+
+    bDebug &&
+        console.info(
+            `getOED() isGapInDelegation[${isGapInDelegation}], isMemberStillParticipating[${isMemberStillParticipating}], areRoundsWithNoParticipation[${areRoundsWithNoParticipation}], roundsCompleted[${roundsCompleted}], heightOfDelegationMinusChiefs[${heightOfMyDelegationMinusChiefs}]`
+        );
     const electionData = {
         ...ELECTION_DEFAULTS,
         isMemberStillParticipating,
