@@ -8,7 +8,6 @@ import {
     useMemberStats,
     useMyDelegation,
     useOngoingElectionData as useOngoingElectionData,
-    useVoteDataRow,
     Election,
 } from "_app";
 import { Button, Container, Heading, Loader, Link, Text } from "_app/ui";
@@ -33,11 +32,7 @@ export const OngoingElection = ({ election }: { election: any }) => {
         isLoading: isLoadingMemberStats,
         isError: isErrorMemberStats,
     } = useMemberStats();
-    const { data: loggedInVoteData } = useVoteDataRow(loggedInUser?.account);
-    const { data: myDelegationSoFar } = useMyDelegation();
-    const { data: ongoingElectionData } = useOngoingElectionData({
-        enabled: Boolean(loggedInUser) && Boolean(memberStats),
-    });
+    const { data: ongoingElectionData } = useOngoingElectionData();
 
     console.info(
         "<OngoingElection /> ongoingElectiondata:",
@@ -56,10 +51,6 @@ export const OngoingElection = ({ election }: { election: any }) => {
     if (isError || !memberStats) {
         return <ErrorLoadingElection />;
     }
-    // console.info("currentElection:", currentElection);
-
-    const showNoConsensusInPreviousRoundMessage =
-        (myDelegationSoFar?.length || 0) < election.round;
 
     // TODO: Model all this data to be self-consistent and to abstract the frontend from the complexities of the backend logic
     // start with logged-in user
