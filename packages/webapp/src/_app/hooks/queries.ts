@@ -415,11 +415,9 @@ export const useOngoingElectionData = (
         loggedInMember?.account,
         memberStats && memberStats?.ranks.length
     );
-    console.info("useOED().membersInOngoingRound:", membersInOngoingRound);
     let { data: votingMemberData } = useMemberDataFromVoteData(
         membersInOngoingRound
     );
-    console.info("useOED().votingMemberData:", votingMemberData);
 
     const { queryKey, queryFn } = queryOngoingElectionData(
         memberStats,

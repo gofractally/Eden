@@ -107,7 +107,6 @@ export const OngoingRoundSegment = ({
         isError: isErrorCurrentMember,
     } = useCurrentMember();
 
-    console.info(`<OngoingRound /> roundIndex[${roundIndex}]`);
     const {
         data: participants,
         isLoading: isLoadingParticipants,
@@ -134,7 +133,6 @@ export const OngoingRoundSegment = ({
         isLoading: isLoadingMemberData,
         isError: isErrorMemberData,
     } = useMemberDataFromVoteData(voteData);
-    console.info(`<OngoingRound /> after use()s roundIndex[${roundIndex}]`);
 
     const isLoading =
         isLoadingParticipants ||
@@ -156,19 +154,27 @@ export const OngoingRoundSegment = ({
         isErrorChiefs ||
         isErrorMemberData ||
         isErrorCurrentMember ||
-        members?.length !== voteData?.length;
+        (voteData &&
+            voteData.length > 0 &&
+            members?.length !== voteData?.length);
 
-    if (isError || !members || !voteData) {
+    console.info(
+        `OngoingRoundSegment() isError[${isError}], members:`,
+        members,
+        `voteData:`,
+        voteData
+    );
+    if (isError) {
         return <ErrorLoadingElection />;
     }
 
-    const userVoterStats = voteData.find(
+    const userVoterStats = voteData!.find(
         (vs) => vs.member === loggedInMember?.account
     );
 
-    const userVotingFor = members.find(
-        (m) => m.account === userVoterStats?.candidate
-    );
+    const userVotingFor =
+        voteData &&
+        members?.find((m) => m.account === userVoterStats?.candidate);
 
     const onSubmitVote = async () => {
         if (!selectedMember) return;
@@ -200,14 +206,7 @@ export const OngoingRoundSegment = ({
         setIsSubmittingVote(false);
     };
 
-    // TODO: this needs more attention once we have sufficient test data to test it
-    if (!participants?.length) {
-        return (
-            <div>
-                You nor a delegate of yours is participating in this round.
-            </div>
-        );
-    }
+    if (!participants?.length) return null;
     return (
         // TODO: Move this out into a separate component to simplify and make this more readable
         <Expander
