@@ -5,14 +5,14 @@ import { MembersGrid } from "members";
 import { MemberData } from "members/interfaces";
 
 interface VotingRoundParticipantsProps {
-    members: MemberData[];
+    members?: MemberData[];
     voteData: VoteData[];
     selectedMember: MemberData | null;
     onSelectMember: (member: MemberData) => void;
 }
 
 const VotingRoundParticipants = ({
-    members,
+    members = [],
     voteData,
     selectedMember,
     onSelectMember,
