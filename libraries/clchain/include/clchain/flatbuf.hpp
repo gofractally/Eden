@@ -1,7 +1,11 @@
+// TODO: const support
+
 #pragma once
-#include <clio/error.hpp>
-#include <clio/name.hpp>
-#include <clio/stream.hpp>
+
+#include <eosio/for_each_field.hpp>
+#include <eosio/reflection2.hpp>
+#include <eosio/stream.hpp>
+#include <eosio/types.hpp>
 
 namespace clio
 {
@@ -33,21 +37,28 @@ namespace clio
    template <typename T>
    class flat<flat_ptr<T>>;
 
+   template <typename T>
+   class flat<std::vector<T>>;
+
    template <typename... Ts>
    class flat<std::variant<Ts...>>;
+
+   inline constexpr uint32_t flat_variant_size = 16;
+   inline constexpr uint32_t flat_variant_data_size = 8;
 
    template <typename T>
    auto get_view_type()
    {
-      //        if constexpr( is_flat_ptr<T>::value ) {
+      //        if constexpr( is_flat_ptr<T>() ) {
       //            return get_view_type<typename T::value_type>();
-      if constexpr (reflect<T>::is_struct)
+      if constexpr (eosio::reflection::has_for_each_field_v<T>)
       {
-         using view_type = typename reflect<T>::template proxy<flat_view_proxy_impl>;
-         return (view_type*)(nullptr);
+         using view_type =
+             decltype(eosio_get_proxy_type((T*)nullptr, (flat_view_proxy_impl*)nullptr));
+         return (view_type*)nullptr;
       }
-      else if constexpr (std::is_trivially_copyable<T>::value)
-         return (T*)(nullptr);
+      else if constexpr (std::is_integral_v<T> || std::is_floating_point_v<T>)
+         return (T*)nullptr;
       else
          return (flat<T>*)nullptr;
    }
@@ -60,214 +71,149 @@ namespace clio
       uint32_t offset;
 
       template <typename T>
-      auto get() const;
-   };
-
-   template <typename T>
-   constexpr bool contains_offset_ptr();
-
-   template <typename T>
-   struct tuple_contains_offset;
-
-   template <typename First, typename... Ts>
-   constexpr uint32_t get_contains_offset_ptr()
-   {
-      if constexpr (sizeof...(Ts) == 0)
-         return contains_offset_ptr<First>();
-      else
+      auto get() const
       {
-         return contains_offset_ptr<First>() | get_contains_offset_ptr<Ts...>();
-      }
-   }
-
-   template <typename... Ts>
-   struct tuple_contains_offset<std::tuple<Ts...>>
-   {
-      static constexpr const auto value = get_contains_offset_ptr<Ts...>();
-   };
-
-   /** 
-    *  Recursively checks the types for any field which requires dynamic allocation,
-    */
-   template <typename T>
-   constexpr bool contains_offset_ptr()
-   {
-      if constexpr (is_flat_ptr<T>::value)
-      {
-         return true;
-      }
-      else if constexpr (is_std_tuple<T>::value)
-      {
-         return tuple_contains_offset<T>::value;
-      }
-      else if constexpr (is_std_variant<T>::value)
-      {
-         return contains_offset_ptr<typename is_std_variant<T>::alts_as_tuple>();
-      }
-      else if constexpr (std::is_same_v<std::string, T>)
-      {
-         return true;
-      }
-      else if constexpr (is_std_vector<T>::value)
-      {
-         return true;
-      }
-      else if constexpr (clio::reflect<T>::is_struct)
-      {
-         bool is_flat = true;
-         clio::reflect<T>::for_each([&](const clio::meta& ref, auto mptr) {
-            using member_type = std::decay_t<decltype(clio::result_of_member(mptr))>;
-            is_flat &= not contains_offset_ptr<member_type>();
-         });
-         return not is_flat;
-      }
-      else if constexpr (std::is_arithmetic_v<T>)
-      {
-         return false;
-      }
-      else if constexpr (std::is_trivially_copyable<T>::value)
-      {
-         return false;
-      }
-      else
-      {
-         T::contains_offset_ptr_not_defined;
-      }
-   }
-
-   template <typename T>
-   constexpr uint32_t flatpack_size()
-   {
-      if constexpr (is_flat_ptr<T>::value)
-      {
-         return sizeof(offset_ptr);
-      }
-      else if constexpr (is_std_variant<T>::value)
-      {
-         return 16;
-      }
-      else if constexpr (reflect<T>::is_struct)
-      {
-         uint32_t size = 0;
-         reflect<T>::for_each([&](const meta& ref, const auto& mptr) {
-            using member_type = decltype(result_of_member(mptr));
-            if constexpr (contains_offset_ptr<member_type>())
-            {
-               size += sizeof(offset_ptr);
-            }
-            else
-            {
-               size += flatpack_size<member_type>();
-            }
-         });
-         return size;
-      }
-      else if constexpr (std::is_same_v<std::string, T> || is_std_vector<T>::value)
-      {
-         return sizeof(offset_ptr);
-      }
-      else if constexpr (std::is_arithmetic_v<T>)
-      {
-         return sizeof(T);
-      }
-      else if constexpr (std::is_trivially_copyable<T>::value)
-      {
-         return sizeof(T);
-      }
-      else
-      {
-         T::flatpack_size_not_defined;
-      }
-   }
-
-   template <uint32_t I, typename Tuple>
-   struct get_tuple_offset;
-
-   template <uint32_t Idx, typename First, typename... Ts>
-   constexpr uint32_t get_offset()
-   {
-      static_assert(Idx < sizeof...(Ts) + 1, "index out of range");
-      if constexpr (Idx == 0)
-         return 0;
-      else if constexpr (sizeof...(Ts) == 0)
-         if constexpr (contains_offset_ptr<First>())
-            return 4;
-         /// if contains ptr then 8 else flatpack_size...
-         else
-            return flatpack_size<First>();
-      //     return get_flat_size( ((const First*)(nullptr)) );
-      else
-      {
-         if constexpr (contains_offset_ptr<First>())
-            return get_offset<Idx - 1, Ts...>() + 4;  //flatpack_size<First>();
-         else
-            return get_offset<Idx - 1, Ts...>() + flatpack_size<First>();
-         //     return get_offset< Idx-1, Ts...>() + get_flat_size( ((const First*)(nullptr)) );
-      }
-   }
-
-   template <uint32_t I, typename... Args>
-   struct get_tuple_offset<I, std::tuple<Args...>>
-   {
-      static constexpr const uint32_t value = get_offset<I, Args...>();
-   };
-
-   struct flat_view_proxy_impl
-   {
-      /** This method is called by the reflection library to get the field */
-      template <uint32_t idx, uint64_t Name, auto MemberPtr>
-      constexpr auto get()
-      {
-         using class_type = decltype(clio::class_of_member(MemberPtr));
-         using tuple_type = typename clio::reflect<class_type>::struct_tuple_type;
-         using member_type = decltype(clio::result_of_member(MemberPtr));
-
-         constexpr uint32_t offset = clio::get_tuple_offset<idx, tuple_type>::value;
-
-         char* out_ptr = reinterpret_cast<char*>(this) + offset;
-
-         if constexpr (contains_offset_ptr<member_type>())
+         const auto ptr = ((char*)this) + offset;
+         if constexpr (is_flat_ptr<T>())
          {
-            clio::offset_ptr* ptr = reinterpret_cast<clio::offset_ptr*>(out_ptr);
-            return ptr->get<member_type>();
+            return reinterpret_cast<flat_view<T>*>(ptr + 4);
+         }
+         else if constexpr (eosio::reflection::has_for_each_field_v<T>)
+         {
+            return reinterpret_cast<flat_view<T>*>(ptr);
+         }
+         else if constexpr (std::is_same_v<std::string, T>)
+         {
+            return reinterpret_cast<flat<std::string>*>(ptr);
+         }
+         else if constexpr (eosio::is_std_vector<T>())
+         {
+            return reinterpret_cast<flat<T>*>(ptr);
          }
          else
          {
-            return reinterpret_cast<member_type*>(out_ptr);
-         }
-      }
-
-      template <uint32_t idx, uint64_t Name, auto MemberPtr>
-      constexpr const auto get() const
-      {
-         using class_type = decltype(clio::class_of_member(MemberPtr));
-         using tuple_type = typename clio::reflect<class_type>::struct_tuple_type;
-         using member_type = decltype(clio::result_of_member(MemberPtr));
-
-         constexpr uint32_t offset = clio::get_tuple_offset<idx, tuple_type>::value;
-
-         auto out_ptr = reinterpret_cast<const char*>(this) + offset;
-
-         if constexpr (contains_offset_ptr<member_type>())
-         {
-            const clio::offset_ptr* ptr = reinterpret_cast<const clio::offset_ptr*>(out_ptr);
-            return ptr->get<member_type>();
-         }
-         else
-         {
-            return reinterpret_cast<const member_type*>(out_ptr);
+            T::is_not_reflected_for_offset_ptr;
          }
       }
    };
 
    /**
-    *  A flat view of a flat pointer.  
+    *  Recursively checks the types for any field which requires dynamic allocation
+    */
+   template <typename T>
+   constexpr bool contains_offset_ptr(T*);
+
+   template <typename... Ts>
+   constexpr bool contains_offset_ptr(std::variant<Ts...>*)
+   {
+      return (... || contains_offset_ptr((Ts*)nullptr));
+   }
+
+   template <typename T>
+   constexpr bool contains_offset_ptr(T*)
+   {
+      if constexpr (is_flat_ptr<T>())
+         return true;
+      else if constexpr (std::is_same_v<std::string, T>)
+         return true;
+      else if constexpr (eosio::is_std_vector<T>())
+         return true;
+      else if constexpr (eosio::reflection::has_for_each_field_v<T>)
+      {
+         bool have_ptr = false;
+         eosio::for_each_field<T>([&](auto, auto member) {
+            using member_type = eosio::remove_cvref_t<decltype(member((T*)nullptr))>;
+            have_ptr |= contains_offset_ptr((member_type*)nullptr);
+         });
+         return have_ptr;
+      }
+      else if constexpr (std::is_integral_v<T> || std::is_floating_point_v<T>)
+         return false;
+      else
+         T::contains_offset_ptr_not_defined;
+   }
+
+   template <typename T>
+   constexpr uint32_t flatpack_size()
+   {
+      if constexpr (is_flat_ptr<T>())
+         return sizeof(offset_ptr);
+      else if constexpr (eosio::is_std_variant<T>())
+         return flat_variant_size;
+      else if constexpr (eosio::reflection::has_for_each_field_v<T>)
+      {
+         uint32_t size = 0;
+         eosio::for_each_field<T>([&](auto, auto member) {
+            using member_type = eosio::remove_cvref_t<decltype(member((T*)nullptr))>;
+            if constexpr (contains_offset_ptr((member_type*)nullptr))
+               size += sizeof(offset_ptr);
+            else
+               size += flatpack_size<member_type>();
+         });
+         return size;
+      }
+      else if constexpr (std::is_same_v<std::string, T> || eosio::is_std_vector<T>())
+         return sizeof(offset_ptr);
+      else if constexpr (std::is_integral_v<T> || std::is_floating_point_v<T>)
+         return sizeof(T);
+      else
+         T::flatpack_size_not_defined;
+   }
+
+   template <uint32_t Idx, typename T>
+   constexpr uint32_t get_offset()
+   {
+      uint32_t offset = 0;
+      uint32_t i = 0;
+      eosio_for_each_field((T*)nullptr, [&](const char*, auto member, auto...) {
+         if (i >= Idx)
+            return;
+         if constexpr (std::is_member_object_pointer_v<decltype(member((T*)nullptr))>)
+         {
+            using m = decltype(std::declval<T>().*member((T*)nullptr));
+            if constexpr (contains_offset_ptr((m*)nullptr))
+               offset += sizeof(offset_ptr);
+            else
+               offset += flatpack_size<m>();
+         }
+         ++i;
+      });
+      return offset;
+   }
+
+   struct flat_view_proxy_impl
+   {
+      flat_view_proxy_impl() = delete;
+      flat_view_proxy_impl(const flat_view_proxy_impl&) = delete;
+      ~flat_view_proxy_impl() = delete;
+      flat_view_proxy_impl& operator=(const flat_view_proxy_impl&) = delete;
+
+      /** This method is called by the reflection library to get the field */
+      template <uint32_t idx, auto MemberPtr>
+      constexpr auto get()
+      {
+         using mo = eosio::member_object<decltype(MemberPtr)>;
+         using member_type = typename mo::member_type;
+         constexpr uint32_t offset = get_offset<idx, typename mo::class_type>();
+         auto out_ptr = reinterpret_cast<char*>(this) + offset;
+         if constexpr (contains_offset_ptr((member_type*)nullptr))
+         {
+            auto ptr = reinterpret_cast<offset_ptr*>(out_ptr);
+            return ptr->get<member_type>();
+         }
+         else
+            return reinterpret_cast<flat_view<member_type>*>(out_ptr);
+      }
+   };
+
+   /**
+    *  A flat view of a flat pointer.
     */
    template <typename T>
    class flat<flat_ptr<T>>
    {
      public:
-      auto get() { return reinterpret_cast<decltype(get_view_type<T>())>(_data); }
+      auto get() { return reinterpret_cast<flat_view<T>*>(_data); }
 
      private:
       uint32_t _size = 0;
@@ -304,10 +250,11 @@ namespace clio
       uint32_t flat_data = 0;
       offset_ptr offset_data;
 
-      flat()
+      static void assert_sizes()
       {
-         static_assert(sizeof(flat) == 16);
-         static_assert(std::is_trivially_copyable<flat>::value);
+         static_assert(flat_variant_size == sizeof(flat));
+         static_assert(flat_variant_data_size == sizeof(flat_data) + sizeof(offset_data));
+         static_assert(std::is_trivially_copyable<flat>());
       }
 
       int64_t index_from_type() const { return get_index_from_type<Ts...>(); }
@@ -352,7 +299,8 @@ namespace clio
       {
          if (get_type_hashname<First>() == type)
          {
-            if constexpr (not get_contains_offset_ptr<First>() and flatpack_size<First>() <= 8)
+            if constexpr (!contains_offset_ptr((First*)nullptr) &&
+                          flatpack_size<First>() <= flat_variant_data_size)
             {
                v(*((const flat_view<First>*)&flat_data));
             }
@@ -375,62 +323,28 @@ namespace clio
      public:
       auto& operator[](uint32_t index)
       {
-         if (index >= _size)
-            throw_error(stream_error::overrun);
+         eosio::check(index < _size, convert_stream_error(eosio::stream_error::overrun));
+
          /** in this case the data is a series of offset_ptr<> */
-         if constexpr (std::is_same<T, std::string>::value)
+         if constexpr (std::is_same<T, std::string>())
          {
             auto ptr_array = reinterpret_cast<offset_ptr*>(_data);
-            return *reinterpret_cast<flat<std::string>*>(ptr_array[index].get<std::vector<T>>());
+            return *ptr_array[index].get<std::string>();
          }
-         else if constexpr (contains_offset_ptr<T>())
+         else if constexpr (contains_offset_ptr((T*)nullptr))
          {
             auto ptr_array = reinterpret_cast<offset_ptr*>(_data);
+            // !!!
             return *reinterpret_cast<flat_view<T>*>(ptr_array[index].get<std::vector<T>>());
          }
-         else if constexpr (reflect<T>::is_struct)
+         else if constexpr (eosio::reflection::has_for_each_field_v<T>)
          {  /// the data is a series of packed T
             const auto offset = index * flatpack_size<T>();
             return *reinterpret_cast<flat_view<T>*>(&_data[offset]);
          }
-         else if constexpr (std::is_trivially_copyable<T>::value)
+         else if constexpr (std::is_integral_v<T> || std::is_floating_point_v<T>)
          {
             auto T_array = reinterpret_cast<T*>(_data);
-            return T_array[index];
-         }
-         else
-         {
-            T::is_not_a_known_flat_type;
-         }
-      }
-      const auto& operator[](uint32_t index) const
-      {
-         if (index >= _size)
-            throw_error(stream_error::overrun);
-
-         /** in this case the data is a series of offset_ptr<> */
-         if constexpr (std::is_same<T, std::string>::value)
-         {
-            auto ptr_array = reinterpret_cast<const offset_ptr*>(_data);
-            return *reinterpret_cast<const flat<std::string>*>(
-                ptr_array[index].get<std::vector<T>>());
-         }
-         else if constexpr (contains_offset_ptr<T>())
-         {
-            auto ptr_array =
-                reinterpret_cast<const offset_ptr*>(_data + sizeof(offset_ptr) * index);
-            const auto& r =
-                *reinterpret_cast<const flat_view<T>*>(ptr_array->get<std::vector<T>>());
-            return r;
-         }
-         else if constexpr (reflect<T>::is_struct)
-         {  /// the data is a series of packed T
-            const auto offset = index * flatpack_size<T>();
-            return *reinterpret_cast<const flat_view<T>*>(&_data[offset]);
-         }
-         else if constexpr (std::is_trivially_copyable<T>::value)
-         {
-            auto T_array = reinterpret_cast<const T*>(_data);
             return T_array[index];
          }
          else
@@ -446,53 +360,20 @@ namespace clio
       char _data[];
    };
 
-   template <typename T>
-   auto offset_ptr::get() const
-   {
-      const auto ptr = ((char*)this) + offset;
-      if constexpr (is_flat_ptr<T>::value)
-      {
-         return reinterpret_cast<decltype(get_view_type<typename T::value_type>())>(ptr + 4);
-      }
-      else if constexpr (reflect<T>::is_struct)
-      {
-         return reinterpret_cast<flat_view<T>*>(ptr);
-      }
-      else if constexpr (std::is_same_v<std::string, T>)
-      {
-         return reinterpret_cast<flat<std::string>*>(ptr);
-      }
-      else if constexpr (is_std_vector<T>::value)
-      {
-         return reinterpret_cast<flat<T>*>(ptr);
-      }
-      else
-      {
-         T::is_not_reflected_for_offset_ptr;
-      }
-   }
-
-   /**
-    * Verifies that the type pointed at could be unpacked without a buffer overflow,
-    * which means that all offset pointers are in bounds. It does this by unpacking
-    * the stream without allocating any memory.
-    */
-   struct validate_input_stream : public input_stream
-   {
-      using input_stream::input_stream;
-   };
-
+#if 0
+// TODO
    template <typename T, typename InputStream>
    void flatcheck(InputStream& stream)
    {
-      if constexpr (is_flat_ptr<T>::value)
+      if constexpr (is_flat_ptr<T>())
       {
          uint32_t size;
          stream.read(&size, sizeof(size));
          stream.skip(size);
       }
-      else if constexpr (is_std_variant<T>::value)
+      else if constexpr (is_std_variant<T>())
       {
+         flat<T>::assert_sizes();
          flat<T> fv;
          stream.read(&fv, sizeof(fv));
 
@@ -502,8 +383,8 @@ namespace clio
          fv.init_variant(temp);
          std::visit(
              [&](auto& iv) {
-                using item_type = std::decay_t<decltype(iv)>;
-                if constexpr (get_contains_offset_ptr<item_type>())
+                using item_type = eosio::remove_cvref_t<decltype(iv)>;
+                if constexpr (contains_offset_ptr((item_type*)nullptr))
                 {
                    /// the stream.pos is at the END of reading the variant, which
                    /// should be the same as the end of flat<variant>::offset_data
@@ -511,7 +392,7 @@ namespace clio
                                   stream.end);
                    flatunpack(iv, in);
                 }
-                else if constexpr (flatpack_size<item_type>() <= 8)
+                else if constexpr (flatpack_size<item_type>() <= flat_variant_data_size)
                 {
                 }
                 else
@@ -530,11 +411,11 @@ namespace clio
          stream.read(&size, sizeof(size));
          stream.skip(size);
       }
-      else if constexpr (is_std_vector<T>::value)
+      else if constexpr (eosio::is_std_vector<T>())
       {
          uint32_t size;
          stream.read(&size, sizeof(size));
-         if constexpr (contains_offset_ptr<typename is_std_vector<T>::value_type>())
+         if constexpr (contains_offset_ptr((typename eosio::is_std_vector<T>::value_type*)nullptr))
          {
             auto start = stream.pos;
             stream.skip(size * sizeof(offset_ptr));
@@ -551,14 +432,14 @@ namespace clio
             stream.skip(size * flatpack_size<typename T::value_type>());
          }
       }
-      else if constexpr (reflect<T>::is_struct)
+      else if constexpr (eosio::reflection::has_for_each_field_v<T>)
       {
-         if constexpr (contains_offset_ptr<T>())
+         if constexpr (contains_offset_ptr((T*)nullptr))
          {
             reflect<T>::for_each([&](const meta& ref, const auto& mptr) {
                using member_type = decltype(result_of_member(mptr));
 
-               if constexpr (contains_offset_ptr<member_type>())
+               if constexpr (contains_offset_ptr((member_type*)nullptr))
                {
                   offset_ptr ptr;
                   stream.read(&ptr, sizeof(ptr));
@@ -577,7 +458,7 @@ namespace clio
             stream.skip(flatpack_size<typename T::value_type>());
          }
       }
-      else if constexpr (std::is_trivially_copyable<T>::value)
+      else if constexpr (std::is_integral<T>||std::is_floating_point<T>)
       {
          stream.skip(sizeof(T));
       }
@@ -586,26 +467,30 @@ namespace clio
          T::is_not_defined;
       }
    }
+#endif
 
+#if 0
+// TODO
    template <typename T, typename S>
    void flatunpack(T& v, S& stream)
    {
-      if constexpr (is_flat_ptr<T>::value)
+      if constexpr (is_flat_ptr<T>())
       {
          uint32_t size;
          stream.read(&size, sizeof(size));
          v.reset(size);
          stream.read(v.data(), size);
       }
-      else if constexpr (is_std_variant<T>::value)
+      else if constexpr (is_std_variant<T>())
       {
+         flat<T>::assert_sizes();
          flat<T> fv;
          stream.read(&fv, sizeof(fv));
          fv.init_variant(v);
          std::visit(
              [&](auto& iv) {
-                using item_type = std::decay_t<decltype(iv)>;
-                if constexpr (get_contains_offset_ptr<item_type>())
+                using item_type = eosio::remove_cvref_t<decltype(iv)>;
+                if constexpr (contains_offset_ptr((item_type*)nullptr)
                 {
                    /// the stream.pos is at the END of reading the variant, which
                    /// should be the same as the end of flat<variant>::offset_data
@@ -613,9 +498,9 @@ namespace clio
                                    stream.end);
                    flatunpack(iv, in);
                 }
-                else if constexpr (flatpack_size<item_type>() <= 8)
+                else if constexpr (flatpack_size<item_type>() <= flat_variant_data_size)
                 {
-                   input_stream st((const char*)&fv.flat_data, 8);
+                   input_stream st((const char*)&fv.flat_data, flat_variant_data_size);
                    flatunpack(iv, st);
                 }
                 else
@@ -635,13 +520,13 @@ namespace clio
          stream.read(v.data(), size);
          stream.skip(1);  // null
       }
-      else if constexpr (is_std_vector<T>::value)
+      else if constexpr (eosio::is_std_vector<T>())
       {
          uint32_t size;
          stream.read(&size, sizeof(size));
          v.resize(size);
 
-         if constexpr (contains_offset_ptr<typename is_std_vector<T>::value_type>())
+         if constexpr (contains_offset_ptr((typename eosio::is_std_vector<T>>::value_type*)nullptr))
          {
             for (auto& item : v)
             {
@@ -661,13 +546,13 @@ namespace clio
             }
          }
       }
-      else if constexpr (reflect<T>::is_struct)
+      else if constexpr (eosio::reflection::has_for_each_field_v<T>)
       {
          reflect<T>::for_each([&](const meta& ref, const auto& mptr) {
             auto& member = v.*mptr;
             using member_type = decltype(result_of_member(mptr));
 
-            if constexpr (contains_offset_ptr<member_type>())
+            if constexpr (contains_offset_ptr((member_type*)nullptr))
             {
                offset_ptr ptr;
                stream.read(&ptr, sizeof(ptr));
@@ -681,7 +566,7 @@ namespace clio
             }
          });
       }
-      else if constexpr (std::is_trivially_copyable<T>::value)
+      else if constexpr (std::is_integral<T>||std::is_floating_point<T>)
       {
          stream.read((char*)&v, sizeof(v));
       }
@@ -690,97 +575,89 @@ namespace clio
          T::is_not_defined;
       }
    }
+#endif
 
    template <typename T, typename S>
    uint32_t flatpack(const T& v, S& stream)
    {
-      uint32_t alloc_pos = 0;
-      uint32_t cur_pos = 0;
-
-      if constexpr (is_flat_ptr<T>::value)
+      if constexpr (is_flat_ptr<T>())
       {
          uint32_t size = v.size();
          stream.write(&size, sizeof(size));
-         cur_pos += sizeof(size);
-
          if (size)
-         {
             stream.write(v.data(), v.size());
-         }
+         return sizeof(size) + size;
       }
-      else if constexpr (is_std_variant<T>::value)
+      else if constexpr (eosio::is_std_variant<T>())
       {
-         alloc_pos = flatpack_size<T>();
+         uint32_t alloc_pos = flatpack_size<T>();
          std::visit(
              [&](const auto& iv) {
-                using item_type = std::decay_t<decltype(iv)>;
+                using item_type = eosio::remove_cvref_t<decltype(iv)>;
+                flat<T>::assert_sizes();
                 flat<T> fv;
                 fv.type = get_type_hashname<item_type>();
-                if constexpr (not get_contains_offset_ptr<item_type>() and
-                              flatpack_size<item_type>() <= 8)
+                if constexpr (!contains_offset_ptr((item_type*)nullptr) &&
+                              flatpack_size<item_type>() <= flat_variant_data_size)
                 {
-                   fixed_buf_stream st((char*)&fv.flat_data, 8);
+                   eosio::fixed_buf_stream st((char*)&fv.flat_data, flat_variant_data_size);
                    flatpack(iv, st);
-
-                   static_assert(sizeof(fv) == 16);
-                   stream.write(&fv, sizeof(fv));
+                   stream.rite(&fv, sizeof(fv));
                 }
                 else
                 {
-                   fv.offset_data.offset =
-                       (alloc_pos -
-                        (cur_pos + 12));  //+8 because we haven't written the type yet / pad
-                   size_stream size_str;
+                   fv.offset_data.offset = sizeof(fv.offset_data);
+                   eosio::size_stream size_str;
                    flatpack(iv, size_str);
                    alloc_pos += size_str.size;
 
-                   static_assert(sizeof(fv) == 16);
                    stream.write(&fv, sizeof(fv));
 
-                   if constexpr (std::is_same_v<size_stream, S>)
+                   if constexpr (std::is_same_v<eosio::size_stream, S>)
                    {
                       stream.skip(size_str.size);  /// we already calculated this above
                    }
                    else
                    {
                       /// now pack the member into the allocated spot
-                      fixed_buf_stream substream(
+                      eosio::fixed_buf_stream substream(
                           stream.pos + fv.offset_data.offset - sizeof(fv.offset_data),
                           size_str.size);
-                      if (substream.end > stream.end)
-                         throw_error(stream_error::overrun);
+                      eosio::check(substream.end <= stream.end,
+                                   convert_stream_error(eosio::stream_error::overrun));
                       flatpack(iv, substream);
                    }
                 }
              },
              v);
+         return alloc_pos;
       }
       else if constexpr (std::is_same_v<std::string, T>)
       {
          uint32_t size = v.size();
          stream.write(&size, sizeof(size));
-         cur_pos += sizeof(size);
-
          if (size)
          {
             stream.write(v.data(), v.size());
             stream.write("\0", 1);  /// null term
-            cur_pos += v.size() + 1;
+            return sizeof(size) + size + 1;
          }
+         else
+            return sizeof(size);
       }
-      else if constexpr (is_std_vector<T>::value)
+      else if constexpr (eosio::is_std_vector<T>())
       {
-         if constexpr (contains_offset_ptr<typename T::value_type>())
+         if constexpr (contains_offset_ptr((typename T::value_type*)nullptr))
          {
             uint32_t size = v.size();
             stream.write(&size, sizeof(size));
-            cur_pos += sizeof(size);
-            alloc_pos += sizeof(size) + size * sizeof(offset_ptr);
+            uint32_t cur_pos = sizeof(size);
+            uint32_t alloc_pos = sizeof(size) + size * sizeof(offset_ptr);
 
             for (const auto& member : v)
             {
                if constexpr (std::is_same_v<std::string, typename T::value_type> ||
-                             is_std_vector<typename T::value_type>::value)
+                             is_std_vector<typename T::value_type>())
                {
                   if (member.size() == 0)
                   {
@@ -791,92 +668,83 @@ namespace clio
                   }
                }
 
-               size_stream size_str;
+               eosio::size_stream size_str;
                flatpack(member, size_str);
 
                offset_ptr ptr = {.offset = (alloc_pos - cur_pos)};
-
-               alloc_pos += size_str.size;
-
                stream.write(&ptr, sizeof(ptr));
-
+               alloc_pos += size_str.size;
                cur_pos += sizeof(ptr);
 
-               //? cur_pos += size_str.size;
-               if constexpr (std::is_same_v<size_stream, S>)
+               if constexpr (std::is_same_v<eosio::size_stream, S>)
                {
                   stream.skip(size_str.size);  /// we already calculated this above
                }
                else
                {
                   /// now pack the member into the allocated spot
-                  fixed_buf_stream substream(stream.pos + ptr.offset - sizeof(ptr),
-                                             size_str.size);  //ptr.size );
-                  if (substream.end > stream.end)
-                     throw_error(stream_error::overrun);
+                  eosio::fixed_buf_stream substream(stream.pos + ptr.offset - sizeof(ptr),
+                                                    size_str.size);  // ptr.size );
+                  eosio::check(substream.end <= stream.end,
+                               convert_stream_error(eosio::stream_error::overrun));
                   flatpack(member, substream);
                }
             }
+            return alloc_pos;
          }
          else
          {
-            //  std::cout << "vector type, T, is flat types:  " << boost::core::demangle(typeid(typename T::value_type).name()) <<"\n";
+            //  std::cout << "vector type, T, is flat types:  " <<
+            //  boost::core::demangle(typeid(typename T::value_type).name()) <<"\n";
             uint32_t size = v.size();
             stream.write(&size, sizeof(size));
-            cur_pos += sizeof(size);
+            uint32_t cur_pos = sizeof(size);
             for (const auto& item : v)
-            {
                cur_pos += flatpack(item, stream);
-            }
+            return cur_pos;
          }
       }
-      else if constexpr (reflect<T>::is_struct)
+      else if constexpr (eosio::reflection::has_for_each_field_v<T>)
       {
-         alloc_pos = flatpack_size<T>();  //<typename reflect<T>::struct_tuple_type>::value;
-         reflect<T>::for_each([&](const meta& ref, const auto& mptr) {
-            const auto& member = v.*mptr;
-
-            using member_type = decltype(result_of_member(mptr));
-            if constexpr (contains_offset_ptr<member_type>())
+         uint32_t cur_pos = 0;
+         uint32_t alloc_pos = flatpack_size<T>();
+         eosio::for_each_field([&](auto, const auto& member) {
+            using member_type = eosio::remove_cvref_t<decltype(member)>;
+            if constexpr (contains_offset_ptr((member_type*)nullptr))
             {
                if constexpr (std::is_same_v<std::string, member_type> ||
-                             is_std_vector<member_type>::value)
+                             eosio::is_std_vector<member_type>())
                {
                   if (member.size() == 0)
                   {
                      offset_ptr ptr = {.offset = 0};
                      stream.write(&ptr, sizeof(ptr));
                      cur_pos += sizeof(ptr);
-
                      return;
                   }
                }
 
-               size_stream size_str;
+               eosio::size_stream size_str;
                flatpack(member, size_str);
 
                offset_ptr ptr = {.offset = alloc_pos - cur_pos};
-
-               if (ptr.offset == 0)
-                  exit(-1);
+               eosio::check(alloc_pos > cur_pos > 0, "flatbuf bug");
 
                alloc_pos += size_str.size;
                stream.write(&ptr, sizeof(ptr));
                cur_pos += sizeof(ptr);
 
-               if constexpr (std::is_same_v<size_stream, S>)
+               if constexpr (std::is_same_v<eosio::size_stream, S>)
                {
                   stream.skip(size_str.size);  /// we already calculated this above
                }
                else
                {
                   /// now pack the member into the allocated spot
-                  fixed_buf_stream substream(stream.pos + ptr.offset - sizeof(ptr), size_str.size);
-
-                  if (substream.end > stream.end)
-                  {
-                     throw_error(stream_error::overrun);
-                  }
+                  eosio::fixed_buf_stream substream(stream.pos + ptr.offset - sizeof(ptr),
+                                                    size_str.size);
+                  eosio::check(substream.end <= stream.end,
+                               convert_stream_error(eosio::stream_error::overrun));
                   flatpack(member, substream);
                }
             }
@@ -885,18 +753,19 @@ namespace clio
                cur_pos += flatpack(member, stream);
             }
          });
+         return alloc_pos;
       }
-      else if constexpr (std::is_trivially_copyable<T>::value)
+      else if constexpr (std::is_integral_v<T> || std::is_floating_point_v<T>)
       {
          stream.write(&v, sizeof(v));
-         cur_pos += sizeof(v);
+         return sizeof(v);
       }
       else
       {
          T::flatpack_is_not_defined;
+         return 0;
       }
-      return cur_pos;
-   }
+   }  // flatpack()
 
    /**
     * Behaves like a shared_ptr<T>, copies will all point to the same flat data array.
@@ -909,14 +778,14 @@ namespace clio
 
       flat_ptr(const T& from)
       {
-         clio::size_stream ss;
-         clio::flatpack(from, ss);
+         eosio::size_stream ss;
+         flatpack(from, ss);
          _size = ss.size;
          if (_size)
          {
             _data = std::shared_ptr<char>(new char[_size], [](char* c) { delete[] c; });
-            fixed_buf_stream out(_data.get(), _size);
-            clio::flatpack(from, out);
+            eosio::fixed_buf_stream out(_data.get(), _size);
+            flatpack(from, out);
          }
       }
       flat_ptr(){};
@@ -940,8 +809,8 @@ namespace clio
       operator T() const
       {
          T tmp;
-         input_stream in(_data.get(), _size);
-         clio::flatunpack(tmp, in);
+         eosio::input_stream in(_data.get(), _size);
+         flatunpack(tmp, in);
          return tmp;
       }
 
