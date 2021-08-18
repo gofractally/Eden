@@ -338,7 +338,7 @@ export const getOngoingElectionData = async (
     currentElection?: CurrentElection,
     myDelegation: EdenMember[] = []
 ) => {
-    const bDebug = false;
+    const bDebug = true;
     bDebug &&
         console.info(
             "getOngoingElectionData().top votingMemberData:",
@@ -368,19 +368,13 @@ export const getOngoingElectionData = async (
           isResultOfNoConsensus(
               myDelegation[myDelegation.length - 1].representative
           );
+    const isGapInDelegation = isMemberStillParticipating
+        ? false
+        : heightOfMyDelegationMinusChiefs < roundsCompleted;
+
     bDebug &&
         console.info(
-            `isMemberStillParticipating[${isMemberStillParticipating}], areRoundsWithNoParticipation[${areRoundsWithNoParticipation}], roundsCompleted[${roundsCompleted}], heightOfDelegationMinusChiefs[${heightOfMyDelegationMinusChiefs}], highestRoundIndexInWhichMemberWasRepresented[${highestRoundIndexInWhichMemberWasRepresented}]`
-        );
-    bDebug &&
-        console.info(
-            `myDelegation.length[${
-                myDelegation.length
-            }], myDelegation[myDelegation.length - 1][${
-                myDelegation[myDelegation.length - 1]
-            }], lastDelegate.rep[${
-                myDelegation[myDelegation.length - 1].representative
-            }]`
+            `getOED() isMemberStillParticipating[${isMemberStillParticipating}], areRoundsWithNoParticipation[${areRoundsWithNoParticipation}], roundsCompleted[${roundsCompleted}], heightOfDelegationMinusChiefs[${heightOfMyDelegationMinusChiefs}], highestRoundIndexInWhichMemberWasRepresented[${highestRoundIndexInWhichMemberWasRepresented}]`
         );
 
     // Ongoing Round info: this is unfiltered/unmodified vote table data.
@@ -397,6 +391,7 @@ export const getOngoingElectionData = async (
         isMemberStillParticipating,
         highestRoundIndexInWhichMemberWasRepresented, //: 2,
         areRoundsWithNoParticipation, // : false,
+        isGapInDelegation,
         completedRounds,
         ongoingRound,
     } as Election;

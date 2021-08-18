@@ -79,11 +79,17 @@ export const getMyDelegation = async (
             ? memberStats?.ranks.length - 1
             : -1; // ranks is set to [] at start of election and has a new entry added at the end of each round
         // TODO: handle highestRank*whereRepresented*
+        console.info(
+            `myDelegation.for memberRankIndex[${memberRankIndex}], highestCompletedRoundIndex[${highestCompletedRoundIndex}]`
+        );
         for (
             let idx = myDelegates.length;
-            idx < memberRankIndex && idx <= highestCompletedRoundIndex;
+            idx <= memberRankIndex && idx <= highestCompletedRoundIndex;
             idx++
         ) {
+            console.info(
+                `myDelegation.for idx[${idx}], memberRankIndex[${memberRankIndex}], highestCompletedRoundIndex[${highestCompletedRoundIndex}]`
+            );
             myDelegates.push(member);
         }
         isHeadChief = member.account === member.representative;
