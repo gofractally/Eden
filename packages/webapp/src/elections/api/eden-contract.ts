@@ -11,6 +11,7 @@ import {
     getRow,
     getTableRawRows,
     getTableRows,
+    isResultFromNoConsensus as isResultOfNoConsensus,
     isValidDelegate,
     queryMemberByAccountName,
     queryMemberData,
@@ -345,27 +346,42 @@ export const getOngoingElectionData = async (
         currentElection?.electionState === ElectionStatus.Final; // status===final only during sortition round
     // TODO: do we need currentElection.electionState === ElectionStatus.Active?
     const roundsCompleted = memberStats ? memberStats?.ranks.length : 0;
-    const heightOfDelegationMinusChiefs = inSortitionRound
-        ? roundsCompleted
+    const heightOfMyDelegationMinusChiefs = inSortitionRound
+        ? myDelegation.length - 1
         : myDelegation.length;
 
     // START calculating values needed for return value
     // highestRoundIndex = myDelegation.length - 1
     const highestRoundIndexInWhichMemberWasRepresented: number =
-        heightOfDelegationMinusChiefs - 1;
+        // heightOfMyDelegationMinusChiefs - 1;
+        myDelegation.length - 1;
     // areRoundsWithNoParticipation = myDelegation.length < memberStats.ranks.length
     const areRoundsWithNoParticipation =
-        heightOfDelegationMinusChiefs < (memberStats?.ranks?.length || 0);
+        heightOfMyDelegationMinusChiefs < roundsCompleted ||
+        isResultOfNoConsensus(
+            myDelegation[myDelegation.length - 1].representative
+        );
+    console.info(
+        `areRoundsWithNoParticipation[${areRoundsWithNoParticipation}], roundsCompleted[${roundsCompleted}], heightOfDelegationMinusChiefs[${heightOfMyDelegationMinusChiefs}], highestRoundIndexInWhichMemberWasRepresented[${highestRoundIndexInWhichMemberWasRepresented}]`
+    );
+    console.info(
+        `myDelegation.length[${
+            myDelegation.length
+        }], myDelegation[myDelegation.length - 1][${
+            myDelegation[myDelegation.length - 1]
+        }], lastDelegate.rep[${
+            myDelegation[myDelegation.length - 1].representative
+        }]`
+    );
 
     // Ongoing Round info: this is unfiltered/unmodified vote table data.
     // This can be refactored to be more tailored to the frontend eventually.
     const ongoingRound = { participantsMemberData: votingMemberData };
-    console.info("ongoingRound:", ongoingRound);
+    // console.info("ongoingRound:", ongoingRound);
 
     const completedRounds = await getParticipantsOfCompletedRounds(
         myDelegation
     );
-    console.info("completedRounds:", completedRounds);
 
     const electionData: Election = {
         ...ELECTION_DEFAULTS,

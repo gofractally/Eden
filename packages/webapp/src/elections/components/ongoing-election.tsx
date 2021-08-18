@@ -111,7 +111,7 @@ const NoFurtherParticipationInRoundsMessage = ({
         return null;
     }
     return (
-        <Container className="flex items-center space-x-2 pr-8">
+        <Container className="flex items-center space-x-2 pr-8 py-8">
             <BsInfoCircle
                 size={22}
                 className="ml-px text-gray-400 place-self-start mt-1"
