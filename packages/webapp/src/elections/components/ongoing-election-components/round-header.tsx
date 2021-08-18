@@ -1,5 +1,3 @@
-import { useState } from "react";
-import dayjs, { Dayjs } from "dayjs";
 import { FaCheckCircle } from "react-icons/fa";
 import { GoSync } from "react-icons/go";
 
