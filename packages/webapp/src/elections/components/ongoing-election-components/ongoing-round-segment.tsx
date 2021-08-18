@@ -5,13 +5,7 @@ import { BiCheck } from "react-icons/bi";
 import { RiVideoUploadLine } from "react-icons/ri";
 
 import { electionMeetingDurationMs as meetingDurationMs } from "config";
-import {
-    Election,
-    onError,
-    useCountdown,
-    useTimeout,
-    useUALAccount,
-} from "_app";
+import { onError, useCountdown, useTimeout, useUALAccount } from "_app";
 import {
     queryMemberGroupParticipants,
     useCurrentElection,
@@ -30,6 +24,7 @@ import {
 } from "elections";
 import {
     ActiveStateConfigType,
+    Election,
     ElectionStatus,
     RoundStage,
 } from "elections/interfaces";
