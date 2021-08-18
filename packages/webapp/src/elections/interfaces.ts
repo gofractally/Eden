@@ -108,10 +108,8 @@ export interface Election {
     };
     isElectionInProgress?: boolean;
     isMemberStillParticipating?: boolean;
-    isGapInDelegation?: boolean;
     inProgressRoundIndex?: number; // undefined if no round (or election) in progress
     inSortitionRound?: boolean;
-    areRoundsWithNoParticipation: boolean;
     // .length === number of rounds that have completed (regardless of current member's participation)
     completedRounds: ElectionCompletedRound[];
     ongoingRound: {

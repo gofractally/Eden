@@ -19,7 +19,7 @@ export const didReachConsensus = (
     );
 };
 
-export const isResultFromNoConsensus = (representativeValue?: string) =>
+const isResultFromNoConsensus = (representativeValue?: string) =>
     representativeValue !==
         MEMBER_REPRESENTATIVE_IF_NOT_PARTICIPATED_IN_RECENT_ELECTION &&
     representativeValue?.length === 13;
