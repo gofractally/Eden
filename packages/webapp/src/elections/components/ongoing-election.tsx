@@ -84,15 +84,9 @@ export const OngoingElection = ({ election }: { election: any }) => {
             />
             <SignInContainer />
             <SignUpContainer />
-            {ongoingElectionData?.isGapInDelegation ? (
-                <NoDelegateInFurtherRoundsMessage
-                    ongoingElectionData={ongoingElectionData}
-                />
-            ) : (
-                <NoParticipationInFurtherRoundsMessage
-                    ongoingElectionData={ongoingElectionData}
-                />
-            )}
+            <NoParticipationInFurtherRoundsMessage
+                ongoingElectionData={ongoingElectionData}
+            />
             <CurrentRound
                 ongoingElectionData={ongoingElectionData}
                 electionState={election.electionState}
@@ -126,42 +120,6 @@ const NoParticipationInFurtherRoundsMessage = ({
             <div className="flex-1">
                 <Text size="sm">
                     You aren't involved in further rounds. Please{" "}
-                    <Link href={""}>join the Community Room</Link> &amp; Support
-                    for news and updates of the ongoing election. The results
-                    will be displayed in the My Delegation area after the
-                    election is complete. Once the Chief Delegates are selected,
-                    they are displayed below.
-                </Text>
-            </div>
-        </Container>
-    );
-};
-
-interface NoFurtherDelegateParticipationProps {
-    ongoingElectionData?: Election;
-}
-
-const NoDelegateInFurtherRoundsMessage = ({
-    ongoingElectionData,
-}: NoFurtherDelegateParticipationProps) => {
-    if (!ongoingElectionData) return null;
-    console.info(
-        "ongoingElectionData.isGapInDelegation:",
-        ongoingElectionData.isGapInDelegation
-    );
-    if (!ongoingElectionData.isGapInDelegation) {
-        return null;
-    }
-    return (
-        <Container className="flex items-center space-x-2 pr-8 py-8">
-            <BsInfoCircle
-                size={22}
-                className="ml-px text-gray-400 place-self-start mt-1"
-            />
-            <div className="flex-1">
-                <Text size="sm">
-                    You did not advance a delegate to participate in further
-                    rounds. Please{" "}
                     <Link href={""}>join the Community Room</Link> &amp; Support
                     for news and updates of the ongoing election. The results
                     will be displayed in the My Delegation area after the

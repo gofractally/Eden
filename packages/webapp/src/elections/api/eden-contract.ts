@@ -8,6 +8,7 @@ import {
     CONTRACT_ELECTION_STATE_TABLE,
     CONTRACT_MEMBER_TABLE,
     CONTRACT_VOTE_TABLE,
+    didReachConsensus,
     getRow,
     getTableRawRows,
     getTableRows,
@@ -297,44 +298,47 @@ const getParticipantsOfCompletedRounds = async (myDelegation: EdenMember[]) => {
         "getParticipantsOfCompletedRounds().myDelegation:",
         myDelegation
     );
-    const pCompletedRounds = myDelegation.map(async (member, electionRound) => {
-        // get EdenMembers in group with this member
-        const { queryKey, queryFn } = queryParticipantsInCompletedRound(
-            electionRound,
-            member
-        );
-        const edenMembers = await queryClient.fetchQuery(queryKey, queryFn);
+    const pCompletedRounds = myDelegation.map(
+        async (member, electionRoundIndex) => {
+            // get EdenMembers in group with this member
+            const { queryKey, queryFn } = queryParticipantsInCompletedRound(
+                electionRoundIndex,
+                member
+            );
+            const edenMembers = await queryClient.fetchQuery(queryKey, queryFn);
 
-        // get MemberDatas for these EdenMembers
-        const pParticipantsMemberData = edenMembers?.participants.map(
-            async (edenMember) => {
-                const { queryKey, queryFn } = queryMemberData(
-                    edenMember.account
-                );
-                const memberData = await queryClient.fetchQuery(
-                    queryKey,
-                    queryFn
-                );
-                return memberData;
-            }
-        );
-        const participantsMemberData = await Promise.all(
-            pParticipantsMemberData!
-        );
+            // get MemberDatas for these EdenMembers
+            const pParticipantsMemberData = edenMembers?.participants.map(
+                async (edenMember) => {
+                    const { queryKey, queryFn } = queryMemberData(
+                        edenMember.account
+                    );
+                    const memberData = await queryClient.fetchQuery(
+                        queryKey,
+                        queryFn
+                    );
+                    return memberData;
+                }
+            );
+            const participantsMemberData = await Promise.all(
+                pParticipantsMemberData!
+            );
 
-        console.info(
-            "didReachConsensus: ",
-            edenMembers?.participants?.[0]?.representative,
-            edenMembers
-        );
-        return {
-            participants: edenMembers?.participants, // .length will be number of participants and empty if no round happened
-            participantsMemberData,
-            didReachConsensus: !isResultFromNoConsensus(
-                edenMembers?.participants?.[0]?.representative
-            ),
-        };
-    });
+            console.info(
+                "didReachConsensus: ",
+                edenMembers?.participants?.[0]?.representative,
+                edenMembers
+            );
+            return {
+                participants: edenMembers?.participants, // .length will be number of participants and empty if no round happened
+                participantsMemberData,
+                didReachConsensus: didReachConsensus(
+                    electionRoundIndex,
+                    edenMembers?.participants
+                ),
+            };
+        }
+    );
     const completedRounds = await Promise.all(pCompletedRounds);
     console.info("completedRounds:", completedRounds);
     return completedRounds;
