@@ -1,3 +1,4 @@
+enable_testing()
 find_package(OpenSSL REQUIRED Crypto)
 
 function(add suffix)
@@ -24,3 +25,5 @@ add("")
 if(DEFINED IS_WASM)
     add("-debug")
 endif()
+
+add_subdirectory(tests)

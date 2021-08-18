@@ -25,6 +25,8 @@ function(native_test N)
     )
 endfunction()
 
+add_library(boost INTERFACE)
+
 add_subdirectory(../external external)
 add_subdirectory(../libraries libraries)
 add_subdirectory(../programs programs)

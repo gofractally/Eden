@@ -170,7 +170,7 @@ namespace clio
             return;
          if constexpr (std::is_member_object_pointer_v<decltype(member((T*)nullptr))>)
          {
-            using m = decltype(std::declval<T>().*member((T*)nullptr));
+            using m = eosio::remove_cvref_t<decltype(std::declval<T>().*member((T*)nullptr))>;
             if constexpr (contains_offset_ptr((m*)nullptr))
                offset += sizeof(offset_ptr);
             else
@@ -657,7 +657,7 @@ namespace clio
             for (const auto& member : v)
             {
                if constexpr (std::is_same_v<std::string, typename T::value_type> ||
-                             is_std_vector<typename T::value_type>())
+                             eosio::is_std_vector<typename T::value_type>())
                {
                   if (member.size() == 0)
                   {
@@ -708,7 +708,7 @@ namespace clio
       {
          uint32_t cur_pos = 0;
          uint32_t alloc_pos = flatpack_size<T>();
-         eosio::for_each_field([&](auto, const auto& member) {
+         eosio::for_each_field(v, [&](const auto& member) {
             using member_type = eosio::remove_cvref_t<decltype(member)>;
             if constexpr (contains_offset_ptr((member_type*)nullptr))
             {

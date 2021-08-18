@@ -40,7 +40,6 @@ sudo apt-get install -yq    \
     build-essential         \
     cmake                   \
     git                     \
-    libboost-all-dev        \
     libcurl4-openssl-dev    \
     libgbm-dev              \
     libgmp-dev              \
@@ -60,4 +59,12 @@ tar xf wasi-sdk-12.0-linux.tar.gz
 wget https://nodejs.org/dist/v14.16.0/node-v14.16.0-linux-x64.tar.xz
 tar xf node-v14.16.0-linux-x64.tar.xz
 npm i -g yarn
+
+# Install boost 1.75 or later. e.g. this installs it in /usr/local:
+curl -LO https://github.com/eoscommunity/Eden/releases/download/deps/boost_1_75_0.tar.bz2
+tar xf boost_1_75_0.tar.bz2
+cd boost_1_75_0
+./bootstrap.sh
+./b2
+sudo ./b2 install
 ```

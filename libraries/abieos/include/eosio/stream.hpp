@@ -142,6 +142,12 @@ namespace eosio
       {
          write(&v, sizeof(v));
       }
+
+      void skip(size_t size)
+      {
+         check(size <= size_t(end - pos), convert_stream_error(stream_error::overrun));
+         pos += size;
+      }
    };
 
    struct size_stream
@@ -157,6 +163,8 @@ namespace eosio
       {
          size += sizeof(v);
       }
+
+      void skip(size_t sz) { size += sz; }
    };
 
    template <typename S>
