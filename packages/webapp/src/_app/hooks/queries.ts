@@ -43,7 +43,7 @@ import {
     Election,
     VoteData,
 } from "elections/interfaces";
-import { EncryptionScope } from "encryption/api";
+import { EncryptionScope, getEncryptedData } from "encryption/api";
 
 export const queryHeadDelegate = {
     queryKey: "query_head_delegate",
