@@ -5,7 +5,13 @@ import { BiCheck } from "react-icons/bi";
 import { RiVideoUploadLine } from "react-icons/ri";
 
 import { electionMeetingDurationMs as meetingDurationMs } from "config";
-import { onError, useCountdown, useTimeout, useUALAccount } from "_app";
+import {
+    Election,
+    onError,
+    useCountdown,
+    useTimeout,
+    useUALAccount,
+} from "_app";
 import {
     queryMemberGroupParticipants,
     useCurrentElection,
@@ -35,6 +41,7 @@ import VotingRoundParticipants from "./voting-round-participants";
 import { setVote } from "../../transactions";
 
 export interface RoundSegmentProps {
+    ongoingElectionData?: Election;
     electionState: string;
     roundIndex: number;
     roundStartTime: Dayjs;
@@ -45,6 +52,7 @@ export interface RoundSegmentProps {
 
 // TODO: Much of the building up of the data shouldn't be done in the UI layer. What do we want the API to provide? What data does this UI really need? We could even define a new OngoingElection type to provide to this UI.
 export const OngoingRoundSegment = ({
+    ongoingElectionData,
     electionState,
     roundIndex,
     roundStartTime,
@@ -158,7 +166,6 @@ export const OngoingRoundSegment = ({
             voteData.length > 0 &&
             members?.length !== voteData?.length);
 
-    console.info(`voteData:`, voteData);
     if (isError) {
         return <ErrorLoadingElection />;
     }
@@ -201,6 +208,7 @@ export const OngoingRoundSegment = ({
         setIsSubmittingVote(false);
     };
 
+    if (!ongoingElectionData?.isMemberStillParticipating) return null;
     return (
         // TODO: Move this out into a separate component to simplify and make this more readable
         <Expander
@@ -239,7 +247,6 @@ export const OngoingRoundSegment = ({
                         : "This round is finalizing. Please submit any outstanding votes now. You will be able to come back later to upload election videos if your video isn't ready yet."}
                 </Text>
             </Container>
-            <div>shit1</div>
             {voteData?.length === 0 ? (
                 <div>you didn't participate in this round</div>
             ) : voteData && isVotingOpen ? (
@@ -293,7 +300,6 @@ export const OngoingRoundSegment = ({
                     )}
                 </MembersGrid>
             )}
-            <div>shit2</div>
         </Expander>
     );
 };
