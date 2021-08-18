@@ -12,7 +12,7 @@ import {
     VoteDataQueryOptionsByGroup,
     MemberStats,
 } from "members";
-import { Election, getCommunityGlobals } from "_app/api";
+import { getCommunityGlobals } from "_app/api";
 
 import { useUALAccount } from "../eos";
 import {
@@ -40,6 +40,7 @@ import {
     ActiveStateConfigType,
     CurrentElection,
     CurrentElection_activeState,
+    Election,
     VoteData,
 } from "elections/interfaces";
 
@@ -311,7 +312,9 @@ export const useMemberGroupParticipants = (
     const currentActiveElection = currentElection as CurrentElection_activeState;
 
     let enabled = Boolean(
-        memberAccount && roundIndex && currentActiveElection?.config
+        memberAccount &&
+            currentActiveElection?.config &&
+            roundIndex !== undefined
     );
     if ("enabled" in queryOptions) {
         enabled = enabled && queryOptions.enabled;
@@ -413,7 +416,7 @@ export const useOngoingElectionData = (
     // GET participants for ongoing round
     const { data: membersInOngoingRound } = useMemberGroupParticipants(
         loggedInMember?.account,
-        memberStats && memberStats?.ranks.length
+        memberStats?.ranks.length
     );
     let { data: votingMemberData } = useMemberDataFromVoteData(
         membersInOngoingRound

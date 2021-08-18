@@ -8,7 +8,6 @@ import {
     CONTRACT_ELECTION_STATE_TABLE,
     CONTRACT_MEMBER_TABLE,
     CONTRACT_VOTE_TABLE,
-    Election,
     getRow,
     getTableRawRows,
     getTableRows,
@@ -28,6 +27,7 @@ import {
 import {
     ActiveStateConfigType,
     CurrentElection,
+    Election,
     ElectionState,
     ElectionStatus,
     VoteData,
@@ -88,7 +88,7 @@ export const getMemberGroupParticipants = async (
         throw new Error(
             "getMemberGroupParticipants requires a config object (got 'undefined')"
         );
-    if (!roundIndex)
+    if (roundIndex === undefined)
         throw new Error(
             "getMemberGroupParticipants requires a roundIndex (got 'undefined')"
         );
@@ -344,7 +344,6 @@ export const getOngoingElectionData = async (
             "getOngoingElectionData().top votingMemberData:",
             votingMemberData
         );
-    if (!votingMemberData) throw new Error("no votingMemberData");
 
     // Calculate highestRoundIndexInWhichMemberWasRepresented and areRoundsWithNoParticipation
     const inSortitionRound =
@@ -386,7 +385,7 @@ export const getOngoingElectionData = async (
         myDelegation
     );
 
-    const electionData: Election = {
+    const electionData = {
         ...ELECTION_DEFAULTS,
         isMemberStillParticipating,
         highestRoundIndexInWhichMemberWasRepresented, //: 2,

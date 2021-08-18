@@ -6,13 +6,15 @@ import {
     useCommunityGlobals,
     useCurrentMember,
     useMemberStats,
-    useMyDelegation,
-    useOngoingElectionData as useOngoingElectionData,
-    Election,
+    useOngoingElectionData,
 } from "_app";
 import { Button, Container, Heading, Loader, Link, Text } from "_app/ui";
 import { ErrorLoadingElection } from "elections";
-import { ActiveStateConfigType, ElectionStatus } from "elections/interfaces";
+import {
+    ActiveStateConfigType,
+    Election,
+    ElectionStatus,
+} from "elections/interfaces";
 
 import * as Ongoing from "./ongoing-election-components";
 
