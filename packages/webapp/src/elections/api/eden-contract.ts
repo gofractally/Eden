@@ -347,21 +347,13 @@ export const getOngoingElectionData = async (
             votingMemberData
         );
 
-    // Calculate highestRoundIndexInWhichMemberWasRepresented and areRoundsWithNoParticipation
     const inSortitionRound =
         currentElection?.electionState === ElectionStatus.Final; // status===final only during sortition round
     // TODO: do we need currentElection.electionState === ElectionStatus.Active?
     const roundsCompleted = memberStats ? memberStats?.ranks.length : 0;
-    const heightOfMyDelegationMinusChiefs = inSortitionRound
-        ? myDelegation.length - 1
-        : myDelegation.length;
+    const heightOfMyDelegationMinusChiefs = myDelegation.length;
 
     // START calculating values needed for return value
-    // highestRoundIndex = myDelegation.length - 1
-    const highestRoundIndexInWhichMemberWasRepresented: number =
-        // heightOfMyDelegationMinusChiefs - 1;
-        myDelegation.length - 1;
-    // areRoundsWithNoParticipation = myDelegation.length < memberStats.ranks.length
     const isMemberStillParticipating = votingMemberData.length > 0;
     const areRoundsWithNoParticipation = isMemberStillParticipating
         ? false
@@ -369,13 +361,14 @@ export const getOngoingElectionData = async (
           isResultOfNoConsensus(
               myDelegation[myDelegation.length - 1].representative
           );
+    console.info("myDelegation:", myDelegation);
     const isGapInDelegation = isMemberStillParticipating
         ? false
         : heightOfMyDelegationMinusChiefs < roundsCompleted;
 
     bDebug &&
         console.info(
-            `getOED() isMemberStillParticipating[${isMemberStillParticipating}], areRoundsWithNoParticipation[${areRoundsWithNoParticipation}], roundsCompleted[${roundsCompleted}], heightOfDelegationMinusChiefs[${heightOfMyDelegationMinusChiefs}], highestRoundIndexInWhichMemberWasRepresented[${highestRoundIndexInWhichMemberWasRepresented}]`
+            `getOED() isGapInDelegation[${isGapInDelegation}], isMemberStillParticipating[${isMemberStillParticipating}], areRoundsWithNoParticipation[${areRoundsWithNoParticipation}], roundsCompleted[${roundsCompleted}], heightOfDelegationMinusChiefs[${heightOfMyDelegationMinusChiefs}]`
         );
 
     // Ongoing Round info: this is unfiltered/unmodified vote table data.
@@ -390,16 +383,12 @@ export const getOngoingElectionData = async (
     const electionData = {
         ...ELECTION_DEFAULTS,
         isMemberStillParticipating,
-        highestRoundIndexInWhichMemberWasRepresented, //: 2,
         areRoundsWithNoParticipation, // : false,
         isGapInDelegation,
+        inSortitionRound,
         completedRounds,
         ongoingRound,
     } as Election;
     if (!electionData) return ELECTION_DEFAULTS;
-    // electionData.areRoundsWithNoParticipation =
-    //     electionData.completedRounds!.length > 1 &&
-    //     electionData.highestRoundIndexInWhichMemberWasRepresented! <
-    //         electionData.completedRounds!.length - 1;
     return electionData;
 };

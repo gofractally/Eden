@@ -145,6 +145,10 @@ const NoDelegateInFurtherRoundsMessage = ({
     ongoingElectionData,
 }: NoFurtherDelegateParticipationProps) => {
     if (!ongoingElectionData) return null;
+    console.info(
+        "ongoingElectionData.isGapInDelegation:",
+        ongoingElectionData.isGapInDelegation
+    );
     if (!ongoingElectionData.isGapInDelegation) {
         return null;
     }
