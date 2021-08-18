@@ -107,11 +107,12 @@ export const OngoingRoundSegment = ({
         isError: isErrorCurrentMember,
     } = useCurrentMember();
 
+    console.info(`<OngoingRound /> roundIndex[${roundIndex}]`);
     const {
         data: participants,
         isLoading: isLoadingParticipants,
         isError: isErrorParticipants,
-    } = useMemberGroupParticipants(loggedInMember?.account, {
+    } = useMemberGroupParticipants(loggedInMember?.account, roundIndex, {
         refetchInterval: isVotingOpen ? 10000 : null,
         refetchIntervalInBackground: true,
     });
@@ -133,6 +134,7 @@ export const OngoingRoundSegment = ({
         isLoading: isLoadingMemberData,
         isError: isErrorMemberData,
     } = useMemberDataFromVoteData(voteData);
+    console.info(`<OngoingRound /> after use()s roundIndex[${roundIndex}]`);
 
     const isLoading =
         isLoadingParticipants ||
@@ -187,6 +189,7 @@ export const OngoingRoundSegment = ({
             queryClient.invalidateQueries(
                 queryMemberGroupParticipants(
                     loggedInMember?.account,
+                    roundIndex,
                     electionConfig
                 ).queryKey
             );
