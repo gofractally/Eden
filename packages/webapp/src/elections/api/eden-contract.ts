@@ -16,6 +16,7 @@ import {
     queryMemberByAccountName,
     queryMemberData,
     queryParticipantsInCompletedRound,
+    useElectionState,
 } from "_app";
 import {
     EdenMember,
@@ -82,12 +83,15 @@ export const getMemberGroupFromIndex = (
 export const getMemberGroupParticipants = async (
     memberAccount?: string,
     roundIndex?: number,
-    config?: ActiveStateConfigType
+    config: ActiveStateConfigType = {
+        num_participants: 13,
+        num_groups: 1,
+    }
 ) => {
-    if (!config)
-        throw new Error(
-            "getMemberGroupParticipants requires a config object (got 'undefined')"
-        );
+    // if (!config)
+    //     throw new Error(
+    //         "getMemberGroupParticipants requires a config object (got 'undefined')"
+    //     );
     if (roundIndex === undefined)
         throw new Error(
             "getMemberGroupParticipants requires a roundIndex (got 'undefined')"
@@ -107,6 +111,8 @@ export const getMemberGroupParticipants = async (
     });
     if (!memberVoteData) return [];
 
+    console.info("getMGP() memberVoteData: ", memberVoteData);
+    console.info("getMGP() getting vote data w config:", config);
     // return all indexes that represent members in this member's group
     const { lowerBound, upperBound } = getMemberGroupFromIndex(
         memberVoteData.index,

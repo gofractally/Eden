@@ -41,6 +41,7 @@ import {
     CurrentElection,
     CurrentElection_activeState,
     Election,
+    ElectionStatus,
     VoteData,
 } from "elections/interfaces";
 import { EncryptionScope, getEncryptedData } from "encryption/api";
@@ -312,18 +313,17 @@ export const useMemberGroupParticipants = (
     roundIndex?: number,
     queryOptions: any = {}
 ) => {
-    // console.info(`useMGP().top roundIndex[${roundIndex}]`);
+    console.info(`   --->    useMGP().top roundIndex[${roundIndex}]`);
     const { data: currentElection } = useCurrentElection();
     // ASSUMPTION: this use method will only be called by *non*-Chief ongoing rounds
     const currentActiveElection = currentElection as CurrentElection_activeState;
 
-    let enabled =
-        Boolean(memberAccount && currentActiveElection?.config) &&
-        roundIndex !== undefined;
+    let enabled = Boolean(memberAccount) && roundIndex !== undefined;
 
     if ("enabled" in queryOptions) {
         enabled = enabled && queryOptions.enabled;
     }
+    console.info(`useMGP().enabled[${enabled}]`);
 
     return useQuery<VoteData[], Error>({
         ...queryMemberGroupParticipants(
@@ -430,6 +430,12 @@ export const useOngoingElectionData = (): UseQueryResult<
     );
     let { data: votingMemberData } = useMemberDataFromVoteData(
         membersInOngoingRound
+    );
+    console.info(
+        "membersInOngoingRound:",
+        membersInOngoingRound,
+        "votingMemberData:",
+        votingMemberData
     );
 
     const { queryKey, queryFn } = queryOngoingElectionData(
