@@ -36,11 +36,13 @@ const TABLE_PARAM_DEFAULTS = {
 export const getRow = async <T>(
     table: string,
     keyName?: string,
-    keyValue?: string
+    keyValue?: string,
+    scope?: string
 ): Promise<T | undefined> => {
-    const options: TableQueryOptions | undefined = keyValue
-        ? { lowerBound: keyValue }
-        : undefined;
+    const options: TableQueryOptions = {};
+    if (keyValue) options.lowerBound = keyValue;
+    if (scope) options.scope = scope;
+
     const rows = await getTableRows(table, options);
 
     if (!rows.length) {
