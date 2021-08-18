@@ -294,7 +294,6 @@ const ELECTION_DEFAULTS: Election = {
 };
 
 const getParticipantsOfCompletedRounds = async (myDelegation: EdenMember[]) => {
-    console.info("getParticipantsOfCompletedRounds().top");
     const pCompletedRounds = myDelegation.map(async (member, electionRound) => {
         // get EdenMembers in group with this member
         const { queryKey, queryFn } = queryParticipantsInCompletedRound(
@@ -318,13 +317,6 @@ const getParticipantsOfCompletedRounds = async (myDelegation: EdenMember[]) => {
         );
         const participantsMemberData = await Promise.all(
             pParticipantsMemberData!
-        );
-
-        console.info("getPoCR() didReachConsensus: edenMembers:", edenMembers);
-        console.info("rep:", edenMembers?.participants?.[0]?.representative);
-        console.info(
-            "didReachConsensus:",
-            isValidDelegate(edenMembers?.participants?.[0]?.representative)
         );
 
         return {
