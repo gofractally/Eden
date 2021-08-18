@@ -113,14 +113,10 @@ export const getMemberGroupParticipants = async (
         totalParticipants,
         numGroups
     );
-    console.info(
-        `getMGP().lowerBound[${lowerBound}], upperBound[${lowerBound}]`
-    );
 
     const GET_VOTE_DATA_ROWS_LIMIT = 20;
 
     // get all members in this member's group
-    console.info("getVoteDRs()", { lowerBound, upperBound });
     const rows = await getVoteDataRows({
         lowerBound: (roundIndex << 16) + lowerBound,
         upperBound: (roundIndex << 16) + upperBound,
@@ -165,7 +161,6 @@ const getVoteDataRows = async (
     // TODO: see what real data looks like and real use-cases and see if we need the electionState flag;
     // If not, switch this back to getTableRows()
     const rawRows = await getTableRawRows(CONTRACT_VOTE_TABLE, opts);
-    console.info("rawRows:", rawRows);
 
     if (rawRows?.[0].length) return rawRows.map((row) => row[1]);
     return rawRows;
@@ -281,6 +276,7 @@ export const getElectionState = async () => {
 
 const ELECTION_DEFAULTS: Election = {
     areRoundsWithNoParticipation: false,
+    isMemberStillParticipating: false,
     completedRounds: [
         {
             participants: [],
@@ -294,6 +290,10 @@ const ELECTION_DEFAULTS: Election = {
 };
 
 const getParticipantsOfCompletedRounds = async (myDelegation: EdenMember[]) => {
+    console.info(
+        "getParticipantsOfCompletedRounds().myDelegation:",
+        myDelegation
+    );
     const pCompletedRounds = myDelegation.map(async (member, electionRound) => {
         // get EdenMembers in group with this member
         const { queryKey, queryFn } = queryParticipantsInCompletedRound(
@@ -328,6 +328,7 @@ const getParticipantsOfCompletedRounds = async (myDelegation: EdenMember[]) => {
         };
     });
     const completedRounds = await Promise.all(pCompletedRounds);
+    console.info("completedRounds:", completedRounds);
     return completedRounds;
 };
 
@@ -337,8 +338,12 @@ export const getOngoingElectionData = async (
     currentElection?: CurrentElection,
     myDelegation: EdenMember[] = []
 ) => {
-    console.info("getOngoingElectionData().top");
-    console.info("getOED().votingMemberData:", votingMemberData);
+    const bDebug = false;
+    bDebug &&
+        console.info(
+            "getOngoingElectionData().top votingMemberData:",
+            votingMemberData
+        );
 
     // Calculate highestRoundIndexInWhichMemberWasRepresented and areRoundsWithNoParticipation
     const inSortitionRound =
@@ -355,28 +360,32 @@ export const getOngoingElectionData = async (
         // heightOfMyDelegationMinusChiefs - 1;
         myDelegation.length - 1;
     // areRoundsWithNoParticipation = myDelegation.length < memberStats.ranks.length
-    const areRoundsWithNoParticipation =
-        heightOfMyDelegationMinusChiefs < roundsCompleted ||
-        isResultOfNoConsensus(
-            myDelegation[myDelegation.length - 1].representative
+    const isMemberStillParticipating = votingMemberData.length > 0;
+    const areRoundsWithNoParticipation = isMemberStillParticipating
+        ? false
+        : heightOfMyDelegationMinusChiefs < roundsCompleted ||
+          isResultOfNoConsensus(
+              myDelegation[myDelegation.length - 1].representative
+          );
+    bDebug &&
+        console.info(
+            `isMemberStillParticipating[${isMemberStillParticipating}], areRoundsWithNoParticipation[${areRoundsWithNoParticipation}], roundsCompleted[${roundsCompleted}], heightOfDelegationMinusChiefs[${heightOfMyDelegationMinusChiefs}], highestRoundIndexInWhichMemberWasRepresented[${highestRoundIndexInWhichMemberWasRepresented}]`
         );
-    console.info(
-        `areRoundsWithNoParticipation[${areRoundsWithNoParticipation}], roundsCompleted[${roundsCompleted}], heightOfDelegationMinusChiefs[${heightOfMyDelegationMinusChiefs}], highestRoundIndexInWhichMemberWasRepresented[${highestRoundIndexInWhichMemberWasRepresented}]`
-    );
-    console.info(
-        `myDelegation.length[${
-            myDelegation.length
-        }], myDelegation[myDelegation.length - 1][${
-            myDelegation[myDelegation.length - 1]
-        }], lastDelegate.rep[${
-            myDelegation[myDelegation.length - 1].representative
-        }]`
-    );
+    bDebug &&
+        console.info(
+            `myDelegation.length[${
+                myDelegation.length
+            }], myDelegation[myDelegation.length - 1][${
+                myDelegation[myDelegation.length - 1]
+            }], lastDelegate.rep[${
+                myDelegation[myDelegation.length - 1].representative
+            }]`
+        );
 
     // Ongoing Round info: this is unfiltered/unmodified vote table data.
     // This can be refactored to be more tailored to the frontend eventually.
     const ongoingRound = { participantsMemberData: votingMemberData };
-    // console.info("ongoingRound:", ongoingRound);
+    bDebug && console.info("ongoingRound:", ongoingRound);
 
     const completedRounds = await getParticipantsOfCompletedRounds(
         myDelegation
@@ -384,6 +393,7 @@ export const getOngoingElectionData = async (
 
     const electionData: Election = {
         ...ELECTION_DEFAULTS,
+        isMemberStillParticipating,
         highestRoundIndexInWhichMemberWasRepresented, //: 2,
         areRoundsWithNoParticipation, // : false,
         completedRounds,

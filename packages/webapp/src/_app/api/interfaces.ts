@@ -26,6 +26,7 @@ export interface Election {
         isMemberStillParticipating?: boolean;
     };
     isElectionInProgress?: boolean;
+    isMemberStillParticipating?: boolean;
     inProgressRoundIndex?: number; // undefined if no round (or election) in progress
     highestRoundIndexInWhichMemberWasRepresented?: number; // no ?
     areRoundsWithNoParticipation: boolean;

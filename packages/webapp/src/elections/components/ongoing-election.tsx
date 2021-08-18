@@ -9,6 +9,7 @@ import {
     useMyDelegation,
     useOngoingElectionData as useOngoingElectionData,
     useVoteDataRow,
+    Election,
 } from "_app";
 import { Button, Container, Heading, Loader, Link, Text } from "_app/ui";
 import { ErrorLoadingElection } from "elections";
@@ -90,12 +91,18 @@ export const OngoingElection = ({ election }: { election: any }) => {
             />
             <SignInContainer />
             <SignUpContainer />
-            <NoFurtherParticipationInRoundsMessage
+            <NoParticipationInFurtherRoundsMessage
+                isMemberStillParticipating={
+                    ongoingElectionData?.isMemberStillParticipating
+                }
+            />
+            <NoDelegateInFurtherRoundsMessage
                 areRoundsWithNoParticipation={
                     ongoingElectionData?.areRoundsWithNoParticipation
                 }
             />
             <CurrentRound
+                ongoingElectionData={ongoingElectionData}
                 electionState={election.electionState}
                 roundIndex={roundIndex}
                 roundStartTime={roundStartTime}
@@ -108,13 +115,45 @@ export const OngoingElection = ({ election }: { election: any }) => {
 };
 
 interface NoFurtherParticipationProps {
-    areRoundsWithNoParticipation?: boolean;
+    ongoingElectionData?: Election;
 }
 
-const NoFurtherParticipationInRoundsMessage = ({
-    areRoundsWithNoParticipation,
+const NoParticipationInFurtherRoundsMessage = ({
+    ongoingElectionData,
 }: NoFurtherParticipationProps) => {
-    if (!areRoundsWithNoParticipation) {
+    if (!ongoingElectionData) return null;
+    if (ongoingElectionData.isMemberStillParticipating) {
+        return null;
+    }
+    return (
+        <Container className="flex items-center space-x-2 pr-8 py-8">
+            <BsInfoCircle
+                size={22}
+                className="ml-px text-gray-400 place-self-start mt-1"
+            />
+            <div className="flex-1">
+                <Text size="sm">
+                    You aren't involved in further rounds. Please{" "}
+                    <Link href={""}>join the Community Room</Link> &amp; Support
+                    for news and updates of the ongoing election. The results
+                    will be displayed in the My Delegation area after the
+                    election is complete. Once the Chief Delegates are selected,
+                    they are displayed below.
+                </Text>
+            </div>
+        </Container>
+    );
+};
+
+interface NoFurtherDelegateParticipationProps {
+    ongoingElectionData?: Election;
+}
+
+const NoDelegateInFurtherRoundsMessage = ({
+    ongoingElectionData,
+}: NoFurtherDelegateParticipationProps) => {
+    if (!ongoingElectionData) return null;
+    if (!ongoingElectionData.areRoundsWithNoParticipation) {
         return null;
     }
     return (
@@ -162,6 +201,7 @@ const CompletedRounds = ({ numCompletedRounds }: CompletedRoundsProps) => {
 };
 
 export interface CurrentRoundProps {
+    ongoingElectionData?: Election;
     electionState: string;
     roundIndex: number;
     roundStartTime: Dayjs;
@@ -181,6 +221,7 @@ const CurrentRound = (props: CurrentRoundProps) => {
 
     return (
         <Ongoing.OngoingRoundSegment
+            ongoingElectionData={props.ongoingElectionData}
             electionState={props.electionState}
             roundIndex={props.roundIndex}
             roundStartTime={props.roundStartTime}
