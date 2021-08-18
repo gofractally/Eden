@@ -12,6 +12,8 @@ import {
     getRow,
     getTableRawRows,
     getTableRows,
+    INDEX_MEMBER_BY_REP,
+    INDEX_VOTE_BY_GROUP_INDEX,
     isValidDelegate,
     queryMemberByAccountName,
     queryMembers,
@@ -114,7 +116,7 @@ export const getMemberGroupParticipants = async (
         lowerBound: (roundIndex << 16) + lowerBound,
         upperBound: (roundIndex << 16) + upperBound,
         limit: GET_VOTE_DATA_ROWS_LIMIT,
-        ...TABLE_INDEXES[CONTRACT_VOTE_TABLE],
+        ...TABLE_INDEXES[CONTRACT_VOTE_TABLE][INDEX_VOTE_BY_GROUP_INDEX],
     } as TableQueryOptions);
 
     if (!rows || !rows.length) {
@@ -226,7 +228,7 @@ export const getParticipantsInCompletedRound = async (
         lowerBound: bounds,
         upperBound: bounds,
         limit: 20,
-        ...TABLE_INDEXES[CONTRACT_MEMBER_TABLE],
+        ...TABLE_INDEXES[CONTRACT_MEMBER_TABLE][INDEX_MEMBER_BY_REP],
     });
 
     const delegateAccountName = participants?.[0].representative;
