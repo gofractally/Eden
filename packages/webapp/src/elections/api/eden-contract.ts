@@ -12,13 +12,10 @@ import {
     getRow,
     getTableRawRows,
     getTableRows,
-    isResultFromNoConsensus,
-    isResultFromNoConsensus as isResultOfNoConsensus,
     isValidDelegate,
     queryMemberByAccountName,
     queryMemberData,
     queryParticipantsInCompletedRound,
-    useElectionState,
 } from "_app";
 import {
     EdenMember,
@@ -109,8 +106,6 @@ export const getMemberGroupParticipants = async (
     });
     if (!memberVoteData) return [];
 
-    console.info("getMGP() memberVoteData: ", memberVoteData);
-    console.info("getMGP() getting vote data w config:", config);
     // return all indexes that represent members in this member's group
     const { lowerBound, upperBound } = getMemberGroupFromIndex(
         memberVoteData.index,
@@ -279,7 +274,6 @@ export const getElectionState = async () => {
 };
 
 const ELECTION_DEFAULTS: Election = {
-    areRoundsWithNoParticipation: false,
     isMemberStillParticipating: false,
     completedRounds: [
         {
@@ -340,7 +334,6 @@ const getParticipantsOfCompletedRounds = async (myDelegation: EdenMember[]) => {
         }
     );
     const completedRounds = await Promise.all(pCompletedRounds);
-    console.info("completedRounds:", completedRounds);
     return completedRounds;
 };
 
@@ -350,13 +343,6 @@ export const getOngoingElectionData = async (
     currentElection?: CurrentElection,
     myDelegation: EdenMember[] = []
 ) => {
-    const bDebug = true;
-    bDebug &&
-        console.info(
-            "getOngoingElectionData().top votingMemberData:",
-            votingMemberData
-        );
-
     const inSortitionRound =
         currentElection?.electionState === ElectionStatus.Final; // status===final only during sortition round
     // TODO: do we need currentElection.electionState === ElectionStatus.Active?
@@ -365,36 +351,18 @@ export const getOngoingElectionData = async (
 
     // START calculating values needed for return value
     const isMemberStillParticipating = votingMemberData.length > 0;
-    const areRoundsWithNoParticipation = isMemberStillParticipating
-        ? false
-        : heightOfMyDelegationMinusChiefs < roundsCompleted ||
-          isResultOfNoConsensus(
-              myDelegation[myDelegation.length - 1].representative
-          );
-    console.info("myDelegation:", myDelegation);
 
     // Ongoing Round info: this is unfiltered/unmodified vote table data.
     // This can be refactored to be more tailored to the frontend eventually.
     const ongoingRound = { participantsMemberData: votingMemberData };
-    bDebug && console.info("ongoingRound:", ongoingRound);
 
     const completedRounds = await getParticipantsOfCompletedRounds(
         myDelegation
     );
 
-    const isGapInDelegation = isMemberStillParticipating
-        ? false
-        : Boolean(completedRounds.find((r) => !r.didReachConsensus));
-
-    bDebug &&
-        console.info(
-            `getOED() isGapInDelegation[${isGapInDelegation}], isMemberStillParticipating[${isMemberStillParticipating}], areRoundsWithNoParticipation[${areRoundsWithNoParticipation}], roundsCompleted[${roundsCompleted}], heightOfDelegationMinusChiefs[${heightOfMyDelegationMinusChiefs}]`
-        );
     const electionData = {
         ...ELECTION_DEFAULTS,
         isMemberStillParticipating,
-        areRoundsWithNoParticipation, // : false,
-        isGapInDelegation,
         inSortitionRound,
         completedRounds,
         ongoingRound,
