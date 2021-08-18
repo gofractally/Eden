@@ -88,10 +88,6 @@ export const getMemberGroupParticipants = async (
         num_groups: 1,
     }
 ) => {
-    // if (!config)
-    //     throw new Error(
-    //         "getMemberGroupParticipants requires a config object (got 'undefined')"
-    //     );
     if (roundIndex === undefined)
         throw new Error(
             "getMemberGroupParticipants requires a roundIndex (got 'undefined')"
