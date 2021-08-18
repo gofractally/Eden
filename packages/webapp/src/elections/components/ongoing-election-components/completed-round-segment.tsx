@@ -7,7 +7,7 @@ import {
 } from "_app";
 import { Button, Container, Expander, Text } from "_app/ui";
 import { ElectionParticipantChip } from "elections";
-import { MembersGrid } from "members";
+import { EdenMember, MembersGrid } from "members";
 
 import RoundHeader from "./round-header";
 
@@ -31,17 +31,7 @@ export const CompletedRoundSegment = ({
 
     return (
         <Expander
-            header={
-                <RoundHeader
-                    isRoundActive={false}
-                    headlineComponent={<div>Round {roundIndex + 1}</div>}
-                    sublineComponent={
-                        isValidDelegate(commonDelegate?.account)
-                            ? `Delegate elect: ${commonDelegate!.name}`
-                            : "Consensus not achieved"
-                    }
-                />
-            }
+            header={<Header roundIndex={roundIndex} winner={commonDelegate} />}
             inactive
         >
             <MembersGrid members={participantsMemberData}>
@@ -80,10 +70,14 @@ export default CompletedRoundSegment;
 
 interface HeaderProps {
     roundIndex: number;
-    winner?: string;
+    winner?: EdenMember;
 }
 
 const Header = ({ roundIndex, winner }: HeaderProps) => {
+    const subText = isValidDelegate(winner?.account)
+        ? `Delegate elect: ${winner?.name}`
+        : "Consensus not achieved";
+
     return (
         <RoundHeader
             isRoundActive={false}
@@ -94,9 +88,7 @@ const Header = ({ roundIndex, winner }: HeaderProps) => {
             }
             sublineComponent={
                 <Text size="sm" className="tracking-tight">
-                    {winner
-                        ? `Delegate elect: ${winner}`
-                        : "Consensus not achieved"}
+                    {subText}
                 </Text>
             }
         />

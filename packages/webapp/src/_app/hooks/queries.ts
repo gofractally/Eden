@@ -316,9 +316,10 @@ export const useMemberGroupParticipants = (
     // ASSUMPTION: this use method will only be called by *non*-Chief ongoing rounds
     const currentActiveElection = currentElection as CurrentElection_activeState;
 
-    let enabled = Boolean(
-        memberAccount && roundIndex && currentActiveElection?.config
-    );
+    let enabled =
+        Boolean(memberAccount && currentActiveElection?.config) &&
+        roundIndex !== undefined;
+
     if ("enabled" in queryOptions) {
         enabled = enabled && queryOptions.enabled;
     }
@@ -424,7 +425,7 @@ export const useOngoingElectionData = (
     // GET participants for ongoing round
     const { data: membersInOngoingRound } = useMemberGroupParticipants(
         loggedInMember?.account,
-        memberStats && memberStats?.ranks.length
+        memberStats?.ranks?.length
     );
     console.info("useOED().membersInOngoingRound:", membersInOngoingRound);
     let { data: votingMemberData } = useMemberDataFromVoteData(
