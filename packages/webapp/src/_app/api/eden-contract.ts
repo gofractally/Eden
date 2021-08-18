@@ -8,7 +8,7 @@ const MEMBER_REPRESENTATIVE_IF_NOT_PARTICIPATED_IN_RECENT_ELECTION =
 // These non-rep values, since they're stored in the `representative` field
 // will be distinguishable by the fact that they're 13 characters long, making them invalid EOS account names
 export const isResultFromNoConsensus = (representativeValue: string) =>
-    representativeValue.length !== 13;
+    representativeValue.length === 13;
 
 export const isValidDelegate = (memberRep?: string) =>
     memberRep &&
