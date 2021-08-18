@@ -1,3 +1,4 @@
+import { CurrentElection_activeState } from "elections/interfaces";
 import { extractElectionDates } from "elections/utils";
 import React from "react";
 
@@ -24,6 +25,7 @@ export const ElectionPage = () => {
     const { data: leadRepresentative } = useHeadDelegate();
 
     const { data: currentElection } = useCurrentElection();
+    const currentActiveElection = currentElection as CurrentElection_activeState;
 
     const {
         data: participantsInCompletedRound,
@@ -34,7 +36,8 @@ export const ElectionPage = () => {
     );
 
     const { data: membersInGroup } = useMemberGroupParticipants(
-        loggedInMember?.account
+        loggedInMember?.account,
+        targetRound
     );
 
     const {
@@ -165,7 +168,8 @@ export const ElectionPage = () => {
                 <Text>Everything below assume `electionState === active`</Text>
                 <Text>We know the *current* round from this field:</Text>
                 <Text>
-                    currentElectionState[active].round[{currentElection.round}]
+                    currentElectionState[active].round[
+                    {currentActiveElection.round}]
                 </Text>
                 <Text>
                     If this member not in `vote` table then their participation

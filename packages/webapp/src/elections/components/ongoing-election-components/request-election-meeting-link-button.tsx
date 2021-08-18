@@ -41,7 +41,8 @@ export const RequestElectionMeetingLinkButton = ({
     const [ualAccount] = useUALAccount();
     const [zoomAccountJWT, setZoomAccountJWT] = useZoomAccountJWT(undefined);
     const { data: memberGroup } = useMemberGroupParticipants(
-        ualAccount?.accountName
+        ualAccount?.accountName,
+        roundIndex
     );
     const { data: currentVoteDataRow } = useVoteDataRow(
         ualAccount?.accountName

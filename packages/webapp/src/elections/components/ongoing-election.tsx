@@ -38,12 +38,6 @@ export const OngoingElection = ({ election }: { election: any }) => {
         enabled: Boolean(loggedInUser) && Boolean(memberStats),
     });
 
-    console.info(
-        "isLoadingGlobals: ",
-        isLoadingGlobals,
-        "isLoadingMemberStats:",
-        isLoadingMemberStats
-    );
     if (isLoadingGlobals || isLoadingMemberStats) {
         return (
             <Container>
@@ -76,6 +70,8 @@ export const OngoingElection = ({ election }: { election: any }) => {
     const roundEndTime = dayjs(roundEndTimeRaw + "Z");
     const roundStartTime = dayjs(roundEndTime).subtract(roundDurationMs);
     const loggedInRank = isStillParticipating ? 0 : loggedInUser?.election_rank;
+
+    console.info("ongoingRoundData:", ongoingRoundData);
 
     return (
         <div className="divide-y">

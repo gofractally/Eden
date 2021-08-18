@@ -61,10 +61,17 @@ export const queryMyDelegation = (memberAccount?: string) => ({
 
 export const queryMemberGroupParticipants = (
     memberAccount?: string,
+    roundIndex?: number,
     config?: ActiveStateConfigType
 ) => ({
-    queryKey: ["query_member_group_participants", memberAccount, config],
-    queryFn: () => getMemberGroupParticipants(memberAccount, config),
+    queryKey: [
+        "query_member_group_participants",
+        memberAccount,
+        roundIndex,
+        config,
+    ],
+    queryFn: () =>
+        getMemberGroupParticipants(memberAccount, roundIndex, config),
 });
 
 export const queryVoteDataRow = (account?: string) => ({
@@ -301,13 +308,17 @@ export const useCurrentElection = (queryOptions: any = {}) =>
 
 export const useMemberGroupParticipants = (
     memberAccount?: string,
+    roundIndex?: number,
     queryOptions: any = {}
 ) => {
+    // console.info(`useMGP().top roundIndex[${roundIndex}]`);
     const { data: currentElection } = useCurrentElection();
     // ASSUMPTION: this use method will only be called by *non*-Chief ongoing rounds
     const currentActiveElection = currentElection as CurrentElection_activeState;
 
-    let enabled = Boolean(memberAccount && currentActiveElection?.config);
+    let enabled = Boolean(
+        memberAccount && roundIndex && currentActiveElection?.config
+    );
     if ("enabled" in queryOptions) {
         enabled = enabled && queryOptions.enabled;
     }
@@ -315,6 +326,7 @@ export const useMemberGroupParticipants = (
     return useQuery<VoteData[], Error>({
         ...queryMemberGroupParticipants(
             memberAccount,
+            roundIndex,
             currentActiveElection?.config
         ),
         ...queryOptions,
@@ -368,9 +380,11 @@ export const useMemberDataFromEdenMembers = (
 };
 
 export const useMemberDataFromVoteData = (voteData?: VoteData[]) => {
+    // console.info("useMemberDataFromVoteData().top");
     const responses = useMemberListByAccountNames(
         voteData?.map((participant) => participant.member) ?? []
     );
+    // console.info("responses:", responses);
     const isFetchError = responses.some((res) => res.isError);
     const areQueriesComplete = responses.every((res) => res.isSuccess);
     const isLoading = responses.some((res) => res.isLoading);
@@ -378,10 +392,12 @@ export const useMemberDataFromVoteData = (voteData?: VoteData[]) => {
     const edenMembers = responses
         .filter((res) => Boolean(res?.data?.nft_template_id))
         .map((res) => res.data as EdenMember);
+    // console.info("edenMembers:", edenMembers);
 
     const memberDataRes = useMemberDataFromEdenMembers(edenMembers, {
         enabled: !isFetchError && areQueriesComplete,
     });
+    // console.info("memberDataRes:", memberDataRes);
 
     return {
         ...memberDataRes,
@@ -407,11 +423,14 @@ export const useOngoingElectionData = (
 
     // GET participants for ongoing round
     const { data: membersInOngoingRound } = useMemberGroupParticipants(
-        loggedInMember?.account
+        loggedInMember?.account,
+        memberStats && memberStats?.ranks.length
     );
+    console.info("useOED().membersInOngoingRound:", membersInOngoingRound);
     let { data: votingMemberData } = useMemberDataFromVoteData(
         membersInOngoingRound
     );
+    console.info("useOED().votingMemberData:", votingMemberData);
 
     const { queryKey, queryFn } = queryOngoingElectionData(
         memberStats,
