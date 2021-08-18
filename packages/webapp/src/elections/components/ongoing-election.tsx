@@ -63,7 +63,6 @@ export const OngoingElection = ({ election }: { election: any }) => {
     // start with logged-in user
     // check that they registered for the election (and cast at least one vote?)
     // see if they're still participating
-    const isStillParticipating = Boolean(loggedInVoteData);
     // Below in the UI, iterate through myDelegation *only* up to the level of currentElection.round (to avoid old member data)
 
     const roundDurationSec = globals.election_round_time_sec;
@@ -72,7 +71,6 @@ export const OngoingElection = ({ election }: { election: any }) => {
     const roundEndTimeRaw = election.round_end ?? election.seed.end_time;
     const roundEndTime = dayjs(roundEndTimeRaw + "Z");
     const roundStartTime = dayjs(roundEndTime).subtract(roundDurationMs);
-    const loggedInRank = isStillParticipating ? 0 : loggedInUser?.election_rank;
 
     console.info("ongoingElectionData:", ongoingElectionData);
 
@@ -91,16 +89,15 @@ export const OngoingElection = ({ election }: { election: any }) => {
             />
             <SignInContainer />
             <SignUpContainer />
-            <NoParticipationInFurtherRoundsMessage
-                isMemberStillParticipating={
-                    ongoingElectionData?.isMemberStillParticipating
-                }
-            />
-            <NoDelegateInFurtherRoundsMessage
-                areRoundsWithNoParticipation={
-                    ongoingElectionData?.areRoundsWithNoParticipation
-                }
-            />
+            {ongoingElectionData?.isGapInDelegation ? (
+                <NoDelegateInFurtherRoundsMessage
+                    ongoingElectionData={ongoingElectionData}
+                />
+            ) : (
+                <NoParticipationInFurtherRoundsMessage
+                    ongoingElectionData={ongoingElectionData}
+                />
+            )}
             <CurrentRound
                 ongoingElectionData={ongoingElectionData}
                 electionState={election.electionState}
@@ -153,7 +150,7 @@ const NoDelegateInFurtherRoundsMessage = ({
     ongoingElectionData,
 }: NoFurtherDelegateParticipationProps) => {
     if (!ongoingElectionData) return null;
-    if (!ongoingElectionData.areRoundsWithNoParticipation) {
+    if (!ongoingElectionData.isGapInDelegation) {
         return null;
     }
     return (
