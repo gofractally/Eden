@@ -34,9 +34,14 @@ export const OngoingElection = ({ election }: { election: any }) => {
     } = useMemberStats();
     const { data: loggedInVoteData } = useVoteDataRow(loggedInUser?.account);
     const { data: myDelegationSoFar } = useMyDelegation();
-    const { data: ongoingRoundData } = useOngoingElectionData({
+    const { data: ongoingElectionData } = useOngoingElectionData({
         enabled: Boolean(loggedInUser) && Boolean(memberStats),
     });
+
+    console.info(
+        "<OngoingElection /> ongoingElectiondata:",
+        ongoingElectionData
+    );
 
     if (isLoadingGlobals || isLoadingMemberStats) {
         return (
@@ -71,7 +76,7 @@ export const OngoingElection = ({ election }: { election: any }) => {
     const roundStartTime = dayjs(roundEndTime).subtract(roundDurationMs);
     const loggedInRank = isStillParticipating ? 0 : loggedInUser?.election_rank;
 
-    console.info("ongoingRoundData:", ongoingRoundData);
+    console.info("ongoingRoundData:", ongoingElectionData);
 
     return (
         <div className="divide-y">
@@ -82,13 +87,15 @@ export const OngoingElection = ({ election }: { election: any }) => {
             <Ongoing.SupportSegment />
 
             <CompletedRounds
-                numCompletedRounds={ongoingRoundData?.completedRounds?.length}
+                numCompletedRounds={
+                    ongoingElectionData?.completedRounds?.length
+                }
             />
             <SignInContainer />
             <SignUpContainer />
             <NoFurtherParticipationInRoundsMessage
                 areRoundsWithNoParticipation={
-                    ongoingRoundData?.areRoundsWithNoParticipation
+                    ongoingElectionData?.areRoundsWithNoParticipation
                 }
             />
             <CurrentRound

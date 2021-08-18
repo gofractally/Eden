@@ -320,6 +320,13 @@ const getParticipantsOfCompletedRounds = async (myDelegation: EdenMember[]) => {
             pParticipantsMemberData!
         );
 
+        console.info("getPoCR() didReachConsensus: edenMembers:", edenMembers);
+        console.info("rep:", edenMembers?.participants?.[0]?.representative);
+        console.info(
+            "didReachConsensus:",
+            isValidDelegate(edenMembers?.participants?.[0]?.representative)
+        );
+
         return {
             participants: edenMembers?.participants, // .length will be number of participants and empty if no round happened
             participantsMemberData,
