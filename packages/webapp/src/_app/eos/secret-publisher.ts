@@ -30,8 +30,6 @@ export const encryptSecretForPublishing = async (
     recipientAccounts: string[],
     info?: string
 ) => {
-    // TODO: Remove all the print messages
-    console.info("encrypting message", message);
     const accountKeys = await fetchAccountKeys(
         [publisherAccount, ...recipientAccounts],
         queryClient
@@ -44,20 +42,16 @@ export const encryptSecretForPublishing = async (
     );
 
     const transientKeyPair = generateEncryptionKey();
-    console.info(transientKeyPair);
 
     const keks = await ecdhRecipientsKeyEncryptionKeys(
         publicKeys,
         transientKeyPair.privateKey,
         info
     );
-    console.info(publicKeys, keks);
 
     const sessionKey = await generateRandomSessionKey();
-    console.info("session key", sessionKey);
 
     const encryptedSessionKeys = await encryptSessionKeys(sessionKey, keks);
-    console.info(encryptedSessionKeys);
 
     const encryptedMessage = await encryptMessage(sessionKey, message);
 
@@ -84,14 +78,6 @@ export const encryptSecretForPublishing = async (
         );
     }
 
-    console.info({
-        encryptedSessionKeys,
-        contractFormatEncryptedKeys,
-        publicKeys,
-        transientKeyPair,
-        encryptedMessage,
-    });
-
     return {
         contractFormatEncryptedKeys,
         encryptedMessage,
@@ -110,13 +96,9 @@ export const decryptPublishedMessage = async (
         recipientPrivateKey,
         PublicKey.fromString(transientPublicKey)
     );
-    console.info("ecdh secret is ", ecdhSecret);
     const hkdfKey = await hkdfSha256FromEcdh(ecdhSecret, info);
-    console.info("hkdf key to unwrap is", hkdfKey);
     const sessionKey = await unwrapSessionKey(encryptedSessionKey, hkdfKey);
-    console.info("unwrapped session key!", sessionKey);
     const message = await decryptMessage(sessionKey, encryptedMessage);
-    console.info("decrypted message:", message);
     return message;
 };
 
@@ -189,7 +171,6 @@ const ecdhRecipientsKeyEncryptionKeys = async (
                 transientPrivateKey,
                 PublicKey.fromString(publicKey)
             );
-            console.info(ecdhSecret);
             return await hkdfSha256FromEcdh(ecdhSecret, info);
         })
     );
