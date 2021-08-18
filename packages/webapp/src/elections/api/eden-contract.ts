@@ -11,6 +11,7 @@ import {
     getRow,
     getTableRawRows,
     getTableRows,
+    isResultFromNoConsensus,
     isResultFromNoConsensus as isResultOfNoConsensus,
     isValidDelegate,
     queryMemberByAccountName,
@@ -321,10 +322,15 @@ const getParticipantsOfCompletedRounds = async (myDelegation: EdenMember[]) => {
             pParticipantsMemberData!
         );
 
+        console.info(
+            "didReachConsensus: ",
+            edenMembers?.participants?.[0]?.representative,
+            edenMembers
+        );
         return {
             participants: edenMembers?.participants, // .length will be number of participants and empty if no round happened
             participantsMemberData,
-            didReachConsensus: isValidDelegate(
+            didReachConsensus: !isResultFromNoConsensus(
                 edenMembers?.participants?.[0]?.representative
             ),
         };
