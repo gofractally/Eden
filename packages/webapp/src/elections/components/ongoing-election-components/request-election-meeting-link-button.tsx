@@ -3,10 +3,13 @@ import { Dayjs } from "dayjs";
 
 import {
     Button,
+    decryptPublishedMessage,
     encryptSecretForPublishing,
     onError,
+    useEncryptedData,
     useMemberGroupParticipants,
     useUALAccount,
+    useVoteDataRow,
     useZoomAccountJWT,
 } from "_app";
 import {
@@ -14,32 +17,87 @@ import {
     zoomConnectAccountLink,
 } from "_api/zoom-commons";
 import { setElectionMeeting } from "elections/transactions";
+import { useEffect, useState } from "react";
+import { calculateGroupId } from "elections/utils";
+import { ActiveStateConfigType } from "elections/interfaces";
+import { getEncryptionKey } from "encryption";
 
-interface MeetingLinkProps {
+interface RequestMeetingLinkProps {
     roundIndex: number;
     meetingStartTime: Dayjs;
     meetingDurationMs: number;
+    electionConfig: ActiveStateConfigType;
 }
 
 export const RequestElectionMeetingLinkButton = ({
     roundIndex,
     meetingStartTime,
     meetingDurationMs,
-}: MeetingLinkProps) => {
+    electionConfig,
+}: RequestMeetingLinkProps) => {
     const [ualAccount] = useUALAccount();
     const [zoomAccountJWT, setZoomAccountJWT] = useZoomAccountJWT(undefined);
     const { data: memberGroup } = useMemberGroupParticipants(
         ualAccount?.accountName
     );
+    const { data: currentVoteDataRow } = useVoteDataRow(
+        ualAccount?.accountName
+    );
 
-    if (!memberGroup) {
+    if (!memberGroup || !currentVoteDataRow) {
         return null;
     }
 
     // TODO: Should we just pass the participants into this component?
     const participantAccounts = memberGroup.map((member) => member.member);
 
-    const roundMeetingLink = undefined; // todo: get the round meeting link if generated
+    const groupId = calculateGroupId(
+        roundIndex,
+        currentVoteDataRow.index,
+        electionConfig
+    );
+
+    const {
+        data: encryptedData,
+        isLoading: loadingEncryptedData,
+    } = useEncryptedData(groupId);
+
+    const [roundMeetingLink, setRoundMeetingLink] = useState("");
+
+    useEffect(() => {
+        decryptMeetingLink();
+    }, [encryptedData]);
+
+    const decryptMeetingLink = async () => {
+        console.info("got encrypted data", encryptedData);
+        if (encryptedData) {
+            try {
+                const encryptionKey = encryptedData.keys.find((k) =>
+                    getEncryptionKey(k.recipient_key)
+                );
+
+                if (!encryptionKey) {
+                    throw new Error(
+                        "Encryption key not found to decrypt the current meeting"
+                    );
+                }
+
+                const decryptedLink = await decryptPublishedMessage(
+                    encryptedData.data,
+                    encryptionKey.recipient_key,
+                    encryptionKey.sender_key,
+                    encryptionKey.key
+                );
+
+                console.info(decryptedLink);
+                setRoundMeetingLink(decryptedLink);
+            } catch (e) {
+                console.error("fail to decrypt meeting link", e);
+            }
+        } else {
+            setRoundMeetingLink("");
+        }
+    };
 
     const linkZoomAccount = () => {
         window.location.href =
@@ -48,12 +106,16 @@ export const RequestElectionMeetingLinkButton = ({
 
     const requestMeetingLink = async () => {
         try {
+            const recipientAccounts = participantAccounts.filter(
+                (account) => account !== ualAccount.accountName
+            );
+
             // check all the participants keys are ready to be encrypted
             // if this dummy encryption fails we know we can't create the meeting
             await encryptSecretForPublishing(
                 "dummy-encryption-test",
                 ualAccount.accountName,
-                participantAccounts
+                recipientAccounts
             );
 
             const topic = `Eden Election - Round #${roundIndex + 1}`;
@@ -75,7 +137,7 @@ export const RequestElectionMeetingLinkButton = ({
             const encryptedMeetingData = await encryptSecretForPublishing(
                 responseData.meeting.join_url,
                 ualAccount.accountName,
-                participantAccounts
+                recipientAccounts
             );
 
             const authorizerAccount = ualAccount.accountName;
@@ -100,7 +162,9 @@ export const RequestElectionMeetingLinkButton = ({
         }
     };
 
-    return roundMeetingLink ? (
+    return loadingEncryptedData ? (
+        <>Loading Meeeting Link...</>
+    ) : roundMeetingLink ? (
         <Button size="sm" href={roundMeetingLink} target="_blank">
             <BiWebcam className="mr-1" />
             Join meeting

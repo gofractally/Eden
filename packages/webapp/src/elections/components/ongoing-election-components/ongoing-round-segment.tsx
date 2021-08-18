@@ -221,6 +221,7 @@ export const OngoingRoundSegment = ({
                         roundIndex={roundIndex}
                         meetingStartTime={meetingStartTime}
                         meetingDurationMs={meetingDurationMs}
+                        electionConfig={electionConfig!}
                     />
                 )}
                 <Heading size={3}>Meeting group members</Heading>

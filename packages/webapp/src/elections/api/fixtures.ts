@@ -53,7 +53,7 @@ export const fixtureCurrentElection: CurrentElection = {
     },
     round: 2,
     saved_seed: "some seed",
-    round_end: "2021-08-15T18:34:45.000",
+    round_end: "2021-08-18T18:34:45.000",
 };
 
 // This data represents the *in-progress*, *first* round (whereas other fixture data represents the *results* of the overall election)
