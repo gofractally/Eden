@@ -426,7 +426,7 @@ export const useOngoingElectionData = (): UseQueryResult<
     // GET participants for ongoing round
     const { data: membersInOngoingRound } = useMemberGroupParticipants(
         loggedInMember?.account,
-        memberStats?.ranks?.length
+        memberStats?.ranks.length
     );
     let { data: votingMemberData } = useMemberDataFromVoteData(
         membersInOngoingRound

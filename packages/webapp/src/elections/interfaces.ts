@@ -1,3 +1,5 @@
+import { EdenMember, MemberData } from "members";
+
 export interface ElectionState {
     lead_representative: string;
     board: string[];
@@ -89,4 +91,33 @@ export enum RoundStage {
     Meeting,
     PostMeeting,
     Complete,
+}
+
+interface ElectionCompletedRound {
+    participants: EdenMember[]; // .length will be number of participants and empty if no round happened
+    participantsMemberData: MemberData[];
+    didReachConsensus?: boolean;
+    delegate?: string;
+}
+
+export interface Election {
+    member?: {
+        memberRank?: number; // undefined if still participating
+        isMemberRegisteredForElection?: boolean;
+        isMemberStillParticipating?: boolean;
+    };
+    isElectionInProgress?: boolean;
+    isMemberStillParticipating?: boolean;
+    isGapInDelegation?: boolean;
+    inProgressRoundIndex?: number; // undefined if no round (or election) in progress
+    highestRoundIndexInWhichMemberWasRepresented?: number; // no ?
+    areRoundsWithNoParticipation: boolean;
+    // .length === number of rounds that have completed (regardless of current member's participation)
+    completedRounds: ElectionCompletedRound[];
+    ongoingRound: {
+        participants: EdenMember[];
+        participantsMemberData: MemberData[];
+        projectedDelegate?: string;
+        isSortitionRound?: boolean;
+    };
 }
