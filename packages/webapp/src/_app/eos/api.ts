@@ -15,15 +15,23 @@ export const CONTRACT_CURRENT_ELECTION_TABLE = "elect.curr";
 export const CONTRACT_VOTE_TABLE = "votes";
 export const CONTRACT_INDUCTION_TABLE = "induction";
 export const CONTRACT_ENDORSEMENT_TABLE = "endorsement";
+a;
+
+export const INDEX_MEMBER_BY_REP = "MemberTableIndexByRep";
+export const INDEX_VOTE_BY_GROUP_INDEX = "VoteTableIndexByGroupIndex";
 
 export const TABLE_INDEXES = {
     [CONTRACT_MEMBER_TABLE]: {
-        index_position: 2,
-        key_type: "i128" as TableKeyType,
+        [INDEX_MEMBER_BY_REP]: {
+            index_position: 2,
+            key_type: "i128" as TableKeyType,
+        },
     },
     [CONTRACT_VOTE_TABLE]: {
-        key_type: "i64" as TableKeyType,
-        index_position: 2,
+        [INDEX_VOTE_BY_GROUP_INDEX]: {
+            key_type: "i64" as TableKeyType,
+            index_position: 2,
+        },
     },
 };
 
