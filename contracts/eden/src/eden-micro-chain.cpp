@@ -75,6 +75,7 @@ namespace boost
 struct by_id;
 struct by_pk;
 struct by_invitee;
+struct by_group;
 
 template <typename T, typename... Indexes>
 using mic = boost::
@@ -95,6 +96,11 @@ using ordered_by_invitee = boost::multi_index::ordered_unique<  //
     boost::multi_index::tag<by_invitee>,
     boost::multi_index::key<&T::invitee>>;
 
+template <typename T>
+using ordered_by_group = boost::multi_index::ordered_unique<  //
+    boost::multi_index::tag<by_group>,
+    boost::multi_index::key<&T::group>>;
+
 uint64_t available_pk(const auto& table, const auto& first)
 {
    auto& idx = table.template get<by_pk>();
@@ -108,7 +114,16 @@ enum tables
    status_table,
    induction_table,
    member_table,
+   election_group_table,
+   vote_table,
 };
+
+struct Vote;
+using vote_key = std::tuple<eosio::name, uint64_t>;
+constexpr const char VoteConnection_name[] = "VoteConnection";
+constexpr const char VoteEdge_name[] = "VoteEdge";
+using VoteConnection =
+    clchain::Connection<clchain::ConnectionConfig<Vote, VoteConnection_name, VoteEdge_name>>;
 
 struct status
 {
@@ -177,8 +192,19 @@ struct member
    std::vector<eosio::name> inductionWitnesses;
    eden::new_member_profile profile;
    std::string inductionVideo;
+
+   VoteConnection votes(std::optional<uint32_t> first,
+                        std::optional<uint32_t> last,
+                        std::optional<std::string> before,
+                        std::optional<std::string> after) const;
 };
-EOSIO_REFLECT(member, account, inviter, inductionWitnesses, profile, inductionVideo)
+EOSIO_REFLECT2(member,
+               account,
+               inviter,
+               inductionWitnesses,
+               profile,
+               inductionVideo,
+               method(votes, "first", "last", "before", "after"))
 
 struct member_object : public chainbase::object<member_table, member_object>
 {
@@ -191,18 +217,49 @@ struct member_object : public chainbase::object<member_table, member_object>
 };
 using member_index = mic<member_object, ordered_by_id<member_object>, ordered_by_pk<member_object>>;
 
+struct election_group_object : public chainbase::object<election_group_table, election_group_object>
+{
+   CHAINBASE_DEFAULT_CONSTRUCTOR(election_group_object)
+
+   // TODO: identify election
+   id_type id;
+   uint8_t round;
+   eosio::name winner;
+};
+using election_group_index = mic<election_group_object, ordered_by_id<election_group_object>>;
+
+struct vote_object : public chainbase::object<vote_table, vote_object>
+{
+   CHAINBASE_DEFAULT_CONSTRUCTOR(vote_object)
+
+   id_type id;
+   uint64_t group_id;
+   eosio::name voter;
+   eosio::name candidate;
+
+   vote_key pk() const { return {voter, group_id}; }
+   auto group() const { return std::tuple{group_id, voter}; }
+};
+using vote_index = mic<vote_object,
+                       ordered_by_id<vote_object>,
+                       ordered_by_pk<vote_object>,
+                       ordered_by_group<vote_object>>;
+
 struct database
 {
    chainbase::database db;
    chainbase::generic_index<status_index> status;
    chainbase::generic_index<induction_index> inductions;
    chainbase::generic_index<member_index> members;
+   chainbase::generic_index<election_group_index> election_groups;
+   chainbase::generic_index<vote_index> votes;
 
    database()
    {
       db.add_index(status);
       db.add_index(inductions);
       db.add_index(members);
+      db.add_index(election_groups);
    }
 };
 database db;
@@ -255,11 +312,79 @@ const auto& get(Table& table, const Key& key)
    return *it;
 }
 
+template <typename Tag, typename Table, typename Key>
+const typename Table::value_type* get_ptr(Table& table, const Key& key)
+{
+   auto& idx = table.template get<Tag>();
+   auto it = idx.find(key);
+   if (it == idx.end())
+      return nullptr;
+   return &*it;
+}
+
 const auto& get_status()
 {
    auto& idx = db.status.get<by_id>();
    eosio::check(idx.size() == 1, "missing genesis action");
    return *idx.begin();
+}
+
+const member* get_member(eosio::name account)
+{
+   if (auto* member_object = get_ptr<by_pk>(db.members, account))
+      return &member_object->member;
+   return nullptr;
+}
+
+struct ElectionGroup
+{
+   const election_group_object* obj;
+
+   uint64_t id() const { return obj->id._id; }
+   uint8_t round() const { return obj->round; }
+   auto winner() const { return get_member(obj->winner); }
+   std::vector<Vote> votes() const;
+};
+EOSIO_REFLECT2(ElectionGroup, id, round, winner, votes)
+
+struct Vote
+{
+   const vote_object* obj;
+
+   auto voter() const { return get_member(obj->voter); }
+   auto candidate() const { return get_member(obj->candidate); }
+   auto group() const { return ElectionGroup{&get<by_id>(db.election_groups, obj->group_id)}; }
+};
+EOSIO_REFLECT2(Vote, voter, candidate, group)
+
+std::vector<Vote> ElectionGroup::votes() const
+{
+   std::vector<Vote> result;
+   auto& idx = db.votes.get<by_group>();
+   for (auto it = idx.lower_bound(std::tuple{obj->id._id, eosio::name{0}});
+        it != idx.end() && it->group_id == obj->id._id; ++it)
+   {
+      result.push_back(Vote{&*it});
+   }
+   return result;
+}
+
+VoteConnection member::votes(std::optional<uint32_t> first,
+                             std::optional<uint32_t> last,
+                             std::optional<std::string> before,
+                             std::optional<std::string> after) const
+{
+   return clchain::make_connection<VoteConnection, vote_key>(
+       std::nullopt,                                 // gt
+       vote_key{account, 0},                         // ge
+       vote_key{eosio::name{account.value + 1}, 0},  // lt
+       std::nullopt,                                 // le
+       first, last, before, after,                   //
+       db.votes.get<by_pk>(),                        //
+       [](auto& obj) { return obj.pk(); },           //
+       [](auto& obj) { return Vote{&obj}; },         //
+       [](auto& votes, auto key) { return votes.lower_bound(key); },
+       [](auto& votes, auto key) { return votes.upper_bound(key); });
 }
 
 void add_genesis_member(const status& status, eosio::name member)
@@ -290,6 +415,8 @@ void clearall()
    clearall(db.status);
    clearall(db.inductions);
    clearall(db.members);
+   clearall(db.election_groups);
+   clearall(db.votes);
 }
 
 void genesis(std::string community,
@@ -387,6 +514,35 @@ void inductdonate(eosio::name payer, uint64_t id, eosio::asset quantity)
    }
 }
 
+void resign(eosio::name account)
+{
+   remove_if_exists<by_pk>(db.members, account);
+}
+
+void electreport(uint8_t round, std::vector<eden::vote_report> reports, eosio::name winner)
+{
+   auto& group = db.election_groups.emplace([&](auto& group) {
+      group.round = round;
+      group.winner = winner;
+   });
+   for (auto& report : reports)
+   {
+      db.votes.emplace([&](auto& vote) {
+         vote.group_id = group.id._id;
+         vote.voter = report.voter;
+         vote.candidate = report.candidate;
+      });
+   }
+}
+
+void electopt(eosio::name voter, bool participating)
+{
+   // TODO: need a cleaner signal that a new election began
+   // TODO: track multiple elections
+   clearall(db.election_groups);
+   clearall(db.votes);
+}
+
 template <typename... Args>
 void call(void (*f)(Args...), const std::vector<char>& data)
 {
@@ -421,6 +577,12 @@ void filter_block(const subchain::eosio_block& block)
                call(inductcancel, action.hexData.data);
             else if (action.name == "inductdonate"_n)
                call(inductdonate, action.hexData.data);
+            else if (action.name == "resign"_n)
+               call(resign, action.hexData.data);
+            else if (action.name == "electreport"_n)
+               call(electreport, action.hexData.data);
+            else if (action.name == "electopt"_n)
+               call(electopt, action.hexData.data);
          }
       }
    }

@@ -107,7 +107,8 @@ namespace clchain
       if constexpr (eosio::is_std_optional<T>())
          return generate_gql_whole_name((typename T::value_type*)nullptr, true);
       else if constexpr (std::is_pointer<T>())
-         return generate_gql_whole_name((T) nullptr, true);
+         return generate_gql_whole_name((std::remove_const_t<std::remove_pointer_t<T>>*)nullptr,
+                                        true);
       else if constexpr (eosio::is_std_unique_ptr<T>())
          return generate_gql_whole_name((typename T::element_type*)nullptr, true);
       else if constexpr (eosio::is_std_reference_wrapper<T>())
@@ -125,7 +126,8 @@ namespace clchain
       if constexpr (eosio::is_std_optional<T>())
          fill_gql_schema((typename T::value_type*)nullptr, stream, defined_types);
       else if constexpr (std::is_pointer<T>())
-         fill_gql_schema((T) nullptr, stream, defined_types);
+         fill_gql_schema((std::remove_const_t<std::remove_pointer_t<T>>*)nullptr, stream,
+                         defined_types);
       else if constexpr (eosio::is_std_unique_ptr<T>())
          fill_gql_schema((typename T::element_type*)nullptr, stream, defined_types);
       else if constexpr (eosio::is_std_reference_wrapper<T>())
