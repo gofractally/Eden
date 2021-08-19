@@ -158,11 +158,14 @@ const CurrentRound = (props: CurrentRoundProps) => {
         return <Ongoing.ChiefsRoundSegment roundEndTime={props.roundEndTime} />;
     }
 
-    if (!currentMember) return null;
+    if (
+        !currentMember ||
+        !props.ongoingElectionData?.isMemberStillParticipating
+    )
+        return null;
 
     return (
         <Ongoing.OngoingRoundSegment
-            ongoingElectionData={props.ongoingElectionData}
             electionState={props.electionState}
             roundIndex={props.roundIndex}
             roundStartTime={props.roundStartTime}

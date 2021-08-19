@@ -47,7 +47,6 @@ export interface RoundSegmentProps {
 
 // TODO: Much of the building up of the data shouldn't be done in the UI layer. What do we want the API to provide? What data does this UI really need? We could even define a new OngoingElection type to provide to this UI.
 export const OngoingRoundSegment = ({
-    ongoingElectionData,
     electionState,
     roundIndex,
     roundStartTime,
@@ -203,7 +202,6 @@ export const OngoingRoundSegment = ({
         setIsSubmittingVote(false);
     };
 
-    if (!ongoingElectionData?.isMemberStillParticipating) return null;
     return (
         // TODO: Move this out into a separate component to simplify and make this more readable
         <Expander
