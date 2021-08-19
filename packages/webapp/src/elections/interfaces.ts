@@ -4,6 +4,16 @@ export interface ElectionState {
     last_election_time: string;
 }
 
+export enum ElectionStatus {
+    PendingDate = "current_election_state_pending_date",
+    Registration = "current_election_state_registration",
+    Seeding = "current_election_state_seeding",
+    Voters = "current_election_state_init_voters",
+    Active = "current_election_state_active",
+    Round = "current_election_state_post_round",
+    Final = "current_election_state_final",
+}
+
 interface CurrentElection_registrationState {
     start_time: string;
     election_threshold?: number;
@@ -32,7 +42,9 @@ export interface ActiveStateConfigType {
     num_participants: number;
     num_groups: number;
 }
-interface CurrentElection_activeState {
+
+// TODO: reconsider the TS error I was getting that forced me to export this. Preferably, we don't export it
+export interface CurrentElection_activeState {
     round: number;
     config: ActiveStateConfigType;
     saved_seed: string;
@@ -70,4 +82,11 @@ export interface VoteData {
     round: number;
     index: number;
     candidate: string;
+}
+
+export enum RoundStage {
+    PreMeeting,
+    Meeting,
+    PostMeeting,
+    Complete,
 }

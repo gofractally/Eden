@@ -1,5 +1,7 @@
 import { zoom } from "config";
 
+import { AvailableMeetingClients } from "./schemas";
+
 export const ZOOM_AUTHORIZATION = Buffer.from(
     zoom.clientKey + ":" + zoom.clientSecret
 ).toString("base64");
@@ -51,9 +53,65 @@ export const zoomRefreshAuth = async (refreshToken: string) => {
 };
 
 export const zoomAccountJWTIsExpired = (zoomAccountJWT: ZoomAccountJWT) => {
-    return false; // TODO: fix and calculate it properly
+    const accessTokenEncodedData = zoomAccountJWT.access_token.split(".");
+    if (accessTokenEncodedData.length !== 3)
+        throw new Error("invalid zoom jwt payload");
+
+    const accessTokenData = JSON.parse(atob(accessTokenEncodedData[1]));
+    if (!accessTokenData.exp) {
+        throw new Error("can't parse zoom jwt expiration date");
+    }
+    return Date.now() > accessTokenData.exp * 1000;
 };
 
 export const zoomResponseIsInvalidAccess = (response: any) => {
     return response && response.error && response.error.code === 124; // invalid access token
+};
+
+export const generateZoomMeetingLink = async (
+    zoomAccountJWT: any,
+    setZoomAccountJWT: (updatedJwt: any) => void,
+    topic: string,
+    durationInMinutes: number,
+    startTime: string
+) => {
+    let accessToken = zoomAccountJWT.access_token;
+    if (!accessToken) {
+        throw new Error("Invalid AccessToken");
+    }
+
+    if (zoomAccountJWTIsExpired(zoomAccountJWT)) {
+        const newTokensResponse = await fetch(`/api/refresh-zoom`, {
+            method: "POST",
+            body: JSON.stringify({
+                refreshToken: zoomAccountJWT.refresh_token,
+            }),
+        });
+
+        const newTokens = await newTokensResponse.json();
+        if (!newTokensResponse.ok) {
+            setZoomAccountJWT(undefined);
+        }
+
+        setZoomAccountJWT(newTokens);
+        accessToken = newTokens.access_token;
+    }
+
+    const response = await fetch(`/api/meeting-links`, {
+        method: "POST",
+        body: JSON.stringify({
+            accessToken,
+            client: AvailableMeetingClients.Zoom,
+            topic,
+            duration: durationInMinutes,
+            startTime,
+        }),
+    });
+
+    const responseData = await response.json();
+    if (zoomResponseIsInvalidAccess(responseData)) {
+        setZoomAccountJWT(undefined);
+    }
+
+    return responseData;
 };

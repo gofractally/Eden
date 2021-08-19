@@ -1,4 +1,4 @@
-import { getEncryptionKey } from "encryption";
+import { EncryptedKey, getEncryptionKey } from "encryption";
 import { PrivateKey, PublicKey } from "eosjs/dist/eosjs-jssig";
 import { generateKeyPair } from "eosjs/dist/eosjs-key-conversions";
 import { KeyType } from "eosjs/dist/eosjs-numeric";
@@ -30,56 +30,58 @@ export const encryptSecretForPublishing = async (
     recipientAccounts: string[],
     info?: string
 ) => {
-    // TODO: Remove all the print messages
-    console.info("encrypting message", message);
     const accountKeys = await fetchAccountKeys(
         [publisherAccount, ...recipientAccounts],
         queryClient
     );
 
-    const [publisherKey, ...recipientKeys] = validateFetchedKeys(
+    const publicKeys = validateFetchedKeys(
         accountKeys,
         publisherAccount,
         recipientAccounts
     );
 
     const transientKeyPair = generateEncryptionKey();
-    console.info(transientKeyPair);
 
-    const keks = await ecdhRecipientsKeyEncriptionKeys(
-        [publisherKey, ...recipientKeys],
+    const keks = await ecdhRecipientsKeyEncryptionKeys(
+        publicKeys,
         transientKeyPair.privateKey,
         info
     );
-    console.info(keks);
 
     const sessionKey = await generateRandomSessionKey();
-    console.info("session key", sessionKey);
 
     const encryptedSessionKeys = await encryptSessionKeys(sessionKey, keks);
-    console.info(encryptedSessionKeys);
 
     const encryptedMessage = await encryptMessage(sessionKey, message);
 
-    console.info({
-        encryptedSessionKeys,
-        publisherKey,
-        recipientKeys,
-        transientKeyPair,
-        encryptedMessage,
-    });
+    const senderKey = transientKeyPair.publicKey.toString();
+    const contractFormatEncryptedKeys: EncryptedKey[] = encryptedSessionKeys.map(
+        (encryptedKey, i) => ({
+            sender_key: senderKey,
+            recipient_key: publicKeys[i],
+            key: encryptedKey,
+        })
+    );
 
-    // TODO: remove this test
-    console.info("testing decryption...");
-    await decryptPublishedMessage(
+    const publisherKey = publicKeys[0];
+    const decryptedMessage = await decryptPublishedMessage(
         encryptedMessage,
         publisherKey,
-        transientKeyPair.publicKey.toString(),
+        senderKey,
         encryptedSessionKeys[0],
         info
     );
+    if (decryptedMessage !== message) {
+        throw new Error(
+            "an error occurred during encryption/decryption of the data"
+        );
+    }
 
-    return {};
+    return {
+        contractFormatEncryptedKeys,
+        encryptedMessage,
+    };
 };
 
 export const decryptPublishedMessage = async (
@@ -94,13 +96,9 @@ export const decryptPublishedMessage = async (
         recipientPrivateKey,
         PublicKey.fromString(transientPublicKey)
     );
-    console.info("ecdh secret is ", ecdhSecret);
     const hkdfKey = await hkdfSha256FromEcdh(ecdhSecret, info);
-    console.info("hkdf key to unwrap is", hkdfKey);
     const sessionKey = await unwrapSessionKey(encryptedSessionKey, hkdfKey);
-    console.info("unwrapped session key!", sessionKey);
     const message = await decryptMessage(sessionKey, encryptedMessage);
-    console.info("decrypted message:", message);
     return message;
 };
 
@@ -108,9 +106,10 @@ export const generateEncryptionKey = () =>
     generateKeyPair(KeyType.k1, { secureEnv: true });
 
 const retrieveRecipientPrivateKey = (publicKey: string): PrivateKey => {
-    // TODO: find the corresponding private key in the localstorage, or else throw
-    console.info("retrieving publicKey...");
-    const rawPrivateKey = "5KcMypBPGByXbeBphsVzyyzUvg31tWNKsgrfXs2MmanYgYf4gao";
+    const rawPrivateKey = getEncryptionKey(publicKey);
+    if (!rawPrivateKey) {
+        throw new Error("fail to retrieve private key for decrypting message");
+    }
     return PrivateKey.fromString(rawPrivateKey);
 };
 
@@ -138,30 +137,33 @@ const validateFetchedKeys = (
 ) => {
     const publisherKey = accountKeys[publisherAccount];
     if (!publisherKey) {
-        throw new Error("Publisher has not defined an encryption key");
+        throw new Error("You have not defined an encryption key");
     }
 
     if (!getEncryptionKey(publisherKey)) {
         throw new Error(
-            "Publisher encryption key could not be found in this browser"
+            "Your encryption key could not be found in this browser"
         );
     }
 
     const recipientKeys: string[] = [];
     for (const recipientAccount of recipientAccounts) {
         const recipientKey = accountKeys[recipientAccount];
-        if (!recipientKey) {
-            throw new Error(
-                `Recipient ${recipientAccount} has not set an encryption key`
-            );
+        if (recipientKey) {
+            recipientKeys.push(recipientKey);
         }
-        recipientKeys.push(recipientKey);
+    }
+
+    if (recipientKeys.length < 1) {
+        throw new Error(
+            "No other recipients have enabled a valid encryption key"
+        );
     }
 
     return [publisherKey, ...recipientKeys];
 };
 
-const ecdhRecipientsKeyEncriptionKeys = async (
+const ecdhRecipientsKeyEncryptionKeys = async (
     recipientPublicKeys: string[],
     transientPrivateKey: PrivateKey,
     info?: string
@@ -172,7 +174,6 @@ const ecdhRecipientsKeyEncriptionKeys = async (
                 transientPrivateKey,
                 PublicKey.fromString(publicKey)
             );
-            console.info(ecdhSecret);
             return await hkdfSha256FromEcdh(ecdhSecret, info);
         })
     );
@@ -185,7 +186,7 @@ const deriveEcdhSecret = (
     return eosPrivateKeyA
         .toElliptic()
         .derive(eosPublicKeyB.toElliptic().getPublic())
-        .toArrayLike(ArrayBuffer);
+        .toArrayLike(Uint8Array).buffer;
 };
 
 const hkdfSha256FromEcdh = async (
@@ -278,7 +279,7 @@ const unwrapSessionKey = async (
 const decryptMessage = async (
     sessionKey: CryptoKey,
     encryptedMessage: Uint8Array
-): Promise<String> => {
+): Promise<string> => {
     const encodedMessage = await crypto.subtle.decrypt(
         {
             name: "AES-GCM",

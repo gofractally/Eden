@@ -15,5 +15,6 @@ namespace eden
 
    inline constexpr uint32_t max_gc_on_induction = 32;
    inline constexpr uint32_t election_seeding_window = 24 * 60 * 60;
+   inline constexpr uint32_t election_final_seeding_window = 2 * 60 * 60;
    inline constexpr uint16_t min_election_threshold = 1000;
 }  // namespace eden

@@ -1,12 +1,15 @@
 import dayjs from "dayjs";
+import * as eosjsSerialize from "eosjs/dist/eosjs-serialize";
+import * as eosjsNumeric from "eosjs/dist/eosjs-numeric";
 
-import { VoteData } from "elections/interfaces";
+import { ActiveStateConfigType, VoteData } from "./interfaces";
+import { getMemberGroupFromIndex } from "./api";
 
 export const extractElectionDates = (election: any) => {
-    const rawStartDateTime = `${
-        (election?.election_seeder && election.election_seeder.end_time) ||
-        election?.start_time
-    }Z`;
+    const rawStartDateTime =
+        (election?.election_seeder?.end_time ||
+            election?.start_time ||
+            election?.seed?.end_time) + "Z";
 
     if (!rawStartDateTime) {
         throw new Error("Error parsing the Election start date.");
@@ -73,4 +76,21 @@ export const tallyVotesFromVoteData = (participantVoteData: VoteData[]) => {
         leaderIsVotingForSelf,
         isThereConsensus: didReachConsensus,
     };
+};
+
+export const calculateGroupId = (
+    round: number,
+    voterIndex: number,
+    config: ActiveStateConfigType
+): string => {
+    const totalParticipants = config.num_participants;
+    const numGroups = config.num_groups;
+
+    const { groupNumber } = getMemberGroupFromIndex(
+        voterIndex,
+        totalParticipants,
+        numGroups
+    );
+
+    return `${(round << 16) | groupNumber}`;
 };

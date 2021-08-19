@@ -47,4 +47,10 @@ namespace eden
       data.election_start_time = start_time;
       get_global_singleton(contract).set(data, eosio::same_payer);
    }
+
+   void globals::set_election_round_duration(uint32_t duration)
+   {
+      data.election_round_time_sec = duration;
+      get_global_singleton(contract).set(data, eosio::same_payer);
+   }
 }  // namespace eden

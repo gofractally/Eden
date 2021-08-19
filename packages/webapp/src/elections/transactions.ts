@@ -11,7 +11,7 @@ export const setElectionMeeting = (
     actions: [
         {
             account: edenContractAccount,
-            name: "inductmeetin",
+            name: "electmeeting",
             authorization: [
                 {
                     actor: authorizerAccount,
@@ -46,6 +46,30 @@ export const setElectionParticipation = (
             data: {
                 member: authorizerAccount,
                 participating,
+            },
+        },
+    ],
+});
+
+export const setVote = (
+    authorizerAccount: string,
+    round: number,
+    candidate: string
+) => ({
+    actions: [
+        {
+            account: edenContractAccount,
+            name: "electvote",
+            authorization: [
+                {
+                    actor: authorizerAccount,
+                    permission: "active",
+                },
+            ],
+            data: {
+                round,
+                voter: authorizerAccount,
+                candidate,
             },
         },
     ],

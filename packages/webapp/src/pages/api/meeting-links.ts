@@ -39,7 +39,7 @@ export const generateMeeting = async (meetingRequest: MeetingLinkRequest) => {
     console.info(meetingRequest);
     switch (meetingRequest.client as AvailableMeetingClients) {
         case AvailableMeetingClients.Zoom:
-            return generateZoomMeeting(meetingRequest.accessToken);
+            return generateZoomMeeting(meetingRequest);
         default:
             throw new BadRequestError("meeting client not supported");
     }
@@ -49,13 +49,11 @@ export const generateMeeting = async (meetingRequest: MeetingLinkRequest) => {
  * Zoom Meeting Create API can be found here:
  * https://marketplace.zoom.us/docs/api-reference/zoom-api/meetings/meetingcreate
  */
-const generateZoomMeeting = async (accessToken: string) => {
+const generateZoomMeeting = async (meetingRequest: MeetingLinkRequest) => {
     const body = {
-        topic: `Test Eden Election #${Math.floor(Math.random() * 100_000_000)}`,
-        duration: 40,
-        start_time: `2025-08-15T${Math.floor(Math.random() * 23)}:${Math.floor(
-            Math.random() * 59
-        )}:00Z`,
+        topic: meetingRequest.topic,
+        duration: meetingRequest.duration,
+        start_time: meetingRequest.startTime,
         password: uuidv4().substr(0, 8),
         settings: {
             join_before_host: true,
@@ -68,7 +66,7 @@ const generateZoomMeeting = async (accessToken: string) => {
     const response = await fetch(`https://api.zoom.us/v2/users/me/meetings`, {
         method: "POST",
         headers: {
-            Authorization: `Bearer ${accessToken}`,
+            Authorization: `Bearer ${meetingRequest.accessToken}`,
             "Content-Type": "application/json",
         },
         body: JSON.stringify(body),
