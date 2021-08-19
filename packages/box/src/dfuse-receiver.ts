@@ -126,7 +126,7 @@ export default class DfuseReceiver {
                 this.unpushedTransactions.length - 1
             ];
             if (trx.undo != prev.undo || trx.block.id != prev.block.id) {
-                if (prev.undo) this.storage.undo(prev.block.id);
+                if (prev.undo) this.storage.undoEosioNum(prev.block.num);
                 else if (prev.trace) {
                     const block = { ...prev.block, transactions: [] as any[] };
                     for (let t of this.unpushedTransactions) {

@@ -397,7 +397,6 @@ void call(void (*f)(Args...), const std::vector<char>& data)
    std::apply([f](auto&&... args) { f(std::move(args)...); }, t);
 }
 
-// TODO: configurable contract accounts
 void filter_block(const subchain::eosio_block& block)
 {
    for (auto& trx : block.transactions)
@@ -429,15 +428,20 @@ void filter_block(const subchain::eosio_block& block)
 
 subchain::block_log block_log;
 
+void forked_n_blocks(size_t n)
+{
+   if (n)
+      printf("forked %d blocks, %d now in log\n", (int)n, (int)block_log.blocks.size());
+   while (n--)
+      db.db.undo();
+}
+
 bool add_block(subchain::block_with_id&& bi, uint32_t eosio_irreversible)
 {
    auto [status, num_forked] = block_log.add_block(bi);
    if (status)
       return false;
-   if (num_forked)
-      printf("forked %d blocks, %d now in log\n", (int)num_forked, (int)block_log.blocks.size());
-   while (num_forked--)
-      db.db.undo();
+   forked_n_blocks(num_forked);
    if (auto* b = block_log.block_before_eosio_num(eosio_irreversible + 1))
       block_log.irreversible = std::max(block_log.irreversible, b->num);
    db.db.commit(block_log.irreversible);
@@ -519,6 +523,17 @@ bool add_block(subchain::block&& eden_block, uint32_t eosio_irreversible)
 [[clang::export_name("trimBlocks")]] void trimBlocks()
 {
    block_log.trim();
+}
+
+[[clang::export_name("undoBlockNum")]] void undoBlockNum(uint32_t blockNum)
+{
+   forked_n_blocks(block_log.undo(blockNum));
+}
+
+[[clang::export_name("undoEosioNum")]] void undoEosioNum(uint32_t eosioNum)
+{
+   if (auto* b = block_log.block_by_eosio_num(eosioNum))
+      forked_n_blocks(block_log.undo(b->num));
 }
 
 [[clang::export_name("getBlock")]] bool getBlock(uint32_t num)

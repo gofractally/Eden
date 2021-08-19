@@ -154,6 +154,18 @@ namespace subchain
          return {appended, num_forked};
       }
 
+      size_t undo(uint32_t block_num)
+      {
+         if (block_num <= irreversible)
+            return 0;
+         auto it = lower_bound_by_num(block_num);
+         if (it == blocks.end() || it[0]->num != block_num)
+            return 0;
+         size_t num_removed = blocks.end() - it;
+         blocks.erase(it, blocks.end());
+         return num_removed;
+      }
+
       // Keep only 1 irreversible block
       void trim()
       {

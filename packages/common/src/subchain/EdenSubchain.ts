@@ -176,8 +176,16 @@ export class EdenSubchain {
         });
     }
 
-    undo(blockId: string) {
-        // TODO
+    undoBlockNum(blockNum: number) {
+        this.protect(() => {
+            this.exports.undoBlockNum(blockNum);
+        });
+    }
+
+    undoEosioNum(eosioNum: number) {
+        this.protect(() => {
+            this.exports.undoEosioNum(eosioNum);
+        });
     }
 
     getBlock(num: number) {

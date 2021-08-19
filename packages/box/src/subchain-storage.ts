@@ -99,8 +99,12 @@ export class Storage {
         }
     }
 
-    undo(id: string) {
-        // TODO
+    undoEosioNum(eosioNum: number) {
+        this.protect(() => {
+            this.blocksWasm!.undoEosioNum(eosioNum);
+            this.stateWasm!.undoEosioNum(eosioNum);
+        });
+        this.changed();
     }
 
     pushJsonBlock(jsonBlock: string, irreversible: number) {
