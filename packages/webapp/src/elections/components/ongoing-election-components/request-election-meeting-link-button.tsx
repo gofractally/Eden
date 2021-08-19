@@ -2,6 +2,7 @@ import { BiWebcam } from "react-icons/bi";
 import { Dayjs } from "dayjs";
 import { useEffect, useState } from "react";
 import { useQueryClient } from "react-query";
+import { BsExclamationTriangle } from "react-icons/bs";
 
 import {
     Button,
@@ -9,6 +10,7 @@ import {
     encryptSecretForPublishing,
     onError,
     queryVoteDataRow,
+    Text,
     useEncryptedData,
     useMemberGroupParticipants,
     useUALAccount,
@@ -21,14 +23,15 @@ import {
 } from "_api/zoom-commons";
 import { setElectionMeeting } from "elections/transactions";
 import { calculateGroupId } from "elections/utils";
-import { ActiveStateConfigType } from "elections/interfaces";
-import { getEncryptionKey } from "encryption";
+import { ActiveStateConfigType, RoundStage } from "elections/interfaces";
+import { EncryptedData, getEncryptionKey } from "encryption";
 
 interface RequestMeetingLinkProps {
     roundIndex: number;
     meetingStartTime: Dayjs;
     meetingDurationMs: number;
     electionConfig: ActiveStateConfigType;
+    stage: RoundStage;
 }
 
 export const RequestElectionMeetingLinkButton = ({
@@ -36,6 +39,7 @@ export const RequestElectionMeetingLinkButton = ({
     meetingStartTime,
     meetingDurationMs,
     electionConfig,
+    stage,
 }: RequestMeetingLinkProps) => {
     const queryClient = useQueryClient();
     const [ualAccount] = useUALAccount();
@@ -56,41 +60,6 @@ export const RequestElectionMeetingLinkButton = ({
         data: encryptedData,
         isLoading: loadingEncryptedData,
     } = useEncryptedData("election", groupId);
-
-    const [roundMeetingLink, setRoundMeetingLink] = useState("");
-
-    useEffect(() => {
-        decryptMeetingLink();
-    }, [encryptedData]);
-
-    const decryptMeetingLink = async () => {
-        if (encryptedData) {
-            try {
-                const encryptionKey = encryptedData.keys.find((k) =>
-                    getEncryptionKey(k.recipient_key)
-                );
-
-                if (!encryptionKey) {
-                    throw new Error(
-                        "Encryption key not found to decrypt the current meeting"
-                    );
-                }
-
-                const decryptedLink = await decryptPublishedMessage(
-                    encryptedData.data,
-                    encryptionKey.recipient_key,
-                    encryptionKey.sender_key,
-                    encryptionKey.key
-                );
-
-                setRoundMeetingLink(decryptedLink);
-            } catch (e) {
-                console.error("fail to decrypt meeting link", e);
-            }
-        } else {
-            setRoundMeetingLink("");
-        }
-    };
 
     if (!memberGroup || !currentVoteDataRow) {
         return null;
@@ -164,11 +133,8 @@ export const RequestElectionMeetingLinkButton = ({
 
     return loadingEncryptedData ? (
         <>Loading Meeeting Link...</>
-    ) : roundMeetingLink ? (
-        <Button size="sm" href={roundMeetingLink} target="_blank">
-            <BiWebcam className="mr-1" />
-            Join meeting
-        </Button>
+    ) : encryptedData ? (
+        <JoinMeetingButton stage={stage} encryptedData={encryptedData} />
     ) : zoomAccountJWT ? (
         <Button size="sm" onClick={requestMeetingLink}>
             <BiWebcam className="mr-1" />
@@ -180,4 +146,78 @@ export const RequestElectionMeetingLinkButton = ({
             Link Zoom Account to Request a meeting link
         </Button>
     );
+};
+
+interface JoinMeetingButtonProps {
+    stage: RoundStage;
+    encryptedData: EncryptedData;
+}
+
+const JoinMeetingButton = ({
+    stage,
+    encryptedData,
+}: JoinMeetingButtonProps) => {
+    console.info(stage);
+
+    const [roundMeetingLink, setRoundMeetingLink] = useState("");
+    const [
+        failedToDecryptMeetingLink,
+        setFailedToDecryptMeetingLink,
+    ] = useState(false);
+
+    useEffect(() => {
+        decryptMeetingLink();
+    }, [encryptedData]);
+
+    const decryptMeetingLink = async () => {
+        if (encryptedData) {
+            try {
+                const encryptionKey = encryptedData.keys.find((k) =>
+                    getEncryptionKey(k.recipient_key)
+                );
+
+                if (!encryptionKey) {
+                    throw new Error(
+                        "Encryption key not found to decrypt the current meeting"
+                    );
+                }
+
+                const decryptedLink = await decryptPublishedMessage(
+                    encryptedData.data,
+                    encryptionKey.recipient_key,
+                    encryptionKey.sender_key,
+                    encryptionKey.key
+                );
+
+                setRoundMeetingLink(decryptedLink);
+            } catch (e) {
+                console.error("fail to decrypt meeting link", e);
+                onError(e.message);
+                setFailedToDecryptMeetingLink(true);
+            }
+        } else {
+            setRoundMeetingLink("");
+        }
+    };
+
+    return failedToDecryptMeetingLink ? (
+        <div className="flex items-center space-x-2">
+            <Text type="danger">
+                <BsExclamationTriangle className="mr-1 mb-px" />
+            </Text>
+            <Text type="danger">
+                Failed to retrieve the meeting link. Please reach out to someone
+                from your election round group or access the support.
+            </Text>
+        </div>
+    ) : stage === RoundStage.PreMeeting ? (
+        <Text type="info">
+            Waiting for meeting to start to display the join button.
+        </Text>
+    ) : roundMeetingLink ? (
+        <Button size="sm" href={roundMeetingLink} target="_blank">
+            <BiWebcam className="mr-1" />
+            Join meeting
+        </Button>
+    ) : null;
 };
