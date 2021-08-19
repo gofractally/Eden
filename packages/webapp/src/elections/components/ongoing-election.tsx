@@ -18,12 +18,10 @@ import {
 
 import * as Ongoing from "./ongoing-election-components";
 
-// TODO: How do we get previous round info for rounds that didn't come to consensus? Do that here.
 // TODO: Non-participating-eden-member currently sees error.
 // TODO: Specifically, what happens to CompletedRound component when non-participating-eden-member logs in?
 // TODO: Make sure time zone changes during election are handled properly
 export const OngoingElection = ({ election }: { election: any }) => {
-    const { data: loggedInUser } = useCurrentMember();
     const {
         data: globals,
         isLoading: isLoadingGlobals,
@@ -35,11 +33,6 @@ export const OngoingElection = ({ election }: { election: any }) => {
         isError: isErrorMemberStats,
     } = useMemberStats();
     const { data: ongoingElectionData } = useOngoingElectionData();
-
-    console.info(
-        "<OngoingElection /> ongoingElectiondata:",
-        ongoingElectionData
-    );
 
     if (isLoadingGlobals || isLoadingMemberStats) {
         return (
@@ -54,20 +47,12 @@ export const OngoingElection = ({ election }: { election: any }) => {
         return <ErrorLoadingElection />;
     }
 
-    // TODO: Model all this data to be self-consistent and to abstract the frontend from the complexities of the backend logic
-    // start with logged-in user
-    // check that they registered for the election (and cast at least one vote?)
-    // see if they're still participating
-    // Below in the UI, iterate through myDelegation *only* up to the level of currentElection.round (to avoid old member data)
-
     const roundDurationSec = globals.election_round_time_sec;
     const roundDurationMs = roundDurationSec * 1000;
     const roundIndex = election.round ?? memberStats.ranks.length;
     const roundEndTimeRaw = election.round_end ?? election.seed.end_time;
     const roundEndTime = dayjs(roundEndTimeRaw + "Z");
     const roundStartTime = dayjs(roundEndTime).subtract(roundDurationMs);
-
-    console.info("ongoingElectionData:", ongoingElectionData);
 
     return (
         <div className="divide-y">
@@ -119,12 +104,13 @@ const NoParticipationInFurtherRoundsMessage = ({
             />
             <div className="flex-1">
                 <Text size="sm">
-                    You aren't involved in further rounds. Please{" "}
+                    You are not involved in further rounds. Please{" "}
                     <Link href={""}>join the Community Room</Link> &amp; Support
                     for news and updates of the ongoing election. The results
                     will be displayed in the My Delegation area after the
-                    election is complete. Once the Chief Delegates are selected,
-                    they are displayed below.
+                    election is complete.{" "}
+                    {!ongoingElectionData.inSortitionRound &&
+                        "Once the Chief Delegates are selected, they will be displayed below."}
                 </Text>
             </div>
         </Container>

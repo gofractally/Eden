@@ -169,9 +169,9 @@ export const OngoingRoundSegment = ({
         (vs) => vs.member === loggedInMember?.account
     );
 
-    const userVotingFor =
-        voteData &&
-        members?.find((m) => m.account === userVoterStats?.candidate);
+    const userVotingFor = members?.find(
+        (m) => m.account === userVoterStats?.candidate
+    );
 
     const onSubmitVote = async () => {
         if (!selectedMember) return;
@@ -243,9 +243,7 @@ export const OngoingRoundSegment = ({
                         : "This round is finalizing. Please submit any outstanding votes now. You will be able to come back later to upload election videos if your video isn't ready yet."}
                 </Text>
             </Container>
-            {voteData?.length === 0 ? (
-                <div>you didn't participate in this round</div>
-            ) : voteData && isVotingOpen ? (
+            {voteData && isVotingOpen ? (
                 <>
                     <Container className="flex justify-between">
                         <Heading size={4} className="inline-block">
