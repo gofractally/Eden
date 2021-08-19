@@ -107,8 +107,9 @@ const NoParticipationInFurtherRoundsMessage = ({
                     You are not involved in further rounds. Please{" "}
                     <Link href={""}>join the Community Room</Link> &amp; Support
                     for news and updates of the ongoing election. The results
-                    will be displayed in the My Delegation area after the
-                    election is complete.{" "}
+                    will be displayed in the{" "}
+                    <span className="font-semibold">My Delegation</span> area
+                    after the election is complete.{" "}
                     {!ongoingElectionData.inSortitionRound &&
                         "Once the Chief Delegates are selected, they will be displayed below."}
                 </Text>
