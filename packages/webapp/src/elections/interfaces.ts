@@ -108,21 +108,13 @@ interface ElectionCompletedRound {
 }
 
 export interface Election {
-    member?: {
-        memberRank?: number; // undefined if still participating
-        isMemberRegisteredForElection?: boolean;
-        isMemberStillParticipating?: boolean;
-    };
     isElectionOngoing?: boolean;
     isMemberStillParticipating?: boolean;
-    inProgressRoundIndex?: number; // undefined if no round (or election) in progress
     inSortitionRound?: boolean;
     // .length === number of rounds that have completed (regardless of current member's participation)
     completedRounds: ElectionCompletedRound[];
     ongoingRound: {
         participants: EdenMember[];
         participantsMemberData: MemberData[];
-        projectedDelegate?: string;
-        isSortitionRound?: boolean;
     };
 }
