@@ -9,6 +9,7 @@ import {
     getNewMembers,
     getMembersStats,
     MemberData,
+    MemberStats,
 } from "members";
 import { getCommunityGlobals } from "_app/api";
 
@@ -54,9 +55,12 @@ export const queryChiefDelegates = {
     queryFn: getChiefDelegates,
 };
 
-export const queryMyDelegation = (memberAccount?: string) => ({
-    queryKey: ["query_my_delegation", memberAccount],
-    queryFn: () => getMyDelegation(memberAccount),
+export const queryMyDelegation = (
+    memberStats?: MemberStats,
+    memberAccount?: string
+) => ({
+    queryKey: ["query_my_delegation", memberAccount, memberStats],
+    queryFn: () => getMyDelegation(memberAccount, memberStats),
 });
 
 export const queryMemberGroupParticipants = (
@@ -144,6 +148,7 @@ export const queryOngoingElectionData = (
     votingMemberData?: MemberData[],
     currentElection?: CurrentElection,
     myDelegation?: EdenMember[],
+    memberStats?: MemberStats,
     queryOptions: any = {}
 ) => ({
     queryKey: [
@@ -151,6 +156,7 @@ export const queryOngoingElectionData = (
         votingMemberData,
         currentElection,
         myDelegation,
+        memberStats,
     ],
     queryFn: () => {
         return getOngoingElectionData(
@@ -225,7 +231,6 @@ export const queryEndorsementsByInductionId = (inductionId: string) => ({
 export const useMemberByAccountName = (accountName: string) =>
     useQuery({
         ...queryMemberByAccountName(accountName),
-        staleTime: Infinity,
         enabled: Boolean(accountName),
     });
 
@@ -238,7 +243,6 @@ export const useMemberListByAccountNames = (
     return useQueries(
         accountNames.map((accountName) => ({
             ...queryMemberByAccountName(accountName),
-            staleTime: Infinity,
             ...queryOptions,
             // want this to fail if queryOpts.enabled is disabled and merge if enabled; ignore not specified
             enabled: enabled && accountNames.length && Boolean(accountName),
@@ -269,11 +273,12 @@ export const useIsCommunityActive = () => {
 
 export const useMyDelegation = (queryOptions: any = {}) => {
     const { data: member } = useCurrentMember();
+    const { data: memberStats } = useMemberStats();
     // use queryOptions.enabled unless unspecified, in which case, ensure we don't disable the internal `enabled`
     let enabled = "enabled" in queryOptions ? queryOptions.enabled : true;
 
     return useQuery({
-        ...queryMyDelegation(member?.account),
+        ...queryMyDelegation(memberStats, member?.account),
         enabled: enabled && Boolean(member?.account),
     });
 };
@@ -411,13 +416,26 @@ export const useEncryptedData = (scope: EncryptionScope, id: string) =>
         enabled: Boolean(id),
     });
 
-export const useOngoingElectionData = (): UseQueryResult<
-    Election | undefined
-> => {
+export const useOngoingElectionData = (
+    queryOptions: any = {}
+): UseQueryResult<Election | undefined> => {
     const { data: loggedInMember } = useCurrentMember();
     const { data: memberStats } = useMemberStats();
     const { data: electionState } = useCurrentElection();
     const { data: myDelegation } = useMyDelegation();
+
+    console.log(
+        "%c useOngoingElectionData(): ",
+        "background: #222; color: #bada55"
+    );
+    console.log("loggedInMember:", loggedInMember);
+    console.log("memberStats:", memberStats);
+    console.log("electionState:", electionState);
+    console.log("myDelegation:", myDelegation);
+    console.log(
+        "%c useOngoingElectionData(): ",
+        "background: #222; color: #bada55"
+    );
 
     const { data: membersInOngoingRound } = useMemberGroupParticipants(
         loggedInMember?.account,
@@ -430,14 +448,19 @@ export const useOngoingElectionData = (): UseQueryResult<
     const { queryKey, queryFn } = queryOngoingElectionData(
         votingMemberData,
         electionState,
-        myDelegation
+        myDelegation,
+        memberStats
     );
+
+    let enabled = Boolean(loggedInMember && electionState && myDelegation);
+    if ("enabled" in queryOptions) {
+        enabled = enabled && queryOptions.enabled;
+    }
+
     return useQuery<Election, Error>({
         queryKey,
         queryFn,
-        enabled:
-            Boolean(loggedInMember) &&
-            Boolean(electionState) &&
-            Boolean(myDelegation),
+        enabled,
+        ...queryOptions,
     });
 };

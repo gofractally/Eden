@@ -36,18 +36,12 @@ const getMemberWrapper = async (account: string) => {
 };
 
 export const getMyDelegation = async (
-    loggedInMemberAccount: string | undefined
+    loggedInMemberAccount?: string,
+    memberStats?: MemberStats
 ): Promise<EdenMember[]> => {
-    const currentElection: CurrentElection = await queryClient.fetchQuery(
-        queryCurrentElection
-    );
-    const memberStats: MemberStats = await queryClient.fetchQuery(
-        queryMembersStats
-    );
-
     let myDelegates: EdenMember[] = [];
 
-    if (!loggedInMemberAccount) return myDelegates;
+    if (!loggedInMemberAccount || !memberStats) return myDelegates;
 
     let nextMemberAccount = loggedInMemberAccount;
     let isHeadChief: Boolean;
