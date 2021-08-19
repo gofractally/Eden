@@ -34,6 +34,10 @@ export const OngoingElection = ({ election }: { election: any }) => {
     } = useMemberStats();
     const { data: ongoingElectionData } = useOngoingElectionData();
 
+    console.log("%<OngoingElection>:", "background: light-blue;");
+    console.log("ongoingElectionData:", ongoingElectionData);
+    console.log("%</OngoingElection>:", "background: light-blue; color: red");
+
     if (isLoadingGlobals || isLoadingMemberStats) {
         return (
             <Container>
