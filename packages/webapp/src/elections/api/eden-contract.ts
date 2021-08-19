@@ -15,17 +15,18 @@ import {
     isValidDelegate,
     queryMemberByAccountName,
     queryMemberData,
+    queryMembers,
     queryParticipantsInCompletedRound,
 } from "_app";
 import {
     EdenMember,
     MemberData,
-    MemberStats,
     VoteDataQueryOptionsByField,
     VoteDataQueryOptionsByGroup,
 } from "members";
 import {
     ActiveStateConfigType,
+    CONFIG_SORTITION_ROUND_DEFAULTS,
     CurrentElection,
     Election,
     ElectionState,
@@ -82,10 +83,7 @@ export const getMemberGroupFromIndex = (
 export const getMemberGroupParticipants = async (
     memberAccount?: string,
     roundIndex?: number,
-    config: ActiveStateConfigType = {
-        num_participants: 13,
-        num_groups: 1,
-    }
+    config: ActiveStateConfigType = CONFIG_SORTITION_ROUND_DEFAULTS
 ) => {
     if (roundIndex === undefined)
         throw new Error(
@@ -275,6 +273,7 @@ export const getElectionState = async () => {
 
 const ELECTION_DEFAULTS: Election = {
     isMemberStillParticipating: false,
+    isElectionOngoing: false,
     completedRounds: [
         {
             participants: [],
@@ -287,11 +286,22 @@ const ELECTION_DEFAULTS: Election = {
     },
 };
 
-const getParticipantsOfCompletedRounds = async (myDelegation: EdenMember[]) => {
-    console.info(
-        "getParticipantsOfCompletedRounds().myDelegation:",
-        myDelegation
+const getMemberDataFromEdenMemberList = async (memberList: EdenMember[]) => {
+    const nftTemplateIds = memberList.map((em) => em.nft_template_id);
+
+    const { queryKey, queryFn } = queryMembers(
+        1,
+        nftTemplateIds.length,
+        nftTemplateIds
     );
+
+    return await queryClient.fetchQuery<MemberData[], Error>(
+        queryKey,
+        queryFn,
+        { staleTime: Infinity }
+    );
+};
+const getParticipantsOfCompletedRounds = async (myDelegation: EdenMember[]) => {
     const pCompletedRounds = myDelegation.map(
         async (member, electionRoundIndex) => {
             // get EdenMembers in group with this member
@@ -299,36 +309,21 @@ const getParticipantsOfCompletedRounds = async (myDelegation: EdenMember[]) => {
                 electionRoundIndex,
                 member
             );
-            const edenMembers = await queryClient.fetchQuery(queryKey, queryFn);
-
-            // get MemberDatas for these EdenMembers
-            const pParticipantsMemberData = edenMembers?.participants.map(
-                async (edenMember) => {
-                    const { queryKey, queryFn } = queryMemberData(
-                        edenMember.account
-                    );
-                    const memberData = await queryClient.fetchQuery(
-                        queryKey,
-                        queryFn
-                    );
-                    return memberData;
-                }
-            );
-            const participantsMemberData = await Promise.all(
-                pParticipantsMemberData!
+            const edenMembersInThisRound = await queryClient.fetchQuery(
+                queryKey,
+                queryFn
             );
 
-            console.info(
-                "didReachConsensus: ",
-                edenMembers?.participants?.[0]?.representative,
-                edenMembers
+            const participantsMemberData = await getMemberDataFromEdenMemberList(
+                edenMembersInThisRound?.participants || []
             );
+
             return {
-                participants: edenMembers?.participants, // .length will be number of participants and empty if no round happened
+                participants: edenMembersInThisRound?.participants, // .length will be number of participants and empty if no round happened
                 participantsMemberData,
                 didReachConsensus: didReachConsensus(
                     electionRoundIndex,
-                    edenMembers?.participants
+                    edenMembersInThisRound?.participants
                 ),
             };
         }
@@ -337,23 +332,27 @@ const getParticipantsOfCompletedRounds = async (myDelegation: EdenMember[]) => {
     return completedRounds;
 };
 
+/**
+ * get an abstracted view of the election data
+ * Goal: Model all this data to be self-consistent and to abstract the frontend from the complexities of the backend logic
+ * Ongoing Round info: this is unfiltered/unmodified vote table data.
+ * Ongoing Round info can be refactored to be more tailored to the frontend eventually.
+ * @param {string} title - The title of the book.
+ * @param {string} author - The author of the book.
+ */
 export const getOngoingElectionData = async (
-    memberStats?: MemberStats,
     votingMemberData: MemberData[] = [],
     currentElection?: CurrentElection,
     myDelegation: EdenMember[] = []
 ) => {
+    const isElectionOngoing =
+        currentElection?.electionState === ElectionStatus.Active ||
+        currentElection?.electionState === ElectionStatus.Final;
     const inSortitionRound =
         currentElection?.electionState === ElectionStatus.Final; // status===final only during sortition round
-    // TODO: do we need currentElection.electionState === ElectionStatus.Active?
-    const roundsCompleted = memberStats ? memberStats?.ranks.length : 0;
-    const heightOfMyDelegationMinusChiefs = myDelegation.length;
 
-    // START calculating values needed for return value
     const isMemberStillParticipating = votingMemberData.length > 0;
 
-    // Ongoing Round info: this is unfiltered/unmodified vote table data.
-    // This can be refactored to be more tailored to the frontend eventually.
     const ongoingRound = { participantsMemberData: votingMemberData };
 
     const completedRounds = await getParticipantsOfCompletedRounds(
@@ -362,6 +361,7 @@ export const getOngoingElectionData = async (
 
     const electionData = {
         ...ELECTION_DEFAULTS,
+        isElectionOngoing,
         isMemberStillParticipating,
         inSortitionRound,
         completedRounds,

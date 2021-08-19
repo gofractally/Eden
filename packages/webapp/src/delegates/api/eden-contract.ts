@@ -1,9 +1,4 @@
-import { getCurrentElection } from "elections/api";
-import {
-    CurrentElection,
-    CurrentElection_activeState,
-    ElectionStatus,
-} from "elections/interfaces";
+import { CurrentElection } from "elections/interfaces";
 import { EdenMember, MemberStats } from "members";
 import { queryClient } from "pages/_app";
 import {
@@ -13,7 +8,6 @@ import {
     queryMemberByAccountName,
     queryMembersStats,
     queryVoteDataRow,
-    useElectionState,
 } from "_app";
 
 const queryElectionStateHelper = async () =>
@@ -66,30 +60,17 @@ export const getMyDelegation = async (
         const memberVoteData = await queryClient.fetchQuery(
             queryVoteDataRow(nextMemberAccount)
         );
-        const memberRankIndex = memberVoteData
-            ? memberVoteData.round
-            : member.election_rank;
+        const memberRankIndex = memberVoteData?.round ?? member.election_rank;
 
         // Fill the array from next available position up to member.election_rank with member,
         // in case this delegate got voted up through multiple levels
-        const isElectionOngoing =
-            currentElection.electionState === ElectionStatus.Active ||
-            currentElection.electionState === ElectionStatus.Final;
-        const highestCompletedRoundIndex = memberStats // Do we need this? Would it handle during- and post-election scenarios to just remove it? && isElectionOngoing
-            ? memberStats?.ranks.length - 1
-            : -1; // ranks is set to [] at start of election and has a new entry added at the end of each round
-        // TODO: handle highestRank*whereRepresented*
-        console.info(
-            `myDelegation.for memberRankIndex[${memberRankIndex}], highestCompletedRoundIndex[${highestCompletedRoundIndex}]`
-        );
+        const highestCompletedRoundIndex = memberStats.ranks.length - 1;
+
         for (
             let idx = myDelegates.length;
             idx <= memberRankIndex && idx <= highestCompletedRoundIndex;
             idx++
         ) {
-            console.info(
-                `myDelegation.for idx[${idx}], memberRankIndex[${memberRankIndex}], highestCompletedRoundIndex[${highestCompletedRoundIndex}]`
-            );
             myDelegates.push(member);
         }
         isHeadChief = member.account === member.representative;

@@ -54,5 +54,6 @@ export interface MemberStats {
     active_members: number;
     pending_members: number;
     completed_waiting_inductions: number;
+    // NOTE: ranks is set to [] at start of election and has a new entry added at the end of each round
     ranks: any[];
 }

@@ -1,5 +1,11 @@
 import { EdenMember, MemberData } from "members";
 
+const NUM_PARTICIPANTS_IN_SORTITION_ROUND = 1;
+const MAX_PARTICIPANTS_IN_SORTITION_ROUND = 13;
+export const CONFIG_SORTITION_ROUND_DEFAULTS = {
+    num_participants: MAX_PARTICIPANTS_IN_SORTITION_ROUND,
+    num_groups: NUM_PARTICIPANTS_IN_SORTITION_ROUND,
+};
 export interface ElectionState {
     lead_representative: string;
     board: string[];
@@ -40,6 +46,7 @@ interface CurrentElection_initVotersState {
     rng: any;
     last_processed: string;
 }
+
 export interface ActiveStateConfigType {
     num_participants: number;
     num_groups: number;
@@ -106,7 +113,7 @@ export interface Election {
         isMemberRegisteredForElection?: boolean;
         isMemberStillParticipating?: boolean;
     };
-    isElectionInProgress?: boolean;
+    isElectionOngoing?: boolean;
     isMemberStillParticipating?: boolean;
     inProgressRoundIndex?: number; // undefined if no round (or election) in progress
     inSortitionRound?: boolean;

@@ -10,7 +10,6 @@ import {
     getMembersStats,
     MemberData,
     VoteDataQueryOptionsByGroup,
-    MemberStats,
 } from "members";
 import { getCommunityGlobals } from "_app/api";
 
@@ -41,7 +40,6 @@ import {
     CurrentElection,
     CurrentElection_activeState,
     Election,
-    ElectionStatus,
     VoteData,
 } from "elections/interfaces";
 import { EncryptionScope, getEncryptedData } from "encryption/api";
@@ -143,7 +141,6 @@ export const queryCommunityGlobals = {
 };
 
 export const queryOngoingElectionData = (
-    memberStats?: MemberStats,
     votingMemberData?: MemberData[],
     currentElection?: CurrentElection,
     myDelegation?: EdenMember[],
@@ -151,13 +148,12 @@ export const queryOngoingElectionData = (
 ) => ({
     queryKey: [
         "query_ongoing_round",
-        memberStats,
-        currentElection,
         votingMemberData,
+        currentElection,
+        myDelegation,
     ],
     queryFn: () => {
         return getOngoingElectionData(
-            memberStats,
             votingMemberData,
             currentElection,
             myDelegation
@@ -308,14 +304,19 @@ export const useCurrentElection = (queryOptions: any = {}) =>
         ...queryOptions,
     });
 
+/**
+ * use `votes` table data (for a particular person and round)
+ * ASSUMPTION: this use method will only be called by *non*-Chief ongoing rounds
+ * It relies on election state being active (not final)
+ * @param {string} memberAccount - account of member to get
+ * @param {number} roundIndex - election round index
+ */
 export const useMemberGroupParticipants = (
     memberAccount?: string,
     roundIndex?: number,
     queryOptions: any = {}
 ) => {
-    console.info(`   --->    useMGP().top roundIndex[${roundIndex}]`);
     const { data: currentElection } = useCurrentElection();
-    // ASSUMPTION: this use method will only be called by *non*-Chief ongoing rounds
     const currentActiveElection = currentElection as CurrentElection_activeState;
 
     let enabled = Boolean(memberAccount) && roundIndex !== undefined;
@@ -323,7 +324,6 @@ export const useMemberGroupParticipants = (
     if ("enabled" in queryOptions) {
         enabled = enabled && queryOptions.enabled;
     }
-    console.info(`useMGP().enabled[${enabled}]`);
 
     return useQuery<VoteData[], Error>({
         ...queryMemberGroupParticipants(
@@ -382,11 +382,9 @@ export const useMemberDataFromEdenMembers = (
 };
 
 export const useMemberDataFromVoteData = (voteData?: VoteData[]) => {
-    // console.info("useMemberDataFromVoteData().top");
     const responses = useMemberListByAccountNames(
         voteData?.map((participant) => participant.member) ?? []
     );
-    // console.info("responses:", responses);
     const isFetchError = responses.some((res) => res.isError);
     const areQueriesComplete = responses.every((res) => res.isSuccess);
     const isLoading = responses.some((res) => res.isLoading);
@@ -394,12 +392,10 @@ export const useMemberDataFromVoteData = (voteData?: VoteData[]) => {
     const edenMembers = responses
         .filter((res) => Boolean(res?.data?.nft_template_id))
         .map((res) => res.data as EdenMember);
-    // console.info("edenMembers:", edenMembers);
 
     const memberDataRes = useMemberDataFromEdenMembers(edenMembers, {
         enabled: !isFetchError && areQueriesComplete,
     });
-    // console.info("memberDataRes:", memberDataRes);
 
     return {
         ...memberDataRes,
@@ -414,16 +410,15 @@ export const useEncryptedData = (scope: EncryptionScope, id: string) =>
         ...queryEncryptedData(scope, id),
         enabled: Boolean(id),
     });
+
 export const useOngoingElectionData = (): UseQueryResult<
     Election | undefined
 > => {
     const { data: loggedInMember } = useCurrentMember();
-    // GET highestRandIndexParticipatedIn
     const { data: memberStats } = useMemberStats();
     const { data: electionState } = useCurrentElection();
     const { data: myDelegation } = useMyDelegation();
 
-    // GET participants for ongoing round
     const { data: membersInOngoingRound } = useMemberGroupParticipants(
         loggedInMember?.account,
         memberStats?.ranks.length
@@ -431,15 +426,8 @@ export const useOngoingElectionData = (): UseQueryResult<
     let { data: votingMemberData } = useMemberDataFromVoteData(
         membersInOngoingRound
     );
-    console.info(
-        "membersInOngoingRound:",
-        membersInOngoingRound,
-        "votingMemberData:",
-        votingMemberData
-    );
 
     const { queryKey, queryFn } = queryOngoingElectionData(
-        memberStats,
         votingMemberData,
         electionState,
         myDelegation
@@ -449,7 +437,6 @@ export const useOngoingElectionData = (): UseQueryResult<
         queryFn,
         enabled:
             Boolean(loggedInMember) &&
-            Boolean(memberStats) &&
             Boolean(electionState) &&
             Boolean(myDelegation),
     });
