@@ -6,22 +6,22 @@ import {
     useCommunityGlobals,
     useCurrentMember,
     useMemberStats,
-    useMyDelegation,
-    useOngoingElectionData as useOngoingElectionData,
-    useVoteDataRow,
+    useOngoingElectionData,
 } from "_app";
 import { Button, Container, Heading, Loader, Link, Text } from "_app/ui";
 import { ErrorLoadingElection } from "elections";
-import { ActiveStateConfigType, ElectionStatus } from "elections/interfaces";
+import {
+    ActiveStateConfigType,
+    Election,
+    ElectionStatus,
+} from "elections/interfaces";
 
 import * as Ongoing from "./ongoing-election-components";
 
-// TODO: How do we get previous round info for rounds that didn't come to consensus? Do that here.
 // TODO: Non-participating-eden-member currently sees error.
 // TODO: Specifically, what happens to CompletedRound component when non-participating-eden-member logs in?
 // TODO: Make sure time zone changes during election are handled properly
 export const OngoingElection = ({ election }: { election: any }) => {
-    const { data: loggedInUser } = useCurrentMember();
     const {
         data: globals,
         isLoading: isLoadingGlobals,
@@ -32,11 +32,7 @@ export const OngoingElection = ({ election }: { election: any }) => {
         isLoading: isLoadingMemberStats,
         isError: isErrorMemberStats,
     } = useMemberStats();
-    const { data: loggedInVoteData } = useVoteDataRow(loggedInUser?.account);
-    const { data: myDelegationSoFar } = useMyDelegation();
-    const { data: ongoingRoundData } = useOngoingElectionData({
-        enabled: Boolean(loggedInUser) && Boolean(memberStats),
-    });
+    const { data: ongoingElectionData } = useOngoingElectionData();
 
     if (isLoadingGlobals || isLoadingMemberStats) {
         return (
@@ -50,17 +46,6 @@ export const OngoingElection = ({ election }: { election: any }) => {
     if (isError || !memberStats) {
         return <ErrorLoadingElection />;
     }
-    // console.info("currentElection:", currentElection);
-
-    const showNoConsensusInPreviousRoundMessage =
-        (myDelegationSoFar?.length || 0) < election.round;
-
-    // TODO: Model all this data to be self-consistent and to abstract the frontend from the complexities of the backend logic
-    // start with logged-in user
-    // check that they registered for the election (and cast at least one vote?)
-    // see if they're still participating
-    const isStillParticipating = Boolean(loggedInVoteData);
-    // Below in the UI, iterate through myDelegation *only* up to the level of currentElection.round (to avoid old member data)
 
     const roundDurationSec = globals.election_round_time_sec;
     const roundDurationMs = roundDurationSec * 1000;
@@ -68,9 +53,6 @@ export const OngoingElection = ({ election }: { election: any }) => {
     const roundEndTimeRaw = election.round_end ?? election.seed.end_time;
     const roundEndTime = dayjs(roundEndTimeRaw + "Z");
     const roundStartTime = dayjs(roundEndTime).subtract(roundDurationMs);
-    const loggedInRank = isStillParticipating ? 0 : loggedInUser?.election_rank;
-
-    console.info("ongoingRoundData:", ongoingRoundData);
 
     return (
         <div className="divide-y">
@@ -81,16 +63,17 @@ export const OngoingElection = ({ election }: { election: any }) => {
             <Ongoing.SupportSegment />
 
             <CompletedRounds
-                numCompletedRounds={ongoingRoundData?.completedRounds?.length}
+                numCompletedRounds={
+                    ongoingElectionData?.completedRounds?.length
+                }
             />
             <SignInContainer />
             <SignUpContainer />
-            <NoFurtherParticipationInRoundsMessage
-                areRoundsWithNoParticipation={
-                    ongoingRoundData?.areRoundsWithNoParticipation
-                }
+            <NoParticipationInFurtherRoundsMessage
+                ongoingElectionData={ongoingElectionData}
             />
             <CurrentRound
+                ongoingElectionData={ongoingElectionData}
                 electionState={election.electionState}
                 roundIndex={roundIndex}
                 roundStartTime={roundStartTime}
@@ -103,30 +86,32 @@ export const OngoingElection = ({ election }: { election: any }) => {
 };
 
 interface NoFurtherParticipationProps {
-    areRoundsWithNoParticipation?: boolean;
+    ongoingElectionData?: Election;
 }
 
-const NoFurtherParticipationInRoundsMessage = ({
-    areRoundsWithNoParticipation,
+const NoParticipationInFurtherRoundsMessage = ({
+    ongoingElectionData,
 }: NoFurtherParticipationProps) => {
-    if (!areRoundsWithNoParticipation) {
+    if (!ongoingElectionData) return null;
+    if (ongoingElectionData.isMemberStillParticipating) {
         return null;
     }
     return (
-        <Container className="flex items-center space-x-2 pr-8">
+        <Container className="flex items-center space-x-2 pr-8 py-8">
             <BsInfoCircle
                 size={22}
                 className="ml-px text-gray-400 place-self-start mt-1"
             />
             <div className="flex-1">
                 <Text size="sm">
-                    You did not advance a delegate to participate in further
-                    rounds. Please{" "}
+                    You are not involved in further rounds. Please{" "}
                     <Link href={""}>join the Community Room</Link> &amp; Support
                     for news and updates of the ongoing election. The results
-                    will be displayed in the My Delegation area after the
-                    election is complete. Once the Chief Delegates are selected,
-                    they are displayed below.
+                    will be displayed in the{" "}
+                    <span className="font-semibold">My Delegation</span> area
+                    after the election is complete.{" "}
+                    {!ongoingElectionData.inSortitionRound &&
+                        "Once the Chief Delegates are selected, they will be displayed below."}
                 </Text>
             </div>
         </Container>
@@ -157,6 +142,7 @@ const CompletedRounds = ({ numCompletedRounds }: CompletedRoundsProps) => {
 };
 
 export interface CurrentRoundProps {
+    ongoingElectionData?: Election;
     electionState: string;
     roundIndex: number;
     roundStartTime: Dayjs;
@@ -172,7 +158,11 @@ const CurrentRound = (props: CurrentRoundProps) => {
         return <Ongoing.ChiefsRoundSegment roundEndTime={props.roundEndTime} />;
     }
 
-    if (!currentMember) return null;
+    if (
+        !currentMember ||
+        !props.ongoingElectionData?.isMemberStillParticipating
+    )
+        return null;
 
     return (
         <Ongoing.OngoingRoundSegment

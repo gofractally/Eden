@@ -764,7 +764,7 @@ namespace clchain
    }
 
    template <typename Stream = eosio::time_point_include_z_stream<eosio::string_stream>, typename T>
-   std::string gql_query(const T& value, std::string_view query)
+   std::string gql_query(const T& value, std::string_view query, std::string_view variables)
    {
       gql_stream input_stream{query};
       std::string result;
@@ -774,10 +774,18 @@ namespace clchain
       write_newline(output_stream);
       write_str("\"data\": ", output_stream);
       std::string error;
-      if (!gql_query_root(value, input_stream, output_stream, [&](const auto& e) {
-             error = e;
-             return false;
-          }))
+      bool ok = true;
+      if (!variables.empty())
+      {
+         error = "variables not supported; argument must be empty";
+         ok = false;
+      }
+      else
+         ok = gql_query_root(value, input_stream, output_stream, [&](const auto& e) {
+            error = e;
+            return false;
+         });
+      if (!ok)
       {
          result.clear();
          Stream error_stream(result);

@@ -462,9 +462,6 @@ export const fixtureEdenMembersInGroup = (
     roundIndex: number,
     delegateAccount: string
 ): EdenMember[] => {
-    console.info(
-        `fixtureEdenMembersInGroup(roundIndex[${roundIndex}], delegateAccount[${delegateAccount}])`
-    );
     const membersInGroup = fixtureEdenMembers.filter(
         (member) =>
             member.election_rank === roundIndex &&

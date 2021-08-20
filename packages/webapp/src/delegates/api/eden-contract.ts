@@ -1,9 +1,4 @@
-import { getCurrentElection } from "elections/api";
-import {
-    CurrentElection,
-    CurrentElection_activeState,
-    ElectionStatus,
-} from "elections/interfaces";
+import { CurrentElection } from "elections/interfaces";
 import { EdenMember, MemberStats } from "members";
 import { queryClient } from "pages/_app";
 import {
@@ -12,7 +7,7 @@ import {
     queryElectionState,
     queryMemberByAccountName,
     queryMembersStats,
-    useElectionState,
+    queryVoteDataRow,
 } from "_app";
 
 const queryElectionStateHelper = async () =>
@@ -62,19 +57,18 @@ export const getMyDelegation = async (
             throw new Error(
                 `Member record not found for provided account [${nextMemberAccount}].`
             );
+        const memberVoteData = await queryClient.fetchQuery(
+            queryVoteDataRow(nextMemberAccount)
+        );
+        const memberRankIndex = memberVoteData?.round ?? member.election_rank;
 
         // Fill the array from next available position up to member.election_rank with member,
         // in case this delegate got voted up through multiple levels
-        const isElectionOngoing =
-            currentElection.electionState === ElectionStatus.Active ||
-            currentElection.electionState === ElectionStatus.Final;
-        const highestCompletedRoundIndex = memberStats // Do we need this? Would it handle during- and post-election scenarios to just remove it? && isElectionOngoing
-            ? memberStats?.ranks.length - 1
-            : -1; // ranks is set to [] at start of election and has a new entry added at the end of each round
-        // TODO: handle highestRank*whereRepresented*
+        const highestCompletedRoundIndex = memberStats.ranks.length - 1;
+
         for (
             let idx = myDelegates.length;
-            idx <= member?.election_rank && idx <= highestCompletedRoundIndex;
+            idx <= memberRankIndex && idx <= highestCompletedRoundIndex;
             idx++
         ) {
             myDelegates.push(member);

@@ -44,6 +44,9 @@ jobs:
         container: ghcr.io/eoscommunity/eden-builder:sub-chain
 
         steps:
+            - name: ✅ Checkout code
+              uses: actions/checkout@v2
+
             - uses: dorny/paths-filter@v2
               id: filter
               with:
@@ -58,10 +61,6 @@ jobs:
                         - "native/**"
                         - "programs/**"
                         - "wasm/**"
-
-            - name: ✅ Checkout code
-              if: steps.filter.outputs.src == 'true'
-              uses: actions/checkout@v2
 
             - name: Prepare ccache timestamp
               if: steps.filter.outputs.src == 'true'
@@ -218,6 +217,9 @@ jobs:
         runs-on: ubuntu-latest
 
         steps:
+            - name: ✅ Checkout code
+              uses: actions/checkout@v2
+
             - uses: dorny/paths-filter@v2
               id: filter
               with:
@@ -237,10 +239,6 @@ jobs:
 
                         - "docker/eden-box.Dockerfile"
                         - "packages/box/**"
-
-            - name: ✅ Checkout code
-              if: steps.filter.outputs.src == 'true'
-              uses: actions/checkout@v2
 
             - name: Download Eden Microchain
               if: steps.filter.outputs.src == 'true'
@@ -270,6 +268,9 @@ jobs:
         runs-on: ubuntu-latest
 
         steps:
+            - name: ✅ Checkout code
+              uses: actions/checkout@v2
+
             - uses: dorny/paths-filter@v2
               id: filter
               with:
@@ -289,10 +290,6 @@ jobs:
 
                         - "docker/eden-box.Dockerfile"
                         - "packages/box/**"
-
-            - name: ✅ Checkout code
-              if: steps.filter.outputs.src == 'true'
-              uses: actions/checkout@v2
 
             - name: Download Eden Microchain
               if: steps.filter.outputs.src == 'true'
@@ -345,6 +342,9 @@ jobs:
         runs-on: ubuntu-latest
 
         steps:
+            - name: ✅ Checkout code
+              uses: actions/checkout@v2
+
             - uses: dorny/paths-filter@v2
               id: filter
               with:
@@ -364,10 +364,6 @@ jobs:
 
                         - "docker/eden-webapp.Dockerfile"
                         - "packages/webapp/**"
-
-            - name: ✅ Checkout code
-              if: steps.filter.outputs.src == 'true'
-              uses: actions/checkout@v2
 
             - name: Download Eden Microchain
               if: steps.filter.outputs.src == 'true'
@@ -404,6 +400,9 @@ jobs:
         runs-on: ubuntu-latest
 
         steps:
+            - name: ✅ Checkout code
+              uses: actions/checkout@v2
+
             - uses: dorny/paths-filter@v2
               id: filter
               with:
@@ -423,10 +422,6 @@ jobs:
 
                         - "docker/eden-webapp.Dockerfile"
                         - "packages/webapp/**"
-
-            - name: ✅ Checkout code
-              if: steps.filter.outputs.src == 'true'
-              uses: actions/checkout@v2
 
             - name: Image Preparation
               if: steps.filter.outputs.src == 'true'
