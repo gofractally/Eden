@@ -453,14 +453,11 @@ export const useOngoingElectionData = (
     );
 
     let enabled = Boolean(loggedInMember && electionState && myDelegation);
-    if ("enabled" in queryOptions) {
-        enabled = enabled && queryOptions.enabled;
-    }
 
     return useQuery<Election, Error>({
         queryKey,
         queryFn,
-        enabled,
         ...queryOptions,
+        enabled: enabled && (queryOptions.enabled ?? true),
     });
 };
