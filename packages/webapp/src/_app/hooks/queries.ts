@@ -9,7 +9,6 @@ import {
     getNewMembers,
     getMembersStats,
     MemberData,
-    VoteDataQueryOptionsByGroup,
 } from "members";
 import { getCommunityGlobals } from "_app/api";
 
