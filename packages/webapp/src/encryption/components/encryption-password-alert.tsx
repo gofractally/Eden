@@ -28,6 +28,7 @@ export const EncryptionPasswordAlert = ({
         updateEncryptionPassword,
         isLoading: isLoadingPassword,
     } = useEncryptionPassword();
+    const [forgotPassword, setForgotPassword] = useState(false);
 
     const [ualAccount] = useUALAccount();
     const { data: currentMember } = useCurrentMember();
@@ -40,13 +41,16 @@ export const EncryptionPasswordAlert = ({
         return null;
     }
 
-    const promptNewKey =
-        promptSetupEncryptionKey &&
+    const promptNewKey = forgotPassword ||
+        (promptSetupEncryptionKey &&
         !isLoadingPassword &&
-        !encryptionPassword.publicKey;
+        !encryptionPassword.publicKey);
     if (promptNewKey) {
         return (
-            <PromptNewKey updateEncryptionPassword={updateEncryptionPassword} />
+            <PromptNewKey 
+                updateEncryptionPassword={updateEncryptionPassword} 
+                forgotPassword={forgotPassword} 
+            />
         );
     }
 
@@ -59,6 +63,7 @@ export const EncryptionPasswordAlert = ({
             <NotPresentKeyWarning
                 expectedPublicKey={encryptionPassword.publicKey!}
                 updateEncryptionPassword={updateEncryptionPassword}
+                triggerForgotPassword={() => setForgotPassword(true)}
             />
         );
     }
@@ -68,9 +73,10 @@ export const EncryptionPasswordAlert = ({
 
 interface PromptNewKeyProps {
     updateEncryptionPassword: UpdateEncryptionPassword;
+    forgotPassword?: boolean;
 }
 
-const PromptNewKey = ({ updateEncryptionPassword }: PromptNewKeyProps) => {
+const PromptNewKey = ({ updateEncryptionPassword, forgotPassword }: PromptNewKeyProps) => {
     const [showNewKeyModal, setShowNewKeyModal] = useState(false);
     return (
         <Container className="flex justify-center bg-yellow-500">
@@ -80,12 +86,13 @@ const PromptNewKey = ({ updateEncryptionPassword }: PromptNewKeyProps) => {
                 onClick={() => setShowNewKeyModal(!showNewKeyModal)}
             >
                 <BsExclamationTriangle className="mr-1 mb-px" />
-                Create Election Password
+                {forgotPassword ? "Forgot Password" : "Create Election Password"}
             </Button>
             <PromptNewKeyModal
                 updateEncryptionPassword={updateEncryptionPassword}
                 isOpen={showNewKeyModal}
                 close={() => setShowNewKeyModal(false)}
+                forgotPassword={forgotPassword}
             />
         </Container>
     );
@@ -94,11 +101,13 @@ const PromptNewKey = ({ updateEncryptionPassword }: PromptNewKeyProps) => {
 interface NotPresentKeyWarningProps {
     expectedPublicKey: string;
     updateEncryptionPassword: UpdateEncryptionPassword;
+    triggerForgotPassword: () => void;
 }
 
 const NotPresentKeyWarning = ({
     expectedPublicKey,
     updateEncryptionPassword,
+    triggerForgotPassword,
 }: NotPresentKeyWarningProps) => {
     const [showReenterKeyModal, setShowReenterKeyModal] = useState(false);
     return (
@@ -116,6 +125,7 @@ const NotPresentKeyWarning = ({
                 isOpen={showReenterKeyModal}
                 close={() => setShowReenterKeyModal(false)}
                 expectedPublicKey={expectedPublicKey}
+                onForgotPassword={() => setShowReenterKeyModal(false) && triggerForgotPassword()}
             />
         </Container>
     );
@@ -125,12 +135,14 @@ interface PasswordModalProps {
     isOpen: boolean;
     close: () => void;
     updateEncryptionPassword: UpdateEncryptionPassword;
+    forgotPassword?: boolean;
 }
 
 const PromptNewKeyModal = ({
     isOpen,
     close,
     updateEncryptionPassword,
+    forgotPassword,
 }: PasswordModalProps) => {
     const [isLoading, setIsLoading] = useState<boolean>(false);
     const [ualAccount] = useUALAccount();
@@ -175,6 +187,7 @@ const PromptNewKeyModal = ({
                 isLoading={isLoading}
                 onSubmit={onSubmit}
                 onCancel={close}
+                forgotPassword={forgotPassword}
             />
         </Modal>
     );
@@ -182,6 +195,7 @@ const PromptNewKeyModal = ({
 
 interface PromptReenterKeyModalProps extends PasswordModalProps {
     expectedPublicKey: string;
+    onForgotPassword: () => void;
 }
 
 const PromptReenterKeyModal = ({
@@ -189,6 +203,7 @@ const PromptReenterKeyModal = ({
     close,
     expectedPublicKey,
     updateEncryptionPassword,
+    onForgotPassword,
 }: PromptReenterKeyModalProps) => {
     const onSubmit = async (publicKey: string, privateKey: string) => {
         try {
@@ -214,6 +229,7 @@ const PromptReenterKeyModal = ({
                 expectedPublicKey={expectedPublicKey}
                 onSubmit={onSubmit}
                 onCancel={close}
+                onForgotPassword={onForgotPassword}
             />
         </Modal>
     );

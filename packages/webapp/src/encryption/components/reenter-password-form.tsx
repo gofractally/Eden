@@ -7,6 +7,7 @@ interface Props {
     isLoading?: boolean;
     onSubmit: (publicKey: string, privateKey: string) => Promise<void>;
     onCancel: () => void;
+    onForgotPassword: () => void;
 }
 
 export const ReenterPasswordForm = ({
@@ -14,6 +15,7 @@ export const ReenterPasswordForm = ({
     isLoading,
     onSubmit,
     onCancel,
+    onForgotPassword,
 }: Props) => {
     const [fields, setFields] = useFormFields({
         password: "",
@@ -57,6 +59,9 @@ export const ReenterPasswordForm = ({
                         disabled={isLoading}
                         onChange={onChangeFields}
                     />
+                    <Link onClick={onForgotPassword}>
+                        <Text type="small">Forgot Password?</Text>
+                    </Link>
                 </Form.LabeledSet>
                 <div className="flex space-x-3">
                     <Button type="neutral" onClick={onCancel}>
