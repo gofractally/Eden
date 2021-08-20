@@ -98,6 +98,8 @@ export const getTableRawRows = async <T = any>(
         show_payer: false,
         table: table,
         ...options,
+        lower_bound: options.lowerBound,
+        upper_bound: options.upperBound,
     };
 
     const response = await fetch(RPC_GET_TABLE_ROWS, {
