@@ -588,8 +588,11 @@ auto schema = clchain::get_gql_schema<Query>();
    return schema.c_str();
 }
 
-[[clang::export_name("query")]] void query(const char* query, uint32_t size)
+[[clang::export_name("query")]] void query(const char* query,
+                                           uint32_t size,
+                                           const char* variables,
+                                           uint32_t variables_size)
 {
    Query root{block_log};
-   result = clchain::gql_query(root, {query, size});
+   result = clchain::gql_query(root, {query, size}, {variables, variables_size});
 }

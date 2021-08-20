@@ -208,7 +208,7 @@ export class EdenSubchain {
         const utf8 = new TextEncoder().encode(q);
         return this.protect(() => {
             return this.withData(utf8, (addr) => {
-                this.exports.query(addr, utf8.length);
+                this.exports.query(addr, utf8.length, 0, 0);
                 return JSON.parse(this.resultAsString());
             });
         });
