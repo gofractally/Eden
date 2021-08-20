@@ -224,6 +224,7 @@ export const OngoingRoundSegment = ({
                     stage
                 ) && (
                     <RequestElectionMeetingLinkButton
+                        stage={stage}
                         roundIndex={roundIndex}
                         meetingStartTime={meetingStartTime}
                         meetingDurationMs={meetingDurationMs}
