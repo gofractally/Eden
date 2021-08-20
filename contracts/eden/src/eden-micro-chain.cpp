@@ -138,17 +138,6 @@ struct status
    uint32_t auctionDuration;
    std::string memo;
 };
-EOSIO_REFLECT(status,
-              active,
-              community,
-              communitySymbol,
-              minimumDonation,
-              initialMembers,
-              genesisVideo,
-              collectionAttributes,
-              auctionStartingBid,
-              auctionDuration,
-              memo)
 
 struct status_object : public chainbase::object<status_table, status_object>
 {
@@ -192,19 +181,7 @@ struct member
    std::vector<eosio::name> inductionWitnesses;
    eden::new_member_profile profile;
    std::string inductionVideo;
-
-   VoteConnection votes(std::optional<uint32_t> first,
-                        std::optional<uint32_t> last,
-                        std::optional<std::string> before,
-                        std::optional<std::string> after) const;
 };
-EOSIO_REFLECT2(member,
-               account,
-               inviter,
-               inductionWitnesses,
-               profile,
-               inductionVideo,
-               method(votes, "first", "last", "before", "after"))
 
 struct member_object : public chainbase::object<member_table, member_object>
 {
@@ -329,12 +306,74 @@ const auto& get_status()
    return *idx.begin();
 }
 
-const member* get_member(eosio::name account)
+struct Member;
+std::optional<Member> get_member(eosio::name account);
+std::vector<Member> get_members(const std::vector<eosio::name>& v);
+
+struct Member
+{
+   eosio::name account;
+   const member* member;
+
+   auto inviter() const { return get_member(member ? member->inviter : ""_n); }
+   std::optional<std::vector<Member>> inductionWitnesses() const
+   {
+      return member ? std::optional{get_members(member->inductionWitnesses)} : std::nullopt;
+   }
+   const eden::new_member_profile* profile() const { return member ? &member->profile : nullptr; }
+   const std::string* inductionVideo() const { return member ? &member->inductionVideo : nullptr; }
+
+   VoteConnection votes(std::optional<uint32_t> first,
+                        std::optional<uint32_t> last,
+                        std::optional<std::string> before,
+                        std::optional<std::string> after) const;
+};
+EOSIO_REFLECT2(Member,
+               account,
+               inviter,
+               inductionWitnesses,
+               profile,
+               inductionVideo,
+               method(votes, "first", "last", "before", "after"))
+
+std::optional<Member> get_member(eosio::name account)
 {
    if (auto* member_object = get_ptr<by_pk>(db.members, account))
-      return &member_object->member;
-   return nullptr;
+      return Member{account, &member_object->member};
+   else if (account.value && !(account.value & 0x0f))
+      return Member{account, nullptr};
+   else
+      return std::nullopt;
 }
+
+std::vector<Member> get_members(const std::vector<eosio::name>& v)
+{
+   std::vector<Member> result;
+   result.reserve(v.size());
+   for (auto n : v)
+   {
+      auto m = get_member(n);
+      if (m)
+         result.push_back(*m);
+   }
+   return result;
+}
+
+struct Status
+{
+   const status* status;
+
+   bool active() const { return status->active; }
+   const std::string& community() const { return status->community; }
+   // const eosio::symbol& communitySymbol() const { return status->communitySymbol; }
+   // const eosio::asset& minimumDonation() const { return status->minimumDonation; }
+   auto initialMembers() const { return get_members(status->initialMembers); }
+   const std::string& genesisVideo() const { return status->genesisVideo; }
+   // const eosio::asset& auctionStartingBid() const { return status->auctionStartingBid; }
+   uint32_t auctionDuration() const { return status->auctionDuration; }
+   const std::string& memo() const { return status->memo; }
+};
+EOSIO_REFLECT2(Status, active, community, initialMembers, genesisVideo, auctionDuration, memo)
 
 struct ElectionGroup
 {
@@ -369,7 +408,7 @@ std::vector<Vote> ElectionGroup::votes() const
    return result;
 }
 
-VoteConnection member::votes(std::optional<uint32_t> first,
+VoteConnection Member::votes(std::optional<uint32_t> first,
                              std::optional<uint32_t> last,
                              std::optional<std::string> before,
                              std::optional<std::string> after) const
@@ -710,13 +749,19 @@ bool add_block(subchain::block&& eden_block, uint32_t eosio_irreversible)
 constexpr const char MemberConnection_name[] = "MemberConnection";
 constexpr const char MemberEdge_name[] = "MemberEdge";
 using MemberConnection =
-    clchain::Connection<clchain::ConnectionConfig<std::reference_wrapper<const member>,
-                                                  MemberConnection_name,
-                                                  MemberEdge_name>>;
+    clchain::Connection<clchain::ConnectionConfig<Member, MemberConnection_name, MemberEdge_name>>;
 
 struct Query
 {
    subchain::BlockLog blockLog;
+
+   std::optional<Status> status() const
+   {
+      auto& idx = db.status.get<by_id>();
+      if (idx.size() != 1)
+         return std::nullopt;
+      return Status{&idx.begin()->status};
+   }
 
    MemberConnection members(std::optional<eosio::name> gt,
                             std::optional<eosio::name> ge,
@@ -728,16 +773,19 @@ struct Query
                             std::optional<std::string> after) const
    {
       return clchain::make_connection<MemberConnection, eosio::name>(
-          gt, ge, lt, le, first, last, before, after,       //
-          db.members.get<by_pk>(),                          //
-          [](auto& obj) { return obj.member.account; },     //
-          [](auto& obj) { return std::cref(obj.member); },  //
+          gt, ge, lt, le, first, last, before, after,    //
+          db.members.get<by_pk>(),                       //
+          [](auto& obj) { return obj.member.account; },  //
+          [](auto& obj) {
+             return Member{obj.member.account, &obj.member};
+          },
           [](auto& members, auto key) { return members.lower_bound(key); },
           [](auto& members, auto key) { return members.upper_bound(key); });
    }
 };
 EOSIO_REFLECT2(Query,
                blockLog,
+               status,
                method(members, "gt", "ge", "lt", "le", "first", "last", "before", "after"))
 
 auto schema = clchain::get_gql_schema<Query>();
