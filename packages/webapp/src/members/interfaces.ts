@@ -1,12 +1,5 @@
 import { EdenNftSocialHandles } from "nfts/interfaces";
 import { Asset, ElectionParticipationStatus, MemberStatus } from "_app";
-import { TableQueryOptions } from "_app/eos/interfaces";
-
-export type VoteDataQueryOptionsByGroup = TableQueryOptions & {
-    index_position?: 2;
-    lowerBound?: number;
-    upperBound?: number;
-};
 
 export type VoteDataQueryOptionsByField = {
     fieldName?: string;
@@ -54,5 +47,6 @@ export interface MemberStats {
     active_members: number;
     pending_members: number;
     completed_waiting_inductions: number;
+    // NOTE: ranks is set to [] at start of election and has a new entry added at the end of each round
     ranks: any[];
 }

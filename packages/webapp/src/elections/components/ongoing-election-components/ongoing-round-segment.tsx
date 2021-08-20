@@ -24,6 +24,7 @@ import {
 } from "elections";
 import {
     ActiveStateConfigType,
+    Election,
     ElectionStatus,
     RoundStage,
 } from "elections/interfaces";
@@ -35,6 +36,7 @@ import VotingRoundParticipants from "./voting-round-participants";
 import { setVote } from "../../transactions";
 
 export interface RoundSegmentProps {
+    ongoingElectionData?: Election;
     electionState: string;
     roundIndex: number;
     roundStartTime: Dayjs;
@@ -107,7 +109,6 @@ export const OngoingRoundSegment = ({
         isError: isErrorCurrentMember,
     } = useCurrentMember();
 
-    console.info(`<OngoingRound /> roundIndex[${roundIndex}]`);
     const {
         data: participants,
         isLoading: isLoadingParticipants,
@@ -134,7 +135,6 @@ export const OngoingRoundSegment = ({
         isLoading: isLoadingMemberData,
         isError: isErrorMemberData,
     } = useMemberDataFromVoteData(voteData);
-    console.info(`<OngoingRound /> after use()s roundIndex[${roundIndex}]`);
 
     const isLoading =
         isLoadingParticipants ||
@@ -156,17 +156,19 @@ export const OngoingRoundSegment = ({
         isErrorChiefs ||
         isErrorMemberData ||
         isErrorCurrentMember ||
-        members?.length !== voteData?.length;
+        (voteData &&
+            voteData.length > 0 &&
+            members?.length !== voteData?.length);
 
-    if (isError || !members || !voteData) {
+    if (isError) {
         return <ErrorLoadingElection />;
     }
 
-    const userVoterStats = voteData.find(
+    const userVoterStats = voteData!.find(
         (vs) => vs.member === loggedInMember?.account
     );
 
-    const userVotingFor = members.find(
+    const userVotingFor = members?.find(
         (m) => m.account === userVoterStats?.candidate
     );
 
@@ -200,14 +202,6 @@ export const OngoingRoundSegment = ({
         setIsSubmittingVote(false);
     };
 
-    // TODO: this needs more attention once we have sufficient test data to test it
-    if (!participants?.length) {
-        return (
-            <div>
-                You nor a delegate of yours is participating in this round.
-            </div>
-        );
-    }
     return (
         // TODO: Move this out into a separate component to simplify and make this more readable
         <Expander
@@ -230,6 +224,7 @@ export const OngoingRoundSegment = ({
                     stage
                 ) && (
                     <RequestElectionMeetingLinkButton
+                        stage={stage}
                         roundIndex={roundIndex}
                         meetingStartTime={meetingStartTime}
                         meetingDurationMs={meetingDurationMs}
@@ -247,7 +242,7 @@ export const OngoingRoundSegment = ({
                         : "This round is finalizing. Please submit any outstanding votes now. You will be able to come back later to upload election videos if your video isn't ready yet."}
                 </Text>
             </Container>
-            {isVotingOpen ? (
+            {voteData && isVotingOpen ? (
                 <>
                     <Container className="flex justify-between">
                         <Heading size={4} className="inline-block">

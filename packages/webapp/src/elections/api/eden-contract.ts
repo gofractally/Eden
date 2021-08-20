@@ -8,25 +8,24 @@ import {
     CONTRACT_ELECTION_STATE_TABLE,
     CONTRACT_MEMBER_TABLE,
     CONTRACT_VOTE_TABLE,
-    Election,
+    didReachConsensus,
     getRow,
     getTableRawRows,
     getTableRows,
+    INDEX_MEMBER_BY_REP,
+    INDEX_VOTE_BY_GROUP_INDEX,
     isValidDelegate,
     queryMemberByAccountName,
-    queryMemberData,
+    queryMembers,
     queryParticipantsInCompletedRound,
+    TABLE_INDEXES,
 } from "_app";
-import {
-    EdenMember,
-    MemberData,
-    MemberStats,
-    VoteDataQueryOptionsByField,
-    VoteDataQueryOptionsByGroup,
-} from "members";
+import { EdenMember, MemberData, VoteDataQueryOptionsByField } from "members";
 import {
     ActiveStateConfigType,
+    CONFIG_SORTITION_ROUND_DEFAULTS,
     CurrentElection,
+    Election,
     ElectionState,
     ElectionStatus,
     VoteData,
@@ -37,9 +36,10 @@ import {
     fixtureVoteDataRow,
     fixtureVoteDataRows,
 } from "./fixtures";
-import { fixtureEdenMembersInGroup } from "members/api/fixtures";
 
 const CONSENSUS_RESULT_NO_DELEGATE = "no delegate";
+import { TableQueryOptions } from "_app/eos/interfaces";
+import { fixtureEdenMembersInGroup } from "members/api/fixtures";
 
 export const getMemberGroupFromIndex = (
     memberIdx: number,
@@ -81,12 +81,8 @@ export const getMemberGroupFromIndex = (
 export const getMemberGroupParticipants = async (
     memberAccount?: string,
     roundIndex?: number,
-    config?: ActiveStateConfigType
+    config: ActiveStateConfigType = CONFIG_SORTITION_ROUND_DEFAULTS
 ) => {
-    if (!config)
-        throw new Error(
-            "getMemberGroupParticipants requires a config object (got 'undefined')"
-        );
     if (roundIndex === undefined)
         throw new Error(
             "getMemberGroupParticipants requires a roundIndex (got 'undefined')"
@@ -112,21 +108,16 @@ export const getMemberGroupParticipants = async (
         totalParticipants,
         numGroups
     );
-    console.info(
-        `getMGP().lowerBound[${lowerBound}], upperBound[${lowerBound}]`
-    );
 
     const GET_VOTE_DATA_ROWS_LIMIT = 20;
 
     // get all members in this member's group
-    console.info("getVoteDRs()", { lowerBound, upperBound });
     const rows = await getVoteDataRows({
         lowerBound: (roundIndex << 16) + lowerBound,
         upperBound: (roundIndex << 16) + upperBound,
         limit: GET_VOTE_DATA_ROWS_LIMIT,
-        key_type: "i64",
-        index_position: 2,
-    });
+        ...TABLE_INDEXES[CONTRACT_VOTE_TABLE][INDEX_VOTE_BY_GROUP_INDEX],
+    } as TableQueryOptions);
 
     if (!rows || !rows.length) {
         return undefined;
@@ -150,21 +141,20 @@ export const getVoteDataRow = async (
 };
 
 const getVoteDataRows = async (
-    opts: VoteDataQueryOptionsByGroup
+    opts: TableQueryOptions
 ): Promise<VoteData[] | undefined> => {
     if (devUseFixtureData)
         return Promise.resolve(
             fixtureVoteDataRows.filter(
                 (vote) =>
-                    vote.index >= opts.lowerBound &&
-                    vote.index <= opts.upperBound
+                    vote.index >= opts.lowerBound! &&
+                    vote.index <= opts.upperBound!
             )
         );
 
     // TODO: see what real data looks like and real use-cases and see if we need the electionState flag;
     // If not, switch this back to getTableRows()
     const rawRows = await getTableRawRows(CONTRACT_VOTE_TABLE, opts);
-    console.info("rawRows:", rawRows);
 
     if (rawRows?.[0].length) return rawRows.map((row) => row[1]);
     return rawRows;
@@ -235,11 +225,10 @@ export const getParticipantsInCompletedRound = async (
     const bounds: string = eosjsNumeric.signedBinaryToDecimal(bytes).toString();
 
     const participants = await getTableRows(CONTRACT_MEMBER_TABLE, {
-        index_position: 2,
-        key_type: "i128",
         lowerBound: bounds,
         upperBound: bounds,
         limit: 20,
+        ...TABLE_INDEXES[CONTRACT_MEMBER_TABLE][INDEX_MEMBER_BY_REP],
     });
 
     const delegateAccountName = participants?.[0].representative;
@@ -279,7 +268,8 @@ export const getElectionState = async () => {
 };
 
 const ELECTION_DEFAULTS: Election = {
-    areRoundsWithNoParticipation: false,
+    isMemberStillParticipating: false,
+    isElectionOngoing: false,
     completedRounds: [
         {
             participants: [],
@@ -292,93 +282,87 @@ const ELECTION_DEFAULTS: Election = {
     },
 };
 
+const getMemberDataFromEdenMemberList = async (memberList: EdenMember[]) => {
+    const nftTemplateIds = memberList.map((em) => em.nft_template_id);
+
+    const { queryKey, queryFn } = queryMembers(
+        1,
+        nftTemplateIds.length,
+        nftTemplateIds
+    );
+
+    return await queryClient.fetchQuery<MemberData[], Error>(
+        queryKey,
+        queryFn,
+        { staleTime: Infinity }
+    );
+};
 const getParticipantsOfCompletedRounds = async (myDelegation: EdenMember[]) => {
-    console.info("getParticipantsOfCompletedRounds().top");
-    const pCompletedRounds = myDelegation.map(async (member, electionRound) => {
-        // get EdenMembers in group with this member
-        const { queryKey, queryFn } = queryParticipantsInCompletedRound(
-            electionRound,
-            member
-        );
-        const edenMembers = await queryClient.fetchQuery(queryKey, queryFn);
+    const pCompletedRounds = myDelegation.map(
+        async (member, electionRoundIndex) => {
+            // get EdenMembers in group with this member
+            const { queryKey, queryFn } = queryParticipantsInCompletedRound(
+                electionRoundIndex,
+                member
+            );
+            const edenMembersInThisRound = await queryClient.fetchQuery(
+                queryKey,
+                queryFn
+            );
 
-        // get MemberDatas for these EdenMembers
-        const pParticipantsMemberData = edenMembers?.participants.map(
-            async (edenMember) => {
-                const { queryKey, queryFn } = queryMemberData(
-                    edenMember.account
-                );
-                const memberData = await queryClient.fetchQuery(
-                    queryKey,
-                    queryFn
-                );
-                return memberData;
-            }
-        );
-        const participantsMemberData = await Promise.all(
-            pParticipantsMemberData!
-        );
+            const participantsMemberData = await getMemberDataFromEdenMemberList(
+                edenMembersInThisRound?.participants || []
+            );
 
-        return {
-            participants: edenMembers?.participants, // .length will be number of participants and empty if no round happened
-            participantsMemberData,
-            didReachConsensus: isValidDelegate(
-                edenMembers?.participants?.[0]?.representative
-            ),
-        };
-    });
+            return {
+                participants: edenMembersInThisRound?.participants, // .length will be number of participants and empty if no round happened
+                participantsMemberData,
+                didReachConsensus: didReachConsensus(
+                    electionRoundIndex,
+                    edenMembersInThisRound?.participants
+                ),
+            };
+        }
+    );
     const completedRounds = await Promise.all(pCompletedRounds);
     return completedRounds;
 };
 
+/**
+ * get an abstracted view of the election data
+ * Goal: Model all this data to be self-consistent and to abstract the frontend from the complexities of the backend logic
+ * Ongoing Round info: this is unfiltered/unmodified vote table data.
+ * Ongoing Round info can be refactored to be more tailored to the frontend eventually.
+ * @param {string} title - The title of the book.
+ * @param {string} author - The author of the book.
+ */
 export const getOngoingElectionData = async (
-    memberStats?: MemberStats,
     votingMemberData: MemberData[] = [],
     currentElection?: CurrentElection,
     myDelegation: EdenMember[] = []
 ) => {
-    console.info("getOngoingElectionData().top");
-    if (!votingMemberData) throw new Error("no votingMemberData");
-    console.info("getOED().votingMemberData:", votingMemberData);
-
-    // Calculate highestRoundIndexInWhichMemberWasRepresented and areRoundsWithNoParticipation
+    const isElectionOngoing =
+        currentElection?.electionState === ElectionStatus.Active ||
+        currentElection?.electionState === ElectionStatus.Final;
     const inSortitionRound =
         currentElection?.electionState === ElectionStatus.Final; // status===final only during sortition round
-    // TODO: do we need currentElection.electionState === ElectionStatus.Active?
-    const roundsCompleted = memberStats ? memberStats?.ranks.length : 0;
-    const heightOfDelegationMinusChiefs = inSortitionRound
-        ? roundsCompleted
-        : myDelegation.length;
 
-    // START calculating values needed for return value
-    // highestRoundIndex = myDelegation.length - 1
-    const highestRoundIndexInWhichMemberWasRepresented: number =
-        heightOfDelegationMinusChiefs - 1;
-    // areRoundsWithNoParticipation = myDelegation.length < memberStats.ranks.length
-    const areRoundsWithNoParticipation =
-        heightOfDelegationMinusChiefs < (memberStats?.ranks?.length || 0);
+    const isMemberStillParticipating = votingMemberData.length > 0;
 
-    // Ongoing Round info: this is unfiltered/unmodified vote table data.
-    // This can be refactored to be more tailored to the frontend eventually.
     const ongoingRound = { participantsMemberData: votingMemberData };
-    console.info("ongoingRound:", ongoingRound);
 
     const completedRounds = await getParticipantsOfCompletedRounds(
         myDelegation
     );
-    console.info("completedRounds:", completedRounds);
 
-    const electionData: Election = {
+    const electionData = {
         ...ELECTION_DEFAULTS,
-        highestRoundIndexInWhichMemberWasRepresented, //: 2,
-        areRoundsWithNoParticipation, // : false,
+        isElectionOngoing,
+        isMemberStillParticipating,
+        inSortitionRound,
         completedRounds,
         ongoingRound,
     } as Election;
     if (!electionData) return ELECTION_DEFAULTS;
-    // electionData.areRoundsWithNoParticipation =
-    //     electionData.completedRounds!.length > 1 &&
-    //     electionData.highestRoundIndexInWhichMemberWasRepresented! <
-    //         electionData.completedRounds!.length - 1;
     return electionData;
 };

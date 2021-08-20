@@ -1,5 +1,5 @@
 import { edenContractAccount, rpcEndpoint } from "config";
-import { TableQueryOptions } from "./interfaces";
+import { TableKeyType, TableQueryOptions } from "./interfaces";
 
 const RPC_URL = `${rpcEndpoint.protocol}://${rpcEndpoint.host}:${rpcEndpoint.port}`;
 export const RPC_GET_TABLE_ROWS = `${RPC_URL}/v1/chain/get_table_rows`;
@@ -16,6 +16,24 @@ export const CONTRACT_VOTE_TABLE = "votes";
 export const CONTRACT_INDUCTION_TABLE = "induction";
 export const CONTRACT_ENDORSEMENT_TABLE = "endorsement";
 
+export const INDEX_MEMBER_BY_REP = "MemberTableIndexByRep";
+export const INDEX_VOTE_BY_GROUP_INDEX = "VoteTableIndexByGroupIndex";
+
+export const TABLE_INDEXES = {
+    [CONTRACT_MEMBER_TABLE]: {
+        [INDEX_MEMBER_BY_REP]: {
+            index_position: 2,
+            key_type: "i128" as TableKeyType,
+        },
+    },
+    [CONTRACT_VOTE_TABLE]: {
+        [INDEX_VOTE_BY_GROUP_INDEX]: {
+            key_type: "i64" as TableKeyType,
+            index_position: 2,
+        },
+    },
+};
+
 type TableResponseRow<T> = [string, T] | T;
 
 interface TableResponse<T> {
@@ -30,8 +48,7 @@ const TABLE_PARAM_DEFAULTS = {
     upperBound: null,
     limit: 1,
     index_position: 1,
-    key_type: "",
-};
+} as TableQueryOptions;
 
 export const getRow = async <T>(
     table: string,
@@ -76,17 +93,11 @@ export const getTableRawRows = async <T = any>(
 
     const requestBody = {
         code: edenContractAccount,
-        index_position: options.index_position,
         json: true,
-        key_type: options.key_type,
-        limit: `${options.limit}`,
-        lower_bound: options.lowerBound,
-        upper_bound: options.upperBound,
         reverse,
-        scope: options.scope,
         show_payer: false,
         table: table,
-        table_key: "",
+        ...options,
     };
 
     const response = await fetch(RPC_GET_TABLE_ROWS, {
@@ -107,15 +118,7 @@ export const getTableRawRows = async <T = any>(
 export const getTableIndexRows = async (
     table: string,
     indexPosition: number,
-    keyType:
-        | "name"
-        | "i64"
-        | "i128"
-        | "i256"
-        | "float64"
-        | "float128"
-        | "sha256"
-        | "ripemd160",
+    keyType: TableKeyType,
     lowerBound: any,
     upperBound?: any,
     limit = 100
