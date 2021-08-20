@@ -193,13 +193,8 @@ namespace eden
           "Registration has closed");
 
       member_tb.modify(member, eosio::same_payer, [&](auto& row) {
-         row.value = member_v1{
-             {.account = row.account(),
-              .name = row.name(),
-              .status = row.status(),
-              .nft_template_id = row.nft_template_id(),
-              .election_participation_status = participating ? in_election : not_in_election,
-              .election_rank = row.election_rank()}};
+         row.value = std::visit([](auto& v) { return member_v1{v}; }, row.value);
+         row.election_participation_status() = participating ? in_election : not_in_election;
       });
    }
 

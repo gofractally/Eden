@@ -1,5 +1,5 @@
 import { edenContractAccount, rpcEndpoint } from "config";
-import { TableQueryOptions } from "./interfaces";
+import { TableKeyType, TableQueryOptions } from "./interfaces";
 
 const RPC_URL = `${rpcEndpoint.protocol}://${rpcEndpoint.host}:${rpcEndpoint.port}`;
 export const RPC_GET_TABLE_ROWS = `${RPC_URL}/v1/chain/get_table_rows`;
@@ -7,6 +7,7 @@ export const RPC_GET_TABLE_ROWS = `${RPC_URL}/v1/chain/get_table_rows`;
 export const CONTRACT_SCOPE = "0";
 export const CONTRACT_GLOBAL_TABLE = "global";
 export const CONTRACT_MEMBER_TABLE = "member";
+export const CONTRACT_ENCRYPTED_TABLE = "encrypted";
 export const CONTRACT_MEMBERSTATS_TABLE = "memberstats";
 export const CONTRACT_ACCOUNT_TABLE = "account";
 export const CONTRACT_ELECTION_STATE_TABLE = "elect.state";
@@ -15,8 +16,28 @@ export const CONTRACT_VOTE_TABLE = "votes";
 export const CONTRACT_INDUCTION_TABLE = "induction";
 export const CONTRACT_ENDORSEMENT_TABLE = "endorsement";
 
+export const INDEX_MEMBER_BY_REP = "MemberTableIndexByRep";
+export const INDEX_VOTE_BY_GROUP_INDEX = "VoteTableIndexByGroupIndex";
+
+export const TABLE_INDEXES = {
+    [CONTRACT_MEMBER_TABLE]: {
+        [INDEX_MEMBER_BY_REP]: {
+            index_position: 2,
+            key_type: "i128" as TableKeyType,
+        },
+    },
+    [CONTRACT_VOTE_TABLE]: {
+        [INDEX_VOTE_BY_GROUP_INDEX]: {
+            key_type: "i64" as TableKeyType,
+            index_position: 2,
+        },
+    },
+};
+
+type TableResponseRow<T> = [string, T] | T;
+
 interface TableResponse<T> {
-    rows: [string, T][];
+    rows: TableResponseRow<T>[];
     more: boolean;
     next_key: string;
 }
@@ -27,17 +48,18 @@ const TABLE_PARAM_DEFAULTS = {
     upperBound: null,
     limit: 1,
     index_position: 1,
-    key_type: "",
-};
+} as TableQueryOptions;
 
 export const getRow = async <T>(
     table: string,
     keyName?: string,
-    keyValue?: string
+    keyValue?: string,
+    scope?: string
 ): Promise<T | undefined> => {
-    const options: TableQueryOptions | undefined = keyValue
-        ? { lowerBound: keyValue }
-        : undefined;
+    const options: TableQueryOptions = {};
+    if (keyValue) options.lowerBound = keyValue;
+    if (scope) options.scope = scope;
+
     const rows = await getTableRows(table, options);
 
     if (!rows.length) {
@@ -58,29 +80,24 @@ export const getTableRows = async <T = any>(
     const rows = await getTableRawRows(table, options);
     // variants are structured as such: array[type: string, <object the variant contains>]
     // this line is reducing the data to just the data part
-    return rows.map((row) => row[1]);
+    if (rows?.[0]?.length) return rows.map((row) => row[1]);
+    return rows;
 };
 
 export const getTableRawRows = async <T = any>(
     table: string,
     options?: TableQueryOptions
-): Promise<[string, T][]> => {
+): Promise<TableResponseRow<T>[]> => {
     options = { ...TABLE_PARAM_DEFAULTS, ...options };
     const reverse = Boolean(options.lowerBound === "0" && options.upperBound);
 
     const requestBody = {
         code: edenContractAccount,
-        index_position: options.index_position,
         json: true,
-        key_type: options.key_type,
-        limit: `${options.limit}`,
-        lower_bound: options.lowerBound,
-        upper_bound: options.upperBound,
         reverse,
-        scope: options.scope,
         show_payer: false,
         table: table,
-        table_key: "",
+        ...options,
     };
 
     const response = await fetch(RPC_GET_TABLE_ROWS, {
@@ -101,15 +118,7 @@ export const getTableRawRows = async <T = any>(
 export const getTableIndexRows = async (
     table: string,
     indexPosition: number,
-    keyType:
-        | "name"
-        | "i64"
-        | "i128"
-        | "i256"
-        | "float64"
-        | "float128"
-        | "sha256"
-        | "ripemd160",
+    keyType: TableKeyType,
     lowerBound: any,
     upperBound?: any,
     limit = 100

@@ -2,7 +2,17 @@
 set -e
 
 CLEOS="cleos -u https://wax-test.eosdac.io"
-CONTRACT="test.edev"
+CONTRACT="test2.edev"
+
+for PARMS in $(cat ./genesis_accounts_long_list); do
+  ACCOUNT_NAME=$(echo $PARMS | cut -d "," -f1);
+  INDUCTION_ID=$(echo $PARMS | cut -d "," -f2);
+  IMAGE=$(echo $PARMS | cut -d "," -f3);
+  GENESIS_MEMBERS="$GENESIS_MEMBERS, \"$ACCOUNT_NAME\""
+done
+GENESIS_MEMBERS=$(echo $GENESIS_MEMBERS | cut -c 3-)
+GENESIS_MEMBERS="$GENESIS_MEMBERS"
+
 COMMUNITY_NAME="Eden Test"
 COMMUNITY_DESCRIPTION="Eden is a community working to maximize the power and independence of its members and thereby securing life, liberty, property, and justice for all."
 COMMUNITY_LOGO="QmZQ11KWvfj2NkKUMJfsTfvfbyUNQpLYCu8uxSbFTQ2zbA"
@@ -13,7 +23,6 @@ MINIMUM_DONATION="10.00000000 WAX"
 AUCTION_STARTING_BID="1.00000000 WAX"
 AUCTION_DURATION=604800
 GENESIS_MEMO="A community is born."
-GENESIS_MEMBERS='"alice.edev", "pip.edev", "egeon.edev","edenmember11", "edenmember12", "edenmember13", "edenmember14", "edenmember15","edenmember21", "edenmember22", "edenmember23", "edenmember24", "edenmember25","edenmember31", "edenmember32", "edenmember33", "edenmember34", "edenmember35","edenmember41", "edenmember42"'
 ELECTION_DAY="0"
 ELECTION_TIME="16:00"
 

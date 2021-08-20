@@ -4,7 +4,7 @@ import { json as bpJson, urlencoded as bpUrlencoded } from "body-parser";
 import * as http from "http";
 
 import routes from "./routes";
-import { serverConfig, env } from "./config";
+import { serverConfig, env, subchainConfig } from "./config";
 import logger, { setupExpressLogger } from "./logger";
 import { createWSServer, startSubchain } from "./handlers/subchain";
 
@@ -28,5 +28,7 @@ server.listen(serverConfig.port, () => {
     logger.info(`Environment=${env}`);
 });
 
-createWSServer("/subchain", server);
-startSubchain();
+if (subchainConfig.enable) {
+    createWSServer("/v1/subchain", server);
+    startSubchain();
+}

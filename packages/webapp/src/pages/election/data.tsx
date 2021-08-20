@@ -1,3 +1,4 @@
+import { CurrentElection_activeState } from "elections/interfaces";
 import { extractElectionDates } from "elections/utils";
 import React from "react";
 
@@ -13,7 +14,7 @@ import {
     useElectionState,
     useHeadDelegate,
     useMemberGroupParticipants,
-    useParticipantsInCompletedRound,
+    useParticipantsInMyCompletedRound,
     useVoteDataRow,
 } from "_app";
 
@@ -24,17 +25,19 @@ export const ElectionPage = () => {
     const { data: leadRepresentative } = useHeadDelegate();
 
     const { data: currentElection } = useCurrentElection();
+    const currentActiveElection = currentElection as CurrentElection_activeState;
 
     const {
         data: participantsInCompletedRound,
-    } = useParticipantsInCompletedRound(targetRound, loggedInMember);
+    } = useParticipantsInMyCompletedRound(targetRound);
 
     const { data: voteRowForLoggedInMember } = useVoteDataRow(
         loggedInMember?.account
     );
 
     const { data: membersInGroup } = useMemberGroupParticipants(
-        loggedInMember?.account
+        loggedInMember?.account,
+        targetRound
     );
 
     const {
@@ -165,7 +168,8 @@ export const ElectionPage = () => {
                 <Text>Everything below assume `electionState === active`</Text>
                 <Text>We know the *current* round from this field:</Text>
                 <Text>
-                    currentElectionState[active].round[{currentElection.round}]
+                    currentElectionState[active].round[
+                    {currentActiveElection.round}]
                 </Text>
                 <Text>
                     If this member not in `vote` table then their participation
@@ -209,18 +213,39 @@ export const ElectionPage = () => {
                 <pre>
                     {JSON.stringify(voteRowForLoggedInMember || {}, null, 2)}
                 </pre>
-                {/* TODO: remove the true below once done */}
-                {(true || !Boolean(voteRowForLoggedInMember)) && (
+                <Text className="mt-8">
+                    Let's start by knowing if we're going to display a
+                    delegation or just show the user an "Election is in
+                    progress" screen
+                </Text>
+                <Text>
+                    We check the electionState.status field for registration,
+                    which is the state the contract is in between elections
+                </Text>
+                <Text>
+                    electionState.status[{currentElection.electionState}]; we're
+                    *not* in an active election is the `electionState` is
+                    `current_election_state_registration`
+                </Text>
+                {!Boolean(voteRowForLoggedInMember) && (
                     <>
-                        <Text>
+                        <Text className="mt-8">
                             Since we didn't find vote data for loggedInMember...
                         </Text>
-                        <Text>
-                            ON HOLD: 1) **Failed Consensus** Did the group come
-                            to consensus? edenmember23 demonstrates this; no way
-                            yet to discover their group partciipants
+                        <Text className="font-bold">
+                            1) **Failed Consensus** Did the group come to
+                            consensus? edenmember12 (Round 2) and edenmember23
+                            (Round 1) demonstrate this.
                         </Text>
-                        <Text>
+                        <Text className="mb-4">
+                            NOTE : This scenario is identical algorithmically to
+                            a group who *did* come to consensus, difference
+                            being that the representative is a 13-character
+                            string (invalid eos account). So to know if the
+                            group came to consensus, you just need to verify if
+                            the representative account is 13 characters long.
+                        </Text>
+                        <Text className="font-bold">
                             2.1) **Member has advanced** Is sought round lower
                             than loggedUser's election_rank, ie. has
                             loggedInUser advanced beyond that target level?
@@ -230,7 +255,7 @@ export const ElectionPage = () => {
                             loggedInUser.election_rank[
                             {loggedInMember.election_rank}]
                         </Text>
-                        <Text>
+                        <Text className="font-bold">
                             2.2) **Member didn't advance** loggedInMember was in
                             a group that did come to consensus but
                             loggedInMember was not the one made a delegate.
@@ -261,7 +286,7 @@ export const ElectionPage = () => {
                     </>
                 )}
                 {Boolean(voteRowForLoggedInMember) && (
-                    <Text>
+                    <Text className="mt-8">
                         loggedInUser in `vote` table; see intra-round
                         instructions above.
                     </Text>

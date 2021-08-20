@@ -11,18 +11,6 @@ module.exports = {
         // // Perform customizations to webpack config
         // config.plugins.push(new webpack.IgnorePlugin(/\/__tests__\//))
 
-        config.externals.push(
-            (function () {
-                var IGNORES = ["electron"];
-                return function (context, request, callback) {
-                    if (IGNORES.indexOf(request) >= 0) {
-                        return callback(null, "require('" + request + "')");
-                    }
-                    return callback();
-                };
-            })()
-        );
-
         // Fixes build with ts/lerna monorepo workspaces
         const tsRule = config.module.rules.find(
             (rule) => rule.test && rule.test.toString().includes("tsx|ts")

@@ -4,7 +4,7 @@ export const ElectionFAQ = () => {
     return (
         <>
             <Container darkBg>
-                <Heading size={1}>FAQ</Heading>
+                <Heading size={2}>Election FAQ</Heading>
             </Container>
             <Expander header="What is an election like?" darkBg>
                 <Container>Answers coming soon.</Container>

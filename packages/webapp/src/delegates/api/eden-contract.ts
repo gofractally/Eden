@@ -1,9 +1,13 @@
-import { EdenMember } from "members";
+import { CurrentElection } from "elections/interfaces";
+import { EdenMember, MemberStats } from "members";
 import { queryClient } from "pages/_app";
 import {
     isValidDelegate,
+    queryCurrentElection,
     queryElectionState,
     queryMemberByAccountName,
+    queryMembersStats,
+    queryVoteDataRow,
 } from "_app";
 
 const queryElectionStateHelper = async () =>
@@ -34,6 +38,13 @@ const getMemberWrapper = async (account: string) => {
 export const getMyDelegation = async (
     loggedInMemberAccount: string | undefined
 ): Promise<EdenMember[]> => {
+    const currentElection: CurrentElection = await queryClient.fetchQuery(
+        queryCurrentElection
+    );
+    const memberStats: MemberStats = await queryClient.fetchQuery(
+        queryMembersStats
+    );
+
     let myDelegates: EdenMember[] = [];
 
     if (!loggedInMemberAccount) return myDelegates;
@@ -46,10 +57,20 @@ export const getMyDelegation = async (
             throw new Error(
                 `Member record not found for provided account [${nextMemberAccount}].`
             );
+        const memberVoteData = await queryClient.fetchQuery(
+            queryVoteDataRow(nextMemberAccount)
+        );
+        const memberRankIndex = memberVoteData?.round ?? member.election_rank;
 
         // Fill the array from next available position up to member.election_rank with member,
         // in case this delegate got voted up through multiple levels
-        for (let idx = myDelegates.length; idx < member?.election_rank; idx++) {
+        const highestCompletedRoundIndex = memberStats.ranks.length - 1;
+
+        for (
+            let idx = myDelegates.length;
+            idx <= memberRankIndex && idx <= highestCompletedRoundIndex;
+            idx++
+        ) {
             myDelegates.push(member);
         }
         isHeadChief = member.account === member.representative;

@@ -2,7 +2,16 @@ import Link from "next/link";
 import { useQuery } from "@edenos/common/dist/subchain";
 
 export default function Header() {
-    const info = useQuery("{blockLog{head{num eosioBlock{num}}}}");
+    const info = useQuery(`{
+        blockLog {
+            head {
+                num
+                eosioBlock {
+                    num
+                }
+            }
+        }
+    }`);
     return (
         <div>
             <div style={{ margin: 10 }}>

@@ -470,8 +470,7 @@ namespace eden
                state_variant = current_election_state_active{
                    0, configs.front(), state->rng.seed(),
                    eosio::current_time_point() +
-                       eosio::seconds(globals.get().election_round_time_sec +
-                                      globals.get().election_break_time_sec)};
+                       eosio::seconds(globals.get().election_round_time_sec)};
             }
             --max_steps;
          }
@@ -516,10 +515,12 @@ namespace eden
    {
       // count votes
       group_result result{eosio::name{~iter->member.value}};
+      std::vector<std::pair<eosio::name, eosio::name>> votes;
       std::map<eosio::name, uint8_t> votes_by_candidate;
       uint8_t total_votes = 0;
       for (uint32_t i = 0; i < group_size; ++i)
       {
+         votes.push_back({iter->member, iter->candidate});
          if (iter->candidate != eosio::name())
          {
             if (iter->candidate == iter->member)
@@ -543,6 +544,12 @@ namespace eden
       {
          result.winner = best->first;
       }
+      auto contract = group_idx.get_code();
+      eosio::action{{contract, "active"_n},
+                    contract,
+                    "electreport"_n,
+                    std::tuple(state.prev_round, votes, result.winner)}
+          .send();
       return result;
    }
 
@@ -691,15 +698,15 @@ namespace eden
          {
             auto now = eosio::current_time_point();
             state = current_election_state_final{
-                {.start_time = now, .end_time = now + eosio::seconds(election_seeding_window)}};
+                {.start_time = now,
+                 .end_time = now + eosio::seconds(election_final_seeding_window)}};
          }
          else
          {
             auto g = globals.get();
             state = current_election_state_active{
                 static_cast<uint8_t>(data.prev_round + 1), config.front(), data.rng.seed(),
-                eosio::current_time_point() +
-                    eosio::seconds(g.election_round_time_sec + g.election_break_time_sec)};
+                eosio::current_time_point() + eosio::seconds(g.election_round_time_sec)};
          }
          --max_steps;
       }

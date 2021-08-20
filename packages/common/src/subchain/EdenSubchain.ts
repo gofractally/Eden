@@ -176,8 +176,16 @@ export class EdenSubchain {
         });
     }
 
-    undo(blockId: string) {
-        // TODO
+    undoBlockNum(blockNum: number) {
+        this.protect(() => {
+            this.exports.undoBlockNum(blockNum);
+        });
+    }
+
+    undoEosioNum(eosioNum: number) {
+        this.protect(() => {
+            this.exports.undoEosioNum(eosioNum);
+        });
     }
 
     getBlock(num: number) {
@@ -200,16 +208,20 @@ export class EdenSubchain {
         const utf8 = new TextEncoder().encode(q);
         return this.protect(() => {
             return this.withData(utf8, (addr) => {
-                this.exports.query(addr, utf8.length);
+                this.exports.query(addr, utf8.length, 0, 0);
                 return JSON.parse(this.resultAsString());
             });
         });
     }
 
     getIrreversible(): number {
-        return (
-            this.query("{blockLog{irreversible{num}}}").data.blockLog
-                .irreversible?.num || 0
-        );
+        const q = this.query(`{
+            blockLog{
+                irreversible{
+                    num
+                }
+            }
+        }`);
+        return q.data.blockLog.irreversible?.num || 0;
     }
 } // WrapWasm

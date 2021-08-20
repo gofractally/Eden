@@ -1,28 +1,44 @@
-import { useState } from "react";
+import React, { useState } from "react";
+import { useQueryClient } from "react-query";
+import dayjs from "dayjs";
 
 import {
-    Button,
-    Container,
     ElectionParticipationStatus,
-    Form,
-    Heading,
-    Modal,
     onError,
     queryMemberByAccountName,
-    Text,
+    useCountdown,
     useCurrentElection,
     useCurrentMember,
     useUALAccount,
 } from "_app";
+import {
+    Button,
+    Container,
+    Form,
+    Heading,
+    Modal,
+    PieStatusIndicator,
+    Text,
+} from "_app/ui";
+import {
+    setEncryptionPublicKeyTransaction,
+    useEncryptionPassword,
+    NewPasswordForm,
+    ReenterPasswordForm,
+} from "encryption";
 
 import { extractElectionDates } from "../../utils";
 import { setElectionParticipation } from "../../transactions";
-import { useQueryClient } from "react-query";
 
 export const ParticipationCard = () => {
+    const [electionIsAboutToStart, setElectionIsAboutToStart] = useState(false);
+
     const [ualAccount, _, ualShowModal] = useUALAccount();
     const { data: currentMember } = useCurrentMember();
-    const { data: election } = useCurrentElection();
+    const { data: election } = useCurrentElection({
+        refetchInterval: electionIsAboutToStart ? 5000 : false,
+        refetchIntervalInBackground: true,
+    });
 
     const [
         showConfirmParticipationModal,
@@ -46,11 +62,16 @@ export const ParticipationCard = () => {
 
     const electionDate = electionDates.startDateTime.format("LL");
     const electionStartTime = electionDates.startDateTime.format("LT");
+    const electionStartTimeZone = electionDates.startDateTime.format("z");
     const electionEstimatedEndTime = electionDates.estimatedEndDateTime.format(
         "LT"
     );
     const electionParticipationLimitTime = electionDates.participationTimeLimit.format(
-        "LLL"
+        "LLL (z)"
+    );
+
+    const isPastElectionParticipationTimeLimit = dayjs().isAfter(
+        electionDates.participationTimeLimit
     );
 
     let statusLabel = "";
@@ -60,8 +81,10 @@ export const ParticipationCard = () => {
     let statusButton = null;
 
     if (!ualAccount) {
-        participationCallLabel = "Sign in to reserve your spot.";
-        statusButton = <Button onClick={ualShowModal}>Sign in</Button>;
+        participationCallLabel = "Sign in to participate.";
+        statusButton = (
+            <Button onClick={ualShowModal}>Sign in to participate</Button>
+        );
     } else if (currentMember) {
         if (
             currentMember.election_participation_status !==
@@ -86,7 +109,9 @@ export const ParticipationCard = () => {
         );
     } else {
         participationCallLabel = "Join Eden to participate!";
-        statusButton = <Button href="/induction">Join Eden</Button>;
+        statusButton = (
+            <Button href="/induction">Join Eden to participate</Button>
+        );
     }
 
     return (
@@ -100,13 +125,35 @@ export const ParticipationCard = () => {
                 </Heading>
             </div>
             <Heading size={3}>{statusLabel}</Heading>
-            <Text>
-                The next election will be held on {electionDate} between{" "}
-                {electionStartTime} and approximately {electionEstimatedEndTime}
-                .{" "}
-                <span className="font-semibold">{participationCallLabel}</span>
-            </Text>
-            {statusButton}
+            {isPastElectionParticipationTimeLimit ? (
+                <>
+                    <ParticipationCardCountdown
+                        electionDates={electionDates}
+                        onEnd={() => setElectionIsAboutToStart(true)}
+                        electionIsAboutToStart={electionIsAboutToStart}
+                    />
+                    <Text>
+                        <span className="font-semibold">
+                            Registration is closed. Waiting for the election to
+                            begin{" "}
+                        </span>
+                        {electionDate} at {electionStartTime}{" "}
+                        {electionStartTimeZone}, until approximately{" "}
+                        {electionEstimatedEndTime}.
+                    </Text>
+                </>
+            ) : (
+                <Text>
+                    The next election will be held on {electionDate} between{" "}
+                    {electionStartTime} and approximately{" "}
+                    {electionEstimatedEndTime} ({electionStartTimeZone}).{" "}
+                    <span className="font-semibold">
+                        {participationCallLabel}
+                    </span>
+                </Text>
+            )}
+
+            {!isPastElectionParticipationTimeLimit && statusButton}
             <ConfirmParticipationModal
                 isOpen={showConfirmParticipationModal}
                 close={() => setShowConfirmParticipationModal(false)}
@@ -119,19 +166,74 @@ export const ParticipationCard = () => {
     );
 };
 
+interface CountdownProps {
+    electionDates: any;
+    onEnd: () => void;
+    electionIsAboutToStart: boolean;
+}
+
+const ParticipationCardCountdown = ({
+    electionDates,
+    onEnd,
+    electionIsAboutToStart,
+}: CountdownProps) => {
+    const countdown = useCountdown({
+        startTime: electionDates.startDateTime.subtract(1, "day").toDate(),
+        endTime: electionDates.startDateTime.toDate(),
+        onEnd,
+    });
+
+    return (
+        <div className="flex items-center space-x-2">
+            <PieStatusIndicator
+                percent={countdown.percentDecimal * 100}
+                size={24}
+            />
+            {electionIsAboutToStart ? (
+                <Text className="font-semibold">
+                    The election will begin momentarily
+                </Text>
+            ) : (
+                <Text>
+                    <span className="font-semibold">
+                        The election starts in:
+                    </span>{" "}
+                    {countdown.hmmss}
+                </Text>
+            )}
+        </div>
+    );
+};
+
 interface ModalProps {
     isOpen: boolean;
     close: () => void;
+}
+
+enum ParticipationStep {
+    ConfirmParticipation,
+    ConfirmPassword,
+}
+
+interface SetEncryptionPasswordAction {
+    privateKey: string;
+    publicKey: string;
+    trx: any;
 }
 
 const ConfirmParticipationModal = ({ isOpen, close }: ModalProps) => {
     const [isLoading, setIsLoading] = useState<boolean>(false);
     const [ualAccount] = useUALAccount();
     const queryClient = useQueryClient();
+    const [step, setStep] = useState(ParticipationStep.ConfirmParticipation);
+    const {
+        encryptionPassword,
+        updateEncryptionPassword,
+    } = useEncryptionPassword();
 
-    const onSubmit = async (e: React.FormEvent) => {
-        e.preventDefault();
-
+    const onSubmit = async (
+        setEncryptionPasswordAction?: SetEncryptionPasswordAction
+    ) => {
         setIsLoading(true);
 
         try {
@@ -142,12 +244,27 @@ const ConfirmParticipationModal = ({ isOpen, close }: ModalProps) => {
             );
             console.info("signing trx", transaction);
 
+            if (setEncryptionPasswordAction) {
+                transaction.actions = [
+                    ...transaction.actions,
+                    ...setEncryptionPasswordAction.trx.actions,
+                ];
+            }
+
             const signedTrx = await ualAccount.signTransaction(transaction, {
                 broadcast: true,
             });
             console.info("electopt trx", signedTrx);
 
+            if (setEncryptionPasswordAction) {
+                updateEncryptionPassword(
+                    setEncryptionPasswordAction.publicKey,
+                    setEncryptionPasswordAction.privateKey
+                );
+            }
+
             // invalidate current member query to update participating status
+            await new Promise((resolve) => setTimeout(resolve, 3000));
             queryClient.invalidateQueries(
                 queryMemberByAccountName(ualAccount.accountName).queryKey
             );
@@ -161,6 +278,20 @@ const ConfirmParticipationModal = ({ isOpen, close }: ModalProps) => {
         setIsLoading(false);
     };
 
+    const submitParticipationConfirmation = () => {
+        if (!encryptionPassword.privateKey) {
+            setStep(ParticipationStep.ConfirmPassword);
+        } else {
+            onSubmit();
+        }
+    };
+
+    const submitPasswordConfirmation = async (
+        setEncryptionPasswordTrx?: any
+    ) => {
+        await onSubmit(setEncryptionPasswordTrx);
+    };
+
     return (
         <Modal
             isOpen={isOpen}
@@ -168,46 +299,134 @@ const ConfirmParticipationModal = ({ isOpen, close }: ModalProps) => {
             onRequestClose={close}
             contentLabel="Election Participation Modal - Confirming Participation"
             preventScroll
-            shouldCloseOnOverlayClick={!isLoading}
-            shouldCloseOnEsc={!isLoading}
+            shouldCloseOnOverlayClick={
+                step !== ParticipationStep.ConfirmPassword
+            }
+            shouldCloseOnEsc={step !== ParticipationStep.ConfirmPassword}
         >
-            <form onSubmit={onSubmit}>
-                <div className="space-y-4">
-                    <Text>
-                        You are committing to participate in the upcoming
-                        election. Not showing up could impact your standing and
-                        reputation in the community. If for some reason you
-                        cannot participate in the election, please update your
-                        status more than 24 hours from the election.
-                    </Text>
-                    <div className="p-3 border rounded">
-                        <Form.Checkbox
-                            id="confirm-checkbox"
-                            label="I agree to keep my participation status up to date."
-                            disabled={isLoading}
-                            required
-                        />
-                    </div>
-                    <div className="flex space-x-3">
-                        <Button
-                            type="neutral"
-                            onClick={close}
-                            disabled={isLoading}
-                        >
-                            Cancel
-                        </Button>
-                        <Button
-                            isSubmit
-                            isLoading={isLoading}
-                            disabled={isLoading}
-                        >
-                            {isLoading ? "Submitting..." : "Confirm"}
-                        </Button>
-                    </div>
-                </div>
-            </form>
+            {step === ParticipationStep.ConfirmParticipation && (
+                <ConfirmParticipationStep
+                    onSubmit={submitParticipationConfirmation}
+                    isLoading={isLoading}
+                    onCancel={close}
+                />
+            )}
+            {step === ParticipationStep.ConfirmPassword && (
+                <ConfirmPasswordStep
+                    onSubmit={submitPasswordConfirmation}
+                    isLoading={isLoading}
+                    onCancel={close}
+                />
+            )}
         </Modal>
     );
+};
+
+interface ConfirmParticipationStepProps {
+    onSubmit: () => void;
+    isLoading?: boolean;
+    onCancel: () => void;
+}
+
+const ConfirmParticipationStep = ({
+    onSubmit,
+    isLoading,
+    onCancel,
+}: ConfirmParticipationStepProps) => {
+    const doSubmit = (e: React.FormEvent) => {
+        e.preventDefault();
+        onSubmit();
+    };
+
+    return (
+        <form onSubmit={doSubmit}>
+            <div className="space-y-4">
+                <Text>
+                    You are committing to participate in the upcoming election.
+                    Not showing up could impact your standing and reputation in
+                    the community. If for some reason you cannot participate in
+                    the election, please update your status more than 24 hours
+                    prior to the start of the election.
+                </Text>
+                <div className="p-3 border rounded">
+                    <Form.Checkbox
+                        id="confirm-checkbox"
+                        label="I agree to keep my participation status up to date."
+                        disabled={isLoading}
+                        required
+                    />
+                </div>
+                <div className="flex space-x-3">
+                    <Button
+                        type="neutral"
+                        onClick={onCancel}
+                        disabled={isLoading}
+                    >
+                        Cancel
+                    </Button>
+                    <Button isSubmit isLoading={isLoading} disabled={isLoading}>
+                        {isLoading ? "Submitting..." : "Confirm"}
+                    </Button>
+                </div>
+            </div>
+        </form>
+    );
+};
+
+interface ConfirmPasswordStepProps {
+    onSubmit: (
+        setEncryptionPasswordAction?: SetEncryptionPasswordAction
+    ) => void;
+    isLoading?: boolean;
+    onCancel: () => void;
+}
+
+const ConfirmPasswordStep = ({
+    onSubmit,
+    isLoading,
+    onCancel,
+}: ConfirmPasswordStepProps) => {
+    const [ualAccount] = useUALAccount();
+    const {
+        encryptionPassword,
+        updateEncryptionPassword,
+    } = useEncryptionPassword();
+
+    if (encryptionPassword.publicKey) {
+        // public key present, user needs to re-enter password
+        const doSubmit = async (
+            publicKey: string,
+            privateKey: string
+        ): Promise<void> => {
+            await onSubmit({ trx: { actions: [] }, publicKey, privateKey });
+        };
+        return (
+            <ReenterPasswordForm
+                expectedPublicKey={encryptionPassword.publicKey}
+                onSubmit={doSubmit}
+                onCancel={onCancel}
+            />
+        );
+    } else {
+        const doSubmit = async (
+            publicKey: string,
+            privateKey: string
+        ): Promise<void> => {
+            const authorizerAccount = ualAccount.accountName;
+            const trx = setEncryptionPublicKeyTransaction(
+                authorizerAccount,
+                publicKey
+            );
+            await onSubmit({ trx, publicKey, privateKey });
+        };
+        return (
+            <NewPasswordForm
+                isLoading={isLoading}
+                onSubmit={doSubmit}
+                onCancel={onCancel}
+            />
+        );
+    }
 };
 
 const CancelParticipationModal = ({ isOpen, close }: ModalProps) => {

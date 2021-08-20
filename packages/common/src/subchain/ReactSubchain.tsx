@@ -19,7 +19,7 @@ export function useCreateEdenChain(
                 try {
                     console.log("create SubchainClient");
                     client = new SubchainClient();
-                    await client!.instantiateStreaming(
+                    await client.instantiateStreaming(
                         edenAccount,
                         tokenAccount,
                         atomicAccount,

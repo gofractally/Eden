@@ -126,7 +126,7 @@ export default class DfuseReceiver {
                 this.unpushedTransactions.length - 1
             ];
             if (trx.undo != prev.undo || trx.block.id != prev.block.id) {
-                if (prev.undo) this.storage.undo(prev.block.id);
+                if (prev.undo) this.storage.undoEosioNum(prev.block.num);
                 else if (prev.trace) {
                     const block = { ...prev.block, transactions: [] as any[] };
                     for (let t of this.unpushedTransactions) {
@@ -198,45 +198,46 @@ export default class DfuseReceiver {
 
     async start() {
         try {
-            this.jsonTransactions = JSON.parse(
-                fs.readFileSync(dfuseConfig.jsonTrxFile, "utf8")
+            try {
+                this.jsonTransactions = JSON.parse(
+                    fs.readFileSync(dfuseConfig.jsonTrxFile, "utf8")
+                );
+                this.numSaved = this.jsonTransactions.length;
+            } catch (e) {}
+
+            if (this.jsonTransactions.length)
+                this.variables.cursor = this.jsonTransactions[
+                    this.jsonTransactions.length - 1
+                ].cursor;
+
+            const begin = performance.now();
+            logger.info("pushing existing blocks...");
+            for (let trx of this.jsonTransactions) this.pushTrx(trx);
+            logger.info(`${performance.now() - begin} ms`);
+            this.storage.saveState();
+
+            if (dfuseConfig.preventConnect) return;
+
+            logger.info("connecting to", dfuseConfig.apiNetwork);
+            if (!this.jsonTransactions.length && dfuseConfig.firstBlock === 1)
+                logger.warn(
+                    "Don't have an existing dfuse cursor and DFUSE_FIRST_BLOCK isn't greater than 1; " +
+                        "this may take a while before the first result comes..."
+                );
+
+            const stream = await this.dfuseClient.graphql(
+                query,
+                this.onMessage.bind(this),
+                {
+                    operationType: "subscription",
+                    variables: this.variables,
+                }
             );
-            this.numSaved = this.jsonTransactions.length;
-        } catch (e) {}
 
-        if (this.jsonTransactions.length)
-            this.variables.cursor = this.jsonTransactions[
-                this.jsonTransactions.length - 1
-            ].cursor;
-
-        const begin = performance.now();
-        logger.info("pushing existing blocks...");
-        for (let trx of this.jsonTransactions) this.pushTrx(trx);
-        logger.info(`${performance.now() - begin} ms`);
-        this.storage.saveState();
-
-        if (dfuseConfig.preventConnect) return;
-
-        logger.info("connecting to", dfuseConfig.apiNetwork);
-        if (!this.jsonTransactions.length && dfuseConfig.firstBlock === 1)
-            logger.warn(
-                "Don't have an existing dfuse cursor and DFUSE_FIRST_BLOCK isn't greator than 1; " +
-                    "this may take a while before the first result comes..."
-            );
-
-        const stream = await this.dfuseClient.graphql(
-            query,
-            this.onMessage.bind(this),
-            {
-                operationType: "subscription",
-                variables: this.variables,
-            }
-        );
-
-        logger.info("dfuse is now connected");
-    }
-    catch(e: Error) {
-        logger.error(e);
-        process.exit(1);
-    }
+            logger.info("dfuse is now connected");
+        } catch (e: any) {
+            logger.error(e);
+            process.exit(1);
+        }
+    } // start()
 }

@@ -8,8 +8,10 @@ import {
     Heading,
     queryMembers,
     Text,
+    useCurrentElection,
     useCurrentMember,
     useElectionState,
+    useMemberDataFromEdenMembers,
     useMemberListByAccountNames,
     useMemberStats,
     useMyDelegation,
@@ -17,6 +19,7 @@ import {
 } from "_app";
 import { DelegateChip } from "elections";
 import { EdenMember, MemberData } from "members/interfaces";
+import { ElectionStatus } from "elections/interfaces";
 
 interface Props {
     delegatesPage: number;
@@ -25,20 +28,33 @@ interface Props {
 export const DelegatesPage = (props: Props) => {
     const [activeUser] = useUALAccount();
     const currentMember = useCurrentMember();
-    const { data: myDelegation } = useMyDelegation();
+
+    const { data: currentElection } = useCurrentElection();
+    const isElectionInProgress =
+        currentElection?.electionState !== ElectionStatus.Registration;
+
+    const { data: myDelegation } = useMyDelegation({
+        enabled: !isElectionInProgress,
+    });
     const { data: electionState } = useElectionState();
 
-    let nftTemplateIds: number[] = [];
-    if (myDelegation?.length) {
-        nftTemplateIds = myDelegation?.map((member) => member.nft_template_id);
+    const { data: myDelegationMemberData } = useMemberDataFromEdenMembers(
+        myDelegation
+    );
+
+    if (isElectionInProgress) {
+        return (
+            <FluidLayout title="My Delegation">
+                <Container>
+                    <Heading size={1}>Election in Progress</Heading>
+                    <Heading size={2}>
+                        Come back after the election is complete to see your
+                        delegation.
+                    </Heading>
+                </Container>
+            </FluidLayout>
+        );
     }
-
-    const { data: members } = useQuery({
-        ...queryMembers(1, myDelegation?.length, nftTemplateIds),
-        staleTime: Infinity,
-        enabled: Boolean(myDelegation?.length),
-    });
-
     if (!activeUser)
         return (
             <FluidLayout>
@@ -51,10 +67,17 @@ export const DelegatesPage = (props: Props) => {
                 <div>not an Eden Member</div>
             </FluidLayout>
         );
-    if (!myDelegation || !members || (myDelegation?.length > 0 && !members))
+    // TODO: Handle the no-election-has-ever-happened scenario (just after genesis induction is complete)
+    if (!myDelegation || !myDelegationMemberData)
         return (
             <FluidLayout>
-                <div>fetching your Delegation and members...</div>
+                <Container className="flex flex-col justify-center items-center py-16 text-center">
+                    <Heading size={4}>No Delegation to display</Heading>
+                    <Text>
+                        Your delegation will appear here after the first
+                        election completes.
+                    </Text>
+                </Container>
             </FluidLayout>
         );
 
@@ -68,7 +91,10 @@ export const DelegatesPage = (props: Props) => {
                         {dayjs(electionState?.last_election_time).format("LL")}
                     </Text>
                 </Container>
-                <Delegates myDelegation={myDelegation} members={members} />
+                <Delegates
+                    myDelegation={myDelegation}
+                    members={myDelegationMemberData}
+                />
             </div>
         </FluidLayout>
     );
@@ -101,7 +127,7 @@ const Delegates = ({
     return (
         <>
             {myDelegation
-                .slice(0, membersStats.ranks.length - 2)
+                .slice(0, heightOfDelegationWithoutChiefs)
                 .map((delegate, index) => (
                     <div
                         className="-mt-px"
@@ -131,12 +157,9 @@ const Chiefs = () => {
     const { data: electionState } = useElectionState();
     const { data: membersStats } = useMemberStats();
 
-    const allChiefs = electionState?.board || [];
+    const allChiefAccountNames = electionState?.board || [];
     // Get EdenMember data, unwrap the QueryResults[] into an EdenMember[], and filter out non-existent members
-    const chiefsAsMembers = useMemberListByAccountNames(
-        allChiefs,
-        Boolean(allChiefs?.length)
-    )
+    const chiefsAsMembers = useMemberListByAccountNames(allChiefAccountNames)
         .map((chiefQR) => chiefQR.data)
         .filter((el) => Boolean(el));
 
@@ -144,19 +167,20 @@ const Chiefs = () => {
         (member) => member!.nft_template_id
     );
 
-    const { data: members } = useQuery({
-        ...queryMembers(1, allChiefs.length, nftTemplateIds),
+    const { data: memberData } = useQuery({
+        ...queryMembers(1, allChiefAccountNames.length, nftTemplateIds),
         staleTime: Infinity,
         enabled: Boolean(chiefsAsMembers?.length),
     });
 
-    if (!electionState || !members || !membersStats)
+    // TODO: Handle the no-election-has-ever-happened scenario (just after genesis induction is complete)
+    if (!electionState || !memberData || !membersStats)
         return <div>fetching data</div>;
 
     const headChiefAsEdenMember = chiefsAsMembers!.find(
         (d) => d?.account === electionState.lead_representative
     );
-    const headChiefAsMemberData = members.find(
+    const headChiefAsMemberData = memberData.find(
         (d) => d?.account === electionState.lead_representative
     );
 
@@ -173,7 +197,7 @@ const Chiefs = () => {
                 return (
                     <div key={`chiefs-${delegate.account}`}>
                         <DelegateChip
-                            member={members.find(
+                            member={memberData.find(
                                 (d) => d.account === delegate.account
                             )}
                             level={membersStats.ranks.length - 1}
@@ -187,7 +211,7 @@ const Chiefs = () => {
             </Container>
             <DelegateChip
                 member={headChiefAsMemberData}
-                level={headChiefAsEdenMember.election_rank}
+                level={headChiefAsEdenMember.election_rank + 1}
             />
         </>
     );

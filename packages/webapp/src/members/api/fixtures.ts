@@ -9,10 +9,12 @@ export const fixtureEdenMembers: EdenMember[] = [
         status: MemberStatus.ActiveMember,
         election_participation_status:
             ElectionParticipationStatus.NotInElection,
-        election_rank: 5,
+        election_rank: 4,
         // representative field will be same as account field for Head Chief
         // see isValidDelegate() for other special values and their meaning
         representative: "alice.edev", // "parent" field
+        encryption_key: "EOS87dKR7L6D4jZPj9XNN4H2pQavaAvWHdasFZZQCdu8Vn9ro5aDf",
+        // PK for above key is: 5J6YvXREKBypzFYVC2uEcw3sLE1dUrYwGZ1yatMArJRgRCN8S81
     },
     {
         name: "Egeon The Great",
@@ -21,8 +23,10 @@ export const fixtureEdenMembers: EdenMember[] = [
         status: MemberStatus.ActiveMember,
         election_participation_status:
             ElectionParticipationStatus.NotInElection,
-        election_rank: 3,
+        election_rank: 2,
         representative: "alice.edev",
+        encryption_key: "EOS85AkeYxLXd3FHb9fk9R4xJfxm8PjLSbDosW33cviiKpm2HUJBT",
+        // pk for above key is: 5Jkoj5KXqQ6mHaLs4QMH4YktfsEZK86hxtXdJ78qXxkBHnVBftE
     },
     {
         name: "Philip Pip",
@@ -31,8 +35,10 @@ export const fixtureEdenMembers: EdenMember[] = [
         status: MemberStatus.ActiveMember,
         election_participation_status:
             ElectionParticipationStatus.NotInElection,
-        election_rank: 2,
+        election_rank: 1,
         representative: "egeon.edev",
+        encryption_key: "EOS7vz6S1LVdztSk7fViBzD2LP2TPvED5K49iDQskSzJ42i75Kg19",
+        // pk for above key is: 5J5JPLn1bcidJp9BLekYWdtAk6CJGG8cfGhSoJ5nibVk4dHrSeJ
     },
     {
         name: "Eden Member 11",
@@ -41,7 +47,7 @@ export const fixtureEdenMembers: EdenMember[] = [
         status: MemberStatus.ActiveMember,
         election_participation_status:
             ElectionParticipationStatus.NotInElection,
-        election_rank: 1,
+        election_rank: 0,
         representative: "edenmember12",
     },
     {
@@ -51,8 +57,10 @@ export const fixtureEdenMembers: EdenMember[] = [
         status: MemberStatus.ActiveMember,
         election_participation_status:
             ElectionParticipationStatus.NotInElection,
-        election_rank: 2,
-        representative: "",
+        election_rank: 1,
+        // group didn't come to consensus, so a non-EOS-account string is put in the `representative` field
+        // see isARepresentativeResultingFromConsensus() for more details
+        representative: "abcdefghijkl2",
     },
     {
         name: "Eden Member 13",
@@ -61,7 +69,7 @@ export const fixtureEdenMembers: EdenMember[] = [
         status: MemberStatus.ActiveMember,
         election_participation_status:
             ElectionParticipationStatus.NotInElection,
-        election_rank: 1,
+        election_rank: 0,
         representative: "edenmember14",
     },
     {
@@ -71,7 +79,7 @@ export const fixtureEdenMembers: EdenMember[] = [
         status: MemberStatus.ActiveMember,
         election_participation_status:
             ElectionParticipationStatus.NotInElection,
-        election_rank: 2,
+        election_rank: 1,
         representative: "alice.edev",
     },
     {
@@ -81,7 +89,7 @@ export const fixtureEdenMembers: EdenMember[] = [
         status: MemberStatus.ActiveMember,
         election_participation_status:
             ElectionParticipationStatus.NotInElection,
-        election_rank: 1,
+        election_rank: 0,
         representative: "egeon.edev",
     },
     {
@@ -91,8 +99,10 @@ export const fixtureEdenMembers: EdenMember[] = [
         status: MemberStatus.ActiveMember,
         election_participation_status:
             ElectionParticipationStatus.NotInElection,
-        election_rank: 1,
+        election_rank: 0,
         representative: "pip.edev",
+        encryption_key: "EOS8S8oAAT5oa2idwX6e1ZDThQgzRTeXNZ2vpQfnCpxo5Z9sSamYg",
+        // pk for above key is: 5JN3VWDFMRn9RexLZJKvA82we6yXweDGHUzStqJA4WuktpEjHbF
     },
     {
         name: "Eden Member 22",
@@ -101,7 +111,7 @@ export const fixtureEdenMembers: EdenMember[] = [
         status: MemberStatus.ActiveMember,
         election_participation_status:
             ElectionParticipationStatus.NotInElection,
-        election_rank: 1,
+        election_rank: 0,
         representative: "alice.edev",
         encryption_key: "EOS87dKR7L6D4jZPj9XNN4H2pQavaAvWHdasFZZQCdu8Vn9ro5aDf",
         // PK for above key is: 5J6YvXREKBypzFYVC2uEcw3sLE1dUrYwGZ1yatMArJRgRCN8S81
@@ -113,8 +123,9 @@ export const fixtureEdenMembers: EdenMember[] = [
         status: MemberStatus.ActiveMember,
         election_participation_status:
             ElectionParticipationStatus.NotInElection,
-        election_rank: 1,
-        representative: "",
+        election_rank: 0,
+        // group didn't come to consensus, so a non-EOS-account string is put in the `representative` field
+        representative: "abcdefghijkl1",
     },
     {
         name: "Eden Member 24",
@@ -123,7 +134,7 @@ export const fixtureEdenMembers: EdenMember[] = [
         status: MemberStatus.ActiveMember,
         election_participation_status:
             ElectionParticipationStatus.NotInElection,
-        election_rank: 1,
+        election_rank: 0,
         representative: "edenmember25",
     },
     {
@@ -133,8 +144,8 @@ export const fixtureEdenMembers: EdenMember[] = [
         status: MemberStatus.ActiveMember,
         election_participation_status:
             ElectionParticipationStatus.NotInElection,
-        election_rank: 4,
-        representative: "",
+        election_rank: 3,
+        representative: "alice.edev",
     },
 ];
 
@@ -447,18 +458,31 @@ export const fixtureMembersStats: MemberStats = {
     ranks: [7, 4, 1, 1, 1],
 };
 
-export const fixtureMembersInGroup = (
-    round: number,
+export const fixtureEdenMembersInGroup = (
+    roundIndex: number,
     delegateAccount: string
-) => {
-    console.info(
-        `fixtureMembersInGroup().round[${round}], delegateAccount[${delegateAccount}]`
+): EdenMember[] => {
+    const membersInGroup = fixtureEdenMembers.filter(
+        (member) =>
+            member.election_rank === roundIndex &&
+            member.representative === delegateAccount
+    );
+    const isDelegateAlreadyInList = membersInGroup.find(
+        (m) => m.account === delegateAccount
     );
     return delegateAccount === ""
         ? []
-        : fixtureEdenMembers.filter(
-              (member) =>
-                  member.election_rank === round &&
-                  member.representative === delegateAccount
-          );
+        : [
+              ...membersInGroup,
+              ...(!isDelegateAlreadyInList
+                  ? fixtureEdenMembers.filter(
+                        (member) => member.account === delegateAccount
+                    )
+                  : []),
+          ];
 };
+
+export const getFixtureEdenMember = (memberAccount: string): EdenMember =>
+    fixtureEdenMembers.find((member) => member.account === memberAccount)!;
+export const getFixtureMemberData = (memberAccount: string): MemberData =>
+    fixtureMemberData.find((member) => member.account === memberAccount)!;

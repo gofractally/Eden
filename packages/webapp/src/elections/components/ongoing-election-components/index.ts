@@ -1,3 +1,4 @@
+export * from "./chiefs-round-segment";
 export * from "./completed-round-segment";
 export * from "./consensometer";
 export * from "./ongoing-round-segment";

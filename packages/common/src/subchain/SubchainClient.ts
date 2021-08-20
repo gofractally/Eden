@@ -106,6 +106,8 @@ export default class SubchainClient {
                     const msg = sanitizeServerMessage(JSON.parse(data!));
                     if (msg.type === "sendStatus") {
                         await this.sendStatus();
+                    } else if (msg.type === "setHead") {
+                        this.subchain.undoBlockNum(msg.head! + 1);
                     } else if (msg.type === "setIrreversible") {
                         this.subchain.setIrreversible(msg.irreversible!);
                         this.subchain.trimBlocks();

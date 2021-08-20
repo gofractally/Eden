@@ -1,50 +1,45 @@
-import { useQuery } from "react-query";
 import { RiVideoUploadLine } from "react-icons/ri";
 
-import { queryMembers } from "_app";
-import { Button, Container, Expander } from "_app/ui";
+import {
+    isValidDelegate,
+    useMemberDataFromEdenMembers,
+    useParticipantsInMyCompletedRound,
+} from "_app";
+import { Button, Container, Expander, Text } from "_app/ui";
 import { ElectionParticipantChip } from "elections";
-import { MembersGrid } from "members";
+import { EdenMember, MembersGrid } from "members";
 
 import RoundHeader from "./round-header";
 
 interface CompletedRoundSegmentProps {
-    round: number;
+    roundIndex: number;
 }
 
 export const CompletedRoundSegment = ({
-    round,
+    roundIndex,
 }: CompletedRoundSegmentProps) => {
-    // TODO: The number of completed rounds is generated based on fixture data, but the contents are still mocked. Fill in contents!
-    const { data: participants } = useQuery({
-        ...queryMembers(1, 5),
-        staleTime: Infinity,
-    });
+    const { data } = useParticipantsInMyCompletedRound(roundIndex);
+    const { data: participantsMemberData } = useMemberDataFromEdenMembers(
+        data?.participants
+    );
 
-    if (!participants) return <></>;
+    if (!participantsMemberData || !participantsMemberData.length) return null;
 
-    const winner = participants[2]; // TODO: This should be the real winner; I'm just picking a random one for now.
+    const commonDelegate = data?.participants.find(
+        (p) => p.account === data.delegate
+    );
 
     return (
         <Expander
-            header={
-                <RoundHeader
-                    roundNum={round}
-                    subText={
-                        winner
-                            ? `Delegate elect: ${winner.name}`
-                            : "Consensus not achieved"
-                    }
-                />
-            }
+            header={<Header roundIndex={roundIndex} winner={commonDelegate} />}
             inactive
         >
-            <MembersGrid members={participants}>
+            <MembersGrid members={participantsMemberData}>
                 {(member) => {
-                    if (member.account === winner?.account) {
+                    if (member.account === commonDelegate?.account) {
                         return (
                             <ElectionParticipantChip
-                                key={`round-${round}-winner`}
+                                key={`round-${roundIndex + 1}-winner`}
                                 member={member}
                                 delegateLevel="Delegate elect"
                                 electionVideoCid="QmeKPeuSai8sbEfvbuVXzQUzYRsntL3KSj5Xok7eRiX5Fp/edenTest2ElectionRoom12.mp4"
@@ -53,7 +48,9 @@ export const CompletedRoundSegment = ({
                     }
                     return (
                         <ElectionParticipantChip
-                            key={`round-${round}-participant-${member.account}`}
+                            key={`round-${roundIndex + 1}-participant-${
+                                member.account
+                            }`}
                             member={member}
                         />
                     );
@@ -62,7 +59,7 @@ export const CompletedRoundSegment = ({
             <Container>
                 <Button size="sm">
                     <RiVideoUploadLine size={18} className="mr-2" />
-                    Upload round {round} recording
+                    Upload round {roundIndex + 1} recording
                 </Button>
             </Container>
         </Expander>
@@ -70,3 +67,29 @@ export const CompletedRoundSegment = ({
 };
 
 export default CompletedRoundSegment;
+
+interface HeaderProps {
+    roundIndex: number;
+    winner?: EdenMember;
+}
+
+const Header = ({ roundIndex, winner }: HeaderProps) => {
+    const subText = isValidDelegate(winner?.account)
+        ? `Delegate elect: ${winner?.name}`
+        : "Consensus not achieved";
+    return (
+        <RoundHeader
+            isRoundActive={false}
+            headlineComponent={
+                <Text size="sm" className="font-semibold">
+                    Round {roundIndex + 1} completed
+                </Text>
+            }
+            sublineComponent={
+                <Text size="sm" className="tracking-tight">
+                    {subText}
+                </Text>
+            }
+        />
+    );
+};
