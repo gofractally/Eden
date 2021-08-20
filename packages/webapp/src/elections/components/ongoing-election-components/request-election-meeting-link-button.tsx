@@ -157,8 +157,6 @@ const JoinMeetingButton = ({
     stage,
     encryptedData,
 }: JoinMeetingButtonProps) => {
-    console.info(stage);
-
     const [roundMeetingLink, setRoundMeetingLink] = useState("");
     const [
         failedToDecryptMeetingLink,
@@ -206,8 +204,9 @@ const JoinMeetingButton = ({
                 <BsExclamationTriangle className="mr-1 mb-px" />
             </Text>
             <Text type="danger">
-                Failed to retrieve the meeting link. Please reach out to someone
-                from your election round group or access the support.
+                Failed to retrieve meeting link. Ask someone else in your 
+                election round group for the link or join the community 
+                support room above.
             </Text>
         </div>
     ) : stage === RoundStage.PreMeeting ? (
