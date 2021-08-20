@@ -41,7 +41,7 @@ jobs:
     build-cpp:
         name: Build C++
         runs-on: ubuntu-latest
-        container: ghcr.io/eoscommunity/eden-builder:sub-chain
+        container: ghcr.io/eoscommunity/eden-builder:flatbuf
 
         steps:
             - name: ✅ Checkout code

@@ -29,6 +29,17 @@ namespace eosio
    using tuple_from_type_list = decltype(tuple_from_type_list_impl(std::declval<T>()));
 
    template <typename T>
+   struct member_object;
+
+   template <typename T, typename M>
+   struct member_object<M(T::*)>
+   {
+      using type = M(T::*);
+      using class_type = T;
+      using member_type = M;
+   };
+
+   template <typename T>
    struct member_fn;
 
    template <typename R, typename T, typename... Args>
@@ -135,6 +146,17 @@ namespace eosio
 
    template <typename T>
    struct is_std_reference_wrapper<std::reference_wrapper<T>> : std::true_type
+   {
+      using value_type = T;
+   };
+
+   template <typename T>
+   struct is_std_vector : std::false_type
+   {
+   };
+
+   template <typename T>
+   struct is_std_vector<std::vector<T>> : std::true_type
    {
       using value_type = T;
    };

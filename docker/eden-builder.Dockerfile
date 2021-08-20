@@ -8,13 +8,14 @@ RUN export DEBIAN_FRONTEND=noninteractive \
         cmake                   \
         curl                    \
         git                     \
-        libboost-all-dev        \
         libcurl4-openssl-dev    \
         libgmp-dev              \
         libssl-dev              \
         libusb-1.0-0-dev        \
+        libz-dev                \
         libzstd-dev             \
         pkg-config              \
+        python                  \
     && apt-get clean -yq \
     && rm -rf /var/lib/apt/lists/*
 
@@ -36,6 +37,15 @@ RUN cd /opt \
     && rm *.tar.* \
     && export PATH="/opt/node-v14.16.0-linux-x64/bin:$PATH" \
     && npm i -g yarn
+
+RUN cd /root \
+    && curl -LO https://github.com/eoscommunity/Eden/releases/download/deps/boost_1_75_0.tar.bz2 \
+    && tar xf boost_1_75_0.tar.bz2 \
+    && cd boost_1_75_0 \
+    && ./bootstrap.sh \
+    && ./b2 --without-python install \
+    && cd /root \
+    && rm -rf boost_*
 
 ENV WASI_SDK_PREFIX=/opt/wasi-sdk-12.0
 ENV PATH=/opt/node-v14.16.0-linux-x64/bin:$PATH
