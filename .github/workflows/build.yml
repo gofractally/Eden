@@ -1,4 +1,4 @@
-name: build eosio contracts
+name: Build
 
 on:
     push:
@@ -8,6 +8,9 @@ on:
     pull_request:
         types: [assigned, opened, synchronize, reopened, labeled]
         paths:
+            - ".github/workflows/build.yml"
+
+            # C++
             - "CMakeLists.txt"
             - "contracts/**"
             - "external/CMakeLists.txt"
@@ -15,13 +18,134 @@ on:
             - "native/**"
             - "programs/**"
             - "wasm/**"
-            - ".github/workflows/build.yml"
 
+            # box, webapp
+            - ".eslintignore"
+            - ".eslintrc.js"
+            - ".prettierrc.json"
+            - "lerna.json"
+            - "package.json"
+            - "packages/common/**"
+            - "tsconfig.build.json"
+            - "tsconfig.json"
+            - "yarn.lock"
+
+            # box
+            - "docker/eden-box.Dockerfile"
+            - "packages/box/**"
+
+            # webapp
+            - "docker/eden-webapp.Dockerfile"
+            - "packages/webapp/**"
 jobs:
-    build:
-        name: Build Eden Community Contracts and WASMs
+    build-cpp:
+        name: Build C++
         runs-on: ubuntu-latest
-        container: ghcr.io/eoscommunity/eden-builder:latest
+        container: ghcr.io/eoscommunity/eden-builder:sub-chain
+
+        steps:
+            - uses: dorny/paths-filter@v2
+              id: filter
+              with:
+                  filters: |
+                      src:
+                        - ".github/workflows/build.yml"
+
+                        - "CMakeLists.txt"
+                        - "contracts/**"
+                        - "external/CMakeLists.txt"
+                        - "libraries/**"
+                        - "native/**"
+                        - "programs/**"
+                        - "wasm/**"
+
+            - name: ✅ Checkout code
+              if: steps.filter.outputs.src == 'true'
+              uses: actions/checkout@v2
+
+            - name: Prepare ccache timestamp
+              if: steps.filter.outputs.src == 'true'
+              id: ccache_cache_timestamp
+              shell: cmake -P {0}
+              run: |
+                  string(TIMESTAMP current_date "%Y-%m-%d-%H-%M-%S" UTC)
+                  message("::set-output name=timestamp::${current_date}")
+
+            - name: show_cache
+              if: steps.filter.outputs.src == 'true'
+              id: show_cache
+              run: echo "${{ runner.os }}-ccache_whole-${{ steps.ccache_cache_timestamp.outputs.timestamp }}"
+
+            - name: ccache cache files
+              if: steps.filter.outputs.src == 'true'
+              uses: actions/cache@v1.1.0
+              with:
+                  path: .ccache
+                  key: ${{ runner.os }}-ccache_whole-${{ steps.ccache_cache_timestamp.outputs.timestamp }}
+                  restore-keys: |
+                      ${{ runner.os }}-ccache_whole-
+
+            - name: 🛠 Build
+              if: steps.filter.outputs.src == 'true'
+              run: |
+                  set -e
+                  export CCACHE_DIR=${GITHUB_WORKSPACE}/.ccache
+                  export CCACHE_CONFIGPATH=${GITHUB_WORKSPACE}/.github/ccache.conf
+                  echo =====
+                  pwd
+                  echo ${GITHUB_WORKSPACE}
+                  echo =====
+                  ccache -s
+                  echo =====
+
+                  git submodule update --init --recursive
+                  mkdir build
+                  cd build
+                  cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_CXX_COMPILER_LAUNCHER=ccache -DCMAKE_C_COMPILER_LAUNCHER=ccache -DSKIP_TS=Yes -DEDEN_ATOMIC_ASSETS_ACCOUNT=atomicassets -DEDEN_ATOMIC_MARKET_ACCOUNT=atomicmarket -DEDEN_SCHEMA_NAME=members ..
+                  make -j$(nproc)
+
+                  tar czf clsdk-ubuntu-20-04.tar.gz clsdk
+
+                  echo =====
+                  ls -la ${GITHUB_WORKSPACE}
+                  echo =====
+                  ccache -s
+                  echo =====
+
+            - name: 🧪 Run tests with CTest
+              if: steps.filter.outputs.src == 'true'
+              run: cd build && ctest -j$(nproc) -V
+
+            - name: 📃 Upload ccache.log
+              if: steps.filter.outputs.src == 'true'
+              uses: actions/upload-artifact@v2
+              with:
+                  name: ccache_log
+                  path: |
+                      ccache.log
+
+            - name: 📃 Upload clsdk
+              if: steps.filter.outputs.src == 'true'
+              uses: actions/upload-artifact@v2
+              with:
+                  name: clsdk
+                  path: |
+                      build/clsdk-ubuntu-20-04.tar.gz
+
+            - name: 📃 Upload Eden Smart Contract
+              if: steps.filter.outputs.src == 'true'
+              uses: actions/upload-artifact@v2
+              with:
+                  name: Eden Smart Contract
+                  path: |
+                      build/eden.abi
+                      build/eden.wasm
+                      build/eden-micro-chain.wasm
+
+    build-micro-chain:
+        name: Build Micro Chain
+        runs-on: ubuntu-latest
+        container: ghcr.io/eoscommunity/eden-builder:sub-chain
 
         steps:
             - name: ✅ Checkout code
@@ -36,50 +160,308 @@ jobs:
 
             - name: show_cache
               id: show_cache
-              run: echo "${{ runner.os }}-ccache-${{ steps.ccache_cache_timestamp.outputs.timestamp }}"
+              run: echo "${{ runner.os }}-ccache_microchain-${{ steps.ccache_cache_timestamp.outputs.timestamp }}"
 
             - name: ccache cache files
               uses: actions/cache@v1.1.0
               with:
                   path: .ccache
-                  key: ${{ runner.os }}-ccache-${{ steps.ccache_cache_timestamp.outputs.timestamp }}
+                  key: ${{ runner.os }}-ccache_microchain-${{ steps.ccache_cache_timestamp.outputs.timestamp }}
                   restore-keys: |
-                      ${{ runner.os }}-ccache-
+                      ${{ runner.os }}-ccache_microchain-
 
             - name: 🛠 Build
               run: |
                   set -e
                   export CCACHE_DIR=${GITHUB_WORKSPACE}/.ccache
+                  export CCACHE_CONFIGPATH=${GITHUB_WORKSPACE}/.github/ccache.conf
+                  echo =====
+                  pwd
+                  echo ${GITHUB_WORKSPACE}
                   echo =====
                   ccache -s
                   echo =====
 
-                  git submodule update --init --recursive
+                  git submodule update --init external/atomicassets-contract
+                  git submodule update --init external/Catch2
+                  git submodule update --init external/fmt
+                  git submodule update --init external/rapidjson
                   mkdir build
                   cd build
-                  cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_CXX_COMPILER_LAUNCHER=ccache -DCMAKE_C_COMPILER_LAUNCHER=ccache -DSKIP_TS=Yes -DEDEN_ATOMIC_ASSETS_ACCOUNT=atomicassets -DEDEN_ATOMIC_MARKET_ACCOUNT=atomicmarket -DEDEN_SCHEMA_NAME=members ..
-                  make -j$(nproc)
+                  cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_CXX_COMPILER_LAUNCHER=ccache -DCMAKE_C_COMPILER_LAUNCHER=ccache -DSKIP_TS=Yes -DEDEN_ATOMIC_ASSETS_ACCOUNT=atomicassets -DEDEN_ATOMIC_MARKET_ACCOUNT=atomicmarket -DEDEN_SCHEMA_NAME=members -DBUILD_NATIVE=OFF ..
+                  make -j$(nproc) wasm-configure
+                  bash -c "cd wasm && make -j$(nproc) eden-micro-chain"
 
-                  tar czf clsdk-ubuntu-20-04.tar.gz clsdk
-
+                  echo =====
+                  ls -la ${GITHUB_WORKSPACE}
                   echo =====
                   ccache -s
                   echo =====
 
-            - name: 🧪 Run tests with CTest
-              run: cd build && ctest -j$(nproc) -V
-
-            - name: 📃 Upload clsdk
+            - name: 📃 Upload ccache.log
               uses: actions/upload-artifact@v2
               with:
-                  name: clsdk
+                  name: microchain_ccache_log
                   path: |
-                      build/clsdk-ubuntu-20-04.tar.gz
+                      ccache.log
 
-            - name: 📃 Upload Eden Smart Contract
+            - name: 📃 Upload Eden Microchain
               uses: actions/upload-artifact@v2
               with:
-                  name: Eden Smart Contract
+                  name: Eden Microchain
                   path: |
-                      build/eden.abi
-                      build/eden.wasm
+                      build/eden-micro-chain.wasm
+
+    box-e2e:
+        needs: build-micro-chain
+        name: Eden Box E2E Tests
+        runs-on: ubuntu-latest
+
+        steps:
+            - uses: dorny/paths-filter@v2
+              id: filter
+              with:
+                  filters: |
+                      src:
+                        - ".github/workflows/build.yml"
+
+                        - ".eslintignore"
+                        - ".eslintrc.js"
+                        - ".prettierrc.json"
+                        - "lerna.json"
+                        - "package.json"
+                        - "packages/common/**"
+                        - "tsconfig.build.json"
+                        - "tsconfig.json"
+                        - "yarn.lock"
+
+                        - "docker/eden-box.Dockerfile"
+                        - "packages/box/**"
+
+            - name: ✅ Checkout code
+              if: steps.filter.outputs.src == 'true'
+              uses: actions/checkout@v2
+
+            - name: Download Eden Microchain
+              if: steps.filter.outputs.src == 'true'
+              uses: actions/download-artifact@v2
+              with:
+                  name: Eden Microchain
+                  path: build
+
+            - name: 🛠 Build and Start Box
+              if: steps.filter.outputs.src == 'true'
+              run: |
+                  export SUBCHAIN_DFUSE_PREVENT_CONNECT=1
+                  yarn
+                  yarn build --stream
+                  cd packages/box
+                  yarn start &
+
+            - name: 🧪 Run E2E
+              if: steps.filter.outputs.src == 'true'
+              # TODO: add real E2E tests... for now it's just a shameless curl ping
+              run: |
+                  curl localhost:3032
+
+    box-build:
+        needs: build-micro-chain
+        name: Build Eden Box
+        runs-on: ubuntu-latest
+
+        steps:
+            - uses: dorny/paths-filter@v2
+              id: filter
+              with:
+                  filters: |
+                      src:
+                        - ".github/workflows/build.yml"
+
+                        - ".eslintignore"
+                        - ".eslintrc.js"
+                        - ".prettierrc.json"
+                        - "lerna.json"
+                        - "package.json"
+                        - "packages/common/**"
+                        - "tsconfig.build.json"
+                        - "tsconfig.json"
+                        - "yarn.lock"
+
+                        - "docker/eden-box.Dockerfile"
+                        - "packages/box/**"
+
+            - name: ✅ Checkout code
+              if: steps.filter.outputs.src == 'true'
+              uses: actions/checkout@v2
+
+            - name: Download Eden Microchain
+              if: steps.filter.outputs.src == 'true'
+              uses: actions/download-artifact@v2
+              with:
+                  name: Eden Microchain
+                  path: build
+
+            - name: Image Preparation
+              if: steps.filter.outputs.src == 'true'
+              id: prep
+              run: |
+                  REGISTRY="ghcr.io"
+                  IMAGE="${REGISTRY}/${{ github.repository_owner }}/eden-box"
+                  TAGS="${IMAGE}:${{ github.sha }}"
+                  if [[ $GITHUB_REF == ref/head/master ]]; then
+                    TAGS="${TAGS},${IMAGE}:latest"
+                  fi
+                  echo ::set-output name=tags::${TAGS,,}
+
+            - name: Showtag
+              if: steps.filter.outputs.src == 'true'
+              id: showtag
+              run: echo ${{ steps.prep.outputs.tags }}
+
+            - name: Docker Buildx setup
+              if: steps.filter.outputs.src == 'true'
+              uses: docker/setup-buildx-action@v1
+
+            - name: Login in to registry
+              if: steps.filter.outputs.src == 'true'
+              uses: docker/login-action@v1
+              with:
+                  registry: ghcr.io
+                  username: ${{ github.repository_owner }}
+                  password: ${{ secrets.GITHUB_TOKEN }}
+
+            - name: 🛠 Build & Publish Image
+              if: steps.filter.outputs.src == 'true'
+              uses: docker/build-push-action@v2
+              with:
+                  push: true
+                  file: docker/eden-box.Dockerfile
+                  tags: ${{ steps.prep.outputs.tags }}
+                  context: .
+
+    webapp-e2e:
+        needs: build-micro-chain
+        name: WebApp E2E Tests
+        runs-on: ubuntu-latest
+
+        steps:
+            - uses: dorny/paths-filter@v2
+              id: filter
+              with:
+                  filters: |
+                      src:
+                        - ".github/workflows/build.yml"
+
+                        - ".eslintignore"
+                        - ".eslintrc.js"
+                        - ".prettierrc.json"
+                        - "lerna.json"
+                        - "package.json"
+                        - "packages/common/**"
+                        - "tsconfig.build.json"
+                        - "tsconfig.json"
+                        - "yarn.lock"
+
+                        - "docker/eden-webapp.Dockerfile"
+                        - "packages/webapp/**"
+
+            - name: ✅ Checkout code
+              if: steps.filter.outputs.src == 'true'
+              uses: actions/checkout@v2
+
+            - name: Download Eden Microchain
+              if: steps.filter.outputs.src == 'true'
+              uses: actions/download-artifact@v2
+              with:
+                  name: Eden Microchain
+                  path: build
+
+            - name: 🛠 Build and Start WebApp
+              if: steps.filter.outputs.src == 'true'
+              run: |
+                  export SUBCHAIN_DFUSE_PREVENT_CONNECT=1
+                  yarn
+                  yarn build --stream --ignore @edenos/example-history-app
+                  yarn start --stream --ignore @edenos/example-history-app &
+
+            - name: 🧪 Run E2E
+              if: steps.filter.outputs.src == 'true'
+              run: |
+                  yarn test --stream
+
+            - name: 🎥 Upload Cypress Results
+              if: always() && steps.filter.outputs.src == 'true'
+              uses: actions/upload-artifact@v2
+              with:
+                  name: Cypress E2E Videos and Screenshots
+                  path: |
+                      packages/webapp/cypress/screenshots
+                      packages/webapp/cypress/videos
+
+    webapp-build:
+        needs: build-micro-chain
+        name: Build Eden Community WebApp
+        runs-on: ubuntu-latest
+
+        steps:
+            - uses: dorny/paths-filter@v2
+              id: filter
+              with:
+                  filters: |
+                      src:
+                        - ".github/workflows/build.yml"
+
+                        - ".eslintignore"
+                        - ".eslintrc.js"
+                        - ".prettierrc.json"
+                        - "lerna.json"
+                        - "package.json"
+                        - "packages/common/**"
+                        - "tsconfig.build.json"
+                        - "tsconfig.json"
+                        - "yarn.lock"
+
+                        - "docker/eden-webapp.Dockerfile"
+                        - "packages/webapp/**"
+
+            - name: ✅ Checkout code
+              if: steps.filter.outputs.src == 'true'
+              uses: actions/checkout@v2
+
+            - name: Image Preparation
+              if: steps.filter.outputs.src == 'true'
+              id: prep
+              run: |
+                  REGISTRY="ghcr.io"
+                  IMAGE="${REGISTRY}/${{ github.repository_owner }}/eden-webapp"
+                  TAGS="${IMAGE}:${{ github.sha }}"
+                  if [[ $GITHUB_REF == ref/head/master ]]; then
+                    TAGS="${TAGS},${IMAGE}:latest"
+                  fi
+                  echo ::set-output name=tags::${TAGS,,}
+
+            - name: Showtag
+              if: steps.filter.outputs.src == 'true'
+              id: showtag
+              run: echo ${{ steps.prep.outputs.tags }}
+
+            - name: Docker Buildx setup
+              if: steps.filter.outputs.src == 'true'
+              uses: docker/setup-buildx-action@v1
+
+            - name: Login in to registry
+              if: steps.filter.outputs.src == 'true'
+              uses: docker/login-action@v1
+              with:
+                  registry: ghcr.io
+                  username: ${{ github.repository_owner }}
+                  password: ${{ secrets.GITHUB_TOKEN }}
+
+            - name: 🛠 Build & Publish Image
+              if: steps.filter.outputs.src == 'true'
+              uses: docker/build-push-action@v2
+              with:
+                  push: true
+                  file: docker/eden-webapp.Dockerfile
+                  tags: ${{ steps.prep.outputs.tags }}
+                  context: .

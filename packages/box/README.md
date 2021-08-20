@@ -33,6 +33,21 @@ In the above configuration we are defining that we support two eden contract act
 
 Right now we don't support a configurable way of supporting new actions. You would need to change the `config.ts` and recompile the code. We will always keep this config maintained with what is required by Eden but we also have plans to make it more flexible to handle another contract uploads in the box as well.
 
+### Subchain settings
+
+The default settings enable subchain support, using `eos.dfuse.eosnation.io` to grab history related to the `genesis.eden` contract on `EOS`.
+
+- `SUBCHAIN_DISABLE`: if present disables subchain support
+- `DFUSE_PREVENT_CONNECT`: if present disables connecting to dfuse
+- `SUBCHAIN_EDEN_CONTRACT`, `SUBCHAIN_TOKEN_CONTRACT`, `SUBCHAIN_AA_CONTRACT`, and `SUBCHAIN_AA_MARKET_CONTRACT`: contracts to filter
+- `SUBCHAIN_WASM`: location of `eden-micro-chain.wasm`
+- `SUBCHAIN_STATE`: location where to store the wasm's state
+- `DFUSE_API_KEY` is optional. Not currently necessary with the document rate this consumes.
+- `DFUSE_API_NETWORK` defaults to `eos.dfuse.eosnation.io`. Do not include the protocol in this field.
+- `DFUSE_AUTH_NETWORK` defaults to `https://auth.eosnation.io`. This requires the protocol (https).
+- `DFUSE_FIRST_BLOCK`: which block to start at. For `genesis.eden` on `EOS`, use 183705819
+- `DFUSE_JSON_TRX_FILE`: location to cache dfuse results. Defaults to `dfuse-transactions.json`
+
 ## Building Image and Publishing to GHCR
 
 ```sh

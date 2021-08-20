@@ -99,6 +99,24 @@ namespace eosio
       }
    };
 
+   struct string_stream
+   {
+      std::string& data;
+      string_stream(std::string& data) : data(data) {}
+
+      void write(char c) { data.push_back(c); }
+      void write(const void* src, std::size_t sz)
+      {
+         auto s = reinterpret_cast<const char*>(src);
+         data.insert(data.end(), s, s + sz);
+      }
+      template <typename T>
+      void write_raw(const T& v)
+      {
+         write(&v, sizeof(v));
+      }
+   };
+
    struct fixed_buf_stream
    {
       char* pos;
@@ -119,12 +137,6 @@ namespace eosio
          pos += sz;
       }
 
-      template <int Size>
-      void write(const char (&src)[Size])
-      {
-         write(src, Size);
-      }
-
       template <typename T>
       void write_raw(const T& v)
       {
@@ -140,18 +152,18 @@ namespace eosio
 
       void write(const void* src, std::size_t sz) { size += sz; }
 
-      template <int Size>
-      void write(const char (&src)[Size])
-      {
-         size += Size;
-      }
-
       template <typename T>
       void write_raw(const T& v)
       {
          size += sizeof(v);
       }
    };
+
+   template <typename S>
+   void write_str(std::string_view str, S& stream)
+   {
+      stream.write(str.data(), str.size());
+   }
 
    template <typename S>
    void increase_indent(S&)

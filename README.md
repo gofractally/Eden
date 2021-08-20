@@ -42,7 +42,9 @@ sudo apt-get install -yq    \
     git                     \
     libboost-all-dev        \
     libcurl4-openssl-dev    \
+    libgbm-dev              \
     libgmp-dev              \
+    libnss3-dev             \
     libssl-dev              \
     libusb-1.0-0-dev        \
     pkg-config              \

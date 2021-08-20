@@ -65,33 +65,6 @@ namespace abieos
 
    // !!!
    template <typename SrcIt, typename DestIt>
-   void hex(SrcIt begin, SrcIt end, DestIt dest)
-   {
-      auto nibble = [&dest](uint8_t i) {
-         if (i <= 9)
-            *dest++ = '0' + i;
-         else
-            *dest++ = 'A' + i - 10;
-      };
-      while (begin != end)
-      {
-         nibble(((uint8_t)*begin) >> 4);
-         nibble(((uint8_t)*begin) & 0xf);
-         ++begin;
-      }
-   }
-
-   // !!!
-   template <typename SrcIt>
-   std::string hex(SrcIt begin, SrcIt end)
-   {
-      std::string s;
-      hex(begin, end, std::back_inserter(s));
-      return s;
-   }
-
-   // !!!
-   template <typename SrcIt, typename DestIt>
    ABIEOS_NODISCARD bool unhex(std::string& error, SrcIt begin, SrcIt end, DestIt dest)
    {
       auto get_digit = [&](uint8_t& nibble) {

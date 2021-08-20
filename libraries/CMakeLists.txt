@@ -11,4 +11,5 @@ if(DEFINED IS_NATIVE)
     add_subdirectory(state_history)
 endif()
 
+add_subdirectory(clchain)
 add_subdirectory(rodeos)
