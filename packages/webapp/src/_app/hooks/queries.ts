@@ -40,6 +40,7 @@ import {
     CurrentElection,
     CurrentElection_activeState,
     Election,
+    ElectionStatus,
     VoteData,
 } from "elections/interfaces";
 import { EncryptionScope, getEncryptedData } from "encryption/api";
@@ -56,11 +57,15 @@ export const queryChiefDelegates = {
 };
 
 export const queryMyDelegation = (
-    memberStats?: MemberStats,
+    highestCompletedRoundIndex?: number,
     memberAccount?: string
 ) => ({
-    queryKey: ["query_my_delegation", memberAccount, memberStats],
-    queryFn: () => getMyDelegation(memberAccount, memberStats),
+    queryKey: [
+        "query_my_delegation",
+        memberAccount,
+        highestCompletedRoundIndex,
+    ],
+    queryFn: () => getMyDelegation(memberAccount, highestCompletedRoundIndex),
 });
 
 export const queryMemberGroupParticipants = (
@@ -147,16 +152,13 @@ export const queryCommunityGlobals = {
 export const queryOngoingElectionData = (
     votingMemberData?: MemberData[],
     currentElection?: CurrentElection,
-    myDelegation?: EdenMember[],
-    memberStats?: MemberStats,
-    queryOptions: any = {}
+    myDelegation?: EdenMember[]
 ) => ({
     queryKey: [
         "query_ongoing_round",
         votingMemberData,
         currentElection,
         myDelegation,
-        memberStats,
     ],
     queryFn: () => {
         return getOngoingElectionData(
@@ -165,8 +167,6 @@ export const queryOngoingElectionData = (
             myDelegation
         );
     },
-    // TODO: ensure adding this bad didn't break anything
-    ...queryOptions,
 });
 
 export const queryMembers = (
@@ -271,15 +271,24 @@ export const useIsCommunityActive = () => {
     };
 };
 
+/**
+ * Use this hook for querying signed-in user's delegation from a past/completed election.
+ * @param queryOptions any react-query queryOptions; enabled will be merged
+ * @returns query of <EdenMember[], Error>
+ */
 export const useMyDelegation = (queryOptions: any = {}) => {
     const { data: member } = useCurrentMember();
     const { data: memberStats } = useMemberStats();
-    // use queryOptions.enabled unless unspecified, in which case, ensure we don't disable the internal `enabled`
-    let enabled = "enabled" in queryOptions ? queryOptions.enabled : true;
 
-    return useQuery({
-        ...queryMyDelegation(memberStats, member?.account),
-        enabled: enabled && Boolean(member?.account && memberStats),
+    const enabled = Boolean(member?.account && memberStats);
+
+    const highestCompletedRoundIndex =
+        memberStats && memberStats.ranks.length - 1;
+
+    return useQuery<EdenMember[], Error>({
+        ...queryMyDelegation(highestCompletedRoundIndex, member?.account),
+        ...queryOptions,
+        enabled: enabled && (queryOptions.enabled ?? true),
     });
 };
 
@@ -310,11 +319,11 @@ export const useCurrentElection = (queryOptions: any = {}) =>
     });
 
 /**
- * use `votes` table data (for a particular person and round)
- * ASSUMPTION: this use method will only be called by *non*-Chief ongoing rounds
- * It relies on election state being active (not final)
+ * Use `votes` table data (for a particular person and round).
+ * This is only enabled during active, non-chief ongoing rounds.
  * @param {string} memberAccount - account of member to get
  * @param {number} roundIndex - election round index
+ * @param {any} queryOptions - any react-query queryOptions overrides (enabled merged)
  */
 export const useMemberGroupParticipants = (
     memberAccount?: string,
@@ -322,13 +331,12 @@ export const useMemberGroupParticipants = (
     queryOptions: any = {}
 ) => {
     const { data: currentElection } = useCurrentElection();
+    const isCurrentElection =
+        currentElection?.electionState === ElectionStatus.Active;
     const currentActiveElection = currentElection as CurrentElection_activeState;
 
-    let enabled = Boolean(memberAccount) && roundIndex !== undefined;
-
-    if ("enabled" in queryOptions) {
-        enabled = enabled && queryOptions.enabled;
-    }
+    let enabled =
+        Boolean(memberAccount) && roundIndex !== undefined && isCurrentElection;
 
     return useQuery<VoteData[], Error>({
         ...queryMemberGroupParticipants(
@@ -337,7 +345,7 @@ export const useMemberGroupParticipants = (
             currentActiveElection?.config
         ),
         ...queryOptions,
-        enabled,
+        enabled: enabled && (queryOptions.enabled ?? true),
     });
 };
 
@@ -346,9 +354,10 @@ export const useElectionState = () =>
         ...queryElectionState,
     });
 
-export const useMemberStats = () =>
-    useQuery({
+export const useMemberStats = (queryOptions: any = {}) =>
+    useQuery<MemberStats, Error>({
         ...queryMembersStats,
+        ...queryOptions,
     });
 
 export const useVoteDataRow = (account?: string) => {
@@ -417,46 +426,40 @@ export const useEncryptedData = (scope: EncryptionScope, id: string) =>
     });
 
 export const useOngoingElectionData = (
+    currentElection: CurrentElection,
     queryOptions: any = {}
 ): UseQueryResult<Election | undefined> => {
     const { data: loggedInMember } = useCurrentMember();
-    const { data: memberStats } = useMemberStats();
-    const { data: electionState } = useCurrentElection();
-    const { data: myDelegation } = useMyDelegation();
 
-    console.log(
-        "%c useOngoingElectionData(): ",
-        "background: #222; color: #bada55"
-    );
-    console.log("loggedInMember:", loggedInMember);
-    console.log("memberStats:", memberStats);
-    console.log("electionState:", electionState);
-    console.log("myDelegation:", myDelegation);
-    console.log(
-        "%c useOngoingElectionData(): ",
-        "background: #222; color: #bada55"
-    );
+    const { data: memberStats } = useMemberStats({
+        queryKey: ["query_member_stats", currentElection],
+    });
+
+    const { data: myDelegation } = useQuery<EdenMember[], Error>({
+        ...queryMyDelegation(
+            memberStats && memberStats.ranks.length - 1,
+            loggedInMember?.account
+        ),
+        enabled: Boolean(loggedInMember && memberStats),
+    });
 
     const { data: membersInOngoingRound } = useMemberGroupParticipants(
         loggedInMember?.account,
         memberStats?.ranks.length
     );
+
     let { data: votingMemberData } = useMemberDataFromVoteData(
         membersInOngoingRound
     );
 
-    const { queryKey, queryFn } = queryOngoingElectionData(
-        votingMemberData,
-        electionState,
-        myDelegation,
-        memberStats
-    );
-
-    let enabled = Boolean(loggedInMember && electionState && myDelegation);
+    let enabled = Boolean(loggedInMember && memberStats);
 
     return useQuery<Election, Error>({
-        queryKey,
-        queryFn,
+        ...queryOngoingElectionData(
+            votingMemberData,
+            currentElection,
+            myDelegation
+        ),
         ...queryOptions,
         enabled: enabled && (queryOptions.enabled ?? true),
     });
