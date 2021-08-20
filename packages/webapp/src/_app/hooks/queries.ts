@@ -12,8 +12,6 @@ import {
     MemberStats,
 } from "members";
 import { getCommunityGlobals } from "_app/api";
-
-import { useUALAccount } from "../eos";
 import {
     getCurrentInductions,
     getEndorsementsByInductionId,
@@ -38,13 +36,13 @@ import {
 import {
     ActiveStateConfigType,
     CurrentElection,
-    CurrentElection_activeState,
     Election,
-    ElectionStatus,
     VoteData,
 } from "elections/interfaces";
 import { EncryptionScope, getEncryptedData } from "encryption/api";
 import { TableQueryOptions } from "_app/eos/interfaces";
+
+import { useUALAccount } from "../eos";
 
 export const queryHeadDelegate = {
     queryKey: "query_head_delegate",

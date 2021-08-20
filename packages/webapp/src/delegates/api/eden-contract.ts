@@ -1,12 +1,9 @@
-import { CurrentElection } from "elections/interfaces";
-import { EdenMember, MemberStats } from "members";
+import { EdenMember } from "members";
 import { queryClient } from "pages/_app";
 import {
     isValidDelegate,
-    queryCurrentElection,
     queryElectionState,
     queryMemberByAccountName,
-    queryMembersStats,
     queryVoteDataRow,
 } from "_app";
 
