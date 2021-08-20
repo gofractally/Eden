@@ -281,7 +281,7 @@ export const useMyDelegation = ({
 }: {
     memberStats?: MemberStats;
     queryOptions?: any;
-}) => {
+} = {}) => {
     const { data: member } = useCurrentMember();
     const { data: cachedMemberStats } = useMemberStats({
         enabled: !memberStats,
