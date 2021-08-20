@@ -30,12 +30,9 @@ export const OngoingElection = ({ election }: { election: any }) => {
         isLoading: isLoadingGlobals,
         isError: isErrorGlobals,
     } = useCommunityGlobals();
-    const {
-        data: memberStats,
-        isLoading: isLoadingMemberStats,
-        isError: isErrorMemberStats,
-    } = useMemberStats();
-    const { data: ongoingElectionData } = useOngoingElectionData(election);
+    const { data: ongoingElectionData } = useOngoingElectionData({
+        currentElection: election,
+    });
 
     useEffect(() => {
         if (!awaitingNextRound) return;
@@ -49,7 +46,7 @@ export const OngoingElection = ({ election }: { election: any }) => {
         refetchIntervalInBackground: true,
     });
 
-    if (isLoadingGlobals || isLoadingMemberStats) {
+    if (isLoadingGlobals) {
         return (
             <Container>
                 <Loader />
@@ -57,14 +54,13 @@ export const OngoingElection = ({ election }: { election: any }) => {
         );
     }
 
-    const isError = isErrorGlobals || isErrorMemberStats;
-    if (isError || !memberStats) {
+    if (isErrorGlobals) {
         return <ErrorLoadingElection />;
     }
 
+    const numCompletedRounds = ongoingElectionData?.completedRounds?.length;
     const roundDurationSec = globals.election_round_time_sec;
     const roundDurationMs = roundDurationSec * 1000;
-    const roundIndex = election.round ?? memberStats.ranks.length;
     const roundEndTimeRaw = election.round_end ?? election.seed.end_time;
     const roundEndTime = dayjs(roundEndTimeRaw + "Z");
     const roundStartTime = dayjs(roundEndTime).subtract(roundDurationMs);
@@ -77,11 +73,7 @@ export const OngoingElection = ({ election }: { election: any }) => {
             </Container>
             <Ongoing.SupportSegment />
 
-            <CompletedRounds
-                numCompletedRounds={
-                    ongoingElectionData?.completedRounds?.length
-                }
-            />
+            <CompletedRounds numCompletedRounds={numCompletedRounds} />
             <SignInContainer />
             <SignUpContainer />
             <NoParticipationInFurtherRoundsMessage
@@ -90,7 +82,6 @@ export const OngoingElection = ({ election }: { election: any }) => {
             <CurrentRound
                 ongoingElectionData={ongoingElectionData}
                 electionState={election.electionState}
-                roundIndex={roundIndex}
                 roundStartTime={roundStartTime}
                 roundEndTime={roundEndTime}
                 roundDurationMs={roundDurationMs}
@@ -160,7 +151,6 @@ const CompletedRounds = ({ numCompletedRounds }: CompletedRoundsProps) => {
 export interface CurrentRoundProps {
     ongoingElectionData?: Election;
     electionState: string;
-    roundIndex: number;
     roundStartTime: Dayjs;
     roundEndTime: Dayjs;
     roundDurationMs: number;
@@ -189,7 +179,7 @@ const CurrentRound = (props: CurrentRoundProps) => {
     return (
         <Ongoing.OngoingRoundSegment
             electionState={props.electionState}
-            roundIndex={props.roundIndex}
+            roundIndex={props.ongoingElectionData.completedRounds.length}
             roundStartTime={props.roundStartTime}
             roundEndTime={props.roundEndTime}
             roundDurationMs={props.roundDurationMs}
