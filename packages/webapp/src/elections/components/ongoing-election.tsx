@@ -19,13 +19,11 @@ import {
 
 import * as Ongoing from "./ongoing-election-components";
 import { useEffect, useState } from "react";
-import { useQueryClient } from "react-query";
 
 // TODO: Non-participating-eden-member currently sees error.
 // TODO: Specifically, what happens to CompletedRound component when non-participating-eden-member logs in?
 // TODO: Make sure time zone changes during election are handled properly
 export const OngoingElection = ({ election }: { election: any }) => {
-    const queryClient = useQueryClient();
     const [awaitingNextRound, setAwaitingNextRound] = useState(false);
     const {
         data: globals,
@@ -37,17 +35,14 @@ export const OngoingElection = ({ election }: { election: any }) => {
         isLoading: isLoadingMemberStats,
         isError: isErrorMemberStats,
     } = useMemberStats();
-    const { data: ongoingElectionData } = useOngoingElectionData();
+    const { data: ongoingElectionData } = useOngoingElectionData(election);
 
     useEffect(() => {
         if (!awaitingNextRound) return;
-        // trigger recalc of rounds count for election state
-        // TODO: Investigate why we need this further; or obviate it via refactor
-        queryClient.invalidateQueries("query_member_stats");
         setAwaitingNextRound(false);
     }, [election.round]);
 
-    // TODO: Poll the memberStats query above instead?
+    // Poll for updated election information while awaitingNextRound
     useCurrentElection({
         enabled: awaitingNextRound,
         refetchInterval: 5000,

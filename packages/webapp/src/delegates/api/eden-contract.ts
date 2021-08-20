@@ -37,11 +37,12 @@ const getMemberWrapper = async (account: string) => {
 
 export const getMyDelegation = async (
     loggedInMemberAccount?: string,
-    memberStats?: MemberStats
+    highestCompletedRoundIndex?: number
 ): Promise<EdenMember[]> => {
     let myDelegates: EdenMember[] = [];
 
-    if (!loggedInMemberAccount || !memberStats) return myDelegates;
+    if (!loggedInMemberAccount || highestCompletedRoundIndex === undefined)
+        return myDelegates;
 
     let nextMemberAccount = loggedInMemberAccount;
     let isHeadChief: Boolean;
@@ -58,8 +59,6 @@ export const getMyDelegation = async (
 
         // Fill the array from next available position up to member.election_rank with member,
         // in case this delegate got voted up through multiple levels
-        const highestCompletedRoundIndex = memberStats.ranks.length - 1;
-
         for (
             let idx = myDelegates.length;
             idx <= memberRankIndex && idx <= highestCompletedRoundIndex;
