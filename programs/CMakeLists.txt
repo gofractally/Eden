@@ -1,4 +1,5 @@
 if(DEFINED IS_NATIVE)
     add_subdirectory(cltester)
     add_subdirectory(rodeos)
+    add_subdirectory(election_stats)
 endif()
