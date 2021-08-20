@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useQueryClient } from "react-query";
 import dayjs, { Dayjs } from "dayjs";
 import { BiCheck } from "react-icons/bi";
@@ -8,7 +8,6 @@ import { electionMeetingDurationMs as meetingDurationMs } from "config";
 import { onError, useCountdown, useTimeout, useUALAccount } from "_app";
 import {
     queryMemberGroupParticipants,
-    useCurrentElection,
     useCurrentMember,
     useMemberDataFromVoteData,
     useMemberGroupParticipants,
@@ -43,6 +42,7 @@ export interface RoundSegmentProps {
     roundEndTime: Dayjs;
     roundDurationMs: number;
     electionConfig?: ActiveStateConfigType;
+    onRoundEnd: () => void;
 }
 
 // TODO: Much of the building up of the data shouldn't be done in the UI layer. What do we want the API to provide? What data does this UI really need? We could even define a new OngoingElection type to provide to this UI.
@@ -53,6 +53,7 @@ export const OngoingRoundSegment = ({
     roundEndTime,
     roundDurationMs,
     electionConfig,
+    onRoundEnd,
 }: RoundSegmentProps) => {
     const queryClient = useQueryClient();
 
@@ -90,14 +91,18 @@ export const OngoingRoundSegment = ({
     );
 
     useTimeout(() => {
-        setStage(stage + 1);
+        const nextStage = stage + 1;
+        setStage(nextStage);
+        if (nextStage === RoundStage.Complete) onRoundEnd();
     }, timeRemainingToNextStageMs);
 
-    const { isLoading: isLoadingCurrentElection } = useCurrentElection({
-        enabled: stage === RoundStage.Complete,
-        refetchInterval: 5000,
-        refetchIntervalInBackground: true,
-    });
+    useEffect(() => {
+        if (currentStage === RoundStage.Complete) {
+            // if mounted after end of round but before results processed,
+            // we call this to trigger polling for next state
+            onRoundEnd();
+        }
+    }, []);
 
     const [selectedMember, setSelected] = useState<MemberData | null>(null);
     const [isSubmittingVote, setIsSubmittingVote] = useState<boolean>(false);
@@ -140,7 +145,6 @@ export const OngoingRoundSegment = ({
         isLoadingParticipants ||
         isLoadingChiefs ||
         isLoadingMemberData ||
-        isLoadingCurrentElection ||
         isLoadingCurrentMember;
 
     if (isLoading) {

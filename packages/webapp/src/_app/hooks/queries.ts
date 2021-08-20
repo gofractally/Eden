@@ -279,7 +279,7 @@ export const useMyDelegation = (queryOptions: any = {}) => {
 
     return useQuery({
         ...queryMyDelegation(memberStats, member?.account),
-        enabled: enabled && Boolean(member?.account),
+        enabled: enabled && Boolean(member?.account && memberStats),
     });
 };
 
