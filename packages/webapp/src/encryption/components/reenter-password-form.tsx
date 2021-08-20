@@ -1,6 +1,6 @@
 import { PrivateKey } from "eosjs/dist/eosjs-key-conversions";
 
-import { Button, Form, onError, Text, useFormFields } from "_app";
+import { Button, Form, Link, onError, Text, useFormFields } from "_app";
 
 interface Props {
     expectedPublicKey: string;
@@ -59,9 +59,7 @@ export const ReenterPasswordForm = ({
                         disabled={isLoading}
                         onChange={onChangeFields}
                     />
-                    <Link onClick={onForgotPassword}>
-                        <Text type="small">Forgot Password?</Text>
-                    </Link>
+                    <Link onClick={onForgotPassword}>Forgot Password?</Link>
                 </Form.LabeledSet>
                 <div className="flex space-x-3">
                     <Button type="neutral" onClick={onCancel}>

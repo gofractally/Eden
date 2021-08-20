@@ -18,7 +18,12 @@ interface Props {
     onCancel: () => void;
 }
 
-export const NewPasswordForm = ({ forgotPassword, isLoading, onSubmit, onCancel }: Props) => {
+export const NewPasswordForm = ({
+    forgotPassword,
+    isLoading,
+    onSubmit,
+    onCancel,
+}: Props) => {
     const [didCopyText, setDidCopyText] = useState<boolean>(false);
     const [fields, setFields] = useFormFields({
         password: generateEncryptionKey().privateKey.toLegacyString(),
@@ -53,14 +58,15 @@ export const NewPasswordForm = ({ forgotPassword, isLoading, onSubmit, onCancel 
 
     return (
         <div className="space-y-4">
-            <Text>{forgotPassword 
-                ? `Re-entering a new password will reset your old password. Bear 
+            <Text>
+                {forgotPassword
+                    ? `Re-entering a new password will reset your old password. Bear
                 in mind that you will not be able to see generated data for your
                 current password (like ongoing meetings links).`
-                : `It looks like you don’t have a password set to participate in
-                the election.`}
-                " "Please copy and save your password somewhere safe,
-                and confirm it below.`
+                    : `It looks like you don’t have a password set to participate in
+                the election.`}{" "}
+                Please copy and save your password somewhere safe, and confirm
+                it below.
             </Text>
             <form onSubmit={doSubmit} className="space-y-3">
                 <Form.LabeledSet
