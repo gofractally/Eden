@@ -272,18 +272,26 @@ export const useIsCommunityActive = () => {
 };
 
 /**
- * Use this hook for querying signed-in user's delegation from a past/completed election.
- * @param queryOptions any react-query queryOptions; enabled will be merged
+ * Use this hook for querying signed-in user's delegation from a past/completed election. Pass in memberStats for retrieving fresh, during-election delegation results.
+ * @param { MemberStats } memberStats - if omitted, internal useMemberStats() query will be used; include if you want to trigger rerender using fresher data
+ * @param { any } queryOptions - any react-query queryOptions; enabled will be merged
  * @returns query of <EdenMember[], Error>
  */
-export const useMyDelegation = (queryOptions: any = {}) => {
+export const useMyDelegation = ({
+    memberStats,
+    queryOptions = {},
+}: {
+    memberStats?: MemberStats;
+    queryOptions?: any;
+}) => {
     const { data: member } = useCurrentMember();
-    const { data: memberStats } = useMemberStats();
+    const { data: cachedMemberStats } = useMemberStats({
+        enabled: !memberStats,
+    });
 
-    const enabled = Boolean(member?.account && memberStats);
-
-    const highestCompletedRoundIndex =
-        memberStats && memberStats.ranks.length - 1;
+    const stats = memberStats ?? cachedMemberStats;
+    const enabled = Boolean(member?.account && stats);
+    const highestCompletedRoundIndex = stats && stats.ranks.length - 1;
 
     return useQuery<EdenMember[], Error>({
         ...queryMyDelegation(highestCompletedRoundIndex, member?.account),
@@ -320,7 +328,7 @@ export const useCurrentElection = (queryOptions: any = {}) =>
 
 /**
  * Use `votes` table data (for a particular person and round).
- * This is only enabled during active, non-chief ongoing rounds.
+ * This is only enabled during Active and Final ongoing rounds.
  * @param {string} memberAccount - account of member to get
  * @param {number} roundIndex - election round index
  * @param {any} queryOptions - any react-query queryOptions overrides (enabled merged)
@@ -331,19 +339,16 @@ export const useMemberGroupParticipants = (
     queryOptions: any = {}
 ) => {
     const { data: currentElection } = useCurrentElection();
-    const isCurrentElection =
-        currentElection?.electionState === ElectionStatus.Active;
-    const currentActiveElection = currentElection as CurrentElection_activeState;
 
-    let enabled =
-        Boolean(memberAccount) && roundIndex !== undefined && isCurrentElection;
+    let config;
+    if (currentElection && "config" in currentElection) {
+        config = currentElection.config;
+    }
+
+    let enabled = Boolean(memberAccount) && roundIndex !== undefined;
 
     return useQuery<VoteData[], Error>({
-        ...queryMemberGroupParticipants(
-            memberAccount,
-            roundIndex,
-            currentActiveElection?.config
-        ),
+        ...queryMemberGroupParticipants(memberAccount, roundIndex, config),
         ...queryOptions,
         enabled: enabled && (queryOptions.enabled ?? true),
     });
@@ -425,23 +430,20 @@ export const useEncryptedData = (scope: EncryptionScope, id: string) =>
         enabled: Boolean(id),
     });
 
-export const useOngoingElectionData = (
-    currentElection: CurrentElection,
-    queryOptions: any = {}
-): UseQueryResult<Election | undefined> => {
+export const useOngoingElectionData = ({
+    currentElection,
+    queryOptions = {},
+}: {
+    currentElection: CurrentElection;
+    queryOptions?: any;
+}): UseQueryResult<Election | undefined> => {
     const { data: loggedInMember } = useCurrentMember();
 
     const { data: memberStats } = useMemberStats({
         queryKey: ["query_member_stats", currentElection],
     });
 
-    const { data: myDelegation } = useQuery<EdenMember[], Error>({
-        ...queryMyDelegation(
-            memberStats && memberStats.ranks.length - 1,
-            loggedInMember?.account
-        ),
-        enabled: Boolean(loggedInMember && memberStats),
-    });
+    const { data: myDelegation } = useMyDelegation({ memberStats });
 
     const { data: membersInOngoingRound } = useMemberGroupParticipants(
         loggedInMember?.account,
