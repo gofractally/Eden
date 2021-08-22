@@ -9,6 +9,7 @@ import {
     CONTRACT_MEMBER_TABLE,
     CONTRACT_VOTE_TABLE,
     didReachConsensus,
+    ElectionParticipationStatus,
     getRow,
     getTableRawRows,
     getTableRows,
@@ -224,12 +225,25 @@ export const getParticipantsInCompletedRound = async (
     const bytes = serialBuffer.getUint8Array(16);
     const bounds: string = eosjsNumeric.signedBinaryToDecimal(bytes).toString();
 
-    const participants = await getTableRows(CONTRACT_MEMBER_TABLE, {
-        lowerBound: bounds,
-        upperBound: bounds,
-        limit: 20,
-        ...TABLE_INDEXES[CONTRACT_MEMBER_TABLE][INDEX_MEMBER_BY_REP],
-    });
+    const participants = (
+        await getTableRows(CONTRACT_MEMBER_TABLE, {
+            lowerBound: bounds,
+            upperBound: bounds,
+            limit: 20,
+            ...TABLE_INDEXES[CONTRACT_MEMBER_TABLE][INDEX_MEMBER_BY_REP],
+        })
+    ).filter(
+        // we want to filter out 1) members who never opted in to this election as well as
+        // members who are still participating in the election.
+        // The follow code handles #1 obviously but handles #2 by virtue of members' participation status
+        // being updated to NotInElection as soon as the "lose" an election
+        // So since we're building only *completed* rounds here,
+        // all members we're interested in will be no longer participating in the election,
+        // except (potentially) for the delegate that got voted up.
+        (p) =>
+            p.election_participation_status ===
+            ElectionParticipationStatus.NotInElection // So this could read status === participationCompleted
+    );
 
     const delegateAccountName = participants?.[0].representative;
     if (!isValidDelegate(delegateAccountName)) return { participants };
