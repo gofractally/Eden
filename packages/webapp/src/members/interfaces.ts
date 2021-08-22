@@ -38,8 +38,15 @@ export interface EdenMember {
     status: MemberStatus;
     nft_template_id: number;
     encryption_key?: string;
+    // Member's participation status is updated once they lose a round (updated as soon as a new value is known),
+    // ie. a member's opt-in participation status lifetime is only from the start of Round 1
+    // until the end of the Round they lose (or end of the election)
     election_participation_status: ElectionParticipationStatus;
     election_rank: number;
+    // A member's representative field is set as soon as it is known. It is left at the old value until then.
+    // For members who do participate (opted-in to the election), this is when a round that they do not win is processed.
+    // For members who do not participate (opted-out of the election), it is during election setup, ie. when the first round groups are created.
+    // Representative field is reset at start of first round for those who are opted out of the election (to zzzzzzzzzzzzj)
     representative: string;
 }
 
