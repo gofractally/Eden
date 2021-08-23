@@ -5,7 +5,6 @@ import {
     useUALAccount,
     useCommunityGlobals,
     useCurrentMember,
-    useMemberStats,
     useOngoingElectionData,
     useCurrentElection,
 } from "_app";
@@ -30,7 +29,11 @@ export const OngoingElection = ({ election }: { election: any }) => {
         isLoading: isLoadingGlobals,
         isError: isErrorGlobals,
     } = useCommunityGlobals();
-    const { data: ongoingElectionData } = useOngoingElectionData({
+    const {
+        data: ongoingElectionData,
+        isLoading: isLoadingElectionData,
+        isError: isErrorElectionData,
+    } = useOngoingElectionData({
         currentElection: election,
     });
 
@@ -46,7 +49,7 @@ export const OngoingElection = ({ election }: { election: any }) => {
         refetchIntervalInBackground: true,
     });
 
-    if (isLoadingGlobals) {
+    if (isLoadingGlobals || isLoadingElectionData) {
         return (
             <Container>
                 <Loader />
@@ -54,7 +57,7 @@ export const OngoingElection = ({ election }: { election: any }) => {
         );
     }
 
-    if (isErrorGlobals) {
+    if (isErrorGlobals || isErrorElectionData) {
         return <ErrorLoadingElection />;
     }
 
