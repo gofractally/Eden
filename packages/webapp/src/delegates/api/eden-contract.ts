@@ -63,10 +63,10 @@ export const getMyDelegation = async (
             idx++
         ) {
             myDelegates.push(member);
+            currRound -= 1;
         }
         isHeadChief = member.account === member.representative;
         nextMemberAccount = member.representative;
-        currRound -= 1;
     } while (currRound && isValidDelegate(nextMemberAccount) && !isHeadChief);
 
     return myDelegates;
