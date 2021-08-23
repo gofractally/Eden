@@ -259,6 +259,7 @@ export const OngoingRoundSegment = ({
                         voteData={voteData}
                         selectedMember={selectedMember}
                         onSelectMember={(m) => setSelected(m)}
+                        userVotingFor={userVotingFor?.account}
                     />
                     <Container>
                         <div className="flex flex-col xs:flex-row justify-center space-y-2 xs:space-y-0 xs:space-x-2">
@@ -276,7 +277,11 @@ export const OngoingRoundSegment = ({
                                 {!isSubmittingVote && (
                                     <BiCheck size={21} className="-mt-1 mr-1" />
                                 )}
-                                {userVotingFor ? "Change Vote" : "Submit Vote"}
+                                {isSubmittingVote
+                                    ? "Submitting Vote"
+                                    : userVotingFor
+                                    ? "Change Vote"
+                                    : "Submit Vote"}
                             </Button>
                             <Button size="sm">
                                 <RiVideoUploadLine size={18} className="mr-2" />
