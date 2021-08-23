@@ -42,16 +42,17 @@ export const OngoingElection = ({ election }: { election: any }) => {
         setAwaitingNextRound(false);
     }, [election.round]);
 
-    // Poll for updated election information while awaitingNextRound
+    // Poll for updated election information while awaitingNextRound or processing round.
+    const isProcessing = election?.electionState === ElectionStatus.PostRound;
     useCurrentElection({
-        enabled: awaitingNextRound,
+        enabled: isProcessing || awaitingNextRound,
         refetchInterval: 5000,
         refetchIntervalInBackground: true,
     });
 
-    if (isLoadingGlobals || isLoadingElectionData) {
+    if (isProcessing || isLoadingGlobals || isLoadingElectionData) {
         return (
-            <Container>
+            <Container className="py-10">
                 <Loader />
             </Container>
         );
