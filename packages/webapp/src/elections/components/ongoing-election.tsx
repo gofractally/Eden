@@ -7,6 +7,7 @@ import {
     useCurrentMember,
     useMemberStats,
     useOngoingElectionData,
+    useCurrentElection,
 } from "_app";
 import { Button, Container, Heading, Loader, Link, Text } from "_app/ui";
 import { ErrorLoadingElection } from "elections";
@@ -17,24 +18,35 @@ import {
 } from "elections/interfaces";
 
 import * as Ongoing from "./ongoing-election-components";
+import { useEffect, useState } from "react";
 
 // TODO: Non-participating-eden-member currently sees error.
 // TODO: Specifically, what happens to CompletedRound component when non-participating-eden-member logs in?
 // TODO: Make sure time zone changes during election are handled properly
 export const OngoingElection = ({ election }: { election: any }) => {
+    const [awaitingNextRound, setAwaitingNextRound] = useState(false);
     const {
         data: globals,
         isLoading: isLoadingGlobals,
         isError: isErrorGlobals,
     } = useCommunityGlobals();
-    const {
-        data: memberStats,
-        isLoading: isLoadingMemberStats,
-        isError: isErrorMemberStats,
-    } = useMemberStats();
-    const { data: ongoingElectionData } = useOngoingElectionData();
+    const { data: ongoingElectionData } = useOngoingElectionData({
+        currentElection: election,
+    });
 
-    if (isLoadingGlobals || isLoadingMemberStats) {
+    useEffect(() => {
+        if (!awaitingNextRound) return;
+        setAwaitingNextRound(false);
+    }, [election.round]);
+
+    // Poll for updated election information while awaitingNextRound
+    useCurrentElection({
+        enabled: awaitingNextRound,
+        refetchInterval: 5000,
+        refetchIntervalInBackground: true,
+    });
+
+    if (isLoadingGlobals) {
         return (
             <Container>
                 <Loader />
@@ -42,14 +54,13 @@ export const OngoingElection = ({ election }: { election: any }) => {
         );
     }
 
-    const isError = isErrorGlobals || isErrorMemberStats;
-    if (isError || !memberStats) {
+    if (isErrorGlobals) {
         return <ErrorLoadingElection />;
     }
 
+    const numCompletedRounds = ongoingElectionData?.completedRounds?.length;
     const roundDurationSec = globals.election_round_time_sec;
     const roundDurationMs = roundDurationSec * 1000;
-    const roundIndex = election.round ?? memberStats.ranks.length;
     const roundEndTimeRaw = election.round_end ?? election.seed.end_time;
     const roundEndTime = dayjs(roundEndTimeRaw + "Z");
     const roundStartTime = dayjs(roundEndTime).subtract(roundDurationMs);
@@ -62,11 +73,7 @@ export const OngoingElection = ({ election }: { election: any }) => {
             </Container>
             <Ongoing.SupportSegment />
 
-            <CompletedRounds
-                numCompletedRounds={
-                    ongoingElectionData?.completedRounds?.length
-                }
-            />
+            <CompletedRounds numCompletedRounds={numCompletedRounds} />
             <SignInContainer />
             <SignUpContainer />
             <NoParticipationInFurtherRoundsMessage
@@ -75,11 +82,11 @@ export const OngoingElection = ({ election }: { election: any }) => {
             <CurrentRound
                 ongoingElectionData={ongoingElectionData}
                 electionState={election.electionState}
-                roundIndex={roundIndex}
                 roundStartTime={roundStartTime}
                 roundEndTime={roundEndTime}
                 roundDurationMs={roundDurationMs}
                 electionConfig={election.config}
+                onRoundEnd={() => setAwaitingNextRound(true)}
             />
         </div>
     );
@@ -144,18 +151,23 @@ const CompletedRounds = ({ numCompletedRounds }: CompletedRoundsProps) => {
 export interface CurrentRoundProps {
     ongoingElectionData?: Election;
     electionState: string;
-    roundIndex: number;
     roundStartTime: Dayjs;
     roundEndTime: Dayjs;
     roundDurationMs: number;
     electionConfig?: ActiveStateConfigType;
+    onRoundEnd: () => void;
 }
 
 const CurrentRound = (props: CurrentRoundProps) => {
     const { data: currentMember } = useCurrentMember();
 
     if (props.electionState === ElectionStatus.Final) {
-        return <Ongoing.ChiefsRoundSegment roundEndTime={props.roundEndTime} />;
+        return (
+            <Ongoing.ChiefsRoundSegment
+                roundEndTime={props.roundEndTime}
+                onRoundEnd={props.onRoundEnd}
+            />
+        );
     }
 
     if (
@@ -167,11 +179,12 @@ const CurrentRound = (props: CurrentRoundProps) => {
     return (
         <Ongoing.OngoingRoundSegment
             electionState={props.electionState}
-            roundIndex={props.roundIndex}
+            roundIndex={props.ongoingElectionData.completedRounds.length}
             roundStartTime={props.roundStartTime}
             roundEndTime={props.roundEndTime}
             roundDurationMs={props.roundDurationMs}
             electionConfig={props.electionConfig}
+            onRoundEnd={props.onRoundEnd}
         />
     );
 };

@@ -1,12 +1,9 @@
-import { CurrentElection } from "elections/interfaces";
-import { EdenMember, MemberStats } from "members";
+import { EdenMember } from "members";
 import { queryClient } from "pages/_app";
 import {
     isValidDelegate,
-    queryCurrentElection,
     queryElectionState,
     queryMemberByAccountName,
-    queryMembersStats,
     queryVoteDataRow,
 } from "_app";
 
@@ -36,18 +33,13 @@ const getMemberWrapper = async (account: string) => {
 };
 
 export const getMyDelegation = async (
-    loggedInMemberAccount: string | undefined
+    loggedInMemberAccount?: string,
+    highestCompletedRoundIndex?: number
 ): Promise<EdenMember[]> => {
-    const currentElection: CurrentElection = await queryClient.fetchQuery(
-        queryCurrentElection
-    );
-    const memberStats: MemberStats = await queryClient.fetchQuery(
-        queryMembersStats
-    );
-
     let myDelegates: EdenMember[] = [];
 
-    if (!loggedInMemberAccount) return myDelegates;
+    if (!loggedInMemberAccount || highestCompletedRoundIndex === undefined)
+        return myDelegates;
 
     let nextMemberAccount = loggedInMemberAccount;
     let isHeadChief: Boolean;
@@ -64,8 +56,6 @@ export const getMyDelegation = async (
 
         // Fill the array from next available position up to member.election_rank with member,
         // in case this delegate got voted up through multiple levels
-        const highestCompletedRoundIndex = memberStats.ranks.length - 1;
-
         for (
             let idx = myDelegates.length;
             idx <= memberRankIndex && idx <= highestCompletedRoundIndex;

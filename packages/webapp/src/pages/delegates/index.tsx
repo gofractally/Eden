@@ -34,8 +34,9 @@ export const DelegatesPage = (props: Props) => {
         currentElection?.electionState !== ElectionStatus.Registration;
 
     const { data: myDelegation } = useMyDelegation({
-        enabled: !isElectionInProgress,
+        queryOptions: { enabled: !isElectionInProgress },
     });
+
     const { data: electionState } = useElectionState();
 
     const { data: myDelegationMemberData } = useMemberDataFromEdenMembers(

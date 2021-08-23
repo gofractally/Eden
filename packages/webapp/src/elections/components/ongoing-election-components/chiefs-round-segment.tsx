@@ -1,7 +1,8 @@
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { RiVideoUploadLine } from "react-icons/ri";
 import dayjs, { Dayjs } from "dayjs";
 
+import { useCountdown } from "_app";
 import {
     useCurrentMember,
     useMemberDataFromVoteData,
@@ -12,14 +13,16 @@ import { DelegateChip, ErrorLoadingElection } from "elections";
 import { MembersGrid } from "members";
 
 import RoundHeader from "./round-header";
-import { useCountdown, useCurrentElection } from "_app";
 
 interface RoundSegmentProps {
     roundEndTime: Dayjs;
+    onRoundEnd: () => void;
 }
 
-export const ChiefsRoundSegment = ({ roundEndTime }: RoundSegmentProps) => {
-    const [timeIsUp, setTimeIsUp] = useState(false);
+export const ChiefsRoundSegment = ({
+    roundEndTime,
+    onRoundEnd,
+}: RoundSegmentProps) => {
     const {
         data: currentMember,
         isLoading: isLoadingCurrentMember,
@@ -36,15 +39,11 @@ export const ChiefsRoundSegment = ({ roundEndTime }: RoundSegmentProps) => {
         isError: isErrorMembers,
     } = useMemberDataFromVoteData(participantData);
 
-    useCurrentElection({
-        enabled: timeIsUp,
-        refetchInterval: 5000,
-        refetchIntervalInBackground: true,
-    });
-
     useEffect(() => {
         if (dayjs().isAfter(roundEndTime)) {
-            setTimeIsUp(true);
+            // if mounted after end of round but before results processed,
+            // we call this to trigger polling for next state
+            onRoundEnd();
         }
     }, []);
 
@@ -77,8 +76,7 @@ export const ChiefsRoundSegment = ({ roundEndTime }: RoundSegmentProps) => {
             header={
                 <Header
                     roundEndTime={roundEndTime}
-                    onEndCountdown={() => setTimeIsUp(true)}
-                    timeIsUp={timeIsUp}
+                    onEndCountdown={onRoundEnd}
                 />
             }
             startExpanded
@@ -126,15 +124,13 @@ export default ChiefsRoundSegment;
 interface HeaderProps {
     roundEndTime: Dayjs;
     onEndCountdown: () => void;
-    timeIsUp: boolean;
 }
 
-const Header = ({
-    roundEndTime,
-    onEndCountdown: onEnd,
-    timeIsUp,
-}: HeaderProps) => {
-    const { hmmss } = useCountdown({ endTime: roundEndTime.toDate(), onEnd });
+const Header = ({ roundEndTime, onEndCountdown: onEnd }: HeaderProps) => {
+    const { msRemaining, hmmss } = useCountdown({
+        endTime: roundEndTime.toDate(),
+        onEnd,
+    });
     return (
         <RoundHeader
             isRoundActive
@@ -145,7 +141,7 @@ const Header = ({
             }
             sublineComponent={
                 <Text size="sm">
-                    {timeIsUp
+                    {msRemaining === 0
                         ? "Finalizing election..."
                         : `Head Chief elected in: ${hmmss}`}
                 </Text>
