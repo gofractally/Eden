@@ -6,6 +6,7 @@
 #include <clchain/graphql_connection.hpp>
 #include <clchain/subchain.hpp>
 #include <eden.hpp>
+#include <eosio/abi.hpp>
 #include <eosio/from_bin.hpp>
 #include <eosio/to_bin.hpp>
 
@@ -120,6 +121,7 @@ enum tables
    status_table,
    induction_table,
    member_table,
+   election_table,
    election_group_table,
    vote_table,
 };
@@ -201,18 +203,30 @@ struct member_object : public chainbase::object<member_table, member_object>
 };
 using member_index = mic<member_object, ordered_by_id<member_object>, ordered_by_pk<member_object>>;
 
-using ElectionGroupByRoundKey = std::tuple<uint8_t, uint64_t>;
+struct election_object : public chainbase::object<election_table, election_object>
+{
+   CHAINBASE_DEFAULT_CONSTRUCTOR(election_object)
+
+   id_type id;
+   eosio::block_timestamp time;
+
+   auto by_pk() const { return time; }
+};
+using election_index =
+    mic<election_object, ordered_by_id<election_object>, ordered_by_pk<election_object>>;
+
+using ElectionGroupByRoundKey = std::tuple<eosio::block_timestamp, uint8_t, uint64_t>;
 
 struct election_group_object : public chainbase::object<election_group_table, election_group_object>
 {
    CHAINBASE_DEFAULT_CONSTRUCTOR(election_group_object)
 
-   // TODO: identify election
    id_type id;
+   eosio::block_timestamp election_time;
    uint8_t round;
    eosio::name winner;
 
-   ElectionGroupByRoundKey by_round() const { return {round, id._id}; }
+   ElectionGroupByRoundKey by_round() const { return {election_time, round, id._id}; }
 };
 using election_group_index = mic<election_group_object,
                                  ordered_by_id<election_group_object>,
@@ -241,6 +255,7 @@ struct database
    chainbase::generic_index<status_index> status;
    chainbase::generic_index<induction_index> inductions;
    chainbase::generic_index<member_index> members;
+   chainbase::generic_index<election_index> elections;
    chainbase::generic_index<election_group_index> election_groups;
    chainbase::generic_index<vote_index> votes;
 
@@ -249,7 +264,9 @@ struct database
       db.add_index(status);
       db.add_index(inductions);
       db.add_index(members);
+      db.add_index(elections);
       db.add_index(election_groups);
+      db.add_index(votes);
    }
 };
 database db;
@@ -390,16 +407,68 @@ struct Status
 };
 EOSIO_REFLECT2(Status, active, community, initialMembers, genesisVideo, auctionDuration, memo)
 
+struct ElectionGroup;
+constexpr const char ElectionGroupConnection_name[] = "ElectionGroupConnection";
+constexpr const char ElectionGroupEdge_name[] = "ElectionGroupEdge";
+using ElectionGroupConnection = clchain::Connection<
+    clchain::ConnectionConfig<ElectionGroup, ElectionGroupConnection_name, ElectionGroupEdge_name>>;
+
+struct Election
+{
+   const election_object* obj;
+
+   eosio::block_timestamp time() const { return obj->time; }
+
+   ElectionGroupConnection groupsByRound(std::optional<uint8_t> gt,
+                                         std::optional<uint8_t> ge,
+                                         std::optional<uint8_t> lt,
+                                         std::optional<uint8_t> le,
+                                         std::optional<uint32_t> first,
+                                         std::optional<uint32_t> last,
+                                         std::optional<std::string> before,
+                                         std::optional<std::string> after) const;
+};
+EOSIO_REFLECT2(Election,
+               time,
+               method(groupsByRound, "gt", "ge", "lt", "le", "first", "last", "before", "after"))
+
 struct ElectionGroup
 {
    const election_group_object* obj;
 
    uint64_t id() const { return obj->id._id; }
+   Election election() const { return {&get<by_pk>(db.elections, obj->election_time)}; }
    uint8_t round() const { return obj->round; }
    auto winner() const { return get_member(obj->winner); }
    std::vector<Vote> votes() const;
 };
-EOSIO_REFLECT2(ElectionGroup, id, round, winner, votes)
+EOSIO_REFLECT2(ElectionGroup, id, election, round, winner, votes)
+
+ElectionGroupConnection Election::groupsByRound(std::optional<uint8_t> gt,
+                                                std::optional<uint8_t> ge,
+                                                std::optional<uint8_t> lt,
+                                                std::optional<uint8_t> le,
+                                                std::optional<uint32_t> first,
+                                                std::optional<uint32_t> last,
+                                                std::optional<std::string> before,
+                                                std::optional<std::string> after) const
+{
+   return clchain::make_connection<ElectionGroupConnection, ElectionGroupByRoundKey>(
+       gt ? std::optional{ElectionGroupByRoundKey{obj->time, *gt, ~uint64_t(0)}}           //
+          : std::nullopt,                                                                  //
+       ge ? std::optional{ElectionGroupByRoundKey{obj->time, *ge, 0}}                      //
+          : std::optional{ElectionGroupByRoundKey{obj->time, 0, 0}},                       //
+       lt ? std::optional{ElectionGroupByRoundKey{obj->time, *lt, 0}}                      //
+          : std::nullopt,                                                                  //
+       le ? std::optional{ElectionGroupByRoundKey{obj->time, *le, ~uint64_t(0)}}           //
+          : std::optional{ElectionGroupByRoundKey{obj->time, ~uint8_t(0), ~uint64_t(0)}},  //
+       first, last, before, after,                                                         //
+       db.election_groups.get<by_round>(),                                                 //
+       [](auto& obj) { return obj.by_round(); },                                           //
+       [](auto& obj) { return ElectionGroup{&obj}; },
+       [](auto& groups, auto key) { return groups.lower_bound(key); },
+       [](auto& groups, auto key) { return groups.upper_bound(key); });
+}
 
 struct Vote
 {
@@ -469,6 +538,7 @@ void clearall()
    clearall(db.status);
    clearall(db.inductions);
    clearall(db.members);
+   clearall(db.elections);
    clearall(db.election_groups);
    clearall(db.votes);
 }
@@ -573,9 +643,26 @@ void resign(eosio::name account)
    remove_if_exists<by_pk>(db.members, account);
 }
 
-void electreport(uint8_t round, std::vector<eden::vote_report> reports, eosio::name winner)
+void clear_participating()
 {
+   auto& idx = db.members.template get<by_pk>();
+   for (auto it = idx.begin(); it != idx.end(); ++it)
+      if (it->member.participating)
+         db.members.modify(*it, [](auto& obj) { obj.member.participating = false; });
+}
+
+void electreport(uint8_t round,
+                 std::vector<eden::vote_report> reports,
+                 eosio::name winner,
+                 eosio::might_not_exist<eosio::block_timestamp> election_time)
+{
+   add_or_modify<by_pk>(db.elections, election_time.value, [&](bool is_new, auto& election) {
+      if (is_new)
+         clear_participating();
+      election.time = election_time.value;
+   });
    auto& group = db.election_groups.emplace([&](auto& group) {
+      group.election_time = election_time.value;
       group.round = round;
       group.winner = winner;
    });
@@ -589,24 +676,8 @@ void electreport(uint8_t round, std::vector<eden::vote_report> reports, eosio::n
    }
 }
 
-// TODO: track multiple elections
-void clear_election()
-{
-   clearall(db.election_groups);
-   clearall(db.votes);
-
-   auto& idx = db.members.template get<by_pk>();
-   for (auto it = idx.begin(); it != idx.end(); ++it)
-      if (it->member.participating)
-         db.members.modify(*it, [](auto& obj) { obj.member.participating = false; });
-}
-
 void electopt(eosio::name voter, bool participating)
 {
-   // TODO: need a cleaner signal that a new election began
-   // TODO: need a cleaner signal that a new election ended
-   if (!db.election_groups.empty() || !db.votes.empty())
-      clear_election();
    modify<by_pk>(db.members, voter, [&](auto& obj) { obj.member.participating = participating; });
 }
 
@@ -779,10 +850,10 @@ constexpr const char MemberEdge_name[] = "MemberEdge";
 using MemberConnection =
     clchain::Connection<clchain::ConnectionConfig<Member, MemberConnection_name, MemberEdge_name>>;
 
-constexpr const char ElectionGroupConnection_name[] = "ElectionGroupConnection";
-constexpr const char ElectionGroupEdge_name[] = "ElectionGroupEdge";
-using ElectionGroupConnection = clchain::Connection<
-    clchain::ConnectionConfig<ElectionGroup, ElectionGroupConnection_name, ElectionGroupEdge_name>>;
+constexpr const char ElectionConnection_name[] = "ElectionConnection";
+constexpr const char ElectionEdge_name[] = "ElectionEdge";
+using ElectionConnection = clchain::Connection<
+    clchain::ConnectionConfig<Election, ElectionConnection_name, ElectionEdge_name>>;
 
 struct Query
 {
@@ -816,34 +887,29 @@ struct Query
           [](auto& members, auto key) { return members.upper_bound(key); });
    }
 
-   ElectionGroupConnection electionGroupsByRound(std::optional<uint8_t> gt,
-                                                 std::optional<uint8_t> ge,
-                                                 std::optional<uint8_t> lt,
-                                                 std::optional<uint8_t> le,
-                                                 std::optional<uint32_t> first,
-                                                 std::optional<uint32_t> last,
-                                                 std::optional<std::string> before,
-                                                 std::optional<std::string> after) const
+   ElectionConnection elections(std::optional<eosio::block_timestamp> gt,
+                                std::optional<eosio::block_timestamp> ge,
+                                std::optional<eosio::block_timestamp> lt,
+                                std::optional<eosio::block_timestamp> le,
+                                std::optional<uint32_t> first,
+                                std::optional<uint32_t> last,
+                                std::optional<std::string> before,
+                                std::optional<std::string> after) const
    {
-      return clchain::make_connection<ElectionGroupConnection, ElectionGroupByRoundKey>(
-          gt ? std::optional{ElectionGroupByRoundKey{*gt, ~uint64_t(0)}} : std::nullopt,
-          ge ? std::optional{ElectionGroupByRoundKey{*ge, 0}} : std::nullopt,
-          lt ? std::optional{ElectionGroupByRoundKey{*lt, 0}} : std::nullopt,
-          le ? std::optional{ElectionGroupByRoundKey{*le, ~uint64_t(0)}} : std::nullopt,  //
-          first, last, before, after,                                                     //
-          db.election_groups.get<by_round>(),                                             //
-          [](auto& obj) { return obj.by_round(); },                                       //
-          [](auto& obj) { return ElectionGroup{&obj}; },
-          [](auto& groups, auto key) { return groups.lower_bound(key); },
-          [](auto& groups, auto key) { return groups.upper_bound(key); });
+      return clchain::make_connection<ElectionConnection, eosio::block_timestamp>(
+          gt, ge, lt, le, first, last, before, after,  //
+          db.elections.get<by_pk>(),                   //
+          [](auto& obj) { return obj.time; },          //
+          [](auto& obj) { return Election{&obj}; },
+          [](auto& elections, auto key) { return elections.lower_bound(key); },
+          [](auto& elections, auto key) { return elections.upper_bound(key); });
    }
 };
-EOSIO_REFLECT2(
-    Query,
-    blockLog,
-    status,
-    method(members, "gt", "ge", "lt", "le", "first", "last", "before", "after"),
-    method(electionGroupsByRound, "gt", "ge", "lt", "le", "first", "last", "before", "after"))
+EOSIO_REFLECT2(Query,
+               blockLog,
+               status,
+               method(members, "gt", "ge", "lt", "le", "first", "last", "before", "after"),
+               method(elections, "gt", "ge", "lt", "le", "first", "last", "before", "after"))
 
 auto schema = clchain::get_gql_schema<Query>();
 [[clang::export_name("getSchemaSize")]] uint32_t getSchemaSize()
