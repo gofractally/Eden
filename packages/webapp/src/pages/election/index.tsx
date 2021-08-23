@@ -63,6 +63,7 @@ const ElectionBody = ({ election }: { election: any }) => {
         case ElectionStatus.InitVoters:
             return <RegistrationElection election={election} />;
         case ElectionStatus.Active:
+        case ElectionStatus.PostRound:
         case ElectionStatus.Final:
             return <OngoingElection election={election} />;
         default:
