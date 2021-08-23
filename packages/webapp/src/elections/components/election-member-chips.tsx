@@ -15,7 +15,7 @@ interface VotingMemberChipProps {
     member: MemberData;
     onSelect: () => void;
     isSelected: boolean;
-    userIsVotingFor: boolean;
+    hasCurrentMembersVote: boolean;
     votesReceived: number;
     votingFor?: string;
     electionVideoCid?: string;
@@ -27,7 +27,7 @@ export const VotingMemberChip = ({
     member,
     onSelect,
     isSelected,
-    userIsVotingFor,
+    hasCurrentMembersVote,
     votesReceived,
     votingFor,
     electionVideoCid,
@@ -66,7 +66,7 @@ export const VotingMemberChip = ({
                     <ElectionVideoPlayButton
                         electionVideoCid={electionVideoCid}
                     />
-                    {userIsVotingFor ? (
+                    {hasCurrentMembersVote ? (
                         <FaCheckSquare
                             size={31}
                             className="ml-4 mr-2 text-gray-400"
