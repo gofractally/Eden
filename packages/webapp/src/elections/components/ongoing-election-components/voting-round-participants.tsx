@@ -57,7 +57,7 @@ const VotingRoundParticipants = ({
                                 isSelected={
                                     selectedMember?.account === member.account
                                 }
-                                userIsVotingFor={
+                                hasCurrentMembersVote={
                                     member.account === userVotingFor
                                 }
                                 onSelect={() => selectMember(member)}

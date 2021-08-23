@@ -47,7 +47,8 @@ export const MembersPage = (props: Props) => {
                 {members.error && "Fail to load members"}
             </Container>
             <MembersGrid members={members.data}>
-                {(member, index) => (
+                {/* TODO: Hard-coded values here should come from fixtures. */}
+                {(member) => (
                     <VotingMemberChip
                         key={`voting-chips-${member.account}`}
                         member={member}
@@ -57,7 +58,9 @@ export const MembersPage = (props: Props) => {
                             member.account === "edenmember12" ? 5 : 0
                         }
                         votingFor="Test Member 5"
-                        userIsVotingFor={member.account === "edenmember13"}
+                        hasCurrentMembersVote={
+                            member.account === "edenmember13"
+                        }
                     />
                 )}
             </MembersGrid>
