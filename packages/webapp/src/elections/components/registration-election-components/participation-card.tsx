@@ -16,6 +16,7 @@ import {
     Container,
     Form,
     Heading,
+    Loader,
     Modal,
     PieStatusIndicator,
     Text,
@@ -29,14 +30,21 @@ import {
 
 import { extractElectionDates } from "../../utils";
 import { setElectionParticipation } from "../../transactions";
+import { CurrentElection, ElectionStatus } from "elections/interfaces";
 
-export const ParticipationCard = () => {
+interface Props {
+    election?: CurrentElection;
+}
+
+export const ParticipationCard = ({ election }: Props) => {
     const [electionIsAboutToStart, setElectionIsAboutToStart] = useState(false);
 
     const [ualAccount, _, ualShowModal] = useUALAccount();
     const { data: currentMember } = useCurrentMember();
-    const { data: election } = useCurrentElection({
-        refetchInterval: electionIsAboutToStart ? 5000 : false,
+
+    const isProcessing = election?.electionState === ElectionStatus.Voters;
+    useCurrentElection({
+        refetchInterval: electionIsAboutToStart || isProcessing ? 5000 : false,
         refetchIntervalInBackground: true,
     });
 
@@ -51,6 +59,14 @@ export const ParticipationCard = () => {
 
     if (!election) {
         return null;
+    }
+
+    if (isProcessing) {
+        return (
+            <Container className="py-10">
+                <Loader />
+            </Container>
+        );
     }
 
     let electionDates = null;

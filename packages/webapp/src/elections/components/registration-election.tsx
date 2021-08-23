@@ -1,12 +1,18 @@
+import { CurrentElection } from "elections/interfaces";
+
 import {
     ElectionFAQ,
     ParticipationCard,
 } from "./registration-election-components";
 
-export const RegistrationElection = () => {
+interface Props {
+    election?: CurrentElection;
+}
+
+export const RegistrationElection = ({ election }: Props) => {
     return (
         <>
-            <ParticipationCard />
+            <ParticipationCard election={election} />
             <ElectionFAQ />
         </>
     );
