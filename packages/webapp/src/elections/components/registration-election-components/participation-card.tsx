@@ -42,7 +42,7 @@ export const ParticipationCard = ({ election }: Props) => {
     const [ualAccount, _, ualShowModal] = useUALAccount();
     const { data: currentMember } = useCurrentMember();
 
-    const isProcessing = election?.electionState === ElectionStatus.Voters;
+    const isProcessing = election?.electionState === ElectionStatus.InitVoters;
     useCurrentElection({
         refetchInterval: electionIsAboutToStart || isProcessing ? 5000 : false,
         refetchIntervalInBackground: true,

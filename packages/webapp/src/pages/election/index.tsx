@@ -60,7 +60,7 @@ const ElectionBody = ({ election }: { election: any }) => {
     switch (election.electionState) {
         case ElectionStatus.Registration:
         case ElectionStatus.Seeding:
-        case ElectionStatus.Voters:
+        case ElectionStatus.InitVoters:
             return <RegistrationElection election={election} />;
         case ElectionStatus.Active:
         case ElectionStatus.Final:
