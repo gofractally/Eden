@@ -19,8 +19,6 @@ import {
 import * as Ongoing from "./ongoing-election-components";
 import { useEffect, useState } from "react";
 
-// TODO: Non-participating-eden-member currently sees error.
-// TODO: Specifically, what happens to CompletedRound component when non-participating-eden-member logs in?
 // TODO: Make sure time zone changes during election are handled properly
 export const OngoingElection = ({ election }: { election: any }) => {
     const [awaitingNextRound, setAwaitingNextRound] = useState(false);
@@ -62,7 +60,6 @@ export const OngoingElection = ({ election }: { election: any }) => {
         return <ErrorLoadingElection />;
     }
 
-    const numCompletedRounds = ongoingElectionData?.completedRounds?.length;
     const roundDurationSec = globals.election_round_time_sec;
     const roundDurationMs = roundDurationSec * 1000;
     const roundEndTimeRaw = election.round_end ?? election.seed.end_time;
@@ -77,7 +74,7 @@ export const OngoingElection = ({ election }: { election: any }) => {
             </Container>
             <Ongoing.SupportSegment />
 
-            <CompletedRounds numCompletedRounds={numCompletedRounds} />
+            <CompletedRounds ongoingElectionData={ongoingElectionData} />
             <SignInContainer />
             <SignUpContainer />
             <NoParticipationInFurtherRoundsMessage
@@ -107,6 +104,11 @@ const NoParticipationInFurtherRoundsMessage = ({
     if (ongoingElectionData.isMemberStillParticipating) {
         return null;
     }
+
+    let statusText = "You are not involved in further rounds.";
+    if (ongoingElectionData.isMemberOptedOut)
+        statusText = "You are not participating in this election.";
+
     return (
         <Container className="flex items-center space-x-2 pr-8 py-8">
             <BsInfoCircle
@@ -115,7 +117,7 @@ const NoParticipationInFurtherRoundsMessage = ({
             />
             <div className="flex-1">
                 <Text size="sm">
-                    You are not involved in further rounds. Please{" "}
+                    {statusText} Please{" "}
                     <Link href={""}>join the Community Room</Link> &amp; Support
                     for news and updates of the ongoing election. The results
                     will be displayed in the{" "}
@@ -132,12 +134,20 @@ const NoParticipationInFurtherRoundsMessage = ({
 export default OngoingElection;
 
 interface CompletedRoundsProps {
-    numCompletedRounds?: number;
+    ongoingElectionData?: Election;
 }
 
-const CompletedRounds = ({ numCompletedRounds }: CompletedRoundsProps) => {
+const CompletedRounds = ({ ongoingElectionData }: CompletedRoundsProps) => {
     const { data: currentMember } = useCurrentMember();
-    if (!currentMember || !numCompletedRounds) return null;
+    const numCompletedRounds = ongoingElectionData?.completedRounds?.length;
+
+    if (
+        !currentMember ||
+        ongoingElectionData?.isMemberOptedOut ||
+        !numCompletedRounds
+    )
+        return null;
+
     return (
         <>
             {[...Array(numCompletedRounds)].map((_, i) => {
