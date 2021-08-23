@@ -15,6 +15,7 @@ import {
     getTableRows,
     INDEX_MEMBER_BY_REP,
     INDEX_VOTE_BY_GROUP_INDEX,
+    isNonParticipantInOngoingElection,
     isValidDelegate,
     queryMemberByAccountName,
     queryMembers,
@@ -353,7 +354,8 @@ const getParticipantsOfCompletedRounds = async (myDelegation: EdenMember[]) => {
 export const getOngoingElectionData = async (
     votingMemberData: MemberData[] = [],
     currentElection?: CurrentElection,
-    myDelegation: EdenMember[] = []
+    myDelegation: EdenMember[] = [],
+    loggedInMember?: EdenMember
 ) => {
     const isElectionOngoing =
         currentElection?.electionState === ElectionStatus.Active ||
@@ -369,10 +371,15 @@ export const getOngoingElectionData = async (
         myDelegation
     );
 
+    const isMemberOptedOut = loggedInMember
+        ? isNonParticipantInOngoingElection(loggedInMember)
+        : undefined;
+
     const electionData = {
         ...ELECTION_DEFAULTS,
         isElectionOngoing,
         isMemberStillParticipating,
+        isMemberOptedOut,
         inSortitionRound,
         completedRounds,
         ongoingRound,

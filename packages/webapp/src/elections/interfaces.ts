@@ -110,6 +110,7 @@ interface ElectionCompletedRound {
 export interface Election {
     isElectionOngoing?: boolean;
     isMemberStillParticipating?: boolean;
+    isMemberOptedOut?: boolean;
     inSortitionRound?: boolean;
     // .length === number of rounds that have completed (regardless of current member's participation)
     completedRounds: ElectionCompletedRound[];
