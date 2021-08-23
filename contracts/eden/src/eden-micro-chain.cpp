@@ -181,6 +181,7 @@ struct member
    std::vector<eosio::name> inductionWitnesses;
    eden::new_member_profile profile;
    std::string inductionVideo;
+   bool participating = false;
 };
 
 struct member_object : public chainbase::object<member_table, member_object>
@@ -322,6 +323,7 @@ struct Member
    }
    const eden::new_member_profile* profile() const { return member ? &member->profile : nullptr; }
    const std::string* inductionVideo() const { return member ? &member->inductionVideo : nullptr; }
+   bool participating() const { return member && member->participating; }
 
    VoteConnection votes(std::optional<uint32_t> first,
                         std::optional<uint32_t> last,
@@ -334,6 +336,7 @@ EOSIO_REFLECT2(Member,
                inductionWitnesses,
                profile,
                inductionVideo,
+               participating,
                method(votes, "first", "last", "before", "after"))
 
 std::optional<Member> get_member(eosio::name account)
@@ -574,12 +577,25 @@ void electreport(uint8_t round, std::vector<eden::vote_report> reports, eosio::n
    }
 }
 
+// TODO: track multiple elections
+void clear_election()
+{
+   clearall(db.election_groups);
+   clearall(db.votes);
+
+   auto& idx = db.members.template get<by_pk>();
+   for (auto it = idx.begin(); it != idx.end(); ++it)
+      if (it->member.participating)
+         db.members.modify(*it, [](auto& obj) { obj.member.participating = false; });
+}
+
 void electopt(eosio::name voter, bool participating)
 {
    // TODO: need a cleaner signal that a new election began
-   // TODO: track multiple elections
-   clearall(db.election_groups);
-   clearall(db.votes);
+   // TODO: need a cleaner signal that a new election ended
+   if (!db.election_groups.empty() || !db.votes.empty())
+      clear_election();
+   modify<by_pk>(db.members, voter, [&](auto& obj) { obj.member.participating = participating; });
 }
 
 template <typename... Args>
