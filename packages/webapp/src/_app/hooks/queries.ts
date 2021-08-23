@@ -150,19 +150,22 @@ export const queryCommunityGlobals = {
 export const queryOngoingElectionData = (
     votingMemberData?: MemberData[],
     currentElection?: CurrentElection,
-    myDelegation?: EdenMember[]
+    myDelegation?: EdenMember[],
+    currentMember?: EdenMember
 ) => ({
     queryKey: [
         "query_ongoing_round",
         votingMemberData,
         currentElection,
         myDelegation,
+        currentMember,
     ],
     queryFn: () => {
         return getOngoingElectionData(
             votingMemberData,
             currentElection,
-            myDelegation
+            myDelegation,
+            currentMember
         );
     },
 });
@@ -458,7 +461,8 @@ export const useOngoingElectionData = ({
         ...queryOngoingElectionData(
             votingMemberData.data,
             currentElection,
-            myDelegation.data
+            myDelegation.data,
+            currentMember.data
         ),
         ...queryOptions,
         enabled: enabled && (queryOptions.enabled ?? true),
