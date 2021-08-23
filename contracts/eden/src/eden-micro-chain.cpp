@@ -429,14 +429,14 @@ VoteConnection Member::votes(std::optional<uint32_t> first,
                              std::optional<std::string> after) const
 {
    return clchain::make_connection<VoteConnection, vote_key>(
-       std::nullopt,                                 // gt
-       vote_key{account, 0},                         // ge
-       vote_key{eosio::name{account.value + 1}, 0},  // lt
-       std::nullopt,                                 // le
-       first, last, before, after,                   //
-       db.votes.get<by_pk>(),                        //
-       [](auto& obj) { return obj.by_pk(); },        //
-       [](auto& obj) { return Vote{&obj}; },         //
+       std::nullopt,                           // gt
+       vote_key{account, 0},                   // ge
+       std::nullopt,                           // lt
+       vote_key{account, ~uint64_t(0)},        // le
+       first, last, before, after,             //
+       db.votes.get<by_pk>(),                  //
+       [](auto& obj) { return obj.by_pk(); },  //
+       [](auto& obj) { return Vote{&obj}; },   //
        [](auto& votes, auto key) { return votes.lower_bound(key); },
        [](auto& votes, auto key) { return votes.upper_bound(key); });
 }
