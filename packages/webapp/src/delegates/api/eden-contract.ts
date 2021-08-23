@@ -43,6 +43,7 @@ export const getMyDelegation = async (
 
     let nextMemberAccount = loggedInMemberAccount;
     let isHeadChief: Boolean;
+    let currRound = highestCompletedRoundIndex + 1;
     do {
         let member = await getMemberWrapper(nextMemberAccount);
         if (!member)
@@ -65,7 +66,8 @@ export const getMyDelegation = async (
         }
         isHeadChief = member.account === member.representative;
         nextMemberAccount = member.representative;
-    } while (isValidDelegate(nextMemberAccount) && !isHeadChief);
+        currRound -= 1;
+    } while (currRound && isValidDelegate(nextMemberAccount) && !isHeadChief);
 
     return myDelegates;
 };
