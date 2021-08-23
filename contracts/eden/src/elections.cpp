@@ -511,7 +511,8 @@ namespace eden
    static group_result finish_group(current_election_state_post_round& state,
                                     Idx& group_idx,
                                     It& iter,
-                                    uint8_t group_size)
+                                    uint8_t group_size,
+                                    eosio::block_timestamp election_start)
    {
       // count votes
       group_result result{eosio::name{~iter->member.value}};
@@ -548,7 +549,7 @@ namespace eden
       eosio::action{{contract, "active"_n},
                     contract,
                     "electreport"_n,
-                    std::tuple(state.prev_round, votes, result.winner)}
+                    std::tuple(state.prev_round, votes, result.winner, election_start)}
           .send();
       return result;
    }
@@ -660,6 +661,10 @@ namespace eden
       members members{contract};
       encrypt encrypt{contract, "election"_n};
 
+      auto election_start_time =
+          std::get<election_state_v0>(election_state_singleton{contract, default_scope}.get())
+              .last_election_time;
+
       for (; max_steps > 0 && group_start != end && group_start->round == data.prev_round;
            --max_steps)
       {
@@ -668,7 +673,7 @@ namespace eden
                                                         (data.prev_config.group_max_size()));
          encrypt.erase((data.prev_round << 16) |
                        data.prev_config.member_index_to_group(group_start->index));
-         auto result = finish_group(data, vote_idx, group_start, group_size);
+         auto result = finish_group(data, vote_idx, group_start, group_size, election_start_time);
          if ((result.winner.value & 0xFull) == 0)
          {
             add_voter(data.rng, data.prev_round + 1, data.next_output_index, result.winner);

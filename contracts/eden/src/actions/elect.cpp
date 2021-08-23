@@ -100,7 +100,8 @@ namespace eden
 
    void eden::electreport(eosio::ignore<uint8_t>,
                           eosio::ignore<std::vector<vote_report>>,
-                          eosio::ignore<eosio::name>)
+                          eosio::ignore<eosio::name>,
+                          eosio::ignore<eosio::block_timestamp>)
    {
       eosio::require_auth(get_self());
    }

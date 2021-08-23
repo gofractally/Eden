@@ -149,7 +149,8 @@ namespace eden
       void electprocess(uint32_t max_steps);
       void electreport(eosio::ignore<uint8_t> round,
                        eosio::ignore<std::vector<vote_report>>,
-                       eosio::ignore<eosio::name>);
+                       eosio::ignore<eosio::name>,
+                       eosio::ignore<eosio::block_timestamp>);
 
       void distribute(uint32_t max_steps);
 
@@ -247,7 +248,7 @@ namespace eden
        action(electvote, round, voter, candidate),
        action(electvideo, round, voter, video),
        action(electprocess, max_steps),
-       action(electreport, round, votes, winner),
+       action(electreport, round, votes, winner, election_time),
        action(bylawspropose, proposer, bylaws),
        action(bylawsapprove, approver, bylaws_hash),
        action(bylawsratify, approver, bylaws_hash),
