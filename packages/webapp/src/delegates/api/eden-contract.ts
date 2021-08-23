@@ -1,11 +1,18 @@
+import { devUseFixtureData } from "config";
 import { EdenMember } from "members";
 import { queryClient } from "pages/_app";
 import {
+    CONTRACT_DISTRIBUTION_ACCOUNTS_TABLE,
+    getTableIndexRows,
+    i128BoundsForAccount,
     isValidDelegate,
     queryElectionState,
     queryMemberByAccountName,
     queryVoteDataRow,
 } from "_app";
+
+import { DistributionAccount } from "../interfaces";
+import { DISTRIBUTION_ACCOUNTS } from "./fixtures";
 
 const queryElectionStateHelper = async () =>
     await queryClient.fetchQuery(
@@ -68,4 +75,29 @@ export const getMyDelegation = async (
     } while (isValidDelegate(nextMemberAccount) && !isHeadChief);
 
     return myDelegates;
+};
+
+// eosio secondary indexes for distaccount table defined at:
+// /contracts/eden/include/distributions.hpp
+const INDEX_BY_OWNER = 2;
+
+export const getDistributionsForAccount = async (
+    account: string
+): Promise<DistributionAccount[]> => {
+    const { lower, upper } = i128BoundsForAccount(account);
+
+    if (devUseFixtureData) {
+        return DISTRIBUTION_ACCOUNTS;
+    }
+
+    const distributionRows = await getTableIndexRows(
+        CONTRACT_DISTRIBUTION_ACCOUNTS_TABLE,
+        INDEX_BY_OWNER,
+        "i128",
+        lower,
+        upper,
+        9999
+    );
+
+    return distributionRows as DistributionAccount[];
 };

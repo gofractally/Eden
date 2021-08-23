@@ -24,3 +24,22 @@ export const assetToString = (price: Asset, decimals = 2) =>
     `${(price.quantity / Math.pow(10, price.precision)).toFixed(decimals)} ${
         price.symbol
     }`;
+
+export const sumAssetStrings = (assets: string[]): Asset | undefined => {
+    if (!assets.length) {
+        return undefined;
+    }
+
+    const [firstAsset, ...parsedAssets] = assets.map(assetFromString);
+
+    return parsedAssets.reduce((prev, curr) => {
+        if (prev.symbol !== curr.symbol) {
+            throw new Error(
+                "invalid operation: can't summarize different asset symbols"
+            );
+        }
+
+        prev.quantity += curr.quantity;
+        return prev;
+    }, firstAsset);
+};
