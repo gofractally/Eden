@@ -77,13 +77,9 @@ export const ParticipationCard = ({ election }: Props) => {
     }
 
     const electionDate = electionDates.startDateTime.format("LL");
-    const electionStartTime = electionDates.startDateTime.format("LT");
-    const electionStartTimeZone = electionDates.startDateTime.format("z");
-    const electionEstimatedEndTime = electionDates.estimatedEndDateTime.format(
-        "LT"
-    );
+    const electionStartTime = electionDates.startDateTime.format("LT z");
     const electionParticipationLimitTime = electionDates.participationTimeLimit.format(
-        "LLL (z)"
+        "LLL z"
     );
 
     const isPastElectionParticipationTimeLimit = dayjs().isAfter(
@@ -149,20 +145,14 @@ export const ParticipationCard = ({ election }: Props) => {
                         electionIsAboutToStart={electionIsAboutToStart}
                     />
                     <Text>
-                        <span className="font-semibold">
-                            Registration is closed. Waiting for the election to
-                            begin{" "}
-                        </span>
-                        {electionDate} at {electionStartTime}{" "}
-                        {electionStartTimeZone}, until approximately{" "}
-                        {electionEstimatedEndTime}.
+                        Registration is closed. Waiting for the election to
+                        begin on {electionDate} at {electionStartTime}.
                     </Text>
                 </>
             ) : (
                 <Text>
-                    The next election will be held on {electionDate} between{" "}
-                    {electionStartTime} and approximately{" "}
-                    {electionEstimatedEndTime} ({electionStartTimeZone}).{" "}
+                    The next election will be held on {electionDate} beginning
+                    at {electionStartTime}.{" "}
                     <span className="font-semibold">
                         {participationCallLabel}
                     </span>
