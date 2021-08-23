@@ -76,6 +76,7 @@ struct by_id;
 struct by_pk;
 struct by_invitee;
 struct by_group;
+struct by_round;
 
 template <typename T, typename... Indexes>
 using mic = boost::
@@ -89,24 +90,29 @@ using ordered_by_id = boost::multi_index::ordered_unique<  //
 template <typename T>
 using ordered_by_pk = boost::multi_index::ordered_unique<  //
     boost::multi_index::tag<by_pk>,
-    boost::multi_index::key<&T::pk>>;
+    boost::multi_index::key<&T::by_pk>>;
 
 template <typename T>
 using ordered_by_invitee = boost::multi_index::ordered_unique<  //
     boost::multi_index::tag<by_invitee>,
-    boost::multi_index::key<&T::invitee>>;
+    boost::multi_index::key<&T::by_invitee>>;
 
 template <typename T>
 using ordered_by_group = boost::multi_index::ordered_unique<  //
     boost::multi_index::tag<by_group>,
-    boost::multi_index::key<&T::group>>;
+    boost::multi_index::key<&T::by_group>>;
+
+template <typename T>
+using ordered_by_round = boost::multi_index::ordered_unique<  //
+    boost::multi_index::tag<by_round>,
+    boost::multi_index::key<&T::by_round>>;
 
 uint64_t available_pk(const auto& table, const auto& first)
 {
    auto& idx = table.template get<by_pk>();
    if (idx.empty())
       return first;
-   return (--idx.end())->pk() + 1;
+   return (--idx.end())->by_pk() + 1;
 }
 
 enum tables
@@ -166,8 +172,8 @@ struct induction_object : public chainbase::object<induction_table, induction_ob
    id_type id;
    induction induction;
 
-   uint64_t pk() const { return induction.id; }
-   std::pair<eosio::name, uint64_t> invitee() const { return {induction.invitee, induction.id}; }
+   uint64_t by_pk() const { return induction.id; }
+   std::pair<eosio::name, uint64_t> by_invitee() const { return {induction.invitee, induction.id}; }
 };
 using induction_index = mic<induction_object,
                             ordered_by_id<induction_object>,
@@ -191,9 +197,11 @@ struct member_object : public chainbase::object<member_table, member_object>
    id_type id;
    member member;
 
-   eosio::name pk() const { return member.account; }
+   eosio::name by_pk() const { return member.account; }
 };
 using member_index = mic<member_object, ordered_by_id<member_object>, ordered_by_pk<member_object>>;
+
+using ElectionGroupByRoundKey = std::tuple<uint8_t, uint64_t>;
 
 struct election_group_object : public chainbase::object<election_group_table, election_group_object>
 {
@@ -203,8 +211,12 @@ struct election_group_object : public chainbase::object<election_group_table, el
    id_type id;
    uint8_t round;
    eosio::name winner;
+
+   ElectionGroupByRoundKey by_round() const { return {round, id._id}; }
 };
-using election_group_index = mic<election_group_object, ordered_by_id<election_group_object>>;
+using election_group_index = mic<election_group_object,
+                                 ordered_by_id<election_group_object>,
+                                 ordered_by_round<election_group_object>>;
 
 struct vote_object : public chainbase::object<vote_table, vote_object>
 {
@@ -215,8 +227,8 @@ struct vote_object : public chainbase::object<vote_table, vote_object>
    eosio::name voter;
    eosio::name candidate;
 
-   vote_key pk() const { return {voter, group_id}; }
-   auto group() const { return std::tuple{group_id, voter}; }
+   vote_key by_pk() const { return {voter, group_id}; }
+   auto by_group() const { return std::tuple{group_id, voter}; }
 };
 using vote_index = mic<vote_object,
                        ordered_by_id<vote_object>,
@@ -423,7 +435,7 @@ VoteConnection Member::votes(std::optional<uint32_t> first,
        std::nullopt,                                 // le
        first, last, before, after,                   //
        db.votes.get<by_pk>(),                        //
-       [](auto& obj) { return obj.pk(); },           //
+       [](auto& obj) { return obj.by_pk(); },        //
        [](auto& obj) { return Vote{&obj}; },         //
        [](auto& votes, auto key) { return votes.lower_bound(key); },
        [](auto& votes, auto key) { return votes.upper_bound(key); });
@@ -767,6 +779,11 @@ constexpr const char MemberEdge_name[] = "MemberEdge";
 using MemberConnection =
     clchain::Connection<clchain::ConnectionConfig<Member, MemberConnection_name, MemberEdge_name>>;
 
+constexpr const char ElectionGroupConnection_name[] = "ElectionGroupConnection";
+constexpr const char ElectionGroupEdge_name[] = "ElectionGroupEdge";
+using ElectionGroupConnection = clchain::Connection<
+    clchain::ConnectionConfig<ElectionGroup, ElectionGroupConnection_name, ElectionGroupEdge_name>>;
+
 struct Query
 {
    subchain::BlockLog blockLog;
@@ -798,11 +815,35 @@ struct Query
           [](auto& members, auto key) { return members.lower_bound(key); },
           [](auto& members, auto key) { return members.upper_bound(key); });
    }
+
+   ElectionGroupConnection electionGroupsByRound(std::optional<uint8_t> gt,
+                                                 std::optional<uint8_t> ge,
+                                                 std::optional<uint8_t> lt,
+                                                 std::optional<uint8_t> le,
+                                                 std::optional<uint32_t> first,
+                                                 std::optional<uint32_t> last,
+                                                 std::optional<std::string> before,
+                                                 std::optional<std::string> after) const
+   {
+      return clchain::make_connection<ElectionGroupConnection, ElectionGroupByRoundKey>(
+          gt ? std::optional{ElectionGroupByRoundKey{*gt, ~uint64_t(0)}} : std::nullopt,
+          ge ? std::optional{ElectionGroupByRoundKey{*ge, 0}} : std::nullopt,
+          lt ? std::optional{ElectionGroupByRoundKey{*lt, 0}} : std::nullopt,
+          le ? std::optional{ElectionGroupByRoundKey{*le, ~uint64_t(0)}} : std::nullopt,  //
+          first, last, before, after,                                                     //
+          db.election_groups.get<by_round>(),                                             //
+          [](auto& obj) { return obj.by_round(); },                                       //
+          [](auto& obj) { return ElectionGroup{&obj}; },
+          [](auto& groups, auto key) { return groups.lower_bound(key); },
+          [](auto& groups, auto key) { return groups.upper_bound(key); });
+   }
 };
-EOSIO_REFLECT2(Query,
-               blockLog,
-               status,
-               method(members, "gt", "ge", "lt", "le", "first", "last", "before", "after"))
+EOSIO_REFLECT2(
+    Query,
+    blockLog,
+    status,
+    method(members, "gt", "ge", "lt", "le", "first", "last", "before", "after"),
+    method(electionGroupsByRound, "gt", "ge", "lt", "le", "first", "last", "before", "after"))
 
 auto schema = clchain::get_gql_schema<Query>();
 [[clang::export_name("getSchemaSize")]] uint32_t getSchemaSize()
