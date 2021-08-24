@@ -60,13 +60,8 @@ export const NewPasswordForm = ({
         <div className="space-y-4">
             <Text>
                 {forgotPassword
-                    ? `Re-entering a new password will reset your old password. Bear
-                in mind that you will not be able to see generated data for your
-                current password (like ongoing meetings links).`
-                    : `It looks like you don’t have a password set to participate in
-                the election.`}{" "}
-                Please copy and save your password somewhere safe, and confirm
-                it below.
+                    ? "Re-entering a new password will reset your old password. Bear in mind that you will not be able to see generated data for your current password (like ongoing meetings links)."
+                    : "It looks like you don’t have an election participation password yet. Please COPY AND SAVE your password somewhere safe, and confirm it below."}
             </Text>
             <form onSubmit={doSubmit} className="space-y-3">
                 <Form.LabeledSet
