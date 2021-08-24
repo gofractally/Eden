@@ -406,12 +406,8 @@ const ConfirmPasswordStep = ({
     const [ualAccount] = useUALAccount();
     const [forgotPasswordMode, setForgotPasswordMode] = useState(false);
 
-    // Using the useEncryptionPassword hook directly here causes the return component to
-    // somewhat unpredictably swithc over to the <ReenterPasswordFrom /> when modal is still
-    // open after submitting the <NewPasswordForm /> because the hook's return value updates
-    // when it's dependent `useCurrentMember` value updates with the new password when we
-    // refocus the window after signing in Anchor. This component gets instantiated with the
-    // encryptionPassword value and doesn't need to worry about handling when it changes.
+    // Instantiate with encryptionPassword and keep that value so that modal doesn't flip
+    // between <NewPasswordForm /> and <ReenterPasswordForm /> modes while open and saving.
     const [password] = useState(encryptionPassword);
 
     const doSubmitWithNewKeyTrx = async (

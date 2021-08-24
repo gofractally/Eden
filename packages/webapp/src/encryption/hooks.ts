@@ -17,27 +17,14 @@ export const useEncryptionPassword = () => {
         encryptionPassword,
         setEncryptionPassword,
     ] = useState<EncryptionPassword>({});
-    const [isInitialized, setIsInitialized] = useState(false);
     const { data: currentMember, isLoading, error } = useCurrentMember();
 
     useEffect(() => {
-        if (currentMember) {
-            const publicKey = currentMember.encryption_key;
-            const privateKey = publicKey
-                ? getEncryptionKey(publicKey)
-                : undefined;
-            setEncryptionPassword({
-                publicKey,
-                privateKey,
-            });
-            setIsInitialized(true);
-        } else if (Object.keys(encryptionPassword).length) {
-            // We needlessly update state causing extra hook updates if we set the password to {} when it's already {}.
-            // This prevents extra hook updates/renders and helps prevent the banner from flickering when loading.
-            setEncryptionPassword({});
-            setIsInitialized(true);
-        }
-    }, [currentMember]);
+        const pw = getEncryptionPassword();
+        const pubKeyChanged = pw.publicKey !== encryptionPassword.publicKey;
+        const privKeyChanged = pw.privateKey !== encryptionPassword.privateKey;
+        if (pubKeyChanged || privKeyChanged) setEncryptionPassword(pw);
+    });
 
     const updateEncryptionPassword = (
         publicKey: string,
@@ -47,10 +34,18 @@ export const useEncryptionPassword = () => {
         setEncryptionPassword({ publicKey, privateKey });
     };
 
+    const getEncryptionPassword = () => {
+        if (!currentMember || !currentMember.encryption_key) return {};
+        const publicKey = currentMember.encryption_key;
+        const privateKey = getEncryptionKey(publicKey);
+        return { publicKey, privateKey } as EncryptionPassword;
+    };
+
     return {
         encryptionPassword,
+        getEncryptionPassword,
         updateEncryptionPassword,
-        isLoading: isLoading || !isInitialized, // prevent flicker
+        isLoading: isLoading,
         error,
     };
 };
