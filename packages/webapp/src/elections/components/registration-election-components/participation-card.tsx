@@ -163,6 +163,7 @@ export const ParticipationCard = ({ election }: Props) => {
             <ConfirmParticipationModal
                 isOpen={showConfirmParticipationModal}
                 close={() => setShowConfirmParticipationModal(false)}
+                deadline={electionParticipationLimitTime}
             />
             <CancelParticipationModal
                 isOpen={showCancelParticipationModal}
@@ -214,6 +215,7 @@ const ParticipationCardCountdown = ({
 interface ModalProps {
     isOpen: boolean;
     close: () => void;
+    deadline?: string;
 }
 
 enum ParticipationStep {
@@ -227,7 +229,7 @@ interface SetEncryptionPasswordAction {
     trx: any;
 }
 
-const ConfirmParticipationModal = ({ isOpen, close }: ModalProps) => {
+const ConfirmParticipationModal = ({ isOpen, close, deadline }: ModalProps) => {
     const [isLoading, setIsLoading] = useState<boolean>(false);
     const [ualAccount] = useUALAccount();
     const queryClient = useQueryClient();
@@ -315,6 +317,7 @@ const ConfirmParticipationModal = ({ isOpen, close }: ModalProps) => {
                     onSubmit={submitParticipationConfirmation}
                     isLoading={isLoading}
                     onCancel={close}
+                    deadline={deadline}
                 />
             )}
             {step === ParticipationStep.ConfirmPassword && (
@@ -332,12 +335,14 @@ interface ConfirmParticipationStepProps {
     onSubmit: () => void;
     isLoading?: boolean;
     onCancel: () => void;
+    deadline?: string;
 }
 
 const ConfirmParticipationStep = ({
     onSubmit,
     isLoading,
     onCancel,
+    deadline,
 }: ConfirmParticipationStepProps) => {
     const doSubmit = (e: React.FormEvent) => {
         e.preventDefault();
@@ -351,8 +356,7 @@ const ConfirmParticipationStep = ({
                     You are committing to participate in the upcoming election.
                     Not showing up could impact your standing and reputation in
                     the community. If for some reason you cannot participate in
-                    the election, please update your status more than 24 hours
-                    prior to the start of the election.
+                    the election, please update your status before {deadline}.
                 </Text>
                 <div className="p-3 border rounded">
                     <Form.Checkbox
