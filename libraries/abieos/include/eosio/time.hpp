@@ -100,11 +100,10 @@ namespace eosio
    EOSIO_COMPARE(time_point);
 
    template <typename S>
-   void from_json(time_point& obj, S& stream)
+   void from_string(time_point& obj, S& stream)
    {
-      auto s = stream.get_string();
-      auto pos = s.data();
-      auto end = pos + s.size();
+      auto pos = stream.pos;
+      auto end = stream.end;
       uint64_t utc_microseconds;
       if (!eosio::string_to_utc_microseconds(utc_microseconds, pos, end, false) ||
           !(pos == end || pos + 1 == end && *pos == 'Z'))
@@ -112,6 +111,14 @@ namespace eosio
          check(false, convert_json_error(eosio::from_json_error::expected_time_point));
       }
       obj = time_point(microseconds(utc_microseconds));
+   }
+
+   template <typename S>
+   void from_json(time_point& obj, S& stream)
+   {
+      auto s = stream.get_string();
+      eosio::input_stream stream2{s.data(), s.end()};
+      from_string(obj, stream2);
    }
 
    template <typename Base>
@@ -322,6 +329,14 @@ namespace eosio
    typedef block_timestamp block_timestamp_type;
 
    EOSIO_REFLECT(block_timestamp_type, slot);
+
+   template <typename S>
+   void from_string(block_timestamp& obj, S& stream)
+   {
+      time_point tp;
+      from_string(tp, stream);
+      obj = block_timestamp(tp);
+   }
 
    template <typename S>
    void from_json(block_timestamp& obj, S& stream)

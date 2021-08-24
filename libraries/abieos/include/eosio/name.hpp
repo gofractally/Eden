@@ -175,6 +175,12 @@ namespace eosio
    EOSIO_COMPARE(name);
 
    template <typename S>
+   void from_string(name& obj, S& stream)
+   {
+      obj = name(hash_name(std::string_view{stream.pos, stream.remaining()}));
+   }
+
+   template <typename S>
    void from_json(name& obj, S& stream)
    {
       auto r = stream.get_string();
