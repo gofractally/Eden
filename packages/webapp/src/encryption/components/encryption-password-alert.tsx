@@ -7,6 +7,7 @@ import {
     MemberStatus,
     Modal,
     onError,
+    queryMemberByAccountName,
     useCurrentMember,
     useUALAccount,
 } from "_app";
@@ -15,6 +16,7 @@ import { setEncryptionPublicKeyTransaction } from "../transactions";
 import { UpdateEncryptionPassword, useEncryptionPassword } from "../hooks";
 import { NewPasswordForm } from "./new-password-form";
 import { ReenterPasswordForm } from "./reenter-password-form";
+import { useQueryClient } from "react-query";
 
 interface Props {
     promptSetupEncryptionKey?: boolean;
@@ -193,8 +195,9 @@ const PromptReenterKeyModal = ({
     const [isLoading, setIsLoading] = useState<boolean>(false);
     const [ualAccount] = useUALAccount();
     const [forgotPasswordMode, setForgotPasswordMode] = useState(false);
+    const queryClient = useQueryClient();
 
-    const onSubmit = async (publicKey: string, privateKey: string) => {
+    const onSubmit = (publicKey: string, privateKey: string) => {
         try {
             updateEncryptionPassword(publicKey, privateKey);
             close();
@@ -221,6 +224,12 @@ const PromptReenterKeyModal = ({
                 broadcast: true,
             });
             console.info("set encryption public key trx", signedTrx);
+            await new Promise((resolve) => setTimeout(resolve, 3000)); // allow time for chain tables to update
+
+            // invalidate current member query to make observing queries aware of presence of new password
+            queryClient.invalidateQueries(
+                queryMemberByAccountName(ualAccount.accountName).queryKey
+            );
             onSubmit(publicKey, privateKey);
         } catch (error) {
             setIsLoading(false);

@@ -5,7 +5,7 @@ import { Button, Form, Link, onError, Text, useFormFields } from "_app";
 interface Props {
     expectedPublicKey: string;
     isLoading?: boolean;
-    onSubmit: (publicKey: string, privateKey: string) => Promise<void>;
+    onSubmit: (publicKey: string, privateKey: string) => void;
     onCancel: () => void;
     onForgotPassword: () => void;
 }
@@ -35,7 +35,7 @@ export const ReenterPasswordForm = ({
                 onError(new Error("The entered password is not correct"));
                 return;
             }
-            await onSubmit(publicKey.toLegacyString(), fields.password);
+            onSubmit(publicKey.toLegacyString(), fields.password);
         } catch (error) {
             console.error(error);
             onError(error);
