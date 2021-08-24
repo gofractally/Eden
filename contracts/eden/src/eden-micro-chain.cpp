@@ -217,6 +217,7 @@ struct election_object : public chainbase::object<election_table, election_objec
 
    id_type id;
    eosio::block_timestamp time;
+   std::optional<uint64_t> final_group_id;
 
    auto by_pk() const { return time; }
 };
@@ -440,10 +441,12 @@ struct Election
                                          std::optional<uint32_t> last,
                                          std::optional<std::string> before,
                                          std::optional<std::string> after) const;
+   std::optional<ElectionGroup> finalGroup() const;
 };
 EOSIO_REFLECT2(Election,
                time,
-               method(groupsByRound, "gt", "ge", "lt", "le", "first", "last", "before", "after"))
+               method(groupsByRound, "gt", "ge", "lt", "le", "first", "last", "before", "after"),
+               finalGroup)
 
 struct MemberElection
 {
@@ -483,13 +486,12 @@ struct ElectionGroup
 {
    const election_group_object* obj;
 
-   uint64_t id() const { return obj->id._id; }
    Election election() const { return {&get<by_pk>(db.elections, obj->election_time)}; }
    uint8_t round() const { return obj->round; }
    auto winner() const { return get_member(obj->winner); }
    std::vector<Vote> votes() const;
 };
-EOSIO_REFLECT2(ElectionGroup, id, election, round, winner, votes)
+EOSIO_REFLECT2(ElectionGroup, election, round, winner, votes)
 
 ElectionGroupConnection Election::groupsByRound(std::optional<uint8_t> gt,
                                                 std::optional<uint8_t> ge,
@@ -515,6 +517,13 @@ ElectionGroupConnection Election::groupsByRound(std::optional<uint8_t> gt,
        [](auto& obj) { return ElectionGroup{&obj}; },
        [](auto& groups, auto key) { return groups.lower_bound(key); },
        [](auto& groups, auto key) { return groups.upper_bound(key); });
+}
+
+std::optional<ElectionGroup> Election::finalGroup() const
+{
+   if (obj->final_group_id)
+      return ElectionGroup{&get<by_id>(db.election_groups, *obj->final_group_id)};
+   return std::nullopt;
 }
 
 struct Vote
@@ -713,6 +722,7 @@ void electreport(uint8_t round,
       group.round = round;
       group.winner = winner;
    });
+   bool found_vote = false;
    for (auto& report : reports)
    {
       db.votes.emplace([&](auto& vote) {
@@ -720,7 +730,14 @@ void electreport(uint8_t round,
          vote.group_id = group.id._id;
          vote.voter = report.voter;
          vote.candidate = report.candidate;
+         if (report.candidate.value)
+            found_vote = true;
       });
+   }
+   if (!found_vote && winner.value && !(winner.value & 0x0f))
+   {
+      modify<by_pk>(db.elections, election_time.value,
+                    [&](auto& election) { election.final_group_id = group.id._id; });
    }
 }
 
