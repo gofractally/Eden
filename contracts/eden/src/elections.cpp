@@ -604,8 +604,10 @@ namespace eden
       set_default_election(result.last_election_time.to_time_point());
       members members{contract};
       uint8_t round = members.stats().ranks.size();
+      std::vector<std::pair<eosio::name, eosio::name>> votes;
       for (auto board_member : result.board)
       {
+         votes.push_back({board_member, {}});
          if (board_member != winner)
          {
             members.set_rank(board_member, round, winner);
@@ -616,6 +618,12 @@ namespace eden
 
       process_election_distribution(contract);
       set_board_permission(result.board);
+
+      eosio::action{{contract, "active"_n},
+                    contract,
+                    "electreport"_n,
+                    std::tuple(round, votes, winner, result.last_election_time)}
+          .send();
    }
 
    uint32_t elections::finish_round(uint32_t max_steps)
