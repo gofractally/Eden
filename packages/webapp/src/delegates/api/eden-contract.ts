@@ -1,11 +1,20 @@
+import { devUseFixtureData } from "config";
 import { EdenMember } from "members";
 import { queryClient } from "pages/_app";
 import {
+    CONTRACT_DISTRIBUTION_ACCOUNTS_TABLE,
+    getTableRows,
+    i128BoundsForAccount,
+    INDEX_BY_OWNER,
     isValidDelegate,
     queryElectionState,
     queryMemberByAccountName,
     queryVoteDataRow,
+    TABLE_INDEXES,
 } from "_app";
+
+import { DistributionAccount } from "../interfaces";
+import { DISTRIBUTION_ACCOUNTS } from "./fixtures";
 
 const queryElectionStateHelper = async () =>
     await queryClient.fetchQuery(
@@ -70,4 +79,28 @@ export const getMyDelegation = async (
     } while (currRound && isValidDelegate(nextMemberAccount) && !isHeadChief);
 
     return myDelegates;
+};
+
+export const getDistributionsForAccount = async (
+    account: string
+): Promise<DistributionAccount[]> => {
+    const { lower, upper } = i128BoundsForAccount(account);
+
+    if (devUseFixtureData) {
+        return DISTRIBUTION_ACCOUNTS;
+    }
+
+    const distributionRows = await getTableRows(
+        CONTRACT_DISTRIBUTION_ACCOUNTS_TABLE,
+        {
+            ...TABLE_INDEXES[CONTRACT_DISTRIBUTION_ACCOUNTS_TABLE][
+                INDEX_BY_OWNER
+            ],
+            lowerBound: lower,
+            upperBound: upper,
+            limit: 9999,
+        }
+    );
+
+    return distributionRows as DistributionAccount[];
 };

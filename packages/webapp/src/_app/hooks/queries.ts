@@ -21,6 +21,7 @@ import {
 } from "inductions/api";
 import {
     getChiefDelegates,
+    getDistributionsForAccount,
     getHeadDelegate,
     getMyDelegation,
 } from "delegates/api";
@@ -197,6 +198,11 @@ export const queryMemberData = (account: string) => ({
     queryFn: () => getMember(account),
 });
 
+export const queryDistributionsForAccount = (account: string) => ({
+    queryKey: ["query_distributions_for_account", account],
+    queryFn: () => getDistributionsForAccount(account),
+});
+
 export const queryInduction = (inductionId: string) => ({
     queryKey: ["query_induction", inductionId],
     queryFn: () => getInduction(inductionId),
@@ -233,6 +239,12 @@ export const useMemberByAccountName = (accountName: string) =>
     useQuery<EdenMember | undefined, Error>({
         ...queryMemberByAccountName(accountName),
         enabled: Boolean(accountName),
+    });
+
+export const useDistributionsForAccount = (account: string) =>
+    useQuery({
+        ...queryDistributionsForAccount(account),
+        enabled: Boolean(account),
     });
 
 export const useMemberListByAccountNames = (

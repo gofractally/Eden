@@ -119,7 +119,7 @@ export const getMemberGroupParticipants = async (
         upperBound: (roundIndex << 16) + upperBound,
         limit: GET_VOTE_DATA_ROWS_LIMIT,
         ...TABLE_INDEXES[CONTRACT_VOTE_TABLE][INDEX_VOTE_BY_GROUP_INDEX],
-    } as TableQueryOptions);
+    });
 
     if (!rows || !rows.length) {
         return undefined;
