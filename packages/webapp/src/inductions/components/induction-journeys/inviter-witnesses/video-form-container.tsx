@@ -15,7 +15,7 @@ import { InductionNames } from "inductions";
 import { Induction } from "../../../interfaces";
 import { getInductionRemainingTimeDays } from "../../../utils";
 import { setInductionVideoTransaction } from "../../../transactions";
-import { InductionVideoForm, VideoSubmissionPhase } from "./video-form";
+import { VideoSubmissionPhase, VideoSubmissionFormAndPreview } from "_app/ui";
 
 interface Props {
     induction: Induction;
@@ -90,7 +90,7 @@ export const InductionVideoFormContainer = ({
                 </Text>
                 <InductionNames inductionId={induction.id} />
             </div>
-            <InductionVideoForm
+            <VideoSubmissionFormAndPreview
                 video={induction.video}
                 onSubmit={submitInductionVideo}
                 submissionPhase={videoSubmissionPhase}

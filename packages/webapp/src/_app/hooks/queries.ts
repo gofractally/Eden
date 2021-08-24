@@ -40,6 +40,7 @@ import {
     ActiveStateConfigType,
     CurrentElection,
     Election,
+    ElectionState,
     VoteData,
 } from "elections/interfaces";
 import { EncryptionScope, getEncryptedData } from "encryption/api";
@@ -359,10 +360,14 @@ export const useHeadDelegate = () =>
         ...queryHeadDelegate,
     });
 
-export const useParticipantsInMyCompletedRound = (electionRound: number) => {
+export const useParticipantsInMyCompletedRound = (
+    electionRound: number
+    // ): UseQueryResult<{ participants: EdenMember[]; delegate?: string }> => {
+) => {
     const { data: member } = useCurrentMember();
     const { data: voteData } = useVoteDataRow(member?.account);
 
+    // return useQuery<{ participants: EdenMember[]; delegate?: string }>({
     return useQuery({
         ...queryParticipantsInCompletedRound(electionRound, member, voteData),
         enabled: Boolean(member),
@@ -404,6 +409,7 @@ export const useMemberGroupParticipants = (
 };
 
 export const useElectionState = () =>
+    // useQuery<ElectionState, Error>({
     useQuery({
         ...queryElectionState,
     });

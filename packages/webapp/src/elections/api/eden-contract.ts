@@ -40,9 +40,12 @@ import {
     fixtureRegistrationElection,
 } from "./fixtures";
 
-const CONSENSUS_RESULT_NO_DELEGATE = "no delegate";
+const COMMON_DELEGATE_OF_NO_ROUND = "no round";
 import { TableQueryOptions } from "_app/eos/interfaces";
-import { fixtureEdenMembersInGroup } from "members/api/fixtures";
+import {
+    fixtureEdenMembers,
+    fixtureEdenMembersInGroup,
+} from "members/api/fixtures";
 
 export const getMemberGroupFromIndex = (
     memberIdx: number,
@@ -170,6 +173,10 @@ const getCommonDelegateAccountForGroupWithThisMember = (
     member: EdenMember,
     voteData?: VoteData
 ) => {
+    // console.info(
+    //     `getCommonDelegateAccountForGroupWithThisMember().roundIndexRequested[${roundIndexRequested}], member:`,
+    //     member
+    // );
     let electionRankIndex = member.election_rank; // if member table has been updated for this election
     // if the member has an open voteData record (i.e., still participating), get their election rank from that
     if (voteData?.member === member.account) {
@@ -177,11 +184,17 @@ const getCommonDelegateAccountForGroupWithThisMember = (
     }
 
     let commonDelegate = member.representative;
+    // console.info("commonDelegate:", commonDelegate);
     if (electionRankIndex > roundIndexRequested) {
+        console.info("electionRankIndex > roundIndexRequested");
         commonDelegate = member.account;
     } else if (electionRankIndex < roundIndexRequested) {
+        console.info("electionRankIndex < roundIndexRequested");
         // TODO: No Consensus Scenario 2: this member was in Round 1, which didn't reach consensus, and we're asking about Round 2 for them, which never happened
-        return CONSENSUS_RESULT_NO_DELEGATE;
+        console.info(
+            "getCommonDelegateAccountForGroupWithThisMember().returning NO_CONSENSUS"
+        );
+        return COMMON_DELEGATE_OF_NO_ROUND;
         // throw new Error(
         //     "Cannot fetch round participants in round member did not participate in."
         // );
@@ -196,12 +209,18 @@ export const getParticipantsInCompletedRound = async (
     electionRoundIndex: number,
     member: EdenMember,
     voteData?: VoteData
-): Promise<{ participants: EdenMember[]; delegate?: string } | undefined> => {
+): Promise<
+    { participants: EdenMember[]; delegate?: EdenMember } | undefined
+> => {
     // TODO: Add no-consensus scenario to this function
     const commonDelegate = getCommonDelegateAccountForGroupWithThisMember(
         electionRoundIndex,
         member,
         voteData
+    );
+    console.info(
+        "getParticipantsInCompletedRound().commonDelegate:",
+        commonDelegate
     );
 
     if (devUseFixtureData)
@@ -210,14 +229,16 @@ export const getParticipantsInCompletedRound = async (
                 electionRoundIndex,
                 commonDelegate
             ),
-            delegate: commonDelegate,
+            delegate: fixtureEdenMembers.find(
+                (m) => m.account === commonDelegate
+            ),
         };
 
-    if (commonDelegate === CONSENSUS_RESULT_NO_DELEGATE) {
+    if (commonDelegate === COMMON_DELEGATE_OF_NO_ROUND) {
+        console.info("getParticipantsInCompletedRound().NO ROUND");
         // TODO: No Consensus scenario 2: Consider and test this further. I don't know that this works yet
         return {
             participants: [],
-            delegate: "",
         };
     }
     const serialBuffer = new eosjsSerialize.SerialBuffer();
@@ -226,15 +247,19 @@ export const getParticipantsInCompletedRound = async (
 
     const bytes = serialBuffer.getUint8Array(16);
     const bounds: string = eosjsNumeric.signedBinaryToDecimal(bytes).toString();
+    console.info("bounds:", bounds);
 
-    const participants = (
-        await getTableRows(CONTRACT_MEMBER_TABLE, {
-            lowerBound: bounds,
-            upperBound: bounds,
-            limit: 20,
-            ...TABLE_INDEXES[CONTRACT_MEMBER_TABLE][INDEX_MEMBER_BY_REP],
-        })
-    ).filter(
+    const participants1 = await getTableRows(CONTRACT_MEMBER_TABLE, {
+        lowerBound: bounds,
+        upperBound: bounds,
+        limit: 20,
+        ...TABLE_INDEXES[CONTRACT_MEMBER_TABLE][INDEX_MEMBER_BY_REP],
+    });
+    console.info(
+        "getParticipantsInCompletedRound().participants1:",
+        participants1
+    );
+    const participants = participants1.filter(
         // we want to filter out 1) members who never opted in to this election as well as
         // members who are still participating in the election.
         // The follow code handles #1 obviously but handles #2 by virtue of members' participation status
@@ -247,14 +272,23 @@ export const getParticipantsInCompletedRound = async (
             ElectionParticipationStatus.NotInElection // So this could read status === participationCompleted
     );
 
+    console.info(
+        "getParticipantsInCompletedRound().participants:",
+        participants
+    );
+
     const delegateAccountName = participants?.[0]?.representative;
+    console.info(
+        "getParticipantsInCompletedRound().delegateAccountName:",
+        delegateAccountName
+    );
     if (!isValidDelegate(delegateAccountName)) return { participants };
 
     const { queryKey, queryFn } = queryMemberByAccountName(delegateAccountName);
     const delegate = await queryClient.fetchQuery(queryKey, queryFn);
     return {
         participants: [delegate, ...participants],
-        delegate: delegateAccountName,
+        delegate: delegate,
     };
 };
 
@@ -316,6 +350,7 @@ const getMemberDataFromEdenMemberList = async (memberList: EdenMember[]) => {
 const getParticipantsOfCompletedRounds = async (myDelegation: EdenMember[]) => {
     const pCompletedRounds = myDelegation.map(
         async (member, electionRoundIndex) => {
+            console.info("getParticipantsOfCompletedRounds().member:", member);
             // get EdenMembers in group with this member
             const { queryKey, queryFn } = queryParticipantsInCompletedRound(
                 electionRoundIndex,
@@ -324,6 +359,10 @@ const getParticipantsOfCompletedRounds = async (myDelegation: EdenMember[]) => {
             const edenMembersInThisRound = await queryClient.fetchQuery(
                 queryKey,
                 queryFn
+            );
+            console.info(
+                "  --->    getParticipantsOfCompletedRounds().edenMembersInThisRound:",
+                edenMembersInThisRound
             );
 
             const participantsMemberData = await getMemberDataFromEdenMemberList(
@@ -358,6 +397,7 @@ export const getOngoingElectionData = async (
     myDelegation: EdenMember[] = [],
     loggedInMember?: EdenMember
 ) => {
+    // console.info("getOngoingElectionData().loggedInMember:", loggedInMember);
     const isElectionOngoing =
         currentElection?.electionState === ElectionStatus.Active ||
         currentElection?.electionState === ElectionStatus.Final;
@@ -366,11 +406,16 @@ export const getOngoingElectionData = async (
 
     const isMemberStillParticipating = votingMemberData.length > 0;
 
-    const ongoingRound = { participantsMemberData: votingMemberData };
+    const ongoingRound = {
+        participantsMemberData: votingMemberData,
+        roundIndex: isElectionOngoing ? myDelegation.length : undefined,
+    };
 
+    // console.info("getOngoingElectionData().myDelegation:", myDelegation);
     const completedRounds = await getParticipantsOfCompletedRounds(
         myDelegation
     );
+    // console.info("getOngoingElectionData().completedRounds:", completedRounds);
 
     const isMemberOptedOut = loggedInMember
         ? isNonParticipantInOngoingElection(loggedInMember)

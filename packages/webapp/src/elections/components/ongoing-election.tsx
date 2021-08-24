@@ -1,3 +1,4 @@
+import { useEffect, useState } from "react";
 import dayjs, { Dayjs } from "dayjs";
 import { BsInfoCircle } from "react-icons/bs";
 
@@ -17,7 +18,6 @@ import {
 } from "elections/interfaces";
 
 import * as Ongoing from "./ongoing-election-components";
-import { useEffect, useState } from "react";
 
 // TODO: Make sure time zone changes during election are handled properly
 export const OngoingElection = ({ election }: { election: any }) => {
@@ -34,6 +34,7 @@ export const OngoingElection = ({ election }: { election: any }) => {
     } = useOngoingElectionData({
         currentElection: election,
     });
+    console.info("useOngoingElectionData() return:", ongoingElectionData);
 
     useEffect(() => {
         if (!awaitingNextRound) return;
@@ -60,11 +61,10 @@ export const OngoingElection = ({ election }: { election: any }) => {
         return <ErrorLoadingElection />;
     }
 
-    const roundDurationSec = globals.election_round_time_sec;
-    const roundDurationMs = roundDurationSec * 1000;
-    const roundEndTimeRaw = election.round_end ?? election.seed.end_time;
-    const roundEndTime = dayjs(roundEndTimeRaw + "Z");
-    const roundStartTime = dayjs(roundEndTime).subtract(roundDurationMs);
+    const { roundDurationMs, roundEndTime, roundStartTime } = getRoundTimes(
+        globals,
+        election
+    );
 
     return (
         <div className="divide-y">
@@ -226,4 +226,24 @@ export const SignUpContainer = () => {
             </Button>
         </Container>
     );
+};
+
+export const getRoundTimes = (
+    communityGlobals: any,
+    currentElection: any
+): {
+    roundDurationMs: number;
+    roundEndTime: Dayjs;
+    roundStartTime: Dayjs;
+} => {
+    const roundDurationSec = communityGlobals.election_round_time_sec;
+    const roundEndTimeRaw =
+        currentElection.round_end ?? currentElection.seed.end_time;
+    const roundDurationMs = roundDurationSec * 1000;
+    const roundEndTime = dayjs(roundEndTimeRaw + "Z");
+    return {
+        roundDurationMs,
+        roundEndTime,
+        roundStartTime: dayjs(roundEndTime).subtract(roundDurationMs),
+    };
 };
