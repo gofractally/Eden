@@ -252,8 +252,8 @@ const ConfirmParticipationModal = ({ isOpen, close }: ModalProps) => {
 
             if (setEncryptionPasswordAction) {
                 transaction.actions = [
-                    ...transaction.actions,
                     ...setEncryptionPasswordAction.trx.actions,
+                    ...transaction.actions,
                 ];
             }
 
@@ -393,43 +393,49 @@ const ConfirmPasswordStep = ({
     onCancel,
 }: ConfirmPasswordStepProps) => {
     const [ualAccount] = useUALAccount();
-    const {
-        encryptionPassword,
-        updateEncryptionPassword,
-    } = useEncryptionPassword();
+    const { encryptionPassword } = useEncryptionPassword();
+    const [forgotPasswordMode, setForgotPasswordMode] = useState(false);
 
-    if (encryptionPassword.publicKey) {
-        // public key present, user needs to re-enter password
-        const doSubmit = async (
-            publicKey: string,
-            privateKey: string
-        ): Promise<void> => {
-            await onSubmit({ trx: { actions: [] }, publicKey, privateKey });
-        };
-        return (
-            <ReenterPasswordForm
-                expectedPublicKey={encryptionPassword.publicKey}
-                onSubmit={doSubmit}
-                onCancel={onCancel}
-            />
+    const doSubmitWithNewKeyTrx = async (
+        publicKey: string,
+        privateKey: string
+    ): Promise<void> => {
+        const authorizerAccount = ualAccount.accountName;
+        const trx = setEncryptionPublicKeyTransaction(
+            authorizerAccount,
+            publicKey
         );
-    } else {
-        const doSubmit = async (
-            publicKey: string,
-            privateKey: string
-        ): Promise<void> => {
-            const authorizerAccount = ualAccount.accountName;
-            const trx = setEncryptionPublicKeyTransaction(
-                authorizerAccount,
-                publicKey
-            );
-            await onSubmit({ trx, publicKey, privateKey });
-        };
+        await onSubmit({ trx, publicKey, privateKey });
+    };
+
+    const doSubmitWithoutTrx = async (
+        publicKey: string,
+        privateKey: string
+    ) => {
+        await onSubmit({ trx: { actions: [] }, publicKey, privateKey });
+    };
+
+    if (forgotPasswordMode || !encryptionPassword.publicKey) {
+        // when key is not present or user clicked in forgot password
         return (
             <NewPasswordForm
                 isLoading={isLoading}
-                onSubmit={doSubmit}
+                onSubmit={doSubmitWithNewKeyTrx}
+                onCancel={() => {
+                    setForgotPasswordMode(false);
+                    onCancel();
+                }}
+                forgotPassword={forgotPasswordMode}
+            />
+        );
+    } else {
+        // public key present, user needs to re-enter password
+        return (
+            <ReenterPasswordForm
+                expectedPublicKey={encryptionPassword.publicKey}
+                onSubmit={doSubmitWithoutTrx}
                 onCancel={onCancel}
+                onForgotPassword={() => setForgotPasswordMode(true)}
             />
         );
     }
