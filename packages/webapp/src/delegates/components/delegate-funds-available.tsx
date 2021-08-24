@@ -34,8 +34,6 @@ export const DelegateFundsAvailable = ({ account }: Props) => {
         return null;
     }
 
-    const nextDisbursementDate = "October 15, 2021"; // TODO: how to calculate this? create fn.
-
     const submitWithdraw = async () => {
         setIsLoading(true);
 
@@ -86,12 +84,6 @@ export const DelegateFundsAvailable = ({ account }: Props) => {
                     )}
                 </div>
             </div>
-            {ualAccount?.accountName === member?.account && (
-                <Text>
-                    Delegate funds are disbursed monthly. Check back on{" "}
-                    {nextDisbursementDate} for your next disbursement.
-                </Text>
-            )}
         </>
     );
 };
