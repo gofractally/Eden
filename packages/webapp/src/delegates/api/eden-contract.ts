@@ -3,12 +3,14 @@ import { EdenMember } from "members";
 import { queryClient } from "pages/_app";
 import {
     CONTRACT_DISTRIBUTION_ACCOUNTS_TABLE,
-    getTableIndexRows,
+    getTableRows,
     i128BoundsForAccount,
+    INDEX_BY_OWNER,
     isValidDelegate,
     queryElectionState,
     queryMemberByAccountName,
     queryVoteDataRow,
+    TABLE_INDEXES,
 } from "_app";
 
 import { DistributionAccount } from "../interfaces";
@@ -77,10 +79,6 @@ export const getMyDelegation = async (
     return myDelegates;
 };
 
-// eosio secondary indexes for distaccount table defined at:
-// /contracts/eden/include/distributions.hpp
-const INDEX_BY_OWNER = 2;
-
 export const getDistributionsForAccount = async (
     account: string
 ): Promise<DistributionAccount[]> => {
@@ -90,13 +88,16 @@ export const getDistributionsForAccount = async (
         return DISTRIBUTION_ACCOUNTS;
     }
 
-    const distributionRows = await getTableIndexRows(
+    const distributionRows = await getTableRows(
         CONTRACT_DISTRIBUTION_ACCOUNTS_TABLE,
-        INDEX_BY_OWNER,
-        "i128",
-        lower,
-        upper,
-        9999
+        {
+            ...TABLE_INDEXES[CONTRACT_DISTRIBUTION_ACCOUNTS_TABLE][
+                INDEX_BY_OWNER
+            ],
+            lowerBound: lower,
+            upperBound: upper,
+            limit: 9999,
+        }
     );
 
     return distributionRows as DistributionAccount[];

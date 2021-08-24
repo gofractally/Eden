@@ -9,7 +9,12 @@ export type TableKeyType =
     | "ripemd160";
 
 type TableIndexBound = number | string | null;
-export interface TableQueryOptions {
+export interface TableQueryIndexOptions {
+    index_position: number;
+    key_type: TableKeyType;
+}
+
+export interface TableQueryOptionsBase {
     scope?: string;
     lowerBound?: TableIndexBound;
     upperBound?: TableIndexBound;
@@ -17,3 +22,7 @@ export interface TableQueryOptions {
     index_position?: number;
     key_type?: TableKeyType;
 }
+
+// leave wrong for TableQueryOptions that don't include secondary indexes
+export type TableQueryOptions = TableQueryOptionsBase &
+    Partial<TableQueryIndexOptions>;
