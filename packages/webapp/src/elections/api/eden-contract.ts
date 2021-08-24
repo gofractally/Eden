@@ -246,7 +246,7 @@ export const getParticipantsInCompletedRound = async (
             ElectionParticipationStatus.NotInElection // So this could read status === participationCompleted
     );
 
-    const delegateAccountName = participants?.[0].representative;
+    const delegateAccountName = participants?.[0]?.representative;
     if (!isValidDelegate(delegateAccountName)) return { participants };
 
     const { queryKey, queryFn } = queryMemberByAccountName(delegateAccountName);
