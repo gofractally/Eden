@@ -26,6 +26,7 @@ import {
     useEncryptionPassword,
     NewPasswordForm,
     ReenterPasswordForm,
+    EncryptionPassword,
 } from "encryption";
 
 import { extractElectionDates } from "../../utils";
@@ -264,6 +265,13 @@ const ConfirmParticipationModal = ({ isOpen, close, deadline }: ModalProps) => {
             });
             console.info("electopt trx", signedTrx);
 
+            await new Promise((resolve) => setTimeout(resolve, 3000)); // allow time for chain tables to update
+
+            // invalidate current member query to update participating status
+            queryClient.invalidateQueries(
+                queryMemberByAccountName(ualAccount.accountName).queryKey
+            );
+
             if (setEncryptionPasswordAction) {
                 updateEncryptionPassword(
                     setEncryptionPasswordAction.publicKey,
@@ -271,18 +279,13 @@ const ConfirmParticipationModal = ({ isOpen, close, deadline }: ModalProps) => {
                 );
             }
 
-            // invalidate current member query to update participating status
-            await new Promise((resolve) => setTimeout(resolve, 3000));
-            queryClient.invalidateQueries(
-                queryMemberByAccountName(ualAccount.accountName).queryKey
-            );
-
-            close();
+            close(); // Close modal first to avoid flashing wrong ParticipationStep
+            await new Promise((resolve) => setTimeout(resolve, 200)); // time for modal transition to complete
+            setStep(ParticipationStep.ConfirmParticipation); // set this back in case they immediately reopen modal to change status again
         } catch (error) {
             console.error(error);
             onError(error);
         }
-
         setIsLoading(false);
     };
 
@@ -305,6 +308,7 @@ const ConfirmParticipationModal = ({ isOpen, close, deadline }: ModalProps) => {
             isOpen={isOpen}
             title="I want to participate"
             onRequestClose={close}
+            onAfterClose={() => setStep(ParticipationStep.ConfirmParticipation)}
             contentLabel="Election Participation Modal - Confirming Participation"
             preventScroll
             shouldCloseOnOverlayClick={
@@ -325,6 +329,7 @@ const ConfirmParticipationModal = ({ isOpen, close, deadline }: ModalProps) => {
                     onSubmit={submitPasswordConfirmation}
                     isLoading={isLoading}
                     onCancel={close}
+                    encryptionPassword={encryptionPassword}
                 />
             )}
         </Modal>
@@ -389,16 +394,25 @@ interface ConfirmPasswordStepProps {
     ) => void;
     isLoading?: boolean;
     onCancel: () => void;
+    encryptionPassword: EncryptionPassword;
 }
 
 const ConfirmPasswordStep = ({
     onSubmit,
     isLoading,
     onCancel,
+    encryptionPassword,
 }: ConfirmPasswordStepProps) => {
     const [ualAccount] = useUALAccount();
-    const { encryptionPassword } = useEncryptionPassword();
     const [forgotPasswordMode, setForgotPasswordMode] = useState(false);
+
+    // Using the useEncryptionPassword hook directly here causes the return component to
+    // somewhat unpredictably swithc over to the <ReenterPasswordFrom /> when modal is still
+    // open after submitting the <NewPasswordForm /> because the hook's return value updates
+    // when it's dependent `useCurrentMember` value updates with the new password when we
+    // refocus the window after signing in Anchor. This component gets instantiated with the
+    // encryptionPassword value and doesn't need to worry about handling when it changes.
+    const [password] = useState(encryptionPassword);
 
     const doSubmitWithNewKeyTrx = async (
         publicKey: string,
@@ -419,7 +433,7 @@ const ConfirmPasswordStep = ({
         await onSubmit({ trx: { actions: [] }, publicKey, privateKey });
     };
 
-    if (forgotPasswordMode || !encryptionPassword.publicKey) {
+    if (forgotPasswordMode || !password.publicKey) {
         // when key is not present or user clicked in forgot password
         return (
             <NewPasswordForm
@@ -436,7 +450,7 @@ const ConfirmPasswordStep = ({
         // public key present, user needs to re-enter password
         return (
             <ReenterPasswordForm
-                expectedPublicKey={encryptionPassword.publicKey}
+                expectedPublicKey={encryptionPassword.publicKey!}
                 onSubmit={doSubmitWithoutTrx}
                 onCancel={onCancel}
                 onForgotPassword={() => setForgotPasswordMode(true)}
