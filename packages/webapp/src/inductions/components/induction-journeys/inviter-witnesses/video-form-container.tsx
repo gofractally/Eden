@@ -14,7 +14,7 @@ import {
 import { Induction } from "../../../interfaces";
 import { getInductionRemainingTimeDays } from "../../../utils";
 import { setInductionVideoTransaction } from "../../../transactions";
-import { InductionVideoForm, VideoSubmissionPhase } from "./video-form";
+import { VideoSubmissionPhase, VideoSubmissionFormAndPreview } from "_app/ui";
 
 interface Props {
     induction: Induction;
@@ -88,7 +88,7 @@ export const InductionVideoFormContainer = ({
                     video conference call inducting the new member.
                 </Text>
             </div>
-            <InductionVideoForm
+            <VideoSubmissionFormAndPreview
                 video={induction.video}
                 onSubmit={submitInductionVideo}
                 submissionPhase={videoSubmissionPhase}

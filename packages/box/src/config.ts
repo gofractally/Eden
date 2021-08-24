@@ -44,6 +44,10 @@ export const validUploadActions: ValidUploadActions = {
             cidField: "new_member_profile.img",
         },
         inductvideo: { maxSize: 100_000_000, cidField: "video" },
+        electvideo: {
+            maxSize: 1_000_000_000,
+            cidField: "video",
+        },
     },
 };
 logger.info(
@@ -67,8 +71,7 @@ export const dfuseConfig = {
     apiNetwork: process.env.DFUSE_API_NETWORK || "eos.dfuse.eosnation.io",
     authNetwork: process.env.DFUSE_AUTH_NETWORK || "https://auth.eosnation.io",
     firstBlock: +(process.env.DFUSE_FIRST_BLOCK as any) || 1,
-    jsonTrxFile:
-        process.env.DFUSE_JSON_TRX_FILE || "dfuse-transactions.json",
+    jsonTrxFile: process.env.DFUSE_JSON_TRX_FILE || "dfuse-transactions.json",
     preventConnect: "DFUSE_PREVENT_CONNECT" in process.env,
 };
 console.info({ ...dfuseConfig, apiKey: "<secret>" });

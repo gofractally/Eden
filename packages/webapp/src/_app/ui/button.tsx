@@ -27,6 +27,7 @@ const SIZES: { [key in ButtonSize]: string } = {
 export type ButtonType =
     | "primary"
     | "disabled"
+    | "secondary"
     | "neutral"
     | "caution"
     | "danger"
@@ -37,12 +38,13 @@ export type ButtonType =
     | "link";
 const TYPES: { [key in ButtonType]: string } = {
     primary: "bg-blue-500 border-blue-500 text-white hover:bg-blue-600",
+    secondary: "border-blue-500 text-blue-500 hover:text-blue-400",
     disabled: "border-gray-300 bg-gray-300 text-white",
     neutral: "bg-gray-50 text-gray-800 hover:bg-gray-200",
     caution: "bg-yellow-500 text-white hover:bg-yellow-600 border-white",
     danger: "bg-red-500 text-white hover:bg-red-600",
     dangerOutline: "text-gray-500 hover:text-red-500 border-none",
-    link: "border-transparent text-blue-500 hover:text-yellow-500",
+    link: "border-transparent text-blue-500 hover:text-blue-600",
     inductionStatusProfile:
         "bg-blue-500 border-blue-500 text-white hover:bg-blue-600",
     inductionStatusCeremony:

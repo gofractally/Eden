@@ -126,6 +126,10 @@ export const validUploadActions: ValidUploadActions = {
             cidField: "new_member_profile.img",
         },
         inductvideo: { maxSize: 100_000_000, cidField: "video" },
+        electvideo: {
+            maxSize: 1_000_000_000,
+            cidField: "video",
+        },
     },
 };
 

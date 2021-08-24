@@ -1,4 +1,5 @@
 import React, { FormEvent, useEffect, useMemo, useRef, useState } from "react";
+import { FiUpload, FiVideo } from "react-icons/fi";
 
 import { Button, Form, handleFileChange } from "_app";
 import { edenContractAccount, validUploadActions } from "config";
@@ -6,15 +7,27 @@ import { ipfsUrl } from "_app/utils/config-helpers";
 
 export type VideoSubmissionPhase = "uploading" | "signing" | "finishing";
 interface Props {
+    uid?: number;
     video: string;
     onSubmit?: (video: File) => Promise<void>;
     submissionPhase?: VideoSubmissionPhase;
+    submitButtonText?: string;
+    submitButtonIcon?: JSX.Element;
+    title?: string;
+    subtitle?: string;
+    action?: string;
 }
 
-export const InductionVideoForm = ({
+export const VideoSubmissionFormAndPreview = ({
+    uid = 0,
     video,
     onSubmit,
     submissionPhase,
+    submitButtonText = "Upload meeting video",
+    submitButtonIcon = <FiUpload />,
+    title = "Induction video",
+    subtitle = "As an official witness, upload the video of the induction ceremony here.",
+    action = "inductvideo",
 }: Props) => {
     const [isLoading, setIsLoading] = useState(false);
     const [uploadedVideo, setUploadedVideo] = useState<File | undefined>(
@@ -56,46 +69,52 @@ export const InductionVideoForm = ({
             case "finishing":
                 return "Finishing up...";
             default:
-                return "Submit";
+                return submitButtonText;
         }
     };
 
     return (
         <form onSubmit={submitTransaction} className="space-y-3">
             <Form.LabeledSet
-                label="Induction video"
-                htmlFor="videoFile"
-                description="As an official witness, upload the video of the induction ceremony here."
+                label={title}
+                htmlFor={"videoFile" + uid}
+                description={subtitle}
             >
-                <Form.FileInput
-                    id="videoFile"
-                    accept="video/*"
-                    label="select a video file"
-                    onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-                        handleFileChange(
-                            e,
-                            "video",
-                            validUploadActions[edenContractAccount][
-                                "inductvideo"
-                            ].maxSize,
-                            setUploadedVideo
-                        )
-                    }
-                />
                 {(video || uploadedVideo) && <VideoClip url={videoUrl} />}
             </Form.LabeledSet>
-
-            {onSubmit && (
-                <div className="pt-4">
-                    <Button
-                        isSubmit
-                        disabled={isLoading || !uploadedVideo}
-                        isLoading={isLoading}
-                    >
-                        {getSubmissionText()}
-                    </Button>
+            <div className="flex justify-evenly items-center">
+                <div>
+                    <FiVideo className="text-blue-500 mr-2 inline-block mb-1" />
+                    <Form.FileInput
+                        id={"videoFile" + uid}
+                        accept="video/*"
+                        label="Select video"
+                        onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                            handleFileChange(
+                                e,
+                                "video",
+                                validUploadActions[edenContractAccount][action]
+                                    .maxSize,
+                                setUploadedVideo
+                            )
+                        }
+                    />
                 </div>
-            )}
+
+                {onSubmit && (
+                    <div>
+                        <Button
+                            isSubmit
+                            disabled={isLoading || (!uploadedVideo && !video)}
+                            isLoading={isLoading}
+                            type={"secondary"}
+                        >
+                            {submitButtonIcon}
+                            {getSubmissionText()}
+                        </Button>
+                    </div>
+                )}
+            </div>
         </form>
     );
 };
@@ -116,6 +135,7 @@ const VideoClip = ({ url }: { url: string }) => {
         previousUrl.current = url;
     }, [url]);
 
+    // console.info("<VideoClip/>.url:", url);
     return (
         <video key={url} ref={videoRef} controls>
             <source src={url} />
