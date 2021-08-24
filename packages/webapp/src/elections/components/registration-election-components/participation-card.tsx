@@ -451,6 +451,7 @@ const ConfirmPasswordStep = ({
         return (
             <ReenterPasswordForm
                 expectedPublicKey={encryptionPassword.publicKey!}
+                isLoading={isLoading}
                 onSubmit={doSubmitWithoutTrx}
                 onCancel={onCancel}
                 onForgotPassword={() => setForgotPasswordMode(true)}
