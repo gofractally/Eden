@@ -241,7 +241,6 @@ const PromptReenterKeyModal = ({
     return (
         <Modal
             isOpen={isOpen}
-            title={forgotPasswordMode ? "Forgot password" : "Re-enter password"}
             onRequestClose={close}
             contentLabel="Meeting Link Activation Modal - Requesting Password"
             preventScroll

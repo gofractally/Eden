@@ -2,14 +2,8 @@ import { useState } from "react";
 import { PrivateKey } from "eosjs/dist/eosjs-key-conversions";
 import { IoMdCopy } from "react-icons/io";
 
-import {
-    Button,
-    Form,
-    generateEncryptionKey,
-    onError,
-    Text,
-    useFormFields,
-} from "_app";
+import { generateEncryptionKey, onError, useFormFields } from "_app";
+import { Button, Form, Heading, Text } from "_app/ui";
 
 interface Props {
     isLoading?: boolean;
@@ -58,9 +52,14 @@ export const NewPasswordForm = ({
 
     return (
         <div className="space-y-4">
+            <Heading className="mb-2.5">
+                {forgotPassword
+                    ? "Get new election password"
+                    : "Election password"}
+            </Heading>
             <Text>
                 {forgotPassword
-                    ? "Re-entering a new password will reset your old password. Bear in mind that you will not be able to see generated data for your current password (like ongoing meetings links)."
+                    ? "If you have forgotten or lost your election password, create a new one below."
                     : "It looks like you don’t have an election participation password yet. Please COPY AND SAVE your password somewhere safe, and confirm it below."}
             </Text>
             <form onSubmit={doSubmit} className="space-y-3">
