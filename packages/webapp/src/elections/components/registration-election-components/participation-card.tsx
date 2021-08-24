@@ -221,6 +221,7 @@ interface ModalProps {
 
 enum ParticipationStep {
     ConfirmParticipation,
+    ConfirmParticipationSuccess,
     ConfirmPassword,
 }
 
@@ -279,9 +280,7 @@ const ConfirmParticipationModal = ({ isOpen, close, deadline }: ModalProps) => {
                 );
             }
 
-            close(); // Close modal first to avoid flashing wrong ParticipationStep
-            await new Promise((resolve) => setTimeout(resolve, 200)); // time for modal transition to complete
-            setStep(ParticipationStep.ConfirmParticipation); // set this back in case they immediately reopen modal to change status again
+            setStep(ParticipationStep.ConfirmParticipationSuccess);
         } catch (error) {
             console.error(error);
             onError(error);
@@ -322,6 +321,9 @@ const ConfirmParticipationModal = ({ isOpen, close, deadline }: ModalProps) => {
                     onCancel={close}
                     deadline={deadline}
                 />
+            )}
+            {step === ParticipationStep.ConfirmParticipationSuccess && (
+                <ConfirmParticipationStepSuccess close={close} />
             )}
             {step === ParticipationStep.ConfirmPassword && (
                 <ConfirmPasswordStep
@@ -385,6 +387,20 @@ const ConfirmParticipationStep = ({
                 </div>
             </div>
         </form>
+    );
+};
+
+const ConfirmParticipationStepSuccess = ({ close }: { close: () => void }) => {
+    return (
+        <div className="space-y-4">
+            <Heading>Success!</Heading>
+            <Text>
+                You are committed to participate in the upcoming election.
+            </Text>
+            <div className="flex space-x-3">
+                <Button onClick={close}>OK</Button>
+            </div>
+        </div>
     );
 };
 

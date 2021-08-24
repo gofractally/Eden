@@ -2,15 +2,13 @@ import { useState } from "react";
 import { BsExclamationTriangle } from "react-icons/bs";
 
 import {
-    Button,
-    Container,
     MemberStatus,
-    Modal,
     onError,
     queryMemberByAccountName,
     useCurrentMember,
     useUALAccount,
 } from "_app";
+import { Button, Container, Heading, Modal, Text } from "_app/ui";
 
 import { setEncryptionPublicKeyTransaction } from "../transactions";
 import { UpdateEncryptionPassword, useEncryptionPassword } from "../hooks";
@@ -30,9 +28,17 @@ export const EncryptionPasswordAlert = ({
         updateEncryptionPassword,
         isLoading: isLoadingPassword,
     } = useEncryptionPassword();
+    const [showNewKeyModal, setShowNewKeyModal] = useState(false);
+    const [showReenterKeyModal, setShowReenterKeyModal] = useState(false);
+    const [isSuccess, setIsSuccess] = useState(false);
 
     const [ualAccount] = useUALAccount();
     const { data: currentMember } = useCurrentMember();
+
+    const updatePassword = (publicKey: string, privateKey: string) => {
+        updateEncryptionPassword(publicKey, privateKey);
+        setIsSuccess(true);
+    };
 
     if (
         !encryptionPassword ||
@@ -46,92 +52,79 @@ export const EncryptionPasswordAlert = ({
         promptSetupEncryptionKey &&
         !isLoadingPassword &&
         !encryptionPassword.publicKey;
-    if (promptNewKey) {
-        return (
-            <PromptNewKey updateEncryptionPassword={updateEncryptionPassword} />
-        );
-    }
 
     const warnKeyNotPresent =
         !isLoadingPassword &&
         encryptionPassword.publicKey &&
         !encryptionPassword.privateKey;
-    if (warnKeyNotPresent) {
-        return (
-            <NotPresentKeyWarning
-                expectedPublicKey={encryptionPassword.publicKey!}
-                updateEncryptionPassword={updateEncryptionPassword}
-            />
-        );
-    }
 
-    return null;
+    return (
+        <>
+            {promptNewKey ? (
+                <PromptNewKey showModal={() => setShowNewKeyModal(true)} />
+            ) : warnKeyNotPresent ? (
+                <NotPresentKeyWarning
+                    showModal={() => setShowReenterKeyModal(true)}
+                />
+            ) : null}
+            <PromptNewKeyModal
+                updateEncryptionPassword={updatePassword}
+                isOpen={showNewKeyModal}
+                isSuccess={isSuccess}
+                close={() => setShowNewKeyModal(false)}
+                onAfterClose={() => setIsSuccess(false)}
+            />
+            <PromptReenterKeyModal
+                updateEncryptionPassword={updatePassword}
+                expectedPublicKey={encryptionPassword.publicKey!}
+                isOpen={showReenterKeyModal}
+                isSuccess={isSuccess}
+                close={() => setShowReenterKeyModal(false)}
+                onAfterClose={() => setIsSuccess(false)}
+            />
+        </>
+    );
 };
 
-interface PromptNewKeyProps {
-    updateEncryptionPassword: UpdateEncryptionPassword;
+interface PromptProps {
+    showModal: () => void;
 }
 
-const PromptNewKey = ({ updateEncryptionPassword }: PromptNewKeyProps) => {
-    const [showNewKeyModal, setShowNewKeyModal] = useState(false);
+const PromptNewKey = ({ showModal }: PromptProps) => {
     return (
         <Container className="flex justify-center bg-yellow-500">
-            <Button
-                type="caution"
-                size="sm"
-                onClick={() => setShowNewKeyModal(!showNewKeyModal)}
-            >
+            <Button type="caution" size="sm" onClick={showModal}>
                 <BsExclamationTriangle className="mr-1 mb-px" />
                 Create Election Password
             </Button>
-            <PromptNewKeyModal
-                updateEncryptionPassword={updateEncryptionPassword}
-                isOpen={showNewKeyModal}
-                close={() => setShowNewKeyModal(false)}
-            />
         </Container>
     );
 };
 
-interface NotPresentKeyWarningProps {
-    expectedPublicKey: string;
-    updateEncryptionPassword: UpdateEncryptionPassword;
-}
-
-const NotPresentKeyWarning = ({
-    expectedPublicKey,
-    updateEncryptionPassword,
-}: NotPresentKeyWarningProps) => {
-    const [showReenterKeyModal, setShowReenterKeyModal] = useState(false);
+const NotPresentKeyWarning = ({ showModal }: PromptProps) => {
     return (
         <Container className="flex justify-center bg-yellow-500">
-            <Button
-                type="caution"
-                size="sm"
-                onClick={() => setShowReenterKeyModal(!showReenterKeyModal)}
-            >
+            <Button type="caution" size="sm" onClick={showModal}>
                 <BsExclamationTriangle className="mr-1 mb-px" />
                 Enter Election Password
             </Button>
-            <PromptReenterKeyModal
-                updateEncryptionPassword={updateEncryptionPassword}
-                isOpen={showReenterKeyModal}
-                close={() => setShowReenterKeyModal(false)}
-                expectedPublicKey={expectedPublicKey}
-            />
         </Container>
     );
 };
 
 interface PasswordModalProps {
     isOpen: boolean;
+    isSuccess: boolean;
     close: () => void;
+    onAfterClose: () => void;
     updateEncryptionPassword: UpdateEncryptionPassword;
 }
 
 const PromptNewKeyModal = ({
     isOpen,
+    isSuccess,
     close,
+    onAfterClose,
     updateEncryptionPassword,
 }: PasswordModalProps) => {
     const [isLoading, setIsLoading] = useState<boolean>(false);
@@ -154,7 +147,6 @@ const PromptNewKeyModal = ({
             console.info("set encryption public key trx", signedTrx);
 
             updateEncryptionPassword(publicKey, privateKey);
-            close();
         } catch (error) {
             console.error(error);
             onError(error);
@@ -166,18 +158,22 @@ const PromptNewKeyModal = ({
     return (
         <Modal
             isOpen={isOpen}
-            title="New password"
             onRequestClose={close}
+            onAfterClose={onAfterClose}
             contentLabel="Meeting Link Activation Modal - Requesting Password"
             preventScroll
             shouldCloseOnOverlayClick={!isLoading}
             shouldCloseOnEsc={!isLoading}
         >
-            <NewPasswordForm
-                isLoading={isLoading}
-                onSubmit={onSubmit}
-                onCancel={close}
-            />
+            {isSuccess ? (
+                <PasswordSuccessConfirmation close={close} />
+            ) : (
+                <NewPasswordForm
+                    isLoading={isLoading}
+                    onSubmit={onSubmit}
+                    onCancel={close}
+                />
+            )}
         </Modal>
     );
 };
@@ -188,11 +184,13 @@ interface PromptReenterKeyModalProps extends PasswordModalProps {
 
 const PromptReenterKeyModal = ({
     isOpen,
+    isSuccess,
     close,
+    onAfterClose,
     expectedPublicKey,
     updateEncryptionPassword,
 }: PromptReenterKeyModalProps) => {
-    const [isLoading, setIsLoading] = useState<boolean>(false);
+    const [isLoading, setIsLoading] = useState(false);
     const [ualAccount] = useUALAccount();
     const [forgotPasswordMode, setForgotPasswordMode] = useState(false);
     const queryClient = useQueryClient();
@@ -200,7 +198,6 @@ const PromptReenterKeyModal = ({
     const onSubmit = (publicKey: string, privateKey: string) => {
         try {
             updateEncryptionPassword(publicKey, privateKey);
-            close();
         } catch (error) {
             console.error(error);
             onError(error);
@@ -241,13 +238,16 @@ const PromptReenterKeyModal = ({
     return (
         <Modal
             isOpen={isOpen}
+            onAfterClose={onAfterClose}
             onRequestClose={close}
             contentLabel="Meeting Link Activation Modal - Requesting Password"
             preventScroll
             shouldCloseOnOverlayClick
             shouldCloseOnEsc
         >
-            {forgotPasswordMode ? (
+            {isSuccess ? (
+                <PasswordSuccessConfirmation close={close} />
+            ) : forgotPasswordMode ? (
                 <NewPasswordForm
                     isLoading={isLoading}
                     onSubmit={onSubmitForgotPassword}
@@ -266,5 +266,17 @@ const PromptReenterKeyModal = ({
                 />
             )}
         </Modal>
+    );
+};
+
+const PasswordSuccessConfirmation = ({ close }: { close: () => void }) => {
+    return (
+        <div className="space-y-4">
+            <Heading>Success!</Heading>
+            <Text>Your password is all set.</Text>
+            <div className="flex space-x-3">
+                <Button onClick={close}>OK</Button>
+            </div>
+        </div>
     );
 };
