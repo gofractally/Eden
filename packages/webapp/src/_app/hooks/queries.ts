@@ -21,6 +21,8 @@ import {
 } from "inductions/api";
 import {
     getChiefDelegates,
+    getDistributionsForAccount,
+    getDistributionState,
     getHeadDelegate,
     getMyDelegation,
 } from "delegates/api";
@@ -150,19 +152,22 @@ export const queryCommunityGlobals = {
 export const queryOngoingElectionData = (
     votingMemberData?: MemberData[],
     currentElection?: CurrentElection,
-    myDelegation?: EdenMember[]
+    myDelegation?: EdenMember[],
+    currentMember?: EdenMember
 ) => ({
     queryKey: [
         "query_ongoing_round",
         votingMemberData,
         currentElection,
         myDelegation,
+        currentMember,
     ],
     queryFn: () => {
         return getOngoingElectionData(
             votingMemberData,
             currentElection,
-            myDelegation
+            myDelegation,
+            currentMember
         );
     },
 });
@@ -192,6 +197,16 @@ export const queryMemberByAccountName = (accountName: string) => ({
 export const queryMemberData = (account: string) => ({
     queryKey: ["query_member_data", account],
     queryFn: () => getMember(account),
+});
+
+export const queryDistributionState = () => ({
+    queryKey: ["query_distribution_state"],
+    queryFn: getDistributionState,
+});
+
+export const queryDistributionsForAccount = (account: string) => ({
+    queryKey: ["query_distributions_for_account", account],
+    queryFn: () => getDistributionsForAccount(account),
 });
 
 export const queryInduction = (inductionId: string) => ({
@@ -227,9 +242,20 @@ export const queryEndorsementsByInductionId = (inductionId: string) => ({
 });
 
 export const useMemberByAccountName = (accountName: string) =>
-    useQuery({
+    useQuery<EdenMember | undefined, Error>({
         ...queryMemberByAccountName(accountName),
         enabled: Boolean(accountName),
+    });
+
+export const useDistributionsForAccount = (account: string) =>
+    useQuery({
+        ...queryDistributionsForAccount(account),
+        enabled: Boolean(account),
+    });
+
+export const useDistributionState = () =>
+    useQuery({
+        ...queryDistributionState(),
     });
 
 export const useMemberListByAccountNames = (
@@ -419,7 +445,7 @@ export const useMemberDataFromVoteData = (voteData?: VoteData[]) => {
         isLoading: memberDataRes.isLoading || isLoading,
         isError: memberDataRes.isError || isFetchError,
         isSuccess: memberDataRes.isSuccess || areQueriesComplete,
-    };
+    } as UseQueryResult<MemberData[], Error>;
 };
 
 export const useEncryptedData = (scope: EncryptionScope, id: string) =>
@@ -435,32 +461,55 @@ export const useOngoingElectionData = ({
     currentElection: CurrentElection;
     queryOptions?: any;
 }): UseQueryResult<Election | undefined> => {
-    const { data: loggedInMember } = useCurrentMember();
+    const currentMember = useCurrentMember();
 
-    const { data: memberStats } = useMemberStats({
+    const memberStats = useMemberStats({
         queryKey: ["query_member_stats", currentElection],
     });
 
-    const { data: myDelegation } = useMyDelegation({ memberStats });
+    const myDelegation = useMyDelegation({ memberStats: memberStats.data });
 
-    const { data: membersInOngoingRound } = useMemberGroupParticipants(
-        loggedInMember?.account,
-        memberStats?.ranks.length
+    const membersInOngoingRound = useMemberGroupParticipants(
+        currentMember.data?.account,
+        memberStats.data?.ranks.length
     );
 
-    let { data: votingMemberData } = useMemberDataFromVoteData(
-        membersInOngoingRound
+    let votingMemberData = useMemberDataFromVoteData(
+        membersInOngoingRound.data
     );
 
-    let enabled = Boolean(loggedInMember && memberStats);
+    let enabled = Boolean(currentMember.data && memberStats.data);
 
-    return useQuery<Election, Error>({
+    const ongoingElection = useQuery<Election, Error>({
         ...queryOngoingElectionData(
-            votingMemberData,
+            votingMemberData.data,
             currentElection,
-            myDelegation
+            myDelegation.data,
+            currentMember.data
         ),
         ...queryOptions,
         enabled: enabled && (queryOptions.enabled ?? true),
     });
+
+    const isLoading =
+        currentMember.isLoading ||
+        memberStats.isLoading ||
+        myDelegation.isLoading ||
+        membersInOngoingRound.isLoading ||
+        votingMemberData.isLoading ||
+        ongoingElection.isLoading;
+
+    const isError =
+        currentMember.isError ||
+        memberStats.isError ||
+        myDelegation.isError ||
+        membersInOngoingRound.isError ||
+        votingMemberData.isError ||
+        ongoingElection.isError;
+
+    return {
+        ...ongoingElection,
+        isLoading,
+        isError,
+    } as UseQueryResult<Election, Error>;
 };

@@ -1,5 +1,5 @@
 import { edenContractAccount, rpcEndpoint } from "config";
-import { TableKeyType, TableQueryOptions } from "./interfaces";
+import { TableQueryIndexOptions, TableQueryOptions } from "./interfaces";
 
 const RPC_URL = `${rpcEndpoint.protocol}://${rpcEndpoint.host}:${rpcEndpoint.port}`;
 export const RPC_GET_TABLE_ROWS = `${RPC_URL}/v1/chain/get_table_rows`;
@@ -15,21 +15,66 @@ export const CONTRACT_CURRENT_ELECTION_TABLE = "elect.curr";
 export const CONTRACT_VOTE_TABLE = "votes";
 export const CONTRACT_INDUCTION_TABLE = "induction";
 export const CONTRACT_ENDORSEMENT_TABLE = "endorsement";
+export const CONTRACT_DISTRIBUTION_ACCOUNTS_TABLE = "distaccount";
+export const CONTRACT_DISTRIBUTION_TABLE = "distribution";
 
 export const INDEX_MEMBER_BY_REP = "MemberTableIndexByRep";
 export const INDEX_VOTE_BY_GROUP_INDEX = "VoteTableIndexByGroupIndex";
 
-export const TABLE_INDEXES = {
+// eosio secondary indexes for distaccount table defined at:
+// /contracts/eden/include/distributions.hpp
+export const INDEX_BY_OWNER = "DistributionAccountsTableIndexByOwner";
+
+// eosio secondary indexes for inductions defined at:
+// /contracts/eden/include/inductions.hpp
+export const INDEX_BY_ENDORSER = "EndorsementTableIndexByEndorser";
+export const INDEX_BY_INDUCTION = "EndorsementTableIndexByInduction";
+export const INDEX_BY_INVITER = "InductionTableIndexByInviter";
+export const INDEX_BY_INVITEE = "InductionTableIndexByInvitee";
+
+export interface TableIndexDictionary {
+    [TableNameKey: string]: {
+        [IndexNameKey: string]: TableQueryIndexOptions;
+    };
+}
+
+export const TABLE_INDEXES: TableIndexDictionary = {
     [CONTRACT_MEMBER_TABLE]: {
         [INDEX_MEMBER_BY_REP]: {
             index_position: 2,
-            key_type: "i128" as TableKeyType,
+            key_type: "i128",
         },
     },
     [CONTRACT_VOTE_TABLE]: {
         [INDEX_VOTE_BY_GROUP_INDEX]: {
-            key_type: "i64" as TableKeyType,
+            key_type: "i64",
             index_position: 2,
+        },
+    },
+    [CONTRACT_DISTRIBUTION_ACCOUNTS_TABLE]: {
+        [INDEX_BY_OWNER]: {
+            key_type: "i128",
+            index_position: 2,
+        },
+    },
+    [CONTRACT_ENDORSEMENT_TABLE]: {
+        [INDEX_BY_ENDORSER]: {
+            key_type: "i128",
+            index_position: 2,
+        },
+        [INDEX_BY_INDUCTION]: {
+            key_type: "i64",
+            index_position: 3,
+        },
+    },
+    [CONTRACT_INDUCTION_TABLE]: {
+        [INDEX_BY_INVITEE]: {
+            key_type: "i128",
+            index_position: 2,
+        },
+        [INDEX_BY_INVITER]: {
+            key_type: "i128",
+            index_position: 3,
         },
     },
 };
@@ -108,45 +153,8 @@ export const getTableRawRows = async <T = any>(
     });
 
     const data = (await response.json()) as TableResponse<T>;
-    console.info(`fetched table ${edenContractAccount}.${table} rows`, data);
-
-    if (!data || !data.rows) {
-        throw new Error("Invalid table results");
-    }
-
-    return reverse ? data.rows.reverse() : data.rows;
-};
-
-export const getTableIndexRows = async (
-    table: string,
-    indexPosition: number,
-    keyType: TableKeyType,
-    lowerBound: any,
-    upperBound?: any,
-    limit = 100
-) => {
-    const requestBody = {
-        code: edenContractAccount,
-        index_position: indexPosition,
-        json: true,
-        key_type: keyType,
-        limit: `${limit}`,
-        lower_bound: lowerBound,
-        upper_bound: upperBound,
-        reverse: false,
-        scope: CONTRACT_SCOPE,
-        show_payer: false,
-        table,
-    };
-
-    const response = await fetch(RPC_GET_TABLE_ROWS, {
-        method: "POST",
-        body: JSON.stringify(requestBody),
-    });
-
-    const data = await response.json();
     console.info(
-        `fetched table ${edenContractAccount}.${table} (index ${indexPosition}-${keyType}) rows`,
+        `fetched table ${edenContractAccount}.${table} (index ${options.index_position}-${options.key_type}) rows`,
         data
     );
 
@@ -154,5 +162,5 @@ export const getTableIndexRows = async (
         throw new Error("Invalid table results");
     }
 
-    return data.rows.map((row: any) => row[1]);
+    return reverse ? data.rows.reverse() : data.rows;
 };

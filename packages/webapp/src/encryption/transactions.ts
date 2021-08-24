@@ -1,7 +1,5 @@
 import { edenContractAccount } from "config";
 
-import { PublicKey } from "eosjs/dist/PublicKey";
-
 export const setEncryptionPublicKeyTransaction = (
     authorizerAccount: string,
     encryptionPublicKey: string

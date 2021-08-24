@@ -5,7 +5,6 @@ import {
     useUALAccount,
     useCommunityGlobals,
     useCurrentMember,
-    useMemberStats,
     useOngoingElectionData,
     useCurrentElection,
 } from "_app";
@@ -20,8 +19,6 @@ import {
 import * as Ongoing from "./ongoing-election-components";
 import { useEffect, useState } from "react";
 
-// TODO: Non-participating-eden-member currently sees error.
-// TODO: Specifically, what happens to CompletedRound component when non-participating-eden-member logs in?
 // TODO: Make sure time zone changes during election are handled properly
 export const OngoingElection = ({ election }: { election: any }) => {
     const [awaitingNextRound, setAwaitingNextRound] = useState(false);
@@ -30,7 +27,11 @@ export const OngoingElection = ({ election }: { election: any }) => {
         isLoading: isLoadingGlobals,
         isError: isErrorGlobals,
     } = useCommunityGlobals();
-    const { data: ongoingElectionData } = useOngoingElectionData({
+    const {
+        data: ongoingElectionData,
+        isLoading: isLoadingElectionData,
+        isError: isErrorElectionData,
+    } = useOngoingElectionData({
         currentElection: election,
     });
 
@@ -39,26 +40,26 @@ export const OngoingElection = ({ election }: { election: any }) => {
         setAwaitingNextRound(false);
     }, [election.round]);
 
-    // Poll for updated election information while awaitingNextRound
+    // Poll for updated election information while awaitingNextRound or processing round.
+    const isProcessing = election?.electionState === ElectionStatus.PostRound;
     useCurrentElection({
-        enabled: awaitingNextRound,
+        enabled: isProcessing || awaitingNextRound,
         refetchInterval: 5000,
         refetchIntervalInBackground: true,
     });
 
-    if (isLoadingGlobals) {
+    if (isProcessing || isLoadingGlobals || isLoadingElectionData) {
         return (
-            <Container>
+            <Container className="py-10">
                 <Loader />
             </Container>
         );
     }
 
-    if (isErrorGlobals) {
+    if (isErrorGlobals || isErrorElectionData) {
         return <ErrorLoadingElection />;
     }
 
-    const numCompletedRounds = ongoingElectionData?.completedRounds?.length;
     const roundDurationSec = globals.election_round_time_sec;
     const roundDurationMs = roundDurationSec * 1000;
     const roundEndTimeRaw = election.round_end ?? election.seed.end_time;
@@ -69,11 +70,11 @@ export const OngoingElection = ({ election }: { election: any }) => {
         <div className="divide-y">
             <Container darkBg>
                 <Heading size={2}>Today's Election</Heading>
-                <Text>In progress until 6:30pm EDT</Text>
+                <Text>Currently in progress</Text>
             </Container>
             <Ongoing.SupportSegment />
 
-            <CompletedRounds numCompletedRounds={numCompletedRounds} />
+            <CompletedRounds ongoingElectionData={ongoingElectionData} />
             <SignInContainer />
             <SignUpContainer />
             <NoParticipationInFurtherRoundsMessage
@@ -103,6 +104,11 @@ const NoParticipationInFurtherRoundsMessage = ({
     if (ongoingElectionData.isMemberStillParticipating) {
         return null;
     }
+
+    let statusText = "You are not involved in further rounds.";
+    if (ongoingElectionData.isMemberOptedOut)
+        statusText = "You are not participating in this election.";
+
     return (
         <Container className="flex items-center space-x-2 pr-8 py-8">
             <BsInfoCircle
@@ -111,7 +117,7 @@ const NoParticipationInFurtherRoundsMessage = ({
             />
             <div className="flex-1">
                 <Text size="sm">
-                    You are not involved in further rounds. Please{" "}
+                    {statusText} Please{" "}
                     <Link href={""}>join the Community Room</Link> &amp; Support
                     for news and updates of the ongoing election. The results
                     will be displayed in the{" "}
@@ -128,12 +134,20 @@ const NoParticipationInFurtherRoundsMessage = ({
 export default OngoingElection;
 
 interface CompletedRoundsProps {
-    numCompletedRounds?: number;
+    ongoingElectionData?: Election;
 }
 
-const CompletedRounds = ({ numCompletedRounds }: CompletedRoundsProps) => {
+const CompletedRounds = ({ ongoingElectionData }: CompletedRoundsProps) => {
     const { data: currentMember } = useCurrentMember();
-    if (!currentMember || !numCompletedRounds) return null;
+    const numCompletedRounds = ongoingElectionData?.completedRounds?.length;
+
+    if (
+        !currentMember ||
+        ongoingElectionData?.isMemberOptedOut ||
+        !numCompletedRounds
+    )
+        return null;
+
     return (
         <>
             {[...Array(numCompletedRounds)].map((_, i) => {

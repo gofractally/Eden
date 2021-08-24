@@ -1,11 +1,30 @@
+import { devUseFixtureData } from "config";
 import { EdenMember } from "members";
 import { queryClient } from "pages/_app";
 import {
+    CONTRACT_DISTRIBUTION_ACCOUNTS_TABLE,
+    CONTRACT_DISTRIBUTION_TABLE,
+    getTableRawRows,
+    getTableRows,
+    i128BoundsForAccount,
+    INDEX_BY_OWNER,
     isValidDelegate,
     queryElectionState,
     queryMemberByAccountName,
     queryVoteDataRow,
+    TABLE_INDEXES,
 } from "_app";
+
+import {
+    DistributionAccount,
+    DistributionState,
+    DistributionStateData,
+    Distribution,
+} from "../interfaces";
+import {
+    fixtureDistributionAccounts,
+    fixtureNextDistribution,
+} from "./fixtures";
 
 const queryElectionStateHelper = async () =>
     await queryClient.fetchQuery(
@@ -70,4 +89,47 @@ export const getMyDelegation = async (
     } while (currRound && isValidDelegate(nextMemberAccount) && !isHeadChief);
 
     return myDelegates;
+};
+
+export const getDistributionsForAccount = async (
+    account: string
+): Promise<DistributionAccount[]> => {
+    if (devUseFixtureData) {
+        return fixtureDistributionAccounts;
+    }
+
+    const { lower, upper } = i128BoundsForAccount(account);
+
+    const distributionRows = await getTableRows(
+        CONTRACT_DISTRIBUTION_ACCOUNTS_TABLE,
+        {
+            ...TABLE_INDEXES[CONTRACT_DISTRIBUTION_ACCOUNTS_TABLE][
+                INDEX_BY_OWNER
+            ],
+            lowerBound: lower,
+            upperBound: upper,
+            limit: 9999,
+        }
+    );
+
+    return distributionRows as DistributionAccount[];
+};
+
+export const getDistributionState = async (): Promise<
+    DistributionStateData | undefined
+> => {
+    if (devUseFixtureData) {
+        return fixtureNextDistribution;
+    }
+
+    const rawRows = await getTableRawRows<any>(CONTRACT_DISTRIBUTION_TABLE);
+
+    const state: DistributionState = rawRows[0][0];
+    const rows = rawRows.map((row) => row[1]);
+
+    if (!rows.length) {
+        return undefined;
+    }
+
+    return { state, data: rows[0] as Distribution };
 };

@@ -16,9 +16,9 @@ export enum ElectionStatus {
     PendingDate = "current_election_state_pending_date",
     Registration = "current_election_state_registration",
     Seeding = "current_election_state_seeding",
-    Voters = "current_election_state_init_voters",
+    InitVoters = "current_election_state_init_voters",
     Active = "current_election_state_active",
-    Round = "current_election_state_post_round",
+    PostRound = "current_election_state_post_round",
     Final = "current_election_state_final",
 }
 
@@ -110,6 +110,7 @@ interface ElectionCompletedRound {
 export interface Election {
     isElectionOngoing?: boolean;
     isMemberStillParticipating?: boolean;
+    isMemberOptedOut?: boolean;
     inSortitionRound?: boolean;
     // .length === number of rounds that have completed (regardless of current member's participation)
     completedRounds: ElectionCompletedRound[];

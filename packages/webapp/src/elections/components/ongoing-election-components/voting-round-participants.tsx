@@ -9,6 +9,7 @@ interface VotingRoundParticipantsProps {
     voteData: VoteData[];
     selectedMember: MemberData | null;
     onSelectMember: (member: MemberData) => void;
+    userVotingFor?: string;
 }
 
 const VotingRoundParticipants = ({
@@ -16,6 +17,7 @@ const VotingRoundParticipants = ({
     voteData,
     selectedMember,
     onSelectMember,
+    userVotingFor,
 }: VotingRoundParticipantsProps) => {
     const getVoteCountForMember = (member: MemberData) => {
         return voteData.filter((vd) => vd.candidate === member.account).length;
@@ -54,6 +56,9 @@ const VotingRoundParticipants = ({
                                 member={member}
                                 isSelected={
                                     selectedMember?.account === member.account
+                                }
+                                hasCurrentMembersVote={
+                                    member.account === userVotingFor
                                 }
                                 onSelect={() => selectMember(member)}
                                 votesReceived={votesReceived}

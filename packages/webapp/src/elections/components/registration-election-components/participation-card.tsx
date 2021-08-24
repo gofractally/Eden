@@ -16,6 +16,7 @@ import {
     Container,
     Form,
     Heading,
+    Loader,
     Modal,
     PieStatusIndicator,
     Text,
@@ -29,14 +30,21 @@ import {
 
 import { extractElectionDates } from "../../utils";
 import { setElectionParticipation } from "../../transactions";
+import { CurrentElection, ElectionStatus } from "elections/interfaces";
 
-export const ParticipationCard = () => {
+interface Props {
+    election?: CurrentElection;
+}
+
+export const ParticipationCard = ({ election }: Props) => {
     const [electionIsAboutToStart, setElectionIsAboutToStart] = useState(false);
 
     const [ualAccount, _, ualShowModal] = useUALAccount();
     const { data: currentMember } = useCurrentMember();
-    const { data: election } = useCurrentElection({
-        refetchInterval: electionIsAboutToStart ? 5000 : false,
+
+    const isProcessing = election?.electionState === ElectionStatus.InitVoters;
+    useCurrentElection({
+        refetchInterval: electionIsAboutToStart || isProcessing ? 5000 : false,
         refetchIntervalInBackground: true,
     });
 
@@ -53,6 +61,14 @@ export const ParticipationCard = () => {
         return null;
     }
 
+    if (isProcessing) {
+        return (
+            <Container className="py-10">
+                <Loader />
+            </Container>
+        );
+    }
+
     let electionDates = null;
     try {
         electionDates = extractElectionDates(election);
@@ -61,13 +77,9 @@ export const ParticipationCard = () => {
     }
 
     const electionDate = electionDates.startDateTime.format("LL");
-    const electionStartTime = electionDates.startDateTime.format("LT");
-    const electionStartTimeZone = electionDates.startDateTime.format("z");
-    const electionEstimatedEndTime = electionDates.estimatedEndDateTime.format(
-        "LT"
-    );
+    const electionStartTime = electionDates.startDateTime.format("LT z");
     const electionParticipationLimitTime = electionDates.participationTimeLimit.format(
-        "LLL (z)"
+        "LLL z"
     );
 
     const isPastElectionParticipationTimeLimit = dayjs().isAfter(
@@ -133,20 +145,14 @@ export const ParticipationCard = () => {
                         electionIsAboutToStart={electionIsAboutToStart}
                     />
                     <Text>
-                        <span className="font-semibold">
-                            Registration is closed. Waiting for the election to
-                            begin{" "}
-                        </span>
-                        {electionDate} at {electionStartTime}{" "}
-                        {electionStartTimeZone}, until approximately{" "}
-                        {electionEstimatedEndTime}.
+                        Registration is closed. Waiting for the election to
+                        begin on {electionDate} at {electionStartTime}.
                     </Text>
                 </>
             ) : (
                 <Text>
-                    The next election will be held on {electionDate} between{" "}
-                    {electionStartTime} and approximately{" "}
-                    {electionEstimatedEndTime} ({electionStartTimeZone}).{" "}
+                    The next election will be held on {electionDate} beginning
+                    at {electionStartTime}.{" "}
                     <span className="font-semibold">
                         {participationCallLabel}
                     </span>
@@ -246,8 +252,8 @@ const ConfirmParticipationModal = ({ isOpen, close }: ModalProps) => {
 
             if (setEncryptionPasswordAction) {
                 transaction.actions = [
-                    ...transaction.actions,
                     ...setEncryptionPasswordAction.trx.actions,
+                    ...transaction.actions,
                 ];
             }
 
@@ -387,43 +393,49 @@ const ConfirmPasswordStep = ({
     onCancel,
 }: ConfirmPasswordStepProps) => {
     const [ualAccount] = useUALAccount();
-    const {
-        encryptionPassword,
-        updateEncryptionPassword,
-    } = useEncryptionPassword();
+    const { encryptionPassword } = useEncryptionPassword();
+    const [forgotPasswordMode, setForgotPasswordMode] = useState(false);
 
-    if (encryptionPassword.publicKey) {
-        // public key present, user needs to re-enter password
-        const doSubmit = async (
-            publicKey: string,
-            privateKey: string
-        ): Promise<void> => {
-            await onSubmit({ trx: { actions: [] }, publicKey, privateKey });
-        };
-        return (
-            <ReenterPasswordForm
-                expectedPublicKey={encryptionPassword.publicKey}
-                onSubmit={doSubmit}
-                onCancel={onCancel}
-            />
+    const doSubmitWithNewKeyTrx = async (
+        publicKey: string,
+        privateKey: string
+    ): Promise<void> => {
+        const authorizerAccount = ualAccount.accountName;
+        const trx = setEncryptionPublicKeyTransaction(
+            authorizerAccount,
+            publicKey
         );
-    } else {
-        const doSubmit = async (
-            publicKey: string,
-            privateKey: string
-        ): Promise<void> => {
-            const authorizerAccount = ualAccount.accountName;
-            const trx = setEncryptionPublicKeyTransaction(
-                authorizerAccount,
-                publicKey
-            );
-            await onSubmit({ trx, publicKey, privateKey });
-        };
+        await onSubmit({ trx, publicKey, privateKey });
+    };
+
+    const doSubmitWithoutTrx = async (
+        publicKey: string,
+        privateKey: string
+    ) => {
+        await onSubmit({ trx: { actions: [] }, publicKey, privateKey });
+    };
+
+    if (forgotPasswordMode || !encryptionPassword.publicKey) {
+        // when key is not present or user clicked in forgot password
         return (
             <NewPasswordForm
                 isLoading={isLoading}
-                onSubmit={doSubmit}
+                onSubmit={doSubmitWithNewKeyTrx}
+                onCancel={() => {
+                    setForgotPasswordMode(false);
+                    onCancel();
+                }}
+                forgotPassword={forgotPasswordMode}
+            />
+        );
+    } else {
+        // public key present, user needs to re-enter password
+        return (
+            <ReenterPasswordForm
+                expectedPublicKey={encryptionPassword.publicKey}
+                onSubmit={doSubmitWithoutTrx}
                 onCancel={onCancel}
+                onForgotPassword={() => setForgotPasswordMode(true)}
             />
         );
     }

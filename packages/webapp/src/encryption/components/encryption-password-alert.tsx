@@ -190,6 +190,10 @@ const PromptReenterKeyModal = ({
     expectedPublicKey,
     updateEncryptionPassword,
 }: PromptReenterKeyModalProps) => {
+    const [isLoading, setIsLoading] = useState<boolean>(false);
+    const [ualAccount] = useUALAccount();
+    const [forgotPasswordMode, setForgotPasswordMode] = useState(false);
+
     const onSubmit = async (publicKey: string, privateKey: string) => {
         try {
             updateEncryptionPassword(publicKey, privateKey);
@@ -200,21 +204,59 @@ const PromptReenterKeyModal = ({
         }
     };
 
+    const onSubmitForgotPassword = async (
+        publicKey: string,
+        privateKey: string
+    ) => {
+        try {
+            setIsLoading(true);
+            const authorizerAccount = ualAccount.accountName;
+            const transaction = setEncryptionPublicKeyTransaction(
+                authorizerAccount,
+                publicKey
+            );
+            console.info("signing trx", transaction);
+
+            const signedTrx = await ualAccount.signTransaction(transaction, {
+                broadcast: true,
+            });
+            console.info("set encryption public key trx", signedTrx);
+            onSubmit(publicKey, privateKey);
+        } catch (error) {
+            setIsLoading(false);
+            console.error(error);
+            onError(error);
+        }
+    };
+
     return (
         <Modal
             isOpen={isOpen}
-            title="Re-enter password"
+            title={forgotPasswordMode ? "Forgot password" : "Re-enter password"}
             onRequestClose={close}
             contentLabel="Meeting Link Activation Modal - Requesting Password"
             preventScroll
             shouldCloseOnOverlayClick
             shouldCloseOnEsc
         >
-            <ReenterPasswordForm
-                expectedPublicKey={expectedPublicKey}
-                onSubmit={onSubmit}
-                onCancel={close}
-            />
+            {forgotPasswordMode ? (
+                <NewPasswordForm
+                    isLoading={isLoading}
+                    onSubmit={onSubmitForgotPassword}
+                    onCancel={() => {
+                        setForgotPasswordMode(false);
+                        close();
+                    }}
+                    forgotPassword={true}
+                />
+            ) : (
+                <ReenterPasswordForm
+                    expectedPublicKey={expectedPublicKey}
+                    onSubmit={onSubmit}
+                    onCancel={close}
+                    onForgotPassword={() => setForgotPasswordMode(true)}
+                />
+            )}
         </Modal>
     );
 };

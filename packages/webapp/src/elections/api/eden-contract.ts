@@ -9,11 +9,13 @@ import {
     CONTRACT_MEMBER_TABLE,
     CONTRACT_VOTE_TABLE,
     didReachConsensus,
+    ElectionParticipationStatus,
     getRow,
     getTableRawRows,
     getTableRows,
     INDEX_MEMBER_BY_REP,
     INDEX_VOTE_BY_GROUP_INDEX,
+    isNonParticipantInOngoingElection,
     isValidDelegate,
     queryMemberByAccountName,
     queryMembers,
@@ -117,7 +119,7 @@ export const getMemberGroupParticipants = async (
         upperBound: (roundIndex << 16) + upperBound,
         limit: GET_VOTE_DATA_ROWS_LIMIT,
         ...TABLE_INDEXES[CONTRACT_VOTE_TABLE][INDEX_VOTE_BY_GROUP_INDEX],
-    } as TableQueryOptions);
+    });
 
     if (!rows || !rows.length) {
         return undefined;
@@ -224,12 +226,25 @@ export const getParticipantsInCompletedRound = async (
     const bytes = serialBuffer.getUint8Array(16);
     const bounds: string = eosjsNumeric.signedBinaryToDecimal(bytes).toString();
 
-    const participants = await getTableRows(CONTRACT_MEMBER_TABLE, {
-        lowerBound: bounds,
-        upperBound: bounds,
-        limit: 20,
-        ...TABLE_INDEXES[CONTRACT_MEMBER_TABLE][INDEX_MEMBER_BY_REP],
-    });
+    const participants = (
+        await getTableRows(CONTRACT_MEMBER_TABLE, {
+            lowerBound: bounds,
+            upperBound: bounds,
+            limit: 20,
+            ...TABLE_INDEXES[CONTRACT_MEMBER_TABLE][INDEX_MEMBER_BY_REP],
+        })
+    ).filter(
+        // we want to filter out 1) members who never opted in to this election as well as
+        // members who are still participating in the election.
+        // The follow code handles #1 obviously but handles #2 by virtue of members' participation status
+        // being updated to NotInElection as soon as the "lose" an election
+        // So since we're building only *completed* rounds here,
+        // all members we're interested in will be no longer participating in the election,
+        // except (potentially) for the delegate that got voted up.
+        (p) =>
+            p.election_participation_status ===
+            ElectionParticipationStatus.NotInElection // So this could read status === participationCompleted
+    );
 
     const delegateAccountName = participants?.[0].representative;
     if (!isValidDelegate(delegateAccountName)) return { participants };
@@ -339,7 +354,8 @@ const getParticipantsOfCompletedRounds = async (myDelegation: EdenMember[]) => {
 export const getOngoingElectionData = async (
     votingMemberData: MemberData[] = [],
     currentElection?: CurrentElection,
-    myDelegation: EdenMember[] = []
+    myDelegation: EdenMember[] = [],
+    loggedInMember?: EdenMember
 ) => {
     const isElectionOngoing =
         currentElection?.electionState === ElectionStatus.Active ||
@@ -355,10 +371,15 @@ export const getOngoingElectionData = async (
         myDelegation
     );
 
+    const isMemberOptedOut = loggedInMember
+        ? isNonParticipantInOngoingElection(loggedInMember)
+        : undefined;
+
     const electionData = {
         ...ELECTION_DEFAULTS,
         isElectionOngoing,
         isMemberStillParticipating,
+        isMemberOptedOut,
         inSortitionRound,
         completedRounds,
         ongoingRound,
