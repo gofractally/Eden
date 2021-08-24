@@ -103,20 +103,23 @@ export const NextDisbursementInfo = () => {
 
     switch (distributionState.state) {
         case "next_distribution":
+            const nextDisbursementTime = dayjs(
+                distributionState.data.distribution_time + "Z"
+            );
             return (
                 <Text>
                     Delegate funds are disbursed monthly. Check back on{" "}
-                    {dayjs(
-                        distributionState.data.distribution_time + "Z"
-                    ).format("LLL")}{" "}
-                    for your next disbursement.
+                    {nextDisbursementTime.format("LL")} after{" "}
+                    {nextDisbursementTime.format("LT z")} for your next
+                    disbursement.
                 </Text>
             );
         case "election_distribution":
             return (
                 <Text>
-                    An election is running and a disbursement will be made as
-                    soon as the election ends.
+                    An election is currently underway. Disbursements to
+                    newly-elected delegates will be processed as soon as the
+                    election ends.
                 </Text>
             );
         case "current_distribution":
