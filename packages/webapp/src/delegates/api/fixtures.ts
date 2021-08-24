@@ -1,6 +1,10 @@
-import { DistributionAccount } from "../interfaces";
+import {
+    DistributionAccount,
+    DistributionStateData,
+    NextDistribution,
+} from "../interfaces";
 
-export const DISTRIBUTION_ACCOUNTS: DistributionAccount[] = [
+export const fixtureDistributionAccounts: DistributionAccount[] = [
     {
         owner: "pip.edev",
         balance: "10.0000 EOS",
@@ -20,3 +24,10 @@ export const DISTRIBUTION_ACCOUNTS: DistributionAccount[] = [
         distribution_time: "2022-01-16T16:00:00.000",
     },
 ];
+
+export const fixtureNextDistribution: DistributionStateData = {
+    state: "next_distribution",
+    data: {
+        distribution_time: "2022-01-20T16:00:00.000",
+    } as NextDistribution,
+};

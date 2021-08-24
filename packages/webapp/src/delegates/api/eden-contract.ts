@@ -3,6 +3,8 @@ import { EdenMember } from "members";
 import { queryClient } from "pages/_app";
 import {
     CONTRACT_DISTRIBUTION_ACCOUNTS_TABLE,
+    CONTRACT_DISTRIBUTION_TABLE,
+    getTableRawRows,
     getTableRows,
     i128BoundsForAccount,
     INDEX_BY_OWNER,
@@ -13,8 +15,16 @@ import {
     TABLE_INDEXES,
 } from "_app";
 
-import { DistributionAccount } from "../interfaces";
-import { DISTRIBUTION_ACCOUNTS } from "./fixtures";
+import {
+    DistributionAccount,
+    DistributionState,
+    DistributionStateData,
+    Distribution,
+} from "../interfaces";
+import {
+    fixtureDistributionAccounts,
+    fixtureNextDistribution,
+} from "./fixtures";
 
 const queryElectionStateHelper = async () =>
     await queryClient.fetchQuery(
@@ -84,11 +94,11 @@ export const getMyDelegation = async (
 export const getDistributionsForAccount = async (
     account: string
 ): Promise<DistributionAccount[]> => {
-    const { lower, upper } = i128BoundsForAccount(account);
-
     if (devUseFixtureData) {
-        return DISTRIBUTION_ACCOUNTS;
+        return fixtureDistributionAccounts;
     }
+
+    const { lower, upper } = i128BoundsForAccount(account);
 
     const distributionRows = await getTableRows(
         CONTRACT_DISTRIBUTION_ACCOUNTS_TABLE,
@@ -103,4 +113,23 @@ export const getDistributionsForAccount = async (
     );
 
     return distributionRows as DistributionAccount[];
+};
+
+export const getDistributionState = async (): Promise<
+    DistributionStateData | undefined
+> => {
+    if (devUseFixtureData) {
+        return fixtureNextDistribution;
+    }
+
+    const rawRows = await getTableRawRows<any>(CONTRACT_DISTRIBUTION_TABLE);
+
+    const state: DistributionState = rawRows[0][0];
+    const rows = rawRows.map((row) => row[1]);
+
+    if (!rows.length) {
+        return undefined;
+    }
+
+    return { state, data: rows[0] as Distribution };
 };

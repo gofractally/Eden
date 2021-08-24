@@ -1,4 +1,6 @@
+import dayjs from "dayjs";
 import { useState } from "react";
+
 import {
     assetToString,
     Button,
@@ -7,6 +9,7 @@ import {
     sumAssetStrings,
     Text,
     useDistributionsForAccount,
+    useDistributionState,
     useMemberByAccountName,
     useUALAccount,
 } from "_app";
@@ -57,6 +60,10 @@ export const DelegateFundsAvailable = ({ account }: Props) => {
         setIsLoading(false);
     };
 
+    const isLoggedMember = Boolean(
+        ualAccount && member && ualAccount.accountName === member.account
+    );
+
     return (
         <>
             <div className="flex justify-between items-center">
@@ -69,7 +76,7 @@ export const DelegateFundsAvailable = ({ account }: Props) => {
                     </Text>
                 </div>
                 <div>
-                    {ualAccount?.accountName === member?.account && (
+                    {isLoggedMember && (
                         <Button
                             onClick={submitWithdraw}
                             disabled={
@@ -84,6 +91,42 @@ export const DelegateFundsAvailable = ({ account }: Props) => {
                     )}
                 </div>
             </div>
+            {isLoggedMember && <NextDisbursementInfo />}
         </>
     );
+};
+
+export const NextDisbursementInfo = () => {
+    const { data: distributionState } = useDistributionState();
+
+    if (!distributionState) return null;
+
+    switch (distributionState.state) {
+        case "next_distribution":
+            return (
+                <Text>
+                    Delegate funds are disbursed monthly. Check back on{" "}
+                    {dayjs(
+                        distributionState.data.distribution_time + "Z"
+                    ).format("LLL")}{" "}
+                    for your next disbursement.
+                </Text>
+            );
+        case "election_distribution":
+            return (
+                <Text>
+                    An election is running and a disbursement will be made as
+                    soon as the election ends.
+                </Text>
+            );
+        case "current_distribution":
+            return (
+                <Text>
+                    A disbursement is being processed now. Check back in the
+                    next few hours.
+                </Text>
+            );
+        default:
+            return null;
+    }
 };
