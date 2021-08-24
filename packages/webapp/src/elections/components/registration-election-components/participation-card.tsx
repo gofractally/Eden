@@ -306,7 +306,6 @@ const ConfirmParticipationModal = ({ isOpen, close, deadline }: ModalProps) => {
     return (
         <Modal
             isOpen={isOpen}
-            title="I want to participate"
             onRequestClose={close}
             onAfterClose={() => setStep(ParticipationStep.ConfirmParticipation)}
             contentLabel="Election Participation Modal - Confirming Participation"
@@ -357,6 +356,7 @@ const ConfirmParticipationStep = ({
     return (
         <form onSubmit={doSubmit}>
             <div className="space-y-4">
+                <Heading>I want to participate</Heading>
                 <Text>
                     You are committing to participate in the upcoming election.
                     Not showing up could impact your standing and reputation in
@@ -496,18 +496,18 @@ const CancelParticipationModal = ({ isOpen, close }: ModalProps) => {
     return (
         <Modal
             isOpen={isOpen}
-            title="I will not be participating"
             onRequestClose={close}
-            contentLabel="Election Participation Modal - Cancelling Participation"
+            contentLabel="Election Participation Modal - Canceling Participation"
             preventScroll
             shouldCloseOnOverlayClick={!isLoading}
             shouldCloseOnEsc={!isLoading}
         >
             <div className="space-y-4">
+                <Heading>I do not want to participate in the election</Heading>
                 <Text>
-                    Thank you for letting us know in advance. If you choose to
-                    participate, you can change your status more than 24 hours
-                    before the election.
+                    Thank you for letting us know in advance. Please confirm
+                    below. If something changes, you can still update your
+                    participation status more than 24 hours before the election.
                 </Text>
                 <div className="flex space-x-3">
                     <Button type="neutral" onClick={close} disabled={isLoading}>
