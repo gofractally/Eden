@@ -65,7 +65,11 @@ export const ReenterPasswordForm = ({
                     <Button type="neutral" onClick={onCancel}>
                         Cancel
                     </Button>
-                    <Button isSubmit disabled={!fields.password || isLoading}>
+                    <Button
+                        isSubmit
+                        disabled={!fields.password || isLoading}
+                        isLoading={isLoading}
+                    >
                         Submit
                     </Button>
                 </div>
