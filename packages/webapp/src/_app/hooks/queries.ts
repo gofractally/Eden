@@ -22,6 +22,7 @@ import {
 import {
     getChiefDelegates,
     getDistributionsForAccount,
+    getDistributionState,
     getHeadDelegate,
     getMyDelegation,
 } from "delegates/api";
@@ -198,6 +199,11 @@ export const queryMemberData = (account: string) => ({
     queryFn: () => getMember(account),
 });
 
+export const queryDistributionState = () => ({
+    queryKey: ["query_distribution_state"],
+    queryFn: getDistributionState,
+});
+
 export const queryDistributionsForAccount = (account: string) => ({
     queryKey: ["query_distributions_for_account", account],
     queryFn: () => getDistributionsForAccount(account),
@@ -245,6 +251,11 @@ export const useDistributionsForAccount = (account: string) =>
     useQuery({
         ...queryDistributionsForAccount(account),
         enabled: Boolean(account),
+    });
+
+export const useDistributionState = () =>
+    useQuery({
+        ...queryDistributionState(),
     });
 
 export const useMemberListByAccountNames = (

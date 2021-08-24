@@ -16,6 +16,7 @@ export const CONTRACT_VOTE_TABLE = "votes";
 export const CONTRACT_INDUCTION_TABLE = "induction";
 export const CONTRACT_ENDORSEMENT_TABLE = "endorsement";
 export const CONTRACT_DISTRIBUTION_ACCOUNTS_TABLE = "distaccount";
+export const CONTRACT_DISTRIBUTION_TABLE = "distribution";
 
 export const INDEX_MEMBER_BY_REP = "MemberTableIndexByRep";
 export const INDEX_VOTE_BY_GROUP_INDEX = "VoteTableIndexByGroupIndex";
