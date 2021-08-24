@@ -1,7 +1,13 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/router";
 
-import { FluidLayout, useCurrentElection, usePrevious } from "_app";
+import {
+    ElectionParticipationStatus,
+    FluidLayout,
+    useCurrentElection,
+    useCurrentMember,
+    usePrevious,
+} from "_app";
 import { ROUTES } from "_app/config";
 import { Container, Heading, Loader } from "_app/ui";
 import {
@@ -15,7 +21,16 @@ import { EncryptionPasswordAlert } from "encryption";
 export const ElectionPage = () => {
     const router = useRouter();
     const [isElectionComplete, setIsElectionComplete] = useState(false);
-    const { data: currentElection, isLoading, isError } = useCurrentElection();
+    const {
+        data: currentMember,
+        isLoading: isLoadingMember,
+        isError: isErrorMember,
+    } = useCurrentMember();
+    const {
+        data: currentElection,
+        isLoading: isLoadingElection,
+        isError: isErrorElection,
+    } = useCurrentElection();
     const prevElectionState = usePrevious(currentElection?.electionState);
 
     useEffect(() => {
@@ -26,18 +41,28 @@ export const ElectionPage = () => {
         }
     }, [currentElection]);
 
+    const isLoading = isLoadingMember || isLoadingElection;
+    const isError = isErrorMember || isErrorElection;
+
     if (isError) return <ErrorLoadingElection />;
+
+    const renderBanner =
+        currentElection?.electionState !== ElectionStatus.Registration ||
+        currentMember?.election_participation_status ===
+            ElectionParticipationStatus.InElection;
 
     return (
         <FluidLayout
             title="Election"
             banner={
-                <EncryptionPasswordAlert
-                    promptSetupEncryptionKey={
-                        currentElection?.electionState !==
-                        ElectionStatus.Registration
-                    }
-                />
+                renderBanner && (
+                    <EncryptionPasswordAlert
+                        promptSetupEncryptionKey={
+                            currentElection?.electionState !==
+                            ElectionStatus.Registration
+                        }
+                    />
+                )
             }
         >
             {isLoading || isElectionComplete ? (
