@@ -59,8 +59,10 @@ export const NewPasswordForm = ({
             </Heading>
             <Text>
                 {forgotPassword
-                    ? "If you have forgotten or lost your election password, create a new one below."
-                    : "It looks like you don’t have an election participation password yet. Please COPY AND SAVE your password somewhere safe, and confirm it below."}
+                    ? "If you have forgotten or lost your election password, you can replace it with a new one."
+                    : "It looks like you don’t have an election participation password yet."}{" "}
+                Please COPY AND SAVE your password somewhere safe, and confirm
+                it below.
             </Text>
             <form onSubmit={doSubmit} className="space-y-3">
                 <Form.LabeledSet
