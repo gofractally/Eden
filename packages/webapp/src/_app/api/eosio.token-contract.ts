@@ -11,8 +11,6 @@ export const getTokenBalanceForAccount = async (
         minimumDonationAmount.symbol
     );
 
-    console.info("eosio.token", data);
-
     if (data && data.length) {
         return assetFromString(data[0]);
     } else {
