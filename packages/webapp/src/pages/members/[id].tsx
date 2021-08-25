@@ -52,7 +52,7 @@ export const MemberPage = ({ account }: Props) => {
                         <div className="max-w-2xl">
                             <MemberHoloCard member={member} />
                         </div>
-                        <MemberCard member={member} />
+                        <MemberCard member={member} showBalance />
                     </div>
                 </Container>
                 <MemberCollections member={member} />
