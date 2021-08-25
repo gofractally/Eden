@@ -160,7 +160,8 @@ export const queryOngoingElectionData = (
         votingMemberData,
         currentElection,
         myDelegation,
-        currentMember,
+        currentMember?.representative,
+        currentMember?.election_participation_status,
     ],
     queryFn: () => {
         return getOngoingElectionData(
