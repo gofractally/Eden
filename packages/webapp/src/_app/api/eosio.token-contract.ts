@@ -11,7 +11,7 @@ export const getTokenBalanceForAccount = async (
         minimumDonationAmount.symbol
     );
 
-    if (data && data.length) {
+    if (data?.length) {
         return assetFromString(data[0]);
     } else {
         return { ...minimumDonationAmount, quantity: 0.0 };
