@@ -132,7 +132,7 @@ export const RequestElectionMeetingLinkButton = ({
     };
 
     return loadingEncryptedData ? (
-        <>Loading Meeeting Link...</>
+        <>Loading meeting link...</>
     ) : encryptedData ? (
         <JoinMeetingButton stage={stage} encryptedData={encryptedData} />
     ) : zoomAccountJWT ? (
@@ -143,7 +143,7 @@ export const RequestElectionMeetingLinkButton = ({
     ) : (
         <Button size="sm" onClick={linkZoomAccount}>
             <BiWebcam className="mr-1" />
-            Link Zoom Account to Request a meeting link
+            Link Zoom account to request a meeting link
         </Button>
     );
 };
@@ -204,9 +204,9 @@ const JoinMeetingButton = ({
                 <BsExclamationTriangle className="mr-1 mb-px" />
             </Text>
             <Text type="danger">
-                Failed to retrieve meeting link. Ask someone else in your 
-                election round group for the link or join the community 
-                support room above.
+                Failed to retrieve meeting link. Ask someone else in your
+                election round group for the link or join the community support
+                room above.
             </Text>
         </div>
     ) : stage === RoundStage.PreMeeting ? (

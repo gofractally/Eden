@@ -8,7 +8,7 @@ export const SupportSegment = () => (
             <div className="flex justify-center items-center space-x-2">
                 <GoSync size={24} className="text-gray-400" />
                 <Text className="font-semibold">
-                    Community Room &amp; Support
+                    Community room &amp; support
                 </Text>
             </div>
         }
@@ -16,7 +16,7 @@ export const SupportSegment = () => (
         <Container>
             <Button size="sm">
                 <BiWebcam className="mr-1" />
-                Join meeting
+                Join community room
             </Button>
         </Container>
     </Expander>

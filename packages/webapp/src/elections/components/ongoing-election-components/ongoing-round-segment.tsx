@@ -278,10 +278,10 @@ export const OngoingRoundSegment = ({
                                     <BiCheck size={21} className="-mt-1 mr-1" />
                                 )}
                                 {isSubmittingVote
-                                    ? "Submitting Vote"
+                                    ? "Submitting vote"
                                     : userVotingFor
-                                    ? "Change Vote"
-                                    : "Submit Vote"}
+                                    ? "Change vote"
+                                    : "Submit vote"}
                             </Button>
                             <Button size="sm">
                                 <RiVideoUploadLine size={18} className="mr-2" />
