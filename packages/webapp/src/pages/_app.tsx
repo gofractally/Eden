@@ -42,7 +42,7 @@ export const queryClient = new QueryClient();
 
 const WebApp = ({ Component, pageProps }: AppProps) => {
     const subchain = useCreateEdenChain(
-        process.env.NEXT_PUBLIC_EDEN_CONTRACT!,
+        process.env.NEXT_PUBLIC_EDEN_CONTRACT_ACCOUNT!,
         process.env.NEXT_PUBLIC_TOKEN_CONTRACT!,
         process.env.NEXT_PUBLIC_AA_CONTRACT!,
         process.env.NEXT_PUBLIC_AA_MARKET_CONTRACT!,
