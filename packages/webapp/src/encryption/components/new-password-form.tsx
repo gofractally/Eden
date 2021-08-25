@@ -125,3 +125,5 @@ export const NewPasswordForm = ({
         </div>
     );
 };
+
+export default NewPasswordForm;

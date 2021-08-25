@@ -1,20 +1,12 @@
 import { useState } from "react";
 import { BsExclamationTriangle } from "react-icons/bs";
 
-import {
-    MemberStatus,
-    onError,
-    queryMemberByAccountName,
-    useCurrentMember,
-    useUALAccount,
-} from "_app";
-import { Button, Container, Heading, Modal, Text } from "_app/ui";
+import { MemberStatus, useCurrentMember, useUALAccount } from "_app";
+import { Button, Container, Modal } from "_app/ui";
 
-import { setEncryptionPublicKeyTransaction } from "../transactions";
+import ReenterPasswordPrompt from "./reenter-password-prompt";
+import CreateNewPasswordPrompt from "./create-new-password-prompt";
 import { UpdateEncryptionPassword, useEncryptionPassword } from "../hooks";
-import { NewPasswordForm } from "./new-password-form";
-import { ReenterPasswordForm } from "./reenter-password-form";
-import { useQueryClient } from "react-query";
 
 interface Props {
     promptSetupEncryptionKey?: boolean;
@@ -23,11 +15,13 @@ interface Props {
 export const EncryptionPasswordAlert = ({
     promptSetupEncryptionKey,
 }: Props) => {
+    const encryptionPasswordResult = useEncryptionPassword();
     const {
         encryptionPassword,
         updateEncryptionPassword,
         isLoading: isLoadingPassword,
-    } = useEncryptionPassword();
+    } = encryptionPasswordResult;
+
     const [showNewKeyModal, setShowNewKeyModal] = useState(false);
     const [showReenterKeyModal, setShowReenterKeyModal] = useState(false);
     const [isSuccess, setIsSuccess] = useState(false);
@@ -75,10 +69,8 @@ export const EncryptionPasswordAlert = ({
                 onAfterClose={() => setIsSuccess(false)}
             />
             <PromptReenterKeyModal
-                updateEncryptionPassword={updatePassword}
-                expectedPublicKey={encryptionPassword.publicKey!}
+                encryptionPassword={encryptionPasswordResult}
                 isOpen={showReenterKeyModal}
-                isSuccess={isSuccess}
                 close={() => setShowReenterKeyModal(false)}
                 onAfterClose={() => setIsSuccess(false)}
             />
@@ -127,34 +119,6 @@ const PromptNewKeyModal = ({
     onAfterClose,
     updateEncryptionPassword,
 }: PasswordModalProps) => {
-    const [isLoading, setIsLoading] = useState<boolean>(false);
-    const [ualAccount] = useUALAccount();
-
-    const onSubmit = async (publicKey: string, privateKey: string) => {
-        setIsLoading(true);
-
-        try {
-            const authorizerAccount = ualAccount.accountName;
-            const transaction = setEncryptionPublicKeyTransaction(
-                authorizerAccount,
-                publicKey
-            );
-            console.info("signing trx", transaction);
-
-            const signedTrx = await ualAccount.signTransaction(transaction, {
-                broadcast: true,
-            });
-            console.info("set encryption public key trx", signedTrx);
-
-            updateEncryptionPassword(publicKey, privateKey);
-        } catch (error) {
-            console.error(error);
-            onError(error);
-        }
-
-        setIsLoading(false);
-    };
-
     return (
         <Modal
             isOpen={isOpen}
@@ -162,79 +126,31 @@ const PromptNewKeyModal = ({
             onAfterClose={onAfterClose}
             contentLabel="Meeting Link Activation Modal - Requesting Password"
             preventScroll
-            shouldCloseOnOverlayClick={!isLoading}
-            shouldCloseOnEsc={!isLoading}
+            shouldCloseOnOverlayClick={false}
+            shouldCloseOnEsc={false}
         >
-            {isSuccess ? (
-                <PasswordSuccessConfirmation close={close} />
-            ) : (
-                <NewPasswordForm
-                    isLoading={isLoading}
-                    onSubmit={onSubmit}
-                    onCancel={close}
-                />
-            )}
+            <CreateNewPasswordPrompt
+                isSuccess={isSuccess}
+                close={close}
+                updateEncryptionPassword={updateEncryptionPassword}
+            />
         </Modal>
     );
 };
 
-interface PromptReenterKeyModalProps extends PasswordModalProps {
-    expectedPublicKey: string;
+interface PromptReenterKeyModalProps {
+    isOpen: boolean;
+    close: () => void;
+    onAfterClose: () => void;
+    encryptionPassword: ReturnType<typeof useEncryptionPassword>;
 }
 
 const PromptReenterKeyModal = ({
     isOpen,
-    isSuccess,
     close,
     onAfterClose,
-    expectedPublicKey,
-    updateEncryptionPassword,
+    encryptionPassword,
 }: PromptReenterKeyModalProps) => {
-    const [isLoading, setIsLoading] = useState(false);
-    const [ualAccount] = useUALAccount();
-    const [forgotPasswordMode, setForgotPasswordMode] = useState(false);
-    const queryClient = useQueryClient();
-
-    const onSubmit = (publicKey: string, privateKey: string) => {
-        try {
-            updateEncryptionPassword(publicKey, privateKey);
-        } catch (error) {
-            console.error(error);
-            onError(error);
-        }
-    };
-
-    const onSubmitForgotPassword = async (
-        publicKey: string,
-        privateKey: string
-    ) => {
-        try {
-            setIsLoading(true);
-            const authorizerAccount = ualAccount.accountName;
-            const transaction = setEncryptionPublicKeyTransaction(
-                authorizerAccount,
-                publicKey
-            );
-            console.info("signing trx", transaction);
-
-            const signedTrx = await ualAccount.signTransaction(transaction, {
-                broadcast: true,
-            });
-            console.info("set encryption public key trx", signedTrx);
-            await new Promise((resolve) => setTimeout(resolve, 3000)); // allow time for chain tables to update
-
-            // invalidate current member query to make observing queries aware of presence of new password
-            queryClient.invalidateQueries(
-                queryMemberByAccountName(ualAccount.accountName).queryKey
-            );
-            onSubmit(publicKey, privateKey);
-        } catch (error) {
-            setIsLoading(false);
-            console.error(error);
-            onError(error);
-        }
-    };
-
     return (
         <Modal
             isOpen={isOpen}
@@ -245,38 +161,11 @@ const PromptReenterKeyModal = ({
             shouldCloseOnOverlayClick
             shouldCloseOnEsc
         >
-            {isSuccess ? (
-                <PasswordSuccessConfirmation close={close} />
-            ) : forgotPasswordMode ? (
-                <NewPasswordForm
-                    isLoading={isLoading}
-                    onSubmit={onSubmitForgotPassword}
-                    onCancel={() => {
-                        setForgotPasswordMode(false);
-                        close();
-                    }}
-                    forgotPassword={true}
-                />
-            ) : (
-                <ReenterPasswordForm
-                    expectedPublicKey={expectedPublicKey}
-                    onSubmit={onSubmit}
-                    onCancel={close}
-                    onForgotPassword={() => setForgotPasswordMode(true)}
-                />
-            )}
+            <ReenterPasswordPrompt
+                onCancel={close}
+                onDismissConfirmation={close}
+                encryptionPassword={encryptionPassword}
+            />
         </Modal>
-    );
-};
-
-const PasswordSuccessConfirmation = ({ close }: { close: () => void }) => {
-    return (
-        <div className="space-y-4">
-            <Heading>Success!</Heading>
-            <Text>Your password is all set.</Text>
-            <div className="flex space-x-3">
-                <Button onClick={close}>OK</Button>
-            </div>
-        </div>
     );
 };

@@ -88,3 +88,5 @@ export const ReenterPasswordForm = ({
         </div>
     );
 };
+
+export default ReenterPasswordForm;
