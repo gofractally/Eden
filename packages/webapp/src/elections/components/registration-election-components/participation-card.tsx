@@ -31,6 +31,8 @@ import {
 import { extractElectionDates } from "../../utils";
 import { setElectionParticipation } from "../../transactions";
 import { CurrentElection, ElectionStatus } from "elections/interfaces";
+import AddToCalendar from "@culturehq/add-to-calendar";
+import { CalendarEvent } from "@culturehq/add-to-calendar/dist/makeUrls";
 
 interface Props {
     election?: CurrentElection;
@@ -126,15 +128,28 @@ export const ParticipationCard = ({ election }: Props) => {
         );
     }
 
+    const calendarEvent: CalendarEvent = {
+        name: "Eden Election",
+        details: "Join us at https://genesis.eden.eoscommunity.org/election",
+        location: "Remote",
+        startsAt: electionDates.startDateTime.toISOString(),
+        endsAt: electionDates.estimatedEndDateTime.toISOString(),
+    };
+
     return (
         <Container className="space-y-2.5">
             <div className="flex justify-between">
                 <Heading size={2} className="inline-block">
                     Upcoming Election
                 </Heading>
-                <Heading size={2} className="inline-block">
-                    {electionDates.startDateTime.format("MMM D")}
-                </Heading>
+                <div className="text-right">
+                    <div>
+                        <Heading size={2} className="inline-block">
+                            {electionDates.startDateTime.format("MMM D")}
+                        </Heading>
+                    </div>
+                    <AddToCalendar event={calendarEvent} />
+                </div>
             </div>
             <Heading size={3}>{statusLabel}</Heading>
             {isPastElectionParticipationTimeLimit ? (
