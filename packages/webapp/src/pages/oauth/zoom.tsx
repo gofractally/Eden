@@ -2,14 +2,20 @@ import { useEffect } from "react";
 import { GetServerSideProps } from "next";
 
 import {
-    SingleColLayout,
-    CallToAction,
+    FluidLayout,
     useUALAccount,
-    Button,
     useZoomAccountJWT,
     encryptSecretForPublishing,
     onError,
 } from "_app";
+import {
+    Button,
+    CallToAction,
+    Container,
+    Heading,
+    Loader,
+    Text,
+} from "_app/ui";
 
 import { setElectionMeeting } from "elections";
 
@@ -67,7 +73,7 @@ export const ZoomOauthPage = ({ newZoomAccountJWT, oauthState }: Props) => {
 
             if (oauthState === "request-election-link") {
                 setRedirectMessage(
-                    "Thanks for linking your Zoom Account. Redirecting back to your Election page..."
+                    "Your Zoom account is linked. Hold tight while we redirect you back to your in-progress election round."
                 );
                 router.push("/election");
             }
@@ -75,18 +81,23 @@ export const ZoomOauthPage = ({ newZoomAccountJWT, oauthState }: Props) => {
     }, []);
 
     return (
-        <SingleColLayout title="Zoom Test">
+        <FluidLayout title="Zoom Test">
             {redirectMessage ? (
-                <p>{redirectMessage}</p>
-            ) : ualAccount ? ( // TODO: maybe we can even remove the
-                // ualaccount guard from this to allow the Zoom Marketplace review
+                <>
+                    <Container className="space-y-4 py-10">
+                        <Heading size={2}>Your Zoom account is linked</Heading>
+                        <Text>{redirectMessage}</Text>
+                        <Loader />
+                    </Container>
+                </>
+            ) : ualAccount ? ( // TODO: maybe we can even remove the ualAccount guard from this to allow the Zoom Marketplace review
                 <ZoomTestContainer ualAccount={ualAccount} />
             ) : (
                 <CallToAction buttonLabel="Sign in" onClick={ualShowModal}>
                     Welcome to Eden. Sign in using your wallet.
                 </CallToAction>
             )}
-        </SingleColLayout>
+        </FluidLayout>
     );
 };
 
@@ -145,22 +156,22 @@ const ZoomTestContainer = ({ ualAccount }: any) => {
     };
 
     return (
-        <div>
+        <Container className="space-y-4">
             {zoomAccountJWT ? (
-                <div>
-                    Thanks for connecting Eden to your Zoom account.
-                    <p>
-                        Next step is to create a meeting. <br />
-                        <Button onClick={doGenerateZoomMeetingLink}>
-                            Dummy Election Meeting
-                        </Button>
-                    </p>
-                </div>
+                <>
+                    <Text>
+                        Thanks for connecting Eden to your Zoom account.
+                    </Text>
+                    <Text>Next step is to create a meeting.</Text>
+                    <Button onClick={doGenerateZoomMeetingLink}>
+                        Dummy election meeting
+                    </Button>
+                </>
             ) : (
                 <Button href={zoomConnectAccountLink}>
-                    Link your Zoom Account
+                    Link your Zoom account
                 </Button>
             )}
-        </div>
+        </Container>
     );
 };
