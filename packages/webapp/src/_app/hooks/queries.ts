@@ -11,7 +11,7 @@ import {
     MemberData,
     MemberStats,
 } from "members";
-import { getCommunityGlobals } from "_app/api";
+import { getCommunityGlobals, getTokenBalanceForAccount } from "_app/api";
 import {
     getCurrentInductions,
     getEndorsementsByInductionId,
@@ -209,6 +209,11 @@ export const queryDistributionsForAccount = (account: string) => ({
     queryFn: () => getDistributionsForAccount(account),
 });
 
+export const queryTokenBalanceForAccount = (account: string) => ({
+    queryKey: ["query_token_balance_for_account", account],
+    queryFn: () => getTokenBalanceForAccount(account),
+});
+
 export const queryInduction = (inductionId: string) => ({
     queryKey: ["query_induction", inductionId],
     queryFn: () => getInduction(inductionId),
@@ -256,6 +261,12 @@ export const useDistributionsForAccount = (account: string) =>
 export const useDistributionState = () =>
     useQuery({
         ...queryDistributionState(),
+    });
+
+export const useTokenBalanceForAccount = (account: string) =>
+    useQuery({
+        ...queryTokenBalanceForAccount(account),
+        enabled: Boolean(account),
     });
 
 export const useMemberListByAccountNames = (
