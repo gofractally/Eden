@@ -22,7 +22,12 @@ if (
     !process.env.NEXT_PUBLIC_BOX_UPLOAD_IPFS ||
     !process.env.NEXT_PUBLIC_BOX_ADDRESS ||
     !process.env.NEXT_PUBLIC_ZOOM_CLIENT_ID ||
-    !process.env.NEXT_PUBLIC_ELECTION_MEETING_DURATION_MS
+    !process.env.NEXT_PUBLIC_ELECTION_MEETING_DURATION_MS ||
+    !process.env.NEXT_PUBLIC_TOKEN_CONTRACT ||
+    !process.env.NEXT_PUBLIC_SUBCHAIN_WASM_URL ||
+    !process.env.NEXT_PUBLIC_SUBCHAIN_STATE_URL ||
+    !process.env.NEXT_PUBLIC_SUBCHAIN_WS_URL ||
+    !process.env.NEXT_PUBLIC_SUBCHAIN_SLOW_MO
 ) {
     throw new Error("Eden WebApp Environment Variables are not set");
 }
@@ -56,12 +61,17 @@ ZOOM_CLIENT_ID="${process.env.NEXT_PUBLIC_ZOOM_CLIENT_ID}"
 ELECTION_MEETING_DURATION_MS="${
     process.env.NEXT_PUBLIC_ELECTION_MEETING_DURATION_MS
 }"
+NEXT_PUBLIC_TOKEN_CONTRACT="${process.env.NEXT_PUBLIC_TOKEN_CONTRACT}"
+NEXT_PUBLIC_SUBCHAIN_WASM_URL="${process.env.NEXT_PUBLIC_SUBCHAIN_WASM_URL}"
+NEXT_PUBLIC_SUBCHAIN_STATE_URL="${process.env.NEXT_PUBLIC_SUBCHAIN_STATE_URL}"
+NEXT_PUBLIC_SUBCHAIN_WS_URL="${process.env.NEXT_PUBLIC_SUBCHAIN_WS_URL}"
 `);
 
 console.info(`>>> Dev Configs:
 DEV_USE_FIXTURE_DATA="${
     process.env.NEXT_PUBLIC_DEV_USE_FIXTURE_DATA === "true"
 }"
+NEXT_PUBLIC_SUBCHAIN_SLOW_MO="${process.env.NEXT_PUBLIC_SUBCHAIN_SLOW_MO}"
 `);
 
 export const ipfsBaseUrl = "https://ipfs.io/ipfs"; //"https://ipfs.pink.gg/ipfs";
