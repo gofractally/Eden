@@ -2,7 +2,11 @@ import Head from "next/head";
 import GraphiQL from "graphiql";
 import { buildSchema, GraphQLSchema } from "graphql";
 import { useContext } from "react";
-import { EdenChainContext, EdenSubchain } from "@edenos/common/dist/subchain";
+import {
+    EdenChainContext,
+    EdenSubchain,
+    useQuery,
+} from "@edenos/common/dist/subchain";
 import "../../../../node_modules/graphiql/graphiql.min.css";
 
 function createFetcher(subchain: EdenSubchain) {
@@ -51,6 +55,35 @@ const defaultQuery = `# GraphiQL is talking to a WASM running in the browser.
 
 let schema: GraphQLSchema | null = null;
 
+function BlockNum() {
+    const info = useQuery(`{
+      blockLog {
+          head {
+              num
+              eosioBlock {
+                  num
+              }
+          }
+      }
+  }`);
+    return (
+        <div style={{ margin: 10 }}>
+            <table>
+                <tbody>
+                    <tr>
+                        <td>block:</td>
+                        <td>{info?.data?.blockLog.head?.num}</td>
+                    </tr>
+                    <tr>
+                        <td>eosio block:</td>
+                        <td>{info?.data?.blockLog.head?.eosioBlock.num}</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    );
+}
+
 export default function GraphiQLPage() {
     const client = useContext(EdenChainContext);
     if (client?.subchain && !schema)
@@ -80,6 +113,7 @@ export default function GraphiQLPage() {
                         height: "100%",
                     }}
                 >
+                    <BlockNum />
                     {client?.subchain && (
                         <div style={{ flexGrow: 1 }}>
                             <GraphiQL
