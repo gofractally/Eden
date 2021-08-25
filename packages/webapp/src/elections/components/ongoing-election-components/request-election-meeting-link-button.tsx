@@ -5,18 +5,17 @@ import { useQueryClient } from "react-query";
 import { BsExclamationTriangle } from "react-icons/bs";
 
 import {
-    Button,
     decryptPublishedMessage,
     encryptSecretForPublishing,
     onError,
     queryVoteDataRow,
-    Text,
     useEncryptedData,
     useMemberGroupParticipants,
     useUALAccount,
     useVoteDataRow,
     useZoomAccountJWT,
 } from "_app";
+import { Button, Heading, Modal, Text } from "_app/ui";
 import {
     generateZoomMeetingLink,
     zoomConnectAccountLink,
@@ -24,7 +23,19 @@ import {
 import { setElectionMeeting } from "elections/transactions";
 import { calculateGroupId } from "elections/utils";
 import { ActiveStateConfigType, RoundStage } from "elections/interfaces";
-import { EncryptedData, getEncryptionKey } from "encryption";
+import {
+    EncryptedData,
+    getEncryptionKey,
+    useEncryptionPassword,
+    ReenterPasswordPrompt,
+} from "encryption";
+
+enum MeetingStep {
+    LinkZoomAccount,
+    CreateMeetingLink,
+    LoadingMeetingLink,
+    RetrieveMeetingLink,
+}
 
 interface RequestMeetingLinkProps {
     roundIndex: number;
@@ -44,6 +55,10 @@ export const RequestElectionMeetingLinkButton = ({
     const queryClient = useQueryClient();
     const [ualAccount] = useUALAccount();
     const [zoomAccountJWT, setZoomAccountJWT] = useZoomAccountJWT(undefined);
+    const [showMeetingModal, setShowMeetingModal] = useState(false);
+    const [meetingStep, setMeetingStep] = useState(
+        MeetingStep.LoadingMeetingLink
+    );
     const { data: memberGroup } = useMemberGroupParticipants(
         ualAccount?.accountName,
         roundIndex
@@ -58,16 +73,27 @@ export const RequestElectionMeetingLinkButton = ({
 
     const {
         data: encryptedData,
-        isLoading: loadingEncryptedData,
+        isLoading: isLoadingEncryptedData,
     } = useEncryptedData("election", groupId);
+
+    useEffect(() => {
+        if (isLoadingEncryptedData) {
+            setMeetingStep(MeetingStep.LoadingMeetingLink);
+        } else if (encryptedData) {
+            setMeetingStep(MeetingStep.RetrieveMeetingLink);
+        } else if (zoomAccountJWT) {
+            setMeetingStep(MeetingStep.CreateMeetingLink);
+        } else {
+            setMeetingStep(MeetingStep.LinkZoomAccount);
+        }
+    }, [zoomAccountJWT, isLoadingEncryptedData, encryptedData]);
 
     if (!memberGroup || !currentVoteDataRow) {
         return null;
     }
 
-    const linkZoomAccount = () => {
-        window.location.href =
-            zoomConnectAccountLink + "&state=request-election-link";
+    const handleMeetingButton = () => {
+        setShowMeetingModal(true);
     };
 
     const requestMeetingLink = async () => {
@@ -131,21 +157,63 @@ export const RequestElectionMeetingLinkButton = ({
         }
     };
 
-    return loadingEncryptedData ? (
-        <>Loading meeting link...</>
-    ) : encryptedData ? (
-        <JoinMeetingButton stage={stage} encryptedData={encryptedData} />
-    ) : zoomAccountJWT ? (
-        <Button size="sm" onClick={requestMeetingLink}>
-            <BiWebcam className="mr-1" />
-            Request meeting link
-        </Button>
-    ) : (
-        <Button size="sm" onClick={linkZoomAccount}>
-            <BiWebcam className="mr-1" />
-            Link Zoom account to request a meeting link
-        </Button>
+    return (
+        <>
+            <MeetingButton
+                meetingStep={meetingStep}
+                stage={stage}
+                encryptedData={encryptedData}
+                requestMeetingLink={requestMeetingLink}
+                onClick={handleMeetingButton}
+            />
+            <MeetingLinkModal
+                isOpen={showMeetingModal}
+                close={() => setShowMeetingModal(false)}
+            />
+        </>
     );
+};
+
+interface MeetingButtonProps {
+    meetingStep: MeetingStep;
+    stage: RoundStage;
+    encryptedData?: EncryptedData;
+    requestMeetingLink: () => Promise<void>;
+    onClick: () => void;
+}
+
+const MeetingButton = ({
+    meetingStep,
+    stage,
+    encryptedData,
+    requestMeetingLink,
+    onClick,
+}: MeetingButtonProps) => {
+    switch (meetingStep) {
+        case MeetingStep.LoadingMeetingLink:
+            return <>Loading meeting link...</>;
+        case MeetingStep.RetrieveMeetingLink:
+            return (
+                <JoinMeetingButton
+                    stage={stage}
+                    encryptedData={encryptedData!}
+                />
+            );
+        case MeetingStep.CreateMeetingLink:
+            return (
+                <Button size="sm" onClick={requestMeetingLink}>
+                    <BiWebcam className="mr-1" />
+                    Request meeting link
+                </Button>
+            );
+        case MeetingStep.LinkZoomAccount:
+            return (
+                <Button size="sm" onClick={onClick}>
+                    <BiWebcam className="mr-1" />
+                    Link Zoom account to request a meeting link
+                </Button>
+            );
+    }
 };
 
 interface JoinMeetingButtonProps {
@@ -219,4 +287,69 @@ const JoinMeetingButton = ({
             Join meeting
         </Button>
     ) : null;
+};
+
+interface ModalProps {
+    isOpen: boolean;
+    close: () => void;
+}
+
+const MeetingLinkModal = ({ isOpen, close }: ModalProps) => {
+    const encryptionPasswordResult = useEncryptionPassword();
+    const { encryptionPassword, isLoading } = encryptionPasswordResult;
+
+    const [isReenteringPassword, setIsReenteringPassword] = useState(false);
+
+    const isKeyMissing = Boolean(
+        !isLoading &&
+            encryptionPassword.publicKey &&
+            !encryptionPassword.privateKey
+    );
+
+    return (
+        <Modal
+            isOpen={isOpen}
+            onRequestClose={close}
+            // onAfterClose={() => setStep(ParticipationStep.ConfirmParticipation)}
+            contentLabel="Election round meeting link confirmation modal"
+            preventScroll
+            shouldCloseOnOverlayClick={!isReenteringPassword}
+            shouldCloseOnEsc={!isReenteringPassword}
+        >
+            {isKeyMissing || isReenteringPassword ? (
+                <ReenterPasswordPrompt
+                    onCancel={close}
+                    onBeforeUpdatePassword={() => setIsReenteringPassword(true)}
+                    onDismissConfirmation={() => setIsReenteringPassword(false)}
+                    encryptionPassword={encryptionPasswordResult}
+                />
+            ) : (
+                <ModalStepZoom close={close} />
+            )}
+        </Modal>
+    );
+};
+
+const ModalStepZoom = ({ close }: { close: () => void }) => {
+    const linkZoomAccount = () => {
+        window.location.href =
+            zoomConnectAccountLink + "&state=request-election-link";
+    };
+
+    return (
+        <div className="space-y-4">
+            <Heading>Create meeting link</Heading>
+            <Text>
+                Sign in with your Zoom account to create a meeting link for
+                participants in this round. After you sign in, you will be
+                redirected back to the ongoing election.
+            </Text>
+            <div className="flex space-x-3">
+                <Button type="neutral" onClick={close}>
+                    Cancel
+                </Button>
+                <Button onClick={linkZoomAccount}>Link Zoom account</Button>
+            </div>
+        </div>
+    );
 };
