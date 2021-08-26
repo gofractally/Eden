@@ -1,6 +1,6 @@
 import { useState } from "react";
 
-import { onError, queryMemberByAccountName, useUALAccount } from "_app";
+import { delay, onError, queryMemberByAccountName, useUALAccount } from "_app";
 
 import { setEncryptionPublicKeyTransaction } from "../transactions";
 import { useEncryptionPassword } from "../hooks";
@@ -60,7 +60,7 @@ export const ReenterPasswordPrompt = ({
                 broadcast: true,
             });
             console.info("set encryption public key trx", signedTrx);
-            await new Promise((resolve) => setTimeout(resolve, 3000)); // allow time for chain tables to update
+            await delay(3000); // allow time for chain tables to update
 
             // invalidate current member query to make observing queries aware of presence of new password
             queryClient.invalidateQueries(
