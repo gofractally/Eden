@@ -8,6 +8,7 @@ import {
     Heading,
     onError,
     queryDistributionsForAccount,
+    queryTokenBalanceForAccount,
     sumAssetStrings,
     Text,
     useDistributionsForAccount,
@@ -62,6 +63,9 @@ export const DelegateFundsAvailable = ({ account }: Props) => {
             // invalidate current member query to update participating status
             queryClient.invalidateQueries(
                 queryDistributionsForAccount(ualAccount.accountName).queryKey
+            );
+            queryClient.invalidateQueries(
+                queryTokenBalanceForAccount(ualAccount.accountName).queryKey
             );
         } catch (error) {
             console.error(error);
