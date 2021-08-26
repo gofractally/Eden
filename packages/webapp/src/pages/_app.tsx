@@ -20,6 +20,7 @@ import { EdenUALProvider, Toaster } from "_app";
 
 import "tailwindcss/tailwind.css";
 import "_app/styles/nprogress.tailwind.css";
+import "_app/styles/add-to-calendar.chq.css";
 
 Router.events.on("routeChangeStart", (url) => {
     console.log(`Loading: ${url}`);

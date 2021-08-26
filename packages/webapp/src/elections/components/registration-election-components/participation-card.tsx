@@ -32,6 +32,8 @@ import {
 import { extractElectionDates } from "../../utils";
 import { setElectionParticipation } from "../../transactions";
 import { CurrentElection, ElectionStatus } from "elections/interfaces";
+import AddToCalendar from "@culturehq/add-to-calendar";
+import { CalendarEvent } from "@culturehq/add-to-calendar/dist/makeUrls";
 
 interface Props {
     election?: CurrentElection;
@@ -127,6 +129,14 @@ export const ParticipationCard = ({ election }: Props) => {
         );
     }
 
+    const calendarEvent: CalendarEvent = {
+        name: "Eden Election",
+        details: "Join us at https://genesis.eden.eoscommunity.org/election",
+        location: "Remote",
+        startsAt: electionDates.startDateTime.toISOString(),
+        endsAt: electionDates.estimatedEndDateTime.toISOString(),
+    };
+
     return (
         <Container className="space-y-2.5">
             <div className="flex justify-between">
@@ -160,7 +170,15 @@ export const ParticipationCard = ({ election }: Props) => {
                 </Text>
             )}
 
-            {!isPastElectionParticipationTimeLimit && statusButton}
+            <div className="flex justify-between">
+                <div>
+                    {!isPastElectionParticipationTimeLimit && statusButton}
+                </div>
+                {currentMember?.election_participation_status ===
+                    ElectionParticipationStatus.InElection && (
+                    <AddToCalendar event={calendarEvent} />
+                )}
+            </div>
             <ConfirmParticipationModal
                 isOpen={showConfirmParticipationModal}
                 close={() => setShowConfirmParticipationModal(false)}

@@ -742,6 +742,11 @@
     lodash "^4.17.19"
     to-fast-properties "^2.0.0"
 
+"@culturehq/add-to-calendar@^1.1.2":
+  version "1.1.2"
+  resolved "https://registry.yarnpkg.com/@culturehq/add-to-calendar/-/add-to-calendar-1.1.2.tgz#e0fbe95b828478045065a03753907fdb072ae8fc"
+  integrity sha512-x3Z4UuJdWIHwptmExMkgka6HWxbPRv5rKWAEevCMJQXzfWRK6utJp523d3xb7VGeXHnSTL2xleY0kjswMRS5yQ==
+
 "@cypress/listr-verbose-renderer@^0.4.1":
   version "0.4.1"
   resolved "https://registry.yarnpkg.com/@cypress/listr-verbose-renderer/-/listr-verbose-renderer-0.4.1.tgz#a77492f4b11dcc7c446a34b3e28721afd33c642a"
