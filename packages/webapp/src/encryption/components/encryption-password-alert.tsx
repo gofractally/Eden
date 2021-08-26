@@ -24,15 +24,9 @@ export const EncryptionPasswordAlert = ({
 
     const [showNewKeyModal, setShowNewKeyModal] = useState(false);
     const [showReenterKeyModal, setShowReenterKeyModal] = useState(false);
-    const [isSuccess, setIsSuccess] = useState(false);
 
     const [ualAccount] = useUALAccount();
     const { data: currentMember } = useCurrentMember();
-
-    const updatePassword = (publicKey: string, privateKey: string) => {
-        updateEncryptionPassword(publicKey, privateKey);
-        setIsSuccess(true);
-    };
 
     if (
         !encryptionPassword ||
@@ -62,17 +56,14 @@ export const EncryptionPasswordAlert = ({
                 />
             ) : null}
             <PromptNewKeyModal
-                updateEncryptionPassword={updatePassword}
+                updateEncryptionPassword={updateEncryptionPassword}
                 isOpen={showNewKeyModal}
-                isSuccess={isSuccess}
                 close={() => setShowNewKeyModal(false)}
-                onAfterClose={() => setIsSuccess(false)}
             />
             <PromptReenterKeyModal
                 encryptionPassword={encryptionPasswordResult}
                 isOpen={showReenterKeyModal}
                 close={() => setShowReenterKeyModal(false)}
-                onAfterClose={() => setIsSuccess(false)}
             />
         </>
     );
@@ -106,32 +97,27 @@ const NotPresentKeyWarning = ({ showModal }: PromptProps) => {
 
 interface PasswordModalProps {
     isOpen: boolean;
-    isSuccess: boolean;
     close: () => void;
-    onAfterClose: () => void;
     updateEncryptionPassword: UpdateEncryptionPassword;
 }
 
 const PromptNewKeyModal = ({
     isOpen,
-    isSuccess,
     close,
-    onAfterClose,
     updateEncryptionPassword,
 }: PasswordModalProps) => {
     return (
         <Modal
             isOpen={isOpen}
             onRequestClose={close}
-            onAfterClose={onAfterClose}
             contentLabel="Meeting Link Activation Modal - Requesting Password"
             preventScroll
             shouldCloseOnOverlayClick={false}
             shouldCloseOnEsc={false}
         >
             <CreateNewPasswordPrompt
-                isSuccess={isSuccess}
-                close={close}
+                onCancel={close}
+                onDismissConfirmation={close}
                 updateEncryptionPassword={updateEncryptionPassword}
             />
         </Modal>
@@ -141,20 +127,17 @@ const PromptNewKeyModal = ({
 interface PromptReenterKeyModalProps {
     isOpen: boolean;
     close: () => void;
-    onAfterClose: () => void;
     encryptionPassword: ReturnType<typeof useEncryptionPassword>;
 }
 
 const PromptReenterKeyModal = ({
     isOpen,
     close,
-    onAfterClose,
     encryptionPassword,
 }: PromptReenterKeyModalProps) => {
     return (
         <Modal
             isOpen={isOpen}
-            onAfterClose={onAfterClose}
             onRequestClose={close}
             contentLabel="Meeting Link Activation Modal - Requesting Password"
             preventScroll

@@ -8,20 +8,24 @@ import NewPasswordForm from "./new-password-form";
 import PasswordSuccessConfirmation from "./password-success-confirmation";
 
 interface Props {
-    isSuccess: boolean;
-    close: () => void;
+    onCancel: () => void;
+    onBeforeUpdatePassword?: () => void;
+    onDismissConfirmation: () => void;
     updateEncryptionPassword: UpdateEncryptionPassword;
 }
 
 export const CreateNewPasswordPrompt = ({
-    isSuccess,
-    close,
+    onCancel,
+    onBeforeUpdatePassword,
+    onDismissConfirmation,
     updateEncryptionPassword,
 }: Props) => {
     const [isLoading, setIsLoading] = useState<boolean>(false);
+    const [isSuccess, setIsSuccess] = useState(false);
     const [ualAccount] = useUALAccount();
 
     const onSubmit = async (publicKey: string, privateKey: string) => {
+        onBeforeUpdatePassword?.();
         setIsLoading(true);
 
         try {
@@ -38,6 +42,7 @@ export const CreateNewPasswordPrompt = ({
             console.info("set encryption public key trx", signedTrx);
 
             updateEncryptionPassword(publicKey, privateKey);
+            setIsSuccess(true);
         } catch (error) {
             console.error(error);
             onError(error);
@@ -46,15 +51,25 @@ export const CreateNewPasswordPrompt = ({
         setIsLoading(false);
     };
 
+    const handleOnDismiss = () => {
+        setIsSuccess(false);
+        onDismissConfirmation();
+    };
+
+    const handleOnCancel = () => {
+        setIsSuccess(false);
+        onCancel();
+    };
+
     if (isSuccess) {
-        return <PasswordSuccessConfirmation onDismiss={close} />;
+        return <PasswordSuccessConfirmation onDismiss={handleOnDismiss} />;
     }
 
     return (
         <NewPasswordForm
             isLoading={isLoading}
             onSubmit={onSubmit}
-            onCancel={close}
+            onCancel={handleOnCancel}
         />
     );
 };
