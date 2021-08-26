@@ -25,6 +25,16 @@ namespace subchain
    };
    EOSIO_REFLECT(transaction, id, actions)
 
+   struct delta
+   {
+      eosio::name code;
+      eosio::name table;
+      eosio::name scope;
+      eosio::name key;
+      std::optional<eosio::bytes> newData;
+   };
+   EOSIO_REFLECT(delta, code, table, scope, key, newData)
+
    struct eosio_block
    {
       uint32_t num = 0;
@@ -32,8 +42,9 @@ namespace subchain
       eosio::checksum256 previous;
       eosio::time_point timestamp;
       std::vector<transaction> transactions;
+      std::vector<delta> deltas;
    };
-   EOSIO_REFLECT(eosio_block, num, id, previous, timestamp, transactions)
+   EOSIO_REFLECT(eosio_block, num, id, previous, timestamp, transactions, deltas)
 
    struct block
    {

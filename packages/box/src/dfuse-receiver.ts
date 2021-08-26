@@ -9,7 +9,7 @@ import logger from "./logger";
 
 const query = `
 subscription ($query: String!, $cursor: String, $limit: Int64, $low: Int64,
-              $high: Int64, $irrev: Boolean, $interval: Uint32) {
+              $high: Int64, $irrev: Boolean, $interval: Uint32, $eden: String) {
     searchTransactionsForward(
                 query: $query, lowBlockNum: $low, highBlockNum: $high,
                 limit: $limit, cursor: $cursor, irreversibleOnly: $irrev,
@@ -32,10 +32,39 @@ subscription ($query: String!, $cursor: String, $limit: Int64, $low: Int64,
                 account
                 name
                 hexData
+                dbOps(code: $eden) {
+                    key {
+                        code
+                        table
+                        scope
+                        key
+                    }
+                    oldData
+                    newData
+                }
             }
         }
     }
 }`;
+
+interface DbOp {
+    key: {
+        code: string;
+        table: string;
+        scope: string;
+        key: string;
+    };
+    oldData: string | null;
+    newData: string | null;
+}
+
+interface Delta {
+    code: string;
+    table: string;
+    scope: string;
+    key: string;
+    newData: string;
+}
 
 interface JsonTrx {
     undo: boolean;
@@ -57,6 +86,7 @@ interface JsonTrx {
                 account: string;
                 name: string;
                 hexData: string;
+                dbOps: [DbOp];
             }
         ];
     };
@@ -94,6 +124,7 @@ export default class DfuseReceiver {
         limit: 0,
         irrev: false,
         interval: 30,
+        eden: subchainConfig.eden,
     };
 
     dfuseClient = createDfuseClient({
@@ -128,8 +159,28 @@ export default class DfuseReceiver {
             if (trx.undo != prev.undo || trx.block.id != prev.block.id) {
                 if (prev.undo) this.storage.undoEosioNum(prev.block.num);
                 else if (prev.trace) {
-                    const block = { ...prev.block, transactions: [] as any[] };
+                    const opMap = new Map<string, DbOp>();
+                    const block = {
+                        ...prev.block,
+                        transactions: [] as any[],
+                        deltas: [] as Delta[],
+                    };
                     for (let t of this.unpushedTransactions) {
+                        for (let act of t.trace.matchingActions) {
+                            for (let op of act.dbOps) {
+                                const strKey =
+                                    op.key.code +
+                                    " " +
+                                    op.key.table +
+                                    " " +
+                                    op.key.scope +
+                                    " " +
+                                    op.key.key;
+                                const delta = opMap.get(strKey);
+                                if (delta) delta.newData = op.newData;
+                                else opMap.set(strKey, op);
+                            }
+                        }
                         block.transactions.push({
                             id: t.trace.id,
                             actions: t.trace.matchingActions.map((a) => ({
@@ -140,6 +191,18 @@ export default class DfuseReceiver {
                                 hexData: a.hexData,
                             })),
                         });
+                    }
+                    const strKeys = Array.from(opMap.keys()).sort();
+                    for (let strKey of strKeys) {
+                        const op = opMap.get(strKey);
+                        if (op.newData !== op.oldData)
+                            block.deltas.push({
+                                code: op.key.code,
+                                table: op.key.table,
+                                scope: op.key.scope,
+                                key: op.key.key,
+                                newData: op.newData,
+                            });
                     }
                     this.storage.pushJsonBlock(
                         JSON.stringify(block),
