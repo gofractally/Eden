@@ -46,7 +46,10 @@ export const withdrawDelegateAvailableFunds = (
                 ],
                 data: {
                     owner: authorizerAccount,
-                    quantity: assetToString(totalWithdraw),
+                    quantity: assetToString(
+                        totalWithdraw,
+                        totalWithdraw.precision
+                    ),
                 },
             },
         ],

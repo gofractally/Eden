@@ -23,8 +23,10 @@ export const getMember = async (
     if (devUseFixtureData)
         return fixtureMemberData.find((member) => member.account === account);
     const member = await getEdenMember(account);
+    console.info(member);
     if (member && member.nft_template_id > 0) {
         const template = await getTemplate(`${member.nft_template_id}`);
+        console.info(template);
         return template ? convertAtomicTemplateToMember(template) : undefined;
     }
 };
