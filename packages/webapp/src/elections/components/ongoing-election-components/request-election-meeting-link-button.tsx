@@ -1,14 +1,13 @@
 import { BiWebcam } from "react-icons/bi";
 import { Dayjs } from "dayjs";
 import { useEffect, useState } from "react";
-import { useQueryClient } from "react-query";
 import { BsExclamationTriangle } from "react-icons/bs";
 
 import {
     decryptPublishedMessage,
+    delay,
     encryptSecretForPublishing,
     onError,
-    queryVoteDataRow,
     useEncryptedData,
     useMemberGroupParticipants,
     useUALAccount,
@@ -53,7 +52,6 @@ export const RequestElectionMeetingLinkButton = ({
     electionConfig,
     stage,
 }: RequestMeetingLinkProps) => {
-    const queryClient = useQueryClient();
     const [ualAccount] = useUALAccount();
     const [zoomAccountJWT, setZoomAccountJWT] = useZoomAccountJWT(undefined);
     const [showMeetingModal, setShowMeetingModal] = useState(false);
@@ -75,6 +73,7 @@ export const RequestElectionMeetingLinkButton = ({
     const {
         data: encryptedData,
         isLoading: isLoadingEncryptedData,
+        refetch: refetchEncryptedData,
     } = useEncryptedData("election", groupId);
 
     useEffect(() => {
@@ -112,6 +111,11 @@ export const RequestElectionMeetingLinkButton = ({
                 recipientAccounts
             );
 
+            // eagerly check for presence of link on chain to avoid creating
+            // unnecessary meetings and making user sign something for nothing.
+            const { data } = await refetchEncryptedData();
+            if (data) return;
+
             const topic = `Eden Election - Round #${roundIndex + 1}`;
             const durationInMinutes = meetingDurationMs / 1000 / 60;
 
@@ -148,14 +152,19 @@ export const RequestElectionMeetingLinkButton = ({
                 broadcast: true,
             });
             console.info("electmeeting trx", signedTrx);
-
-            queryClient.invalidateQueries(
-                queryVoteDataRow(ualAccount.accountName).queryKey
-            );
-        } catch (error) {
+        } catch (e) {
+            const error = e as Error;
             console.error(error);
-            onError(error);
+            const message = error.toString();
+            const linkAlreadyExistsError = message?.includes(
+                "Encrypted data does not match"
+            );
+            // if encrypted data is already on chain; fail silently and fetch new data
+            if (!linkAlreadyExistsError) onError(error);
         }
+        // refetch updated encrypted data after allowing time for chains/nodes to see it
+        await delay(3000);
+        refetchEncryptedData();
     };
 
     return (
