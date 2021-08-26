@@ -28,6 +28,7 @@ import {
     getEncryptionKey,
     useEncryptionPassword,
     ReenterPasswordPrompt,
+    CreateNewPasswordPrompt,
 } from "encryption";
 
 enum MeetingStep {
@@ -296,15 +297,18 @@ interface ModalProps {
 
 const MeetingLinkModal = ({ isOpen, close }: ModalProps) => {
     const encryptionPasswordResult = useEncryptionPassword();
-    const { encryptionPassword, isLoading } = encryptionPasswordResult;
+    const {
+        encryptionPassword,
+        updateEncryptionPassword,
+        isLoading,
+    } = encryptionPasswordResult;
+    const { publicKey, privateKey } = encryptionPassword;
 
     const [isReenteringPassword, setIsReenteringPassword] = useState(false);
+    const [isCreatingPassword, setIsCreatingPassword] = useState(false);
 
-    const isKeyMissing = Boolean(
-        !isLoading &&
-            encryptionPassword.publicKey &&
-            !encryptionPassword.privateKey
-    );
+    const isPasswordMissing = Boolean(!isLoading && publicKey && !privateKey);
+    const isPasswordNotSet = !isLoading && !publicKey;
 
     return (
         <Modal
@@ -316,7 +320,14 @@ const MeetingLinkModal = ({ isOpen, close }: ModalProps) => {
             shouldCloseOnOverlayClick={!isReenteringPassword}
             shouldCloseOnEsc={!isReenteringPassword}
         >
-            {isKeyMissing || isReenteringPassword ? (
+            {isPasswordNotSet || isCreatingPassword ? (
+                <CreateNewPasswordPrompt
+                    onCancel={close}
+                    onBeforeUpdatePassword={() => setIsCreatingPassword(true)}
+                    onDismissConfirmation={() => setIsCreatingPassword(false)}
+                    updateEncryptionPassword={updateEncryptionPassword}
+                />
+            ) : isPasswordMissing || isReenteringPassword ? (
                 <ReenterPasswordPrompt
                     onCancel={close}
                     onBeforeUpdatePassword={() => setIsReenteringPassword(true)}
