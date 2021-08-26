@@ -1,5 +1,6 @@
 #include <accounts.hpp>
 #include <boot/boot.hpp>
+#include <clchain/subchain_tester_dfuse.hpp>
 #include <distributions.hpp>
 #include <eden-atomicassets.hpp>
 #include <eden-atomicmarket.hpp>
@@ -488,6 +489,13 @@ struct eden_tester
       }
       return result;
    };
+
+   void write_dfuse_history(const char* filename)
+   {
+      chain.start_block();
+      chain.start_block();
+      dfuse_subchain::write_history(filename, chain);
+   }
 };
 
 TEST_CASE("genesis NFT pre-setup")
@@ -1624,3 +1632,12 @@ TEST_CASE("settablerows")
 }
 
 #endif
+
+TEST_CASE("dfuse-test-election")
+{
+   eden_tester t;
+   t.genesis();
+   t.induct_n(100);
+   t.run_election();
+   t.write_dfuse_history("dfuse-test-election.json");
+}
