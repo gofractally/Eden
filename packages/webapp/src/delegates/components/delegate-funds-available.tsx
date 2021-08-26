@@ -1,11 +1,14 @@
 import dayjs from "dayjs";
 import { useState } from "react";
+import { useQueryClient } from "react-query";
 
 import {
     assetToString,
     Button,
     Heading,
     onError,
+    queryDistributionsForAccount,
+    queryTokenBalanceForAccount,
     sumAssetStrings,
     Text,
     useDistributionsForAccount,
@@ -25,6 +28,7 @@ export const DelegateFundsAvailable = ({ account }: Props) => {
     const { data: member } = useMemberByAccountName(account);
     const { data: distributions } = useDistributionsForAccount(account);
     const [isLoading, setIsLoading] = useState(false);
+    const queryClient = useQueryClient();
 
     const availableFunds = distributions
         ? sumAssetStrings(
@@ -52,6 +56,17 @@ export const DelegateFundsAvailable = ({ account }: Props) => {
                 broadcast: true,
             });
             console.info("withdraw delegate available funds trx", signedTrx);
+
+            // allow time for chain tables to update
+            await new Promise((resolve) => setTimeout(resolve, 3000));
+
+            // invalidate current member query to update participating status
+            queryClient.invalidateQueries(
+                queryDistributionsForAccount(ualAccount.accountName).queryKey
+            );
+            queryClient.invalidateQueries(
+                queryTokenBalanceForAccount(ualAccount.accountName).queryKey
+            );
         } catch (error) {
             console.error(error);
             onError(error.message);
