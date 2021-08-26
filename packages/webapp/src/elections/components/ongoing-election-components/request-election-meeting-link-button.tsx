@@ -33,7 +33,6 @@ import {
 enum MeetingStep {
     LinkZoomAccount,
     CreateMeetingLink,
-    LoadingMeetingLink,
     RetrieveMeetingLink,
 }
 
@@ -55,9 +54,7 @@ export const RequestElectionMeetingLinkButton = ({
     const [ualAccount] = useUALAccount();
     const [zoomAccountJWT, setZoomAccountJWT] = useZoomAccountJWT(undefined);
     const [showMeetingModal, setShowMeetingModal] = useState(false);
-    const [meetingStep, setMeetingStep] = useState(
-        MeetingStep.LoadingMeetingLink
-    );
+    const [meetingStep, setMeetingStep] = useState(MeetingStep.LinkZoomAccount);
     const { data: memberGroup } = useMemberGroupParticipants(
         ualAccount?.accountName,
         roundIndex
@@ -77,16 +74,14 @@ export const RequestElectionMeetingLinkButton = ({
     } = useEncryptedData("election", groupId);
 
     useEffect(() => {
-        if (isLoadingEncryptedData) {
-            setMeetingStep(MeetingStep.LoadingMeetingLink);
-        } else if (encryptedData) {
+        if (encryptedData) {
             setMeetingStep(MeetingStep.RetrieveMeetingLink);
         } else if (zoomAccountJWT) {
             setMeetingStep(MeetingStep.CreateMeetingLink);
         } else {
             setMeetingStep(MeetingStep.LinkZoomAccount);
         }
-    }, [zoomAccountJWT, isLoadingEncryptedData, encryptedData]);
+    }, [zoomAccountJWT, encryptedData]);
 
     if (!memberGroup || !currentVoteDataRow) {
         return null;
@@ -96,7 +91,7 @@ export const RequestElectionMeetingLinkButton = ({
         setShowMeetingModal(true);
     };
 
-    const requestMeetingLink = async () => {
+    const requestMeetingLink = async (throwOnError: boolean = false) => {
         try {
             // TODO: Should we just pass the participants/recipients into this component?
             const recipientAccounts = memberGroup
@@ -160,7 +155,10 @@ export const RequestElectionMeetingLinkButton = ({
                 "Encrypted data does not match"
             );
             // if encrypted data is already on chain; fail silently and fetch new data
-            if (!linkAlreadyExistsError) onError(error);
+            if (!linkAlreadyExistsError) {
+                onError(error);
+                if (throwOnError) throw error;
+            }
         }
         // refetch updated encrypted data after allowing time for chains/nodes to see it
         await delay(3000);
@@ -173,12 +171,15 @@ export const RequestElectionMeetingLinkButton = ({
                 meetingStep={meetingStep}
                 stage={stage}
                 encryptedData={encryptedData}
-                requestMeetingLink={requestMeetingLink}
+                isLoadingEncryptedData={isLoadingEncryptedData}
                 onClick={handleMeetingButton}
             />
             <MeetingLinkModal
                 isOpen={showMeetingModal}
                 close={() => setShowMeetingModal(false)}
+                meetingStep={meetingStep}
+                requestMeetingLink={requestMeetingLink}
+                stage={stage}
             />
         </>
     );
@@ -188,7 +189,7 @@ interface MeetingButtonProps {
     meetingStep: MeetingStep;
     stage: RoundStage;
     encryptedData?: EncryptedData;
-    requestMeetingLink: () => Promise<void>;
+    isLoadingEncryptedData: boolean;
     onClick: () => void;
 }
 
@@ -196,12 +197,12 @@ const MeetingButton = ({
     meetingStep,
     stage,
     encryptedData,
-    requestMeetingLink,
+    isLoadingEncryptedData,
     onClick,
 }: MeetingButtonProps) => {
+    if (isLoadingEncryptedData)
+        return <>Loading meeting link... (LoadingMeetingLink)</>;
     switch (meetingStep) {
-        case MeetingStep.LoadingMeetingLink:
-            return <>Loading meeting link...</>;
         case MeetingStep.RetrieveMeetingLink:
             return (
                 <JoinMeetingButton
@@ -211,16 +212,16 @@ const MeetingButton = ({
             );
         case MeetingStep.CreateMeetingLink:
             return (
-                <Button size="sm" onClick={requestMeetingLink}>
+                <Button size="sm" onClick={onClick}>
                     <BiWebcam className="mr-1" />
-                    Request meeting link
+                    Get meeting link
                 </Button>
             );
         case MeetingStep.LinkZoomAccount:
             return (
                 <Button size="sm" onClick={onClick}>
                     <BiWebcam className="mr-1" />
-                    Link Zoom account to request a meeting link
+                    Link Zoom account
                 </Button>
             );
     }
@@ -302,9 +303,18 @@ const JoinMeetingButton = ({
 interface ModalProps {
     isOpen: boolean;
     close: () => void;
+    meetingStep: MeetingStep;
+    requestMeetingLink: (throwOnError: boolean) => Promise<void>;
+    stage: RoundStage;
 }
 
-const MeetingLinkModal = ({ isOpen, close }: ModalProps) => {
+const MeetingLinkModal = ({
+    isOpen,
+    close,
+    meetingStep,
+    requestMeetingLink,
+    stage,
+}: ModalProps) => {
     const encryptionPasswordResult = useEncryptionPassword();
     const {
         encryptionPassword,
@@ -343,14 +353,25 @@ const MeetingLinkModal = ({ isOpen, close }: ModalProps) => {
                     onDismissConfirmation={() => setIsReenteringPassword(false)}
                     encryptionPassword={encryptionPasswordResult}
                 />
-            ) : (
+            ) : meetingStep === MeetingStep.LinkZoomAccount ? (
                 <ModalStepZoom close={close} />
-            )}
+            ) : meetingStep === MeetingStep.CreateMeetingLink ||
+              meetingStep === MeetingStep.RetrieveMeetingLink ? (
+                <ModalStepGetLink
+                    close={close}
+                    requestMeetingLink={requestMeetingLink}
+                    stage={stage}
+                />
+            ) : null}
         </Modal>
     );
 };
 
-const ModalStepZoom = ({ close }: { close: () => void }) => {
+interface ModalStepProps {
+    close: () => void;
+}
+
+const ModalStepZoom = ({ close }: ModalStepProps) => {
     const linkZoomAccount = () => {
         window.location.href =
             zoomConnectAccountLink + "&state=request-election-link";
@@ -369,6 +390,82 @@ const ModalStepZoom = ({ close }: { close: () => void }) => {
                     Cancel
                 </Button>
                 <Button onClick={linkZoomAccount}>Link Zoom account</Button>
+            </div>
+        </div>
+    );
+};
+
+interface ModalStepGetLinkProps extends ModalStepProps {
+    requestMeetingLink: (throwOnError: boolean) => Promise<void>;
+    stage: RoundStage;
+}
+
+const ModalStepGetLink = ({
+    close,
+    requestMeetingLink,
+    stage,
+}: ModalStepGetLinkProps) => {
+    const [isSuccess, setIsSuccess] = useState(false);
+    const [isLoading, setIsLoading] = useState(false);
+    const onContinue = async () => {
+        setIsLoading(true);
+        try {
+            await requestMeetingLink(true);
+            setIsSuccess(true);
+        } catch (error) {
+            setIsSuccess(false);
+        }
+        setIsLoading(false);
+    };
+
+    if (isSuccess) {
+        return (
+            <div className="space-y-4">
+                <Heading>Success!</Heading>
+                <Text>A meeting link has been created for your group.</Text>
+                {stage === RoundStage.PreMeeting ? (
+                    <Text>
+                        As soon as your round begins, a "Join meeting" button
+                        will appear on the election screen.
+                    </Text>
+                ) : (
+                    <Text>
+                        Dismiss this message and look for the "Join meeting"
+                        button on the election screen.
+                    </Text>
+                )}
+                <div className="flex space-x-3">
+                    <Button type="neutral" onClick={close}>
+                        Cancel
+                    </Button>
+                    <Button onClick={close}>Ok</Button>
+                </div>
+            </div>
+        );
+    }
+
+    return (
+        <div className="space-y-4">
+            <Heading>Create meeting link</Heading>
+            <Text>
+                Let's create a meeting link for your group to use during this
+                round!
+            </Text>
+            <Text>
+                In the next step, you may be asked to sign a transaction setting
+                the meeting link up.
+            </Text>
+            <div className="flex space-x-3">
+                <Button type="neutral" onClick={close}>
+                    Cancel
+                </Button>
+                <Button
+                    onClick={onContinue}
+                    isLoading={isLoading}
+                    disabled={isLoading}
+                >
+                    Continue
+                </Button>
             </div>
         </div>
     );

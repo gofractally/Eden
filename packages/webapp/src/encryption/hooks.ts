@@ -19,6 +19,8 @@ export const useEncryptionPassword = () => {
     ] = useState<EncryptionPassword>({});
     const { data: currentMember, isLoading, error } = useCurrentMember();
 
+    // This ensures that encryptionPassword is as up-to-date as the latest render
+    // TODO: It would be much better to store encryptionPassword in a context reducer.
     useEffect(() => {
         const pw = getEncryptionPassword();
         const pubKeyChanged = pw.publicKey !== encryptionPassword.publicKey;

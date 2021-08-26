@@ -6,6 +6,8 @@ export const useLocalStorage = (key: string, initialValue: any) => {
         return [undefined, () => undefined];
     }
 
+    // TODO: It would be much better to store this in a context reducer.
+    // Stored values for different instances of this hook will get out of sync.
     const [storedValue, setStoredValue] = useState(() => {
         try {
             const item = window.localStorage.getItem(key);
