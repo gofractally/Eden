@@ -371,7 +371,7 @@ struct eden_tester
             chain.as(member).act<actions::electvote>(round, member, winner);
          }
       }
-      chain.start_block(2 * 60 * 60 * 1000);
+      chain.start_block(60 * 60 * 1000);
       alice.act<actions::electprocess>(256);
    };
 
@@ -418,7 +418,7 @@ struct eden_tester
       {
          chain.start_block();
          electseed(chain.get_head_block_info().timestamp.to_time_point());
-         chain.start_block(24 * 60 * 60 * 1000);
+         chain.start_block(2 * 60 * 60 * 1000);
          alice.act<actions::electprocess>(256);
       }
    }
@@ -1260,9 +1260,9 @@ TEST_CASE("election with multiple rounds")
                                       eosio::bytes{}, std::nullopt);
    t.generic_group_vote(t.get_current_groups(), round++);
    CHECK(get_table_size<eden::vote_table_type>() == 3);
-   t.electseed(eosio::time_point_sec(0x5f010070));
+   t.electseed(s2t("2020-07-04T19:30:00.000"));
    t.chain.start_block((15 * 60 + 30) * 60 * 1000);
-   t.chain.start_block(24 * 60 * 60 * 1000);
+   t.chain.start_block(2 * 60 * 60 * 1000);
    t.alice.act<actions::electprocess>(256);
    CHECK(get_table_size<eden::vote_table_type>() == 0);
    CHECK(get_table_size<eden::encrypted_data_table_type>("election"_n) == 0);
