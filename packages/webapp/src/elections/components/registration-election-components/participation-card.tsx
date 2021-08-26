@@ -142,14 +142,9 @@ export const ParticipationCard = ({ election }: Props) => {
                 <Heading size={2} className="inline-block">
                     Upcoming Election
                 </Heading>
-                <div className="text-right">
-                    <div>
-                        <Heading size={2} className="inline-block">
-                            {electionDates.startDateTime.format("MMM D")}
-                        </Heading>
-                    </div>
-                    <AddToCalendar event={calendarEvent} />
-                </div>
+                <Heading size={2} className="inline-block">
+                    {electionDates.startDateTime.format("MMM D")}
+                </Heading>
             </div>
             <Heading size={3}>{statusLabel}</Heading>
             {isPastElectionParticipationTimeLimit ? (
@@ -174,7 +169,15 @@ export const ParticipationCard = ({ election }: Props) => {
                 </Text>
             )}
 
-            {!isPastElectionParticipationTimeLimit && statusButton}
+            <div className="flex justify-between">
+                <div>
+                    {!isPastElectionParticipationTimeLimit && statusButton}
+                </div>
+                {currentMember?.election_participation_status ===
+                    ElectionParticipationStatus.InElection && (
+                    <AddToCalendar event={calendarEvent} />
+                )}
+            </div>
             <ConfirmParticipationModal
                 isOpen={showConfirmParticipationModal}
                 close={() => setShowConfirmParticipationModal(false)}
