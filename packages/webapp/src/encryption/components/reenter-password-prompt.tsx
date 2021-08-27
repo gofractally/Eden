@@ -14,6 +14,7 @@ interface Props {
     onBeforeUpdatePassword?: () => void;
     onDismissConfirmation: () => void;
     encryptionPassword: ReturnType<typeof useEncryptionPassword>;
+    isTooLateForCurrentRound?: boolean;
 }
 
 export const ReenterPasswordPrompt = ({
@@ -21,6 +22,7 @@ export const ReenterPasswordPrompt = ({
     onBeforeUpdatePassword,
     onDismissConfirmation,
     encryptionPassword: encryptionPasswordResult,
+    isTooLateForCurrentRound,
 }: Props) => {
     const [isLoading, setIsLoading] = useState(false);
     const [isSuccess, setIsSuccess] = useState(false);
@@ -99,6 +101,7 @@ export const ReenterPasswordPrompt = ({
                 }}
                 onCancel={handleOnCancel}
                 forgotPassword={true}
+                isTooLateForCurrentRound={isTooLateForCurrentRound}
             />
         );
     }

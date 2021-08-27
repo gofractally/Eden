@@ -10,6 +10,7 @@ interface Props {
     forgotPassword?: boolean;
     onSubmit: (publicKey: string, privateKey: string) => Promise<void>;
     onCancel: () => void;
+    isTooLateForCurrentRound?: boolean;
 }
 
 export const NewPasswordForm = ({
@@ -17,6 +18,7 @@ export const NewPasswordForm = ({
     isLoading,
     onSubmit,
     onCancel,
+    isTooLateForCurrentRound,
 }: Props) => {
     const [didCopyText, setDidCopyText] = useState<boolean>(false);
     const [fields, setFields] = useFormFields({
@@ -50,6 +52,12 @@ export const NewPasswordForm = ({
         setDidCopyText(true);
     };
 
+    const forgotPasswordText =
+        "If you have forgotten or lost your election password, you can replace it with a new one.";
+    const createNewPasswordText =
+        "It looks like you don’t have an election participation password yet.";
+    const text = forgotPassword ? forgotPasswordText : createNewPasswordText;
+
     return (
         <div className="space-y-4">
             <Heading className="mb-2.5">
@@ -57,10 +65,18 @@ export const NewPasswordForm = ({
                     ? "Get new election password"
                     : "Election password"}
             </Heading>
+            <Text>{text}</Text>
+            {isTooLateForCurrentRound && (
+                <Text>
+                    <span className="font-semibold">IMPORTANT:</span> Your new
+                    password will not work for the current election round
+                    already underway; only{" "}
+                    <span className="italic">future</span> rounds. For this
+                    round, reach out to others in your group via Telegram or
+                    otherwise to ask for the meeting link.
+                </Text>
+            )}
             <Text>
-                {forgotPassword
-                    ? "If you have forgotten or lost your election password, you can replace it with a new one."
-                    : "It looks like you don’t have an election participation password yet."}{" "}
                 Please COPY AND SAVE your password somewhere safe, and confirm
                 it below.
             </Text>

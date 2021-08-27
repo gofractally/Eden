@@ -12,6 +12,7 @@ interface Props {
     onBeforeUpdatePassword?: () => void;
     onDismissConfirmation: () => void;
     updateEncryptionPassword: UpdateEncryptionPassword;
+    isTooLateForCurrentRound?: boolean;
 }
 
 export const CreateNewPasswordPrompt = ({
@@ -19,6 +20,7 @@ export const CreateNewPasswordPrompt = ({
     onBeforeUpdatePassword,
     onDismissConfirmation,
     updateEncryptionPassword,
+    isTooLateForCurrentRound,
 }: Props) => {
     const [isLoading, setIsLoading] = useState<boolean>(false);
     const [isSuccess, setIsSuccess] = useState(false);
@@ -70,6 +72,7 @@ export const CreateNewPasswordPrompt = ({
             isLoading={isLoading}
             onSubmit={onSubmit}
             onCancel={handleOnCancel}
+            isTooLateForCurrentRound={isTooLateForCurrentRound}
         />
     );
 };

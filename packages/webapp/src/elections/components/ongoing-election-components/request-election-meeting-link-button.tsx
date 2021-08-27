@@ -200,14 +200,21 @@ const MeetingButton = ({
     isLoadingEncryptedData,
     onClick,
 }: MeetingButtonProps) => {
-    if (isLoadingEncryptedData)
-        return <>Loading meeting link... (LoadingMeetingLink)</>;
+    if (isLoadingEncryptedData) {
+        return (
+            <Button size="sm" isLoading disabled>
+                Preparing meeting
+            </Button>
+        );
+    }
+
     switch (meetingStep) {
         case MeetingStep.RetrieveMeetingLink:
             return (
                 <JoinMeetingButton
                     stage={stage}
                     encryptedData={encryptedData!}
+                    requestPassword={onClick}
                 />
             );
         case MeetingStep.CreateMeetingLink:
@@ -230,21 +237,24 @@ const MeetingButton = ({
 interface JoinMeetingButtonProps {
     stage: RoundStage;
     encryptedData: EncryptedData;
+    requestPassword: () => void;
 }
 
 const JoinMeetingButton = ({
     stage,
     encryptedData,
+    requestPassword,
 }: JoinMeetingButtonProps) => {
     const [roundMeetingLink, setRoundMeetingLink] = useState("");
-    const [
-        failedToDecryptMeetingLink,
-        setFailedToDecryptMeetingLink,
-    ] = useState(false);
+    const [failedToDecrypt, setFailedToDecrypt] = useState(false);
+
+    const { encryptionPassword, isLoading } = useEncryptionPassword();
+    const { publicKey, privateKey } = encryptionPassword;
+    const isPasswordMissing = Boolean(!isLoading && publicKey && !privateKey);
 
     useEffect(() => {
         decryptMeetingLink();
-    }, [encryptedData]);
+    }, [encryptedData, privateKey]);
 
     const decryptMeetingLink = async () => {
         if (encryptedData) {
@@ -267,37 +277,65 @@ const JoinMeetingButton = ({
                 );
 
                 setRoundMeetingLink(decryptedLink);
+                setFailedToDecrypt(false);
             } catch (e) {
                 console.error("fail to decrypt meeting link", e);
+                setFailedToDecrypt(true);
+                if (isPasswordMissing) return;
                 onError(e.message);
-                setFailedToDecryptMeetingLink(true);
             }
         } else {
             setRoundMeetingLink("");
         }
     };
 
-    return failedToDecryptMeetingLink ? (
-        <div className="flex items-center space-x-2">
-            <Text type="danger">
-                <BsExclamationTriangle className="mr-1 mb-px" />
+    if (failedToDecrypt && isPasswordMissing) {
+        return (
+            <Button size="sm" onClick={requestPassword}>
+                <BiWebcam className="mr-1" />
+                Get meeting link
+            </Button>
+        );
+    }
+
+    if (failedToDecrypt) {
+        return (
+            <div className="flex items-center space-x-2">
+                <Text type="danger">
+                    <BsExclamationTriangle className="mr-1 mb-px" />
+                </Text>
+                <Text type="danger">
+                    We were unable to decrypt the meeting link. Ask someone else
+                    in your election round group for the link or join the
+                    community support room above.
+                </Text>
+            </div>
+        );
+    }
+
+    if (stage === RoundStage.PreMeeting) {
+        return (
+            <Text type="info">
+                Meeting link will appear here when round starts.
             </Text>
-            <Text type="danger">
-                Failed to retrieve meeting link. Ask someone else in your
-                election round group for the link or join the community support
-                room above.
-            </Text>
-        </div>
-    ) : stage === RoundStage.PreMeeting ? (
-        <Text type="info">
-            Waiting for meeting to start to display the join button.
-        </Text>
-    ) : roundMeetingLink ? (
-        <Button size="sm" href={roundMeetingLink} target="_blank">
-            <BiWebcam className="mr-1" />
-            Join meeting
-        </Button>
-    ) : null;
+        );
+    }
+
+    if (roundMeetingLink) {
+        return (
+            <Button
+                size="sm"
+                href={roundMeetingLink}
+                target="_blank"
+                isExternal
+            >
+                <BiWebcam className="mr-1" />
+                Join meeting
+            </Button>
+        );
+    }
+
+    return null;
 };
 
 interface ModalProps {
@@ -315,50 +353,35 @@ const MeetingLinkModal = ({
     requestMeetingLink,
     stage,
 }: ModalProps) => {
-    const encryptionPasswordResult = useEncryptionPassword();
-    const {
-        encryptionPassword,
-        updateEncryptionPassword,
-        isLoading,
-    } = encryptionPasswordResult;
-    const { publicKey, privateKey } = encryptionPassword;
+    const [isCreatingMeetingLink, setIsCreatingMeetingLink] = useState(false);
 
-    const [isReenteringPassword, setIsReenteringPassword] = useState(false);
-    const [isCreatingPassword, setIsCreatingPassword] = useState(false);
-
-    const isPasswordMissing = Boolean(!isLoading && publicKey && !privateKey);
-    const isPasswordNotSet = !isLoading && !publicKey;
+    const resetModalState = () => {
+        setIsCreatingMeetingLink(false);
+    };
 
     return (
         <Modal
             isOpen={isOpen}
             onRequestClose={close}
-            // onAfterClose={() => setStep(ParticipationStep.ConfirmParticipation)}
+            onAfterClose={resetModalState}
             contentLabel="Election round meeting link confirmation modal"
             preventScroll
-            shouldCloseOnOverlayClick={!isReenteringPassword}
-            shouldCloseOnEsc={!isReenteringPassword}
+            shouldCloseOnOverlayClick={false}
+            shouldCloseOnEsc={false}
         >
-            {isPasswordNotSet || isCreatingPassword ? (
-                <CreateNewPasswordPrompt
-                    onCancel={close}
-                    onBeforeUpdatePassword={() => setIsCreatingPassword(true)}
-                    onDismissConfirmation={() => setIsCreatingPassword(false)}
-                    updateEncryptionPassword={updateEncryptionPassword}
-                />
-            ) : isPasswordMissing || isReenteringPassword ? (
-                <ReenterPasswordPrompt
-                    onCancel={close}
-                    onBeforeUpdatePassword={() => setIsReenteringPassword(true)}
-                    onDismissConfirmation={() => setIsReenteringPassword(false)}
-                    encryptionPassword={encryptionPasswordResult}
-                />
-            ) : meetingStep === MeetingStep.LinkZoomAccount ? (
+            <ModalStepPasswordInterjection
+                close={close}
+                meetingStep={meetingStep}
+            />
+            {meetingStep === MeetingStep.LinkZoomAccount ? (
                 <ModalStepZoom close={close} />
             ) : meetingStep === MeetingStep.CreateMeetingLink ||
-              meetingStep === MeetingStep.RetrieveMeetingLink ? (
+              isCreatingMeetingLink ? (
                 <ModalStepGetLink
                     close={close}
+                    onBeforeRequestMeetingLink={() =>
+                        setIsCreatingMeetingLink(true)
+                    } // keep this step active when it updates to RetrieveMeetingLink once link is present
                     requestMeetingLink={requestMeetingLink}
                     stage={stage}
                 />
@@ -370,6 +393,71 @@ const MeetingLinkModal = ({
 interface ModalStepProps {
     close: () => void;
 }
+
+interface ModalStepPasswordInterjectionProps extends ModalStepProps {
+    meetingStep: MeetingStep;
+}
+
+const ModalStepPasswordInterjection = ({
+    close,
+    meetingStep,
+}: ModalStepPasswordInterjectionProps) => {
+    const encryptionPasswordResult = useEncryptionPassword();
+    const {
+        encryptionPassword,
+        updateEncryptionPassword,
+        isLoading,
+    } = encryptionPasswordResult;
+    const { publicKey, privateKey } = encryptionPassword;
+
+    const [isReenteringPassword, setIsReenteringPassword] = useState(false);
+    const [isCreatingPassword, setIsCreatingPassword] = useState(false);
+    const isPasswordMissing = Boolean(!isLoading && publicKey && !privateKey);
+    const isPasswordNotSet = !isLoading && !publicKey;
+
+    const linkAlreadyExists = meetingStep === MeetingStep.RetrieveMeetingLink;
+
+    const resetState = () => {
+        setIsReenteringPassword(false);
+        setIsCreatingPassword(false);
+    };
+
+    const cancel = () => {
+        resetState();
+        close();
+    };
+
+    const dismissConfirmation = () => {
+        resetState();
+        linkAlreadyExists && close();
+    };
+
+    if (isPasswordNotSet || isCreatingPassword) {
+        return (
+            <CreateNewPasswordPrompt
+                onCancel={cancel}
+                onBeforeUpdatePassword={() => setIsCreatingPassword(true)}
+                onDismissConfirmation={dismissConfirmation}
+                updateEncryptionPassword={updateEncryptionPassword}
+                isTooLateForCurrentRound={linkAlreadyExists}
+            />
+        );
+    }
+
+    if (isPasswordMissing || isReenteringPassword) {
+        return (
+            <ReenterPasswordPrompt
+                onCancel={cancel}
+                onBeforeUpdatePassword={() => setIsReenteringPassword(true)}
+                onDismissConfirmation={dismissConfirmation}
+                encryptionPassword={encryptionPasswordResult}
+                isTooLateForCurrentRound={linkAlreadyExists}
+            />
+        );
+    }
+
+    return null;
+};
 
 const ModalStepZoom = ({ close }: ModalStepProps) => {
     const linkZoomAccount = () => {
@@ -398,17 +486,20 @@ const ModalStepZoom = ({ close }: ModalStepProps) => {
 interface ModalStepGetLinkProps extends ModalStepProps {
     requestMeetingLink: (throwOnError: boolean) => Promise<void>;
     stage: RoundStage;
+    onBeforeRequestMeetingLink: () => void;
 }
 
 const ModalStepGetLink = ({
     close,
     requestMeetingLink,
     stage,
+    onBeforeRequestMeetingLink,
 }: ModalStepGetLinkProps) => {
     const [isSuccess, setIsSuccess] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
     const onContinue = async () => {
         setIsLoading(true);
+        onBeforeRequestMeetingLink();
         try {
             await requestMeetingLink(true);
             setIsSuccess(true);
@@ -435,9 +526,6 @@ const ModalStepGetLink = ({
                     </Text>
                 )}
                 <div className="flex space-x-3">
-                    <Button type="neutral" onClick={close}>
-                        Cancel
-                    </Button>
                     <Button onClick={close}>Ok</Button>
                 </div>
             </div>
