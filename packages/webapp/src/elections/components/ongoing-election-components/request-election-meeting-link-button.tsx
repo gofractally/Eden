@@ -44,6 +44,10 @@ interface RequestMeetingLinkProps {
     stage: RoundStage;
 }
 
+/**
+ *
+ * For user flows and documentation, see ./request-election-meeting-link-button.md
+ */
 export const RequestElectionMeetingLinkButton = ({
     roundIndex,
     meetingStartTime,
