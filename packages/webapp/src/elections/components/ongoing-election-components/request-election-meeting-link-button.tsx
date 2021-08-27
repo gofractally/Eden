@@ -371,7 +371,7 @@ const MeetingLinkModal = ({
         if (isPasswordNotSet) {
             setIsCreatingPassword(true);
         }
-    }, [isPasswordMissing, isPasswordNotSet]);
+    }, [isPasswordMissing, isPasswordNotSet, isOpen]);
 
     const resetModalState = () => {
         setIsReenteringPassword(false);
