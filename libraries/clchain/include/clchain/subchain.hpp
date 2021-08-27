@@ -8,15 +8,23 @@
 
 namespace subchain
 {
+   struct creator_action
+   {
+      double seq;
+      eosio::name receiver;
+   };
+   EOSIO_REFLECT(creator_action, seq, receiver)
+
    struct action
    {
       uint64_t seq = 0;
       eosio::name firstReceiver;
       eosio::name receiver;
       eosio::name name;
+      std::optional<creator_action> creatorAction;
       eosio::bytes hexData;
    };
-   EOSIO_REFLECT(action, seq, firstReceiver, receiver, name, hexData)
+   EOSIO_REFLECT(action, seq, firstReceiver, receiver, name, creatorAction, hexData)
 
    struct transaction
    {

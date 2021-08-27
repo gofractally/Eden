@@ -4,6 +4,7 @@
 #include <eosio/crypto.hpp>
 #include <eosio/ship_protocol.hpp>
 #include <eosio/system.hpp>
+#include <events.hpp>
 #include <members.hpp>
 
 namespace eden
@@ -191,6 +192,16 @@ namespace eden
       }
    }
 
+   void elections::set_state_sing(const current_election_state& new_value)
+   {
+      if (auto n = std::get_if<current_election_state_registration>(&new_value))
+      {
+         push_event(election_event_schedule{.election_time = n->start_time,
+                                            .election_threshold = n->election_threshold});
+      }
+      state_sing.set(new_value, contract);
+   }
+
    // Incremental implementation of shuffle
    // After adding all voters, each voter will have unique integer in [0, N) as
    // a group_id.
@@ -265,8 +276,7 @@ namespace eden
                  std::get<current_election_state_registration>(state).start_time >= lock_time,
              "Election cannot be rescheduled");
       }
-      state_sing.set(current_election_state_registration{election_time, max_active_members + 1},
-                     contract);
+      set_state_sing(current_election_state_registration{election_time, max_active_members + 1});
    }
 
    void elections::set_time(uint8_t day, const std::string& time)
@@ -301,11 +311,9 @@ namespace eden
                          : 0;
       uint16_t new_threshold = active_members + (active_members + 9) / 10;
       new_threshold = std::clamp(new_threshold, min_election_threshold, max_active_members);
-      state_sing.set(
-          current_election_state_registration{
-              get_election_time(state.election_start_time, origin_time + eosio::days(180)),
-              new_threshold},
-          contract);
+      set_state_sing(current_election_state_registration{
+          get_election_time(state.election_start_time, origin_time + eosio::days(180)),
+          new_threshold});
    }
 
    // Schedules an election at the earliest possible time at least 30 days
@@ -320,7 +328,7 @@ namespace eden
          // date has not been set (only possible if genesis was run using
          // a prior version of the contract), wait until the date is set
          // before scheduling the election.
-         state_sing.set(current_election_state_pending_date{}, contract);
+         set_state_sing(current_election_state_pending_date{});
       }
       else
       {
@@ -334,9 +342,8 @@ namespace eden
                 get_election_time(state.election_start_time, now + eosio::days(30))};
             if (new_start_time < current->start_time)
             {
-               state_sing.set(
-                   current_election_state_registration{new_start_time, max_active_members + 1},
-                   contract);
+               set_state_sing(
+                   current_election_state_registration{new_start_time, max_active_members + 1});
             }
          }
       }
@@ -369,7 +376,7 @@ namespace eden
       {
          eosio::check(false, "Cannot seed election now");
       }
-      state_sing.set(state, contract);
+      set_state_sing(state);
    }
 
    void elections::start_election()
@@ -380,8 +387,7 @@ namespace eden
       auto election_start_time = old_state.seed.end_time.to_time_point();
       eosio::check(eosio::current_block_time() >= old_state.seed.end_time,
                    "Seeding window is still open");
-      state_sing.set(current_election_state_init_voters{0, election_rng{old_state.seed.current}},
-                     contract);
+      set_state_sing(current_election_state_init_voters{0, election_rng{old_state.seed.current}});
 
       // Must happen after the election is started
       setup_distribution(contract, election_start_time);
@@ -475,7 +481,7 @@ namespace eden
             --max_steps;
          }
       }
-      state_sing.set(state_variant, contract);
+      set_state_sing(state_variant);
       return max_steps;
    }
 
@@ -723,7 +729,7 @@ namespace eden
          }
          --max_steps;
       }
-      state_sing.set(state, contract);
+      set_state_sing(state);
       return max_steps;
    }
 

@@ -6,6 +6,7 @@
 #include <eosio/asset.hpp>
 #include <eosio/bytes.hpp>
 #include <eosio/eosio.hpp>
+#include <events.hpp>
 #include <inductions.hpp>
 #include <string>
 #include <vector>
@@ -58,13 +59,6 @@ namespace eden
                                                 encrypted_data_variant,
                                                 std::variant<vote>>;
 #endif
-
-   struct vote_report
-   {
-      eosio::name voter;
-      eosio::name candidate;
-   };
-   EOSIO_REFLECT(vote_report, voter, candidate);
 
    class eden : public eosio::contract
    {

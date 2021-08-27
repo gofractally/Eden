@@ -18,6 +18,7 @@ add_executable(eden
    src/actions/encrypt.cpp
    src/actions/tables.cpp
    src/eden.cpp
+   src/events.cpp
    src/accounts.cpp
    src/globals.cpp
    src/inductions.cpp

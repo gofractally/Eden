@@ -200,6 +200,7 @@ namespace eden
       globals globals;
       current_election_state_active check_active();
 
+      void set_state_sing(const current_election_state& new_value);
       void add_voter(election_rng& rng, uint8_t round, uint16_t& next_index, eosio::name member);
       uint32_t randomize_voters(current_election_state_init_voters& state, uint32_t max_steps);
       std::vector<eosio::name> extract_board();

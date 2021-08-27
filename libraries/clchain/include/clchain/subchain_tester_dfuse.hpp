@@ -15,15 +15,23 @@ namespace dfuse_subchain
    };
    EOSIO_REFLECT(block, num, id, timestamp, previous)
 
+   struct creator_action
+   {
+      double seq;
+      eosio::name receiver;
+   };
+   EOSIO_REFLECT(creator_action, seq, receiver)
+
    struct action
    {
       double seq;
       eosio::name receiver;
       eosio::name account;
       eosio::name name;
+      std::optional<creator_action> creatorAction;
       eosio::bytes hexData;
    };
-   EOSIO_REFLECT(action, seq, receiver, account, name, hexData)
+   EOSIO_REFLECT(action, seq, receiver, account, name, creatorAction, hexData)
 
    struct trace
    {
@@ -42,8 +50,8 @@ namespace dfuse_subchain
    };
    EOSIO_REFLECT(transaction, undo, cursor, irreversibleBlockNum, block, trace)
 
-   void add_transactions(std::vector<transaction>& transactions,
-                         const eosio::test_chain::get_history_result& result)
+   inline void add_transactions(std::vector<transaction>& transactions,
+                                const eosio::test_chain::get_history_result& result)
    {
       block block{
           .num = result.result.this_block->block_num,
@@ -72,6 +80,21 @@ namespace dfuse_subchain
                           a.receiver = atrace.receiver;
                           a.account = atrace.act.account;
                           a.name = atrace.act.name;
+                          if (atrace.creator_action_ordinal.value)
+                          {
+                             std::visit(
+                                 [&](const auto& creator) {
+                                    eosio::check(creator.receipt.has_value(), "missing receipt");
+                                    std::visit(
+                                        [&](const auto& creator_receipt) {
+                                           a.creatorAction = {
+                                               .seq = (double)creator_receipt.global_sequence,
+                                               .receiver = creator.receiver};
+                                        },
+                                        *creator.receipt);
+                                 },
+                                 ttrace.action_traces[atrace.creator_action_ordinal.value - 1]);
+                          }
                           a.hexData.data.insert(a.hexData.data.end(), atrace.act.data.pos,
                                                 atrace.act.data.end);
                           t.trace.matchingActions.push_back(std::move(a));
