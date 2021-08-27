@@ -78,7 +78,7 @@ const PromptNewKey = ({ showModal }: PromptProps) => {
         <Container className="flex justify-center bg-yellow-500">
             <Button type="caution" size="sm" onClick={showModal}>
                 <BsExclamationTriangle className="mr-1 mb-px" />
-                Create Election Password
+                Create election password
             </Button>
         </Container>
     );
@@ -89,7 +89,7 @@ const NotPresentKeyWarning = ({ showModal }: PromptProps) => {
         <Container className="flex justify-center bg-yellow-500">
             <Button type="caution" size="sm" onClick={showModal}>
                 <BsExclamationTriangle className="mr-1 mb-px" />
-                Enter Election Password
+                Enter election password
             </Button>
         </Container>
     );
