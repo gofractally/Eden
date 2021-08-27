@@ -1,5 +1,7 @@
 import { EncryptionPassword } from "encryption";
-import React, { createContext, useReducer } from "react";
+import React, { createContext, useContext, useMemo, useReducer } from "react";
+
+import { ActionType } from "./actions";
 
 interface ContextType {
     state: State;
@@ -10,26 +12,38 @@ type State = {
     encryptionPassword: EncryptionPassword;
 };
 
-type Action = { type: string; payload: any };
+type Action = { type: ActionType; payload: any };
 
 const initialState: State = { encryptionPassword: {} };
 const store = createContext<ContextType | null>(null);
 const { Provider } = store;
 
-const StateProvider = ({ children }: { children: React.ReactNode }) => {
-    const [state, dispatch] = useReducer(
-        (state: State, action: Action): State => {
-            switch (action.type) {
-                case "SET_ENCRYPTION_PASSWORD":
-                    return { ...state, encryptionPassword: action.payload };
-                default:
-                    throw new Error();
-            }
-        },
-        initialState
-    );
+const reducer = (state: State, action: Action): State => {
+    const { type, payload } = action;
+    switch (type) {
+        case ActionType.SetEncryptionPassword:
+            return { ...state, encryptionPassword: payload };
+        default:
+            return state;
+    }
+};
 
-    return <Provider value={{ state, dispatch }}>{children}</Provider>;
+const StateProvider = ({ children }: { children: React.ReactNode }) => {
+    const [state, dispatch] = useReducer(reducer, initialState);
+
+    // ensure unrelated <WebApp /> rerenders of provider do not cause consumers to rerender
+    // https://hswolff.com/blog/how-to-usecontext-with-usereducer/#performance-concerns
+    const contextValue = useMemo(() => {
+        return { state, dispatch };
+    }, [state, dispatch]);
+
+    return <Provider value={contextValue}>{children}</Provider>;
 };
 
 export const Store = { store, StateProvider };
+
+export const useGlobalStore = () => {
+    const globalStore = useContext(Store.store);
+    if (!globalStore) throw new Error("hook should be within store provider");
+    return globalStore;
+};

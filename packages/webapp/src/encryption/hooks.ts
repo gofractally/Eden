@@ -1,5 +1,11 @@
-import { useContext, useEffect, useState } from "react";
-import { Store, useCurrentMember } from "_app";
+import { useEffect } from "react";
+
+import {
+    actionSetEncryptionPassword,
+    useCurrentMember,
+    useGlobalStore,
+} from "_app";
+
 import { getEncryptionKey, putEncryptionKey } from "./storage";
 
 export interface EncryptionPassword {
@@ -12,18 +18,8 @@ export type UpdateEncryptionPassword = (
     privateKey: string
 ) => void;
 
-// TODO: Move this to app hooks for use in useEncryptionPassword and other hooks
-const useGlobalStore = () => {
-    const globalStore = useContext(Store.store);
-    if (!globalStore) throw new Error("hook should be within state provider");
-    return globalStore;
-};
-
 export const useEncryptionPassword = () => {
-    const globalStore = useContext(Store.store);
-    if (!globalStore) throw new Error("hook should be within state provider");
-    const { state, dispatch } = globalStore;
-
+    const { state, dispatch } = useGlobalStore();
     const { data: currentMember, isLoading, error } = useCurrentMember();
 
     useEffect(() => {
@@ -44,10 +40,7 @@ export const useEncryptionPassword = () => {
     };
 
     const setEncryptionPassword = (publicKey?: string, privateKey?: string) => {
-        dispatch({
-            type: "SET_ENCRYPTION_PASSWORD",
-            payload: { publicKey, privateKey },
-        });
+        dispatch(actionSetEncryptionPassword(publicKey, privateKey));
     };
 
     const getEncryptionPassword = () => {
@@ -59,9 +52,8 @@ export const useEncryptionPassword = () => {
 
     return {
         encryptionPassword: state.encryptionPassword,
-        getEncryptionPassword,
         updateEncryptionPassword,
-        isLoading: isLoading,
+        isLoading,
         error,
     };
 };
