@@ -7,12 +7,12 @@
 
 ## Supported user flows
 
-### Flow 1: No meeting link created yet for round, user has no Zoom JWT
+### Flow 1: No meeting link, user DOES NOT have Zoom JWT
 
 When round participants enter pre-round, the race is on to create, encrypt and commit a zoom meeting link. This can be done pre-meeting or during-meeting while no link exists.
 
 1. Use sees "Sign in with Zoom" button.
-2. SEE: Password sub-flows if user does not already have a password set and/or in-browser.
+2. SEE: [Password sub-flows](#password-sub-flows) if user does not already have a password set and/or in-browser.
 3. When user clicks OK button in password confirmation (if applicable), the modal displays a "Create meeting link" screen that says:
     > Sign in with your Zoom account to create a meeting link for participants in this round. After you sign in, you will be redirected back to the ongoing election.
 4. When user clicks "Link Zoom account" button, they're redirected to Zoom Oauth.
@@ -28,19 +28,19 @@ When round participants enter pre-round, the race is on to create, encrypt and c
     - If not, they will be asked to sign a transaction committing the encrypted link on the chain.
     - If that transaction fails because someone else beat the user to it, the transaction will fail silently and present the same "Success!" screen.
 9. When they dismiss the Success message, they're returned to the election screen where they see the Join meeting button.
-10. SEE: Flow 4: Happy path
+10. SEE: [Flow 4: Happy path](#flow-4-happy-path---meeting-and-password-exist)
 
 ### Flow 2: No meeting link, user HAS Zoom JWT
 
-1. SEE: Password sub-flows if user does not already have a password set and/or in-browser.
-2. Start at #6 in Flow 1 above.
+1. SEE: [Password sub-flows](#password-sub-flows) if user does not already have a password set and/or in-browser.
+2. Start at #6 in [Flow 1 above](#flow-1-no-meeting-link-user-does-not-have-zoom-jwt).
 
 ### Flow 3: Meeting link exists
 
 In a round in this state, an arriving user will not be asked at all to sign in with Zoom.
 
-1. SEE: Password sub-flows if user does not already have a password set and/or in-browser.
-2. SEE: Flow 4: Happy path
+1. SEE: [Password sub-flows](#password-sub-flows) if user does not already have a password set and/or in-browser.
+2. SEE: [Flow 4: Happy path](#flow-4-happy-path---meeting-and-password-exist)
 
 ### Flow 4: Happy path - meeting and password exist
 
@@ -56,7 +56,7 @@ If the user has no password set at all, they will see disabled "Join meeting" bu
 
 If user has a password set but they've forgotten it, they'll see a "Get meeting link" button, which, when they click will:
 
-1. SEE: Password sub-flows
+1. SEE: [Password sub-flows](#password-sub-flows)
 1. When user clicks OK button on confirmation, modal dismisses. User sees disabled "Join meeting" button with red warning text below:
 
 > Could not get meeting link for this round. Reach out to others in your group via Telegram or otherwise to ask for the meeting link.
