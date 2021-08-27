@@ -3,6 +3,7 @@ import { useQueryClient } from "react-query";
 import dayjs from "dayjs";
 
 import {
+    delay,
     ElectionParticipationStatus,
     onError,
     queryMemberByAccountName,
@@ -266,7 +267,7 @@ const ConfirmParticipationModal = ({ isOpen, close, deadline }: ModalProps) => {
             });
             console.info("electopt trx", signedTrx);
 
-            await new Promise((resolve) => setTimeout(resolve, 3000)); // allow time for chain tables to update
+            await delay(3000); // allow time for chain tables to update
 
             // invalidate current member query to update participating status
             queryClient.invalidateQueries(
@@ -496,6 +497,7 @@ const CancelParticipationModal = ({ isOpen, close }: ModalProps) => {
             console.info("electopt trx", signedTrx);
 
             // invalidate current member query to update participating status
+            await delay(3000);
             queryClient.invalidateQueries(
                 queryMemberByAccountName(ualAccount.accountName).queryKey
             );
