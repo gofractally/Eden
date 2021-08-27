@@ -2232,6 +2232,11 @@
   resolved "https://registry.yarnpkg.com/@types/scheduler/-/scheduler-0.16.1.tgz#18845205e86ff0038517aab7a18a62a6b9f71275"
   integrity sha512-EaCxbanVeyxDRTQBkdLb3Bvl/HK7PBK6UJjsSixB0iHKoWxE5uu2Q/DgtpOhPIojN0Zl1whvOd7PoHs2P0s5eA==
 
+"@types/secure-random-password@^0.2.1":
+  version "0.2.1"
+  resolved "https://registry.yarnpkg.com/@types/secure-random-password/-/secure-random-password-0.2.1.tgz#c01a96d5c2667c3fa896533207bceb157e3b87bc"
+  integrity sha512-tpG5oVF+NpIS9UJ9ttXAokafyhE/MCZBg65D345qu3gOM4YoJ/mFNVzUDUNBfb1hIi598bNOzvY04BbfS7VKwA==
+
 "@types/serve-static@*":
   version "1.13.9"
   resolved "https://registry.yarnpkg.com/@types/serve-static/-/serve-static-1.13.9.tgz#aacf28a85a05ee29a11fb7c3ead935ac56f33e4e"
@@ -9808,6 +9813,18 @@ scheduler@^0.20.2:
   dependencies:
     loose-envify "^1.1.0"
     object-assign "^4.1.1"
+
+secure-random-password@^0.2.3:
+  version "0.2.3"
+  resolved "https://registry.yarnpkg.com/secure-random-password/-/secure-random-password-0.2.3.tgz#cc99714a824328f251b11b35b557b685c09717db"
+  integrity sha512-2zpmr6pK3CZGIS9fgApFw00/tKEBVbJTqe4AZLrLNgahCK6ueIR5uMzvbERNibr8hkWneMcOqDcm4wpHWUxrYw==
+  dependencies:
+    secure-random "^1.1.2"
+
+secure-random@^1.1.2:
+  version "1.1.2"
+  resolved "https://registry.yarnpkg.com/secure-random/-/secure-random-1.1.2.tgz#ed103b460a851632d420d46448b2a900a41e7f7c"
+  integrity sha512-H2bdSKERKdBV1SwoqYm6C0y+9EA94v6SUBOWO8kDndc4NoUih7Dv6Tsgma7zO1lv27wIvjlD0ZpMQk7um5dheQ==
 
 "semver@2 || 3 || 4 || 5", semver@^5.3.0, semver@^5.4.1, semver@^5.6.0, semver@^5.7.1:
   version "5.7.1"

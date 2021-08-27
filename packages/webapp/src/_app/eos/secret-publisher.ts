@@ -102,8 +102,23 @@ export const decryptPublishedMessage = async (
     return message;
 };
 
-export const generateEncryptionKey = () =>
-    generateKeyPair(KeyType.k1, { secureEnv: true });
+export const generateEncryptionKey = (seedKey?: string) => {
+    let entropy;
+    if (seedKey) {
+        if (seedKey.length < 12) {
+            throw new Error("the seed needs to be at least 12 characters");
+        }
+
+        // the minimum entropy is 24 bytes; if the seedkey is less than that we double it
+        const finalSeedKey = seedKey.length < 24 ? seedKey + seedKey : seedKey;
+        entropy = new TextEncoder().encode(finalSeedKey);
+    }
+
+    return generateKeyPair(KeyType.k1, {
+        secureEnv: true,
+        ecOptions: { entropy },
+    });
+};
 
 const retrieveRecipientPrivateKey = (publicKey: string): PrivateKey => {
     const rawPrivateKey = getEncryptionKey(publicKey);

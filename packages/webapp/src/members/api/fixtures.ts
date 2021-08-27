@@ -37,8 +37,8 @@ export const fixtureEdenMembers: EdenMember[] = [
             ElectionParticipationStatus.NotInElection,
         election_rank: 1,
         representative: "egeon.edev",
-        encryption_key: "EOS7vz6S1LVdztSk7fViBzD2LP2TPvED5K49iDQskSzJ42i75Kg19",
-        // pk for above key is: 5J5JPLn1bcidJp9BLekYWdtAk6CJGG8cfGhSoJ5nibVk4dHrSeJ
+        encryption_key: "EOS5H79vgV7q47Ft5n4T2x7W4U6YvZU3QEpWSW1Da2tZAr9uLgStx",
+        // password for above key is: 9i&%f$MrJR7k
     },
     {
         name: "Eden Member 11",
