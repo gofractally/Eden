@@ -1,6 +1,6 @@
+import { useEffect, useState } from "react";
 import { BiWebcam } from "react-icons/bi";
 import { Dayjs } from "dayjs";
-import { useEffect, useState } from "react";
 import { BsExclamationTriangle } from "react-icons/bs";
 
 import {
@@ -54,7 +54,6 @@ export const RequestElectionMeetingLinkButton = ({
     const [ualAccount] = useUALAccount();
     const [zoomAccountJWT, setZoomAccountJWT] = useZoomAccountJWT(undefined);
     const [showMeetingModal, setShowMeetingModal] = useState(false);
-    const [meetingStep, setMeetingStep] = useState(MeetingStep.LinkZoomAccount);
     const { data: memberGroup } = useMemberGroupParticipants(
         ualAccount?.accountName,
         roundIndex
@@ -73,15 +72,9 @@ export const RequestElectionMeetingLinkButton = ({
         refetch: refetchEncryptedData,
     } = useEncryptedData("election", groupId);
 
-    useEffect(() => {
-        if (encryptedData) {
-            setMeetingStep(MeetingStep.RetrieveMeetingLink);
-        } else if (zoomAccountJWT) {
-            setMeetingStep(MeetingStep.CreateMeetingLink);
-        } else {
-            setMeetingStep(MeetingStep.LinkZoomAccount);
-        }
-    }, [zoomAccountJWT, encryptedData]);
+    let meetingStep = MeetingStep.LinkZoomAccount;
+    if (encryptedData) meetingStep = MeetingStep.RetrieveMeetingLink;
+    if (zoomAccountJWT) meetingStep = MeetingStep.CreateMeetingLink;
 
     if (!memberGroup || !currentVoteDataRow) {
         return null;
@@ -281,8 +274,6 @@ const JoinMeetingButton = ({
             } catch (e) {
                 console.error("fail to decrypt meeting link", e);
                 setFailedToDecrypt(true);
-                if (isPasswordMissing) return;
-                onError(e.message);
             }
         } else {
             setRoundMeetingLink("");
