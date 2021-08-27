@@ -400,7 +400,7 @@ const MeetingLinkModal = ({
             shouldCloseOnEsc={false}
         >
             {isCreatingPassword || isReenteringPassword ? (
-                <ModalStepPasswordInterjection
+                <ModalStepPassword
                     close={cancel}
                     dismissOnSuccess={dismissPasswordConfirmation}
                     isReenteringPassword={isReenteringPassword}
@@ -428,29 +428,25 @@ interface ModalStepProps {
     close: () => void;
 }
 
-interface ModalStepPasswordInterjectionProps extends ModalStepProps {
+interface ModalStepPasswordProps extends ModalStepProps {
     dismissOnSuccess: () => void;
     isReenteringPassword: boolean;
     isCreatingPassword: boolean;
     linkAlreadyExists: boolean;
 }
 
-const ModalStepPasswordInterjection = ({
+const ModalStepPassword = ({
     close,
     dismissOnSuccess,
     isReenteringPassword,
     isCreatingPassword,
     linkAlreadyExists,
-}: ModalStepPasswordInterjectionProps) => {
-    const encryptionPasswordResult = useEncryptionPassword();
-    const { updateEncryptionPassword } = encryptionPasswordResult;
-
+}: ModalStepPasswordProps) => {
     if (isCreatingPassword) {
         return (
             <CreateNewPasswordPrompt
                 onCancel={close}
                 onDismissConfirmation={dismissOnSuccess}
-                updateEncryptionPassword={updateEncryptionPassword} // TODO: With context, we can use this directly in this component now
                 isTooLateForCurrentRound={linkAlreadyExists}
             />
         );
@@ -461,7 +457,6 @@ const ModalStepPasswordInterjection = ({
             <ReenterPasswordPrompt
                 onCancel={close}
                 onDismissConfirmation={dismissOnSuccess}
-                encryptionPassword={encryptionPasswordResult} // TODO: With context, we can use this directly in this component now
                 isTooLateForCurrentRound={linkAlreadyExists}
             />
         );

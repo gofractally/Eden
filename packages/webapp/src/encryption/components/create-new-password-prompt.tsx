@@ -2,32 +2,28 @@ import { useState } from "react";
 
 import { onError, useUALAccount } from "_app";
 
-import { setEncryptionPublicKeyTransaction } from "../transactions";
-import { UpdateEncryptionPassword } from "../hooks";
 import NewPasswordForm from "./new-password-form";
 import PasswordSuccessConfirmation from "./password-success-confirmation";
+import { UpdateEncryptionPassword, useEncryptionPassword } from "../hooks";
+import { setEncryptionPublicKeyTransaction } from "../transactions";
 
 interface Props {
     onCancel: () => void;
-    onBeforeUpdatePassword?: () => void;
     onDismissConfirmation: () => void;
-    updateEncryptionPassword: UpdateEncryptionPassword;
     isTooLateForCurrentRound?: boolean;
 }
 
 export const CreateNewPasswordPrompt = ({
     onCancel,
-    onBeforeUpdatePassword,
     onDismissConfirmation,
-    updateEncryptionPassword,
     isTooLateForCurrentRound,
 }: Props) => {
     const [isLoading, setIsLoading] = useState<boolean>(false);
     const [isSuccess, setIsSuccess] = useState(false);
     const [ualAccount] = useUALAccount();
+    const { updateEncryptionPassword } = useEncryptionPassword();
 
     const onSubmit = async (publicKey: string, privateKey: string) => {
-        onBeforeUpdatePassword?.();
         setIsLoading(true);
 
         try {

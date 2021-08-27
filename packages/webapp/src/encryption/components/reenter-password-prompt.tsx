@@ -1,27 +1,23 @@
 import { useState } from "react";
+import { useQueryClient } from "react-query";
 
 import { delay, onError, queryMemberByAccountName, useUALAccount } from "_app";
 
 import { setEncryptionPublicKeyTransaction } from "../transactions";
-import { useEncryptionPassword } from "../hooks";
 import NewPasswordForm from "./new-password-form";
 import ReenterPasswordForm from "./reenter-password-form";
 import PasswordSuccessConfirmation from "./password-success-confirmation";
-import { useQueryClient } from "react-query";
+import { useEncryptionPassword } from "../hooks";
 
 interface Props {
     onCancel: () => void;
-    onBeforeUpdatePassword?: () => void;
     onDismissConfirmation: () => void;
-    encryptionPassword: ReturnType<typeof useEncryptionPassword>;
     isTooLateForCurrentRound?: boolean;
 }
 
 export const ReenterPasswordPrompt = ({
     onCancel,
-    onBeforeUpdatePassword,
     onDismissConfirmation,
-    encryptionPassword: encryptionPasswordResult,
     isTooLateForCurrentRound,
 }: Props) => {
     const [isLoading, setIsLoading] = useState(false);
@@ -29,11 +25,10 @@ export const ReenterPasswordPrompt = ({
     const [ualAccount] = useUALAccount();
     const [forgotPasswordMode, setForgotPasswordMode] = useState(false);
     const queryClient = useQueryClient();
-
     const {
         encryptionPassword,
         updateEncryptionPassword,
-    } = encryptionPasswordResult;
+    } = useEncryptionPassword();
 
     const onSubmit = (publicKey: string, privateKey: string) => {
         try {
@@ -95,10 +90,7 @@ export const ReenterPasswordPrompt = ({
         return (
             <NewPasswordForm
                 isLoading={isLoading}
-                onSubmit={(pub, priv) => {
-                    onBeforeUpdatePassword?.();
-                    return onSubmitForgotPassword(pub, priv);
-                }}
+                onSubmit={onSubmitForgotPassword}
                 onCancel={handleOnCancel}
                 forgotPassword={true}
                 isTooLateForCurrentRound={isTooLateForCurrentRound}
@@ -109,10 +101,7 @@ export const ReenterPasswordPrompt = ({
     return (
         <ReenterPasswordForm
             expectedPublicKey={encryptionPassword.publicKey!}
-            onSubmit={(pub, priv) => {
-                onBeforeUpdatePassword?.();
-                onSubmit(pub, priv);
-            }}
+            onSubmit={onSubmit}
             onCancel={handleOnCancel}
             onForgotPassword={() => setForgotPasswordMode(true)}
         />

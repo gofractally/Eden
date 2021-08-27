@@ -6,7 +6,7 @@ import { Button, Container, Modal } from "_app/ui";
 
 import ReenterPasswordPrompt from "./reenter-password-prompt";
 import CreateNewPasswordPrompt from "./create-new-password-prompt";
-import { UpdateEncryptionPassword, useEncryptionPassword } from "../hooks";
+import { useEncryptionPassword } from "../hooks";
 
 interface Props {
     promptSetupEncryptionKey?: boolean;
@@ -15,12 +15,10 @@ interface Props {
 export const EncryptionPasswordAlert = ({
     promptSetupEncryptionKey,
 }: Props) => {
-    const encryptionPasswordResult = useEncryptionPassword();
     const {
         encryptionPassword,
-        updateEncryptionPassword,
         isLoading: isLoadingPassword,
-    } = encryptionPasswordResult;
+    } = useEncryptionPassword();
 
     const [showNewKeyModal, setShowNewKeyModal] = useState(false);
     const [showReenterKeyModal, setShowReenterKeyModal] = useState(false);
@@ -56,12 +54,10 @@ export const EncryptionPasswordAlert = ({
                 />
             ) : null}
             <PromptNewKeyModal
-                updateEncryptionPassword={updateEncryptionPassword}
                 isOpen={showNewKeyModal}
                 close={() => setShowNewKeyModal(false)}
             />
             <PromptReenterKeyModal
-                encryptionPassword={encryptionPasswordResult}
                 isOpen={showReenterKeyModal}
                 close={() => setShowReenterKeyModal(false)}
             />
@@ -98,14 +94,9 @@ const NotPresentKeyWarning = ({ showModal }: PromptProps) => {
 interface PasswordModalProps {
     isOpen: boolean;
     close: () => void;
-    updateEncryptionPassword: UpdateEncryptionPassword;
 }
 
-const PromptNewKeyModal = ({
-    isOpen,
-    close,
-    updateEncryptionPassword,
-}: PasswordModalProps) => {
+const PromptNewKeyModal = ({ isOpen, close }: PasswordModalProps) => {
     return (
         <Modal
             isOpen={isOpen}
@@ -118,7 +109,6 @@ const PromptNewKeyModal = ({
             <CreateNewPasswordPrompt
                 onCancel={close}
                 onDismissConfirmation={close}
-                updateEncryptionPassword={updateEncryptionPassword}
             />
         </Modal>
     );
@@ -127,13 +117,11 @@ const PromptNewKeyModal = ({
 interface PromptReenterKeyModalProps {
     isOpen: boolean;
     close: () => void;
-    encryptionPassword: ReturnType<typeof useEncryptionPassword>;
 }
 
 const PromptReenterKeyModal = ({
     isOpen,
     close,
-    encryptionPassword,
 }: PromptReenterKeyModalProps) => {
     return (
         <Modal
@@ -147,7 +135,6 @@ const PromptReenterKeyModal = ({
             <ReenterPasswordPrompt
                 onCancel={close}
                 onDismissConfirmation={close}
-                encryptionPassword={encryptionPassword}
             />
         </Modal>
     );
