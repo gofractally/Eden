@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { PrivateKey } from "eosjs/dist/eosjs-key-conversions";
 import { IoMdCopy } from "react-icons/io";
+import secureRandomPassword from "secure-random-password";
 
 import { generateEncryptionKey, onError, useFormFields } from "_app";
 import { Button, Form, Heading, Text } from "_app/ui";
@@ -13,6 +14,16 @@ interface Props {
     onCancel: () => void;
 }
 
+const PASSWORD_OPTIONS = {
+    length: 12,
+    characters: [
+        secureRandomPassword.lower,
+        secureRandomPassword.upper,
+        secureRandomPassword.symbols,
+        secureRandomPassword.digits,
+    ],
+};
+
 export const NewPasswordForm = ({
     forgotPassword,
     isLoading,
@@ -22,7 +33,7 @@ export const NewPasswordForm = ({
     const [didCopyText, setDidCopyText] = useState<boolean>(false);
     const { newPasswordIsInvalidForCurrentRound } = usePasswordModal();
     const [fields, setFields] = useFormFields({
-        password: generateEncryptionKey().privateKey.toLegacyString(),
+        password: secureRandomPassword.randomPassword(PASSWORD_OPTIONS),
         passwordConfirmation: "",
     });
     const onChangeFields = (e: React.ChangeEvent<HTMLInputElement>) =>
@@ -37,10 +48,11 @@ export const NewPasswordForm = ({
         }
 
         try {
-            const publicKey = PrivateKey.fromString(
-                fields.password
-            ).getPublicKey();
-            await onSubmit(publicKey.toLegacyString(), fields.password);
+            const generatedKey = generateEncryptionKey(fields.password);
+            await onSubmit(
+                generatedKey.publicKey.toLegacyString(),
+                generatedKey.privateKey.toLegacyString()
+            );
         } catch (error) {
             console.error(error);
             onError(error);
@@ -115,8 +127,9 @@ export const NewPasswordForm = ({
                 >
                     <Form.Input
                         id="passwordConfirmation"
-                        type="text"
+                        type="password"
                         required
+                        autoComplete="new-password"
                         value={fields.passwordConfirmation}
                         onChange={onChangeFields}
                     />

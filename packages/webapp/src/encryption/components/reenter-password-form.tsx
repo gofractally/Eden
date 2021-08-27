@@ -1,6 +1,4 @@
-import { PrivateKey } from "eosjs/dist/eosjs-key-conversions";
-
-import { onError, useFormFields } from "_app";
+import { generateEncryptionKey, onError, useFormFields } from "_app";
 import { Button, Form, Heading, Text } from "_app/ui";
 
 interface Props {
@@ -28,15 +26,15 @@ export const ReenterPasswordForm = ({
         e.preventDefault();
 
         try {
-            const publicKey = PrivateKey.fromString(
-                fields.password
-            ).getPublicKey();
-
-            if (publicKey.toLegacyString() !== expectedPublicKey) {
+            const generatedKey = generateEncryptionKey(fields.password);
+            if (generatedKey.publicKey.toLegacyString() !== expectedPublicKey) {
                 onError(new Error("The entered password is not correct"));
                 return;
             }
-            onSubmit(publicKey.toLegacyString(), fields.password);
+            onSubmit(
+                generatedKey.publicKey.toLegacyString(),
+                generatedKey.privateKey.toLegacyString()
+            );
         } catch (error) {
             console.error(error);
             onError(error);
@@ -58,7 +56,8 @@ export const ReenterPasswordForm = ({
                 >
                     <Form.Input
                         id="password"
-                        type="text"
+                        type="password"
+                        autoComplete="current-password"
                         required
                         value={fields.password}
                         disabled={isLoading}
