@@ -349,8 +349,7 @@ const MeetingLinkModal = ({
     requestMeetingLink,
     stage,
 }: ModalProps) => {
-    const encryptionPasswordResult = useEncryptionPassword();
-    const { encryptionPassword, isLoading } = encryptionPasswordResult;
+    const { encryptionPassword, isLoading } = useEncryptionPassword();
     const { publicKey, privateKey } = encryptionPassword;
 
     const [isCreatingMeetingLink, setIsCreatingMeetingLink] = useState(false);
@@ -365,10 +364,10 @@ const MeetingLinkModal = ({
         if (isCreatingPassword || isReenteringPassword) {
             return;
         }
-        if (isPasswordMissing) {
+        if (isPasswordMissing && isOpen) {
             setIsReenteringPassword(true);
         }
-        if (isPasswordNotSet) {
+        if (isPasswordNotSet && isOpen) {
             setIsCreatingPassword(true);
         }
     }, [isPasswordMissing, isPasswordNotSet, isOpen]);
