@@ -304,13 +304,16 @@ const JoinMeetingButton = ({
                     <BsExclamationTriangle size={15} className="mr-1 mb-px" />
                     Join meeting
                 </Button>
-                <Text type="danger" size="sm">
+                <p
+                    className="text-red-500"
+                    style={{ fontSize: 13, lineHeight: "15px" }}
+                >
                     Could not get meeting link for this round. Reach out to
                     others in your group via Telegram or otherwise to ask for
                     the meeting link.
                     {isPasswordNotSet &&
                         " Click the banner above to create an election password so you can access the meeting link in the next round."}
-                </Text>
+                </p>
             </div>
         );
     }
@@ -319,8 +322,10 @@ const JoinMeetingButton = ({
 
     return (
         <>
-            {isPreMeeting && (
+            {isPreMeeting ? (
                 <Text>Join meeting button activates when round starts.</Text>
+            ) : (
+                <Text>The round has started. Join your meeting.</Text>
             )}
             <Button
                 size="sm"
