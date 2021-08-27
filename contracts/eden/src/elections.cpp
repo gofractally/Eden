@@ -194,11 +194,26 @@ namespace eden
 
    void elections::set_state_sing(const current_election_state& new_value)
    {
+      const auto* old_value = state_sing.get_or_null();
+      if (old_value && *old_value == new_value)
+         return;
       if (auto n = std::get_if<current_election_state_registration>(&new_value))
       {
          push_event(election_event_schedule{.election_time = n->start_time,
                                             .election_threshold = n->election_threshold});
       }
+      else if (auto n = std::get_if<current_election_state_seeding>(&new_value))
+      {
+         push_event(election_event_seeding{.start_time = n->seed.start_time,
+                                           .end_time = n->seed.end_time,
+                                           .seed = n->seed.current});
+      }
+      else if (std::holds_alternative<current_election_state_init_voters>(new_value) &&
+               !std::holds_alternative<current_election_state_init_voters>(*old_value))
+      {
+         push_event(election_event_start_create_groups{});
+      }
+
       state_sing.set(new_value, contract);
    }
 

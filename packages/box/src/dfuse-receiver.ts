@@ -145,6 +145,7 @@ export default class DfuseReceiver {
                                 firstReceiver: a.account,
                                 receiver: a.receiver,
                                 name: a.name,
+                                creatorAction: a.creatorAction,
                                 hexData: a.hexData,
                             })),
                         });

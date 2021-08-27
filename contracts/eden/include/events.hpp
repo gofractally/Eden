@@ -1,5 +1,6 @@
 #pragma once
 
+#include <eosio/fixed_bytes.hpp>
 #include <eosio/name.hpp>
 #include <eosio/reflection.hpp>
 #include <eosio/time.hpp>
@@ -15,12 +16,18 @@ namespace eden
    };
    EOSIO_REFLECT(election_event_schedule, election_time, election_threshold)
 
-   struct election_event_start_seed
+   struct election_event_seeding
    {
       eosio::block_timestamp start_time;
       eosio::block_timestamp end_time;
+      eosio::checksum256 seed;
    };
-   EOSIO_REFLECT(election_event_start_seed, start_time, end_time)
+   EOSIO_REFLECT(election_event_seeding, start_time, end_time, seed)
+
+   struct election_event_start_create_groups
+   {
+   };
+   EOSIO_REFLECT(election_event_start_create_groups)
 
    struct election_event_create_group
    {
@@ -66,7 +73,8 @@ namespace eden
    EOSIO_REFLECT(election_event_report_group, round, votes)
 
    using event = std::variant<election_event_schedule,
-                              election_event_start_seed,
+                              election_event_seeding,
+                              election_event_start_create_groups,
                               election_event_create_group,
                               election_event_begin_round,
                               election_event_end_round,

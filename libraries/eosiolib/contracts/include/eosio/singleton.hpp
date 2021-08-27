@@ -78,6 +78,22 @@ namespace eosio
          return itr->value;
       }
 
+      const T& get_cached()
+      {
+         auto itr = _t.find(pk_value);
+         eosio::check(itr != _t.end(), "singleton does not exist");
+         return itr->value;
+      }
+
+      const T* get_or_null()
+      {
+         auto itr = _t.find(pk_value);
+         if (itr != _t.end())
+            return &itr->value;
+         else
+            return nullptr;
+      }
+
       /**
        * Get the value stored inside the singleton table. If it doesn't exist, it will return the
        * specified default value

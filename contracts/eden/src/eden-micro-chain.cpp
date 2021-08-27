@@ -746,6 +746,11 @@ void electopt(eosio::name voter, bool participating)
    modify<by_pk>(db.members, voter, [&](auto& obj) { obj.member.participating = participating; });
 }
 
+void handle_event(const eden::event& event)
+{
+   printf("====\n%s\n====\n", eosio::format_json(event).c_str());
+}
+
 template <typename... Args>
 void call(void (*f)(Args...), const std::vector<char>& data)
 {
@@ -786,6 +791,14 @@ void filter_block(const subchain::eosio_block& block)
                call(electreport, action.hexData.data);
             else if (action.name == "electopt"_n)
                call(electopt, action.hexData.data);
+         }
+         else if (action.firstReceiver == "eosio.null"_n && action.name == "eden.events"_n &&
+                  action.creatorAction && action.creatorAction->receiver == eden_account)
+         {
+            // TODO: prevent abort, indicate what failed
+            auto events = eosio::convert_from_bin<std::vector<eden::event>>(action.hexData.data);
+            for (auto& event : events)
+               handle_event(event);
          }
       }
    }
