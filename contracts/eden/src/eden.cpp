@@ -5,6 +5,7 @@
 #include <eden.hpp>
 #include <elections.hpp>
 #include <encrypt.hpp>
+#include <events.hpp>
 #include <inductions.hpp>
 #include <members.hpp>
 #include <migrations.hpp>

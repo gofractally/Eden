@@ -9,6 +9,7 @@
 #include <eosio/abi.hpp>
 #include <eosio/from_bin.hpp>
 #include <eosio/to_bin.hpp>
+#include <events.hpp>
 
 using namespace eosio::literals;
 
@@ -787,8 +788,6 @@ void filter_block(const subchain::eosio_block& block)
                call(inductdonate, action.hexData.data);
             else if (action.name == "resign"_n)
                call(resign, action.hexData.data);
-            else if (action.name == "electreport"_n)
-               call(electreport, action.hexData.data);
             else if (action.name == "electopt"_n)
                call(electopt, action.hexData.data);
          }
