@@ -315,17 +315,19 @@ const JoinMeetingButton = ({
         );
     }
 
+    const isPreMeeting = stage === RoundStage.PreMeeting;
+
     return (
         <>
-            {stage === RoundStage.PreMeeting && (
+            {isPreMeeting && (
                 <Text>Join meeting button activates when round starts.</Text>
             )}
             <Button
                 size="sm"
-                href={roundMeetingLink}
-                target="_blank"
+                href={isPreMeeting ? undefined : roundMeetingLink}
+                target={isPreMeeting ? undefined : "_blank"}
                 isExternal
-                disabled={stage === RoundStage.PreMeeting}
+                disabled={isPreMeeting}
             >
                 <BiWebcam className="mr-1" />
                 Join meeting
