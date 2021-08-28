@@ -10,7 +10,7 @@ class MyDocument extends Document {
                         rel="stylesheet"
                     />
                 </Head>
-                <body>
+                <body className="overscroll-y-none">
                     <Main />
                     <NextScript />
                 </body>

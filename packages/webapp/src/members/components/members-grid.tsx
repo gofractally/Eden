@@ -14,7 +14,7 @@ interface Props {
 export const MembersGrid = ({ members, dataTestId, children }: Props) => {
     return (
         <div
-            className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-px"
+            className="grid grid-cols-1 md:grid-cols-2 gap-px"
             data-testid={dataTestId}
         >
             {members?.length ? members.map(children) : "No members to list."}

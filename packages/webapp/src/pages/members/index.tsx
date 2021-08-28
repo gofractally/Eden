@@ -6,7 +6,7 @@ import { dehydrate } from "react-query/hydration";
 
 import {
     Container,
-    FluidLayout,
+    SideNavLayout,
     Heading,
     PaginationNav,
     queryMembersStats,
@@ -92,7 +92,7 @@ export const MembersPage = (props: Props) => {
     };
 
     return (
-        <FluidLayout title="Community">
+        <SideNavLayout title="Community">
             <Container>
                 <Heading size={1}>New Members</Heading>
                 {newMembers.isLoading && "Loading new members..."}
@@ -155,7 +155,7 @@ export const MembersPage = (props: Props) => {
                     </Container>
                 </>
             )}
-        </FluidLayout>
+        </SideNavLayout>
     );
 };
 
