@@ -5,11 +5,16 @@ import { MobileNav, SideNav, Footer } from "../ui";
 interface Props {
     title?: string;
     children: React.ReactNode;
-    hideBorders?: boolean;
     banner?: React.ReactNode;
+    className?: string;
 }
 
-export const SideNavLayout = ({ children, title, banner }: Props) => (
+export const SideNavLayout = ({
+    children,
+    title,
+    banner,
+    className = "",
+}: Props) => (
     <div className="flex flex-col xs:flex-row h-screen w-full container max-w-screen-xl mx-auto">
         <Head>
             <title>{title && `${title} | `} Eden</title>
@@ -18,7 +23,9 @@ export const SideNavLayout = ({ children, title, banner }: Props) => (
         <SideNav />
         <MobileNav />
         <div className="flex-1 flex flex-col w-full mt-12 xs:mt-0 pb-16 xs:pb-0">
-            <main className="max-w-4xl min-h-screen border-r">{children}</main>
+            <main className={`max-w-4xl min-h-screen border-r ${className}`}>
+                {children}
+            </main>
             {/* <Footer /> */}
         </div>
     </div>

@@ -3,7 +3,7 @@ import {
     CallToAction,
     Card,
     MemberStatus,
-    SingleColLayout,
+    SideNavLayout,
     useCurrentMember,
     useUALAccount,
 } from "_app";
@@ -40,9 +40,7 @@ export const InitInductionPage = () => {
     };
 
     return (
-        <SingleColLayout title={getPageTitle()}>
-            {renderContents()}
-        </SingleColLayout>
+        <SideNavLayout title={getPageTitle()}>{renderContents()}</SideNavLayout>
     );
 };
 
