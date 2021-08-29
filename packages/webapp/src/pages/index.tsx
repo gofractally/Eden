@@ -1,9 +1,19 @@
 import { ParticipationCard } from "elections/components/registration-election-components";
 import { ElectionStatus } from "elections/interfaces";
 import { GetServerSideProps } from "next";
-import { QueryClient, useQuery } from "react-query";
+import { QueryClient, useQuery, UseQueryResult } from "react-query";
 import { dehydrate } from "react-query/hydration";
 
+import {
+    Asset,
+    assetToString,
+    ElectionParticipationStatus,
+    queryMembersStats,
+    queryTreasuryStats,
+    SideNavLayout,
+    useCurrentElection,
+    useCurrentMember,
+} from "_app";
 import {
     CallToAction,
     Card,
@@ -11,22 +21,16 @@ import {
     Heading,
     Link,
     LoadingCard,
-    queryMembersStats,
-    queryTreasuryStats,
-    SideNavLayout,
     Text,
-    Asset,
-    assetToString,
-    useCurrentElection,
-    useCurrentMember,
-    ElectionParticipationStatus,
-} from "_app";
+} from "_app/ui";
 import { ROUTES } from "_app/config";
+import { MemberStats } from "members";
 import { EncryptionPasswordAlert } from "encryption";
 
 export const getServerSideProps: GetServerSideProps = async () => {
     const queryClient = new QueryClient();
     await queryClient.prefetchQuery(queryMembersStats);
+    await queryClient.prefetchQuery(queryTreasuryStats);
     return {
         props: {
             dehydratedState: dehydrate(queryClient),
@@ -35,15 +39,12 @@ export const getServerSideProps: GetServerSideProps = async () => {
 };
 
 export const Index = () => {
-    const { isError: isMemberDataFetchError, data: memberStats } = useQuery({
+    const memberStats = useQuery({
         ...queryMembersStats,
         keepPreviousData: true,
     });
 
-    const {
-        isError: isTreasuryDataFetchError,
-        data: treasuryBalance,
-    } = useQuery({
+    const treasuryStats = useQuery({
         ...queryTreasuryStats,
         keepPreviousData: true,
     });
@@ -95,16 +96,12 @@ export const Index = () => {
                     <WelcomeText1 />
                     <WelcomeText2 />
                 </Card>
-                <Card className="col-span-1 lg:col-span-2 border-t">
-                    {isMemberDataFetchError || isTreasuryDataFetchError ? (
-                        <Text>Error fetching data...</Text>
-                    ) : (
-                        <CommunityStatsCard
-                            memberStats={memberStats}
-                            treasuryBalance={treasuryBalance}
-                        />
-                    )}
-                </Card>
+                <div className="col-span-1 lg:col-span-2 border-t">
+                    <CommunityStats
+                        memberStats={memberStats}
+                        treasuryStats={treasuryStats}
+                    />
+                </div>
             </div>
         </SideNavLayout>
     );
@@ -181,34 +178,53 @@ const WelcomeText2 = () => (
 );
 
 interface CommunityStatsProps {
-    memberStats: any;
-    treasuryBalance: Asset | undefined;
+    memberStats: UseQueryResult<MemberStats | undefined>;
+    treasuryStats: UseQueryResult<Asset | undefined>;
 }
 
-const CommunityStatsCard = ({
-    memberStats,
-    treasuryBalance,
-}: CommunityStatsProps) =>
-    memberStats && treasuryBalance ? (
-        <Card className="flex flex-col justify-center items-center space-y-1 lg:text-lg">
+const CommunityStats = ({
+    memberStats: memberInfo,
+    treasuryStats,
+}: CommunityStatsProps) => {
+    const { data: memberStats, isLoading: isLoadingMemberStats } = memberInfo;
+    const {
+        data: treasuryBalance,
+        isLoading: isLoadingTreasuryBalance,
+    } = treasuryStats;
+
+    if (isLoadingMemberStats || isLoadingTreasuryBalance) {
+        return <LoadingCard />;
+    }
+
+    if (!memberStats && !treasuryBalance) return null;
+
+    return (
+        <Card className="flex flex-col justify-center items-center space-y-1 lg:text-lg my-4">
             <Heading size={2} className="mb-2">
                 Community Stats
             </Heading>
-            <Text className="font-medium" size="inherit">
-                Treasury: {assetToString(treasuryBalance, 4)}
-            </Text>
-            <Link href={ROUTES.MEMBERS.href} className="font-medium">
-                {memberStats.active_members} active member
-                {memberStats.active_members !== 1 && "s"}
-            </Link>
-            <Link
-                href={`${ROUTES.INDUCTION.href}/pending-invitations`}
-                className="font-medium"
-            >
-                {memberStats.pending_members} pending invitation
-                {memberStats.pending_members !== 1 && "s"}
-            </Link>
+            {treasuryBalance && (
+                <Text className="font-medium" size="inherit">
+                    Treasury: {assetToString(treasuryBalance, 4)}
+                </Text>
+            )}
+            {memberStats && (
+                <>
+                    <Link href={ROUTES.MEMBERS.href} className="font-medium">
+                        {memberStats.active_members} active member
+                        {memberStats.active_members !== 1 && "s"}
+                    </Link>
+                    <Link
+                        href={`${ROUTES.INDUCTION.href}/pending-invitations`}
+                        className="font-medium"
+                    >
+                        {memberStats.pending_members} pending invitation
+                        {memberStats.pending_members !== 1 && "s"}
+                    </Link>
+                </>
+            )}
         </Card>
-    ) : null;
+    );
+};
 
 export default Index;
