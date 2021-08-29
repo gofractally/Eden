@@ -9,12 +9,7 @@ interface Props {
     banner?: React.ReactNode;
 }
 
-export const SideNavLayout = ({
-    children,
-    title,
-    hideBorders,
-    banner,
-}: Props) => (
+export const SideNavLayout = ({ children, title, banner }: Props) => (
     <div className="flex flex-col xs:flex-row h-screen w-full container max-w-screen-xl mx-auto">
         <Head>
             <title>{title && `${title} | `} Eden</title>

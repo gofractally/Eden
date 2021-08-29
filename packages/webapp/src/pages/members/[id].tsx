@@ -5,7 +5,7 @@ import { dehydrate } from "react-query/hydration";
 import {
     CallToAction,
     Container,
-    FluidLayout,
+    SideNavLayout,
     LoadingCard,
     queryMemberData,
     SingleColLayout,
@@ -45,18 +45,18 @@ export const MemberPage = ({ account }: Props) => {
 
     if (member) {
         return (
-            <FluidLayout title={`${member.name}'s Profile`}>
+            <SideNavLayout title={`${member.name}'s Profile`}>
                 <Container className="space-y-2.5 border-b">
                     <DelegateFundsAvailable account={account} />
-                    <div className="flex items-center space-y-10 xl:space-y-0 xl:space-x-4 flex-col xl:flex-row">
-                        <div className="max-w-2xl">
+                    <div className="flex items-center space-y-10 xl:space-y-0 xl:space-x-4 flex-col">
+                        <div className="max-w-xl">
                             <MemberHoloCard member={member} />
                         </div>
                         <MemberCard member={member} showBalance />
                     </div>
                 </Container>
                 <MemberCollections member={member} />
-            </FluidLayout>
+            </SideNavLayout>
         );
     }
 
