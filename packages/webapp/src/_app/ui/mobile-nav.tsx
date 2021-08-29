@@ -47,10 +47,23 @@ const BottomNav = () => {
         <div className="flex items-center z-10 h-16 xs:hidden fixed bottom-0 left-0 right-0 bg-white border-t">
             <div className="w-full flex justify-around">
                 {MENU_ITEMS.map((item, index) => {
-                    const { NavIcon } = item;
+                    const { NavIcon, label } = item;
                     return (
                         <HeaderItemLink key={`nav-route-${index}`} route={item}>
                             {NavIcon && <NavIcon />}
+                            <p
+                                style={{ fontSize: 10 }}
+                                className="font-normal label"
+                            >
+                                {label}
+                            </p>
+                            <style jsx>{`
+                                @media screen and (max-width: 368px) {
+                                    .label {
+                                        display: none;
+                                    }
+                                }
+                            `}</style>
                         </HeaderItemLink>
                     );
                 })}
@@ -66,7 +79,7 @@ interface HeaderItemLinkProps {
 }
 
 const NAV_ITEM_BASE_CLASS =
-    "flex-1 h-12 flex flex-col items-center justify-center space-y-1 rounded-2xl hover:bg-gray-50 font-semibold mx-1 pt-1";
+    "flex-1 h-12 rounded-2xl hover:bg-gray-50 font-semibold mx-1 pt-1";
 
 const HeaderItemLink = ({
     children,
@@ -84,20 +97,14 @@ const HeaderItemLink = ({
     return (
         <div className={navItemClass}>
             <Link href={href}>
-                <a onClick={handleNavigationClick} title={label}>
+                <a
+                    onClick={handleNavigationClick}
+                    title={label}
+                    className="flex flex-col justify-center items-center space-y-1"
+                >
                     {children}
                 </a>
             </Link>
-            <p style={{ fontSize: 10 }} className="font-normal label">
-                {label}
-            </p>
-            <style jsx>{`
-                @media screen and (max-width: 368px) {
-                    .label {
-                        display: none;
-                    }
-                }
-            `}</style>
         </div>
     );
 };
