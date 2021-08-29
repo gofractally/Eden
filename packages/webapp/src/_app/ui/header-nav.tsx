@@ -6,23 +6,10 @@ import { FaSignOutAlt } from "react-icons/fa";
 import { useUALAccount } from "../eos";
 import { useCurrentMember } from "_app/hooks";
 import { Button } from "./button";
-import { ROUTES } from "_app/config";
+import { Route, ROUTES } from "_app/config";
 
-interface MenuItem {
-    href: string;
-    label: string;
-    exactPath?: boolean;
-    hideNav?: boolean;
-}
-
-const MENU_ITEMS: MenuItem[] = Object.keys(ROUTES)
-    .map((k) => {
-        let pathObj: MenuItem = ROUTES[k];
-        if (k === "HOME") {
-            pathObj.exactPath = true;
-        }
-        return pathObj;
-    })
+const MENU_ITEMS = Object.keys(ROUTES)
+    .map((k) => ROUTES[k])
     .filter((k) => !k.hideNav);
 
 export const HeaderNav = () => (
@@ -49,7 +36,7 @@ const HeaderLogo = () => (
     </Link>
 );
 
-const HeaderItems = ({ menuItems }: { menuItems: MenuItem[] }) => {
+const HeaderItems = ({ menuItems }: { menuItems: Route[] }) => {
     return (
         <>
             {menuItems.map((item, index) => (

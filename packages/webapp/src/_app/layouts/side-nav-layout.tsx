@@ -1,6 +1,6 @@
 import Head from "next/head";
 
-import { SideNav, Footer } from "../ui";
+import { MobileNav, SideNav, Footer } from "../ui";
 
 interface Props {
     title?: string;
@@ -15,15 +15,14 @@ export const SideNavLayout = ({
     hideBorders,
     banner,
 }: Props) => (
-    <div className="flex h-screen w-full container max-w-screen-xl mx-auto">
+    <div className="flex flex-col xs:flex-row h-screen w-full container max-w-screen-xl mx-auto">
         <Head>
             <title>{title && `${title} | `} Eden</title>
         </Head>
         {banner}
-        <header className="w-24 md:w-32 lg:w-48 xl:w-56">
-            <SideNav />
-        </header>
-        <div className="flex-1 flex flex-col w-full">
+        <SideNav />
+        <MobileNav />
+        <div className="flex-1 flex flex-col w-full mt-12 xs:mt-0 pb-16 xs:pb-0">
             <main className="max-w-4xl">
                 <div className={hideBorders ? "" : "border-b border-r"}>
                     {children}

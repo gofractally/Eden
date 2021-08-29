@@ -16,6 +16,7 @@ export const ROUTES: { [key: string]: Route } = {
         href: "/",
         label: "Home",
         NavIcon: () => <IoHomeOutline className="text-2xl xl:text-xl" />,
+        exactPath: true,
     },
     MEMBERS: {
         href: "/members",
@@ -26,20 +27,31 @@ export const ROUTES: { [key: string]: Route } = {
         href: "/induction",
         label: "Membership",
         NavIcon: () => (
-            <AiOutlineIdcard className="text-3xl xl:text-2xl -ml-px -mr-px" />
+            <AiOutlineIdcard
+                className="text-3xl xl:text-2xl -ml-px -mr-px -mt-1"
+                style={{ marginBottom: -2, marginTop: -2 }}
+            />
         ),
     },
     DELEGATION: {
         href: "/delegates",
         label: "My Delegates",
-        NavIcon: () => <BsStar className="text-3xl xl:text-2xl -ml-px" />,
+        NavIcon: () => (
+            <BsStar
+                className="text-3xl xl:text-2xl -ml-px"
+                style={{ marginBottom: -2, marginTop: -2 }}
+            />
+        ),
     },
     TREASURY: { href: "/treasury", label: "Treasury", hideNav: true },
     ELECTION: {
         href: "/election",
         label: "Election",
         NavIcon: () => (
-            <FiCheckSquare className="text-3xl xl:text-2xl -ml-px" />
+            <FiCheckSquare
+                className="text-3xl xl:text-2xl -ml-px -mt-px -mb-px"
+                style={{ fontSize: 28 }}
+            />
         ),
     },
 };

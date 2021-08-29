@@ -21,3 +21,4 @@ export * from "./delegate-badge";
 export * from "./expander";
 export * from "./pie-status-indicator";
 export * from "./side-nav";
+export * from "./mobile-nav";

@@ -10,21 +10,17 @@ import { Route, ROUTES } from "_app/config";
 import { MouseEventHandler } from "react";
 
 const MENU_ITEMS = Object.keys(ROUTES)
-    .map((k) => {
-        let pathObj = ROUTES[k];
-        if (k === "HOME") {
-            pathObj.exactPath = true;
-        }
-        return pathObj;
-    })
+    .map((k) => ROUTES[k])
     .filter((k) => !k.hideNav);
 
 export const SideNav = () => (
-    <nav className="fixed flex flex-col h-screen w-24 md:w-32 lg:w-48 xl:w-56 pl-9 border-r border-lighter">
-        <HeaderLogo />
-        <HeaderItems menuItems={MENU_ITEMS} />
-        <AccountMenu />
-    </nav>
+    <header className="hidden xs:block w-24 md:w-32 lg:w-48 xl:w-56">
+        <nav className="fixed flex flex-col h-screen w-24 md:w-32 lg:w-48 xl:w-56 pl-9 border-r border-lighter">
+            <HeaderLogo />
+            <HeaderItems menuItems={MENU_ITEMS} />
+            <AccountMenu />
+        </nav>
+    </header>
 );
 
 const HeaderLogo = () => (
