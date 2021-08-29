@@ -7,12 +7,13 @@ import { dehydrate } from "react-query/hydration";
 import {
     CallToAction,
     Card,
+    Container,
     Heading,
     Link,
     LoadingCard,
     queryMembersStats,
     queryTreasuryStats,
-    RawLayout,
+    SideNavLayout,
     Text,
     Asset,
     assetToString,
@@ -56,7 +57,7 @@ export const Index = () => {
             ElectionParticipationStatus.InElection;
 
     return (
-        <RawLayout
+        <SideNavLayout
             banner={
                 renderBanner && (
                     <EncryptionPasswordAlert
@@ -68,9 +69,11 @@ export const Index = () => {
                 )
             }
         >
-            <div className="grid grid-cols-1 xl:grid-cols-3 gap-0 lg:gap-5 text-gray-800">
-                <ElectionCard />
-                <div className="col-span-1 lg:col-span-2 space-y-4">
+            <div className="grid grid-cols-1 lg:grid-cols-2 divide-y">
+                <Container className="col-span-1 lg:col-span-2">
+                    <ElectionCard />
+                </Container>
+                <Container className="col-span-1 lg:col-span-2">
                     <CallToAction
                         href="http://eden.eoscommunity.org"
                         buttonLabel="Learn more"
@@ -81,48 +84,18 @@ export const Index = () => {
                         independence of its members, thereby securing life,
                         liberty, property, and justice for all.
                     </CallToAction>
-                </div>
-                <div className="col-span-1 lg:col-span-2 space-y-4">
-                    <Card>
-                        <div className="grid grid-cols-1 xl:grid-cols-2 gap-4 xl:gap-16 lg:px-8 text-gray-800">
-                            <div className="col-span-2 md:col-span-1 space-y-4">
-                                <Heading size={2}>Welcome to Eden</Heading>
-                                <Text>
-                                    A team of people can be more powerful than
-                                    the sum of its members, but all teams need a
-                                    means to reach consensus, or they will fall
-                                    apart. Unfortunately, traditional democratic
-                                    processes end up empowering politicians and
-                                    disempowering the people who participate.
-                                </Text>
-                            </div>
-                            <div className="col-span-2 md:col-span-1 space-y-4">
-                                <Text>
-                                    EdenOS is a revolutionary new democratic
-                                    process that protects and enhances the
-                                    independence and power of those who join.
-                                    When you join the Eden community, you gain
-                                    access to a group of people working together
-                                    to empower you and your family to make a
-                                    bigger impact in the world.
-                                </Text>
-                                <Text>
-                                    To learn more about Eden and how you can get
-                                    involved, visit{" "}
-                                    <Link
-                                        href="http://eden.eoscommunity.org"
-                                        target="_blank"
-                                        isExternal
-                                    >
-                                        eden.eoscommunity.org
-                                    </Link>
-                                    .
-                                </Text>
-                            </div>
-                        </div>
-                    </Card>
-                </div>
-                <aside className="col-span-1 space-y-4 pb-5">
+                </Container>
+                <Card className="col-span-1 hidden lg:block">
+                    <WelcomeText1 />
+                </Card>
+                <Card className="col-span-1 hidden lg:block">
+                    <WelcomeText2 />
+                </Card>
+                <Card className="col-span-1 lg:hidden space-y-4">
+                    <WelcomeText1 />
+                    <WelcomeText2 />
+                </Card>
+                <Card className="col-span-1 lg:col-span-2 border-t">
                     {isMemberDataFetchError || isTreasuryDataFetchError ? (
                         <Text>Error fetching data...</Text>
                     ) : (
@@ -131,9 +104,9 @@ export const Index = () => {
                             treasuryBalance={treasuryBalance}
                         />
                     )}
-                </aside>
+                </Card>
             </div>
-        </RawLayout>
+        </SideNavLayout>
     );
 };
 
@@ -155,28 +128,57 @@ const ElectionCard = () => {
         case ElectionStatus.Registration:
         case ElectionStatus.Seeding:
         case ElectionStatus.InitVoters:
-            return (
-                <Card className="flex items-center">
-                    <ParticipationCard election={currentElection} />
-                </Card>
-            );
+            return <ParticipationCard election={currentElection} />;
         case ElectionStatus.Active:
         case ElectionStatus.PostRound:
         case ElectionStatus.Final:
             return (
-                <Card className="flex flex-col items-center justify-center space-y-2">
+                <>
                     <Heading size={2}>Election in progress</Heading>
                     <Text>
                         Visit the{" "}
                         <Link href={ROUTES.ELECTION.href}>Election page</Link>{" "}
                         for more details.
                     </Text>
-                </Card>
+                </>
             );
         default:
             return <LoadingCard />;
     }
 };
+const WelcomeText1 = () => (
+    <>
+        <Heading size={2}>Welcome to Eden</Heading>
+        <Text>
+            A team of people can be more powerful than the sum of its members,
+            but all teams need a means to reach consensus, or they will fall
+            apart. Unfortunately, traditional democratic processes end up
+            empowering politicians and disempowering the people who participate.
+        </Text>
+    </>
+);
+const WelcomeText2 = () => (
+    <>
+        <Text>
+            EdenOS is a revolutionary new democratic process that protects and
+            enhances the independence and power of those who join. When you join
+            the Eden community, you gain access to a group of people working
+            together to empower you and your family to make a bigger impact in
+            the world.
+        </Text>
+        <Text>
+            To learn more about Eden and how you can get involved, visit{" "}
+            <Link
+                href="http://eden.eoscommunity.org"
+                target="_blank"
+                isExternal
+            >
+                eden.eoscommunity.org
+            </Link>
+            .
+        </Text>
+    </>
+);
 
 interface CommunityStatsProps {
     memberStats: any;
@@ -188,7 +190,7 @@ const CommunityStatsCard = ({
     treasuryBalance,
 }: CommunityStatsProps) =>
     memberStats && treasuryBalance ? (
-        <Card className="flex flex-col justify-center items-center h-full space-y-4 lg:text-lg">
+        <Card className="flex flex-col justify-center items-center space-y-1 lg:text-lg">
             <Heading size={2} className="mb-2">
                 Community Stats
             </Heading>

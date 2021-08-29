@@ -6,7 +6,7 @@ interface Props {
     title?: string;
     children: React.ReactNode;
     hideBorders?: boolean;
-    banner?: React.FC;
+    banner?: React.ReactNode;
 }
 
 export const SideNavLayout = ({

@@ -28,8 +28,15 @@ const HeaderLogo = () => (
         <Link href="/">
             <a>
                 <img
+                    src="/images/eden-logo.svg"
+                    alt="Eden logo"
+                    className="hidden xl:block"
+                    style={{ height: "50px" }}
+                />
+                <img
                     src="/images/eden-logo-penta.svg"
                     alt="Eden logo"
+                    className="block xl:hidden"
                     style={{ height: "50px" }}
                 />
             </a>
