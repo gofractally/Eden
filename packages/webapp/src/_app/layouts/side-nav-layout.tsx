@@ -23,11 +23,7 @@ export const SideNavLayout = ({
         <SideNav />
         <MobileNav />
         <div className="flex-1 flex flex-col w-full mt-12 xs:mt-0 pb-16 xs:pb-0">
-            <main className="max-w-4xl">
-                <div className={hideBorders ? "" : "border-b border-r"}>
-                    {children}
-                </div>
-            </main>
+            <main className="max-w-4xl min-h-screen border-r">{children}</main>
             {/* <Footer /> */}
         </div>
     </div>
