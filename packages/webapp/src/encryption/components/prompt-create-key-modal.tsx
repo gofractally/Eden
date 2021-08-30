@@ -27,9 +27,7 @@ export const PromptCreateKeyModal = ({
     isTooLateForCurrentRound,
     ...props
 }: Props & ReactModal.Props) => {
-    const { encryptionPassword, isLoading } = useEncryptionPassword();
-    const { publicKey } = encryptionPassword;
-    const isPasswordNotSet = !isLoading && !publicKey;
+    const { isPasswordNotSet } = useEncryptionPassword();
 
     // keeps the modal open even after the isPasswordNotSet condition updates on success
     // this ensures the modal remains open to show the user the success message

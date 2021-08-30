@@ -27,11 +27,9 @@ export const PromptReenterKeyModal = ({
     isTooLateForCurrentRound,
     ...props
 }: Props & ReactModal.Props) => {
-    const { encryptionPassword, isLoading } = useEncryptionPassword();
-    const { publicKey, privateKey } = encryptionPassword;
-    const isPasswordMissing = Boolean(!isLoading && publicKey && !privateKey);
+    const { isPasswordSetNotPresent } = useEncryptionPassword();
 
-    // keeps the modal open even after the isPasswordMissing condition updates on success
+    // keeps the modal open even after the isPasswordSetNotPresent condition updates on success
     // this ensures the modal remains open to show the user the success message
     const [isReenteringPassword, setIsReenteringPassword] = useState(false);
 
@@ -52,7 +50,7 @@ export const PromptReenterKeyModal = ({
 
     return (
         <Modal
-            isOpen={isOpen && (isPasswordMissing || isReenteringPassword)}
+            isOpen={isOpen && (isPasswordSetNotPresent || isReenteringPassword)}
             onAfterClose={onAfterClose}
             onAfterOpen={onAfterOpenHandler}
             onRequestClose={onCloseHandler}

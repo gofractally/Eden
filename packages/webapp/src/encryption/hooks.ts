@@ -22,11 +22,12 @@ export const useEncryptionPassword = () => {
     const { state, dispatch } = useGlobalStore();
     const { data: currentMember, isLoading, error } = useCurrentMember();
 
+    const { encryptionPassword } = state;
+
     useEffect(() => {
         const { publicKey, privateKey } = getEncryptionPassword();
-        const pubKeyChanged = state.encryptionPassword.publicKey !== publicKey;
-        const privKeyChanged =
-            state.encryptionPassword.privateKey !== privateKey;
+        const pubKeyChanged = encryptionPassword.publicKey !== publicKey;
+        const privKeyChanged = encryptionPassword.privateKey !== privateKey;
         if (pubKeyChanged || privKeyChanged)
             setEncryptionPassword(publicKey, privateKey);
     });
@@ -50,10 +51,18 @@ export const useEncryptionPassword = () => {
         return { publicKey, privateKey } as EncryptionPassword;
     };
 
+    const { publicKey, privateKey } = encryptionPassword;
+    const isPasswordNotSet = isLoading ? undefined : !publicKey;
+    const isPasswordSetNotPresent = isLoading
+        ? undefined
+        : Boolean(publicKey && !privateKey);
+
     return {
-        encryptionPassword: state.encryptionPassword,
+        encryptionPassword,
         updateEncryptionPassword,
         isLoading,
+        isPasswordNotSet,
+        isPasswordSetNotPresent,
         error,
     };
 };

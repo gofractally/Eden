@@ -76,14 +76,15 @@ const JoinMeetingButton = ({
     const [roundMeetingLink, setRoundMeetingLink] = useState("");
     const [failedToDecrypt, setFailedToDecrypt] = useState(false);
 
-    const { encryptionPassword, isLoading } = useEncryptionPassword();
-    const { publicKey, privateKey } = encryptionPassword;
-    const isPasswordMissing = Boolean(!isLoading && publicKey && !privateKey);
-    const isPasswordNotSet = !isLoading && !publicKey;
+    const {
+        encryptionPassword,
+        isPasswordNotSet,
+        isPasswordSetNotPresent,
+    } = useEncryptionPassword();
 
     useEffect(() => {
         decryptMeetingLink();
-    }, [encryptedData, privateKey]);
+    }, [encryptedData, encryptionPassword.privateKey]);
 
     const decryptMeetingLink = async () => {
         if (encryptedData) {
@@ -116,7 +117,7 @@ const JoinMeetingButton = ({
         }
     };
 
-    if (failedToDecrypt && isPasswordMissing) {
+    if (failedToDecrypt && isPasswordSetNotPresent) {
         return (
             <Button size="sm" onClick={requestPassword}>
                 <BiWebcam className="mr-1" />
