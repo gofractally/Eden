@@ -205,7 +205,8 @@ namespace eden
       }
       else if (auto n = std::get_if<current_election_state_seeding>(&new_value))
       {
-         push_event(election_event_seeding{.start_time = n->seed.start_time,
+         push_event(election_event_seeding{.election_time = n->seed.end_time,
+                                           .start_time = n->seed.start_time,
                                            .end_time = n->seed.end_time,
                                            .seed = n->seed.current},
                     contract);
@@ -469,7 +470,7 @@ namespace eden
       }
       push_event(
           election_event_create_group{
-              .election_start = election_start,
+              .election_time = election_start,
               .round = round,
               .voters = voters,
           },
@@ -501,33 +502,22 @@ namespace eden
          if (max_steps > 0)
          {
             eosio::check(state->next_member_idx > 0, "No voters");
+            auto election_start_time =
+                std::get<election_state_v0>(election_state_singleton{contract, default_scope}.get())
+                    .last_election_time;
             auto configs = make_election_config(state->next_member_idx);
             if (max_steps > 0 && !state->next_report_index)
-            {
                push_event(
                    election_event_config_summary{
+                       .election_time = election_start_time,
                        .num_rounds = (uint8_t)configs.size(),
                        .num_participants = configs.front().num_participants,
                    },
                    contract);
-               push_event(
-                   election_event_begin_round{
-                       .round = 0,
-                       .num_participants = configs.front().num_participants,
-                       .num_groups = configs.front().num_groups,
-                       .round_begin = eosio::current_time_point(),
-                       .round_end = eosio::current_time_point() +
-                                    eosio::seconds(globals.get().election_round_time_sec),
-                   },
-                   contract);
-            }
 
             auto vote_idx = vote_tb.get_index<"bygroup"_n>();
             auto end = vote_idx.end();
             auto group_start = vote_idx.lower_bound(state->next_report_index);
-            auto election_start_time =
-                std::get<election_state_v0>(election_state_singleton{contract, default_scope}.get())
-                    .last_election_time;
             for (; max_steps > 0 && group_start != end; --max_steps)
             {
                auto group_size = configs.front().group_min_size() +
@@ -539,6 +529,20 @@ namespace eden
 
             if (max_steps > 0)
             {
+               push_event(
+                   election_event_begin_round{
+                       .election_time = election_start_time,
+                       .round = 0,
+                       .requires_voting = configs.size() > 1,
+                       .num_participants = configs.front().num_participants,
+                       .num_groups = configs.front().num_groups,
+                       .round_begin = eosio::current_time_point(),
+                       .round_end =
+                           eosio::current_time_point() +
+                           eosio::seconds(configs.size() > 1 ? globals.get().election_round_time_sec
+                                                             : 0),
+                   },
+                   contract);
                if (configs.size() == 1)
                {
                   auto board = extract_board();
@@ -631,7 +635,7 @@ namespace eden
       auto contract = group_idx.get_code();
       push_event(
           election_event_report_group{
-              .election_start = election_start,
+              .election_time = election_start,
               .round = state.prev_round,
               .winner = result.winner,
               .votes = votes,
@@ -705,8 +709,18 @@ namespace eden
       process_election_distribution(contract);
       set_board_permission(result.board);
 
+      auto election_start_time =
+          std::get<election_state_v0>(election_state_singleton{contract, default_scope}.get())
+              .last_election_time;
+      push_event(
+          election_event_end_round{
+              .election_time = election_start_time,
+              .round = round,
+          },
+          contract);
       push_event(
           election_event_report_group{
+              .election_time = election_start_time,
               .round = round,
               .winner = winner,
               .votes = votes,
@@ -721,6 +735,10 @@ namespace eden
          return max_steps;
       }
       auto state = state_sing.get();
+      auto election_start_time =
+          std::get<election_state_v0>(election_state_singleton{contract, default_scope}.get())
+              .last_election_time;
+
       if (auto* prev_round = std::get_if<current_election_state_active>(&state))
       {
          if (eosio::current_block_time() < prev_round->round_end)
@@ -730,6 +748,12 @@ namespace eden
          state =
              current_election_state_post_round{election_rng{adjust_seed(prev_round->saved_seed)},
                                                prev_round->round, prev_round->config, 0, 0};
+         push_event(
+             election_event_end_round{
+                 .election_time = election_start_time,
+                 .round = prev_round->round,
+             },
+             contract);
       }
       else if (auto* final_round = std::get_if<current_election_state_final>(&state))
       {
@@ -756,10 +780,6 @@ namespace eden
 
       members members{contract};
       encrypt encrypt{contract, "election"_n};
-
-      auto election_start_time =
-          std::get<election_state_v0>(election_state_singleton{contract, default_scope}.get())
-              .last_election_time;
 
       for (; max_steps > 0 && group_start != end && group_start->round == data.prev_round;
            --max_steps)
@@ -796,16 +816,6 @@ namespace eden
       auto next_round = data.prev_round + 1;
       if (max_steps > 0 && !data.next_report_index)
       {
-         push_event(
-             election_event_begin_round{
-                 .round = uint8_t(next_round),
-                 .num_participants = config.front().num_participants,
-                 .num_groups = config.front().num_groups,
-                 .round_begin = eosio::current_time_point(),
-                 .round_end = eosio::current_time_point() +
-                              eosio::seconds(globals.get().election_round_time_sec),
-             },
-             contract);
       }
 
       group_start = vote_idx.lower_bound((next_round << 16) | data.next_report_index);
@@ -820,6 +830,20 @@ namespace eden
 
       if (max_steps > 0)
       {
+         push_event(
+             election_event_begin_round{
+                 .election_time = election_start_time,
+                 .round = uint8_t(next_round),
+                 .requires_voting = config.size() > 1,
+                 .num_participants = config.front().num_participants,
+                 .num_groups = config.front().num_groups,
+                 .round_begin = eosio::current_time_point(),
+                 .round_end =
+                     eosio::current_time_point() +
+                     eosio::seconds(config.size() == 1 ? election_final_seeding_window
+                                                       : globals.get().election_round_time_sec),
+             },
+             contract);
          if (config.size() == 1)
          {
             auto now = eosio::current_time_point();
