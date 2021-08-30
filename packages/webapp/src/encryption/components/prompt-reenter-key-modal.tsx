@@ -12,7 +12,6 @@ interface Props {
     onAfterOpen?: () => void;
     onAfterClose?: () => void;
     onDismissConfirmation: () => void;
-    isTooLateForCurrentRound?: boolean;
 }
 
 /**
@@ -24,7 +23,6 @@ export const PromptReenterKeyModal = ({
     onAfterOpen,
     onAfterClose,
     onDismissConfirmation,
-    isTooLateForCurrentRound,
     ...props
 }: Props & ReactModal.Props) => {
     const { isPasswordSetNotPresent } = useEncryptionPassword();
@@ -63,7 +61,6 @@ export const PromptReenterKeyModal = ({
             <ReenterPasswordPrompt
                 onCancel={onCloseHandler}
                 onDismissConfirmation={onSuccessDismissHandler}
-                isTooLateForCurrentRound={isTooLateForCurrentRound}
             />
         </Modal>
     );

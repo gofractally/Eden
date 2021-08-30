@@ -15,11 +15,10 @@ import { generateZoomMeetingLink } from "_api/zoom-commons";
 import { setElectionMeeting } from "elections/transactions";
 import { calculateGroupId } from "elections/utils";
 import { ActiveStateConfigType, RoundStage } from "elections/interfaces";
+import { useEncryptionPassword, usePasswordModal } from "encryption";
 
 import MeetingButtons from "./meeting-buttons";
 import MeetingLinkModal from "./meeting-link-modal";
-import PromptCreateKeyModal from "encryption/components/prompt-create-key-modal";
-import PromptReenterKeyModal from "encryption/components/prompt-reenter-key-modal";
 
 export enum MeetingStep {
     LinkZoomAccount,
@@ -49,6 +48,13 @@ export const MeetingLink = ({
     const [ualAccount] = useUALAccount();
     const [zoomAccountJWT, setZoomAccountJWT] = useZoomAccountJWT(undefined);
     const [showMeetingModal, setShowMeetingModal] = useState(false);
+
+    const { show: showPasswordModal } = usePasswordModal();
+    const {
+        isPasswordNotSet,
+        isPasswordSetNotPresent,
+    } = useEncryptionPassword();
+
     const { data: memberGroup } = useMemberGroupParticipants(
         ualAccount?.accountName,
         roundIndex
@@ -78,8 +84,20 @@ export const MeetingLink = ({
         return null;
     }
 
-    const handleMeetingButton = () => {
+    const showMeetingLinkModal = () => {
         setShowMeetingModal(true);
+    };
+
+    const handleMeetingButton = async () => {
+        const linkAlreadyExists =
+            meetingStep === MeetingStep.RetrieveMeetingLink;
+        if (isPasswordNotSet || isPasswordSetNotPresent) {
+            const completed = await showPasswordModal(linkAlreadyExists);
+            // if the user canceled, do nothing -- just dismiss
+            completed && !linkAlreadyExists && showMeetingLinkModal();
+        } else {
+            showMeetingLinkModal();
+        }
     };
 
     const requestMeetingLink = async (throwOnError: boolean = false) => {
@@ -165,7 +183,7 @@ export const MeetingLink = ({
                 isLoadingEncryptedData={isLoadingEncryptedData}
                 onClick={handleMeetingButton}
             />
-            <Modals
+            <MeetingLinkModal
                 isOpen={showMeetingModal}
                 close={() => setShowMeetingModal(false)}
                 meetingStep={meetingStep}
@@ -177,58 +195,3 @@ export const MeetingLink = ({
 };
 
 export default MeetingLink;
-
-interface ModalsProps {
-    isOpen: boolean;
-    close: () => void;
-    meetingStep: MeetingStep;
-    requestMeetingLink: (throwOnError: boolean) => Promise<void>;
-    stage: RoundStage;
-}
-
-const Modals = ({
-    isOpen,
-    close,
-    meetingStep,
-    requestMeetingLink,
-    stage,
-}: ModalsProps) => {
-    const [isFixingPassword, setIsFixingPassword] = useState(false);
-    const linkAlreadyExists = meetingStep === MeetingStep.RetrieveMeetingLink;
-
-    const cancel = () => {
-        setIsFixingPassword(false);
-        close();
-    };
-
-    const dismissPasswordSuccessConfirmation = () => {
-        setIsFixingPassword(false);
-        linkAlreadyExists && close();
-    };
-
-    return (
-        <>
-            <PromptCreateKeyModal
-                isOpen={isOpen} // only opens if password is unset
-                onAfterOpen={() => setIsFixingPassword(true)}
-                close={cancel}
-                onDismissConfirmation={dismissPasswordSuccessConfirmation}
-                isTooLateForCurrentRound={linkAlreadyExists}
-            />
-            <PromptReenterKeyModal
-                isOpen={isOpen} // only opens if password is missing
-                onAfterOpen={() => setIsFixingPassword(true)}
-                close={cancel}
-                onDismissConfirmation={dismissPasswordSuccessConfirmation}
-                isTooLateForCurrentRound={linkAlreadyExists}
-            />
-            <MeetingLinkModal
-                isOpen={isOpen && !isFixingPassword}
-                close={close}
-                meetingStep={meetingStep}
-                requestMeetingLink={requestMeetingLink}
-                stage={stage}
-            />
-        </>
-    );
-};

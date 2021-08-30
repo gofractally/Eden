@@ -4,13 +4,13 @@ import { IoMdCopy } from "react-icons/io";
 
 import { generateEncryptionKey, onError, useFormFields } from "_app";
 import { Button, Form, Heading, Text } from "_app/ui";
+import { usePasswordModal } from "encryption/hooks";
 
 interface Props {
     isLoading?: boolean;
     forgotPassword?: boolean;
     onSubmit: (publicKey: string, privateKey: string) => Promise<void>;
     onCancel: () => void;
-    isTooLateForCurrentRound?: boolean;
 }
 
 export const NewPasswordForm = ({
@@ -18,9 +18,9 @@ export const NewPasswordForm = ({
     isLoading,
     onSubmit,
     onCancel,
-    isTooLateForCurrentRound,
 }: Props) => {
     const [didCopyText, setDidCopyText] = useState<boolean>(false);
+    const { newPasswordIsInvalidForCurrentRound } = usePasswordModal();
     const [fields, setFields] = useFormFields({
         password: generateEncryptionKey().privateKey.toLegacyString(),
         passwordConfirmation: "",
@@ -66,7 +66,7 @@ export const NewPasswordForm = ({
                     : "Election password"}
             </Heading>
             <Text>{text}</Text>
-            {isTooLateForCurrentRound && (
+            {newPasswordIsInvalidForCurrentRound && (
                 <Text>
                     <span className="font-semibold">IMPORTANT:</span> Your new
                     password will not work for the current election round

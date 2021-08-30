@@ -2,6 +2,7 @@ import { useEffect } from "react";
 
 import {
     actionSetEncryptionPassword,
+    actionShowPasswordModal,
     useCurrentMember,
     useGlobalStore,
 } from "_app";
@@ -64,5 +65,38 @@ export const useEncryptionPassword = () => {
         isPasswordNotSet,
         isPasswordSetNotPresent,
         error,
+    };
+};
+
+export const usePasswordModal = () => {
+    const { state, dispatch } = useGlobalStore();
+    const { passwordModal } = state;
+    const {
+        isOpen,
+        resolver,
+        newPasswordIsInvalidForCurrentRound,
+    } = passwordModal;
+
+    const show = (newPasswordIsInvalidForCurrentRound: boolean = false) =>
+        new Promise((resolve) => {
+            dispatch(
+                actionShowPasswordModal(
+                    true,
+                    resolve,
+                    newPasswordIsInvalidForCurrentRound
+                )
+            );
+        });
+
+    const dismiss = (withSuccess: boolean = false) => {
+        dispatch(actionShowPasswordModal(false, null));
+        resolver?.(withSuccess);
+    };
+
+    return {
+        isOpen,
+        show,
+        dismiss,
+        newPasswordIsInvalidForCurrentRound,
     };
 };

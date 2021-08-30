@@ -12,13 +12,11 @@ import { useEncryptionPassword } from "../hooks";
 interface Props {
     onCancel: () => void;
     onDismissConfirmation: () => void;
-    isTooLateForCurrentRound?: boolean;
 }
 
 export const ReenterPasswordPrompt = ({
     onCancel,
     onDismissConfirmation,
-    isTooLateForCurrentRound,
 }: Props) => {
     const [isLoading, setIsLoading] = useState(false);
     const [isSuccess, setIsSuccess] = useState(false);
@@ -73,8 +71,6 @@ export const ReenterPasswordPrompt = ({
 
     const handleOnDismiss = async () => {
         onDismissConfirmation();
-        await delay(300); // wait for modal to dismiss before resetting state
-        setIsSuccess(false);
     };
 
     const handleOnCancel = () => {
@@ -94,7 +90,6 @@ export const ReenterPasswordPrompt = ({
                 onSubmit={onSubmitForgotPassword}
                 onCancel={handleOnCancel}
                 forgotPassword={true}
-                isTooLateForCurrentRound={isTooLateForCurrentRound}
             />
         );
     }

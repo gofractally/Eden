@@ -10,11 +10,23 @@ interface ContextType {
 
 type State = {
     encryptionPassword: EncryptionPassword;
+    passwordModal: {
+        isOpen: boolean;
+        resolver: ((success: boolean) => void) | null;
+        newPasswordIsInvalidForCurrentRound: boolean;
+    };
 };
 
 type Action = { type: ActionType; payload: any };
 
-const initialState: State = { encryptionPassword: {} };
+const initialState: State = {
+    encryptionPassword: {},
+    passwordModal: {
+        isOpen: false,
+        resolver: null,
+        newPasswordIsInvalidForCurrentRound: false,
+    },
+};
 const store = createContext<ContextType | null>(null);
 const { Provider } = store;
 
@@ -23,6 +35,8 @@ const reducer = (state: State, action: Action): State => {
     switch (type) {
         case ActionType.SetEncryptionPassword:
             return { ...state, encryptionPassword: payload };
+        case ActionType.ShowPasswordModal:
+            return { ...state, passwordModal: payload };
         default:
             return state;
     }
