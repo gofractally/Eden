@@ -10,13 +10,11 @@ import { setEncryptionPublicKeyTransaction } from "../transactions";
 interface Props {
     onCancel: () => void;
     onDismissConfirmation: () => void;
-    isTooLateForCurrentRound?: boolean;
 }
 
 export const CreateNewPasswordPrompt = ({
     onCancel,
     onDismissConfirmation,
-    isTooLateForCurrentRound,
 }: Props) => {
     const [isLoading, setIsLoading] = useState<boolean>(false);
     const [isSuccess, setIsSuccess] = useState(false);
@@ -68,7 +66,6 @@ export const CreateNewPasswordPrompt = ({
             isLoading={isLoading}
             onSubmit={onSubmit}
             onCancel={handleOnCancel}
-            isTooLateForCurrentRound={isTooLateForCurrentRound}
         />
     );
 };
