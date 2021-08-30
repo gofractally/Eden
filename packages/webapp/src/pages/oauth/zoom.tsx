@@ -73,7 +73,7 @@ export const ZoomOauthPage = ({ newZoomAccountJWT, oauthState }: Props) => {
 
             if (oauthState === "request-election-link") {
                 setRedirectMessage(
-                    "Your Zoom account is linked. Hold tight while we redirect you back to your in-progress election round."
+                    "Hold tight while we redirect you back to your in-progress election round."
                 );
                 router.push("/election");
             }

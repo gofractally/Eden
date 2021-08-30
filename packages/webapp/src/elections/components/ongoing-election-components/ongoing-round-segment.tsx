@@ -30,7 +30,7 @@ import {
 
 import Consensometer from "./consensometer";
 import RoundHeader from "./round-header";
-import MeetingLink from "./meeting-link/meeting-link";
+import { MeetingLink } from "./meeting-link";
 import VotingRoundParticipants from "./voting-round-participants";
 import { setVote } from "../../transactions";
 
