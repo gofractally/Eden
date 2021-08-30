@@ -211,7 +211,17 @@ namespace eden
                                            .seed = n->seed.current},
                     contract);
       }
-
+      else if (auto n = std::get_if<current_election_state_final>(&new_value))
+      {
+         auto election_start_time =
+             std::get<election_state_v0>(election_state_singleton{contract, default_scope}.get())
+                 .last_election_time;
+         push_event(election_event_seeding{.election_time = election_start_time,
+                                           .start_time = n->seed.start_time,
+                                           .end_time = n->seed.end_time,
+                                           .seed = n->seed.current},
+                    contract);
+      }
       state_sing.set(new_value, contract);
    }
 
@@ -372,6 +382,11 @@ namespace eden
          eosio::block_timestamp seeding_start =
              eosio::time_point(registration->start_time) - eosio::seconds(election_seeding_window);
          eosio::check(now >= seeding_start, "Cannot start seeding yet");
+         push_event(
+             election_event_begin{
+                 .election_time = registration->start_time,
+             },
+             contract);
          state = current_election_state_seeding{
              {.start_time = seeding_start, .end_time = registration->start_time.to_time_point()}};
       }
@@ -401,7 +416,7 @@ namespace eden
       eosio::check(eosio::current_block_time() >= old_state.seed.end_time,
                    "Seeding window is still open");
       set_state_sing(current_election_state_init_voters{0, election_rng{old_state.seed.current}});
-      push_event(election_event_seed_finished{.election_time = election_start_time}, contract);
+      push_event(election_event_end_seeding{.election_time = election_start_time}, contract);
 
       // Must happen after the election is started
       setup_distribution(contract, election_start_time);
@@ -695,7 +710,6 @@ namespace eden
       auto result = std::get<election_state_v0>(results.get());
       result.lead_representative = winner;
       result.board = std::move(board);
-      set_default_election(result.last_election_time.to_time_point());
       members members{contract};
       uint8_t round = members.stats().ranks.size();
       std::vector<vote_report> votes;
@@ -717,6 +731,11 @@ namespace eden
           std::get<election_state_v0>(election_state_singleton{contract, default_scope}.get())
               .last_election_time;
       push_event(
+          election_event_end_seeding{
+              .election_time = election_start_time,
+          },
+          contract);
+      push_event(
           election_event_end_round_voting{
               .election_time = election_start_time,
               .round = round,
@@ -737,10 +756,12 @@ namespace eden
           },
           contract);
       push_event(
-          election_event_finished{
+          election_event_end{
               .election_time = election_start_time,
           },
           contract);
+
+      set_default_election(result.last_election_time.to_time_point());
    }
 
    uint32_t elections::finish_round(uint32_t max_steps)

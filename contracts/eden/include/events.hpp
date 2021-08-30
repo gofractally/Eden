@@ -11,19 +11,23 @@ namespace eden
 {
    // Election event order:
    //    election_event_schedule: repeatable, with different scheduled time
+   //    election_event_begin
    //    election_event_seeding: repeatable, with different seed
-   //    election_event_seed_finished
+   //    election_event_end_seeding
    //    election_event_config_summary
    //
    //    For each round:
    //       election_event_create_round
    //       election_event_create_group (for each group)
    //       election_event_begin_round_voting
+   //       if final round:
+   //          election_event_seeding: repeatable, with different seed
+   //          election_event_end_seeding
    //       election_event_end_round_voting
    //       election_event_report_group (for each group)
    //       election_event_end_round
    //
-   //    election_event_finished
+   //    election_event_end
 
    struct election_event_schedule
    {
@@ -31,6 +35,12 @@ namespace eden
       uint16_t election_threshold;
    };
    EOSIO_REFLECT(election_event_schedule, election_time, election_threshold)
+
+   struct election_event_begin
+   {
+      eosio::block_timestamp election_time;
+   };
+   EOSIO_REFLECT(election_event_begin, election_time)
 
    struct election_event_seeding
    {
@@ -41,11 +51,11 @@ namespace eden
    };
    EOSIO_REFLECT(election_event_seeding, election_time, start_time, end_time, seed)
 
-   struct election_event_seed_finished
+   struct election_event_end_seeding
    {
       eosio::block_timestamp election_time;
    };
-   EOSIO_REFLECT(election_event_seed_finished, election_time)
+   EOSIO_REFLECT(election_event_end_seeding, election_time)
 
    struct election_event_config_summary
    {
@@ -117,15 +127,16 @@ namespace eden
    };
    EOSIO_REFLECT(election_event_end_round, election_time, round)
 
-   struct election_event_finished
+   struct election_event_end
    {
       eosio::block_timestamp election_time;
    };
-   EOSIO_REFLECT(election_event_finished, election_time)
+   EOSIO_REFLECT(election_event_end, election_time)
 
    using event = std::variant<election_event_schedule,
+                              election_event_begin,
                               election_event_seeding,
-                              election_event_seed_finished,
+                              election_event_end_seeding,
                               election_event_config_summary,
                               election_event_create_round,
                               election_event_create_group,
@@ -133,7 +144,7 @@ namespace eden
                               election_event_end_round_voting,
                               election_event_report_group,
                               election_event_end_round,
-                              election_event_finished>;
+                              election_event_end>;
 
    extern std::vector<event> events;
    void push_event(const event& e, eosio::name self);
