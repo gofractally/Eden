@@ -38,10 +38,11 @@ namespace eden
 
    struct election_event_create_group
    {
+      eosio::block_timestamp election_start;
       uint8_t round;
       std::vector<eosio::name> voters;
    };
-   EOSIO_REFLECT(election_event_create_group, round, voters)
+   EOSIO_REFLECT(election_event_create_group, election_start, round, voters)
 
    struct election_event_begin_round
    {
@@ -72,11 +73,12 @@ namespace eden
 
    struct election_event_report_group
    {
+      eosio::block_timestamp election_start;
       uint8_t round;
       eosio::name winner;
       std::vector<vote_report> votes;
    };
-   EOSIO_REFLECT(election_event_report_group, round, winner, votes)
+   EOSIO_REFLECT(election_event_report_group, election_start, round, winner, votes)
 
    using event = std::variant<election_event_schedule,
                               election_event_seeding,

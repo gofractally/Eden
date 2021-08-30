@@ -454,6 +454,28 @@ namespace eden
       return max_steps;
    }
 
+   template <typename It>
+   static void report_create_group(uint8_t round,
+                                   eosio::name contract,
+                                   It& iter,
+                                   uint8_t group_size,
+                                   eosio::block_timestamp election_start)
+   {
+      std::vector<eosio::name> voters;
+      for (uint32_t i = 0; i < group_size; ++i)
+      {
+         voters.push_back(iter->member);
+         ++iter;
+      }
+      push_event(
+          election_event_create_group{
+              .election_start = election_start,
+              .round = round,
+              .voters = voters,
+          },
+          contract);
+   }
+
    uint32_t elections::prepare_election(uint32_t max_steps)
    {
       auto state_variant = state_sing.get();
@@ -480,38 +502,60 @@ namespace eden
          {
             eosio::check(state->next_member_idx > 0, "No voters");
             auto configs = make_election_config(state->next_member_idx);
-            push_event(
-                election_event_config_summary{
-                    .num_rounds = (uint8_t)configs.size(),
-                    .num_participants = configs.front().num_participants,
-                },
-                contract);
-            push_event(
-                election_event_begin_round{
-                    .round = 0,
-                    .num_participants = configs.front().num_participants,
-                    .num_groups = configs.front().num_groups,
-                    .round_begin = eosio::current_time_point(),
-                    .round_end = eosio::current_time_point() +
-                                 eosio::seconds(globals.get().election_round_time_sec),
-                },
-                contract);
-            if (configs.size() == 1)
+            if (max_steps > 0 && !state->next_report_index)
             {
-               auto board = extract_board();
-               auto winner = board.front();
-               finish_election(std::move(board), winner);
+               push_event(
+                   election_event_config_summary{
+                       .num_rounds = (uint8_t)configs.size(),
+                       .num_participants = configs.front().num_participants,
+                   },
+                   contract);
+               push_event(
+                   election_event_begin_round{
+                       .round = 0,
+                       .num_participants = configs.front().num_participants,
+                       .num_groups = configs.front().num_groups,
+                       .round_begin = eosio::current_time_point(),
+                       .round_end = eosio::current_time_point() +
+                                    eosio::seconds(globals.get().election_round_time_sec),
+                   },
+                   contract);
+            }
+
+            auto vote_idx = vote_tb.get_index<"bygroup"_n>();
+            auto end = vote_idx.end();
+            auto group_start = vote_idx.lower_bound(state->next_report_index);
+            auto election_start_time =
+                std::get<election_state_v0>(election_state_singleton{contract, default_scope}.get())
+                    .last_election_time;
+            for (; max_steps > 0 && group_start != end; --max_steps)
+            {
+               auto group_size = configs.front().group_min_size() +
+                                 (state->next_report_index < configs.front().num_large_groups() *
+                                                                 configs.front().group_max_size());
+               report_create_group(0, contract, group_start, group_size, election_start_time);
+               state->next_report_index += group_size;
+            }
+
+            if (max_steps > 0)
+            {
+               if (configs.size() == 1)
+               {
+                  auto board = extract_board();
+                  auto winner = board.front();
+                  finish_election(std::move(board), winner);
+                  --max_steps;
+                  return max_steps;
+               }
+               else
+               {
+                  state_variant = current_election_state_active{
+                      0, configs.front(), state->rng.seed(),
+                      eosio::current_time_point() +
+                          eosio::seconds(globals.get().election_round_time_sec)};
+               }
                --max_steps;
-               return max_steps;
             }
-            else
-            {
-               state_variant = current_election_state_active{
-                   0, configs.front(), state->rng.seed(),
-                   eosio::current_time_point() +
-                       eosio::seconds(globals.get().election_round_time_sec)};
-            }
-            --max_steps;
          }
       }
       set_state_sing(state_variant);
@@ -587,6 +631,7 @@ namespace eden
       auto contract = group_idx.get_code();
       push_event(
           election_event_report_group{
+              .election_start = election_start,
               .round = state.prev_round,
               .winner = result.winner,
               .votes = votes,
@@ -747,12 +792,13 @@ namespace eden
          data.next_input_index += group_size;
       }
 
-      if (max_steps > 0)
+      auto config = make_election_config(data.next_output_index);
+      auto next_round = data.prev_round + 1;
+      if (max_steps > 0 && !data.next_report_index)
       {
-         auto config = make_election_config(data.next_output_index);
          push_event(
              election_event_begin_round{
-                 .round = uint8_t(data.prev_round + 1),
+                 .round = uint8_t(next_round),
                  .num_participants = config.front().num_participants,
                  .num_groups = config.front().num_groups,
                  .round_begin = eosio::current_time_point(),
@@ -760,6 +806,20 @@ namespace eden
                               eosio::seconds(globals.get().election_round_time_sec),
              },
              contract);
+      }
+
+      group_start = vote_idx.lower_bound((next_round << 16) | data.next_report_index);
+      for (; max_steps > 0 && group_start != end; --max_steps)
+      {
+         auto group_size = config.front().group_min_size() +
+                           (data.next_report_index <
+                            config.front().num_large_groups() * config.front().group_max_size());
+         report_create_group(next_round, contract, group_start, group_size, election_start_time);
+         data.next_report_index += group_size;
+      }
+
+      if (max_steps > 0)
+      {
          if (config.size() == 1)
          {
             auto now = eosio::current_time_point();

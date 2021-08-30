@@ -143,8 +143,13 @@ namespace eden
       uint16_t next_member_idx;
       election_rng rng;
       eosio::name last_processed = {};
+      uint16_t next_report_index = 0;
    };
-   EOSIO_REFLECT(current_election_state_init_voters, next_member_idx, rng, last_processed)
+   EOSIO_REFLECT(current_election_state_init_voters,
+                 next_member_idx,
+                 rng,
+                 last_processed,
+                 next_report_index)
    EOSIO_COMPARE(current_election_state_init_voters);
 
    struct current_election_state_active
@@ -164,13 +169,15 @@ namespace eden
       election_round_config prev_config;
       uint16_t next_input_index;
       uint16_t next_output_index;
+      uint16_t next_report_index;
    };
    EOSIO_REFLECT(current_election_state_post_round,
                  rng,
                  prev_round,
                  prev_config,
                  next_input_index,
-                 next_output_index)
+                 next_output_index,
+                 next_report_index)
    EOSIO_COMPARE(current_election_state_post_round);
 
    struct current_election_state_final
