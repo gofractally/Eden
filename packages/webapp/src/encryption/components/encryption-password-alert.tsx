@@ -15,53 +15,41 @@ interface Props {
 export const EncryptionPasswordAlert = ({
     promptSetupEncryptionKey,
 }: Props) => {
-    const {
-        encryptionPassword,
-        isLoading: isLoadingPassword,
-    } = useEncryptionPassword();
+    const { encryptionPassword, isLoading } = useEncryptionPassword();
+    const { publicKey, privateKey } = encryptionPassword;
 
-    const [showNewKeyModal, setShowNewKeyModal] = useState(false);
-    const [showReenterKeyModal, setShowReenterKeyModal] = useState(false);
+    const [showFixPasswordModal, setShowFixPasswordModal] = useState(false);
 
     const [ualAccount] = useUALAccount();
     const { data: currentMember } = useCurrentMember();
+    const memberNotActive = currentMember?.status !== MemberStatus.ActiveMember;
 
-    if (
-        !encryptionPassword ||
-        !ualAccount ||
-        currentMember?.status !== MemberStatus.ActiveMember
-    ) {
+    if (!encryptionPassword || !ualAccount || memberNotActive) {
         return null;
     }
 
-    const promptNewKey =
-        promptSetupEncryptionKey &&
-        !isLoadingPassword &&
-        !encryptionPassword.publicKey;
+    const promptNewKey = promptSetupEncryptionKey && !isLoading && !publicKey;
+    const warnKeyNotPresent = !isLoading && publicKey && !privateKey;
 
-    const warnKeyNotPresent =
-        !isLoadingPassword &&
-        encryptionPassword.publicKey &&
-        !encryptionPassword.privateKey;
+    const showPasswordModal = () => setShowFixPasswordModal(true);
+    const hidePasswordModal = () => setShowFixPasswordModal(false);
 
     return (
         <>
             {promptNewKey ? (
-                <PromptNewKey showModal={() => setShowNewKeyModal(true)} />
+                <PromptNewKey showModal={showPasswordModal} />
             ) : warnKeyNotPresent ? (
-                <NotPresentKeyWarning
-                    showModal={() => setShowReenterKeyModal(true)}
-                />
+                <NotPresentKeyWarning showModal={showPasswordModal} />
             ) : null}
             <PromptCreateKeyModal
-                isOpen={showNewKeyModal}
-                close={() => setShowNewKeyModal(false)}
-                onDismissConfirmation={() => setShowNewKeyModal(false)}
+                isOpen={showFixPasswordModal} // only opens if password unset
+                close={hidePasswordModal}
+                onDismissConfirmation={hidePasswordModal}
             />
             <PromptReenterKeyModal
-                isOpen={showReenterKeyModal}
-                close={() => setShowReenterKeyModal(false)}
-                onDismissConfirmation={() => setShowReenterKeyModal(false)}
+                isOpen={showFixPasswordModal} // only opens if password set but missing locally
+                close={hidePasswordModal}
+                onDismissConfirmation={hidePasswordModal}
             />
         </>
     );
