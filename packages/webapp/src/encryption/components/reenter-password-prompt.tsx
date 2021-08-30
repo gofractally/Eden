@@ -71,9 +71,10 @@ export const ReenterPasswordPrompt = ({
         }
     };
 
-    const handleOnDismiss = () => {
-        setIsSuccess(false);
+    const handleOnDismiss = async () => {
         onDismissConfirmation();
+        await delay(300); // wait for modal to dismiss before resetting state
+        setIsSuccess(false);
     };
 
     const handleOnCancel = () => {
