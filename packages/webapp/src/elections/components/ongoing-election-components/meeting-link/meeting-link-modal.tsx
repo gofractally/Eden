@@ -14,7 +14,7 @@ interface Props {
     stage: RoundStage;
 }
 
-export const MeetingModal = ({
+export const MeetingLinkModal = ({
     isOpen,
     close,
     meetingStep,
@@ -142,4 +142,4 @@ const ModalStepGetLink = ({
     );
 };
 
-export default MeetingModal;
+export default MeetingLinkModal;
