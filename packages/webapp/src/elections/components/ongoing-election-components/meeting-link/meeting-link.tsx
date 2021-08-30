@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Dayjs } from "dayjs";
 
 import {
@@ -18,6 +18,9 @@ import { ActiveStateConfigType, RoundStage } from "elections/interfaces";
 
 import MeetingButtons from "./meeting-buttons";
 import MeetingLinkModal from "./meeting-modal";
+import PromptCreateKeyModal from "encryption/components/prompt-create-key-modal";
+import PromptReenterKeyModal from "encryption/components/prompt-reenter-key-modal";
+import { useEncryptionPassword } from "encryption";
 
 export enum MeetingStep {
     LinkZoomAccount,
@@ -163,7 +166,7 @@ export const MeetingLink = ({
                 isLoadingEncryptedData={isLoadingEncryptedData}
                 onClick={handleMeetingButton}
             />
-            <MeetingLinkModal
+            <Modals
                 isOpen={showMeetingModal}
                 close={() => setShowMeetingModal(false)}
                 meetingStep={meetingStep}
@@ -175,3 +178,80 @@ export const MeetingLink = ({
 };
 
 export default MeetingLink;
+
+interface ModalsProps {
+    isOpen: boolean;
+    close: () => void;
+    meetingStep: MeetingStep;
+    requestMeetingLink: (throwOnError: boolean) => Promise<void>;
+    stage: RoundStage;
+}
+
+const Modals = ({
+    isOpen,
+    close,
+    meetingStep,
+    requestMeetingLink,
+    stage,
+}: ModalsProps) => {
+    const { encryptionPassword, isLoading } = useEncryptionPassword();
+    const { publicKey, privateKey } = encryptionPassword;
+
+    const [isReenteringPassword, setIsReenteringPassword] = useState(false);
+    const [isCreatingPassword, setIsCreatingPassword] = useState(false);
+    const isPasswordMissing = Boolean(!isLoading && publicKey && !privateKey);
+    const isPasswordNotSet = !isLoading && !publicKey;
+
+    const linkAlreadyExists = meetingStep === MeetingStep.RetrieveMeetingLink;
+
+    useEffect(() => {
+        if (isCreatingPassword || isReenteringPassword) {
+            return;
+        }
+        if (isPasswordMissing && isOpen) {
+            setIsReenteringPassword(true);
+        }
+        if (isPasswordNotSet && isOpen) {
+            setIsCreatingPassword(true);
+        }
+    }, [isPasswordMissing, isPasswordNotSet, isOpen]);
+
+    const resetModalState = () => {
+        setIsReenteringPassword(false);
+        setIsCreatingPassword(false);
+    };
+
+    const cancel = () => {
+        resetModalState();
+        close();
+    };
+
+    const dismissPasswordConfirmation = () => {
+        resetModalState();
+        linkAlreadyExists && close();
+    };
+
+    return (
+        <>
+            <PromptCreateKeyModal
+                isOpen={isCreatingPassword}
+                close={cancel}
+                onDismissConfirmation={dismissPasswordConfirmation}
+                isTooLateForCurrentRound={linkAlreadyExists}
+            />
+            <PromptReenterKeyModal
+                isOpen={isReenteringPassword}
+                close={cancel}
+                onDismissConfirmation={dismissPasswordConfirmation}
+                isTooLateForCurrentRound={linkAlreadyExists}
+            />
+            <MeetingLinkModal
+                isOpen={!isReenteringPassword && !isCreatingPassword && isOpen}
+                close={cancel}
+                meetingStep={meetingStep}
+                requestMeetingLink={requestMeetingLink}
+                stage={stage}
+            />
+        </>
+    );
+};

@@ -2,10 +2,10 @@ import { useState } from "react";
 import { BsExclamationTriangle } from "react-icons/bs";
 
 import { MemberStatus, useCurrentMember, useUALAccount } from "_app";
-import { Button, Container, Modal } from "_app/ui";
+import { Button, Container } from "_app/ui";
 
-import ReenterPasswordPrompt from "./reenter-password-prompt";
-import CreateNewPasswordPrompt from "./create-new-password-prompt";
+import PromptCreateKeyModal from "./prompt-create-key-modal";
+import PromptReenterKeyModal from "./prompt-reenter-key-modal";
 import { useEncryptionPassword } from "../hooks";
 
 interface Props {
@@ -53,13 +53,15 @@ export const EncryptionPasswordAlert = ({
                     showModal={() => setShowReenterKeyModal(true)}
                 />
             ) : null}
-            <PromptNewKeyModal
+            <PromptCreateKeyModal
                 isOpen={showNewKeyModal}
                 close={() => setShowNewKeyModal(false)}
+                onDismissConfirmation={() => setShowNewKeyModal(false)}
             />
             <PromptReenterKeyModal
                 isOpen={showReenterKeyModal}
                 close={() => setShowReenterKeyModal(false)}
+                onDismissConfirmation={() => setShowReenterKeyModal(false)}
             />
         </>
     );
@@ -88,54 +90,5 @@ const NotPresentKeyWarning = ({ showModal }: PromptProps) => {
                 Enter election password
             </Button>
         </Container>
-    );
-};
-
-interface PasswordModalProps {
-    isOpen: boolean;
-    close: () => void;
-}
-
-const PromptNewKeyModal = ({ isOpen, close }: PasswordModalProps) => {
-    return (
-        <Modal
-            isOpen={isOpen}
-            onRequestClose={close}
-            contentLabel="Meeting Link Activation Modal - Requesting Password"
-            preventScroll
-            shouldCloseOnOverlayClick={false}
-            shouldCloseOnEsc={false}
-        >
-            <CreateNewPasswordPrompt
-                onCancel={close}
-                onDismissConfirmation={close}
-            />
-        </Modal>
-    );
-};
-
-interface PromptReenterKeyModalProps {
-    isOpen: boolean;
-    close: () => void;
-}
-
-const PromptReenterKeyModal = ({
-    isOpen,
-    close,
-}: PromptReenterKeyModalProps) => {
-    return (
-        <Modal
-            isOpen={isOpen}
-            onRequestClose={close}
-            contentLabel="Meeting Link Activation Modal - Requesting Password"
-            preventScroll
-            shouldCloseOnOverlayClick
-            shouldCloseOnEsc
-        >
-            <ReenterPasswordPrompt
-                onCancel={close}
-                onDismissConfirmation={close}
-            />
-        </Modal>
     );
 };

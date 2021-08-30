@@ -1,17 +1,12 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 
 import { Button, Heading, Modal, Text } from "_app/ui";
 import { zoomConnectAccountLink } from "_api/zoom-commons";
 import { RoundStage } from "elections/interfaces";
-import {
-    useEncryptionPassword,
-    ReenterPasswordPrompt,
-    CreateNewPasswordPrompt,
-} from "encryption";
 
 import { MeetingStep } from "./meeting-link";
 
-interface ModalProps {
+interface Props {
     isOpen: boolean;
     close: () => void;
     meetingStep: MeetingStep;
@@ -19,127 +14,36 @@ interface ModalProps {
     stage: RoundStage;
 }
 
-export const MeetingLinkModal = ({
+export const MeetingModal = ({
     isOpen,
     close,
     meetingStep,
     requestMeetingLink,
     stage,
-}: ModalProps) => {
-    const { encryptionPassword, isLoading } = useEncryptionPassword();
-    const { publicKey, privateKey } = encryptionPassword;
-
-    const [isCreatingMeetingLink, setIsCreatingMeetingLink] = useState(false);
-    const [isReenteringPassword, setIsReenteringPassword] = useState(false);
-    const [isCreatingPassword, setIsCreatingPassword] = useState(false);
-    const isPasswordMissing = Boolean(!isLoading && publicKey && !privateKey);
-    const isPasswordNotSet = !isLoading && !publicKey;
-
-    const linkAlreadyExists = meetingStep === MeetingStep.RetrieveMeetingLink;
-
-    useEffect(() => {
-        if (isCreatingPassword || isReenteringPassword) {
-            return;
-        }
-        if (isPasswordMissing && isOpen) {
-            setIsReenteringPassword(true);
-        }
-        if (isPasswordNotSet && isOpen) {
-            setIsCreatingPassword(true);
-        }
-    }, [isPasswordMissing, isPasswordNotSet, isOpen]);
-
-    const resetModalState = () => {
-        setIsReenteringPassword(false);
-        setIsCreatingPassword(false);
-        setIsCreatingMeetingLink(false);
-    };
-
-    const cancel = () => {
-        resetModalState();
-        close();
-    };
-
-    const dismissPasswordConfirmation = () => {
-        resetModalState();
-        linkAlreadyExists && close();
-    };
-
-    return (
-        <Modal
-            isOpen={isOpen}
-            onRequestClose={close}
-            onAfterClose={resetModalState}
-            contentLabel="Election round meeting link confirmation modal"
-            preventScroll
-            shouldCloseOnOverlayClick={false}
-            shouldCloseOnEsc={false}
-        >
-            {isCreatingPassword || isReenteringPassword ? (
-                <ModalStepPassword
-                    close={cancel}
-                    dismissOnSuccess={dismissPasswordConfirmation}
-                    isReenteringPassword={isReenteringPassword}
-                    isCreatingPassword={isCreatingPassword}
-                    linkAlreadyExists={linkAlreadyExists}
-                />
-            ) : meetingStep === MeetingStep.LinkZoomAccount ? (
-                <ModalStepZoom close={close} />
-            ) : meetingStep === MeetingStep.CreateMeetingLink ||
-              isCreatingMeetingLink ? (
-                <ModalStepGetLink
-                    close={close}
-                    onBeforeRequestMeetingLink={() =>
-                        setIsCreatingMeetingLink(true)
-                    } // keep this step active when it updates to RetrieveMeetingLink once link is present
-                    requestMeetingLink={requestMeetingLink}
-                    stage={stage}
-                />
-            ) : null}
-        </Modal>
-    );
-};
+}: Props) => (
+    <Modal
+        isOpen={isOpen}
+        onRequestClose={close}
+        contentLabel="Election round meeting link confirmation modal"
+        preventScroll
+        shouldCloseOnOverlayClick={false}
+        shouldCloseOnEsc={false}
+    >
+        {meetingStep === MeetingStep.LinkZoomAccount ? (
+            <ModalStepZoom close={close} />
+        ) : (
+            <ModalStepGetLink
+                close={close}
+                requestMeetingLink={requestMeetingLink}
+                stage={stage}
+            />
+        )}
+    </Modal>
+);
 
 interface ModalStepProps {
     close: () => void;
 }
-
-interface ModalStepPasswordProps extends ModalStepProps {
-    dismissOnSuccess: () => void;
-    isReenteringPassword: boolean;
-    isCreatingPassword: boolean;
-    linkAlreadyExists: boolean;
-}
-
-const ModalStepPassword = ({
-    close,
-    dismissOnSuccess,
-    isReenteringPassword,
-    isCreatingPassword,
-    linkAlreadyExists,
-}: ModalStepPasswordProps) => {
-    if (isCreatingPassword) {
-        return (
-            <CreateNewPasswordPrompt
-                onCancel={close}
-                onDismissConfirmation={dismissOnSuccess}
-                isTooLateForCurrentRound={linkAlreadyExists}
-            />
-        );
-    }
-
-    if (isReenteringPassword) {
-        return (
-            <ReenterPasswordPrompt
-                onCancel={close}
-                onDismissConfirmation={dismissOnSuccess}
-                isTooLateForCurrentRound={linkAlreadyExists}
-            />
-        );
-    }
-
-    return null;
-};
 
 const ModalStepZoom = ({ close }: ModalStepProps) => {
     const linkZoomAccount = () => {
@@ -168,20 +72,17 @@ const ModalStepZoom = ({ close }: ModalStepProps) => {
 interface ModalStepGetLinkProps extends ModalStepProps {
     requestMeetingLink: (throwOnError: boolean) => Promise<void>;
     stage: RoundStage;
-    onBeforeRequestMeetingLink: () => void;
 }
 
 const ModalStepGetLink = ({
     close,
     requestMeetingLink,
     stage,
-    onBeforeRequestMeetingLink,
 }: ModalStepGetLinkProps) => {
     const [isSuccess, setIsSuccess] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
     const onContinue = async () => {
         setIsLoading(true);
-        onBeforeRequestMeetingLink();
         try {
             await requestMeetingLink(true);
             setIsSuccess(true);
@@ -241,4 +142,4 @@ const ModalStepGetLink = ({
     );
 };
 
-export default MeetingLinkModal;
+export default MeetingModal;
