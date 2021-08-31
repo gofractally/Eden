@@ -20,6 +20,7 @@ import {
     queryMemberByAccountName,
     queryMembers,
     queryParticipantsInCompletedRound,
+    queryVoteDataRow,
     TABLE_INDEXES,
 } from "_app";
 import { EdenMember, MemberData, VoteDataQueryOptionsByField } from "members";
@@ -171,7 +172,7 @@ export const getVoteData = getVoteDataRows;
 const getCommonDelegateAccountForGroupWithThisMember = (
     roundIndexRequested: number,
     member: EdenMember,
-    voteData?: VoteData
+    voteData: VoteData
 ) => {
     // console.info(
     //     `getCommonDelegateAccountForGroupWithThisMember().roundIndexRequested[${roundIndexRequested}], member:`,
@@ -179,7 +180,7 @@ const getCommonDelegateAccountForGroupWithThisMember = (
     // );
     let electionRankIndex = member.election_rank; // if member table has been updated for this election
     // if the member has an open voteData record (i.e., still participating), get their election rank from that
-    if (voteData?.member === member.account) {
+    if (voteData.member === member.account) {
         electionRankIndex = voteData.round;
     }
 
@@ -208,7 +209,8 @@ const getCommonDelegateAccountForGroupWithThisMember = (
 export const getParticipantsInCompletedRound = async (
     electionRoundIndex: number,
     member: EdenMember,
-    voteData?: VoteData
+    // TODO: query for this data internally rather than passing it in; no reason not to encapsulate this
+    voteData: VoteData
 ): Promise<
     { participants: EdenMember[]; delegate?: EdenMember } | undefined
 > => {
@@ -351,10 +353,20 @@ const getParticipantsOfCompletedRounds = async (myDelegation: EdenMember[]) => {
     const pCompletedRounds = myDelegation.map(
         async (member, electionRoundIndex) => {
             console.info("getParticipantsOfCompletedRounds().member:", member);
+            const {
+                queryKey: queryKeyVote,
+                queryFn: queryFnVote,
+            } = queryVoteDataRow(member.account);
+            const voteData = await queryClient.fetchQuery(
+                queryKeyVote,
+                queryFnVote
+            );
+
             // get EdenMembers in group with this member
             const { queryKey, queryFn } = queryParticipantsInCompletedRound(
                 electionRoundIndex,
-                member
+                member,
+                voteData
             );
             const edenMembersInThisRound = await queryClient.fetchQuery(
                 queryKey,
@@ -369,13 +381,19 @@ const getParticipantsOfCompletedRounds = async (myDelegation: EdenMember[]) => {
                 edenMembersInThisRound?.participants || []
             );
 
+            const commonDelegate = edenMembersInThisRound?.participants.find(
+                (m) => m.representative !== member.account
+            );
+            const bDidReachConsensus = didReachConsensus(
+                electionRoundIndex,
+                edenMembersInThisRound?.participants
+            );
+
             return {
                 participants: edenMembersInThisRound?.participants, // .length will be number of participants and empty if no round happened
                 participantsMemberData,
-                didReachConsensus: didReachConsensus(
-                    electionRoundIndex,
-                    edenMembersInThisRound?.participants
-                ),
+                didReachConsensus: bDidReachConsensus,
+                delegate: bDidReachConsensus && commonDelegate,
             };
         }
     );
