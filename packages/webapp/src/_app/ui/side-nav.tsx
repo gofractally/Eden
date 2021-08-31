@@ -1,13 +1,12 @@
-import Link from "next/link";
+import { MouseEventHandler } from "react";
 import { useRouter } from "next/router";
+import Link from "next/link";
 import { useQueryClient } from "react-query";
-import { FaSignOutAlt } from "react-icons/fa";
 
 import { useUALAccount } from "../eos";
-import { useCurrentMember } from "_app/hooks";
-import { Button } from "./button";
+import { useCurrentMember, useMemberDataFromEdenMembers } from "_app/hooks";
+import { Button, ProfileImage, Text } from "_app/ui";
 import { Route, ROUTES } from "_app/config";
-import { MouseEventHandler } from "react";
 
 const MENU_ITEMS = Object.keys(ROUTES)
     .map((k) => ROUTES[k])
@@ -96,29 +95,83 @@ const AccountMenu = () => {
     const accountName = ualAccount?.accountName;
 
     const queryClient = useQueryClient();
-    const { data: member } = useCurrentMember();
+    const {
+        data: member,
+        isLoading: isLoadingCurrentMember,
+        isError: isErrorCurrentMember,
+    } = useCurrentMember();
+    const {
+        data: memberData,
+        isLoading: isLoadingMemberData,
+        isError: isErrorMemberData,
+    } = useMemberDataFromEdenMembers(member ? [member] : []);
+
+    const userProfile = memberData?.[0];
 
     const onSignOut = () => {
         queryClient.clear();
         ualLogout();
     };
 
-    return ualAccount ? (
-        <div className="flex justify-end xl:justify-start mr-6 xl:mr-0 mb-8 space-x-5 hover:text-gray-900">
-            <div className="hidden xl:block">
+    if (!ualAccount) {
+        return (
+            <Button onClick={ualShowModal} className="mb-8 -ml-4 mr-4">
+                Sign in
+            </Button>
+        );
+    }
+
+    if (!member) {
+        return (
+            <div className="flex justify-end xl:justify-start items-center ml-2.5 mr-7 xl:mr-0 mb-8 space-x-3">
+                <ProfileImage imageCid={userProfile?.image} size={40} />
+                <div className="hidden xl:block">
+                    <Text className="cursor-default">
+                        {accountName || "(unknown)"}
+                    </Text>
+                    <SignOutLink onClick={onSignOut} />
+                </div>
+            </div>
+        );
+    }
+
+    // TODO: Get our Link component up to snuff and start depending in that
+    // TODO: Handle long names
+    // TODO: Don't let ProfileImage collapse when at smaller breakpoints
+    // TODO: How does a user sign out?
+    // TODO: Sign in button at various sizes
+    // TODO: Handle loaders and error state
+    // TODO: Layout at smallest size in top nav bar
+    return (
+        <div className="flex justify-end xl:justify-start items-center ml-2.5 mr-7 xl:mr-0 mb-8 space-x-3">
+            <div className="cursor-pointer">
                 <Link href={`${ROUTES.MEMBERS.href}/${accountName}`}>
-                    <a>{member?.name || accountName || "(unknown)"}</a>
+                    <a>
+                        <ProfileImage imageCid={userProfile?.image} size={40} />
+                    </a>
                 </Link>
             </div>
-            <div>
-                <a href="#" onClick={onSignOut} title="Sign out">
-                    <FaSignOutAlt className="text-3xl xl:text-base inline-block mb-1" />
-                </a>
+            <div className="hidden xl:block">
+                <Link href={`${ROUTES.MEMBERS.href}/${accountName}`}>
+                    <a className="hover:underline">
+                        <Text>{member?.name}</Text>
+                    </a>
+                </Link>
+                <SignOutLink onClick={onSignOut} />
             </div>
         </div>
-    ) : (
-        <Button onClick={ualShowModal} className="mb-8 -ml-4 mr-4">
-            Sign in
-        </Button>
     );
 };
+
+const SignOutLink = ({ onClick }: { onClick: () => void }) => (
+    <Text size="sm">
+        <a
+            href="#"
+            onClick={onClick}
+            title="Sign out"
+            className="hover:underline"
+        >
+            Sign out
+        </a>
+    </Text>
+);
