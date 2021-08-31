@@ -13,7 +13,7 @@ export const RegistrationElection = ({ election }: Props) => {
     return (
         <>
             <ParticipationCard election={election} />
-            <ElectionFAQ />
+            {/* <ElectionFAQ /> */}
         </>
     );
 };
