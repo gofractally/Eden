@@ -35,7 +35,7 @@ const HeaderLogo = () => (
 
 const TopNav = () => {
     return (
-        <header className="xs:hidden fixed z-10 top-0 left-0 right-0 h-12 flex items-center border-b pl-28 pr-4 bg-white">
+        <header className="xs:hidden fixed z-50 top-0 left-0 right-0 h-12 flex items-center border-b pl-28 pr-4 bg-white">
             <HeaderLogo />
             <AccountMenu />
         </header>
@@ -44,7 +44,7 @@ const TopNav = () => {
 
 const BottomNav = () => {
     return (
-        <div className="flex items-center z-10 h-16 xs:hidden fixed bottom-0 left-0 right-0 bg-white border-t">
+        <div className="flex items-center z-50 h-16 xs:hidden fixed bottom-0 left-0 right-0 bg-white border-t">
             <div className="w-full flex justify-around">
                 {MENU_ITEMS.map((item, index) => {
                     const { NavIcon, label } = item;
