@@ -34,6 +34,11 @@ import { EncryptionPasswordAlert } from "encryption";
 import { EdenMember } from "members";
 import { RoundHeader } from "elections/components/ongoing-election-components";
 
+// TODO:
+// 1) add buttons that launch video upload service in new tab
+// 2) test inductions to ensure I haven't screwed up their video upload
+// 3) Test video uploads during (and after) an election
+
 export const RoundVideoUploadPage = () => {
     const [isElectionComplete, setIsElectionComplete] = useState(false);
     const {
