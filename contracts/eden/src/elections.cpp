@@ -555,8 +555,8 @@ namespace eden
                    election_event_begin_round_voting{
                        .election_time = election_start_time,
                        .round = 0,
-                       .round_begin = eosio::current_time_point(),
-                       .round_end =
+                       .voting_begin = eosio::current_time_point(),
+                       .voting_end =
                            eosio::current_time_point() +
                            eosio::seconds(configs.size() > 1 ? globals.get().election_round_time_sec
                                                              : 0),
@@ -885,8 +885,8 @@ namespace eden
              election_event_begin_round_voting{
                  .election_time = election_start_time,
                  .round = next_round,
-                 .round_begin = eosio::current_time_point(),
-                 .round_end =
+                 .voting_begin = eosio::current_time_point(),
+                 .voting_end =
                      eosio::current_time_point() +
                      eosio::seconds(config.size() == 1 ? election_final_seeding_window
                                                        : globals.get().election_round_time_sec),

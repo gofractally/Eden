@@ -92,10 +92,10 @@ namespace eden
    {
       eosio::block_timestamp election_time;
       uint8_t round;
-      eosio::block_timestamp round_begin;
-      eosio::block_timestamp round_end;
+      eosio::block_timestamp voting_begin;
+      eosio::block_timestamp voting_end;
    };
-   EOSIO_REFLECT(election_event_begin_round_voting, election_time, round, round_begin, round_end)
+   EOSIO_REFLECT(election_event_begin_round_voting, election_time, round, voting_begin, voting_end)
 
    struct election_event_end_round_voting
    {
