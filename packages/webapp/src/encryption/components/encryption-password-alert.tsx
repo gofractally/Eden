@@ -3,8 +3,6 @@ import { BsExclamationTriangle } from "react-icons/bs";
 import { MemberStatus, useCurrentMember, useUALAccount } from "_app";
 import { Button, Container } from "_app/ui";
 
-import PromptCreateKeyModal from "./prompt-create-key-modal";
-import PromptReenterKeyModal from "./prompt-reenter-key-modal";
 import { useEncryptionPassword, usePasswordModal } from "../hooks";
 
 interface Props {
@@ -14,7 +12,7 @@ interface Props {
 export const EncryptionPasswordAlert = ({
     promptSetupEncryptionKey,
 }: Props) => {
-    const { isOpen, show, dismiss } = usePasswordModal();
+    const { show } = usePasswordModal();
     const {
         encryptionPassword,
         isPasswordNotSet,
@@ -32,37 +30,19 @@ export const EncryptionPasswordAlert = ({
     const promptNewKey = promptSetupEncryptionKey && isPasswordNotSet;
     const warnKeyNotPresent = isPasswordSetNotPresent;
 
-    const onCancel = () => {
-        dismiss();
-    };
-
-    const onDismissSuccessMessage = () => {
-        dismiss(true);
-    };
-
     const showModal = () => {
         show();
     };
 
-    return (
-        <>
-            {promptNewKey ? (
-                <PromptNewKey showModal={showModal} />
-            ) : warnKeyNotPresent ? (
-                <NotPresentKeyWarning showModal={showModal} />
-            ) : null}
-            <PromptCreateKeyModal
-                isOpen={isOpen} // only opens if password unset
-                close={onCancel}
-                onDismissConfirmation={onDismissSuccessMessage}
-            />
-            <PromptReenterKeyModal
-                isOpen={isOpen} // only opens if password set but missing locally
-                close={onCancel}
-                onDismissConfirmation={onDismissSuccessMessage}
-            />
-        </>
-    );
+    if (promptNewKey) {
+        return <PromptNewKey showModal={showModal} />;
+    }
+
+    if (warnKeyNotPresent) {
+        return <NotPresentKeyWarning showModal={showModal} />;
+    }
+
+    return null;
 };
 
 interface PromptProps {

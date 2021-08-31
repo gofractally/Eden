@@ -18,6 +18,8 @@ import {
 
 import { EdenUALProvider, Store, Toaster } from "_app";
 
+import EncryptionPasswordModals from "encryption/components/encryption-password-modals";
+
 import "tailwindcss/tailwind.css";
 import "_app/styles/nprogress.tailwind.css";
 
@@ -59,6 +61,7 @@ const WebApp = ({ Component, pageProps }: AppProps) => {
                 <QueryClientProvider client={queryClient}>
                     <Hydrate state={pageProps.dehydratedState}>
                         <EdenUALProvider>
+                            <EncryptionPasswordModals />
                             <Component {...pageProps} />
                         </EdenUALProvider>
                     </Hydrate>
