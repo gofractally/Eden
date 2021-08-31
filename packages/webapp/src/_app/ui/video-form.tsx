@@ -15,19 +15,19 @@ interface Props {
     submitButtonIcon?: JSX.Element;
     title?: string;
     subtitle?: string;
-    action?: string;
+    action: string;
 }
 
 export const VideoSubmissionFormAndPreview = ({
     uid = 0,
     video,
     onSubmit,
+    action,
     submissionPhase,
-    submitButtonText = "Upload meeting video",
+    submitButtonText,
     submitButtonIcon = <FiUpload />,
-    title = "Induction video",
-    subtitle = "As an official witness, upload the video of the induction ceremony here.",
-    action = "inductvideo",
+    title = "",
+    subtitle = "",
 }: Props) => {
     const [isLoading, setIsLoading] = useState(false);
     const [uploadedVideo, setUploadedVideo] = useState<File | undefined>(
@@ -135,7 +135,6 @@ const VideoClip = ({ url }: { url: string }) => {
         previousUrl.current = url;
     }, [url]);
 
-    // console.info("<VideoClip/>.url:", url);
     return (
         <video key={url} ref={videoRef} controls>
             <source src={url} />

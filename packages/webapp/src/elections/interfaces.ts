@@ -100,9 +100,9 @@ export enum RoundStage {
     Complete,
 }
 
-interface ElectionCompletedRound {
+export interface ElectionCompletedRound {
     participants: EdenMember[]; // .length will be number of participants and empty if no round happened
-    participantsMemberData: MemberData[];
+    participantsMemberData?: MemberData[];
     didReachConsensus?: boolean;
     delegate?: EdenMember;
 }
