@@ -94,6 +94,10 @@ export const InductionVideoFormContainer = ({
                 video={induction.video}
                 onSubmit={submitInductionVideo}
                 submissionPhase={videoSubmissionPhase}
+                action="inductvideo"
+                submitButtonText="Upload meeting video"
+                title="Induction video"
+                subtitle="As an official witness, upload the video of the induction ceremony here."
             />
         </>
     );

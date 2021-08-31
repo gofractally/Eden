@@ -10,7 +10,6 @@ import {
     uploadToIpfs,
     useCommunityGlobals,
     useCurrentElection,
-    useCurrentMember,
     useLocalStorage,
     useOngoingElectionData,
     useUALAccount,
@@ -26,11 +25,10 @@ import {
 } from "_app/ui";
 import {
     CurrentElection,
-    Election,
     ElectionStatus,
     ErrorLoadingElection,
-    getRoundTimes,
     setElectionRoundVideo,
+    getRoundTimes,
 } from "elections";
 import { EncryptionPasswordAlert } from "encryption";
 import { EdenMember } from "members";
@@ -38,11 +36,6 @@ import { RoundHeader } from "elections/components/ongoing-election-components";
 
 export const RoundVideoUploadPage = () => {
     const [isElectionComplete, setIsElectionComplete] = useState(false);
-    const {
-        data: currentMember,
-        isLoading: isLoadingMember,
-        isError: isErrorMember,
-    } = useCurrentMember();
     const {
         data: currentElection,
         isLoading: isLoadingElection,
@@ -55,25 +48,13 @@ export const RoundVideoUploadPage = () => {
         }
     }, [currentElection]);
 
-    const isLoading = isLoadingMember || isLoadingElection;
-    const isError = isErrorMember || isErrorElection;
+    const isLoading = isLoadingElection;
+    const isError = isErrorElection;
 
+    if (isLoading || !currentElection) return <LoaderSection />;
     if (isError) return <ErrorLoadingElection />;
-    if (!currentElection) return <div>No currentElection yet</div>;
 
     const renderBanner = true; // TODO: get end time for video submission
-
-    // TODO:
-    // x) Add container to contents
-    // x) Add ongoing round
-    // x) Color completed round gray
-    // x) Add local storage persistence
-    // O) Test refetching of ongoingElectionData to update how many round show (as rounds complete and start)
-    // O) True up to UX -- Brandon: how to set border-t-0 on explanatory text at top of video upload page
-    // 7) handling loading/error conditions nicely
-    // x) Verify logged-in user is member and was in each round (otherwise don't display that round)
-    // 9) No reason to show ongoing round until voting is possible (avoid the "starts in..." period)
-    // x) Consider where components and files are (check imports) and rearrange them to be logical
 
     return (
         <FluidLayout
@@ -89,8 +70,8 @@ export const RoundVideoUploadPage = () => {
                 )
             }
         >
-            {isLoading || isElectionComplete ? (
-                <LoaderSection />
+            {isElectionComplete ? (
+                <div>Election is complete.</div>
             ) : (
                 <div className="divide-y">
                     <Container>
@@ -101,15 +82,15 @@ export const RoundVideoUploadPage = () => {
                     <Container className="space-y-6 pb-5">
                         <Text>
                             Election video files are typically large and require
-                            many mintes to pload completely. Do mot close this
-                            tab during the upload. A confirmatio wil be
+                            many minutes to upload completely. Do not close this
+                            tab during the upload. A confirmation will be
                             displayed when your upload is complete, along with a
                             preview of your video.
                         </Text>
                         <Text>
-                            Be patient, and remember you have up to 48 hours
-                            from the beginning of the electin to complete your
-                            election video uploads.
+                            Be patient, and remember you have 48 hours from the
+                            beginning of the election to complete your election
+                            video uploads.
                         </Text>
                     </Container>
                     <RoundVideoUploadList election={currentElection} />
@@ -135,10 +116,11 @@ const RoundVideoUploadList = ({ election }: { election: CurrentElection }) => {
     } = useCurrentElection();
     const {
         data: ongoingElectionData,
-    }: { data?: Election } = useOngoingElectionData({
+        isLoading: isLoadingOngoingElectionData,
+        isError: isErrorOngoingElectionData,
+    } = useOngoingElectionData({
         currentElection: election,
     });
-    console.info("useOngoingElectionData() return:", ongoingElectionData);
     const [roundVideoList, setRoundVideoList] = useLocalStorage(
         "RoundVideosUploaded",
         {}
@@ -147,8 +129,32 @@ const RoundVideoUploadList = ({ election }: { election: CurrentElection }) => {
         VideoSubmissionPhase | undefined
     >(undefined);
 
-    if (!ongoingElectionData) return <div>Loading data</div>;
+    const isLoading =
+        isLoadingGlobals && isLoadingElection && isLoadingOngoingElectionData;
+    const isError =
+        isErrorGlobals && isErrorElection && isErrorOngoingElectionData;
 
+    if (isLoading || !ongoingElectionData) {
+        return <LoaderSection />;
+    } else if (isError) {
+        return <ErrorLoadingElection />;
+    }
+
+    if (
+        ongoingElectionData.completedRounds.length === 0 &&
+        ongoingElectionData.ongoingRound.participantsMemberData.length === 0
+    )
+        return (
+            <Text className="p-8">
+                It appears you haven't participated in any election round.
+                Nothing to upload.
+            </Text>
+        );
+
+    const { roundEndTime, roundStartTime } = getRoundTimes(
+        communityGlobals,
+        currentElection
+    );
     const numCompletedRounds: number =
         ongoingElectionData.completedRounds.length;
 
@@ -158,7 +164,6 @@ const RoundVideoUploadList = ({ election }: { election: CurrentElection }) => {
         try {
             setVideoSubmissionPhase("uploading");
             const videoHash = await uploadToIpfs(videoFile);
-            // console.info(`submitElectionRoundVideo().videoHash[${videoHash}]`);
 
             const authorizerAccount = ualAccount.accountName;
             const transaction = setElectionRoundVideo(
@@ -182,7 +187,6 @@ const RoundVideoUploadList = ({ election }: { election: CurrentElection }) => {
             );
 
             roundVideoList[roundIndex] = videoHash;
-            // console.info(`set video[${roundIndex}]:`, videoHash);
             setRoundVideoList(roundVideoList);
 
             setVideoSubmissionPhase(undefined);
@@ -192,33 +196,11 @@ const RoundVideoUploadList = ({ election }: { election: CurrentElection }) => {
         }
     };
 
-    const { roundEndTime, roundStartTime } = getRoundTimes(
-        communityGlobals,
-        currentElection
-    );
     const roundIndex = ongoingElectionData.ongoingRound.roundIndex;
-    if (
-        !ongoingElectionData.completedRounds[0]?.participants?.find(
-            (m) => m.account === ualAccount.accountName
-        )
-    )
-        return (
-            <Text className="p-8">
-                It appears you haven't participated in any election round.
-                Nothing to upload.
-            </Text>
-        );
+
     return (
         <>
             {[...Array(numCompletedRounds)].map((_, roundIndex) => {
-                if (
-                    !ongoingElectionData.completedRounds[
-                        roundIndex
-                    ]?.participants?.find(
-                        (m) => m.account === ualAccount.accountName
-                    )
-                )
-                    return null;
                 const commonDelegate =
                     ongoingElectionData.completedRounds[roundIndex].delegate;
                 return (
@@ -249,9 +231,6 @@ const RoundVideoUploadList = ({ election }: { election: CurrentElection }) => {
                                         />
                                     }
                                     title="Upload your election video recording."
-                                    // subtitle={`As a participant in the election, upload the video of Round ${
-                                    //     roundIndex + 1
-                                    // } here.`}
                                     subtitle=""
                                     action="electvideo"
                                 />
@@ -327,7 +306,6 @@ const Header = ({
     roundStartTime,
     roundEndTime,
 }: HeaderProps) => {
-    console.info("<Header/>.winner:", winner);
     const subText =
         roundStartTime && roundEndTime
             ? `${roundStartTime.format("LT")} - ${roundEndTime.format("LT z")}`

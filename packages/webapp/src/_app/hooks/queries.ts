@@ -40,6 +40,7 @@ import {
     ActiveStateConfigType,
     CurrentElection,
     Election,
+    ElectionCompletedRound,
     ElectionState,
     VoteData,
 } from "elections/interfaces";
@@ -118,7 +119,7 @@ export const queryParticipantsInCompletedRound = (
         electionRound,
     ],
     queryFn: () => {
-        if (!member || voteData === undefined)
+        if (!member || !voteData)
             throw new Error(
                 "useParticipantsInCompletedRound() requires a value for 'memberAccount'"
             );
@@ -362,13 +363,11 @@ export const useHeadDelegate = () =>
 
 export const useParticipantsInMyCompletedRound = (
     electionRound: number
-    // ): UseQueryResult<{ participants: EdenMember[]; delegate?: string }> => {
-) => {
+): UseQueryResult<ElectionCompletedRound> => {
     const { data: member } = useCurrentMember();
     const { data: voteData } = useVoteDataRow(member?.account);
 
-    // return useQuery<{ participants: EdenMember[]; delegate?: string }>({
-    return useQuery({
+    return useQuery<ElectionCompletedRound>({
         ...queryParticipantsInCompletedRound(electionRound, member, voteData),
         enabled: Boolean(member),
     });
@@ -409,7 +408,6 @@ export const useMemberGroupParticipants = (
 };
 
 export const useElectionState = () =>
-    // useQuery<ElectionState, Error>({
     useQuery({
         ...queryElectionState,
     });

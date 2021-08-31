@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import dayjs, { Dayjs } from "dayjs";
+import { Dayjs } from "dayjs";
 import { BsInfoCircle } from "react-icons/bs";
 
 import {
@@ -18,6 +18,7 @@ import {
 } from "elections/interfaces";
 
 import * as Ongoing from "./ongoing-election-components";
+import { getRoundTimes } from "elections/utils";
 
 // TODO: Make sure time zone changes during election are handled properly
 export const OngoingElection = ({ election }: { election: any }) => {
@@ -34,7 +35,6 @@ export const OngoingElection = ({ election }: { election: any }) => {
     } = useOngoingElectionData({
         currentElection: election,
     });
-    console.info("useOngoingElectionData() return:", ongoingElectionData);
 
     useEffect(() => {
         if (!awaitingNextRound) return;
@@ -226,24 +226,4 @@ export const SignUpContainer = () => {
             </Button>
         </Container>
     );
-};
-
-export const getRoundTimes = (
-    communityGlobals: any,
-    currentElection: any
-): {
-    roundDurationMs: number;
-    roundEndTime: Dayjs;
-    roundStartTime: Dayjs;
-} => {
-    const roundDurationSec = communityGlobals.election_round_time_sec;
-    const roundEndTimeRaw =
-        currentElection.round_end ?? currentElection.seed.end_time;
-    const roundDurationMs = roundDurationSec * 1000;
-    const roundEndTime = dayjs(roundEndTimeRaw + "Z");
-    return {
-        roundDurationMs,
-        roundEndTime,
-        roundStartTime: dayjs(roundEndTime).subtract(roundDurationMs),
-    };
 };
