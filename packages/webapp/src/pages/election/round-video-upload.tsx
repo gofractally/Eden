@@ -98,18 +98,20 @@ export const RoundVideoUploadPage = () => {
                             Election-video upload service
                         </Heading>
                     </Container>
-                    <Text className="border-t-0 p-2">
-                        Election video files are typically large and require
-                        many mintes to pload completely. Do mot close this tab
-                        during the upload. A confirmatio wil be displayed when
-                        your upload is complete, along with a preview of your
-                        video.
-                    </Text>
-                    <Text className="border-t-0 p-2">
-                        Be patient, and remember you have up to 48 hours from
-                        the beginning of the electin to complete your election
-                        video uploads.
-                    </Text>
+                    <Container className="space-y-6 pb-5">
+                        <Text>
+                            Election video files are typically large and require
+                            many mintes to pload completely. Do mot close this
+                            tab during the upload. A confirmatio wil be
+                            displayed when your upload is complete, along with a
+                            preview of your video.
+                        </Text>
+                        <Text>
+                            Be patient, and remember you have up to 48 hours
+                            from the beginning of the electin to complete your
+                            election video uploads.
+                        </Text>
+                    </Container>
                     <RoundVideoUploadList election={currentElection} />
                 </div>
             )}
@@ -195,10 +197,6 @@ const RoundVideoUploadList = ({ election }: { election: CurrentElection }) => {
         currentElection
     );
     const roundIndex = ongoingElectionData.ongoingRound.roundIndex;
-    // console.info(
-    //     "round-video-upload.render().ongoingElection:",
-    //     ongoingElectionData
-    // );
     if (
         !ongoingElectionData.completedRounds[0]?.participants?.find(
             (m) => m.account === ualAccount.accountName
@@ -250,10 +248,11 @@ const RoundVideoUploadList = ({ election }: { election: CurrentElection }) => {
                                             className="mr-2"
                                         />
                                     }
-                                    title={`Round ${roundIndex + 1} Video`}
-                                    subtitle={`As a participant in the election, upload the video of Round ${
-                                        roundIndex + 1
-                                    } here.`}
+                                    title="Upload your election video recording."
+                                    // subtitle={`As a participant in the election, upload the video of Round ${
+                                    //     roundIndex + 1
+                                    // } here.`}
+                                    subtitle=""
                                     action="electvideo"
                                 />
                             </Container>
@@ -328,27 +327,15 @@ const Header = ({
     roundStartTime,
     roundEndTime,
 }: HeaderProps) => {
+    console.info("<Header/>.winner:", winner);
     const subText =
-        winner && isValidDelegate(winner.account)
+        roundStartTime && roundEndTime
+            ? `${roundStartTime.format("LT")} - ${roundEndTime.format("LT z")}`
+            : winner && isValidDelegate(winner.account)
             ? `Delegate elect: ${winner.name}`
             : "Consensus not achieved";
 
-    return roundStartTime && roundEndTime ? (
-        <RoundHeader
-            isRoundActive={isOngoing}
-            headlineComponent={
-                <Text size="sm" className="font-semibold">
-                    Round {roundIndex + 1}
-                </Text>
-            }
-            sublineComponent={
-                <Text size="sm" className="tracking-tight">
-                    {roundStartTime.format("LT")} -{" "}
-                    {roundEndTime.format("LT z")}
-                </Text>
-            }
-        />
-    ) : (
+    return (
         <RoundHeader
             isRoundActive={isOngoing}
             headlineComponent={
