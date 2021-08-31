@@ -287,16 +287,20 @@ struct vote_object : public chainbase::object<vote_table, vote_object>
 
    id_type id;
    eosio::block_timestamp election_time;
+   uint8_t round;
    uint64_t group_id;
    eosio::name voter;
    eosio::name candidate;
+   std::string video;
 
    vote_key by_pk() const { return {voter, election_time, group_id}; }
+   auto by_round() const { return std::tuple{election_time, round, voter}; }
    auto by_group() const { return std::tuple{group_id, voter}; }
 };
 using vote_index = mic<vote_object,
                        ordered_by_id<vote_object>,
                        ordered_by_pk<vote_object>,
+                       ordered_by_round<vote_object>,
                        ordered_by_group<vote_object>>;
 
 struct database
@@ -661,9 +665,10 @@ struct Vote
 
    auto voter() const { return get_member(obj->voter); }
    auto candidate() const { return get_member(obj->candidate); }
+   const auto& video() const { return obj->video; }
    auto group() const { return ElectionGroup{&get<by_id>(db.election_groups, obj->group_id)}; }
 };
-EOSIO_REFLECT2(Vote, voter, candidate, group)
+EOSIO_REFLECT2(Vote, voter, candidate, video, group)
 
 std::vector<Vote> ElectionGroup::votes() const
 {
@@ -842,6 +847,26 @@ void electopt(eosio::name voter, bool participating)
    modify<by_pk>(db.members, voter, [&](auto& obj) { obj.member.participating = participating; });
 }
 
+void electvote(uint8_t round, eosio::name voter, eosio::name candidate)
+{
+   auto& election_idx = db.elections.get<by_pk>();
+   eosio::check(!election_idx.empty(), "electvote without any elections");
+   auto& election = *--election_idx.end();
+   auto& vote = get<by_round>(db.votes, std::tuple{election.time, round, voter});
+   db.votes.modify(vote, [&](auto& vote) { vote.candidate = candidate; });
+}
+
+void electvideo(uint8_t round, eosio::name voter, const std::string& video)
+{
+   auto& election_idx = db.elections.get<by_pk>();
+   if (election_idx.empty())
+      return;
+   auto& election = *--election_idx.end();
+   auto* vote = get_ptr<by_round>(db.votes, std::tuple{election.time, round, voter});
+   if (vote)
+      db.votes.modify(*vote, [&](auto& vote) { vote.video = video; });
+}
+
 void handle_event(const eden::election_event_schedule& event)
 {
    db.status.modify(get_status(), [&](auto& status) {
@@ -893,13 +918,22 @@ void handle_event(const eden::election_event_create_round& event)
 void handle_event(const eden::election_event_create_group& event)
 {
    eosio::check(!event.voters.empty(), "group has no voters");
-   db.election_groups.emplace([&](auto& group) {
+   auto& group = db.election_groups.emplace([&](auto& group) {
       group.election_time = event.election_time;
       group.round = event.round;
       group.first_member =
           std::accumulate(event.voters.begin(), event.voters.end(), eosio::name{~uint64_t(0)},
                           [](auto& a, auto& b) { return std::min(a, b); });
    });
+   for (auto voter : event.voters)
+   {
+      db.votes.emplace([&](auto& vote) {
+         vote.election_time = group.election_time;
+         vote.round = event.round;
+         vote.group_id = group.id._id;
+         vote.voter = voter;
+      });
+   }
 }
 
 void handle_event(const eden::election_event_begin_round_voting& event)
@@ -975,6 +1009,10 @@ void filter_block(const subchain::eosio_block& block)
                call(resign, action.hexData.data);
             else if (action.name == "electopt"_n)
                call(electopt, action.hexData.data);
+            else if (action.name == "electvote"_n)
+               call(electvote, action.hexData.data);
+            else if (action.name == "electvideo"_n)
+               call(electvideo, action.hexData.data);
          }
          else if (action.firstReceiver == "eosio.null"_n && action.name == "eden.events"_n &&
                   action.creatorAction && action.creatorAction->receiver == eden_account)

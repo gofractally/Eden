@@ -361,7 +361,7 @@ struct eden_tester
       return groups;
    };
 
-   void generic_group_vote(const auto& groups, uint8_t round)
+   void generic_group_vote(const auto& groups, uint8_t round, bool add_video = false)
    {
       for (const auto& [group_id, members] : groups)
       {
@@ -370,6 +370,9 @@ struct eden_tester
          for (eosio::name member : members)
          {
             chain.as(member).act<actions::electvote>(round, member, winner);
+            if (add_video)
+               chain.as(member).act<actions::electvideo>(
+                   round, member, "Qmb7WmZiSDXss5HfuKfoSf6jxTDrHzr8AoAUDeDMLNDuws");
          }
       }
       chain.start_block(60 * 60 * 1000);
@@ -396,7 +399,7 @@ struct eden_tester
       }
    }
 
-   void run_election(bool auto_donate = true, uint32_t batch_size = 10000)
+   void run_election(bool auto_donate = true, uint32_t batch_size = 10000, bool add_video = false)
    {
       if (auto_donate)
       {
@@ -412,7 +415,7 @@ struct eden_tester
 
       while (get_table_size<eden::vote_table_type>() > 11)
       {
-         generic_group_vote(get_current_groups(), round++);
+         generic_group_vote(get_current_groups(), round++, add_video);
       }
 
       if (get_table_size<eden::vote_table_type>() != 0)
@@ -1638,6 +1641,6 @@ TEST_CASE("dfuse-test-election")
    eden_tester t;
    t.genesis();
    t.induct_n(100);
-   t.run_election();
+   t.run_election(true, 10000, true);
    t.write_dfuse_history("dfuse-test-election.json");
 }
