@@ -69,7 +69,7 @@ export const OngoingElection = ({ election }: { election: any }) => {
     return (
         <div className="divide-y">
             <Container darkBg>
-                <Heading size={2}>Today's Election</Heading>
+                <Heading size={2}>Today's election</Heading>
                 <Text>Currently in progress</Text>
             </Container>
             <Ongoing.SupportSegment />

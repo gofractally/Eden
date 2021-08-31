@@ -30,7 +30,7 @@ import {
 
 import Consensometer from "./consensometer";
 import RoundHeader from "./round-header";
-import { RequestElectionMeetingLinkButton } from "./request-election-meeting-link-button";
+import { MeetingLink } from "./meeting-link";
 import VotingRoundParticipants from "./voting-round-participants";
 import { setVote } from "../../transactions";
 
@@ -227,7 +227,7 @@ export const OngoingRoundSegment = ({
                 {[RoundStage.PreMeeting, RoundStage.Meeting].includes(
                     stage
                 ) && (
-                    <RequestElectionMeetingLinkButton
+                    <MeetingLink
                         stage={stage}
                         roundIndex={roundIndex}
                         meetingStartTime={meetingStartTime}
@@ -278,10 +278,10 @@ export const OngoingRoundSegment = ({
                                     <BiCheck size={21} className="-mt-1 mr-1" />
                                 )}
                                 {isSubmittingVote
-                                    ? "Submitting Vote"
+                                    ? "Submitting vote"
                                     : userVotingFor
-                                    ? "Change Vote"
-                                    : "Submit Vote"}
+                                    ? "Change vote"
+                                    : "Submit vote"}
                             </Button>
                             <Button size="sm">
                                 <RiVideoUploadLine size={18} className="mr-2" />
