@@ -1,3 +1,5 @@
+import { ParticipationCard } from "elections/components/registration-election-components";
+import { ElectionStatus } from "elections/interfaces";
 import { GetServerSideProps } from "next";
 import { QueryClient, useQuery } from "react-query";
 import { dehydrate } from "react-query/hydration";
@@ -7,14 +9,19 @@ import {
     Card,
     Heading,
     Link,
+    LoadingCard,
     queryMembersStats,
     queryTreasuryStats,
     RawLayout,
     Text,
     Asset,
     assetToString,
+    useCurrentElection,
+    useCurrentMember,
+    ElectionParticipationStatus,
 } from "_app";
 import { ROUTES } from "_app/config";
+import { EncryptionPasswordAlert } from "encryption";
 
 export const getServerSideProps: GetServerSideProps = async () => {
     const queryClient = new QueryClient();
@@ -27,11 +34,7 @@ export const getServerSideProps: GetServerSideProps = async () => {
 };
 
 export const Index = () => {
-    const {
-        isError: isMemberDataFetchError,
-        error: memberStatsError,
-        data: memberStats,
-    } = useQuery({
+    const { isError: isMemberDataFetchError, data: memberStats } = useQuery({
         ...queryMembersStats,
         keepPreviousData: true,
     });
@@ -44,19 +47,41 @@ export const Index = () => {
         keepPreviousData: true,
     });
 
+    const { data: currentMember } = useCurrentMember();
+    const { data: currentElection } = useCurrentElection();
+
+    const renderBanner =
+        currentElection?.electionState !== ElectionStatus.Registration ||
+        currentMember?.election_participation_status ===
+            ElectionParticipationStatus.InElection;
+
     return (
-        <RawLayout>
-            <CallToAction
-                href="http://eden.eoscommunity.org"
-                buttonLabel="Learn more"
-                target="_blank"
-                isExternal
-            >
-                Eden is a community working to maximize the power and
-                independence of its members, thereby securing life, liberty,
-                property, and justice for all.
-            </CallToAction>
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-0 lg:gap-5 text-gray-800">
+        <RawLayout
+            banner={
+                renderBanner && (
+                    <EncryptionPasswordAlert
+                        promptSetupEncryptionKey={
+                            currentElection?.electionState !==
+                            ElectionStatus.Registration
+                        }
+                    />
+                )
+            }
+        >
+            <div className="grid grid-cols-1 xl:grid-cols-3 gap-0 lg:gap-5 text-gray-800">
+                <ElectionCard />
+                <div className="col-span-1 lg:col-span-2 space-y-4">
+                    <CallToAction
+                        href="http://eden.eoscommunity.org"
+                        buttonLabel="Learn more"
+                        target="_blank"
+                        isExternal
+                    >
+                        Eden is a community working to maximize the power and
+                        independence of its members, thereby securing life,
+                        liberty, property, and justice for all.
+                    </CallToAction>
+                </div>
                 <div className="col-span-1 lg:col-span-2 space-y-4">
                     <Card>
                         <div className="grid grid-cols-1 xl:grid-cols-2 gap-4 xl:gap-16 lg:px-8 text-gray-800">
@@ -110,6 +135,47 @@ export const Index = () => {
             </div>
         </RawLayout>
     );
+};
+
+const ElectionCard = () => {
+    const { data: currentElection, isLoading, isError } = useCurrentElection();
+
+    if (isError)
+        return (
+            <Card className="flex items-center justify-center">
+                <Heading size={2}>Error loading election</Heading>
+            </Card>
+        );
+
+    if (isLoading) {
+        return <LoadingCard />;
+    }
+
+    switch (currentElection?.electionState) {
+        case ElectionStatus.Registration:
+        case ElectionStatus.Seeding:
+        case ElectionStatus.InitVoters:
+            return (
+                <Card className="flex items-center">
+                    <ParticipationCard election={currentElection} />
+                </Card>
+            );
+        case ElectionStatus.Active:
+        case ElectionStatus.PostRound:
+        case ElectionStatus.Final:
+            return (
+                <Card className="flex flex-col items-center justify-center space-y-2">
+                    <Heading size={2}>Election in progress</Heading>
+                    <Text>
+                        Visit the{" "}
+                        <Link href={ROUTES.ELECTION.href}>Election page</Link>{" "}
+                        for more details.
+                    </Text>
+                </Card>
+            );
+        default:
+            return <LoadingCard />;
+    }
 };
 
 interface CommunityStatsProps {
