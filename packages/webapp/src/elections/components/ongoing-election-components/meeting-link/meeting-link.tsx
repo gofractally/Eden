@@ -118,6 +118,8 @@ export const MeetingLink = ({
             // eagerly check for presence of link on chain to avoid creating
             // unnecessary meetings and making user sign something for nothing.
             const { data } = await refetchEncryptedData();
+            // TODO: attempt to decrypt here; if unsuccessful, throw error and inform user they're new password will only work for upcoming rounds / elections
+
             if (data) return;
 
             const topic = `Eden Election - Round #${roundIndex + 1}`;

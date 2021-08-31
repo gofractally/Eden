@@ -54,8 +54,8 @@ export const PromptReenterKeyModal = ({
             onRequestClose={onCloseHandler}
             contentLabel="Meeting Link Activation Modal - Requesting Password"
             preventScroll
-            shouldCloseOnOverlayClick
-            shouldCloseOnEsc
+            shouldCloseOnOverlayClick={false}
+            shouldCloseOnEsc={false}
             {...props}
         >
             <ReenterPasswordPrompt

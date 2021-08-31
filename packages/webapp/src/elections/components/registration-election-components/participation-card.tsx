@@ -232,6 +232,8 @@ interface SetEncryptionPasswordAction {
     trx: any;
 }
 
+// TODO: Refactor to use password modals from new `usePasswordModal()` hook.
+// See `meetingLink.tsx` for example implementation.
 const ConfirmParticipationModal = ({ isOpen, close, deadline }: ModalProps) => {
     const [isLoading, setIsLoading] = useState<boolean>(false);
     const [ualAccount] = useUALAccount();

@@ -1,10 +1,11 @@
 import { useState } from "react";
+import { useQueryClient } from "react-query";
 
-import { onError, useUALAccount } from "_app";
+import { delay, onError, queryMemberByAccountName, useUALAccount } from "_app";
 
 import NewPasswordForm from "./new-password-form";
 import PasswordSuccessConfirmation from "./password-success-confirmation";
-import { UpdateEncryptionPassword, useEncryptionPassword } from "../hooks";
+import { useEncryptionPassword } from "../hooks";
 import { setEncryptionPublicKeyTransaction } from "../transactions";
 
 interface Props {
@@ -20,6 +21,7 @@ export const CreateNewPasswordPrompt = ({
     const [isSuccess, setIsSuccess] = useState(false);
     const [ualAccount] = useUALAccount();
     const { updateEncryptionPassword } = useEncryptionPassword();
+    const queryClient = useQueryClient();
 
     const onSubmit = async (publicKey: string, privateKey: string) => {
         setIsLoading(true);
@@ -36,6 +38,12 @@ export const CreateNewPasswordPrompt = ({
                 broadcast: true,
             });
             console.info("set encryption public key trx", signedTrx);
+            await delay(3000); // allow time for chain tables to update
+
+            // invalidate current member query to make observing queries aware of presence of new password
+            queryClient.invalidateQueries(
+                queryMemberByAccountName(ualAccount.accountName).queryKey
+            );
 
             updateEncryptionPassword(publicKey, privateKey);
             setIsSuccess(true);
