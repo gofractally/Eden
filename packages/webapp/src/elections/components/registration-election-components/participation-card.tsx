@@ -330,10 +330,8 @@ const ConfirmParticipationModal = ({ isOpen, close, deadline }: ModalProps) => {
             onAfterClose={() => setStep(ParticipationStep.ConfirmParticipation)}
             contentLabel="Election Participation Modal - Confirming Participation"
             preventScroll
-            shouldCloseOnOverlayClick={
-                step !== ParticipationStep.ConfirmPassword
-            }
-            shouldCloseOnEsc={step !== ParticipationStep.ConfirmPassword}
+            shouldCloseOnOverlayClick={false}
+            shouldCloseOnEsc={false}
         >
             {step === ParticipationStep.ConfirmParticipation && (
                 <ConfirmParticipationStep
@@ -537,8 +535,8 @@ const CancelParticipationModal = ({ isOpen, close }: ModalProps) => {
             onRequestClose={close}
             contentLabel="Election Participation Modal - Canceling Participation"
             preventScroll
-            shouldCloseOnOverlayClick={!isLoading}
-            shouldCloseOnEsc={!isLoading}
+            shouldCloseOnOverlayClick={false}
+            shouldCloseOnEsc={false}
         >
             <div className="space-y-4">
                 <Heading>I do not want to participate in the election</Heading>
