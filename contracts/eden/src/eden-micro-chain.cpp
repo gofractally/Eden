@@ -138,7 +138,7 @@ using MemberElectionConnection =
                                                   MemberElectionEdge_name>>;
 
 struct Vote;
-using vote_key = std::tuple<eosio::name, eosio::block_timestamp, uint64_t>;
+using vote_key = std::tuple<eosio::name, eosio::block_timestamp, uint8_t>;
 constexpr const char VoteConnection_name[] = "VoteConnection";
 constexpr const char VoteEdge_name[] = "VoteEdge";
 using VoteConnection =
@@ -223,6 +223,7 @@ struct election_object : public chainbase::object<election_table, election_objec
    id_type id;
    eosio::block_timestamp time;
    bool seeding = false;
+   bool results_available = false;
    std::optional<eosio::block_timestamp> seeding_start_time;
    std::optional<eosio::block_timestamp> seeding_end_time;
    std::optional<eosio::checksum256> seed;
@@ -293,15 +294,13 @@ struct vote_object : public chainbase::object<vote_table, vote_object>
    eosio::name candidate;
    std::string video;
 
-   vote_key by_pk() const { return {voter, election_time, group_id}; }
+   vote_key by_pk() const { return {voter, election_time, round}; }
    auto by_round() const { return std::tuple{election_time, round, voter}; }
-   auto by_group() const { return std::tuple{group_id, voter}; }
 };
 using vote_index = mic<vote_object,
                        ordered_by_id<vote_object>,
                        ordered_by_pk<vote_object>,
-                       ordered_by_round<vote_object>,
-                       ordered_by_group<vote_object>>;
+                       ordered_by_round<vote_object>>;
 
 struct database
 {
@@ -495,6 +494,7 @@ struct Election
 
    eosio::block_timestamp time() const { return obj->time; }
    bool seeding() const { return obj->seeding; }
+   bool resultsAvailable() const { return obj->results_available; }
    std::optional<eosio::block_timestamp> seedingStartTime() const
    {
       return obj->seeding_start_time;
@@ -517,6 +517,7 @@ struct Election
 EOSIO_REFLECT2(Election,
                time,
                seeding,
+               resultsAvailable,
                seedingStartTime,
                seedingEndTime,
                seed,
@@ -673,9 +674,9 @@ EOSIO_REFLECT2(Vote, voter, candidate, video, group)
 std::vector<Vote> ElectionGroup::votes() const
 {
    std::vector<Vote> result;
-   auto& idx = db.votes.get<by_group>();
-   for (auto it = idx.lower_bound(std::tuple{obj->id._id, eosio::name{0}});
-        it != idx.end() && it->group_id == obj->id._id; ++it)
+   auto& idx = db.votes.get<by_round>();
+   for (auto it = idx.lower_bound(std::tuple{obj->election_time, obj->round, eosio::name{0}});
+        it != idx.end() && it->election_time == obj->election_time && it->round == obj->round; ++it)
    {
       result.push_back(Vote{&*it});
    }
@@ -688,14 +689,14 @@ VoteConnection MemberElection::votes(std::optional<uint32_t> first,
                                      std::optional<std::string> after) const
 {
    return clchain::make_connection<VoteConnection, vote_key>(
-       std::nullopt,                                             // gt
-       vote_key{member->account, election->time, 0},             // ge
-       std::nullopt,                                             // lt
-       vote_key{member->account, election->time, ~uint64_t(0)},  // le
-       first, last, before, after,                               //
-       db.votes.get<by_pk>(),                                    //
-       [](auto& obj) { return obj.by_pk(); },                    //
-       [](auto& obj) { return Vote{&obj}; },                     //
+       std::nullopt,                                            // gt
+       vote_key{member->account, election->time, 0},            // ge
+       std::nullopt,                                            // lt
+       vote_key{member->account, election->time, ~uint8_t(0)},  // le
+       first, last, before, after,                              //
+       db.votes.get<by_pk>(),                                   //
+       [](auto& obj) { return obj.by_pk(); },                   //
+       [](auto& obj) { return Vote{&obj}; },                    //
        [](auto& votes, auto key) { return votes.lower_bound(key); },
        [](auto& votes, auto key) { return votes.upper_bound(key); });
 }
@@ -953,7 +954,21 @@ void handle_event(const eden::election_event_end_round_voting& event)
                     [&](auto& round) { round.voting_finished = true; });
 }
 
-void handle_event(const eden::election_event_report_group& event) {}
+void handle_event(const eden::election_event_report_group& event)
+{
+   eosio::check(!event.votes.empty(), "group has no votes");
+   auto first_member =
+       std::accumulate(event.votes.begin(), event.votes.end(), eosio::name{~uint64_t(0)},
+                       [](auto& a, auto& b) { return std::min(a, b.voter); });
+   auto& group = get<by_pk>(db.election_groups,
+                            ElectionGroupKey{event.election_time, event.round, first_member});
+   db.election_groups.modify(group, [&](auto& group) { group.winner = event.winner; });
+   for (auto& v : event.votes)
+   {
+      auto& vote = get<by_round>(db.votes, std::tuple{event.election_time, event.round, v.voter});
+      db.votes.modify(vote, [&](auto& vote) { vote.candidate = v.candidate; });
+   }
+}
 
 void handle_event(const eden::election_event_end_round& event)
 {
@@ -961,7 +976,20 @@ void handle_event(const eden::election_event_end_round& event)
                     [&](auto& round) { round.results_available = true; });
 }
 
-void handle_event(const eden::election_event_end& event) {}
+void handle_event(const eden::election_event_end& event)
+{
+   modify<by_pk>(db.elections, event.election_time, [&](auto& election) {
+      election.results_available = true;
+      if (!election.num_rounds)
+         return;
+      auto& idx = db.election_groups.get<by_pk>();
+      auto it =
+          idx.lower_bound(ElectionGroupKey{event.election_time, *election.num_rounds - 1, ""_n});
+      if (it != idx.end() && it->election_time == event.election_time &&
+          it->round == *election.num_rounds - 1)
+         election.final_group_id = it->id._id;
+   });
+}
 
 void handle_event(const auto& event) {}
 
