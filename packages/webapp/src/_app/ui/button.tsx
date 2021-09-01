@@ -37,7 +37,7 @@ export type ButtonType =
     | "link";
 const TYPES: { [key in ButtonType]: string } = {
     primary: "bg-blue-500 border-blue-500 text-white hover:bg-blue-600",
-    disabled: "border-gray-400 bg-gray-300 text-gray-500",
+    disabled: "border-gray-300 bg-gray-300 text-white",
     neutral: "bg-gray-50 text-gray-800 hover:bg-gray-200",
     caution: "bg-yellow-500 text-white hover:bg-yellow-600 border-white",
     danger: "bg-red-500 text-white hover:bg-red-600",

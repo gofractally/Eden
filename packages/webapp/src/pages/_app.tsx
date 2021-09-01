@@ -16,7 +16,9 @@ import {
     EdenChainContext,
 } from "@edenos/common/dist/subchain";
 
-import { EdenUALProvider, Toaster } from "_app";
+import { EdenUALProvider, Store, Toaster } from "_app";
+
+import EncryptionPasswordModals from "encryption/components/encryption-password-modals";
 
 import "tailwindcss/tailwind.css";
 import "_app/styles/nprogress.tailwind.css";
@@ -56,15 +58,18 @@ const WebApp = ({ Component, pageProps }: AppProps) => {
     );
     return (
         <EdenChainContext.Provider value={subchain}>
-            <QueryClientProvider client={queryClient}>
-                <Hydrate state={pageProps.dehydratedState}>
-                    <EdenUALProvider>
-                        <Component {...pageProps} />
-                    </EdenUALProvider>
-                </Hydrate>
-                <ReactQueryDevtools initialIsOpen={false} />
-                <Toaster />
-            </QueryClientProvider>
+            <Store.StateProvider>
+                <QueryClientProvider client={queryClient}>
+                    <Hydrate state={pageProps.dehydratedState}>
+                        <EdenUALProvider>
+                            <EncryptionPasswordModals />
+                            <Component {...pageProps} />
+                        </EdenUALProvider>
+                    </Hydrate>
+                    <ReactQueryDevtools initialIsOpen={false} />
+                    <Toaster />
+                </QueryClientProvider>
+            </Store.StateProvider>
         </EdenChainContext.Provider>
     );
 };

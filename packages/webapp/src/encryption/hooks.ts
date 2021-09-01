@@ -1,5 +1,12 @@
-import { useEffect, useState } from "react";
-import { useCurrentMember } from "_app";
+import { useEffect } from "react";
+
+import {
+    actionSetEncryptionPassword,
+    actionShowPasswordModal,
+    useCurrentMember,
+    useGlobalStore,
+} from "_app";
+
 import { getEncryptionKey, putEncryptionKey } from "./storage";
 
 export interface EncryptionPassword {
@@ -13,17 +20,17 @@ export type UpdateEncryptionPassword = (
 ) => void;
 
 export const useEncryptionPassword = () => {
-    const [
-        encryptionPassword,
-        setEncryptionPassword,
-    ] = useState<EncryptionPassword>({});
+    const { state, dispatch } = useGlobalStore();
     const { data: currentMember, isLoading, error } = useCurrentMember();
 
+    const { encryptionPassword } = state;
+
     useEffect(() => {
-        const pw = getEncryptionPassword();
-        const pubKeyChanged = pw.publicKey !== encryptionPassword.publicKey;
-        const privKeyChanged = pw.privateKey !== encryptionPassword.privateKey;
-        if (pubKeyChanged || privKeyChanged) setEncryptionPassword(pw);
+        const { publicKey, privateKey } = getEncryptionPassword();
+        const pubKeyChanged = encryptionPassword.publicKey !== publicKey;
+        const privKeyChanged = encryptionPassword.privateKey !== privateKey;
+        if (pubKeyChanged || privKeyChanged)
+            setEncryptionPassword(publicKey, privateKey);
     });
 
     const updateEncryptionPassword = (
@@ -31,7 +38,11 @@ export const useEncryptionPassword = () => {
         privateKey: string
     ) => {
         putEncryptionKey(publicKey, privateKey);
-        setEncryptionPassword({ publicKey, privateKey });
+        setEncryptionPassword(publicKey, privateKey);
+    };
+
+    const setEncryptionPassword = (publicKey?: string, privateKey?: string) => {
+        dispatch(actionSetEncryptionPassword(publicKey, privateKey));
     };
 
     const getEncryptionPassword = () => {
@@ -41,11 +52,51 @@ export const useEncryptionPassword = () => {
         return { publicKey, privateKey } as EncryptionPassword;
     };
 
+    const { publicKey, privateKey } = encryptionPassword;
+    const isPasswordNotSet = isLoading ? undefined : !publicKey;
+    const isPasswordSetNotPresent = isLoading
+        ? undefined
+        : Boolean(publicKey && !privateKey);
+
     return {
         encryptionPassword,
-        getEncryptionPassword,
         updateEncryptionPassword,
-        isLoading: isLoading,
+        isLoading,
+        isPasswordNotSet,
+        isPasswordSetNotPresent,
         error,
+    };
+};
+
+export const usePasswordModal = () => {
+    const { state, dispatch } = useGlobalStore();
+    const { passwordModal } = state;
+    const {
+        isOpen,
+        resolver,
+        newPasswordIsInvalidForCurrentRound,
+    } = passwordModal;
+
+    const show = (newPasswordIsInvalidForCurrentRound: boolean = false) =>
+        new Promise((resolve) => {
+            dispatch(
+                actionShowPasswordModal(
+                    true,
+                    resolve,
+                    newPasswordIsInvalidForCurrentRound
+                )
+            );
+        });
+
+    const dismiss = (withSuccess: boolean = false) => {
+        dispatch(actionShowPasswordModal(false, null));
+        resolver?.(withSuccess);
+    };
+
+    return {
+        isOpen,
+        show,
+        dismiss,
+        newPasswordIsInvalidForCurrentRound,
     };
 };
