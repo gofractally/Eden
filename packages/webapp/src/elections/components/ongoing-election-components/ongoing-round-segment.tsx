@@ -33,6 +33,7 @@ import RoundHeader from "./round-header";
 import { MeetingLink } from "./meeting-link";
 import VotingRoundParticipants from "./voting-round-participants";
 import { setVote } from "../../transactions";
+import { VideoUploadButton } from "pages/election/round-video-upload";
 
 export interface RoundSegmentProps {
     ongoingElectionData?: Election;
@@ -302,6 +303,9 @@ export const OngoingRoundSegment = ({
                     )}
                 </MembersGrid>
             )}
+            <Container>
+                <VideoUploadButton />
+            </Container>
         </Expander>
     );
 };

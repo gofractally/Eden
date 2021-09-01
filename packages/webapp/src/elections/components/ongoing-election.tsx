@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
-import { Dayjs } from "dayjs";
 import { BsInfoCircle } from "react-icons/bs";
+import { Dayjs } from "dayjs";
 
 import {
     useUALAccount,
@@ -10,7 +10,7 @@ import {
     useCurrentElection,
 } from "_app";
 import { Button, Container, Heading, Loader, Link, Text } from "_app/ui";
-import { ErrorLoadingElection } from "elections";
+import { ErrorLoadingElection, getRoundTimes } from "elections";
 import {
     ActiveStateConfigType,
     Election,
@@ -18,7 +18,6 @@ import {
 } from "elections/interfaces";
 
 import * as Ongoing from "./ongoing-election-components";
-import { getRoundTimes } from "elections/utils";
 
 // TODO: Make sure time zone changes during election are handled properly
 export const OngoingElection = ({ election }: { election: any }) => {
