@@ -3,11 +3,12 @@ import {
     useMemberDataFromEdenMembers,
     useParticipantsInMyCompletedRound,
 } from "_app";
-import { Expander, Text } from "_app/ui";
+import { Container, Expander, Text } from "_app/ui";
 import { ElectionParticipantChip } from "elections";
 import { EdenMember, MembersGrid } from "members";
 
 import RoundHeader from "./round-header";
+import { VideoUploadButton } from "pages/election/round-video-upload";
 
 interface CompletedRoundSegmentProps {
     roundIndex: number;
@@ -54,6 +55,9 @@ export const CompletedRoundSegment = ({
                     );
                 }}
             </MembersGrid>
+            <Container>
+                <VideoUploadButton />
+            </Container>
         </Expander>
     );
 };
