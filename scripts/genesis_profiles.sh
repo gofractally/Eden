@@ -1,7 +1,7 @@
 #!/usr/bin/env sh
 set -xe
 
-CLEOS="cleos -u https://wax-test.eosdac.io"
+CLEOS="cleos -u https://waxtest.eosn.io"
 CONTRACT="test2.edev"
 
 for PARMS in $(cat ./genesis_accounts_long_list); do
