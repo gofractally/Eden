@@ -995,7 +995,6 @@ void handle_event(const auto& event) {}
 
 void handle_event(const eden::event& event)
 {
-   printf("====\n%s\n", eosio::format_json(event).c_str());
    std::visit([](const auto& event) { handle_event(event); }, event);
 }
 
@@ -1049,7 +1048,6 @@ void filter_block(const subchain::eosio_block& block)
             auto events = eosio::convert_from_bin<std::vector<eden::event>>(action.hexData.data);
             for (auto& event : events)
                handle_event(event);
-            printf("@@@@@@@@\n");
          }
       }
    }
