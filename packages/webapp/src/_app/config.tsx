@@ -8,7 +8,7 @@ export interface Route {
     label: string;
     exactPath?: boolean;
     hideNav?: boolean;
-    NavIcon?: React.ComponentType;
+    NavIcon?: React.ReactNode;
 }
 
 export const ROUTES: { [key: string]: Route } = {
@@ -36,6 +36,7 @@ export const ROUTES: { [key: string]: Route } = {
     DELEGATION: {
         href: "/delegates",
         label: "My Delegates",
+        hideNav: true,
         NavIcon: () => (
             <BsStar
                 className="text-3xl xl:text-2xl -ml-px"
@@ -43,7 +44,17 @@ export const ROUTES: { [key: string]: Route } = {
             />
         ),
     },
-    TREASURY: { href: "/treasury", label: "Treasury", hideNav: true },
+    TREASURY: {
+        href: "/treasury",
+        label: "Treasury",
+        NavIcon: () => (
+            <img
+                src="/images/eos-logo.svg"
+                alt="EOS logo"
+                className="h-7 mx-0.5"
+            />
+        ),
+    },
     ELECTION: {
         href: "/election",
         label: "Election",
