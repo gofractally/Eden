@@ -7,6 +7,6 @@ export const ROUTES: any = {
         label: "My Delegation",
         hideNav: true,
     },
-    TREASURY: { href: "/treasury", label: "Treasury", hideNav: true },
     ELECTION: { href: "/election", label: "Election" },
+    TREASURY: { href: "/treasury", label: "Treasury" },
 };
