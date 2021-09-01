@@ -31,6 +31,10 @@ subscription ($query: String!, $cursor: String, $limit: Int64, $low: Int64,
                 receiver
                 account
                 name
+                creatorAction {
+                    seq
+                    receiver
+                }
                 hexData
             }
         }
@@ -56,6 +60,10 @@ interface JsonTrx {
                 receiver: string;
                 account: string;
                 name: string;
+                creatorAction: {
+                    seq: number;
+                    receiver: string;
+                };
                 hexData: string;
             }
         ];
@@ -137,6 +145,7 @@ export default class DfuseReceiver {
                                 firstReceiver: a.account,
                                 receiver: a.receiver,
                                 name: a.name,
+                                creatorAction: a.creatorAction,
                                 hexData: a.hexData,
                             })),
                         });

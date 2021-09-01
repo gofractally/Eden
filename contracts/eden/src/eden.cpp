@@ -5,11 +5,22 @@
 #include <eden.hpp>
 #include <elections.hpp>
 #include <encrypt.hpp>
+#include <events.hpp>
 #include <inductions.hpp>
 #include <members.hpp>
 #include <migrations.hpp>
 
-EOSIO_ACTION_DISPATCHER(eden::actions)
+extern "C"
+{
+   void __wasm_call_ctors();
+   void apply(uint64_t receiver, uint64_t code, uint64_t action)
+   {
+      __wasm_call_ctors();
+      eden::actions::eosio_apply(receiver, code, action);
+      eden::send_events(eosio::name{receiver});
+   }
+}
+
 EOSIO_ABIGEN(
     // This overrides the default names within
     // attribute_value to preserve JSON compatibility

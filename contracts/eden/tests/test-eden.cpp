@@ -1,5 +1,6 @@
 #include <accounts.hpp>
 #include <boot/boot.hpp>
+#include <clchain/subchain_tester_dfuse.hpp>
 #include <distributions.hpp>
 #include <eden-atomicassets.hpp>
 #include <eden-atomicmarket.hpp>
@@ -7,10 +8,12 @@
 #include <elections.hpp>
 #include <encrypt.hpp>
 #include <eosio/tester.hpp>
+#include <events.hpp>
+#include <fstream>
 #include <members.hpp>
 #include <token/token.hpp>
 
-#define CATCH_CONFIG_MAIN
+#define CATCH_CONFIG_RUNNER
 #include <catch2/catch.hpp>
 
 using namespace eosio;
@@ -40,6 +43,83 @@ eosio::time_point s2t(const std::string& time)
                 "bad time");
    return eosio::time_point{eosio::microseconds(value)};
 }
+
+bool write_expected = false;
+
+int main(int argc, char* argv[])
+{
+   Catch::Session session;
+   auto cli = session.cli() | Catch::clara::Opt(write_expected)["--write"]("Write .expected files");
+   session.cli(cli);
+   auto ret = session.applyCommandLine(argc, argv);
+   if (ret)
+      return ret;
+   return session.run();
+}
+
+struct CompareFile
+{
+   std::string expected_path;
+   std::string actual_path;
+   std::ofstream file;
+
+   CompareFile(const std::string& name)
+       : expected_path("eden-test-data/" + name + ".expected"),
+         actual_path("eden-test-data/" + name + ".actual"),
+         file{actual_path}
+   {
+      eosio::check(file.is_open(), "failed to open " + actual_path);
+   }
+
+   void compare()
+   {
+      file.close();
+      if (write_expected)
+         eosio::execute("cp " + actual_path + " " + expected_path);
+      else
+         eosio::check(!eosio::execute("diff " + actual_path + " " + expected_path),
+                      "file mismatch between " + actual_path + ", " + expected_path);
+   }
+
+   auto& write_events(eosio::test_chain& chain)
+   {
+      uint32_t last_block = 1;
+      while (auto history = chain.get_history(last_block + 1))
+      {
+         for (auto& ttrace : history->traces)
+         {
+            std::visit(
+                [&](auto& ttrace) {
+                   for (auto& atrace : ttrace.action_traces)
+                   {
+                      std::visit(
+                          [&](auto& atrace) {
+                             if (atrace.receiver == "eosio.null"_n &&
+                                 atrace.act.name == "eden.events"_n)
+                             {
+                                std::vector<eden::event> events;
+                                from_bin(events, atrace.act.data);
+                                for (auto& event : events)
+                                {
+                                   std::string str;
+                                   eosio::pretty_stream<
+                                       eosio::time_point_include_z_stream<eosio::string_stream>>
+                                       stream{str};
+                                   to_json(event, stream);
+                                   file << str << "\n";
+                                }
+                             }
+                          },
+                          atrace);
+                   }
+                },
+                ttrace);
+         }
+         ++last_block;
+      }
+      return *this;
+   }  // write_events
+};    // CompareFile
 
 void chain_setup(test_chain& t)
 {
@@ -360,7 +440,7 @@ struct eden_tester
       return groups;
    };
 
-   void generic_group_vote(const auto& groups, uint8_t round)
+   void generic_group_vote(const auto& groups, uint8_t round, bool add_video = false)
    {
       for (const auto& [group_id, members] : groups)
       {
@@ -369,6 +449,9 @@ struct eden_tester
          for (eosio::name member : members)
          {
             chain.as(member).act<actions::electvote>(round, member, winner);
+            if (add_video)
+               chain.as(member).act<actions::electvideo>(
+                   round, member, "Qmb7WmZiSDXss5HfuKfoSf6jxTDrHzr8AoAUDeDMLNDuws");
          }
       }
       chain.start_block(60 * 60 * 1000);
@@ -395,7 +478,7 @@ struct eden_tester
       }
    }
 
-   void run_election(bool auto_donate = true, uint32_t batch_size = 10000)
+   void run_election(bool auto_donate = true, uint32_t batch_size = 10000, bool add_video = false)
    {
       if (auto_donate)
       {
@@ -411,7 +494,7 @@ struct eden_tester
 
       while (get_table_size<eden::vote_table_type>() > 11)
       {
-         generic_group_vote(get_current_groups(), round++);
+         generic_group_vote(get_current_groups(), round++, add_video);
       }
 
       if (get_table_size<eden::vote_table_type>() != 0)
@@ -488,6 +571,13 @@ struct eden_tester
       }
       return result;
    };
+
+   void write_dfuse_history(const char* filename)
+   {
+      chain.start_block();
+      chain.start_block();
+      dfuse_subchain::write_history(filename, chain);
+   }
 };
 
 TEST_CASE("genesis NFT pre-setup")
@@ -1624,3 +1714,14 @@ TEST_CASE("settablerows")
 }
 
 #endif
+
+TEST_CASE("election-events")
+{
+   eden_tester t;
+   t.genesis();
+   t.run_election(true, 10000, true);
+   t.induct_n(100);
+   t.run_election(true, 10000, true);
+   t.write_dfuse_history("dfuse-test-election.json");
+   CompareFile{"test-election"}.write_events(t.chain).compare();
+}

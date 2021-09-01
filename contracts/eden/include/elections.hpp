@@ -67,6 +67,7 @@ namespace eden
       // num_short_groups < num_groups
    };
    EOSIO_REFLECT(election_round_config, num_participants, num_groups)
+   EOSIO_COMPARE(election_round_config);
 
    using election_config = std::vector<election_round_config>;
 
@@ -88,6 +89,7 @@ namespace eden
       uint8_t index;
    };
    EOSIO_REFLECT(election_rng, buf, index)
+   EOSIO_COMPARE(election_rng);
 
    // election states:
    //
@@ -105,6 +107,7 @@ namespace eden
    {
    };
    EOSIO_REFLECT(current_election_state_pending_date);
+   EOSIO_COMPARE(current_election_state_pending_date);
 
    struct current_election_state_registration
    {
@@ -113,6 +116,7 @@ namespace eden
           election_threshold;  // The election may be moved forward if active membership reached this
    };
    EOSIO_REFLECT(current_election_state_registration, start_time, election_threshold);
+   EOSIO_COMPARE(current_election_state_registration);
 
    struct election_seeder
    {
@@ -124,12 +128,14 @@ namespace eden
       void update(eosio::input_stream& bytes);
    };
    EOSIO_REFLECT(election_seeder, current, start_time, end_time);
+   EOSIO_COMPARE(election_seeder);
 
    struct current_election_state_seeding
    {
       election_seeder seed;
    };
    EOSIO_REFLECT(current_election_state_seeding, seed);
+   EOSIO_COMPARE(current_election_state_seeding);
 
    // In this phase, every voter is assigned a unique random integer id in [0,N)
    struct current_election_state_init_voters
@@ -137,8 +143,14 @@ namespace eden
       uint16_t next_member_idx;
       election_rng rng;
       eosio::name last_processed = {};
+      uint16_t next_report_index = 0;
    };
-   EOSIO_REFLECT(current_election_state_init_voters, next_member_idx, rng, last_processed)
+   EOSIO_REFLECT(current_election_state_init_voters,
+                 next_member_idx,
+                 rng,
+                 last_processed,
+                 next_report_index)
+   EOSIO_COMPARE(current_election_state_init_voters);
 
    struct current_election_state_active
    {
@@ -148,6 +160,7 @@ namespace eden
       eosio::block_timestamp round_end;
    };
    EOSIO_REFLECT(current_election_state_active, round, config, saved_seed, round_end)
+   EOSIO_COMPARE(current_election_state_active);
 
    struct current_election_state_post_round
    {
@@ -156,19 +169,23 @@ namespace eden
       election_round_config prev_config;
       uint16_t next_input_index;
       uint16_t next_output_index;
+      uint16_t next_report_index;
    };
    EOSIO_REFLECT(current_election_state_post_round,
                  rng,
                  prev_round,
                  prev_config,
                  next_input_index,
-                 next_output_index)
+                 next_output_index,
+                 next_report_index)
+   EOSIO_COMPARE(current_election_state_post_round);
 
    struct current_election_state_final
    {
       election_seeder seed;
    };
    EOSIO_REFLECT(current_election_state_final, seed)
+   EOSIO_COMPARE(current_election_state_final);
 
    using current_election_state = std::variant<current_election_state_pending_date,
                                                current_election_state_registration,
@@ -200,6 +217,7 @@ namespace eden
       globals globals;
       current_election_state_active check_active();
 
+      void set_state_sing(const current_election_state& new_value);
       void add_voter(election_rng& rng, uint8_t round, uint16_t& next_index, eosio::name member);
       uint32_t randomize_voters(current_election_state_init_voters& state, uint32_t max_steps);
       std::vector<eosio::name> extract_board();

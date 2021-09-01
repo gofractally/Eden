@@ -97,13 +97,4 @@ namespace eden
       remaining = elections.finish_round(remaining);
       eosio::check(remaining != max_steps, "Nothing to do");
    }
-
-   void eden::electreport(eosio::ignore<uint8_t>,
-                          eosio::ignore<std::vector<vote_report>>,
-                          eosio::ignore<eosio::name>,
-                          eosio::ignore<eosio::block_timestamp>)
-   {
-      eosio::require_auth(get_self());
-   }
-
 }  // namespace eden
