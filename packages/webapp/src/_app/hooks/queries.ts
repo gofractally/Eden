@@ -264,6 +264,8 @@ export const useDistributionState = () =>
         ...queryDistributionState(),
     });
 
+export const useTreasuryStats = () => useQuery({ ...queryTreasuryStats });
+
 export const useTokenBalanceForAccount = (account: string) =>
     useQuery({
         ...queryTokenBalanceForAccount(account),

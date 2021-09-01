@@ -1,26 +1,22 @@
 import React from "react";
-import { GetServerSideProps } from "next";
-import { QueryClient } from "react-query";
-import { dehydrate } from "react-query/hydration";
+import {
+    TreasuryDisbursementsInfo,
+    TreasuryHeader,
+    TreasuryDelegateLevelsInfo,
+} from "treasury";
 
-import { RawLayout } from "_app";
+import { Container, FluidLayout } from "_app";
 
-export const getServerSideProps: GetServerSideProps = async ({ query }) => {
-    const queryClient = new QueryClient();
-
-    return {
-        props: {
-            dehydratedState: dehydrate(queryClient),
-        },
-    };
-};
-
-interface Props {
-    treasuryPage: number;
-}
-
-export const TreasuryPage = (props: Props) => {
-    return <RawLayout title="Election">Election stuff</RawLayout>;
+export const TreasuryPage = () => {
+    return (
+        <FluidLayout title="Treasury">
+            <Container>
+                <TreasuryHeader />
+                <TreasuryDisbursementsInfo />
+                <TreasuryDelegateLevelsInfo />
+            </Container>
+        </FluidLayout>
+    );
 };
 
 export default TreasuryPage;
