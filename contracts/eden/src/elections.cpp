@@ -730,11 +730,12 @@ namespace eden
       auto election_start_time =
           std::get<election_state_v0>(election_state_singleton{contract, default_scope}.get())
               .last_election_time;
-      push_event(
-          election_event_end_seeding{
-              .election_time = election_start_time,
-          },
-          contract);
+      if (round)
+         push_event(
+             election_event_end_seeding{
+                 .election_time = election_start_time,
+             },
+             contract);
       push_event(
           election_event_end_round_voting{
               .election_time = election_start_time,

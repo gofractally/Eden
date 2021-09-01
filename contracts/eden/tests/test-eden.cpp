@@ -8,10 +8,12 @@
 #include <elections.hpp>
 #include <encrypt.hpp>
 #include <eosio/tester.hpp>
+#include <events.hpp>
+#include <fstream>
 #include <members.hpp>
 #include <token/token.hpp>
 
-#define CATCH_CONFIG_MAIN
+#define CATCH_CONFIG_RUNNER
 #include <catch2/catch.hpp>
 
 using namespace eosio;
@@ -41,6 +43,83 @@ eosio::time_point s2t(const std::string& time)
                 "bad time");
    return eosio::time_point{eosio::microseconds(value)};
 }
+
+bool write_expected = false;
+
+int main(int argc, char* argv[])
+{
+   Catch::Session session;
+   auto cli = session.cli() | Catch::clara::Opt(write_expected)["--write"]("Write .expected files");
+   session.cli(cli);
+   auto ret = session.applyCommandLine(argc, argv);
+   if (ret)
+      return ret;
+   return session.run();
+}
+
+struct CompareFile
+{
+   std::string expected_path;
+   std::string actual_path;
+   std::ofstream file;
+
+   CompareFile(const std::string& name)
+       : expected_path("eden-test-data/" + name + ".expected"),
+         actual_path("eden-test-data/" + name + ".actual"),
+         file{actual_path}
+   {
+      eosio::check(file.is_open(), "failed to open " + actual_path);
+   }
+
+   void compare()
+   {
+      file.close();
+      if (write_expected)
+         eosio::execute("cp " + actual_path + " " + expected_path);
+      else
+         eosio::check(!eosio::execute("diff " + actual_path + " " + expected_path),
+                      "file mismatch between " + actual_path + ", " + expected_path);
+   }
+
+   auto& write_events(eosio::test_chain& chain)
+   {
+      uint32_t last_block = 1;
+      while (auto history = chain.get_history(last_block + 1))
+      {
+         for (auto& ttrace : history->traces)
+         {
+            std::visit(
+                [&](auto& ttrace) {
+                   for (auto& atrace : ttrace.action_traces)
+                   {
+                      std::visit(
+                          [&](auto& atrace) {
+                             if (atrace.receiver == "eosio.null"_n &&
+                                 atrace.act.name == "eden.events"_n)
+                             {
+                                std::vector<eden::event> events;
+                                from_bin(events, atrace.act.data);
+                                for (auto& event : events)
+                                {
+                                   std::string str;
+                                   eosio::pretty_stream<
+                                       eosio::time_point_include_z_stream<eosio::string_stream>>
+                                       stream{str};
+                                   to_json(event, stream);
+                                   file << str << "\n";
+                                }
+                             }
+                          },
+                          atrace);
+                   }
+                },
+                ttrace);
+         }
+         ++last_block;
+      }
+      return *this;
+   }  // write_events
+};    // CompareFile
 
 void chain_setup(test_chain& t)
 {
@@ -1636,11 +1715,13 @@ TEST_CASE("settablerows")
 
 #endif
 
-TEST_CASE("dfuse-test-election")
+TEST_CASE("election-events")
 {
    eden_tester t;
    t.genesis();
+   t.run_election(true, 10000, true);
    t.induct_n(100);
    t.run_election(true, 10000, true);
    t.write_dfuse_history("dfuse-test-election.json");
+   CompareFile{"test-election"}.write_events(t.chain).compare();
 }

@@ -59,6 +59,8 @@ add_test_eden("")
 add_test_eden("-debug")
 eden_tester_test(test-eden)
 
+file(CREATE_LINK ${CMAKE_CURRENT_SOURCE_DIR}/tests/data ${ROOT_BINARY_DIR}/eden-test-data SYMBOLIC)
+
 function(add_eden_microchain suffix)
     add_executable(eden-micro-chain${suffix}
         src/eden-micro-chain.cpp
