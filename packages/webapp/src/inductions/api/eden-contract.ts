@@ -48,10 +48,10 @@ export const getEndorsementsByInductionId = async (
 ): Promise<Endorsement[]> => {
     const endorsementsRows = await getTableRows(CONTRACT_ENDORSEMENT_TABLE, {
         ...TABLE_INDEXES[CONTRACT_ENDORSEMENT_TABLE][INDEX_BY_INDUCTION],
+        limit: 100,
         lowerBound: inductionId,
         upperBound: inductionId,
     });
-    console.info("retrieved endorsement", endorsementsRows);
     const endorsements = endorsementsRows.filter(
         (endorsement: Endorsement) => endorsement.induction_id === inductionId
     );
