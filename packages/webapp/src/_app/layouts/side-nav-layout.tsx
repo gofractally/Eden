@@ -19,10 +19,10 @@ export const SideNavLayout = ({
         <Head>
             <title>{title && `${title} | `} Eden</title>
         </Head>
-        {banner}
         <SideNav />
         <MobileNav />
         <div className="flex-1 flex flex-col w-full mt-14 xs:mt-0 pb-16 xs:pb-0">
+            {banner}
             <main className={`min-h-screen border-r ${className}`}>
                 {children}
             </main>
