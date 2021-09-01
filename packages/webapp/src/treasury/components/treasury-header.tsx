@@ -1,21 +1,31 @@
-import { assetToString, Heading, Loader, Text, useTreasuryStats } from "_app";
+import {
+    assetToString,
+    Container,
+    Heading,
+    Loader,
+    Text,
+    useTreasuryStats,
+} from "_app";
 
 export const TreasuryHeader = () => {
-    const { data: treasuryStats, isLoading: isLoading } = useTreasuryStats();
+    const { data: treasuryStats, isLoading } = useTreasuryStats();
 
     return (
-        <div className="flex justify-between">
-            <Heading size={1}>Eden Treasury</Heading>
-            <Text size="lg">
-                {isLoading ? (
+        <Container className="flex justify-between items-center">
+            <Heading size={1}>
+                <span className="hidden xs:inline">Eden </span>Treasury
+            </Heading>
+            {isLoading ? (
+                <div>
                     <Loader size={24} />
-                ) : treasuryStats ? (
-                    assetToString(treasuryStats)
-                ) : (
-                    ""
-                )}
-            </Text>
-        </div>
+                </div>
+            ) : treasuryStats ? (
+                <div className="text-right">
+                    <Text className="font-medium">Balance</Text>
+                    <Text size="lg">{assetToString(treasuryStats)}</Text>
+                </div>
+            ) : null}
+        </Container>
     );
 };
 

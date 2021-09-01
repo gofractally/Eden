@@ -1,5 +1,5 @@
 import dayjs from "dayjs";
-import { Heading, Text, useDistributionState } from "_app";
+import { Container, Heading, Text, useDistributionState } from "_app";
 
 export const TreasuryDisbursementsInfo = () => {
     const { data: distributionState } = useDistributionState();
@@ -9,8 +9,8 @@ export const TreasuryDisbursementsInfo = () => {
         dayjs(distributionState.data.distribution_time + "Z").format("LL");
 
     return (
-        <div className="space-y-2">
-            <Heading size={2}>Monthly Disbursements</Heading>
+        <Container className="space-y-2.5">
+            <Heading size={2}>Monthly disbursements</Heading>
             <Text>
                 Eden delegate disbursements occur monthly and are claimed by the
                 delegate from the contract to their personal EOS accounts.
@@ -18,13 +18,16 @@ export const TreasuryDisbursementsInfo = () => {
             <Text>
                 The overall disbursement is equal to 5% of the Eden treasury at
                 the time of disbursement. The amount is then divided equally
-                between the representative levels. At each level the amount is
-                divided equally between the representatives in that level.
+                among the representative levels. At each level, the amount is
+                further divided equally among that level's representatives.
             </Text>
             {nextDisbursementTime && (
-                <Text>Next disbursement date: {nextDisbursementTime}</Text>
+                <Text>
+                    Next disbursement date:{" "}
+                    <span className="font-medium">{nextDisbursementTime}</span>
+                </Text>
             )}
-        </div>
+        </Container>
     );
 };
 

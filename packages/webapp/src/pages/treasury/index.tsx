@@ -5,16 +5,16 @@ import {
     TreasuryDelegateLevelsInfo,
 } from "treasury";
 
-import { Container, FluidLayout } from "_app";
+import { FluidLayout } from "_app";
 
 export const TreasuryPage = () => {
     return (
         <FluidLayout title="Treasury">
-            <Container>
+            <div className="divide-y">
                 <TreasuryHeader />
                 <TreasuryDisbursementsInfo />
-                <TreasuryDelegateLevelsInfo />
-            </Container>
+                {/* <TreasuryDelegateLevelsInfo /> */}
+            </div>
         </FluidLayout>
     );
 };
