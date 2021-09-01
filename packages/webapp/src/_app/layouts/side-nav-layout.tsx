@@ -22,7 +22,7 @@ export const SideNavLayout = ({
         {banner}
         <SideNav />
         <MobileNav />
-        <div className="flex-1 flex flex-col w-full mt-12 xs:mt-0 pb-16 xs:pb-0">
+        <div className="flex-1 flex flex-col w-full mt-14 xs:mt-0 pb-16 xs:pb-0">
             <main className={`min-h-screen border-r ${className}`}>
                 {children}
             </main>

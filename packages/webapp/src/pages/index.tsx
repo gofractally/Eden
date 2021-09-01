@@ -71,6 +71,9 @@ export const Index = () => {
             }
         >
             <div className="grid grid-cols-1 lg:grid-cols-2 divide-y">
+                <Container>
+                    <Heading size={1}>Home</Heading>
+                </Container>
                 <Container className="col-span-1 lg:col-span-2">
                     <ElectionCard />
                 </Container>
