@@ -9,7 +9,11 @@ import { useCurrentMember, useMemberDataFromEdenMembers } from "_app/hooks";
 import { Button, ProfileImage, Text } from "_app/ui";
 import { ROUTES } from "_app/config";
 
-export const NavProfile = () => {
+interface Props {
+    location: "side-nav" | "mobile-nav";
+}
+
+export const NavProfile = ({ location }: Props) => {
     const [ualAccount, ualLogout, ualShowModal] = useUALAccount();
     const accountName = ualAccount?.accountName;
 
@@ -54,6 +58,15 @@ export const NavProfile = () => {
         );
     }
 
+    let WRAPPER_CLASS = "flex justify-end xl:justify-start items-center";
+    let CONTAINER_CLASS =
+        "flex rounded-full space-x-1.5 hover:bg-gray-100 transition duration-300 ease-in-out";
+
+    if (location === "side-nav") {
+        WRAPPER_CLASS += " mb-8";
+        CONTAINER_CLASS += " p-3";
+    }
+
     // TODO: Get our Link component up to snuff and start depending in that
     // TODO: Handle long names
     // TODO: Don't let ProfileImage collapse when at smaller breakpoints
@@ -61,9 +74,9 @@ export const NavProfile = () => {
     // TODO: Handle loaders and error state, non-member state
     // TODO: Layout at smallest size in top nav bar
     return (
-        <div className="flex justify-end xl:justify-start items-center mb-8">
-            <PopoverWrapper>
-                <div className="flex p-3 rounded-full space-x-1.5 hover:bg-gray-100 transition duration-300 ease-in-out">
+        <div className={WRAPPER_CLASS}>
+            <PopoverWrapper location={location}>
+                <div className={CONTAINER_CLASS}>
                     <div className="cursor-pointer">
                         <ProfileImage imageCid={userProfile?.image} size={40} />
                     </div>
@@ -82,7 +95,10 @@ export const NavProfile = () => {
 
 export default NavProfile;
 
-const PopoverWrapper = ({ children }: { children: React.ReactNode }) => {
+const PopoverWrapper = ({
+    children,
+    location,
+}: { children: React.ReactNode } & Props) => {
     const [
         referenceElement,
         setReferenceElement,
@@ -93,14 +109,16 @@ const PopoverWrapper = ({ children }: { children: React.ReactNode }) => {
     const { styles, attributes } = usePopper<HTMLDivElement | null>(
         referenceElement,
         popperElement,
-        { placement: "top-start" }
+        { placement: location === "mobile-nav" ? "bottom-end" : "top-start" }
     );
 
     const [ualAccount, ualLogout, ualShowModal] = useUALAccount();
     const accountName = ualAccount?.accountName;
 
     return (
-        <Popover className="xl:w-full">
+        <Popover
+            className={`xl:w-full ${location === "mobile-nav" ? "h-10" : ""}`}
+        >
             <Popover.Button
                 ref={setReferenceElement}
                 className="xl:w-full focus:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-opacity-75"
@@ -112,7 +130,7 @@ const PopoverWrapper = ({ children }: { children: React.ReactNode }) => {
                 style={styles.popper}
                 {...attributes.popper}
             >
-                <div className="shadow w-32 bg-white mb-2">
+                <div className="shadow w-32 bg-white mb-2 mt-1">
                     <Link href={`${ROUTES.MEMBERS.href}/${accountName}`}>
                         <a className="block p-3 w-full hover:bg-gray-100 text-left">
                             <Text>My profile</Text>

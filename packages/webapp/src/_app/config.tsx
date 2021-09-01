@@ -8,7 +8,7 @@ export interface Route {
     label: string;
     exactPath?: boolean;
     hideNav?: boolean;
-    NavIcon?: React.ReactNode;
+    NavIcon?: React.ComponentType;
 }
 
 export const ROUTES: { [key: string]: Route } = {

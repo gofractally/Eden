@@ -1,12 +1,14 @@
-import Link from "next/link";
+import React, { MouseEventHandler } from "react";
 import { useRouter } from "next/router";
+import Link from "next/link";
 import { useQueryClient } from "react-query";
 import { FaSignOutAlt } from "react-icons/fa";
 
-import { useUALAccount } from "../eos";
-import { Button } from "./button";
 import { Route, ROUTES } from "_app/config";
-import React, { MouseEventHandler } from "react";
+
+import NavProfile from "./nav-profile";
+import { Button } from "./button";
+import { useUALAccount } from "../eos";
 
 const MENU_ITEMS = Object.keys(ROUTES)
     .map((k) => ROUTES[k])
@@ -20,7 +22,7 @@ export const MobileNav = () => (
 );
 
 const HeaderLogo = () => (
-    <div className="flex-1 flex justify-center">
+    <div className="flex-1 flex">
         <Link href="/">
             <a>
                 <img
@@ -35,9 +37,9 @@ const HeaderLogo = () => (
 
 const TopNav = () => {
     return (
-        <header className="xs:hidden fixed z-50 top-0 left-0 right-0 h-12 flex items-center border-b pl-28 pr-4 bg-white">
+        <header className="xs:hidden fixed z-50 top-0 left-0 right-0 h-14 flex items-center border-b px-4 bg-white">
             <HeaderLogo />
-            <AccountMenu />
+            <NavProfile location="mobile-nav" />
         </header>
     );
 };

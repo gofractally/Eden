@@ -16,7 +16,7 @@ export const SideNav = () => (
             <HeaderLogo />
             <HeaderItems menuItems={MENU_ITEMS} />
             <div className="-mr-2.5 xl:mr-0">
-                <NavProfile />
+                <NavProfile location="side-nav" />
             </div>
         </nav>
     </header>
