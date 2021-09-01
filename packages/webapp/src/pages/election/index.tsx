@@ -3,7 +3,7 @@ import { useRouter } from "next/router";
 
 import {
     ElectionParticipationStatus,
-    FluidLayout,
+    SideNavLayout,
     useCurrentElection,
     useCurrentMember,
     usePrevious,
@@ -52,7 +52,7 @@ export const ElectionPage = () => {
             ElectionParticipationStatus.InElection;
 
     return (
-        <FluidLayout
+        <SideNavLayout
             title="Election"
             banner={
                 renderBanner && (
@@ -75,7 +75,7 @@ export const ElectionPage = () => {
                     <ElectionBody election={currentElection} />
                 </div>
             )}
-        </FluidLayout>
+        </SideNavLayout>
     );
 };
 
