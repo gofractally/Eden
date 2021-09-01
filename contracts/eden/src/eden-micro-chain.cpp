@@ -10,7 +10,6 @@
 #include <eosio/from_bin.hpp>
 #include <eosio/to_bin.hpp>
 #include <events.hpp>
-#include <numeric>
 
 using namespace eosio::literals;
 
@@ -157,7 +156,7 @@ struct status
    uint32_t auctionDuration;
    std::string memo;
    eosio::block_timestamp nextElection;
-   uint16_t electionThreshold;
+   uint16_t electionThreshold = 0;
 };
 
 struct status_object : public chainbase::object<status_table, status_object>
@@ -893,8 +892,11 @@ void handle_event(const eden::election_event_seeding& event)
 
 void handle_event(const eden::election_event_end_seeding& event)
 {
-   modify<by_pk>(db.elections, event.election_time,
-                 [&](auto& election) { election.seeding = false; });
+   modify<by_pk>(db.elections, event.election_time, [&](auto& election) {
+      election.seeding = false;
+      election.seeding_start_time = std::nullopt;
+      election.seeding_end_time = std::nullopt;
+   });
 }
 
 void handle_event(const eden::election_event_config_summary& event)
@@ -922,9 +924,7 @@ void handle_event(const eden::election_event_create_group& event)
    auto& group = db.election_groups.emplace([&](auto& group) {
       group.election_time = event.election_time;
       group.round = event.round;
-      group.first_member =
-          std::accumulate(event.voters.begin(), event.voters.end(), eosio::name{~uint64_t(0)},
-                          [](auto& a, auto& b) { return std::min(a, b); });
+      group.first_member = *std::min_element(event.voters.begin(), event.voters.end());
    });
    for (auto voter : event.voters)
    {
@@ -958,8 +958,9 @@ void handle_event(const eden::election_event_report_group& event)
 {
    eosio::check(!event.votes.empty(), "group has no votes");
    auto first_member =
-       std::accumulate(event.votes.begin(), event.votes.end(), eosio::name{~uint64_t(0)},
-                       [](auto& a, auto& b) { return std::min(a, b.voter); });
+       std::min_element(event.votes.begin(), event.votes.end(), [](auto& a, auto& b) {
+          return a.voter < b.voter;
+       })->voter;
    auto& group = get<by_pk>(db.election_groups,
                             ElectionGroupKey{event.election_time, event.round, first_member});
    db.election_groups.modify(group, [&](auto& group) { group.winner = event.winner; });
@@ -989,6 +990,7 @@ void handle_event(const eden::election_event_end& event)
           it->round == *election.num_rounds - 1)
          election.final_group_id = it->id._id;
    });
+   clear_participating();
 }
 
 void handle_event(const auto& event) {}

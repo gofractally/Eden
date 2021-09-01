@@ -146,7 +146,6 @@ namespace eden
                               election_event_end_round,
                               election_event_end>;
 
-   extern std::vector<event> events;
    void push_event(const event& e, eosio::name self);
    void send_events(eosio::name self);
 }  // namespace eden

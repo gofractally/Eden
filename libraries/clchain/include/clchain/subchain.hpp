@@ -10,7 +10,7 @@ namespace subchain
 {
    struct creator_action
    {
-      double seq;
+      uint64_t seq;
       eosio::name receiver;
    };
    EOSIO_REFLECT(creator_action, seq, receiver)
