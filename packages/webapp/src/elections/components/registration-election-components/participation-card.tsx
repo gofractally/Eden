@@ -5,6 +5,7 @@ import dayjs from "dayjs";
 import {
     delay,
     ElectionParticipationStatus,
+    MemberStatus,
     onError,
     queryMemberByAccountName,
     useCountdown,
@@ -101,7 +102,7 @@ export const ParticipationCard = ({ election }: Props) => {
         statusButton = (
             <Button onClick={ualShowModal}>Sign in to participate</Button>
         );
-    } else if (currentMember) {
+    } else if (currentMember?.status === MemberStatus.ActiveMember) {
         if (
             currentMember.election_participation_status !==
             ElectionParticipationStatus.InElection
