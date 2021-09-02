@@ -3,6 +3,7 @@ import { useQuery } from "react-query";
 import { assetToString, queryMembersStats, queryTreasuryStats } from "_app";
 import { Container, Heading, Link, Loader, Text } from "_app/ui";
 import { ROUTES } from "_app/config";
+import { CommunityNav, MembershipNav, TreasuryNav } from "_app/ui/nav-icons";
 
 interface CommunityStatsProps {
     className?: string;
@@ -47,26 +48,44 @@ const CommunityStatsContents = () => {
             <Heading size={2} className="mb-2">
                 Community stats
             </Heading>
-            {treasuryBalance && (
-                <Text className="font-medium" size="inherit">
-                    Treasury: {assetToString(treasuryBalance, 4)}
-                </Text>
-            )}
-            {memberStats && (
-                <>
-                    <Link href={ROUTES.MEMBERS.href} className="font-medium">
-                        {memberStats.active_members} active member
-                        {memberStats.active_members !== 1 && "s"}
-                    </Link>
-                    <Link
-                        href={`${ROUTES.INDUCTION.href}/pending-invitations`}
-                        className="font-medium"
-                    >
-                        {memberStats.pending_members} pending invitation
-                        {memberStats.pending_members !== 1 && "s"}
-                    </Link>
-                </>
-            )}
+            <div className="space-y-2.5">
+                {treasuryBalance && (
+                    <div className="flex items-center space-x-2 group">
+                        <div className="flex justify-center w-5 group-hover:text-blue-500 transition">
+                            <TreasuryNav />
+                        </div>
+                        <Link href={ROUTES.TREASURY.href}>
+                            Treasury: {assetToString(treasuryBalance, 4)}
+                        </Link>
+                    </div>
+                )}
+                {memberStats && (
+                    <>
+                        <div className="flex items-center space-x-2 group">
+                            <div className="flex justify-center w-5 group-hover:text-blue-500 transition">
+                                <MembershipNav />
+                            </div>
+                            <Link href={ROUTES.MEMBERS.href}>
+                                Active member
+                                {memberStats.active_members !== 1 && "s"}:{" "}
+                                {memberStats.active_members}
+                            </Link>
+                        </div>
+                        <div className="flex items-center space-x-2 group">
+                            <div className="flex justify-center w-5 group-hover:text-blue-500 transition">
+                                <CommunityNav />
+                            </div>
+                            <Link
+                                href={`${ROUTES.INDUCTION.href}/pending-invitations`}
+                            >
+                                Pending invitation
+                                {memberStats.pending_members !== 1 && "s"}:{" "}
+                                {memberStats.pending_members}
+                            </Link>
+                        </div>
+                    </>
+                )}
+            </div>
         </Container>
     );
 };
