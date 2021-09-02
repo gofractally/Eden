@@ -143,7 +143,7 @@ export const ParticipationCard = ({ election }: Props) => {
         <Container className="space-y-2.5">
             <div className="flex justify-between">
                 <Heading size={2} className="inline-block">
-                    Upcoming Election
+                    Upcoming election
                 </Heading>
                 <Heading size={2} className="inline-block">
                     {electionDates.startDateTime.format("MMM D")}
