@@ -225,15 +225,21 @@ export default class DfuseReceiver {
             logger.info(`${performance.now() - begin} ms`);
             this.storage.saveState();
 
-            if (dfuseConfig.preventConnect) return;
+            if (!dfuseConfig.preventConnect) await this.connect();
+        } catch (e: any) {
+            logger.error(e);
+            process.exit(1);
+        }
+    } // start()
 
+    async connect() {
+        try {
             logger.info("connecting to", dfuseConfig.apiNetwork);
             if (!this.jsonTransactions.length && dfuseConfig.firstBlock === 1)
                 logger.warn(
                     "Don't have an existing dfuse cursor and DFUSE_FIRST_BLOCK isn't greater than 1; " +
                         "this may take a while before the first result comes..."
                 );
-
             const stream = await this.dfuseClient.graphql(
                 query,
                 this.onMessage.bind(this),
@@ -242,11 +248,13 @@ export default class DfuseReceiver {
                     variables: this.variables,
                 }
             );
-
             logger.info("dfuse is now connected");
         } catch (e: any) {
             logger.error(e);
-            process.exit(1);
+            logger.info("scheduling retry in 10 min");
+            setTimeout(() => {
+                this.connect();
+            }, 10 * 60 * 1000);
         }
-    } // start()
+    }
 }
