@@ -15,7 +15,7 @@ function(add suffix)
             wasi-polyfill/__wasi_fd_read.cpp
             wasi-polyfill/__wasi_proc_exit.cpp
             wasi-polyfill/eosio_assert.cpp
-            wasi-polyfill/prints.cpp
+            wasi-polyfill/print.cpp
         )
     endif()
 endfunction()
