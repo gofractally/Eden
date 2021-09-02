@@ -3,11 +3,14 @@ import Link from "next/link";
 import { useQueryClient } from "react-query";
 import { Popover } from "@headlessui/react";
 import { usePopper } from "react-popper";
+import { IoMdLogIn } from "react-icons/io";
 
-import { useUALAccount } from "../eos";
 import { useCurrentMember, useMemberDataFromEdenMembers } from "_app/hooks";
 import { Button, ProfileImage, Text } from "_app/ui";
 import { ROUTES } from "_app/config";
+import { MemberStatus } from "_app";
+
+import { useUALAccount } from "../eos";
 
 interface Props {
     location: "side-nav" | "mobile-nav";
@@ -29,6 +32,8 @@ export const NavProfile = ({ location }: Props) => {
         isError: isErrorMemberData,
     } = useMemberDataFromEdenMembers(member ? [member] : []);
 
+    const isActiveMember = member?.status === MemberStatus.ActiveMember;
+
     const userProfile = memberData?.[0];
 
     const onSignOut = () => {
@@ -38,22 +43,24 @@ export const NavProfile = ({ location }: Props) => {
 
     if (!ualAccount) {
         return (
-            <Button onClick={ualShowModal} className="mb-8 -ml-4 mr-4">
-                Sign in
-            </Button>
-        );
-    }
-
-    if (!member) {
-        return (
-            <div className="flex justify-end xl:justify-start items-center ml-2.5 mr-7 xl:mr-0 mb-8 space-x-3">
-                <ProfileImage imageCid={userProfile?.image} size={40} />
-                <div className="hidden xl:block">
-                    <Text className="cursor-default">
-                        {accountName || "(unknown)"}
-                    </Text>
-                    <SignOutLink onClick={onSignOut} />
-                </div>
+            <div className="flex justify-end xs:justify-center md:justify-end xl:justify-start mb-0 xs:mb-8 my-0">
+                <Button
+                    onClick={ualShowModal}
+                    size="sm"
+                    className="md:hidden"
+                    title="Sign in"
+                >
+                    <span className="block xs:hidden">Sign in</span>
+                    <IoMdLogIn size="24" className="hidden xs:block" />
+                </Button>
+                <Button
+                    onClick={ualShowModal}
+                    className="hidden md:block"
+                    title="Sign in"
+                >
+                    <span className="hidden lg:block">Sign in</span>
+                    <IoMdLogIn size="24" className="block lg:hidden" />
+                </Button>
             </div>
         );
     }
@@ -70,22 +77,19 @@ export const NavProfile = ({ location }: Props) => {
     // TODO: Get our Link component up to snuff and start depending in that
     // TODO: Handle long names
     // TODO: Don't let ProfileImage collapse when at smaller breakpoints
-    // TODO: Sign in button at various sizes
     // TODO: Handle loaders and error state, non-member state
-    // TODO: Layout at smallest size in top nav bar
     return (
         <div className={WRAPPER_CLASS}>
-            <PopoverWrapper location={location}>
+            <PopoverWrapper location={location} isActiveMember={isActiveMember}>
                 <div className={CONTAINER_CLASS}>
                     <div className="cursor-pointer">
                         <ProfileImage imageCid={userProfile?.image} size={40} />
                     </div>
                     <div className="hidden xl:block text-left">
                         <Text size="sm" className="font-semibold">
-                            {member?.name}
+                            {member?.name ?? "Not a member"}
                         </Text>
-                        <Text size="sm">@{member?.account}</Text>
-                        {/* <SignOutLink onClick={onSignOut} /> */}
+                        <Text size="sm">@{member?.account ?? accountName}</Text>
                     </div>
                 </div>
             </PopoverWrapper>
@@ -98,7 +102,8 @@ export default NavProfile;
 const PopoverWrapper = ({
     children,
     location,
-}: { children: React.ReactNode } & Props) => {
+    isActiveMember,
+}: { children: React.ReactNode; isActiveMember: boolean } & Props) => {
     const [
         referenceElement,
         setReferenceElement,
@@ -112,7 +117,7 @@ const PopoverWrapper = ({
         { placement: location === "mobile-nav" ? "bottom-end" : "top-start" }
     );
 
-    const [ualAccount, ualLogout, ualShowModal] = useUALAccount();
+    const [ualAccount, ualLogout] = useUALAccount();
     const accountName = ualAccount?.accountName;
 
     return (
@@ -131,11 +136,13 @@ const PopoverWrapper = ({
                 {...attributes.popper}
             >
                 <div className="shadow w-32 bg-white mb-2 mt-1">
-                    <Link href={`${ROUTES.MEMBERS.href}/${accountName}`}>
-                        <a className="block p-3 w-full hover:bg-gray-100 text-left">
-                            <Text>My profile</Text>
-                        </a>
-                    </Link>
+                    {isActiveMember && (
+                        <Link href={`${ROUTES.MEMBERS.href}/${accountName}`}>
+                            <a className="block p-3 w-full hover:bg-gray-100 text-left">
+                                <Text>My profile</Text>
+                            </a>
+                        </Link>
+                    )}
                     <button
                         onClick={ualLogout}
                         title="Sign out"
@@ -148,16 +155,3 @@ const PopoverWrapper = ({
         </Popover>
     );
 };
-
-const SignOutLink = ({ onClick }: { onClick: () => void }) => (
-    <Text size="sm">
-        <a
-            href="#"
-            onClick={onClick}
-            title="Sign out"
-            className="hover:underline"
-        >
-            Sign out
-        </a>
-    </Text>
-);
