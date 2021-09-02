@@ -1,14 +1,10 @@
 import React, { MouseEventHandler } from "react";
 import { useRouter } from "next/router";
 import Link from "next/link";
-import { useQueryClient } from "react-query";
-import { FaSignOutAlt } from "react-icons/fa";
 
 import { Route, ROUTES } from "_app/config";
 
 import NavProfile from "./nav-profile";
-import { Button } from "./button";
-import { useUALAccount } from "../eos";
 
 const MENU_ITEMS = Object.keys(ROUTES)
     .map((k) => ROUTES[k])
@@ -109,32 +105,4 @@ const HeaderItemLink = ({
             </Link>
         </div>
     );
-};
-
-const AccountMenu = () => {
-    const [ualAccount, ualLogout, ualShowModal] = useUALAccount();
-    const queryClient = useQueryClient();
-
-    const onSignOut = () => {
-        queryClient.clear();
-        ualLogout();
-    };
-
-    let button = (
-        <Button onClick={ualShowModal} className="">
-            Sign in
-        </Button>
-    );
-
-    if (ualAccount) {
-        button = (
-            <div className="">
-                <a href="#" onClick={onSignOut} title="Sign out">
-                    <FaSignOutAlt className="text-3xl inline-block text-gray-500 hover:text-gray-700" />
-                </a>
-            </div>
-        );
-    }
-
-    return <div className="flex justify-end w-24">{button}</div>;
 };

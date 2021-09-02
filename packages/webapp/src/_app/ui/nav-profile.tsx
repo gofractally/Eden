@@ -17,7 +17,7 @@ interface Props {
 }
 
 export const NavProfile = ({ location }: Props) => {
-    const [ualAccount, ualShowModal] = useUALAccount();
+    const [ualAccount, _, ualShowModal] = useUALAccount();
     const accountName = ualAccount?.accountName;
 
     const {
