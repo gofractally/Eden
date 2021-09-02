@@ -29,7 +29,7 @@ export const PendingInvitationsPage = () => {
 
     useEffect(() => {
         if (inductions.data && inductions.data.length && !page.firstKey) {
-            setPage({ ...page, firstKey: inductions.data[0].id });
+            setPage({ ...page, firstKey: inductions.data[0]?.id });
         }
     }, [inductions.data]);
 
@@ -55,7 +55,7 @@ export const PendingInvitationsPage = () => {
                     <PaginationNav
                         paginate={paginateInductions}
                         hasNext={hasNextPage}
-                        hasPrevious={inductions.data[0].id !== page.firstKey}
+                        hasPrevious={inductions.data[0]?.id !== page.firstKey}
                     />
                 </div>
             )}
