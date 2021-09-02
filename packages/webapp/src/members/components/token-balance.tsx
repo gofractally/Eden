@@ -15,14 +15,12 @@ export const TokenBalance = ({ member }: Props) => {
             <Text>
                 <strong>Balance:</strong>{" "}
                 {balance ? assetToString(balance) : "loading..."}{" "}
-                <span className="ml-4">
-                    <Link
-                        href={`${blockExplorerAccountBaseUrl}/${member.account}`}
-                        target="_blank"
-                    >
-                        History
-                    </Link>
-                </span>
+                <Link
+                    href={`${blockExplorerAccountBaseUrl}/${member.account}`}
+                    target="_blank"
+                >
+                    History
+                </Link>
             </Text>
         </div>
     );

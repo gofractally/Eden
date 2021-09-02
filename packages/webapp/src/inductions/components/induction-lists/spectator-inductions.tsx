@@ -25,11 +25,12 @@ const SPECTATOR_COLUMNS: InductionTable.Column[] = [
     {
         key: "inviter",
         label: "Inviter",
+        className: "hidden sm:flex",
     },
     {
         key: "witnesses",
         label: "Witnesses",
-        className: "hidden md:flex",
+        className: "hidden lg:flex",
     },
     {
         key: "time_remaining",
@@ -38,7 +39,7 @@ const SPECTATOR_COLUMNS: InductionTable.Column[] = [
     },
     {
         key: "status",
-        label: "Action/Status",
+        label: "Action/status",
         type: InductionTable.DataTypeEnum.Action,
     },
 ];

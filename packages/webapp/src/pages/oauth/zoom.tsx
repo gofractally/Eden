@@ -2,7 +2,7 @@ import { useEffect } from "react";
 import { GetServerSideProps } from "next";
 
 import {
-    FluidLayout,
+    SideNavLayout,
     useUALAccount,
     useZoomAccountJWT,
     encryptSecretForPublishing,
@@ -81,15 +81,13 @@ export const ZoomOauthPage = ({ newZoomAccountJWT, oauthState }: Props) => {
     }, []);
 
     return (
-        <FluidLayout title="Zoom Test">
+        <SideNavLayout title="Zoom Test">
             {redirectMessage ? (
-                <>
-                    <Container className="space-y-4 py-10">
-                        <Heading size={2}>Your Zoom account is linked</Heading>
-                        <Text>{redirectMessage}</Text>
-                        <Loader />
-                    </Container>
-                </>
+                <Container className="space-y-4 py-16 text-center">
+                    <Heading size={2}>Your Zoom account is linked</Heading>
+                    <Text className="pb-8">{redirectMessage}</Text>
+                    <Loader />
+                </Container>
             ) : ualAccount ? ( // TODO: maybe we can even remove the ualAccount guard from this to allow the Zoom Marketplace review
                 <ZoomTestContainer ualAccount={ualAccount} />
             ) : (
@@ -97,7 +95,7 @@ export const ZoomOauthPage = ({ newZoomAccountJWT, oauthState }: Props) => {
                     Welcome to Eden. Sign in using your wallet.
                 </CallToAction>
             )}
-        </FluidLayout>
+        </SideNavLayout>
     );
 };
 

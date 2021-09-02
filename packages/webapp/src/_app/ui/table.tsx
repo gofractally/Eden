@@ -1,5 +1,5 @@
 import React from "react";
-import { Heading } from "_app";
+import { Container, Heading } from "_app";
 
 export enum DataTypeEnum {
     Action = "action",
@@ -34,13 +34,13 @@ export const Table = ({
     rowClassName = "",
     tableHeader,
 }: TableProps) => {
-    const tableClass = `xs:m-0 sm:-mx-4 md:m-0 bg-white border-t border-b md:border border-gray-200 md:rounded md:shadow-sm text-gray-700 ${className}`;
+    const tableClass = `bg-white border-t border-b border-gray-200 text-gray-700 ${className}`;
     return (
-        <div className="mb-8">
+        <div>
             {tableHeader && (
-                <Heading size={3} className="mb-2 md:mb-3 px-4 sm:p-0">
-                    {tableHeader}
-                </Heading>
+                <Container>
+                    <Heading size={1}>{tableHeader}</Heading>
+                </Container>
             )}
             <div
                 className={tableClass}

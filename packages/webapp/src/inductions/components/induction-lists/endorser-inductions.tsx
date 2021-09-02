@@ -44,7 +44,7 @@ const ENDORSER_INDUCTION_COLUMNS: InductionTable.Column[] = [
     },
     {
         key: "inviterAndWitnesses",
-        label: "Inviter & Witnesses",
+        label: "Inviter & witnesses",
         className: "hidden md:flex",
     },
     {
@@ -54,7 +54,7 @@ const ENDORSER_INDUCTION_COLUMNS: InductionTable.Column[] = [
     },
     {
         key: "status",
-        label: "Action/Status",
+        label: "Action/status",
         type: InductionTable.DataTypeEnum.Action,
     },
 ];

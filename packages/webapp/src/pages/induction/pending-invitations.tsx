@@ -1,6 +1,6 @@
 import { useQuery } from "react-query";
 
-import { SingleColLayout, PaginationNav, queryInductions } from "_app";
+import { SideNavLayout, PaginationNav, queryInductions } from "_app";
 import { useEffect, useState } from "react";
 import { SpectatorInductions } from "inductions";
 
@@ -46,7 +46,7 @@ export const PendingInvitationsPage = () => {
     };
 
     return (
-        <SingleColLayout>
+        <SideNavLayout>
             {inductions.isLoading && "Loading pending inductions..."}
             {inductions.error && "Fail to load inductions"}
             {inductions.data && (
@@ -59,7 +59,7 @@ export const PendingInvitationsPage = () => {
                     />
                 </div>
             )}
-        </SingleColLayout>
+        </SideNavLayout>
     );
 };
 

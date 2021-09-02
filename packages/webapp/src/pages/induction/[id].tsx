@@ -3,8 +3,7 @@ import { useRouter } from "next/router";
 import {
     CallToAction,
     Card,
-    RawLayout,
-    SingleColLayout,
+    SideNavLayout,
     useIsCommunityActive,
     useUALAccount,
 } from "_app";
@@ -43,7 +42,7 @@ export const InductionDetailsPage = () => {
 
     if (!isLoading && notFound) {
         return (
-            <RawLayout title="Invite not found">
+            <SideNavLayout title="Invite not found">
                 <CallToAction
                     href={ROUTES.INDUCTION.href}
                     buttonLabel="Membership Dashboard"
@@ -52,12 +51,12 @@ export const InductionDetailsPage = () => {
                     have already been inducted, or their invitation could have
                     expired.
                 </CallToAction>
-            </RawLayout>
+            </SideNavLayout>
         );
     }
 
     return (
-        <SingleColLayout
+        <SideNavLayout
             title={isLoading ? "Loading" : `Induction #${inductionId}`}
         >
             {isLoading ? (
@@ -71,7 +70,7 @@ export const InductionDetailsPage = () => {
                     />
                 )
             )}
-        </SingleColLayout>
+        </SideNavLayout>
     );
 };
 
