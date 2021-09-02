@@ -36,7 +36,7 @@ export const Table = ({
 }: TableProps) => {
     const tableClass = `bg-white border-t border-b border-gray-200 text-gray-700 ${className}`;
     return (
-        <div className="">
+        <div>
             {tableHeader && (
                 <Container>
                     <Heading size={1}>{tableHeader}</Heading>

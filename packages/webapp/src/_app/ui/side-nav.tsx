@@ -2,19 +2,16 @@ import { MouseEventHandler } from "react";
 import { useRouter } from "next/router";
 import Link from "next/link";
 
-import { Route, ROUTES } from "_app/config";
+import { NAV_MENU_ITEMS } from "_app";
+import { Route } from "_app/config";
 
 import NavProfile from "./nav-profile";
-
-const MENU_ITEMS = Object.keys(ROUTES)
-    .map((k) => ROUTES[k])
-    .filter((k) => !k.hideNav);
 
 export const SideNav = () => (
     <header className="hidden xs:block w-24 md:w-32 lg:w-48 xl:w-64">
         <nav className="fixed flex flex-col h-screen w-24 md:w-32 lg:w-48 xl:w-64 pl-5 pr-6 xl:pr-4 border-r border-lighter">
             <HeaderLogo />
-            <HeaderItems menuItems={MENU_ITEMS} />
+            <HeaderItems menuItems={NAV_MENU_ITEMS} />
             <div className="-mr-2.5 xl:mr-0">
                 <NavProfile location="side-nav" />
             </div>

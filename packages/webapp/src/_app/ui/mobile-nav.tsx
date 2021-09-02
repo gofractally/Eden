@@ -2,13 +2,10 @@ import React, { MouseEventHandler } from "react";
 import { useRouter } from "next/router";
 import Link from "next/link";
 
+import { NAV_MENU_ITEMS } from "_app";
 import { Route, ROUTES } from "_app/config";
 
 import NavProfile from "./nav-profile";
-
-const MENU_ITEMS = Object.keys(ROUTES)
-    .map((k) => ROUTES[k])
-    .filter((k) => !k.hideNav);
 
 export const MobileNav = () => (
     <>
@@ -44,7 +41,7 @@ const BottomNav = () => {
     return (
         <div className="flex items-center z-50 h-16 xs:hidden fixed bottom-0 left-0 right-0 bg-white border-t">
             <div className="w-full flex justify-around">
-                {MENU_ITEMS.map((item, index) => {
+                {NAV_MENU_ITEMS.map((item, index) => {
                     const { Icon, label } = item;
                     return (
                         <HeaderItemLink key={`nav-route-${index}`} route={item}>

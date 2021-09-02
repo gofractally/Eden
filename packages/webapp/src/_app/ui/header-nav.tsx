@@ -3,21 +3,18 @@ import { useRouter } from "next/router";
 import { useQueryClient } from "react-query";
 import { FaSignOutAlt } from "react-icons/fa";
 
-import { useUALAccount } from "../eos";
-import { useCurrentMember } from "_app/hooks";
-import { Button } from "./button";
+import { useCurrentMember, NAV_MENU_ITEMS } from "_app";
 import { Route, ROUTES } from "_app/config";
 
-const MENU_ITEMS = Object.keys(ROUTES)
-    .map((k) => ROUTES[k])
-    .filter((k) => !k.hideNav);
+import { useUALAccount } from "../eos";
+import { Button } from "./button";
 
 export const HeaderNav = () => (
     <header className="text-gray-600 body-font border-b border-gray-200 bg-white">
         <div className="container mx-auto flex flex-wrap py-3 flex-col md:flex-row items-center">
             <HeaderLogo />
             <nav className="md:mr-auto md:ml-4 md:py-1 md:pl-4 md:border-l md:border-gray-400	flex flex-wrap items-center text-base justify-center">
-                <HeaderItems menuItems={MENU_ITEMS} />
+                <HeaderItems menuItems={NAV_MENU_ITEMS} />
             </nav>
             <AccountMenu />
         </div>
