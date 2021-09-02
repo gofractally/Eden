@@ -146,5 +146,5 @@ export const getMasterPool = async (): Promise<Pool | undefined> => {
     if (devUseFixtureData) {
         return fixturePool;
     }
-    return getRow<Pool>(CONTRACT_POOLS_TABLE);
+    return getRow<Pool>(CONTRACT_POOLS_TABLE, "name", "master");
 };
