@@ -47,14 +47,12 @@ const HeaderItems = ({ menuItems }: { menuItems: Route[] }) => {
     return (
         <div className="flex flex-col flex-1 space-y-3 mb-4 items-end xl:items-start">
             {menuItems.map((item, index) => {
-                const { label, NavIcon } = item;
+                const { label, Icon } = item;
                 return (
                     <HeaderItemLink key={`nav-route-${index}`} route={item}>
-                        {NavIcon && (
-                            <div className="flex justify-center w-7">
-                                <NavIcon />
-                            </div>
-                        )}
+                        <div className="flex justify-center w-7">
+                            <Icon />
+                        </div>
                         <p className="hidden xl:block">{label}</p>
                     </HeaderItemLink>
                 );

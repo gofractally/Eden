@@ -45,10 +45,12 @@ const BottomNav = () => {
         <div className="flex items-center z-50 h-16 xs:hidden fixed bottom-0 left-0 right-0 bg-white border-t">
             <div className="w-full flex justify-around">
                 {MENU_ITEMS.map((item, index) => {
-                    const { NavIcon, label } = item;
+                    const { Icon, label } = item;
                     return (
                         <HeaderItemLink key={`nav-route-${index}`} route={item}>
-                            {NavIcon && <NavIcon />}
+                            <div className="h-5">
+                                <Icon />
+                            </div>
                             <p
                                 style={{ fontSize: 10 }}
                                 className="font-normal label"
