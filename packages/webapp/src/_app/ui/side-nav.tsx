@@ -50,7 +50,11 @@ const HeaderItems = ({ menuItems }: { menuItems: Route[] }) => {
                 const { label, NavIcon } = item;
                 return (
                     <HeaderItemLink key={`nav-route-${index}`} route={item}>
-                        {NavIcon && <NavIcon />}
+                        {NavIcon && (
+                            <div className="flex justify-center w-7">
+                                <NavIcon />
+                            </div>
+                        )}
                         <p className="hidden xl:block">{label}</p>
                     </HeaderItemLink>
                 );
@@ -66,7 +70,7 @@ interface HeaderItemLinkProps {
 }
 
 const NAV_ITEM_BASE_CLASS =
-    "h-12 w-12 xl:w-full flex items-center justify-center xl:justify-start rounded-full xl:pl-4 transition duration-300 ease-in-out hover:bg-gray-100 font-semibold text-base space-x-4 ";
+    "h-12 w-12 xl:w-full flex items-center justify-center xl:justify-start rounded-full xl:pl-4 transition duration-300 ease-in-out hover:bg-gray-100 font-semibold text-base space-x-3 ";
 
 const HeaderItemLink = ({
     children,

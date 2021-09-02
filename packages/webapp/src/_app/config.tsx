@@ -15,21 +15,30 @@ export const ROUTES: { [key: string]: Route } = {
     HOME: {
         href: "/",
         label: "Home",
-        NavIcon: () => <IoHomeOutline className="text-2xl xl:text-xl" />,
+        NavIcon: () => (
+            <img src="/images/nav/home-nav.svg" alt="Home" className="h-5" />
+        ),
         exactPath: true,
     },
     MEMBERS: {
         href: "/members",
         label: "Community",
-        NavIcon: () => <FiUsers className="text-2xl xl:text-xl" />,
+        NavIcon: () => (
+            <img
+                src="/images/nav/community-nav.svg"
+                alt="Community"
+                className="h-5"
+            />
+        ),
     },
     INDUCTION: {
         href: "/induction",
         label: "Membership",
         NavIcon: () => (
-            <AiOutlineIdcard
-                className="text-3xl xl:text-2xl -ml-px -mr-px -mt-1"
-                style={{ marginBottom: -2, marginTop: -2 }}
+            <img
+                src="/images/nav/membership-nav.svg"
+                alt="Membership"
+                className="h-5"
             />
         ),
     },
@@ -38,9 +47,10 @@ export const ROUTES: { [key: string]: Route } = {
         label: "My Delegates",
         hideNav: true,
         NavIcon: () => (
-            <BsStar
-                className="text-3xl xl:text-2xl -ml-px"
-                style={{ marginBottom: -2, marginTop: -2 }}
+            <img
+                src="/images/nav/delegation-nav.svg"
+                alt="My Delegates"
+                className="h-5"
             />
         ),
     },
@@ -49,9 +59,9 @@ export const ROUTES: { [key: string]: Route } = {
         label: "Treasury",
         NavIcon: () => (
             <img
-                src="/images/eos-logo.svg"
-                alt="EOS logo"
-                className="h-7 mx-0.5"
+                src="/images/nav/treasury-nav.svg"
+                alt="Treasury"
+                className="h-5"
             />
         ),
     },
@@ -59,9 +69,10 @@ export const ROUTES: { [key: string]: Route } = {
         href: "/election",
         label: "Election",
         NavIcon: () => (
-            <FiCheckSquare
-                className="text-3xl xl:text-2xl -ml-px -mt-px -mb-px"
-                style={{ fontSize: 28 }}
+            <img
+                src="/images/nav/election-nav.svg"
+                alt="Election"
+                className="h-5"
             />
         ),
     },

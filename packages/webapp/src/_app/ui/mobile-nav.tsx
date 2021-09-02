@@ -56,7 +56,7 @@ const BottomNav = () => {
                                 {label}
                             </p>
                             <style jsx>{`
-                                @media screen and (max-width: 368px) {
+                                @media screen and (max-width: 300px) {
                                     .label {
                                         display: none;
                                     }
