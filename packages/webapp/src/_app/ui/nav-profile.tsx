@@ -17,10 +17,9 @@ interface Props {
 }
 
 export const NavProfile = ({ location }: Props) => {
-    const [ualAccount, ualLogout, ualShowModal] = useUALAccount();
+    const [ualAccount, ualShowModal] = useUALAccount();
     const accountName = ualAccount?.accountName;
 
-    const queryClient = useQueryClient();
     const {
         data: member,
         isLoading: isLoadingCurrentMember,
@@ -35,11 +34,6 @@ export const NavProfile = ({ location }: Props) => {
     const isActiveMember = member?.status === MemberStatus.ActiveMember;
 
     const userProfile = memberData?.[0];
-
-    const onSignOut = () => {
-        queryClient.clear();
-        ualLogout();
-    };
 
     if (!ualAccount) {
         return (
@@ -117,8 +111,14 @@ const PopoverWrapper = ({
         { placement: location === "mobile-nav" ? "bottom-end" : "top-start" }
     );
 
+    const queryClient = useQueryClient();
     const [ualAccount, ualLogout] = useUALAccount();
     const accountName = ualAccount?.accountName;
+
+    const onSignOut = () => {
+        queryClient.clear();
+        ualLogout();
+    };
 
     return (
         <Popover
@@ -144,7 +144,7 @@ const PopoverWrapper = ({
                         </Link>
                     )}
                     <button
-                        onClick={ualLogout}
+                        onClick={onSignOut}
                         title="Sign out"
                         className="block p-3 w-full hover:bg-gray-100 text-left"
                     >
