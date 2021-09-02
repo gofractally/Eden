@@ -45,12 +45,12 @@ const BottomNav = () => {
                     const { Icon, label } = item;
                     return (
                         <HeaderItemLink key={`nav-route-${index}`} route={item}>
-                            <div className="h-5">
+                            <div className="flex items-center h-5">
                                 <Icon />
                             </div>
                             <p
                                 style={{ fontSize: 10 }}
-                                className="font-normal label"
+                                className="font-light label"
                             >
                                 {label}
                             </p>
@@ -76,7 +76,7 @@ interface HeaderItemLinkProps {
 }
 
 const NAV_ITEM_BASE_CLASS =
-    "flex-1 h-12 rounded-2xl hover:bg-gray-50 font-semibold mx-1 pt-1";
+    "flex-1 h-12 rounded-2xl hover:bg-gray-50 mx-1 pt-1";
 
 const HeaderItemLink = ({
     children,
@@ -89,7 +89,7 @@ const HeaderItemLink = ({
     const navItemClass =
         NAV_ITEM_BASE_CLASS +
         (active
-            ? " bg-gray-100 hover:bg-gray-100 text-blue-500"
+            ? " bg-gray-100 hover:bg-gray-100 text-blue-600"
             : " text-gray-800");
     return (
         <div className={navItemClass}>

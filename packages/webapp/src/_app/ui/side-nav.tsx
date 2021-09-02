@@ -65,7 +65,7 @@ interface HeaderItemLinkProps {
 }
 
 const NAV_ITEM_BASE_CLASS =
-    "h-12 w-12 xl:w-full flex items-center justify-center xl:justify-start rounded-full xl:pl-4 transition duration-300 ease-in-out hover:bg-gray-100 font-semibold text-base space-x-3 ";
+    "h-12 w-12 xl:w-full flex items-center justify-center xl:justify-start rounded-full xl:pl-4 transition duration-300 ease-in-out hover:bg-gray-100 font-light text-base space-x-3 ";
 
 const HeaderItemLink = ({
     children,
@@ -76,7 +76,7 @@ const HeaderItemLink = ({
     const { pathname } = useRouter();
     const active = exactPath ? pathname === href : pathname.startsWith(href);
     const navItemClass =
-        NAV_ITEM_BASE_CLASS + (active ? "bg-gray-100 text-blue-500" : "");
+        NAV_ITEM_BASE_CLASS + (active ? "bg-gray-100 text-blue-600" : "");
     return (
         <div className="xl:w-full">
             <Link href={href}>

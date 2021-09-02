@@ -135,10 +135,15 @@ const PopoverWrapper = ({
                 style={styles.popper}
                 {...attributes.popper}
             >
-                <div className="shadow w-32 bg-white mb-2 mt-1">
+                <div
+                    className="w-48 bg-white mb-2 mt-1 rounded-xl divide-y divide-gray-100"
+                    style={{
+                        boxShadow: "2px 2px 25px rgba(0, 0, 0, 0.15)",
+                    }}
+                >
                     {isActiveMember && (
                         <Link href={`${ROUTES.MEMBERS.href}/${accountName}`}>
-                            <a className="block p-3 w-full hover:bg-gray-100 text-left">
+                            <a className="block p-6 w-full hover:bg-gray-100 text-left">
                                 <Text>My profile</Text>
                             </a>
                         </Link>
@@ -146,7 +151,7 @@ const PopoverWrapper = ({
                     <button
                         onClick={onSignOut}
                         title="Sign out"
-                        className="block p-3 w-full hover:bg-gray-100 text-left"
+                        className="block p-6 w-full hover:bg-gray-100 text-left"
                     >
                         <Text>Sign out</Text>
                     </button>
