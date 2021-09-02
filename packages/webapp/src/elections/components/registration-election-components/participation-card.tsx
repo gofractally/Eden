@@ -1,6 +1,8 @@
 import React, { useState } from "react";
 import { useQueryClient } from "react-query";
 import dayjs from "dayjs";
+import AddToCalendar from "@culturehq/add-to-calendar";
+import { CalendarEvent } from "@culturehq/add-to-calendar/dist/makeUrls";
 
 import {
     delay,
@@ -30,12 +32,11 @@ import {
     ReenterPasswordForm,
     EncryptionPassword,
 } from "encryption";
+import { CurrentElection, ElectionStatus } from "elections/interfaces";
+import { Avatars } from "elections/components";
 
 import { extractElectionDates } from "../../utils";
 import { setElectionParticipation } from "../../transactions";
-import { CurrentElection, ElectionStatus } from "elections/interfaces";
-import AddToCalendar from "@culturehq/add-to-calendar";
-import { CalendarEvent } from "@culturehq/add-to-calendar/dist/makeUrls";
 
 interface Props {
     election?: CurrentElection;
@@ -149,6 +150,7 @@ export const ParticipationCard = ({ election }: Props) => {
                     {electionDates.startDateTime.format("MMM D")}
                 </Heading>
             </div>
+            <Avatars />
             <Heading size={3}>{statusLabel}</Heading>
             {isPastElectionParticipationTimeLimit ? (
                 <>
