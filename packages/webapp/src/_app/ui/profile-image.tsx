@@ -1,4 +1,5 @@
 import { ipfsUrl } from "_app";
+import { Image } from "./image";
 
 interface ProfileImageProps {
     imageCid?: string;
@@ -17,8 +18,9 @@ export const ProfileImage = ({
     if (imageCid) {
         return (
             <div className="relative group" onClick={onClick}>
-                <img
+                <Image
                     src={ipfsUrl(imageCid)}
+                    fallbackImage={"/images/unknown-member.png"}
                     className={imageClass}
                     style={{ height: size, width: size }}
                 />
@@ -30,7 +32,7 @@ export const ProfileImage = ({
         );
     }
     return (
-        <img
+        <Image
             src={"/images/unknown-member.png"}
             className={imageClass}
             style={{ height: size, width: size }}
