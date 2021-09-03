@@ -174,13 +174,21 @@ export const ParticipationCard = ({ election }: Props) => {
                 </Text>
             )}
 
-            <div className="flex justify-between">
-                <div>
-                    {!isPastElectionParticipationTimeLimit && statusButton}
-                </div>
+            <div className="flex flex-col sm:flex-row items-start sm:justify-between space-y-2 sm:space-y-0">
+                {!isPastElectionParticipationTimeLimit && statusButton}
                 {currentMember?.election_participation_status ===
                     ElectionParticipationStatus.InElection && (
-                    <AddToCalendar event={calendarEvent} />
+                    <div className="-my-1">
+                        <AddToCalendar event={calendarEvent}>
+                            <Button
+                                type="neutral"
+                                onClick={() => {}}
+                                className="-ml-2.5 -mt-1"
+                            >
+                                Add to calendar
+                            </Button>
+                        </AddToCalendar>
+                    </div>
                 )}
             </div>
             <ConfirmParticipationModal
