@@ -6,6 +6,7 @@ import { NAV_MENU_ITEMS } from "_app";
 import { Route, ROUTES } from "_app/config";
 
 import NavProfile from "./nav-profile";
+import { Image } from "./image";
 
 export const MobileNav = () => (
     <>
@@ -18,7 +19,7 @@ const HeaderLogo = () => (
     <div className="flex-1 flex">
         <Link href="/">
             <a>
-                <img
+                <Image
                     src="/images/eden-logo.svg"
                     alt="Eden logo"
                     className="h-8 mt-2 mb-2"

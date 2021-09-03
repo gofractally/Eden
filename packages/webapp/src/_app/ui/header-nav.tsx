@@ -8,6 +8,7 @@ import { Route, ROUTES } from "_app/config";
 
 import { useUALAccount } from "../eos";
 import { Button } from "./button";
+import { Image } from "./image";
 
 export const HeaderNav = () => (
     <header className="text-gray-600 body-font border-b border-gray-200 bg-white">
@@ -24,7 +25,7 @@ export const HeaderNav = () => (
 const HeaderLogo = () => (
     <Link href="/">
         <a className="flex title-font items-center mb-4 md:mb-0">
-            <img
+            <Image
                 src="/images/eden-logo.svg"
                 alt="Eden logo"
                 style={{ height: "54px" }}

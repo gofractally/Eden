@@ -6,6 +6,7 @@ import { NAV_MENU_ITEMS } from "_app";
 import { Route } from "_app/config";
 
 import NavProfile from "./nav-profile";
+import { Image } from "./image";
 
 export const SideNav = () => (
     <header className="hidden xs:block w-24 md:w-32 lg:w-48 xl:w-64">
@@ -23,13 +24,13 @@ const HeaderLogo = () => (
     <div className="flex mt-3 mb-5 -ml-3 md:ml-0 justify-end xl:justify-start mr-1.5">
         <Link href="/">
             <a>
-                <img
+                <Image
                     src="/images/eden-logo.svg"
                     alt="Eden logo"
                     className="hidden xl:block"
                     style={{ height: "50px" }}
                 />
-                <img
+                <Image
                     src="/images/eden-logo-penta.svg"
                     alt="Eden logo"
                     className="block xl:hidden"

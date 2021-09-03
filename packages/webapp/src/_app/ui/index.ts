@@ -23,3 +23,4 @@ export * from "./pie-status-indicator";
 export * from "./side-nav";
 export * from "./mobile-nav";
 export * from "./nav-profile";
+export * from "./image";
