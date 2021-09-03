@@ -35,7 +35,7 @@ export const MemberHoloCard = ({ member, inducted = true }: Props) => {
                             ? member.image
                             : ipfsUrl(member.image)
                     }
-                    fallbackImage={"/images/unknown-member.png"}
+                    fallbackImage={"/images/avatars/fallback/avatar-6.svg"}
                     className="rounded-full object-cover bg-white"
                     title={memberImageTitle}
                     style={{
