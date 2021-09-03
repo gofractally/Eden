@@ -1,7 +1,7 @@
 #!/usr/bin/env sh
 set -xe
 
-CLEOS="cleos -u https://wax-test.eosdac.io"
+CLEOS="cleos -u https://waxtest.eosn.io"
 CONTRACT="edenmembers1"
 
 INVITEE="edenmember11"

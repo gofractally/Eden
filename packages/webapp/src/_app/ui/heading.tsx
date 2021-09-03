@@ -8,28 +8,28 @@ interface Props {
 
 export const Heading = ({ children, size, className }: Props) => {
     let element = "";
-    let textSize = "";
+    let textClass = "";
 
     switch (size) {
         case 2:
             element = "h2";
-            textSize = "text-2xl";
+            textClass = "text-2xl tracking-tight";
             break;
         case 3:
             element = "h3";
-            textSize = "text-lg sm:text-xl";
+            textClass = "text-xl tracking-tight";
             break;
         case 4:
             element = "h4";
-            textSize = "text-lg";
+            textClass = "text-lg tracking-tight";
             break;
         case 1:
         default:
             element = "h1";
-            textSize = "text-3xl";
+            textClass = "text-3xl tracking-tight";
     }
 
-    const headingClassName = `${textSize} font-semibold text-gray-800 ${
+    const headingClassName = `${textClass} font-semibold text-gray-800 ${
         className || ""
     }`;
 

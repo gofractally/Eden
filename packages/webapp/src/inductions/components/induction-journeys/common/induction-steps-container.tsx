@@ -136,15 +136,11 @@ export const InductionStepsContainer = ({ step, children }: Props) => {
     }
 
     return (
-        <Card>
-            <div className="flex flex-col lg:flex-row lg:items-center">
-                <div className="lg:w-1/2 xl:w-3/5 px-4 sm:px-12 md:px-16 xl:px-24 pt-8 pb-4">
-                    {children}
-                </div>
-                <div className="lg:w-1/2 xl:w-2/5 mt-8 sm:px-8 md:px-12 lg:px-0 self-start">
-                    <Steps steps={steps} currentStep={step} />
-                </div>
+        <div className="flex flex-col lg:flex-row lg:items-center">
+            <div className="lg:w-1/2 px-4 sm:px-12 pt-8 pb-4">{children}</div>
+            <div className="lg:w-1/2 mt-8 sm:px-8 lg:px-0 self-start">
+                <Steps steps={steps} currentStep={step} />
             </div>
-        </Card>
+        </div>
     );
 };

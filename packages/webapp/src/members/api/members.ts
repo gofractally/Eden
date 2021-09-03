@@ -1,4 +1,4 @@
-import { atomicAssets, edenContractAccount } from "config";
+import { atomicAssets, devUseFixtureData, edenContractAccount } from "config";
 import {
     getAccountCollection,
     getAuctions,
@@ -15,10 +15,13 @@ import {
 
 import { MemberData } from "../interfaces";
 import { getEdenMember } from "./eden-contract";
+import { fixtureMemberData } from "./fixtures";
 
 export const getMember = async (
     account: string
 ): Promise<MemberData | undefined> => {
+    if (devUseFixtureData)
+        return fixtureMemberData.find((member) => member.account === account);
     const member = await getEdenMember(account);
     if (member && member.nft_template_id > 0) {
         const template = await getTemplate(`${member.nft_template_id}`);
@@ -27,12 +30,21 @@ export const getMember = async (
 };
 
 export const getMembers = async (
-    page = 1,
-    limit = 200,
+    page: number,
+    limit: number,
     ids: string[] = [],
     sortField = "created",
     order = "asc"
 ): Promise<MemberData[]> => {
+    if (devUseFixtureData) {
+        let data = fixtureMemberData;
+        if (ids.length) {
+            data = fixtureMemberData.filter((md) =>
+                ids.includes(md.templateId.toString())
+            );
+        }
+        return Promise.resolve(data.slice(0, limit));
+    }
     const data = await getTemplates(page, limit, ids, sortField, order);
     return data.map(convertAtomicTemplateToMember);
 };
@@ -89,7 +101,19 @@ export const getCollectedBy = async (
     return { members, unknownOwners };
 };
 
+export const memberDataDefaults = {
+    templateId: 0,
+    name: "",
+    image: "",
+    account: "",
+    bio: "",
+    socialHandles: {},
+    inductionVideo: "",
+    attributions: "",
+    createdAt: 0,
+};
 const convertAtomicTemplateToMember = (data: TemplateData): MemberData => ({
+    ...memberDataDefaults,
     templateId: parseInt(data.template_id),
     createdAt: parseInt(data.created_at_time),
     name: data.immutable_data.name,

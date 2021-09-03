@@ -9,7 +9,7 @@ namespace eden
       migration_sing.set(new_value, contract);
    }
 
-   void migrations::clear_all() { migration_singleton(contract, default_scope).remove(); }
+   void migrations::clear_all() { clear_singleton(migration_sing, contract); }
 
    void migrations::init()
    {

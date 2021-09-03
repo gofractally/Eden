@@ -1,6 +1,6 @@
 import { useQuery } from "react-query";
 
-import { SingleColLayout, PaginationNav, queryInductions } from "_app";
+import { SideNavLayout, PaginationNav, queryInductions } from "_app";
 import { useEffect, useState } from "react";
 import { SpectatorInductions } from "inductions";
 
@@ -29,7 +29,7 @@ export const PendingInvitationsPage = () => {
 
     useEffect(() => {
         if (inductions.data && inductions.data.length && !page.firstKey) {
-            setPage({ ...page, firstKey: inductions.data[0].id });
+            setPage({ ...page, firstKey: inductions.data[0]?.id });
         }
     }, [inductions.data]);
 
@@ -46,7 +46,7 @@ export const PendingInvitationsPage = () => {
     };
 
     return (
-        <SingleColLayout>
+        <SideNavLayout>
             {inductions.isLoading && "Loading pending inductions..."}
             {inductions.error && "Fail to load inductions"}
             {inductions.data && (
@@ -55,11 +55,11 @@ export const PendingInvitationsPage = () => {
                     <PaginationNav
                         paginate={paginateInductions}
                         hasNext={hasNextPage}
-                        hasPrevious={inductions.data[0].id !== page.firstKey}
+                        hasPrevious={inductions.data[0]?.id !== page.firstKey}
                     />
                 </div>
             )}
-        </SingleColLayout>
+        </SideNavLayout>
     );
 };
 

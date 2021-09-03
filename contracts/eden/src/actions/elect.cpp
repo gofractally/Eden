@@ -1,6 +1,7 @@
 #include <accounts.hpp>
 #include <eden.hpp>
 #include <elections.hpp>
+#include <encrypt.hpp>
 #include <members.hpp>
 #include <migrations.hpp>
 
@@ -14,7 +15,7 @@ namespace eden
 
    void eden::electconfig(uint8_t election_day,
                           const std::string& election_time,
-                          const eosio::asset& election_donation)
+                          uint32_t round_duration)
    {
       eosio::require_auth(get_self());
 
@@ -22,31 +23,7 @@ namespace eden
       elections.set_time(election_day, election_time);
 
       globals globals{get_self()};
-      eosio::check(election_donation.symbol == globals.default_token(),
-                   "Wrong token for election donation");
-      globals.set_election_donation(election_donation);
-   }
-
-   void eden::electdonate(eosio::name payer, const eosio::asset& quantity)
-   {
-      eosio::require_auth(payer);
-      globals globals{get_self()};
-
-      accounts user_accounts{get_self()};
-
-      eosio::check(quantity == globals.get().election_donation, "incorrect donation");
-      user_accounts.sub_balance(payer, quantity);
-      migrations migrations{get_self()};
-      eosio::check(migrations.is_completed<migrate_account_v0>(), "Please migrate tables first");
-      add_to_pool(get_self(), "master"_n, quantity);
-
-      members members{get_self()};
-      const auto& member = members.get_member(payer);
-      if (member.election_participation_status() != no_donation)
-      {
-         eosio::check(false, "Cannot donate at this time");
-      }
-      members.election_opt(member, true);
+      globals.set_election_round_duration(round_duration);
    }
 
    void eden::electopt(eosio::name voter, bool participating)
@@ -74,11 +51,43 @@ namespace eden
       elections.seed(btc_header);
    }
 
+   void eden::electmeeting(eosio::name account,
+                           uint8_t round,
+                           const std::vector<encrypted_key>& keys,
+                           const eosio::bytes& data,
+                           const std::optional<eosio::bytes>& old_data)
+   {
+      eosio::require_auth(account);
+      members members{get_self()};
+      elections elections{get_self()};
+      auto group_id = elections.get_group_id(account, round);
+      members.check_keys(elections.get_group_members(group_id), keys);
+      encrypt encrypt{get_self(), "election"_n};
+      encrypt.set(group_id, keys, data, old_data);
+   }
+
    void eden::electvote(uint8_t round, eosio::name voter, eosio::name candidate)
    {
       eosio::require_auth(voter);
       elections elections(get_self());
       elections.vote(round, voter, candidate);
+   }
+
+   void eden::electvideo(uint8_t round, eosio::name voter, const std::string& video)
+   {
+      eosio::require_auth(voter);
+      elections elections{get_self()};
+      members members{get_self()};
+      if (auto check = elections.can_upload_video(round, voter); boost::logic::indeterminate(check))
+      {
+         eosio::check(members.can_upload_video(round, voter),
+                      "Cannot upload video for this election round");
+      }
+      else
+      {
+         eosio::check(static_cast<bool>(check), "Cannot upload video for this election round");
+      }
+      atomicassets::validate_ipfs(video);
    }
 
    void eden::electprocess(uint32_t max_steps)
@@ -88,5 +97,4 @@ namespace eden
       remaining = elections.finish_round(remaining);
       eosio::check(remaining != max_steps, "Nothing to do");
    }
-
 }  // namespace eden

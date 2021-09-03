@@ -2,19 +2,16 @@ import {
     CONTRACT_INDUCTION_TABLE,
     getRow,
     i128BoundsForAccount,
-    getTableIndexRows,
     CONTRACT_ENDORSEMENT_TABLE,
     getTableRows,
+    TABLE_INDEXES,
+    INDEX_BY_INDUCTION,
+    INDEX_BY_INVITER,
+    INDEX_BY_INVITEE,
+    INDEX_BY_ENDORSER,
 } from "_app";
 
 import { Endorsement, Induction } from "../interfaces";
-
-// eosio secondary indexes for inductions defined at:
-// /contracts/eden/include/inductions.hpp
-const INDEX_BY_INVITEE = 2;
-const INDEX_BY_INVITER = 3;
-const INDEX_BY_ENDORSER = 2;
-const INDEX_BY_INDUCTION = 3;
 
 export const getInductionWithEndorsements = async (
     inductionId: string
@@ -49,14 +46,12 @@ export const getInduction = async (
 export const getEndorsementsByInductionId = async (
     inductionId: string
 ): Promise<Endorsement[]> => {
-    const endorsementsRows = await getTableIndexRows(
-        CONTRACT_ENDORSEMENT_TABLE,
-        INDEX_BY_INDUCTION,
-        "i64",
-        inductionId,
-        inductionId
-    );
-    console.info("retrieved endorsement", endorsementsRows);
+    const endorsementsRows = await getTableRows(CONTRACT_ENDORSEMENT_TABLE, {
+        ...TABLE_INDEXES[CONTRACT_ENDORSEMENT_TABLE][INDEX_BY_INDUCTION],
+        limit: 100,
+        lowerBound: inductionId,
+        upperBound: inductionId,
+    });
     const endorsements = endorsementsRows.filter(
         (endorsement: Endorsement) => endorsement.induction_id === inductionId
     );
@@ -67,26 +62,23 @@ export const getCurrentInductions = async (
     account: string,
     isActive: boolean
 ): Promise<{ inductions: Induction[]; endorsements: Endorsement[] }> => {
-    const indexPosition = isActive ? INDEX_BY_INVITER : INDEX_BY_INVITEE;
     const { lower, upper } = i128BoundsForAccount(account);
 
     const [inductions, endorsements] = (await Promise.all([
-        getTableIndexRows(
-            CONTRACT_INDUCTION_TABLE,
-            indexPosition,
-            "i128",
-            lower,
-            upper,
-            9999
-        ),
-        getTableIndexRows(
-            CONTRACT_ENDORSEMENT_TABLE,
-            INDEX_BY_ENDORSER,
-            "i128",
-            lower,
-            upper,
-            99999
-        ),
+        getTableRows(CONTRACT_INDUCTION_TABLE, {
+            ...TABLE_INDEXES[CONTRACT_INDUCTION_TABLE][
+                isActive ? INDEX_BY_INVITER : INDEX_BY_INVITEE
+            ],
+            lowerBound: lower,
+            upperBound: upper,
+            limit: 9999,
+        }),
+        getTableRows(CONTRACT_ENDORSEMENT_TABLE, {
+            ...TABLE_INDEXES[CONTRACT_ENDORSEMENT_TABLE][INDEX_BY_ENDORSER],
+            lowerBound: lower,
+            upperBound: upper,
+            limit: 99999,
+        }),
     ])) as [Induction[], Endorsement[]];
 
     return { inductions, endorsements };

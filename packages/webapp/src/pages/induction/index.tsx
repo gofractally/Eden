@@ -1,38 +1,22 @@
-import {
-    SingleColLayout,
-    CallToAction,
-    useUALAccount,
-    useIsCommunityActive,
-    Link,
-} from "_app";
-
-import { InductionsContainer } from "inductions";
-import { ROUTES } from "_app/config";
+import { SideNavLayout, CallToAction, useUALAccount } from "_app";
+import { InductionsContainer, PendingInvitationsLink } from "inductions";
 
 export const InductionPage = () => {
     const [ualAccount, _, ualShowModal] = useUALAccount();
-    const { data: isCommunityActive } = useIsCommunityActive();
 
     return (
-        <SingleColLayout title="Membership">
+        <SideNavLayout title="Membership" className="flex flex-col">
             {ualAccount ? (
                 <InductionsContainer ualAccount={ualAccount} />
             ) : (
-                <CallToAction buttonLabel="Sign in" onClick={ualShowModal}>
-                    Welcome to Eden. Sign in using your wallet.
-                </CallToAction>
+                <div className="flex-1 flex flex-col justify-center">
+                    <CallToAction buttonLabel="Sign in" onClick={ualShowModal}>
+                        Welcome to Eden. Sign in using your wallet.
+                    </CallToAction>
+                    <PendingInvitationsLink />
+                </div>
             )}
-            {isCommunityActive && (
-                <Link
-                    href={`${ROUTES.INDUCTION.href}/pending-invitations`}
-                    className="block w-full my-8 text-center"
-                >
-                    <span className="text-gray-400">
-                        See all pending community invitations
-                    </span>
-                </Link>
-            )}
-        </SingleColLayout>
+        </SideNavLayout>
     );
 };
 

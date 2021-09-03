@@ -1,10 +1,10 @@
 import React, { useEffect, useState } from "react";
 
 import { Button, Container, Heading, LoadingCard } from "_app";
+import { MemberChip, MembersGrid } from "members";
 
-import { getCollection, getCollectedBy } from "../api";
+import { getCollection, getCollectedBy, memberDataDefaults } from "../api";
 import { MemberData } from "../interfaces";
-import { MembersGrid } from "./members-grid";
 
 interface Props {
     member: MemberData;
@@ -74,22 +74,20 @@ export const MemberCollections = ({ member }: Props) => {
             {isLoading ? (
                 <LoadingCard />
             ) : (
-                <MembersGrid members={members || []} />
+                <MembersGrid members={members || []}>
+                    {(member) => (
+                        <MemberChip
+                            key={`member-collection-${member.account}`}
+                            member={member}
+                        />
+                    )}
+                </MembersGrid>
             )}
         </div>
     );
 };
 
-const externalOwnersCards = (owner: string): MemberData => {
-    return {
-        templateId: 0,
-        name: owner,
-        image: "",
-        account: "",
-        bio: "",
-        socialHandles: {},
-        inductionVideo: "",
-        attributions: "",
-        createdAt: 0,
-    };
-};
+const externalOwnersCards = (owner: string): MemberData => ({
+    ...memberDataDefaults,
+    name: owner,
+});

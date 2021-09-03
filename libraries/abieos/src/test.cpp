@@ -252,8 +252,8 @@ std::string string_to_hex(const std::string& s)
 {
    std::string result;
    uint8_t size = s.size();
-   abieos::hex(&size, &size + 1, std::back_inserter(result));
-   abieos::hex(s.begin(), s.end(), std::back_inserter(result));
+   eosio::hex(&size, &size + 1, std::back_inserter(result));
+   eosio::hex(s.begin(), s.end(), std::back_inserter(result));
    return result;
 }
 

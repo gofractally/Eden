@@ -1,6 +1,7 @@
 #pragma once
 
 #include <constants.hpp>
+#include <encrypt.hpp>
 #include <eosio/asset.hpp>
 #include <eosio/eosio.hpp>
 #include <globals.hpp>
@@ -19,11 +20,16 @@ namespace eden
    using election_participation_status_type = uint8_t;
    enum election_participation_status : election_participation_status_type
    {
-      no_donation,
-      in_election,
       not_in_election,
-      recently_inducted
+      in_election
    };
+
+   struct migrate_member_v0
+   {
+      uint64_t next_primary_key = 0;
+      uint32_t migrate_some(eosio::name contract, uint32_t max_steps);
+   };
+   EOSIO_REFLECT(migrate_member_v0, next_primary_key)
 
    struct member_v0
    {
@@ -32,11 +38,16 @@ namespace eden
       member_status_type status;
       uint64_t nft_template_id;
       // Only reflected in v1
-      election_participation_status_type election_participation_status = in_election;
+      election_participation_status_type election_participation_status = not_in_election;
       uint8_t election_rank = 0;
       eosio::name representative{uint64_t(-1)};
+      std::optional<eosio::public_key> encryption_key;
 
       uint64_t primary_key() const { return account.value; }
+      uint128_t by_representative() const
+      {
+         return (static_cast<uint128_t>(election_rank) << 64) | representative.value;
+      }
    };
    EOSIO_REFLECT(member_v0, account, name, status, nft_template_id)
 
@@ -51,13 +62,13 @@ namespace eden
                  base member_v0,
                  election_participation_status,
                  election_rank,
-                 representative);
+                 representative,
+                 encryption_key);
 
    using member_variant = std::variant<member_v0, member_v1>;
 
    struct member
    {
-      member() = default;
       member_variant value;
       EDEN_FORWARD_MEMBERS(value,
                            account,
@@ -66,12 +77,17 @@ namespace eden
                            nft_template_id,
                            election_participation_status,
                            election_rank,
-                           representative);
-      EDEN_FORWARD_FUNCTIONS(value, primary_key)
+                           representative,
+                           encryption_key);
+      EDEN_FORWARD_FUNCTIONS(value, primary_key, by_representative)
    };
    EOSIO_REFLECT(member, value)
 
-   using member_table_type = eosio::multi_index<"member"_n, member>;
+   using member_table_type = eosio::multi_index<
+       "member"_n,
+       member,
+       eosio::indexed_by<"byrep"_n,
+                         eosio::const_mem_fun<member, uint128_t, &member::by_representative>>>;
 
    struct member_stats_v0
    {
@@ -116,12 +132,16 @@ namespace eden
       bool is_new_member(eosio::name account) const;
       void check_active_member(eosio::name account);
       void check_pending_member(eosio::name account);
+      void check_keys(const std::vector<eosio::name>& accounts,
+                      const std::vector<encrypted_key>& keys);
+      void set_key(eosio::name member, const eosio::public_key& key);
       void deposit(eosio::name account, const eosio::asset& quantity);
       void set_nft(eosio::name account, int32_t nft_template_id);
       void set_active(eosio::name account, const std::string& name);
       void clear_ranks();
       void set_rank(eosio::name account, uint8_t rank, eosio::name representative);
       void election_opt(const member& member, bool participating);
+      bool can_upload_video(uint8_t round, eosio::name member);
       // Activates the contract if all genesis members are active
       void maybe_activate_contract();
       member_stats_v1 stats();

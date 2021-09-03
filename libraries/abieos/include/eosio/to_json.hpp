@@ -331,16 +331,22 @@ template <typename S> void to_json(__int128 value, S& stream) { return int_to_js
       return result;
    }
 
-   template <typename T>
-   std::string format_json(const T& t)
+   template <template <typename S> typename Wrapper, typename T>
+   std::string convert_to_json_wrapped(const T& t)
    {
-      pretty_stream<size_stream> ss;
+      Wrapper<size_stream> ss;
       to_json(t, ss);
       std::string result(ss.size, 0);
-      pretty_stream<fixed_buf_stream> fbs(result.data(), result.size());
+      Wrapper<fixed_buf_stream> fbs(result.data(), result.size());
       to_json(t, fbs);
       check(fbs.pos == fbs.end, convert_stream_error(stream_error::underrun));
       return result;
+   }
+
+   template <typename T>
+   std::string format_json(const T& t)
+   {
+      return convert_to_json_wrapped<pretty_stream>(t);
    }
 
 }  // namespace eosio

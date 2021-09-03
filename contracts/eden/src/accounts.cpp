@@ -93,10 +93,6 @@ namespace eden
       {
          // TODO: create another global
          auto minimum_donation = globals.get().minimum_donation;
-         if (globals.get().election_donation.symbol != eosio::symbol())
-         {
-            minimum_donation = std::min(minimum_donation, globals.get().election_donation);
-         }
          eosio::check(account_tb.get_scope() != default_scope || quantity >= minimum_donation,
                       "insufficient deposit to open an account");
          account_tb.emplace(
@@ -119,12 +115,7 @@ namespace eden
          account_tb.modify(record, contract, [&](auto& r) { r.balance() -= quantity; });
    }
 
-   void accounts::clear_all()
-   {
-      auto accounts_itr = account_tb.lower_bound(0);
-      while (accounts_itr != account_tb.end())
-         account_tb.erase(accounts_itr++);
-   }
+   void accounts::clear_all() { clear_table(account_tb); }
 
    void add_to_pool(eosio::name contract, eosio::name pool, eosio::asset amount)
    {

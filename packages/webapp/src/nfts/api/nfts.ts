@@ -1,4 +1,4 @@
-import { atomicAssets, edenContractAccount } from "config";
+import { atomicAssets } from "config";
 import { AssetData, AuctionableTemplateData } from "../interfaces";
 
 export const getTemplate = async (templateId: string) => {
@@ -6,7 +6,9 @@ export const getTemplate = async (templateId: string) => {
     return templates.length ? templates[0] : undefined;
 };
 
-const LAUNCH_TIMESTAMP = "&after=1619779033000";
+const FETCH_AFTER_TIMESTAMP = atomicAssets.fetchAfter
+    ? `&after=${atomicAssets.fetchAfter}`
+    : "&after=1619779033000"; // genesis community launch timestamp
 
 export const getTemplates = async (
     page = 1,
@@ -15,7 +17,7 @@ export const getTemplates = async (
     sortField = "created",
     order = "asc"
 ): Promise<any[]> => {
-    let url = `${atomicAssets.apiBaseUrl}/templates?collection_name=${atomicAssets.collection}&schema_name=${atomicAssets.schema}&page=${page}&limit=${limit}&order=${order}&sort=${sortField}${LAUNCH_TIMESTAMP}`;
+    let url = `${atomicAssets.apiBaseUrl}/templates?collection_name=${atomicAssets.collection}&schema_name=${atomicAssets.schema}&page=${page}&limit=${limit}&order=${order}&sort=${sortField}${FETCH_AFTER_TIMESTAMP}`;
 
     if (ids.length) {
         url += `&ids=${ids.join(",")}`;
@@ -32,7 +34,7 @@ export const getAccountCollection = async (
     sortField = "transferred",
     order = "asc"
 ): Promise<AssetData[]> => {
-    const url = `${atomicAssets.apiMarketUrl}/assets?owner=${account}&collection_name=${atomicAssets.collection}&schema_name=${atomicAssets.schema}&page=${page}&limit=${limit}&order=${order}&sort=${sortField}${LAUNCH_TIMESTAMP}`;
+    const url = `${atomicAssets.apiMarketUrl}/assets?owner=${account}&collection_name=${atomicAssets.collection}&schema_name=${atomicAssets.schema}&page=${page}&limit=${limit}&order=${order}&sort=${sortField}${FETCH_AFTER_TIMESTAMP}`;
     const { data } = await executeAtomicAssetRequest(url);
     return data;
 };
@@ -48,7 +50,7 @@ export const getSalesForTemplates = async (
         ","
     )}&collection_name=${
         atomicAssets.collection
-    }&page=${page}&limit=${limit}&order=${order}&sort=${sortField}${LAUNCH_TIMESTAMP}`;
+    }&page=${page}&limit=${limit}&order=${order}&sort=${sortField}${FETCH_AFTER_TIMESTAMP}`;
     const { data } = await executeAtomicAssetRequest(url);
     return data;
 };
@@ -66,7 +68,7 @@ export const getAuctions = async (
     page = 1,
     limit = 9999
 ): Promise<AuctionableTemplateData[]> => {
-    let url = `${atomicAssets.apiMarketUrl}/auctions?state=1&collection_name=${atomicAssets.collection}&schema_name=${atomicAssets.schema}&page=${page}&limit=${limit}&order=desc&sort=created${LAUNCH_TIMESTAMP}`;
+    let url = `${atomicAssets.apiMarketUrl}/auctions?state=1&collection_name=${atomicAssets.collection}&schema_name=${atomicAssets.schema}&page=${page}&limit=${limit}&order=desc&sort=created${FETCH_AFTER_TIMESTAMP}`;
 
     if (seller) {
         url += `&seller=${seller}`;

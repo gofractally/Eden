@@ -1,5 +1,6 @@
 #include <algorithm>
 #include <eden-atomicassets.hpp>
+#include <encrypt.hpp>
 #include <eosio/action.hpp>
 #include <eosio/crypto.hpp>
 #include <inductions.hpp>
@@ -155,6 +156,19 @@ namespace eden
       eosio::check(is_valid_induction(induction), "induction has expired");
    }
 
+   std::vector<eosio::name> inductions::get_endorsers(uint64_t id)
+   {
+      std::vector<eosio::name> result;
+      auto endorsement_idx = endorsement_tb.get_index<"byinduction"_n>();
+      auto itr = endorsement_idx.lower_bound(id);
+      while (itr != endorsement_idx.end() && itr->induction_id() == id)
+      {
+         result.push_back(itr->endorser());
+         itr++;
+      }
+      return result;
+   }
+
    void inductions::update_video(const induction& induction, const std::string& video)
    {
       check_valid_induction(induction);
@@ -306,6 +320,8 @@ namespace eden
       {
          endorsed_induction_tb.erase(itr);
       }
+      encrypt encrypt{contract, "induction"_n};
+      encrypt.erase(induction.id());
       auto invitee = induction.invitee();
       induction_tb.erase(induction);
    }
@@ -421,17 +437,8 @@ namespace eden
 
    void inductions::clear_all()
    {
-      auto inductions_itr = induction_tb.lower_bound(0);
-      while (inductions_itr != induction_tb.end())
-      {
-         induction_tb.erase(inductions_itr++);
-      }
-
-      auto endorsements_itr = endorsement_tb.lower_bound(0);
-      while (endorsements_itr != endorsement_tb.end())
-      {
-         endorsement_tb.erase(endorsements_itr++);
-      }
+      clear_table(induction_tb);
+      clear_table(endorsement_tb);
    }
 
 }  // namespace eden

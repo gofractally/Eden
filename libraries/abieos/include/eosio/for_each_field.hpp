@@ -24,7 +24,7 @@ namespace eosio
    constexpr auto for_each_field(T&& t, F&& f)
        -> std::enable_if_t<reflection::has_for_each_field_v<std::decay_t<T>>>
    {
-      eosio_for_each_field((std::decay_t<T>*)nullptr, [&](const char*, auto member) {
+      eosio_for_each_field((std::decay_t<T>*)nullptr, [&](const char*, auto member, auto...) {
          if constexpr (std::is_member_object_pointer_v<decltype(member(&t))>)
          {
             f(t.*member(&t));
@@ -35,7 +35,7 @@ namespace eosio
    template <typename T, typename F>
    constexpr void for_each_field(F&& f)
    {
-      eosio_for_each_field((T*)nullptr, [&f](const char* name, auto member) {
+      eosio_for_each_field((T*)nullptr, [&f](const char* name, auto member, auto...) {
          if constexpr (std::is_member_object_pointer_v<decltype(member((T*)nullptr))>)
          {
             f(name, [member](auto p) -> decltype((p->*member(p))) { return p->*member(p); });
@@ -47,10 +47,10 @@ namespace eosio
    template <typename T, typename F>
    constexpr void for_each_method(F&& f)
    {
-      eosio_for_each_field((T*)nullptr, [&f](const char* name, auto member) {
+      eosio_for_each_field((T*)nullptr, [&f](const char* name, auto member, auto... arg_names) {
          if constexpr (std::is_member_function_pointer_v<decltype(member((T*)nullptr))>)
          {
-            f(name, member((T*)nullptr));
+            f(name, member((T*)nullptr), arg_names...);
          }
       });
    }

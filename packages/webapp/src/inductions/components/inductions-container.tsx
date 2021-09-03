@@ -6,13 +6,15 @@ import {
     useIsCommunityActive,
     LoadingCard,
     queryCurrentInductions,
+    MemberStatus,
 } from "_app";
-import { EdenMember, MemberStatus } from "members";
+import { EdenMember } from "members";
 
 import { Endorsement } from "../interfaces";
 import { PendingInductions } from "./pending-inductions";
 import { GetAnInviteCTA } from "./get-an-invite-cta";
 import { InviteBanner } from "./invite-banner";
+import PendingInvitationsLink from "./pending-invitations-link";
 
 interface InductionsContainerProps {
     ualAccount: any;
@@ -70,25 +72,19 @@ const MemberInductionsContainer = ({
         (end: Endorsement) => end.inviter !== end.endorser
     );
 
-    const thereAreEndorsements = userEndorsements.length > 0;
-    const thereAreInductions = inductions.length > 0;
-    const thereAreRecords = thereAreInductions || thereAreEndorsements;
-
     return isLoading ? (
         <LoadingCard />
     ) : (
         <>
             {!isActiveCommunity && <GenesisBanner />}
-            <InviteBanner
-                canInvite={isActiveCommunity && isActiveMember}
-                asCallToAction={!thereAreRecords}
-            />
             <PendingInductions
                 inductions={inductions}
                 endorsements={userEndorsements}
                 isActiveCommunity={isActiveCommunity}
                 isActiveMember={isActiveMember}
             />
+            <PendingInvitationsLink />
+            <InviteBanner canInvite={isActiveCommunity && isActiveMember} />
         </>
     );
 };

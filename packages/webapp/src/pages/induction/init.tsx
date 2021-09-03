@@ -2,12 +2,12 @@ import React from "react";
 import {
     CallToAction,
     Card,
-    SingleColLayout,
+    MemberStatus,
+    SideNavLayout,
     useCurrentMember,
     useUALAccount,
 } from "_app";
 import { GetAnInviteCTA, InductionInviteFormContainer } from "inductions";
-import { MemberStatus } from "members";
 
 export const InitInductionPage = () => {
     const [ualAccount, _, ualShowModal] = useUALAccount();
@@ -40,9 +40,7 @@ export const InitInductionPage = () => {
     };
 
     return (
-        <SingleColLayout title={getPageTitle()}>
-            {renderContents()}
-        </SingleColLayout>
+        <SideNavLayout title={getPageTitle()}>{renderContents()}</SideNavLayout>
     );
 };
 

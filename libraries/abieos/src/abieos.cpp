@@ -2,6 +2,7 @@
 
 #include "eosio/abieos.h"
 #include "abieos.hpp"
+#include "eosio/hex.hpp"
 
 #include <memory>
 
@@ -101,8 +102,8 @@ extern "C" const char* abieos_get_bin_hex(abieos_context* context)
 {
    return handle_exceptions(context, nullptr, [&] {
       context->result_str.clear();
-      hex(context->result_bin.begin(), context->result_bin.end(),
-          std::back_inserter(context->result_str));
+      eosio::hex(context->result_bin.begin(), context->result_bin.end(),
+                 std::back_inserter(context->result_str));
       return context->result_str.c_str();
    });
 }

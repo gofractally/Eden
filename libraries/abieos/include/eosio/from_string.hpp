@@ -5,6 +5,8 @@
 
 namespace eosio
 {
+   // TODO: replace stream interface from from_string(obj, stream) with string_view
+
    template <typename T, typename S>
    T from_string(S& stream)
    {

@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="132.99" height="144.852" viewBox="0 0 132.99 144.852">
+  <g id="Icon-voter-04" transform="translate(0 1.5)">
+    <g id="Group_10837" data-name="Group 10837" transform="translate(0 11.038)">
+      <ellipse id="Ellipse_788" data-name="Ellipse 788" cx="66.067" cy="66.064" rx="66.067" ry="66.064" transform="translate(0 0)" fill="#e6e7eb"/>
+      <g id="Group_10890" data-name="Group 10890" transform="translate(29.561 12.456)">
+        <path id="Path_8167" data-name="Path 8167" d="M88.219,217.341A65.764,65.764,0,0,1,51.9,206.474c2.434-13.3,11.7-14.064,11.7-14.064h51.083s8.736.716,11.474,12.958A65.769,65.769,0,0,1,88.219,217.341Z" transform="translate(-51.9 -97.483)" fill="#525252"/>
+        <path id="Path_8169" data-name="Path 8169" d="M119.559,163.27H100.445a2.12,2.12,0,0,0-2.255,1.951h0v14.4c0,5.641,5.287,10.215,11.809,10.215h0c6.522,0,11.809-4.573,11.809-10.215h0v-14.4A2.119,2.119,0,0,0,119.559,163.27Z" transform="translate(-72.917 -85.313)" fill="#e0a88e"/>
+        <path id="Path_8170" data-name="Path 8170" d="M121.94,176.72a31.344,31.344,0,0,1-23.69.074V173.61h23.69Z" transform="translate(-73.05 -90.21)" opacity="0.1" style="isolation: isolate"/>
+        <ellipse id="Ellipse_833" data-name="Ellipse 833" cx="31.891" cy="33.522" rx="31.891" ry="33.522" transform="translate(5.238 14.932)" fill="#d66b00"/>
+        <ellipse id="Ellipse_790" data-name="Ellipse 790" cx="27.676" cy="31.772" rx="27.676" ry="31.772" transform="translate(9.337 24.256)" fill="#f2b193"/>
+        <path id="Path_8225" data-name="Path 8225" d="M79.2,323.475s12.8,27.192,48.913,11.383l-8.406-13.8-14.9-5.6Z" transform="translate(-63.424 -293.126)" fill="#be5f00"/>
+        <path id="Path_8361" data-name="Path 8361" d="M79.2,322.84s12.34,25.042,47.172,10.483l-8.107-12.713L103.9,315.45Z" transform="translate(-64.361 -293.916)" fill="#d66b00"/>
+        <path id="Path_8226" data-name="Path 8226" d="M.672,17.406A14.522,14.522,0,0,1,5.28,11.534C11.61,6.63,21.991,5.6,27.316,0c1.143,1.565.451,3.559-1.546,4.455q-.182.081-.374.148c5.12-.025,11.015-.376,13.9-3.666a6.262,6.262,0,0,1-1.606,7.893c4.519.161,9.344,2.563,9.639,6.1.192,2.357-1.69,4.588-4.167,5.942a27.422,27.422,0,0,1-8.41,2.482C26.158,24.853-4.935,31.077.672,17.406Z" transform="matrix(0.914, 0.407, -0.407, 0.914, 31.013, 0)" fill="#d66b00"/>
+      </g>
+    </g>
+    <g id="Component_382_83" data-name="Component 382 – 83" transform="translate(85.605)">
+      <ellipse id="baf12095-0797-4180-a98d-6422936d747a" cx="22.942" cy="22.942" rx="22.942" ry="22.942" fill="#acacac" stroke="#fff" stroke-width="3"/>
+      <path id="b582f34e-fd02-4670-b1d8-d23f069ed737" d="M164.665,252.068a3.113,3.113,0,0,1-1.874-.623l-.033-.025-7.06-5.4a3.137,3.137,0,1,1,3.817-4.979h0l4.573,3.506,10.805-14.1a3.136,3.136,0,0,1,4.4-.581h0l-.067.093.069-.093a3.14,3.14,0,0,1,.58,4.4l-12.71,16.574a3.139,3.139,0,0,1-2.5,1.223Z" transform="translate(-144.664 -217.675)" fill="#fff"/>
+    </g>
+  </g>
+</svg>

@@ -1,7 +1,7 @@
 import dayjs from "dayjs";
 import useDimensions from "react-cool-dimensions";
 
-import { ipfsUrl } from "_app";
+import { Image, ipfsUrl } from "_app";
 import { MemberData } from "../interfaces";
 
 interface Props {
@@ -24,17 +24,18 @@ export const MemberHoloCard = ({ member, inducted = true }: Props) => {
             style={{ maxWidth: 1024 }}
             ref={observe}
         >
-            <img src="/images/eden-profile-bg.png" />
+            <Image src="/images/eden-profile-bg.png" />
             <div
                 className="absolute inset-0 flex flex-col justify-between"
                 style={{ padding: width * 0.047 }}
             >
-                <img
+                <Image
                     src={
                         member.image.startsWith("blob:")
                             ? member.image
                             : ipfsUrl(member.image)
                     }
+                    fallbackImage={"/images/avatars/fallback/avatar-6.svg"}
                     className="rounded-full object-cover bg-white"
                     title={memberImageTitle}
                     style={{
@@ -66,7 +67,7 @@ export const MemberHoloCard = ({ member, inducted = true }: Props) => {
                     </p>
                 </div>
             </div>
-            <img
+            <Image
                 src="/images/eden-profile-watermark@3x.png"
                 className="absolute top-0 left-0"
                 style={{ mixBlendMode: "overlay" }}

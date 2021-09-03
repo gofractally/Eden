@@ -3,6 +3,13 @@
 
 namespace eden
 {
+   uint32_t migrate_member_v0::migrate_some(eosio::name contract, uint32_t max_steps)
+   {
+      member_table_type member_tb{contract, default_scope};
+      member_tb.update_index<"byrep"_n>(contract, next_primary_key, max_steps);
+      return max_steps;
+   }
+
    const member& members::get_member(eosio::name account)
    {
       return member_tb.get(account.value, ("member " + account.to_string() + " not found").c_str());
@@ -24,6 +31,40 @@ namespace eden
    {
       auto itr = member_tb.find(account.value);
       return itr == member_tb.end();
+   }
+
+   void members::check_keys(const std::vector<eosio::name>& accounts,
+                            const std::vector<encrypted_key>& keys)
+   {
+      std::vector<eosio::public_key> actual_keys;
+      std::vector<eosio::public_key> expected_keys;
+      actual_keys.reserve(keys.size());
+      expected_keys.reserve(accounts.size());
+      for (auto account : accounts)
+      {
+         const auto& member = member_tb.get(account.value);
+         if (member.encryption_key())
+         {
+            expected_keys.push_back(*member.encryption_key());
+         }
+      }
+      eosio::check(expected_keys.size() == keys.size(), "Wrong number of encyption keys");
+      for (const auto& key : keys)
+      {
+         actual_keys.push_back(key.recipient_key);
+      }
+      std::sort(actual_keys.begin(), actual_keys.end());
+      std::sort(expected_keys.begin(), expected_keys.end());
+      eosio::check(actual_keys == expected_keys, "Wrong encryption key");
+   }
+
+   void members::set_key(eosio::name member, const eosio::public_key& key)
+   {
+      member_tb.modify(get_member(member), contract, [&](auto& row) {
+         auto next = std::visit([](auto& m) { return member_v1{m}; }, row.value);
+         next.encryption_key = key;
+         row.value = std::move(next);
+      });
    }
 
    void members::create(eosio::name account)
@@ -103,36 +144,13 @@ namespace eden
       member_stats.set(stats, eosio::same_payer);
       check_pending_member(account);
       current_election_state_singleton election_state(contract, default_scope);
-      auto status = no_donation;
-      if (election_state.exists())
-      {
-         auto state = election_state.get();
-         if (auto* reg = std::get_if<current_election_state_registration>(&state))
-         {
-            if (reg->start_time.to_time_point() <= eosio::current_time_point() + eosio::days(30))
-            {
-               status = recently_inducted;
-            }
-         }
-         else if (std::holds_alternative<current_election_state_seeding>(state))
-         {
-            status = recently_inducted;
-         }
-         else if (auto* init = std::get_if<current_election_state_init_voters>(&state))
-         {
-            if (init->last_processed < account)
-            {
-               status = recently_inducted;
-            }
-         }
-      }
       const auto& member = get_member(account);
       member_tb.modify(member, eosio::same_payer, [&](auto& row) {
          row.value = member_v1{{.account = row.account(),
                                 .name = name,
                                 .status = member_status::active_member,
                                 .nft_template_id = row.nft_template_id(),
-                                .election_participation_status = status}};
+                                .election_participation_status = not_in_election}};
       });
    }
 
@@ -142,7 +160,7 @@ namespace eden
          row.value = std::visit([](auto& v) { return member_v1{v}; }, row.value);
          row.election_rank() = rank;
          row.representative() = representative;
-         row.election_participation_status() = no_donation;
+         row.election_participation_status() = not_in_election;
       });
       auto stats = this->stats();
       if (representative != eosio::name(-1))
@@ -175,14 +193,16 @@ namespace eden
           "Registration has closed");
 
       member_tb.modify(member, eosio::same_payer, [&](auto& row) {
-         row.value = member_v1{
-             {.account = row.account(),
-              .name = row.name(),
-              .status = row.status(),
-              .nft_template_id = row.nft_template_id(),
-              .election_participation_status = participating ? in_election : not_in_election,
-              .election_rank = row.election_rank()}};
+         row.value = std::visit([](auto& v) { return member_v1{v}; }, row.value);
+         row.election_participation_status() = participating ? in_election : not_in_election;
       });
+   }
+
+   bool members::can_upload_video(uint8_t round, eosio::name member)
+   {
+      auto iter = member_tb.find(member.value);
+      return iter != member_tb.end() && iter->election_rank() >= round &&
+             iter->representative() != eosio::name(-1);
    }
 
    struct member_stats_v1 members::stats()
@@ -211,9 +231,7 @@ namespace eden
 
    void members::clear_all()
    {
-      auto members_itr = member_tb.lower_bound(0);
-      while (members_itr != member_tb.end())
-         member_tb.erase(members_itr++);
-      member_stats.remove();
+      clear_table(member_tb);
+      clear_singleton(member_stats, contract);
    }
 }  // namespace eden

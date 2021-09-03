@@ -1,0 +1,1535 @@
+[
+    "election_event_schedule",
+    {
+        "election_time": "2020-07-04T15:30:00.000",
+        "election_threshold": 1000
+    }
+]
+[
+    "election_event_begin",
+    {
+        "election_time": "2020-07-04T15:30:00.000"
+    }
+]
+[
+    "election_event_seeding",
+    {
+        "election_time": "2020-07-04T15:30:00.000",
+        "start_time": "2020-07-03T15:30:00.000",
+        "end_time": "2020-07-04T15:30:00.000",
+        "seed": "C7973BEC0DD9FA971257BAA0F710C1ED4E78B3E874CF54FDBD912DEFE169BC79"
+    }
+]
+[
+    "election_event_end_seeding",
+    {
+        "election_time": "2020-07-04T15:30:00.000"
+    }
+]
+[
+    "election_event_config_summary",
+    {
+        "election_time": "2020-07-04T15:30:00.000",
+        "num_rounds": 1,
+        "num_participants": 3
+    }
+]
+[
+    "election_event_create_round",
+    {
+        "election_time": "2020-07-04T15:30:00.000",
+        "round": 0,
+        "requires_voting": false,
+        "num_participants": 3,
+        "num_groups": 1
+    }
+]
+[
+    "election_event_create_group",
+    {
+        "election_time": "2020-07-04T15:30:00.000",
+        "round": 0,
+        "voters": [
+            "egeon",
+            "pip",
+            "alice"
+        ]
+    }
+]
+[
+    "election_event_begin_round_voting",
+    {
+        "election_time": "2020-07-04T15:30:00.000",
+        "round": 0,
+        "voting_begin": "2020-07-04T15:30:00.000",
+        "voting_end": "2020-07-04T15:30:00.000"
+    }
+]
+[
+    "election_event_end_round_voting",
+    {
+        "election_time": "2020-07-04T15:30:00.000",
+        "round": 0
+    }
+]
+[
+    "election_event_report_group",
+    {
+        "election_time": "2020-07-04T15:30:00.000",
+        "round": 0,
+        "winner": "egeon",
+        "votes": [
+            {
+                "voter": "egeon",
+                "candidate": ""
+            },
+            {
+                "voter": "pip",
+                "candidate": ""
+            },
+            {
+                "voter": "alice",
+                "candidate": ""
+            }
+        ]
+    }
+]
+[
+    "election_event_end_round",
+    {
+        "election_time": "2020-07-04T15:30:00.000",
+        "round": 0
+    }
+]
+[
+    "election_event_end",
+    {
+        "election_time": "2020-07-04T15:30:00.000"
+    }
+]
+[
+    "election_event_schedule",
+    {
+        "election_time": "2021-01-02T15:30:00.000",
+        "election_threshold": 1000
+    }
+]
+[
+    "election_event_begin",
+    {
+        "election_time": "2021-01-02T15:30:00.000"
+    }
+]
+[
+    "election_event_seeding",
+    {
+        "election_time": "2021-01-02T15:30:00.000",
+        "start_time": "2021-01-01T15:30:00.000",
+        "end_time": "2021-01-02T15:30:00.000",
+        "seed": "07E2D9D112CBAAE565589AA3AA6C1D31BC78BA02AB8B36F7D29A2920DA31CBBD"
+    }
+]
+[
+    "election_event_end_seeding",
+    {
+        "election_time": "2021-01-02T15:30:00.000"
+    }
+]
+[
+    "election_event_config_summary",
+    {
+        "election_time": "2021-01-02T15:30:00.000",
+        "num_rounds": 3,
+        "num_participants": 103
+    }
+]
+[
+    "election_event_create_round",
+    {
+        "election_time": "2021-01-02T15:30:00.000",
+        "round": 0,
+        "requires_voting": true,
+        "num_participants": 103,
+        "num_groups": 25
+    }
+]
+[
+    "election_event_create_group",
+    {
+        "election_time": "2021-01-02T15:30:00.000",
+        "round": 0,
+        "voters": [
+            "alice",
+            "edenmember1s",
+            "edenmember1m",
+            "edenmember2m",
+            "edenmember2h"
+        ]
+    }
+]
+[
+    "election_event_create_group",
+    {
+        "election_time": "2021-01-02T15:30:00.000",
+        "round": 0,
+        "voters": [
+            "edenmember32",
+            "edenmember2l",
+            "edenmember3u",
+            "edenmember3v",
+            "edenmember1f"
+        ]
+    }
+]
+[
+    "election_event_create_group",
+    {
+        "election_time": "2021-01-02T15:30:00.000",
+        "round": 0,
+        "voters": [
+            "edenmember15",
+            "edenmember2q",
+            "edenmember13",
+            "edenmember3c",
+            "edenmember21"
+        ]
+    }
+]
+[
+    "election_event_create_group",
+    {
+        "election_time": "2021-01-02T15:30:00.000",
+        "round": 0,
+        "voters": [
+            "edenmember1i",
+            "edenmember24",
+            "edenmember1h",
+            "edenmember3z"
+        ]
+    }
+]
+[
+    "election_event_create_group",
+    {
+        "election_time": "2021-01-02T15:30:00.000",
+        "round": 0,
+        "voters": [
+            "edenmember43",
+            "edenmember1a",
+            "edenmember1w",
+            "edenmember3g"
+        ]
+    }
+]
+[
+    "election_event_create_group",
+    {
+        "election_time": "2021-01-02T15:30:00.000",
+        "round": 0,
+        "voters": [
+            "egeon",
+            "edenmember3l",
+            "edenmember1r",
+            "edenmember3d"
+        ]
+    }
+]
+[
+    "election_event_create_group",
+    {
+        "election_time": "2021-01-02T15:30:00.000",
+        "round": 0,
+        "voters": [
+            "edenmember2d",
+            "edenmember3b",
+            "edenmember2t",
+            "edenmember2r"
+        ]
+    }
+]
+[
+    "election_event_create_group",
+    {
+        "election_time": "2021-01-02T15:30:00.000",
+        "round": 0,
+        "voters": [
+            "edenmember1z",
+            "edenmember3i",
+            "edenmember34",
+            "edenmember2b"
+        ]
+    }
+]
+[
+    "election_event_create_group",
+    {
+        "election_time": "2021-01-02T15:30:00.000",
+        "round": 0,
+        "voters": [
+            "edenmember22",
+            "edenmember1p",
+            "edenmember2c",
+            "edenmember3n"
+        ]
+    }
+]
+[
+    "election_event_create_group",
+    {
+        "election_time": "2021-01-02T15:30:00.000",
+        "round": 0,
+        "voters": [
+            "edenmember3j",
+            "edenmember25",
+            "edenmember2f",
+            "edenmember3o"
+        ]
+    }
+]
+[
+    "election_event_create_group",
+    {
+        "election_time": "2021-01-02T15:30:00.000",
+        "round": 0,
+        "voters": [
+            "edenmember1o",
+            "edenmember3m",
+            "edenmember23",
+            "edenmember1v"
+        ]
+    }
+]
+[
+    "election_event_create_group",
+    {
+        "election_time": "2021-01-02T15:30:00.000",
+        "round": 0,
+        "voters": [
+            "edenmember42",
+            "edenmember4a",
+            "edenmember3x",
+            "edenmember3r"
+        ]
+    }
+]
+[
+    "election_event_create_group",
+    {
+        "election_time": "2021-01-02T15:30:00.000",
+        "round": 0,
+        "voters": [
+            "edenmember1j",
+            "pip",
+            "edenmember2s",
+            "edenmember3y"
+        ]
+    }
+]
+[
+    "election_event_create_group",
+    {
+        "election_time": "2021-01-02T15:30:00.000",
+        "round": 0,
+        "voters": [
+            "edenmember2p",
+            "edenmember2i",
+            "edenmember14",
+            "edenmember1c"
+        ]
+    }
+]
+[
+    "election_event_create_group",
+    {
+        "election_time": "2021-01-02T15:30:00.000",
+        "round": 0,
+        "voters": [
+            "edenmember3a",
+            "edenmember3e",
+            "edenmember1x",
+            "edenmember2o"
+        ]
+    }
+]
+[
+    "election_event_create_group",
+    {
+        "election_time": "2021-01-02T15:30:00.000",
+        "round": 0,
+        "voters": [
+            "edenmember33",
+            "edenmember4b",
+            "edenmember35",
+            "edenmember1g"
+        ]
+    }
+]
+[
+    "election_event_create_group",
+    {
+        "election_time": "2021-01-02T15:30:00.000",
+        "round": 0,
+        "voters": [
+            "edenmember1y",
+            "edenmember12",
+            "edenmember41",
+            "edenmember3f"
+        ]
+    }
+]
+[
+    "election_event_create_group",
+    {
+        "election_time": "2021-01-02T15:30:00.000",
+        "round": 0,
+        "voters": [
+            "edenmember1n",
+            "edenmember1b",
+            "edenmember2u",
+            "edenmember1u"
+        ]
+    }
+]
+[
+    "election_event_create_group",
+    {
+        "election_time": "2021-01-02T15:30:00.000",
+        "round": 0,
+        "voters": [
+            "edenmember2v",
+            "edenmember2y",
+            "edenmember31",
+            "edenmember1t"
+        ]
+    }
+]
+[
+    "election_event_create_group",
+    {
+        "election_time": "2021-01-02T15:30:00.000",
+        "round": 0,
+        "voters": [
+            "edenmember2k",
+            "edenmember3p",
+            "edenmember1e",
+            "edenmember2a"
+        ]
+    }
+]
+[
+    "election_event_create_group",
+    {
+        "election_time": "2021-01-02T15:30:00.000",
+        "round": 0,
+        "voters": [
+            "edenmember2z",
+            "edenmember45",
+            "edenmember1k",
+            "edenmember2x"
+        ]
+    }
+]
+[
+    "election_event_create_group",
+    {
+        "election_time": "2021-01-02T15:30:00.000",
+        "round": 0,
+        "voters": [
+            "edenmember2j",
+            "edenmember3h",
+            "edenmember1d",
+            "edenmember2w"
+        ]
+    }
+]
+[
+    "election_event_create_group",
+    {
+        "election_time": "2021-01-02T15:30:00.000",
+        "round": 0,
+        "voters": [
+            "edenmember44",
+            "edenmember3k",
+            "edenmember2g",
+            "edenmember3s"
+        ]
+    }
+]
+[
+    "election_event_create_group",
+    {
+        "election_time": "2021-01-02T15:30:00.000",
+        "round": 0,
+        "voters": [
+            "edenmember3q",
+            "edenmember3w",
+            "edenmember1q",
+            "edenmember2n"
+        ]
+    }
+]
+[
+    "election_event_create_group",
+    {
+        "election_time": "2021-01-02T15:30:00.000",
+        "round": 0,
+        "voters": [
+            "edenmember3t",
+            "edenmember11",
+            "edenmember1l",
+            "edenmember2e"
+        ]
+    }
+]
+[
+    "election_event_begin_round_voting",
+    {
+        "election_time": "2021-01-02T15:30:00.000",
+        "round": 0,
+        "voting_begin": "2021-01-02T15:30:00.000",
+        "voting_end": "2021-01-02T16:30:00.000"
+    }
+]
+[
+    "election_event_end_round_voting",
+    {
+        "election_time": "2021-01-02T15:30:00.000",
+        "round": 0
+    }
+]
+[
+    "election_event_report_group",
+    {
+        "election_time": "2021-01-02T15:30:00.000",
+        "round": 0,
+        "winner": "alice",
+        "votes": [
+            {
+                "voter": "alice",
+                "candidate": "alice"
+            },
+            {
+                "voter": "edenmember1s",
+                "candidate": "alice"
+            },
+            {
+                "voter": "edenmember1m",
+                "candidate": "alice"
+            },
+            {
+                "voter": "edenmember2m",
+                "candidate": "alice"
+            },
+            {
+                "voter": "edenmember2h",
+                "candidate": "alice"
+            }
+        ]
+    }
+]
+[
+    "election_event_report_group",
+    {
+        "election_time": "2021-01-02T15:30:00.000",
+        "round": 0,
+        "winner": "edenmember1f",
+        "votes": [
+            {
+                "voter": "edenmember32",
+                "candidate": "edenmember1f"
+            },
+            {
+                "voter": "edenmember2l",
+                "candidate": "edenmember1f"
+            },
+            {
+                "voter": "edenmember3u",
+                "candidate": "edenmember1f"
+            },
+            {
+                "voter": "edenmember3v",
+                "candidate": "edenmember1f"
+            },
+            {
+                "voter": "edenmember1f",
+                "candidate": "edenmember1f"
+            }
+        ]
+    }
+]
+[
+    "election_event_report_group",
+    {
+        "election_time": "2021-01-02T15:30:00.000",
+        "round": 0,
+        "winner": "edenmember13",
+        "votes": [
+            {
+                "voter": "edenmember15",
+                "candidate": "edenmember13"
+            },
+            {
+                "voter": "edenmember2q",
+                "candidate": "edenmember13"
+            },
+            {
+                "voter": "edenmember13",
+                "candidate": "edenmember13"
+            },
+            {
+                "voter": "edenmember3c",
+                "candidate": "edenmember13"
+            },
+            {
+                "voter": "edenmember21",
+                "candidate": "edenmember13"
+            }
+        ]
+    }
+]
+[
+    "election_event_report_group",
+    {
+        "election_time": "2021-01-02T15:30:00.000",
+        "round": 0,
+        "winner": "edenmember1h",
+        "votes": [
+            {
+                "voter": "edenmember1i",
+                "candidate": "edenmember1h"
+            },
+            {
+                "voter": "edenmember24",
+                "candidate": "edenmember1h"
+            },
+            {
+                "voter": "edenmember1h",
+                "candidate": "edenmember1h"
+            },
+            {
+                "voter": "edenmember3z",
+                "candidate": "edenmember1h"
+            }
+        ]
+    }
+]
+[
+    "election_event_report_group",
+    {
+        "election_time": "2021-01-02T15:30:00.000",
+        "round": 0,
+        "winner": "edenmember1a",
+        "votes": [
+            {
+                "voter": "edenmember43",
+                "candidate": "edenmember1a"
+            },
+            {
+                "voter": "edenmember1a",
+                "candidate": "edenmember1a"
+            },
+            {
+                "voter": "edenmember1w",
+                "candidate": "edenmember1a"
+            },
+            {
+                "voter": "edenmember3g",
+                "candidate": "edenmember1a"
+            }
+        ]
+    }
+]
+[
+    "election_event_report_group",
+    {
+        "election_time": "2021-01-02T15:30:00.000",
+        "round": 0,
+        "winner": "edenmember1r",
+        "votes": [
+            {
+                "voter": "egeon",
+                "candidate": "edenmember1r"
+            },
+            {
+                "voter": "edenmember3l",
+                "candidate": "edenmember1r"
+            },
+            {
+                "voter": "edenmember1r",
+                "candidate": "edenmember1r"
+            },
+            {
+                "voter": "edenmember3d",
+                "candidate": "edenmember1r"
+            }
+        ]
+    }
+]
+[
+    "election_event_report_group",
+    {
+        "election_time": "2021-01-02T15:30:00.000",
+        "round": 0,
+        "winner": "edenmember2d",
+        "votes": [
+            {
+                "voter": "edenmember2d",
+                "candidate": "edenmember2d"
+            },
+            {
+                "voter": "edenmember3b",
+                "candidate": "edenmember2d"
+            },
+            {
+                "voter": "edenmember2t",
+                "candidate": "edenmember2d"
+            },
+            {
+                "voter": "edenmember2r",
+                "candidate": "edenmember2d"
+            }
+        ]
+    }
+]
+[
+    "election_event_report_group",
+    {
+        "election_time": "2021-01-02T15:30:00.000",
+        "round": 0,
+        "winner": "edenmember1z",
+        "votes": [
+            {
+                "voter": "edenmember1z",
+                "candidate": "edenmember1z"
+            },
+            {
+                "voter": "edenmember3i",
+                "candidate": "edenmember1z"
+            },
+            {
+                "voter": "edenmember34",
+                "candidate": "edenmember1z"
+            },
+            {
+                "voter": "edenmember2b",
+                "candidate": "edenmember1z"
+            }
+        ]
+    }
+]
+[
+    "election_event_report_group",
+    {
+        "election_time": "2021-01-02T15:30:00.000",
+        "round": 0,
+        "winner": "edenmember1p",
+        "votes": [
+            {
+                "voter": "edenmember22",
+                "candidate": "edenmember1p"
+            },
+            {
+                "voter": "edenmember1p",
+                "candidate": "edenmember1p"
+            },
+            {
+                "voter": "edenmember2c",
+                "candidate": "edenmember1p"
+            },
+            {
+                "voter": "edenmember3n",
+                "candidate": "edenmember1p"
+            }
+        ]
+    }
+]
+[
+    "election_event_report_group",
+    {
+        "election_time": "2021-01-02T15:30:00.000",
+        "round": 0,
+        "winner": "edenmember25",
+        "votes": [
+            {
+                "voter": "edenmember3j",
+                "candidate": "edenmember25"
+            },
+            {
+                "voter": "edenmember25",
+                "candidate": "edenmember25"
+            },
+            {
+                "voter": "edenmember2f",
+                "candidate": "edenmember25"
+            },
+            {
+                "voter": "edenmember3o",
+                "candidate": "edenmember25"
+            }
+        ]
+    }
+]
+[
+    "election_event_report_group",
+    {
+        "election_time": "2021-01-02T15:30:00.000",
+        "round": 0,
+        "winner": "edenmember1o",
+        "votes": [
+            {
+                "voter": "edenmember1o",
+                "candidate": "edenmember1o"
+            },
+            {
+                "voter": "edenmember3m",
+                "candidate": "edenmember1o"
+            },
+            {
+                "voter": "edenmember23",
+                "candidate": "edenmember1o"
+            },
+            {
+                "voter": "edenmember1v",
+                "candidate": "edenmember1o"
+            }
+        ]
+    }
+]
+[
+    "election_event_report_group",
+    {
+        "election_time": "2021-01-02T15:30:00.000",
+        "round": 0,
+        "winner": "edenmember3r",
+        "votes": [
+            {
+                "voter": "edenmember42",
+                "candidate": "edenmember3r"
+            },
+            {
+                "voter": "edenmember4a",
+                "candidate": "edenmember3r"
+            },
+            {
+                "voter": "edenmember3x",
+                "candidate": "edenmember3r"
+            },
+            {
+                "voter": "edenmember3r",
+                "candidate": "edenmember3r"
+            }
+        ]
+    }
+]
+[
+    "election_event_report_group",
+    {
+        "election_time": "2021-01-02T15:30:00.000",
+        "round": 0,
+        "winner": "edenmember1j",
+        "votes": [
+            {
+                "voter": "edenmember1j",
+                "candidate": "edenmember1j"
+            },
+            {
+                "voter": "pip",
+                "candidate": "edenmember1j"
+            },
+            {
+                "voter": "edenmember2s",
+                "candidate": "edenmember1j"
+            },
+            {
+                "voter": "edenmember3y",
+                "candidate": "edenmember1j"
+            }
+        ]
+    }
+]
+[
+    "election_event_report_group",
+    {
+        "election_time": "2021-01-02T15:30:00.000",
+        "round": 0,
+        "winner": "edenmember14",
+        "votes": [
+            {
+                "voter": "edenmember2p",
+                "candidate": "edenmember14"
+            },
+            {
+                "voter": "edenmember2i",
+                "candidate": "edenmember14"
+            },
+            {
+                "voter": "edenmember14",
+                "candidate": "edenmember14"
+            },
+            {
+                "voter": "edenmember1c",
+                "candidate": "edenmember14"
+            }
+        ]
+    }
+]
+[
+    "election_event_report_group",
+    {
+        "election_time": "2021-01-02T15:30:00.000",
+        "round": 0,
+        "winner": "edenmember1x",
+        "votes": [
+            {
+                "voter": "edenmember3a",
+                "candidate": "edenmember1x"
+            },
+            {
+                "voter": "edenmember3e",
+                "candidate": "edenmember1x"
+            },
+            {
+                "voter": "edenmember1x",
+                "candidate": "edenmember1x"
+            },
+            {
+                "voter": "edenmember2o",
+                "candidate": "edenmember1x"
+            }
+        ]
+    }
+]
+[
+    "election_event_report_group",
+    {
+        "election_time": "2021-01-02T15:30:00.000",
+        "round": 0,
+        "winner": "edenmember1g",
+        "votes": [
+            {
+                "voter": "edenmember33",
+                "candidate": "edenmember1g"
+            },
+            {
+                "voter": "edenmember4b",
+                "candidate": "edenmember1g"
+            },
+            {
+                "voter": "edenmember35",
+                "candidate": "edenmember1g"
+            },
+            {
+                "voter": "edenmember1g",
+                "candidate": "edenmember1g"
+            }
+        ]
+    }
+]
+[
+    "election_event_report_group",
+    {
+        "election_time": "2021-01-02T15:30:00.000",
+        "round": 0,
+        "winner": "edenmember12",
+        "votes": [
+            {
+                "voter": "edenmember1y",
+                "candidate": "edenmember12"
+            },
+            {
+                "voter": "edenmember12",
+                "candidate": "edenmember12"
+            },
+            {
+                "voter": "edenmember41",
+                "candidate": "edenmember12"
+            },
+            {
+                "voter": "edenmember3f",
+                "candidate": "edenmember12"
+            }
+        ]
+    }
+]
+[
+    "election_event_report_group",
+    {
+        "election_time": "2021-01-02T15:30:00.000",
+        "round": 0,
+        "winner": "edenmember1b",
+        "votes": [
+            {
+                "voter": "edenmember1n",
+                "candidate": "edenmember1b"
+            },
+            {
+                "voter": "edenmember1b",
+                "candidate": "edenmember1b"
+            },
+            {
+                "voter": "edenmember2u",
+                "candidate": "edenmember1b"
+            },
+            {
+                "voter": "edenmember1u",
+                "candidate": "edenmember1b"
+            }
+        ]
+    }
+]
+[
+    "election_event_report_group",
+    {
+        "election_time": "2021-01-02T15:30:00.000",
+        "round": 0,
+        "winner": "edenmember1t",
+        "votes": [
+            {
+                "voter": "edenmember2v",
+                "candidate": "edenmember1t"
+            },
+            {
+                "voter": "edenmember2y",
+                "candidate": "edenmember1t"
+            },
+            {
+                "voter": "edenmember31",
+                "candidate": "edenmember1t"
+            },
+            {
+                "voter": "edenmember1t",
+                "candidate": "edenmember1t"
+            }
+        ]
+    }
+]
+[
+    "election_event_report_group",
+    {
+        "election_time": "2021-01-02T15:30:00.000",
+        "round": 0,
+        "winner": "edenmember1e",
+        "votes": [
+            {
+                "voter": "edenmember2k",
+                "candidate": "edenmember1e"
+            },
+            {
+                "voter": "edenmember3p",
+                "candidate": "edenmember1e"
+            },
+            {
+                "voter": "edenmember1e",
+                "candidate": "edenmember1e"
+            },
+            {
+                "voter": "edenmember2a",
+                "candidate": "edenmember1e"
+            }
+        ]
+    }
+]
+[
+    "election_event_report_group",
+    {
+        "election_time": "2021-01-02T15:30:00.000",
+        "round": 0,
+        "winner": "edenmember1k",
+        "votes": [
+            {
+                "voter": "edenmember2z",
+                "candidate": "edenmember1k"
+            },
+            {
+                "voter": "edenmember45",
+                "candidate": "edenmember1k"
+            },
+            {
+                "voter": "edenmember1k",
+                "candidate": "edenmember1k"
+            },
+            {
+                "voter": "edenmember2x",
+                "candidate": "edenmember1k"
+            }
+        ]
+    }
+]
+[
+    "election_event_report_group",
+    {
+        "election_time": "2021-01-02T15:30:00.000",
+        "round": 0,
+        "winner": "edenmember1d",
+        "votes": [
+            {
+                "voter": "edenmember2j",
+                "candidate": "edenmember1d"
+            },
+            {
+                "voter": "edenmember3h",
+                "candidate": "edenmember1d"
+            },
+            {
+                "voter": "edenmember1d",
+                "candidate": "edenmember1d"
+            },
+            {
+                "voter": "edenmember2w",
+                "candidate": "edenmember1d"
+            }
+        ]
+    }
+]
+[
+    "election_event_report_group",
+    {
+        "election_time": "2021-01-02T15:30:00.000",
+        "round": 0,
+        "winner": "edenmember2g",
+        "votes": [
+            {
+                "voter": "edenmember44",
+                "candidate": "edenmember2g"
+            },
+            {
+                "voter": "edenmember3k",
+                "candidate": "edenmember2g"
+            },
+            {
+                "voter": "edenmember2g",
+                "candidate": "edenmember2g"
+            },
+            {
+                "voter": "edenmember3s",
+                "candidate": "edenmember2g"
+            }
+        ]
+    }
+]
+[
+    "election_event_report_group",
+    {
+        "election_time": "2021-01-02T15:30:00.000",
+        "round": 0,
+        "winner": "edenmember1q",
+        "votes": [
+            {
+                "voter": "edenmember3q",
+                "candidate": "edenmember1q"
+            },
+            {
+                "voter": "edenmember3w",
+                "candidate": "edenmember1q"
+            },
+            {
+                "voter": "edenmember1q",
+                "candidate": "edenmember1q"
+            },
+            {
+                "voter": "edenmember2n",
+                "candidate": "edenmember1q"
+            }
+        ]
+    }
+]
+[
+    "election_event_report_group",
+    {
+        "election_time": "2021-01-02T15:30:00.000",
+        "round": 0,
+        "winner": "edenmember11",
+        "votes": [
+            {
+                "voter": "edenmember3t",
+                "candidate": "edenmember11"
+            },
+            {
+                "voter": "edenmember11",
+                "candidate": "edenmember11"
+            },
+            {
+                "voter": "edenmember1l",
+                "candidate": "edenmember11"
+            },
+            {
+                "voter": "edenmember2e",
+                "candidate": "edenmember11"
+            }
+        ]
+    }
+]
+[
+    "election_event_end_round",
+    {
+        "election_time": "2021-01-02T15:30:00.000",
+        "round": 0
+    }
+]
+[
+    "election_event_create_round",
+    {
+        "election_time": "2021-01-02T15:30:00.000",
+        "round": 1,
+        "requires_voting": true,
+        "num_participants": 25,
+        "num_groups": 5
+    }
+]
+[
+    "election_event_create_group",
+    {
+        "election_time": "2021-01-02T15:30:00.000",
+        "round": 1,
+        "voters": [
+            "edenmember1o",
+            "edenmember1r",
+            "edenmember1e",
+            "edenmember1x",
+            "edenmember1f"
+        ]
+    }
+]
+[
+    "election_event_create_group",
+    {
+        "election_time": "2021-01-02T15:30:00.000",
+        "round": 1,
+        "voters": [
+            "edenmember13",
+            "edenmember1q",
+            "edenmember1a",
+            "edenmember1k",
+            "edenmember3r"
+        ]
+    }
+]
+[
+    "election_event_create_group",
+    {
+        "election_time": "2021-01-02T15:30:00.000",
+        "round": 1,
+        "voters": [
+            "edenmember2d",
+            "edenmember1d",
+            "alice",
+            "edenmember2g",
+            "edenmember14"
+        ]
+    }
+]
+[
+    "election_event_create_group",
+    {
+        "election_time": "2021-01-02T15:30:00.000",
+        "round": 1,
+        "voters": [
+            "edenmember11",
+            "edenmember1j",
+            "edenmember1h",
+            "edenmember1b",
+            "edenmember1t"
+        ]
+    }
+]
+[
+    "election_event_create_group",
+    {
+        "election_time": "2021-01-02T15:30:00.000",
+        "round": 1,
+        "voters": [
+            "edenmember12",
+            "edenmember1g",
+            "edenmember1z",
+            "edenmember25",
+            "edenmember1p"
+        ]
+    }
+]
+[
+    "election_event_begin_round_voting",
+    {
+        "election_time": "2021-01-02T15:30:00.000",
+        "round": 1,
+        "voting_begin": "2021-01-02T16:30:13.500",
+        "voting_end": "2021-01-02T17:30:13.500"
+    }
+]
+[
+    "election_event_end_round_voting",
+    {
+        "election_time": "2021-01-02T15:30:00.000",
+        "round": 1
+    }
+]
+[
+    "election_event_report_group",
+    {
+        "election_time": "2021-01-02T15:30:00.000",
+        "round": 1,
+        "winner": "edenmember1e",
+        "votes": [
+            {
+                "voter": "edenmember1o",
+                "candidate": "edenmember1e"
+            },
+            {
+                "voter": "edenmember1r",
+                "candidate": "edenmember1e"
+            },
+            {
+                "voter": "edenmember1e",
+                "candidate": "edenmember1e"
+            },
+            {
+                "voter": "edenmember1x",
+                "candidate": "edenmember1e"
+            },
+            {
+                "voter": "edenmember1f",
+                "candidate": "edenmember1e"
+            }
+        ]
+    }
+]
+[
+    "election_event_report_group",
+    {
+        "election_time": "2021-01-02T15:30:00.000",
+        "round": 1,
+        "winner": "edenmember13",
+        "votes": [
+            {
+                "voter": "edenmember13",
+                "candidate": "edenmember13"
+            },
+            {
+                "voter": "edenmember1q",
+                "candidate": "edenmember13"
+            },
+            {
+                "voter": "edenmember1a",
+                "candidate": "edenmember13"
+            },
+            {
+                "voter": "edenmember1k",
+                "candidate": "edenmember13"
+            },
+            {
+                "voter": "edenmember3r",
+                "candidate": "edenmember13"
+            }
+        ]
+    }
+]
+[
+    "election_event_report_group",
+    {
+        "election_time": "2021-01-02T15:30:00.000",
+        "round": 1,
+        "winner": "alice",
+        "votes": [
+            {
+                "voter": "edenmember2d",
+                "candidate": "alice"
+            },
+            {
+                "voter": "edenmember1d",
+                "candidate": "alice"
+            },
+            {
+                "voter": "alice",
+                "candidate": "alice"
+            },
+            {
+                "voter": "edenmember2g",
+                "candidate": "alice"
+            },
+            {
+                "voter": "edenmember14",
+                "candidate": "alice"
+            }
+        ]
+    }
+]
+[
+    "election_event_report_group",
+    {
+        "election_time": "2021-01-02T15:30:00.000",
+        "round": 1,
+        "winner": "edenmember11",
+        "votes": [
+            {
+                "voter": "edenmember11",
+                "candidate": "edenmember11"
+            },
+            {
+                "voter": "edenmember1j",
+                "candidate": "edenmember11"
+            },
+            {
+                "voter": "edenmember1h",
+                "candidate": "edenmember11"
+            },
+            {
+                "voter": "edenmember1b",
+                "candidate": "edenmember11"
+            },
+            {
+                "voter": "edenmember1t",
+                "candidate": "edenmember11"
+            }
+        ]
+    }
+]
+[
+    "election_event_report_group",
+    {
+        "election_time": "2021-01-02T15:30:00.000",
+        "round": 1,
+        "winner": "edenmember12",
+        "votes": [
+            {
+                "voter": "edenmember12",
+                "candidate": "edenmember12"
+            },
+            {
+                "voter": "edenmember1g",
+                "candidate": "edenmember12"
+            },
+            {
+                "voter": "edenmember1z",
+                "candidate": "edenmember12"
+            },
+            {
+                "voter": "edenmember25",
+                "candidate": "edenmember12"
+            },
+            {
+                "voter": "edenmember1p",
+                "candidate": "edenmember12"
+            }
+        ]
+    }
+]
+[
+    "election_event_end_round",
+    {
+        "election_time": "2021-01-02T15:30:00.000",
+        "round": 1
+    }
+]
+[
+    "election_event_create_round",
+    {
+        "election_time": "2021-01-02T15:30:00.000",
+        "round": 2,
+        "requires_voting": false,
+        "num_participants": 5,
+        "num_groups": 1
+    }
+]
+[
+    "election_event_create_group",
+    {
+        "election_time": "2021-01-02T15:30:00.000",
+        "round": 2,
+        "voters": [
+            "edenmember1e",
+            "edenmember12",
+            "alice",
+            "edenmember13",
+            "edenmember11"
+        ]
+    }
+]
+[
+    "election_event_begin_round_voting",
+    {
+        "election_time": "2021-01-02T15:30:00.000",
+        "round": 2,
+        "voting_begin": "2021-01-02T17:30:16.500",
+        "voting_end": "2021-01-02T19:30:16.500"
+    }
+]
+[
+    "election_event_seeding",
+    {
+        "election_time": "2021-01-02T15:30:00.000",
+        "start_time": "2021-01-02T17:30:16.500",
+        "end_time": "2021-01-02T19:30:16.500",
+        "seed": "FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF"
+    }
+]
+[
+    "election_event_seeding",
+    {
+        "election_time": "2021-01-02T15:30:00.000",
+        "start_time": "2021-01-02T17:30:16.500",
+        "end_time": "2021-01-02T19:30:16.500",
+        "seed": "E57448AFEEBF8AAC0D9877F8FA5DB20E9145285890B0AD2902AF0D71F91AD19F"
+    }
+]
+[
+    "election_event_end_seeding",
+    {
+        "election_time": "2021-01-02T15:30:00.000"
+    }
+]
+[
+    "election_event_end_round_voting",
+    {
+        "election_time": "2021-01-02T15:30:00.000",
+        "round": 2
+    }
+]
+[
+    "election_event_report_group",
+    {
+        "election_time": "2021-01-02T15:30:00.000",
+        "round": 2,
+        "winner": "edenmember11",
+        "votes": [
+            {
+                "voter": "edenmember1e",
+                "candidate": ""
+            },
+            {
+                "voter": "edenmember12",
+                "candidate": ""
+            },
+            {
+                "voter": "alice",
+                "candidate": ""
+            },
+            {
+                "voter": "edenmember13",
+                "candidate": ""
+            },
+            {
+                "voter": "edenmember11",
+                "candidate": ""
+            }
+        ]
+    }
+]
+[
+    "election_event_end_round",
+    {
+        "election_time": "2021-01-02T15:30:00.000",
+        "round": 2
+    }
+]
+[
+    "election_event_end",
+    {
+        "election_time": "2021-01-02T15:30:00.000"
+    }
+]
+[
+    "election_event_schedule",
+    {
+        "election_time": "2021-07-03T15:30:00.000",
+        "election_threshold": 1000
+    }
+]

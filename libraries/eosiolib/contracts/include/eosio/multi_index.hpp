@@ -2080,8 +2080,20 @@ namespace eosio
                                               temp_secondary_key);
                }
 
-               secondary_index_db_functions<typename index_type::secondary_key_type>::db_idx_update(
-                   indexitr, payer.value, secondary);
+               if (indexitr >= 0)
+               {
+                  secondary_index_db_functions<
+                      typename index_type::secondary_key_type>::db_idx_update(indexitr, payer.value,
+                                                                              secondary);
+               }
+               else
+               {
+                  mutableitem.__iters[index_type::number()] = secondary_index_db_functions<
+                      typename index_type::secondary_key_type>::db_idx_store(_scope,
+                                                                             index_type::name(),
+                                                                             payer.value, pk,
+                                                                             secondary);
+               }
             }
          });
       }
@@ -2313,6 +2325,41 @@ namespace eosio
          });
 
          _items_vector.erase(--(itr2.base()));
+      }
+
+      /**
+       * Updates the table for a newly added index.  Updates at most max_steps rows.
+       * next_primary_key should start at 0.
+       * Returns true if the update is complete.
+       */
+      template <eosio::name::raw IndexName>
+      bool update_index(eosio::name payer, uint64_t& next_primary_key, uint32_t& max_steps)
+      {
+         using namespace _multi_index_detail;
+         if (max_steps == 0)
+         {
+            return false;
+         }
+
+         using index_type = decltype(get_index<IndexName>());
+         for (auto iter = lower_bound(next_primary_key), end = this->end();
+              max_steps > 0 && iter != end; --max_steps, ++iter)
+         {
+            typename index_type::secondary_key_type dummy;
+            auto existing = secondary_index_db_functions<
+                typename index_type::secondary_key_type>::db_idx_find_primary(_code.value, _scope,
+                                                                              index_type::name(),
+                                                                              iter->primary_key(),
+                                                                              dummy);
+            if (existing < 0)
+            {
+               auto secondary = index_type::extract_secondary_key(*iter);
+               secondary_index_db_functions<typename index_type::secondary_key_type>::db_idx_store(
+                   _scope, index_type::name(), payer.value, iter->primary_key(), secondary);
+            }
+            next_primary_key = iter->primary_key() + 1;
+         }
+         return max_steps > 0 || next_primary_key == 0;
       }
    };
 }  // namespace eosio

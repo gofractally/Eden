@@ -5,6 +5,7 @@
 #include <eden-atomicassets.hpp>
 #include <eden.hpp>
 #include <elections.hpp>
+#include <encrypt.hpp>
 #include <globals.hpp>
 #include <inductions.hpp>
 #include <members.hpp>
@@ -24,6 +25,8 @@ namespace eden
       elections{get_self()}.clear_all();
       get_global_singleton(get_self()).remove();
       bylaws{get_self()}.clear_all();
+      encrypt{get_self(), "induction"_n}.clear_all();
+      encrypt{get_self(), "election"_n}.clear_all();
    }
 
    void eden::gensetexpire(uint64_t induction_id, eosio::time_point new_expiration)
@@ -100,8 +103,7 @@ namespace eden
                       uint32_t auction_duration,
                       const std::string& memo,
                       uint8_t election_day,
-                      const std::string& election_time,
-                      const eosio::asset& election_donation)
+                      const std::string& election_time)
    {
       require_auth(get_self());
 
@@ -111,9 +113,6 @@ namespace eden
       eosio::check(community_symbol == auction_starting_bid.symbol,
                    "community symbol does not match auction starting bid");
 
-      eosio::check(community_symbol == election_donation.symbol,
-                   "community symbol does not match election donation");
-
       migrations{get_self()}.init();
 
       globals{get_self(),
@@ -121,8 +120,7 @@ namespace eden
                 .minimum_donation = minimum_donation,
                 .auction_starting_bid = auction_starting_bid,
                 .auction_duration = auction_duration,
-                .stage = contract_stage::genesis},
-               .election_donation = election_donation}};
+                .stage = contract_stage::genesis}}};
       members members{get_self()};
       inductions inductions{get_self()};
 

@@ -15,19 +15,21 @@ interface Props {
     href?: string;
     target?: string;
     isExternal?: boolean;
+    title?: string;
 }
 
 export type ButtonSize = "sm" | "md" | "lg";
 const SIZES: { [key in ButtonSize]: string } = {
-    sm: "py-1.5 px-3 text-sm rounded",
-    md: "py-1.5 px-5 font-medium rounded-md",
-    lg: "py-3 px-6 rounded-md text-lg",
+    sm: "py-1.5 px-3 text-sm",
+    md: "py-1.5 px-5",
+    lg: "py-3 px-6 text-lg",
 };
 
 export type ButtonType =
     | "primary"
     | "disabled"
     | "neutral"
+    | "caution"
     | "danger"
     | "dangerOutline"
     | "inductionStatusProfile"
@@ -36,11 +38,12 @@ export type ButtonType =
     | "link";
 const TYPES: { [key in ButtonType]: string } = {
     primary: "bg-blue-500 border-blue-500 text-white hover:bg-blue-600",
-    disabled: "border-gray-400 bg-gray-300 text-gray-500",
+    disabled: "border-gray-300 bg-gray-300 text-white",
     neutral: "bg-gray-50 text-gray-800 hover:bg-gray-200",
+    caution: "bg-yellow-500 text-white hover:bg-yellow-600 border-white",
     danger: "bg-red-500 text-white hover:bg-red-600",
     dangerOutline: "text-gray-500 hover:text-red-500 border-none",
-    link: "border-transparent text-blue-500 hover:text-yellow-500",
+    link: "border-transparent text-blue-500 hover:text-blue-600",
     inductionStatusProfile:
         "bg-blue-500 border-blue-500 text-white hover:bg-blue-600",
     inductionStatusCeremony:
@@ -72,6 +75,7 @@ export const Button = ({
     href = "#",
     target,
     isExternal,
+    title,
 }: Props) => {
     const baseClass = "inline-block border focus:outline-none text-center";
     const widthClass = fullWidth ? "w-full" : "";
@@ -93,6 +97,7 @@ export const Button = ({
                 type={isSubmit ? "submit" : "button"}
                 className={buttonClass}
                 disabled={disabled}
+                title={title}
             >
                 {buttonContents()}
             </button>
@@ -106,6 +111,7 @@ export const Button = ({
                 href={href}
                 rel="noopener noreferrer"
                 target={target}
+                title={title}
             >
                 {buttonContents()}
             </a>
@@ -114,7 +120,7 @@ export const Button = ({
 
     return (
         <NextLink href={href}>
-            <a className={buttonClass} target={target}>
+            <a className={buttonClass} target={target} title={title}>
                 {buttonContents()}
             </a>
         </NextLink>

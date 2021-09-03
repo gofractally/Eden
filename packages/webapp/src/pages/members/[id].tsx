@@ -5,13 +5,15 @@ import { dehydrate } from "react-query/hydration";
 import {
     CallToAction,
     Container,
-    FluidLayout,
+    SideNavLayout,
     LoadingCard,
     queryMemberData,
     SingleColLayout,
 } from "_app";
-import { MemberCard, MemberCollections, MemberHoloCard } from "members";
 import { ROUTES } from "_app/config";
+
+import { MemberCard, MemberCollections, MemberHoloCard } from "members";
+import { DelegateFundsAvailable } from "delegates/components";
 
 /**
  * We have an issue if the member is not found in the development environment
@@ -43,17 +45,18 @@ export const MemberPage = ({ account }: Props) => {
 
     if (member) {
         return (
-            <FluidLayout title={`${member.name}'s Profile`}>
+            <SideNavLayout title={`${member.name}'s Profile`}>
                 <Container className="space-y-2.5 border-b">
-                    <div className="flex items-center space-y-10 xl:space-y-0 xl:space-x-4 flex-col xl:flex-row">
-                        <div className="max-w-2xl">
+                    <DelegateFundsAvailable account={account} />
+                    <div className="flex items-center space-y-10 xl:space-y-0 xl:space-x-4 flex-col">
+                        <div className="max-w-xl">
                             <MemberHoloCard member={member} />
                         </div>
-                        <MemberCard member={member} />
+                        <MemberCard member={member} showBalance />
                     </div>
                 </Container>
                 <MemberCollections member={member} />
-            </FluidLayout>
+            </SideNavLayout>
         );
     }
 

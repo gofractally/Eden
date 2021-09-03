@@ -3,34 +3,19 @@ import { useRouter } from "next/router";
 import { useQueryClient } from "react-query";
 import { FaSignOutAlt } from "react-icons/fa";
 
+import { useCurrentMember, NAV_MENU_ITEMS } from "_app";
+import { Route, ROUTES } from "_app/config";
+
 import { useUALAccount } from "../eos";
-import { useCurrentMember } from "_app/hooks";
 import { Button } from "./button";
-import { ROUTES } from "_app/config";
-
-interface MenuItem {
-    href: string;
-    label: string;
-    exactPath?: boolean;
-    hideNav?: boolean;
-}
-
-const MENU_ITEMS: MenuItem[] = Object.keys(ROUTES)
-    .map((k) => {
-        let pathObj: MenuItem = ROUTES[k];
-        if (k === "HOME") {
-            pathObj.exactPath = true;
-        }
-        return pathObj;
-    })
-    .filter((k) => !k.hideNav);
+import { Image } from "./image";
 
 export const HeaderNav = () => (
     <header className="text-gray-600 body-font border-b border-gray-200 bg-white">
         <div className="container mx-auto flex flex-wrap py-3 flex-col md:flex-row items-center">
             <HeaderLogo />
             <nav className="md:mr-auto md:ml-4 md:py-1 md:pl-4 md:border-l md:border-gray-400	flex flex-wrap items-center text-base justify-center">
-                <HeaderItems menuItems={MENU_ITEMS} />
+                <HeaderItems menuItems={NAV_MENU_ITEMS} />
             </nav>
             <AccountMenu />
         </div>
@@ -40,7 +25,7 @@ export const HeaderNav = () => (
 const HeaderLogo = () => (
     <Link href="/">
         <a className="flex title-font items-center mb-4 md:mb-0">
-            <img
+            <Image
                 src="/images/eden-logo.svg"
                 alt="Eden logo"
                 style={{ height: "54px" }}
@@ -49,7 +34,7 @@ const HeaderLogo = () => (
     </Link>
 );
 
-const HeaderItems = ({ menuItems }: { menuItems: MenuItem[] }) => {
+const HeaderItems = ({ menuItems }: { menuItems: Route[] }) => {
     return (
         <>
             {menuItems.map((item, index) => (
