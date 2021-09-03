@@ -20,7 +20,7 @@ export const ProfileImage = ({
             <div className="relative group" onClick={onClick}>
                 <Image
                     src={ipfsUrl(imageCid)}
-                    fallbackImage={"/images/unknown-member.png"}
+                    fallbackImage={"/images/avatars/fallback/avatar-6.svg"}
                     className={imageClass}
                     style={{ height: size, width: size }}
                 />
