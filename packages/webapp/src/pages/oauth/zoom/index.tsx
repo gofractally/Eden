@@ -1,5 +1,6 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { GetServerSideProps } from "next";
+import { useRouter } from "next/router";
 
 import {
     SideNavLayout,
@@ -12,6 +13,7 @@ import {
     Button,
     CallToAction,
     Container,
+    Expander,
     Heading,
     Loader,
     Text,
@@ -24,8 +26,6 @@ import {
     zoomConnectAccountLink,
     generateZoomMeetingLink,
 } from "_api/zoom-commons";
-import { useRouter } from "next/router";
-import { useState } from "react";
 
 export const getServerSideProps: GetServerSideProps = async ({
     query,
@@ -81,7 +81,10 @@ export const ZoomOauthPage = ({ newZoomAccountJWT, oauthState }: Props) => {
     }, []);
 
     return (
-        <SideNavLayout title="Zoom Test">
+        <SideNavLayout title="Zoom Test" className="divide-y border-b">
+            <Container>
+                <Heading size={1}>Video conferencing for EdenOS</Heading>
+            </Container>
             {redirectMessage ? (
                 <Container className="space-y-4 py-16 text-center">
                     <Heading size={2}>Your Zoom account is linked</Heading>
@@ -95,6 +98,18 @@ export const ZoomOauthPage = ({ newZoomAccountJWT, oauthState }: Props) => {
                     Welcome to Eden. Sign in using your wallet.
                 </CallToAction>
             )}
+            <Expander header={<Heading size={3}>Privacy policy</Heading>}>
+                <Container>This is a test</Container>
+            </Expander>
+            <Expander header={<Heading size={3}>Terms of use</Heading>}>
+                <Container>This is a test</Container>
+            </Expander>
+            <Expander header={<Heading size={3}>Documentation</Heading>}>
+                <Container>This is a test</Container>
+            </Expander>
+            <Expander header={<Heading size={3}>Support</Heading>}>
+                <Container>This is a test</Container>
+            </Expander>
         </SideNavLayout>
     );
 };
