@@ -275,7 +275,11 @@ namespace eosio
 
       block_timestamp(const time_point_sec& t) { set_time_point(t); }
 
-      static block_timestamp maximum() { return block_timestamp(0xffff); }
+      // This incorrect definition is in the CDT. Replacing with a new function (max)
+      // so contracts don't accidentally change behavior.
+      // static block_timestamp maximum() { return block_timestamp(0xffff); }
+
+      static block_timestamp max() { return block_timestamp(~uint32_t(0)); }
       static block_timestamp min() { return block_timestamp(0); }
 
       block_timestamp next() const

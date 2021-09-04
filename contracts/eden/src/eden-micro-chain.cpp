@@ -121,7 +121,8 @@ uint64_t available_pk(const auto& table, const auto& first)
 enum tables
 {
    status_table,
-   account_table,
+   balance_table,
+   balance_history_table,
    induction_table,
    member_table,
    election_table,
@@ -170,18 +171,53 @@ struct status_object : public chainbase::object<status_table, status_object>
 };
 using status_index = mic<status_object, ordered_by_id<status_object>>;
 
-struct account_object : public chainbase::object<account_table, account_object>
+// Invariant: sum of balance across all records = 0
+struct balance_object : public chainbase::object<balance_table, balance_object>
 {
-   CHAINBASE_DEFAULT_CONSTRUCTOR(account_object)
+   CHAINBASE_DEFAULT_CONSTRUCTOR(balance_object)
 
    id_type id;
-   eosio::name owner;
-   eosio::asset balance;
+   eosio::name account;
+   eosio::asset amount;
 
-   auto by_pk() const { return owner; }
+   auto by_pk() const { return account; }
 };
-using account_index =
-    mic<account_object, ordered_by_id<account_object>, ordered_by_pk<account_object>>;
+using balance_index =
+    mic<balance_object, ordered_by_id<balance_object>, ordered_by_pk<balance_object>>;
+
+enum class history_desc
+{
+   deposit,
+   withdraw,
+   fund,
+   donate,
+   inductdonate,
+};
+
+const char* history_desc_str[] = {"deposit", "withdraw", "fund", "donate", "inductdonate"};
+
+using balance_history_key = std::tuple<eosio::name, eosio::block_timestamp, uint64_t>;
+
+// Invariants:
+// * All records have a twin with account and other_account swapped, and with delta = -delta
+// * The sum of deltas for an account match the balance_object for that account
+struct balance_history_object
+    : public chainbase::object<balance_history_table, balance_history_object>
+{
+   CHAINBASE_DEFAULT_CONSTRUCTOR(balance_history_object)
+
+   id_type id;
+   eosio::block_timestamp time;
+   eosio::name account;
+   eosio::asset delta;
+   eosio::name other_account;
+   history_desc description;
+
+   balance_history_key by_pk() const { return {account, time, id._id}; }
+};
+using balance_history_index = mic<balance_history_object,
+                                  ordered_by_id<balance_history_object>,
+                                  ordered_by_pk<balance_history_object>>;
 
 struct induction
 {
@@ -320,7 +356,8 @@ struct database
 {
    chainbase::database db;
    chainbase::generic_index<status_index> status;
-   chainbase::generic_index<account_index> accounts;
+   chainbase::generic_index<balance_index> balances;
+   chainbase::generic_index<balance_history_index> balance_history;
    chainbase::generic_index<induction_index> inductions;
    chainbase::generic_index<member_index> members;
    chainbase::generic_index<election_index> elections;
@@ -331,7 +368,8 @@ struct database
    database()
    {
       db.add_index(status);
-      db.add_index(accounts);
+      db.add_index(balances);
+      db.add_index(balance_history);
       db.add_index(inductions);
       db.add_index(members);
       db.add_index(elections);
@@ -411,32 +449,90 @@ struct Member;
 std::optional<Member> get_member(eosio::name account);
 std::vector<Member> get_members(const std::vector<eosio::name>& v);
 
-struct Account
-{
-   eosio::name _owner;
-   const account_object* obj;
+struct BalanceHistory;
+constexpr const char BalanceHistoryConnection_name[] = "BalanceHistoryConnection";
+constexpr const char BalanceHistoryEdge_name[] = "BalanceHistoryEdge";
+using BalanceHistoryConnection =
+    clchain::Connection<clchain::ConnectionConfig<BalanceHistory,
+                                                  BalanceHistoryConnection_name,
+                                                  BalanceHistoryEdge_name>>;
 
-   std::optional<Member> owner() const;
-   std::optional<eosio::asset> balance() const
+struct Balance
+{
+   eosio::name _account;
+   const balance_object* obj;
+
+   std::optional<Member> account() const;
+   std::optional<eosio::asset> amount() const
    {
-      return obj ? std::optional{obj->balance} : std::nullopt;
+      return obj ? std::optional{obj->amount} : std::nullopt;
    }
+   BalanceHistoryConnection history(std::optional<eosio::block_timestamp> gt,
+                                    std::optional<eosio::block_timestamp> ge,
+                                    std::optional<eosio::block_timestamp> lt,
+                                    std::optional<eosio::block_timestamp> le,
+                                    std::optional<uint32_t> first,
+                                    std::optional<uint32_t> last,
+                                    std::optional<std::string> before,
+                                    std::optional<std::string> after) const;
 };
-EOSIO_REFLECT2(Account, owner, balance)
+EOSIO_REFLECT2(Balance,
+               account,
+               amount,
+               method(history, "gt", "ge", "lt", "le", "first", "last", "before", "after"))
 
-constexpr const char AccountConnection_name[] = "AccountConnection";
-constexpr const char AccountEdge_name[] = "AccountEdge";
-using AccountConnection = clchain::Connection<
-    clchain::ConnectionConfig<Account, AccountConnection_name, AccountEdge_name>>;
+constexpr const char BalanceConnection_name[] = "BalanceConnection";
+constexpr const char BalanceEdge_name[] = "BalanceEdge";
+using BalanceConnection = clchain::Connection<
+    clchain::ConnectionConfig<Balance, BalanceConnection_name, BalanceEdge_name>>;
 
-std::optional<Account> get_account(eosio::name owner)
+std::optional<Balance> get_balance(eosio::name account)
 {
-   if (auto* obj = get_ptr<by_pk>(db.accounts, owner))
-      return Account{owner, obj};
-   else if (owner.value && !(owner.value & 0x0f))
-      return Account{owner, nullptr};
+   if (auto* obj = get_ptr<by_pk>(db.balances, account))
+      return Balance{account, obj};
+   else if (account.value && !(account.value & 0x0f))
+      return Balance{account, nullptr};
    else
       return std::nullopt;
+}
+
+struct BalanceHistory
+{
+   const balance_history_object* obj;
+
+   eosio::block_timestamp time() const { return obj->time; }
+   std::optional<Balance> balance() const { return get_balance(obj->account); }
+   eosio::asset delta() const { return obj->delta; }
+   std::optional<Balance> otherBalance() const { return get_balance(obj->other_account); }
+   std::string description() const { return history_desc_str[(int)obj->description]; }
+};
+EOSIO_REFLECT2(BalanceHistory, time, balance, delta, otherBalance, description)
+
+BalanceHistoryConnection Balance::history(std::optional<eosio::block_timestamp> gt,
+                                          std::optional<eosio::block_timestamp> ge,
+                                          std::optional<eosio::block_timestamp> lt,
+                                          std::optional<eosio::block_timestamp> le,
+                                          std::optional<uint32_t> first,
+                                          std::optional<uint32_t> last,
+                                          std::optional<std::string> before,
+                                          std::optional<std::string> after) const
+{
+   return clchain::make_connection<BalanceHistoryConnection, balance_history_key>(
+       gt ? std::optional{balance_history_key{obj->account, *gt, ~uint64_t(0)}}              //
+          : std::nullopt,                                                                    //
+       ge ? std::optional{balance_history_key{obj->account, *ge, 0}}                         //
+          : std::optional{balance_history_key{obj->account, eosio::block_timestamp{0}, 0}},  //
+       lt ? std::optional{balance_history_key{obj->account, *lt, 0}}                         //
+          : std::nullopt,                                                                    //
+       le ? std::optional{balance_history_key{obj->account, *le, ~uint64_t(0)}}              //
+          : std::optional{balance_history_key{obj->account, eosio::block_timestamp::max(),   //
+                                              ~uint64_t(0)}},                                //
+       first, last, before, after,                                                           //
+       db.balance_history.get<by_pk>(),                                                      //
+       [](auto& obj) { return obj.by_pk(); },                                                //
+       [&](auto& obj) { return BalanceHistory{&obj}; },
+       [](auto& balance_history, auto key) { return balance_history.lower_bound(key); },
+       [](auto& balance_history, auto key) { return balance_history.upper_bound(key); });
 }
 
 struct Member
@@ -444,7 +540,7 @@ struct Member
    eosio::name account;
    const member* member;
 
-   auto balance() const { return get_account(account); }
+   auto balance() const { return get_balance(account); }
    auto inviter() const { return get_member(member ? member->inviter : ""_n); }
    std::optional<std::vector<Member>> inductionWitnesses() const
    {
@@ -496,9 +592,9 @@ std::vector<Member> get_members(const std::vector<eosio::name>& v)
    return result;
 }
 
-std::optional<Member> Account::owner() const
+std::optional<Member> Balance::account() const
 {
-   return get_member(_owner);
+   return get_member(_account);
 }
 
 struct Status
@@ -764,7 +860,14 @@ void add_genesis_member(const status& status, eosio::name member)
    });
 }
 
-void clearall(auto& table)
+struct action_context
+{
+   const subchain::eosio_block& block;
+   const subchain::transaction& transaction;
+   const subchain::action& action;
+};
+
+void clear_table(auto& table)
 {
    for (auto it = table.begin(); it != table.end();)
    {
@@ -777,30 +880,56 @@ void clearall(auto& table)
 
 void clearall()
 {
-   clearall(db.status);
-   clearall(db.accounts);
-   clearall(db.inductions);
-   clearall(db.members);
-   clearall(db.elections);
-   clearall(db.election_rounds);
-   clearall(db.election_groups);
-   clearall(db.votes);
+   clear_table(db.status);
+   clear_table(db.balances);
+   clear_table(db.balance_history);
+   clear_table(db.inductions);
+   clear_table(db.members);
+   clear_table(db.elections);
+   clear_table(db.election_rounds);
+   clear_table(db.election_groups);
+   clear_table(db.votes);
 }
 
-void add_account(eosio::name owner, const eosio::asset& quantity)
+void add_balance(eosio::name account, const eosio::asset& delta)
 {
-   add_or_modify<by_pk>(db.accounts, owner, [&](bool is_new, auto& a) {
+   add_or_modify<by_pk>(db.balances, account, [&](bool is_new, auto& a) {
       if (is_new)
       {
-         a.owner = owner;
-         a.balance = quantity;
+         a.account = account;
+         a.amount = delta;
       }
       else
-         a.balance += quantity;
+         a.amount += delta;
    });
 }
 
-void notify_transfer(eosio::name from,
+void transfer_funds(eosio::block_timestamp time,
+                    eosio::name from,
+                    eosio::name to,
+                    eosio::asset amount,
+                    history_desc description)
+{
+   add_balance(from, -amount);
+   add_balance(to, amount);
+   db.balance_history.emplace([&](auto& h) {
+      h.time = time;
+      h.account = from;
+      h.delta = -amount;
+      h.other_account = to;
+      h.description = description;
+   });
+   db.balance_history.emplace([&](auto& h) {
+      h.time = time;
+      h.account = to;
+      h.delta = amount;
+      h.other_account = from;
+      h.description = description;
+   });
+}
+
+void notify_transfer(const action_context& context,
+                     eosio::name from,
                      eosio::name to,
                      const eosio::asset& quantity,
                      std::string memo)
@@ -808,22 +937,28 @@ void notify_transfer(eosio::name from,
    if (from == eden_account)
       return;
    if (eden::is_possible_deposit_account(from, atomic_account, atomicmarket_account))
-      add_account(from, quantity);
+      transfer_funds(context.block.timestamp, token_account, from, quantity, history_desc::deposit);
    else
-      eosio::print("notify_transfer ", from, " ", to, " ", quantity, " ", memo, "\n");
+   {
+      transfer_funds(context.block.timestamp, token_account, from, quantity, history_desc::deposit);
+      transfer_funds(context.block.timestamp, from, eden_account, quantity, history_desc::fund);
+   }
 }
 
-void withdraw(eosio::name owner, const eosio::asset& quantity)
+void withdraw(const action_context& context, eosio::name owner, const eosio::asset& quantity)
 {
-   eosio::print("withdraw ", owner, " ", quantity, "\n");
+   transfer_funds(context.block.timestamp, owner, token_account, quantity, history_desc::withdraw);
 }
 
-void donate(eosio::name payer, const eosio::asset& quantity)
+void donate(const action_context& context, eosio::name payer, const eosio::asset& quantity)
 {
-   eosio::print("donate ", payer, " ", quantity, "\n");
+   transfer_funds(context.block.timestamp, payer, eden_account, quantity, history_desc::donate);
 }
 
-void transfer(eosio::name to, const eosio::asset& quantity, const std::string& memo)
+void transfer(const action_context& context,
+              eosio::name to,
+              const eosio::asset& quantity,
+              const std::string& memo)
 {
    eosio::print("transfer ", to, " ", quantity, " ", memo, "\n");
 }
@@ -901,9 +1036,11 @@ void inductcancel(eosio::name account, uint64_t id)
    remove_if_exists<by_pk>(db.inductions, id);
 }
 
-void inductdonate(eosio::name payer, uint64_t id, eosio::asset quantity)
+void inductdonate(const action_context& context,
+                  eosio::name payer,
+                  uint64_t id,
+                  eosio::asset quantity)
 {
-   eosio::print("inductdonate ", payer, " ", id, " ", quantity, "\n");
    auto& induction = get<by_pk>(db.inductions, id);
    auto& member = db.members.emplace([&](auto& obj) {
       obj.member.account = induction.induction.invitee;
@@ -912,6 +1049,8 @@ void inductdonate(eosio::name payer, uint64_t id, eosio::asset quantity)
       obj.member.profile = induction.induction.profile;
       obj.member.inductionVideo = induction.induction.video;
    });
+   transfer_funds(context.block.timestamp, payer, eden_account, quantity,
+                  history_desc::inductdonate);
 
    auto& index = db.inductions.get<by_invitee>();
    for (auto it = index.lower_bound(std::pair<eosio::name, uint64_t>{member.member.account, 0});
@@ -1096,7 +1235,7 @@ void handle_event(const eden::event& event)
 }
 
 template <typename... Args>
-void call(void (*f)(Args...), const std::vector<char>& data)
+void call(void (*f)(Args...), const action_context& context, const std::vector<char>& data)
 {
    std::tuple<eosio::remove_cvref_t<Args>...> t;
    eosio::input_stream s(data);
@@ -1105,48 +1244,61 @@ void call(void (*f)(Args...), const std::vector<char>& data)
    std::apply([f](auto&&... args) { f(std::move(args)...); }, t);
 }
 
+template <typename... Args>
+void call(void (*f)(const action_context&, Args...),
+          const action_context& context,
+          const std::vector<char>& data)
+{
+   std::tuple<eosio::remove_cvref_t<Args>...> t;
+   eosio::input_stream s(data);
+   // TODO: prevent abort, indicate what failed
+   eosio::from_bin(t, s);
+   std::apply([&](auto&&... args) { f(context, std::move(args)...); }, t);
+}
+
 void filter_block(const subchain::eosio_block& block)
 {
    for (auto& trx : block.transactions)
    {
       for (auto& action : trx.actions)
       {
+         action_context context{block, trx, action};
          if (action.firstReceiver == eden_account)
          {
             if (action.name == "clearall"_n)
-               call(clearall, action.hexData.data);
+               call(clearall, context, action.hexData.data);
             else if (action.name == "withdraw"_n)
-               call(withdraw, action.hexData.data);
+               call(withdraw, context, action.hexData.data);
             else if (action.name == "donate"_n)
-               call(donate, action.hexData.data);
+               call(donate, context, action.hexData.data);
             else if (action.name == "transfer"_n)
-               call(transfer, action.hexData.data);
+               call(transfer, context, action.hexData.data);
             else if (action.name == "genesis"_n)
-               call(genesis, action.hexData.data);
+               call(genesis, context, action.hexData.data);
             else if (action.name == "addtogenesis"_n)
-               call(addtogenesis, action.hexData.data);
+               call(addtogenesis, context, action.hexData.data);
             else if (action.name == "inductinit"_n)
-               call(inductinit, action.hexData.data);
+               call(inductinit, context, action.hexData.data);
             else if (action.name == "inductprofil"_n)
-               call(inductprofil, action.hexData.data);
+               call(inductprofil, context, action.hexData.data);
             else if (action.name == "inductvideo"_n)
-               call(inductvideo, action.hexData.data);
+               call(inductvideo, context, action.hexData.data);
             else if (action.name == "inductcancel"_n)
-               call(inductcancel, action.hexData.data);
+               call(inductcancel, context, action.hexData.data);
             else if (action.name == "inductdonate"_n)
-               call(inductdonate, action.hexData.data);
+               call(inductdonate, context, action.hexData.data);
             else if (action.name == "resign"_n)
-               call(resign, action.hexData.data);
+               call(resign, context, action.hexData.data);
             else if (action.name == "electopt"_n)
-               call(electopt, action.hexData.data);
+               call(electopt, context, action.hexData.data);
             else if (action.name == "electvote"_n)
-               call(electvote, action.hexData.data);
+               call(electvote, context, action.hexData.data);
             else if (action.name == "electvideo"_n)
-               call(electvideo, action.hexData.data);
+               call(electvideo, context, action.hexData.data);
          }
          else if (action.firstReceiver == token_account && action.receiver == eden_account &&
                   action.name == "transfer"_n)
-            call(notify_transfer, action.hexData.data);
+            call(notify_transfer, context, action.hexData.data);
          else if (action.firstReceiver == "eosio.null"_n && action.name == "eden.events"_n &&
                   action.creatorAction && action.creatorAction->receiver == eden_account)
          {
@@ -1300,7 +1452,7 @@ struct Query
       return Status{&idx.begin()->status};
    }
 
-   AccountConnection accounts(std::optional<eosio::name> gt,
+   BalanceConnection balances(std::optional<eosio::name> gt,
                               std::optional<eosio::name> ge,
                               std::optional<eosio::name> lt,
                               std::optional<eosio::name> le,
@@ -1309,15 +1461,15 @@ struct Query
                               std::optional<std::string> before,
                               std::optional<std::string> after) const
    {
-      return clchain::make_connection<AccountConnection, eosio::name>(
+      return clchain::make_connection<BalanceConnection, eosio::name>(
           gt, ge, lt, le, first, last, before, after,  //
-          db.accounts.get<by_pk>(),                    //
-          [](auto& obj) { return obj.owner; },         //
+          db.balances.get<by_pk>(),                    //
+          [](auto& obj) { return obj.account; },       //
           [](auto& obj) {
-             return Account{obj.owner, &obj};
+             return Balance{obj.account, &obj};
           },
-          [](auto& accounts, auto key) { return accounts.lower_bound(key); },
-          [](auto& accounts, auto key) { return accounts.upper_bound(key); });
+          [](auto& balances, auto key) { return balances.lower_bound(key); },
+          [](auto& balances, auto key) { return balances.upper_bound(key); });
    }
 
    MemberConnection members(std::optional<eosio::name> gt,
@@ -1361,7 +1513,7 @@ struct Query
 EOSIO_REFLECT2(Query,
                blockLog,
                status,
-               method(accounts, "gt", "ge", "lt", "le", "first", "last", "before", "after"),
+               method(balances, "gt", "ge", "lt", "le", "first", "last", "before", "after"),
                method(members, "gt", "ge", "lt", "le", "first", "last", "before", "after"),
                method(elections, "gt", "ge", "lt", "le", "first", "last", "before", "after"))
 
