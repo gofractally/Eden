@@ -171,7 +171,11 @@ struct status_object : public chainbase::object<status_table, status_object>
 };
 using status_index = mic<status_object, ordered_by_id<status_object>>;
 
-// Invariant: sum of balance across all records = 0
+// Invariants:
+// * sum of amount across all balance records = 0
+// * token_account record holds negative of total tokens held
+//   in eden_account's balance in token_account contract
+// * eden_account record holds general funds
 struct balance_object : public chainbase::object<balance_table, balance_object>
 {
    CHAINBASE_DEFAULT_CONSTRUCTOR(balance_object)
