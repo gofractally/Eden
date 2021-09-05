@@ -187,14 +187,26 @@ using balance_index =
 
 enum class history_desc
 {
-   deposit,
-   withdraw,
-   fund,
-   donate,
-   inductdonate,
+   deposit,          // incoming eosio::token
+   withdraw,         // outgoing eosio::token
+   external_spend,   // non-contract spend of general funds
+                     //    e.g. powerup
+                     //    e.g. transfer before contract installed
+   manual_transfer,  // manual spend of general funds (contract's transfer action)
+   fund,             // received general funds from external source
+   donate,           // user donated to general fund
+   inductdonate,     // user donated to general fund during induction
 };
 
-const char* history_desc_str[] = {"deposit", "withdraw", "fund", "donate", "inductdonate"};
+const char* history_desc_str[] = {
+    "deposit",          //
+    "withdraw",         //
+    "external spend",   //
+    "manual transfer",  //
+    "fund",             //
+    "donate",           //
+    "inductdonate",     //
+};
 
 using balance_history_key = std::tuple<eosio::name, eosio::block_timestamp, uint64_t>;
 
@@ -860,9 +872,16 @@ void add_genesis_member(const status& status, eosio::name member)
    });
 }
 
+struct block_state
+{
+   bool in_withdraw = false;
+   bool in_manual_transfer = false;
+};
+
 struct action_context
 {
    const subchain::eosio_block& block;
+   block_state& block_state;
    const subchain::transaction& transaction;
    const subchain::action& action;
 };
@@ -934,20 +953,38 @@ void notify_transfer(const action_context& context,
                      const eosio::asset& quantity,
                      std::string memo)
 {
-   if (from == eden_account)
-      return;
-   if (eden::is_possible_deposit_account(from, atomic_account, atomicmarket_account))
-      transfer_funds(context.block.timestamp, token_account, from, quantity, history_desc::deposit);
-   else
+   // eosio::print("transfer ", from, " ", to, " ", quantity, " ", memo, "\n");
+   if (to == eden_account)
    {
       transfer_funds(context.block.timestamp, token_account, from, quantity, history_desc::deposit);
-      transfer_funds(context.block.timestamp, from, eden_account, quantity, history_desc::fund);
+      if (!eden::is_possible_deposit_account(from, atomic_account, atomicmarket_account))
+         transfer_funds(context.block.timestamp, from, eden_account, quantity, history_desc::fund);
    }
+   else if (context.block_state.in_withdraw)
+   {
+      transfer_funds(context.block.timestamp, to, token_account, quantity, history_desc::withdraw);
+      context.block_state.in_withdraw = false;
+   }
+   else
+   {
+      transfer_funds(context.block.timestamp, eden_account, to, quantity,
+                     context.block_state.in_manual_transfer ? history_desc::manual_transfer
+                                                            : history_desc::external_spend);
+      transfer_funds(context.block.timestamp, to, token_account, quantity, history_desc::withdraw);
+      context.block_state.in_manual_transfer = false;
+   }
+}
+
+void check_transfer_order(const action_context& context)
+{
+   eosio::check(!context.block_state.in_withdraw && !context.block_state.in_manual_transfer,
+                "transfer notifications have incorrect order");
 }
 
 void withdraw(const action_context& context, eosio::name owner, const eosio::asset& quantity)
 {
-   transfer_funds(context.block.timestamp, owner, token_account, quantity, history_desc::withdraw);
+   check_transfer_order(context);
+   context.block_state.in_withdraw = true;
 }
 
 void donate(const action_context& context, eosio::name payer, const eosio::asset& quantity)
@@ -960,7 +997,8 @@ void transfer(const action_context& context,
               const eosio::asset& quantity,
               const std::string& memo)
 {
-   eosio::print("transfer ", to, " ", quantity, " ", memo, "\n");
+   check_transfer_order(context);
+   context.block_state.in_manual_transfer = true;
 }
 
 void genesis(std::string community,
@@ -1258,11 +1296,12 @@ void call(void (*f)(const action_context&, Args...),
 
 void filter_block(const subchain::eosio_block& block)
 {
+   block_state block_state{};
    for (auto& trx : block.transactions)
    {
       for (auto& action : trx.actions)
       {
-         action_context context{block, trx, action};
+         action_context context{block, block_state, trx, action};
          if (action.firstReceiver == eden_account)
          {
             if (action.name == "clearall"_n)
@@ -1309,7 +1348,9 @@ void filter_block(const subchain::eosio_block& block)
          }
       }
    }
-}
+   eosio::check(!block_state.in_withdraw && !block_state.in_manual_transfer,
+                "missing transfer notification");
+}  // filter_block
 
 subchain::block_log block_log;
 
