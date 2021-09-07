@@ -19,6 +19,7 @@ if (
     !process.env.NEXT_PUBLIC_EDEN_CONTRACT_ACCOUNT ||
     !process.env.NEXT_PUBLIC_APP_MINIMUM_DONATION_AMOUNT ||
     !process.env.NEXT_PUBLIC_ENABLED_WALLETS ||
+    !process.env.NEXT_PUBLIC_IPFS_BASE_URL ||
     !process.env.NEXT_PUBLIC_BOX_UPLOAD_IPFS ||
     !process.env.NEXT_PUBLIC_BOX_ADDRESS ||
     !process.env.NEXT_PUBLIC_ZOOM_CLIENT_ID ||
@@ -55,6 +56,7 @@ APP_MINIMUM_DONATION_AMOUNT="${
     process.env.NEXT_PUBLIC_APP_MINIMUM_DONATION_AMOUNT
 }"
 ENABLED_WALLETS="${process.env.NEXT_PUBLIC_ENABLED_WALLETS}"
+IPFS_BASE_URL="${process.env.NEXT_PUBLIC_IPFS_BASE_URL}"
 BOX_UPLOAD_IPFS="${process.env.NEXT_PUBLIC_BOX_UPLOAD_IPFS}"
 BOX_ADDRESS="${process.env.NEXT_PUBLIC_BOX_ADDRESS}"
 ZOOM_CLIENT_ID="${process.env.NEXT_PUBLIC_ZOOM_CLIENT_ID}"
@@ -74,7 +76,7 @@ DEV_USE_FIXTURE_DATA="${
 NEXT_PUBLIC_SUBCHAIN_SLOW_MO="${process.env.NEXT_PUBLIC_SUBCHAIN_SLOW_MO}"
 `);
 
-export const ipfsBaseUrl = "https://ipfs.io/ipfs"; //"https://ipfs.pink.gg/ipfs";
+export const ipfsBaseUrl = process.env.NEXT_PUBLIC_IPFS_BASE_URL;
 export const ipfsApiBaseUrl = "https://ipfs.infura.io:5001/api/v0";
 
 export const box = {

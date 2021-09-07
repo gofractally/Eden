@@ -7,7 +7,7 @@ import {
     Button,
     HelpLink,
     handleFileChange,
-    Text,
+    Image,
 } from "_app";
 import { edenContractAccount, validUploadActions } from "config";
 import { EdenNftSocialHandles } from "nfts";
@@ -101,7 +101,7 @@ export const InductionProfileForm = ({
                     }
                 />
                 {selectedImage || fields.img ? (
-                    <img
+                    <Image
                         src={
                             selectedImage
                                 ? URL.createObjectURL(selectedImage)
@@ -111,7 +111,7 @@ export const InductionProfileForm = ({
                         className="object-cover rounded-full h-24 w-24 mt-4 mx-auto"
                     />
                 ) : (
-                    <img
+                    <Image
                         src="/images/blank-profile-picture.svg"
                         alt="blank profile pic"
                         className="rounded-full h-24 w-24 my-2 mx-auto"
