@@ -157,6 +157,7 @@ struct status
    std::string memo;
    eosio::block_timestamp nextElection;
    uint16_t electionThreshold = 0;
+   uint16_t electionParticipants = 0;
 };
 
 struct status_object : public chainbase::object<status_table, status_object>
@@ -464,6 +465,7 @@ struct Status
    const std::string& memo() const { return status->memo; }
    const eosio::block_timestamp& nextElection() const { return status->nextElection; }
    uint16_t electionThreshold() const { return status->electionThreshold; }
+   uint16_t electionParticipants() const { return status->electionParticipants; }
 };
 EOSIO_REFLECT2(Status,
                active,
@@ -473,7 +475,8 @@ EOSIO_REFLECT2(Status,
                auctionDuration,
                memo,
                nextElection,
-               electionThreshold)
+               electionThreshold,
+               electionParticipants)
 
 struct ElectionRound;
 constexpr const char ElectionRoundConnection_name[] = "ElectionRoundConnection";
@@ -845,6 +848,9 @@ void clear_participating()
 void electopt(eosio::name voter, bool participating)
 {
    modify<by_pk>(db.members, voter, [&](auto& obj) { obj.member.participating = participating; });
+   db.status.modify(get_status(), [&](auto& status) {
+      status.status.electionParticipants += participating ? 1 : -1;
+   });
 }
 
 void electvote(uint8_t round, eosio::name voter, eosio::name candidate)
@@ -877,7 +883,10 @@ void handle_event(const eden::election_event_schedule& event)
 
 void handle_event(const eden::election_event_begin& event)
 {
-   db.elections.emplace([&](auto& election) { election.time = event.election_time; });
+   db.elections.emplace([&](auto& election) { 
+      election.time = event.election_time; 
+      status.status.electionParticipants = 0;
+   });
 }
 
 void handle_event(const eden::election_event_seeding& event)
