@@ -13,7 +13,6 @@ import {
     Button,
     CallToAction,
     Container,
-    Expander,
     Heading,
     Loader,
     Text,
@@ -98,58 +97,6 @@ export const ZoomOauthPage = ({ newZoomAccountJWT, oauthState }: Props) => {
                     Welcome to Eden. Sign in using your wallet.
                 </CallToAction>
             )}
-            <Expander header={<Heading size={3}>Privacy policy</Heading>}>
-                <Container className="space-y-2.5">
-                    <Text>
-                        Your Zoom account will be used to schedule Eden election
-                        meetings on your behalf for members participating in
-                        your Eden election groups during the course of an
-                        ongoing election.
-                    </Text>
-                    <Text>
-                        NONE of your personal information nor any credentials,
-                        tokens or keys relating to your Zoom account are ever
-                        stored, persisted or retained on any server or database.
-                        The only information used by EdenOS is your Zoom OAuth
-                        token, and that is stored only in your local web
-                        browser.
-                    </Text>
-                    <Text>
-                        Whenever you request that an election meeting be
-                        scheduled by EdenOS on your behalf, that OAuth token is
-                        sent, ephemerally, to a stateless, serverless function
-                        which creates the meeting on your Zoom account on your
-                        behalf. Your token is then immediately forgotten by the
-                        server.
-                    </Text>
-                    <Text>
-                        This means that resetting your browser or clearing your
-                        browser's cache or settings is sufficient to deny the
-                        EdenOS application further access to your OAuth token
-                        and prevent it from creating further meetings on your
-                        Zoom account on your behalf.
-                    </Text>
-                </Container>
-            </Expander>
-            <Expander header={<Heading size={3}>Terms of use</Heading>}>
-                <Container className="space-y-2.5">
-                    <Text>
-                        By using the EdenOS Genesis app integration with Zoom,
-                        you understand that the EdenOS software will schedule
-                        meetings on your behalf (but specifically and only when
-                        you request that a meeting be created). The resulting
-                        meeting link/URL will be encrypted and distributed to
-                        your election meeting co-participants. And you accept
-                        that.
-                    </Text>
-                </Container>
-            </Expander>
-            <Expander header={<Heading size={3}>Documentation</Heading>}>
-                <Container>This is a test</Container>
-            </Expander>
-            <Expander header={<Heading size={3}>Support</Heading>}>
-                <Container>This is a test</Container>
-            </Expander>
         </SideNavLayout>
     );
 };
@@ -204,7 +151,7 @@ const ZoomTestContainer = ({ ualAccount }: any) => {
             alert(JSON.stringify(responseData, undefined, 2));
         } catch (error) {
             console.error(error);
-            onError(error);
+            onError(error as Error);
         }
     };
 
