@@ -17,7 +17,7 @@ const dfuseReceiver = new DfuseReceiver(storage);
 export const subchainHandler = express.Router();
 
 subchainHandler.get("/eden-micro-chain.wasm", (req, res) => {
-    res.sendFile(path.resolve("../../build/eden-micro-chain.wasm"));
+    res.sendFile(path.resolve(subchainConfig.wasmFile));
 });
 
 subchainHandler.get("/state", (req, res) => {
