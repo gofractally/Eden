@@ -843,6 +843,9 @@ void clear_participating()
    for (auto it = idx.begin(); it != idx.end(); ++it)
       if (it->member.participating)
          db.members.modify(*it, [](auto& obj) { obj.member.participating = false; });
+   db.status.modify(get_status(), [&](auto& status) {
+      status.status.electionParticipants = 0;
+   });
 }
 
 void electopt(eosio::name voter, bool participating)
@@ -878,7 +881,6 @@ void handle_event(const eden::election_event_schedule& event)
    db.status.modify(get_status(), [&](auto& status) {
       status.status.nextElection = event.election_time;
       status.status.electionThreshold = event.election_threshold;
-      status.status.electionParticipants = 0;
    });
 }
 
