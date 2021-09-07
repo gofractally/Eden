@@ -884,9 +884,7 @@ void handle_event(const eden::election_event_schedule& event)
 
 void handle_event(const eden::election_event_begin& event)
 {
-   db.elections.emplace([&](auto& election) { 
-      election.time = event.election_time; 
-   });
+   db.elections.emplace([&](auto& election) { election.time = event.election_time; });
 }
 
 void handle_event(const eden::election_event_seeding& event)
