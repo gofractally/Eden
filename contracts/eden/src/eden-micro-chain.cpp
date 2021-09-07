@@ -878,6 +878,7 @@ void handle_event(const eden::election_event_schedule& event)
    db.status.modify(get_status(), [&](auto& status) {
       status.status.nextElection = event.election_time;
       status.status.electionThreshold = event.election_threshold;
+      status.status.electionParticipants = 0;
    });
 }
 
@@ -885,7 +886,6 @@ void handle_event(const eden::election_event_begin& event)
 {
    db.elections.emplace([&](auto& election) { 
       election.time = event.election_time; 
-      status.status.electionParticipants = 0;
    });
 }
 
