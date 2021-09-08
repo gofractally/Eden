@@ -48,7 +48,7 @@ export const EdenChainContext = createContext<SubchainClient | null>(null);
 export interface Query<T> {
     isLoading: boolean; // flags if the query is loading
     data?: T; // has the query data when it's loaded or empty if not found
-    error?: any; // flags an error in case it fails to load the query
+    errors?: any; // flags an error in case it fails to load the query
 }
 
 export function useQuery<T = any>(query: string): Query<T> {
@@ -82,14 +82,13 @@ export function useQuery<T = any>(query: string): Query<T> {
         setCachedQuery(query);
         if (client?.subchain) {
             state.cachedQueryResult = {
-                data: client.subchain.query(query).data,
+                ...client.subchain.query(query),
                 isLoading: false,
             };
-            state.cachedQueryResult = client.subchain.query(query);
         } else {
             state.cachedQueryResult = {
                 isLoading: false,
-                error: "subchain not present",
+                errors: { message: "subchain not present" },
             };
         }
     }
