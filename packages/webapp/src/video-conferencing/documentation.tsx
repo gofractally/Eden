@@ -24,7 +24,7 @@ export const ZoomDocumentation = () => (
             </Text>
         </div>
         <div className="space-y-2.5">
-            <Heading size={3}>Instructions</Heading>
+            <Heading size={3}>Installation</Heading>
             <Heading size={4}>1. Sign in with Zoom</Heading>
             <Text>
                 When your election round begins, you will find yourself randomly
@@ -65,6 +65,7 @@ export const ZoomDocumentation = () => (
             </div>
         </div>
         <div className="space-y-2.5">
+            <Heading size={3}>Usage</Heading>
             <Heading size={4}>
                 3. Create the meeting link for your group
             </Heading>
@@ -120,6 +121,35 @@ export const ZoomDocumentation = () => (
                     <Screenshot fileName="10-join-meeting.webp" />
                 </div>
             </div>
+        </div>
+        <div className="space-y-2.5">
+            <Heading size={3}>Uninstallation</Heading>
+            <Text>
+                Uninstalling the EdenOS Zoom app integration will decouple your
+                Zoom account from EdenOS. EdenOS will no longer be able to
+                schedule election meetings on your behalf unless you reinstall
+                the application according to the Installation instructions
+                above. Because EdenOS does not store any information relating to
+                your Zoom account, no information is retained after you
+                uninstall the Zoom app.
+            </Text>
+            <ol className="list-inside list-decimal">
+                <li>
+                    Login to your Zoom Account and navigate to the Zoom App
+                    Marketplace.
+                </li>
+                <li>
+                    Click{" "}
+                    <span className="font-medium">
+                        Manage &gt; Installed Apps
+                    </span>{" "}
+                    or search for the "EdenOS Genesis" app.
+                </li>
+                <li>Click the "EdenOS Genesis" app.</li>
+                <li>
+                    Click <span className="font-medium">uninstall</span>.
+                </li>
+            </ol>
         </div>
     </Container>
 );
