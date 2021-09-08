@@ -2,8 +2,8 @@ import { Link } from "_app/ui";
 import { ROUTES } from "_app/config";
 
 export const Footer = () => (
-    <footer className="border-t text-gray-600 body-font border-gray-200 bg-white pb-20 xs:pb-0">
-        <div className="container p-6 mx-auto flex md:items-center lg:items-start md:flex-row md:flex-nowrap flex-wrap flex-col">
+    <footer className="border-t text-gray-600 body-font border-gray-200 bg-white xs:pb-0">
+        <div className="px-2.5 py-5 sm:px-5 mx-auto flex md:items-center lg:items-start md:flex-row md:flex-nowrap flex-wrap flex-col">
             <div className="flex-grow flex flex-wrap">
                 <div className="lg:w-1/4 md:w-1/2 w-full">
                     <h2 className="title-font font-medium text-gray-900 tracking-widest text-sm mb-1">

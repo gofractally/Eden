@@ -1,5 +1,6 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { GetServerSideProps } from "next";
+import { useRouter } from "next/router";
 
 import {
     SideNavLayout,
@@ -24,8 +25,6 @@ import {
     zoomConnectAccountLink,
     generateZoomMeetingLink,
 } from "_api/zoom-commons";
-import { useRouter } from "next/router";
-import { useState } from "react";
 
 export const getServerSideProps: GetServerSideProps = async ({
     query,
@@ -81,7 +80,10 @@ export const ZoomOauthPage = ({ newZoomAccountJWT, oauthState }: Props) => {
     }, []);
 
     return (
-        <SideNavLayout title="Zoom Test">
+        <SideNavLayout title="Zoom Test" className="divide-y border-b">
+            <Container>
+                <Heading size={1}>Video conferencing for EdenOS</Heading>
+            </Container>
             {redirectMessage ? (
                 <Container className="space-y-4 py-16 text-center">
                     <Heading size={2}>Your Zoom account is linked</Heading>
@@ -149,7 +151,7 @@ const ZoomTestContainer = ({ ualAccount }: any) => {
             alert(JSON.stringify(responseData, undefined, 2));
         } catch (error) {
             console.error(error);
-            onError(error);
+            onError(error as Error);
         }
     };
 
