@@ -87,10 +87,8 @@ export const ZoomDocumentation = () => (
         <div className="space-y-2.5">
             <Heading size={4}>4. Finish creating the meeting link</Heading>
             <Text>
-                You may be asked to sign a transaction sharing the encrypted
-                meeting link with your election round group participants.
-                Complete the signing ceremony with whichever EOSIO authenticator
-                you're using.
+                You may be asked to sign a transaction. Complete the signing
+                ceremony with whichever EOSIO authenticator you're using.
             </Text>
             <div className="flex flex-col md:flex-row justify-around items-center space-y-8 md:space-y-0">
                 <div className="space-y-2.5 text-center">
@@ -106,11 +104,11 @@ export const ZoomDocumentation = () => (
         <div className="space-y-2.5">
             <Heading size={4}>5. Join your group in the meeting</Heading>
             <Text>
-                You've created and shared a Zoom meeting link with your group!
-                On the ongoing election page, you should now see a "Join
-                meeting" button. If the round has not yet started, it will be
-                disabled until the round begins. Once enabled, click the button
-                and work with your group to come to consensus!
+                You've created a Zoom meeting link for your group! On the
+                ongoing election page, you should now see a "Join meeting"
+                button. If the round has not yet started, it will be disabled
+                until the round begins. Once enabled, click the button and work
+                with your group to come to consensus!
             </Text>
             <div className="flex flex-col md:flex-row justify-around items-center space-y-8 md:space-y-0">
                 <div className="space-y-2.5 text-center">
