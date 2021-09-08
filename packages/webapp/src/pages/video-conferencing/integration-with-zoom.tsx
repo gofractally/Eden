@@ -4,7 +4,10 @@ import { ZoomCompliance } from "video-conferencing";
 
 export const ZoomCompliancePage = () => {
     return (
-        <SideNavLayout title="Video conferencing" className="divide-y border-b">
+        <SideNavLayout
+            title="Video conferencing"
+            className="divide-y border-b mb-20"
+        >
             <Container>
                 <Heading size={1}>Video conferencing for EdenOS</Heading>
             </Container>

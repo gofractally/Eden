@@ -9,7 +9,7 @@ import {
 
 export const ZoomCompliance = () => {
     return (
-        <>
+        <div className="divide-y">
             <Expander
                 showContentDivider
                 header={<Heading size={3}>Privacy policy</Heading>}
@@ -34,7 +34,7 @@ export const ZoomCompliance = () => {
             >
                 <ZoomSupport />
             </Expander>
-        </>
+        </div>
     );
 };
 
