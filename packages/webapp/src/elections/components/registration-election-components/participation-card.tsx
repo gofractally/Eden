@@ -13,7 +13,6 @@ import {
     useCountdown,
     useCurrentElection,
     useCurrentMember,
-    useEdenStatus,
     useElectionStatus,
     useUALAccount,
 } from "_app";
@@ -208,19 +207,17 @@ export const ParticipationCard = ({ election }: Props) => {
 };
 
 const ParticipationCounter = () => {
-    const status = useElectionStatus();
-    return (
-        status?.data?.status && (
-            <div>
-                <Text>
-                    Members Participating:{" "}
-                    <strong>
-                        {status.data.status.numElectionParticipants}
-                    </strong>
-                </Text>
-            </div>
-        )
-    );
+    const { data: statusQueryResult } = useElectionStatus();
+    return statusQueryResult ? (
+        <div>
+            <Text>
+                Members Participating:{" "}
+                <strong>
+                    {statusQueryResult.status.numElectionParticipants}
+                </strong>
+            </Text>
+        </div>
+    ) : null;
 };
 
 interface CountdownProps {

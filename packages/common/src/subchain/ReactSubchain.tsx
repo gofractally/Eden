@@ -45,7 +45,14 @@ export function useCreateEdenChain(
 
 export const EdenChainContext = createContext<SubchainClient | null>(null);
 
-export function useQuery<T = any>(query: string): T {
+export interface Query<T> {
+    isLoading: boolean; // flags if the query is loading
+    data?: T; // has the query data when it's loaded or empty if not found
+    error?: any; // flags an error in case it fails to load the query
+}
+
+export function useQuery<T = any>(query: string): Query<T> {
+    console.info("using query...");
     const client = useContext(EdenChainContext);
     const [cachedQuery, setCachedQuery] = useState<string | null>();
     // non-signalling state
@@ -53,7 +60,7 @@ export function useQuery<T = any>(query: string): T {
         mounted: true,
         cachedClient: null as SubchainClient | null,
         subscribed: null as SubchainClient | null,
-        cachedQueryResult: null as any,
+        cachedQueryResult: { isLoading: false } as Query<T>,
     });
     useEffect(() => {
         return () => {
@@ -75,9 +82,16 @@ export function useQuery<T = any>(query: string): T {
         state.cachedClient = client;
         setCachedQuery(query);
         if (client?.subchain) {
+            state.cachedQueryResult = {
+                data: client.subchain.query(query).data,
+                isLoading: false,
+            };
             state.cachedQueryResult = client.subchain.query(query);
         } else {
-            state.cachedQueryResult = null;
+            state.cachedQueryResult = {
+                isLoading: false,
+                error: "subchain not present",
+            };
         }
     }
     return state.cachedQueryResult;
@@ -93,7 +107,7 @@ interface PageInfo {
 export function usePagedQuery<T = any>(
     query: string,
     pageSize: number,
-    getPageInfo: (result: T) => PageInfo | null | undefined
+    getPageInfo: (result: Query<T>) => PageInfo | null | undefined
 ) {
     const [args, setArgs] = useState(`first:${pageSize}`);
     const result = useQuery<T>(query.replace("@page@", args));
