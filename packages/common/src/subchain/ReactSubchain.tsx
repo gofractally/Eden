@@ -52,7 +52,6 @@ export interface Query<T> {
 }
 
 export function useQuery<T = any>(query: string): Query<T> {
-    console.info("using query...");
     const client = useContext(EdenChainContext);
     const [cachedQuery, setCachedQuery] = useState<string | null>();
     // non-signalling state
