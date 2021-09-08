@@ -2,6 +2,7 @@
 
 #include <eosio/stream.hpp>
 #include <memory>
+#include <optional>
 
 namespace dwarf
 {
