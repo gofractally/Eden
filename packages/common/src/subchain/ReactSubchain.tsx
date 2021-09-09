@@ -87,8 +87,7 @@ export function useQuery<T = any>(query: string): Query<T> {
             };
         } else {
             state.cachedQueryResult = {
-                isLoading: false,
-                errors: { message: "subchain not present" },
+                isLoading: true,
             };
         }
     }
