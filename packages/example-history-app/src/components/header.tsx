@@ -19,11 +19,11 @@ export default function Header() {
                     <tbody>
                         <tr>
                             <td>block:</td>
-                            <td>{info?.data?.blockLog.head?.num}</td>
+                            <td>{info.data?.blockLog.head?.num}</td>
                         </tr>
                         <tr>
                             <td>eosio block:</td>
-                            <td>{info?.data?.blockLog.head?.eosioBlock.num}</td>
+                            <td>{info.data?.blockLog.head?.eosioBlock.num}</td>
                         </tr>
                     </tbody>
                 </table>

@@ -13,6 +13,7 @@ import {
     useCountdown,
     useCurrentElection,
     useCurrentMember,
+    useElectionStatus,
     useUALAccount,
 } from "_app";
 import {
@@ -191,6 +192,7 @@ export const ParticipationCard = ({ election }: Props) => {
                     </div>
                 )}
             </div>
+            <ParticipationCounter />
             <ConfirmParticipationModal
                 isOpen={showConfirmParticipationModal}
                 close={() => setShowConfirmParticipationModal(false)}
@@ -202,6 +204,20 @@ export const ParticipationCard = ({ election }: Props) => {
             />
         </Container>
     );
+};
+
+const ParticipationCounter = () => {
+    const { data: statusQueryResult } = useElectionStatus();
+    return statusQueryResult ? (
+        <div>
+            <Text>
+                Members Participating:{" "}
+                <strong>
+                    {statusQueryResult.status.numElectionParticipants}
+                </strong>
+            </Text>
+        </div>
+    ) : null;
 };
 
 interface CountdownProps {
