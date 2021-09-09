@@ -25,27 +25,25 @@ const query = `
 }`;
 
 interface QueryResult {
-    data?: {
-        members: {
-            pageInfo: {
-                hasPreviousPage: boolean;
-                hasNextPage: boolean;
-                startCursor: string;
-                endCursor: string;
-            };
-            edges: [
-                {
-                    node: {
-                        account: string;
-                        profile: {
-                            name: string;
-                            img: string;
-                            bio: string;
-                        };
-                    };
-                }
-            ];
+    members: {
+        pageInfo: {
+            hasPreviousPage: boolean;
+            hasNextPage: boolean;
+            startCursor: string;
+            endCursor: string;
         };
+        edges: [
+            {
+                node: {
+                    account: string;
+                    profile: {
+                        name: string;
+                        img: string;
+                        bio: string;
+                    };
+                };
+            }
+        ];
     };
 }
 
@@ -53,7 +51,7 @@ function Members() {
     const pagedResult = usePagedQuery<QueryResult>(
         query,
         4,
-        (result) => result?.data?.members.pageInfo
+        (result) => result.data?.members.pageInfo
     );
     return (
         <div style={{ flexGrow: 1, margin: "10px" }}>
