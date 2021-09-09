@@ -15,6 +15,10 @@ type State = {
         resolver: ((success: boolean) => void) | null;
         newPasswordIsInvalidForCurrentRound: boolean;
     };
+    ualSoftkeyModal: {
+        isOpen: boolean;
+        resolver: ((value: unknown) => void) | null; // TODO: What value should be passed in (if any)?
+    };
 };
 
 type Action = { type: ActionType; payload: any };
@@ -25,6 +29,10 @@ const initialState: State = {
         isOpen: false,
         resolver: null,
         newPasswordIsInvalidForCurrentRound: false,
+    },
+    ualSoftkeyModal: {
+        isOpen: false,
+        resolver: null,
     },
 };
 const store = createContext<ContextType | null>(null);
@@ -37,6 +45,8 @@ const reducer = (state: State, action: Action): State => {
             return { ...state, encryptionPassword: payload };
         case ActionType.ShowPasswordModal:
             return { ...state, passwordModal: payload };
+        case ActionType.ShowUALSoftkeyModal:
+            return { ...state, ualSoftkeyModal: payload };
         default:
             return state;
     }

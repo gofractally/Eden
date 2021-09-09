@@ -1,6 +1,7 @@
 export enum ActionType {
     SetEncryptionPassword = "SET_ENCRYPTION_PASSWORD",
     ShowPasswordModal = "SHOW_PASSWORD_MODAL",
+    ShowUALSoftkeyModal = "SHOW_UAL_SOFTKEY_MODAL",
 }
 
 export const actionSetEncryptionPassword = (
@@ -25,4 +26,18 @@ export const actionShowPasswordModal = (
 ) => ({
     type: ActionType.ShowPasswordModal,
     payload: { isOpen, resolver, newPasswordIsInvalidForCurrentRound },
+});
+
+/**
+ * Intended for consumption by UAL Softkey Authenticator.
+ * @param {boolean} isOpen - controls open/close state of modal
+ * @param {(value: unknown) => void} resolver - A promise resolver that is resolved when modal is dismissed
+ * @returns a reducer action
+ */
+export const actionShowUALSoftkeyModal = (
+    isOpen: boolean,
+    resolver: ((value: unknown) => void) | null
+) => ({
+    type: ActionType.ShowUALSoftkeyModal,
+    payload: { isOpen, resolver },
 });

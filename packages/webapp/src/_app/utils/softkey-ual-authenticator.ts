@@ -1,3 +1,5 @@
+import { Api, JsonRpc } from "eosjs";
+import { JsSignatureProvider } from "eosjs/dist/eosjs-jssig";
 import {
     Authenticator,
     ButtonStyle,
@@ -12,20 +14,32 @@ import {
 const AUTHENTICATOR_NAME = "Password";
 
 export class SoftkeyUser extends User {
-    private account: string;
     private keys: string[] = [];
+    private api: Api | null = null;
+    private rpc: JsonRpc | null = null;
 
     // Default to WAX Testnet
     private chainId =
         "f16b1833c747c43682f4386fca9cbb327929334a762755ebec17f6f23c9b8a12";
 
-    constructor(chain: Chain | null, account: string) {
+    constructor(private chain: Chain, private accountName: string) {
         super();
-        this.account = account;
 
         if (chain?.chainId) {
             this.chainId = chain.chainId;
         }
+    }
+
+    public async init(privateKey: string) {
+        console.log("init with privateKey:", privateKey);
+        const rpcEndpoint = this.chain.rpcEndpoints[0];
+        const rpcEndpointString = this.buildRpcEndpoint(rpcEndpoint);
+
+        this.rpc = new JsonRpc(rpcEndpointString);
+        this.api = new Api({
+            rpc: this.rpc,
+            signatureProvider: new JsSignatureProvider([privateKey]),
+        });
     }
 
     // TODO: Implement
@@ -66,7 +80,7 @@ export class SoftkeyUser extends User {
     }
 
     public async getAccountName(): Promise<string> {
-        return this.account;
+        return this.accountName;
     }
 
     public async getChainId(): Promise<string> {
