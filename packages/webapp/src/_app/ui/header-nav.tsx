@@ -3,8 +3,8 @@ import { useRouter } from "next/router";
 import { useQueryClient } from "react-query";
 import { FaSignOutAlt } from "react-icons/fa";
 
-import { useCurrentMember, NAV_MENU_ITEMS } from "_app";
-import { Route, ROUTES } from "_app/config";
+import { useCurrentMember, useNavItems } from "_app";
+import { ROUTES } from "_app/config";
 
 import { useUALAccount } from "../eos";
 import { Button } from "./button";
@@ -15,7 +15,7 @@ export const HeaderNav = () => (
         <div className="container mx-auto flex flex-wrap py-3 flex-col md:flex-row items-center">
             <HeaderLogo />
             <nav className="md:mr-auto md:ml-4 md:py-1 md:pl-4 md:border-l md:border-gray-400	flex flex-wrap items-center text-base justify-center">
-                <HeaderItems menuItems={NAV_MENU_ITEMS} />
+                <HeaderItems />
             </nav>
             <AccountMenu />
         </div>
@@ -34,7 +34,8 @@ const HeaderLogo = () => (
     </Link>
 );
 
-const HeaderItems = ({ menuItems }: { menuItems: Route[] }) => {
+const HeaderItems = () => {
+    const menuItems = useNavItems();
     return (
         <>
             {menuItems.map((item, index) => (
