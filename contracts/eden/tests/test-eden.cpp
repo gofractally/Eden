@@ -77,8 +77,8 @@ struct CompareFile
       if (write_expected)
          eosio::execute("cp " + actual_path + " " + expected_path);
       else
-         eosio::check(!eosio::execute("diff " + actual_path + " " + expected_path),
-                      "file mismatch between " + actual_path + ", " + expected_path);
+         eosio::check(!eosio::execute("diff " + expected_path + " " + actual_path),
+                      "file mismatch between " + expected_path + ", " + actual_path);
    }
 
    auto& write_events(eosio::test_chain& chain)
@@ -1722,6 +1722,8 @@ TEST_CASE("election-events")
    t.run_election(true, 10000, true);
    t.induct_n(100);
    t.run_election(true, 10000, true);
+   t.skip_to("2021-02-01T15:30:00.000");
+   t.alice.act<actions::distribute>(250);
    t.write_dfuse_history("dfuse-test-election.json");
    CompareFile{"test-election"}.write_events(t.chain).compare();
 }

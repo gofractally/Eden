@@ -1,5 +1,6 @@
 #pragma once
 
+#include <eosio/asset.hpp>
 #include <eosio/fixed_bytes.hpp>
 #include <eosio/name.hpp>
 #include <eosio/reflection.hpp>
@@ -133,6 +134,48 @@ namespace eden
    };
    EOSIO_REFLECT(election_event_end, election_time)
 
+   // Distribution event order:
+   //    distribution_event_schedule
+   //    distribution_event_reserve
+   //    distribution_event_begin
+   //    distribution_event_fund
+   //    distribution_event_end
+
+   struct distribution_event_schedule
+   {
+      eosio::block_timestamp distribution_time;
+   };
+   EOSIO_REFLECT(distribution_event_schedule, distribution_time)
+
+   struct distribution_event_reserve
+   {
+      eosio::block_timestamp distribution_time;
+      eosio::asset total;
+   };
+   EOSIO_REFLECT(distribution_event_reserve, distribution_time, total)
+
+   struct distribution_event_begin
+   {
+      eosio::block_timestamp distribution_time;
+      std::vector<eosio::asset> rank_distribution;
+   };
+   EOSIO_REFLECT(distribution_event_begin, distribution_time, rank_distribution)
+
+   struct distribution_event_fund
+   {
+      eosio::name owner;
+      eosio::block_timestamp distribution_time;
+      uint8_t rank;
+      eosio::asset balance;
+   };
+   EOSIO_REFLECT(distribution_event_fund, owner, distribution_time, rank, balance)
+
+   struct distribution_event_end
+   {
+      eosio::block_timestamp distribution_time;
+   };
+   EOSIO_REFLECT(distribution_event_end, distribution_time)
+
    using event = std::variant<election_event_schedule,
                               election_event_begin,
                               election_event_seeding,
@@ -144,7 +187,12 @@ namespace eden
                               election_event_end_round_voting,
                               election_event_report_group,
                               election_event_end_round,
-                              election_event_end>;
+                              election_event_end,
+                              distribution_event_schedule,
+                              distribution_event_reserve,
+                              distribution_event_begin,
+                              distribution_event_fund,
+                              distribution_event_end>;
 
    void push_event(const event& e, eosio::name self);
    void send_events(eosio::name self);
