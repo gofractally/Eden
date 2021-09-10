@@ -133,6 +133,8 @@ enum tables
    election_round_table,
    election_group_table,
    vote_table,
+   distribution_table,
+   distribution_fund_table,
 };
 
 struct MemberElection;
@@ -196,25 +198,27 @@ using balance_index =
 
 enum class history_desc
 {
-   deposit,          // incoming eosio::token
-   withdraw,         // outgoing eosio::token
-   external_spend,   // non-contract spend of general funds
-                     //    e.g. powerup
-                     //    e.g. transfer before contract installed
-   manual_transfer,  // manual spend of general funds (contract's transfer action)
-   fund,             // received general funds from external source
-   donate,           // user donated to general fund
-   inductdonate,     // user donated to general fund during induction
+   deposit,               // incoming eosio::token
+   withdraw,              // outgoing eosio::token
+   external_spend,        // non-contract spend of general funds
+                          //    e.g. powerup
+                          //    e.g. transfer before contract installed
+   manual_transfer,       // manual spend of general funds (contract's transfer action)
+   fund,                  // received general funds from external source
+   donate,                // user donated to general fund
+   inductdonate,          // user donated to general fund during induction
+   reserve_distribution,  // reserve funds for distribution
 };
 
 const char* history_desc_str[] = {
-    "deposit",          //
-    "withdraw",         //
-    "external spend",   //
-    "manual transfer",  //
-    "fund",             //
-    "donate",           //
-    "inductdonate",     //
+    "deposit",               //
+    "withdraw",              //
+    "external spend",        //
+    "manual transfer",       //
+    "fund",                  //
+    "donate",                //
+    "inductdonate",          //
+    "reserve_distribution",  //
 };
 
 using balance_history_key = std::tuple<eosio::name, eosio::block_timestamp, uint64_t>;
@@ -373,6 +377,40 @@ using vote_index = mic<vote_object,
                        ordered_by_pk<vote_object>,
                        ordered_by_round<vote_object>>;
 
+struct distribution_object : public chainbase::object<distribution_table, distribution_object>
+{
+   CHAINBASE_DEFAULT_CONSTRUCTOR(distribution_object)
+
+   id_type id;
+   eosio::block_timestamp time;
+   std::optional<eosio::asset> target_amount;
+   std::optional<std::vector<eosio::asset>> rank_distribution;
+
+   auto by_pk() const { return time; }
+};
+using distribution_index = mic<distribution_object,
+                               ordered_by_id<distribution_object>,
+                               ordered_by_pk<distribution_object>>;
+
+using distribution_fund_key = std::tuple<eosio::name, eosio::block_timestamp, uint8_t>;
+
+struct distribution_fund_object
+    : public chainbase::object<distribution_fund_table, distribution_fund_object>
+{
+   CHAINBASE_DEFAULT_CONSTRUCTOR(distribution_fund_object)
+
+   id_type id;
+   eosio::name owner;
+   eosio::block_timestamp distribution_time;
+   uint8_t rank;
+   eosio::asset balance;
+
+   distribution_fund_key by_pk() const { return {owner, distribution_time, rank}; }
+};
+using distribution_fund_index = mic<distribution_fund_object,
+                                    ordered_by_id<distribution_fund_object>,
+                                    ordered_by_pk<distribution_fund_object>>;
+
 struct database
 {
    chainbase::database db;
@@ -385,6 +423,8 @@ struct database
    chainbase::generic_index<election_round_index> election_rounds;
    chainbase::generic_index<election_group_index> election_groups;
    chainbase::generic_index<vote_index> votes;
+   chainbase::generic_index<distribution_index> distributions;
+   chainbase::generic_index<distribution_fund_index> distribution_funds;
 
    database()
    {
@@ -397,6 +437,8 @@ struct database
       db.add_index(election_rounds);
       db.add_index(election_groups);
       db.add_index(votes);
+      db.add_index(distributions);
+      db.add_index(distribution_funds);
    }
 };
 database db;
@@ -467,7 +509,7 @@ const auto& get_status()
 }
 
 struct Member;
-std::optional<Member> get_member(eosio::name account);
+std::optional<Member> get_member(eosio::name account, bool allow_lsb = false);
 std::vector<Member> get_members(const std::vector<eosio::name>& v);
 
 struct BalanceHistory;
@@ -483,7 +525,7 @@ struct Balance
    eosio::name _account;
    const balance_object* obj;
 
-   std::optional<Member> account() const;
+   Member account() const;
    std::optional<eosio::asset> amount() const
    {
       return obj ? std::optional{obj->amount} : std::nullopt;
@@ -588,11 +630,11 @@ EOSIO_REFLECT2(Member,
                participating,
                method(elections, "gt", "ge", "lt", "le", "first", "last", "before", "after"))
 
-std::optional<Member> get_member(eosio::name account)
+std::optional<Member> get_member(eosio::name account, bool allow_lsb)
 {
    if (auto* member_object = get_ptr<by_pk>(db.members, account))
       return Member{account, &member_object->member};
-   else if (account.value && !(account.value & 0x0f))
+   else if (account.value && (!(account.value & 0x0f) || allow_lsb))
       return Member{account, nullptr};
    else
       return std::nullopt;
@@ -611,9 +653,9 @@ std::vector<Member> get_members(const std::vector<eosio::name>& v)
    return result;
 }
 
-std::optional<Member> Balance::account() const
+Member Balance::account() const
 {
-   return get_member(_account);
+   return *get_member(_account, true);
 }
 
 struct Status
@@ -915,6 +957,8 @@ void clearall()
    clear_table(db.election_rounds);
    clear_table(db.election_groups);
    clear_table(db.votes);
+   clear_table(db.distributions);
+   clear_table(db.distribution_funds);
 }
 
 void add_balance(eosio::name account, const eosio::asset& delta)
@@ -1272,11 +1316,30 @@ void handle_event(const eden::election_event_end& event)
    clear_participating();
 }
 
+void handle_event(const eden::distribution_event_schedule& event)
+{
+   db.distributions.emplace([&](auto& dist) { dist.time = event.distribution_time; });
+}
+
+void handle_event(const action_context& context, const eden::distribution_event_reserve& event)
+{
+   modify<by_pk>(db.distributions, event.distribution_time, [&](auto& dist) {
+      transfer_funds(context.block.timestamp, eden_account, distribution_fund, event.target_amount,
+                     history_desc::reserve_distribution);
+      dist.target_amount = event.target_amount;
+   });
+}
+
 void handle_event(const auto& event) {}
 
-void handle_event(const eden::event& event)
+void handle_event(const action_context& context, const auto& event)
 {
-   std::visit([](const auto& event) { handle_event(event); }, event);
+   handle_event(event);
+}
+
+void handle_event(const action_context& context, const eden::event& event)
+{
+   std::visit([&](const auto& event) { handle_event(context, event); }, event);
 }
 
 template <typename... Args>
@@ -1351,7 +1414,7 @@ void filter_block(const subchain::eosio_block& block)
             // TODO: prevent abort, indicate what failed
             auto events = eosio::convert_from_bin<std::vector<eden::event>>(action.hexData.data);
             for (auto& event : events)
-               handle_event(event);
+               handle_event(context, event);
          }
       }
    }
@@ -1564,6 +1627,8 @@ struct Query
 EOSIO_REFLECT2(Query,
                blockLog,
                status,
+               generalFund,
+               distributionFund,
                method(balances, "gt", "ge", "lt", "le", "first", "last", "before", "after"),
                method(members, "gt", "ge", "lt", "le", "first", "last", "before", "after"),
                method(elections, "gt", "ge", "lt", "le", "first", "last", "before", "after"))

@@ -150,9 +150,9 @@ namespace eden
    struct distribution_event_reserve
    {
       eosio::block_timestamp distribution_time;
-      eosio::asset total;
+      eosio::asset target_amount;
    };
-   EOSIO_REFLECT(distribution_event_reserve, distribution_time, total)
+   EOSIO_REFLECT(distribution_event_reserve, distribution_time, target_amount)
 
    struct distribution_event_begin
    {
