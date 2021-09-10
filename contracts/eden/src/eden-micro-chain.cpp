@@ -19,6 +19,8 @@ eosio::name token_account;
 eosio::name atomic_account;
 eosio::name atomicmarket_account;
 
+eosio::name distribution_fund;
+
 // TODO: switch to uint64_t (js BigInt) after we upgrade to nodejs >= 15
 extern "C" void __wasm_call_ctors();
 [[clang::export_name("initialize")]] void initialize(uint32_t eden_account_low,
@@ -36,6 +38,8 @@ extern "C" void __wasm_call_ctors();
    atomic_account.value = (uint64_t(atomic_account_high) << 32) | atomic_account_low;
    atomicmarket_account.value =
        (uint64_t(atomicmarket_account_high) << 32) | atomicmarket_account_low;
+
+   distribution_fund.value = eden_account.value + 1;
 }
 
 [[clang::export_name("allocateMemory")]] void* allocateMemory(uint32_t size)
@@ -176,6 +180,7 @@ using status_index = mic<status_object, ordered_by_id<status_object>>;
 // * token_account record holds negative of total tokens held
 //   in eden_account's balance in token_account contract
 // * eden_account record holds general funds
+// * distribution_fund record holds funds which are distributed but not yet spent
 struct balance_object : public chainbase::object<balance_table, balance_object>
 {
    CHAINBASE_DEFAULT_CONSTRUCTOR(balance_object)
@@ -502,14 +507,12 @@ constexpr const char BalanceEdge_name[] = "BalanceEdge";
 using BalanceConnection = clchain::Connection<
     clchain::ConnectionConfig<Balance, BalanceConnection_name, BalanceEdge_name>>;
 
-std::optional<Balance> get_balance(eosio::name account)
+Balance get_balance(eosio::name account)
 {
    if (auto* obj = get_ptr<by_pk>(db.balances, account))
       return Balance{account, obj};
-   else if (account.value && !(account.value & 0x0f))
-      return Balance{account, nullptr};
    else
-      return std::nullopt;
+      return Balance{account, nullptr};
 }
 
 struct BalanceHistory
@@ -517,9 +520,9 @@ struct BalanceHistory
    const balance_history_object* obj;
 
    eosio::block_timestamp time() const { return obj->time; }
-   std::optional<Balance> balance() const { return get_balance(obj->account); }
+   Balance balance() const { return get_balance(obj->account); }
    eosio::asset delta() const { return obj->delta; }
-   std::optional<Balance> otherBalance() const { return get_balance(obj->other_account); }
+   Balance otherBalance() const { return get_balance(obj->other_account); }
    std::string description() const { return history_desc_str[(int)obj->description]; }
 };
 EOSIO_REFLECT2(BalanceHistory, time, balance, delta, otherBalance, description)
@@ -534,18 +537,18 @@ BalanceHistoryConnection Balance::history(std::optional<eosio::block_timestamp> 
                                           std::optional<std::string> after) const
 {
    return clchain::make_connection<BalanceHistoryConnection, balance_history_key>(
-       gt ? std::optional{balance_history_key{obj->account, *gt, ~uint64_t(0)}}              //
-          : std::nullopt,                                                                    //
-       ge ? std::optional{balance_history_key{obj->account, *ge, 0}}                         //
-          : std::optional{balance_history_key{obj->account, eosio::block_timestamp{0}, 0}},  //
-       lt ? std::optional{balance_history_key{obj->account, *lt, 0}}                         //
-          : std::nullopt,                                                                    //
-       le ? std::optional{balance_history_key{obj->account, *le, ~uint64_t(0)}}              //
-          : std::optional{balance_history_key{obj->account, eosio::block_timestamp::max(),   //
-                                              ~uint64_t(0)}},                                //
-       first, last, before, after,                                                           //
-       db.balance_history.get<by_pk>(),                                                      //
-       [](auto& obj) { return obj.by_pk(); },                                                //
+       gt ? std::optional{balance_history_key{_account, *gt, ~uint64_t(0)}}              //
+          : std::nullopt,                                                                //
+       ge ? std::optional{balance_history_key{_account, *ge, 0}}                         //
+          : std::optional{balance_history_key{_account, eosio::block_timestamp{0}, 0}},  //
+       lt ? std::optional{balance_history_key{_account, *lt, 0}}                         //
+          : std::nullopt,                                                                //
+       le ? std::optional{balance_history_key{_account, *le, ~uint64_t(0)}}              //
+          : std::optional{balance_history_key{_account, eosio::block_timestamp::max(),   //
+                                              ~uint64_t(0)}},                            //
+       first, last, before, after,                                                       //
+       db.balance_history.get<by_pk>(),                                                  //
+       [](auto& obj) { return obj.by_pk(); },                                            //
        [&](auto& obj) { return BalanceHistory{&obj}; },
        [](auto& balance_history, auto key) { return balance_history.lower_bound(key); },
        [](auto& balance_history, auto key) { return balance_history.upper_bound(key); });
@@ -691,7 +694,7 @@ EOSIO_REFLECT2(Election,
 
 struct MemberElection
 {
-   const member* member;
+   eosio::name account;
    const election_object* election;
 
    eosio::block_timestamp time() const { return election->time; }
@@ -717,7 +720,7 @@ MemberElectionConnection Member::elections(std::optional<eosio::block_timestamp>
        db.elections.get<by_pk>(),                   //
        [](auto& obj) { return obj.time; },          //
        [&](auto& obj) {
-          return MemberElection{member, &obj};
+          return MemberElection{account, &obj};
        },
        [](auto& elections, auto key) { return elections.lower_bound(key); },
        [](auto& elections, auto key) { return elections.upper_bound(key); });
@@ -852,14 +855,14 @@ VoteConnection MemberElection::votes(std::optional<uint32_t> first,
                                      std::optional<std::string> after) const
 {
    return clchain::make_connection<VoteConnection, vote_key>(
-       std::nullopt,                                            // gt
-       vote_key{member->account, election->time, 0},            // ge
-       std::nullopt,                                            // lt
-       vote_key{member->account, election->time, ~uint8_t(0)},  // le
-       first, last, before, after,                              //
-       db.votes.get<by_pk>(),                                   //
-       [](auto& obj) { return obj.by_pk(); },                   //
-       [](auto& obj) { return Vote{&obj}; },                    //
+       std::nullopt,                                    // gt
+       vote_key{account, election->time, 0},            // ge
+       std::nullopt,                                    // lt
+       vote_key{account, election->time, ~uint8_t(0)},  // le
+       first, last, before, after,                      //
+       db.votes.get<by_pk>(),                           //
+       [](auto& obj) { return obj.by_pk(); },           //
+       [](auto& obj) { return Vote{&obj}; },            //
        [](auto& votes, auto key) { return votes.lower_bound(key); },
        [](auto& votes, auto key) { return votes.upper_bound(key); });
 }
@@ -1516,6 +1519,9 @@ struct Query
           [](auto& balances, auto key) { return balances.lower_bound(key); },
           [](auto& balances, auto key) { return balances.upper_bound(key); });
    }
+
+   Balance generalFund() const { return get_balance(eden_account); }
+   Balance distributionFund() const { return get_balance(distribution_fund); }
 
    MemberConnection members(std::optional<eosio::name> gt,
                             std::optional<eosio::name> ge,
