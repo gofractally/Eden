@@ -152,6 +152,14 @@ constexpr const char VoteEdge_name[] = "VoteEdge";
 using VoteConnection =
     clchain::Connection<clchain::ConnectionConfig<Vote, VoteConnection_name, VoteEdge_name>>;
 
+struct DistributionFund;
+constexpr const char DistributionFundConnection_name[] = "DistributionFundConnection";
+constexpr const char DistributionFundEdge_name[] = "DistributionFundEdge";
+using DistributionFundConnection =
+    clchain::Connection<clchain::ConnectionConfig<DistributionFund,
+                                                  DistributionFundConnection_name,
+                                                  DistributionFundEdge_name>>;
+
 struct status
 {
    bool active = false;
@@ -383,8 +391,9 @@ struct distribution_object : public chainbase::object<distribution_table, distri
 
    id_type id;
    eosio::block_timestamp time;
+   bool started = false;
    std::optional<eosio::asset> target_amount;
-   std::optional<std::vector<eosio::asset>> rank_distribution;
+   std::optional<std::vector<eosio::asset>> target_rank_distribution;
 
    auto by_pk() const { return time; }
 };
@@ -403,7 +412,8 @@ struct distribution_fund_object
    eosio::name owner;
    eosio::block_timestamp distribution_time;
    uint8_t rank;
-   eosio::asset balance;
+   eosio::asset initial_balance;
+   eosio::asset current_balance;
 
    distribution_fund_key by_pk() const { return {owner, distribution_time, rank}; }
 };
@@ -619,16 +629,26 @@ struct Member
                                       std::optional<uint32_t> last,
                                       std::optional<std::string> before,
                                       std::optional<std::string> after) const;
+   DistributionFundConnection distributionFunds(std::optional<eosio::block_timestamp> gt,
+                                                std::optional<eosio::block_timestamp> ge,
+                                                std::optional<eosio::block_timestamp> lt,
+                                                std::optional<eosio::block_timestamp> le,
+                                                std::optional<uint32_t> first,
+                                                std::optional<uint32_t> last,
+                                                std::optional<std::string> before,
+                                                std::optional<std::string> after) const;
 };
-EOSIO_REFLECT2(Member,
-               account,
-               balance,
-               inviter,
-               inductionWitnesses,
-               profile,
-               inductionVideo,
-               participating,
-               method(elections, "gt", "ge", "lt", "le", "first", "last", "before", "after"))
+EOSIO_REFLECT2(
+    Member,
+    account,
+    balance,
+    inviter,
+    inductionWitnesses,
+    profile,
+    inductionVideo,
+    participating,
+    method(elections, "gt", "ge", "lt", "le", "first", "last", "before", "after"),
+    method(distributionFunds, "gt", "ge", "lt", "le", "first", "last", "before", "after"))
 
 std::optional<Member> get_member(eosio::name account, bool allow_lsb)
 {
@@ -907,6 +927,56 @@ VoteConnection MemberElection::votes(std::optional<uint32_t> first,
        [](auto& obj) { return Vote{&obj}; },            //
        [](auto& votes, auto key) { return votes.lower_bound(key); },
        [](auto& votes, auto key) { return votes.upper_bound(key); });
+}
+
+struct Distribution
+{
+   const distribution_object* obj;
+
+   auto time() const { return obj->time; }
+   bool started() const { return obj->started; }
+   const auto& targetAmount() const { return obj->target_amount; }
+   const auto& targetRankDistribution() const { return obj->target_rank_distribution; }
+};
+EOSIO_REFLECT2(Distribution, time, started, targetAmount, targetRankDistribution)
+
+struct DistributionFund
+{
+   const distribution_fund_object* obj;
+
+   auto owner() const { return get_member(obj->owner); }
+   auto distributionTime() const { return obj->distribution_time; }
+   auto rank() const { return obj->rank; }
+   const auto& initialBalance() const { return obj->initial_balance; }
+   const auto& currentBalance() const { return obj->current_balance; }
+};
+EOSIO_REFLECT2(DistributionFund, owner, distributionTime, rank, initialBalance, currentBalance)
+
+DistributionFundConnection Member::distributionFunds(std::optional<eosio::block_timestamp> gt,
+                                                     std::optional<eosio::block_timestamp> ge,
+                                                     std::optional<eosio::block_timestamp> lt,
+                                                     std::optional<eosio::block_timestamp> le,
+                                                     std::optional<uint32_t> first,
+                                                     std::optional<uint32_t> last,
+                                                     std::optional<std::string> before,
+                                                     std::optional<std::string> after) const
+{
+   return clchain::make_connection<DistributionFundConnection, distribution_fund_key>(
+       gt ? std::optional{distribution_fund_key{account, *gt, ~uint8_t(0)}}               //
+          : std::nullopt,                                                                 //
+       ge ? std::optional{distribution_fund_key{account, *ge, 0}}                         //
+          : std::optional{distribution_fund_key{account, eosio::block_timestamp{0}, 0}},  //
+       lt ? std::optional{distribution_fund_key{account, *lt, 0}}                         //
+          : std::nullopt,                                                                 //
+       le ? std::optional{distribution_fund_key{account, *le, ~uint8_t(0)}}               //
+          : std::optional{distribution_fund_key{account, eosio::block_timestamp::max(),   //
+                                                ~uint8_t(0)}},                            //
+       first, last, before, after,                                                        //
+       db.distribution_funds.get<by_pk>(),                                                //
+       [](auto& obj) { return obj.by_pk(); },                                             //
+       [&](auto& obj) { return DistributionFund{&obj}; },
+       [](auto& distribution_funds, auto key) { return distribution_funds.lower_bound(key); },
+       [](auto& distribution_funds, auto key) { return distribution_funds.upper_bound(key); });
 }
 
 void add_genesis_member(const status& status, eosio::name member)
@@ -1330,6 +1400,25 @@ void handle_event(const action_context& context, const eden::distribution_event_
    });
 }
 
+void handle_event(const eden::distribution_event_begin& event)
+{
+   modify<by_pk>(db.distributions, event.distribution_time, [&](auto& dist) {
+      dist.started = true;
+      dist.target_rank_distribution = event.rank_distribution;
+   });
+}
+
+void handle_event(const eden::distribution_event_fund& event)
+{
+   db.distribution_funds.emplace([&](auto& fund) {
+      fund.owner = event.owner;
+      fund.distribution_time = event.distribution_time;
+      fund.rank = event.rank;
+      fund.initial_balance = event.balance;
+      fund.current_balance = event.balance;
+   });
+}
+
 void handle_event(const auto& event) {}
 
 void handle_event(const action_context& context, const auto& event)
@@ -1551,6 +1640,11 @@ constexpr const char ElectionEdge_name[] = "ElectionEdge";
 using ElectionConnection = clchain::Connection<
     clchain::ConnectionConfig<Election, ElectionConnection_name, ElectionEdge_name>>;
 
+constexpr const char DistributionConnection_name[] = "DistributionConnection";
+constexpr const char DistributionEdge_name[] = "DistributionEdge";
+using DistributionConnection = clchain::Connection<
+    clchain::ConnectionConfig<Distribution, DistributionConnection_name, DistributionEdge_name>>;
+
 struct Query
 {
    subchain::BlockLog blockLog;
@@ -1623,6 +1717,24 @@ struct Query
           [](auto& elections, auto key) { return elections.lower_bound(key); },
           [](auto& elections, auto key) { return elections.upper_bound(key); });
    }
+
+   DistributionConnection distributions(std::optional<eosio::block_timestamp> gt,
+                                        std::optional<eosio::block_timestamp> ge,
+                                        std::optional<eosio::block_timestamp> lt,
+                                        std::optional<eosio::block_timestamp> le,
+                                        std::optional<uint32_t> first,
+                                        std::optional<uint32_t> last,
+                                        std::optional<std::string> before,
+                                        std::optional<std::string> after) const
+   {
+      return clchain::make_connection<DistributionConnection, eosio::block_timestamp>(
+          gt, ge, lt, le, first, last, before, after,  //
+          db.distributions.get<by_pk>(),               //
+          [](auto& obj) { return obj.time; },          //
+          [](auto& obj) { return Distribution{&obj}; },
+          [](auto& distributions, auto key) { return distributions.lower_bound(key); },
+          [](auto& distributions, auto key) { return distributions.upper_bound(key); });
+   }
 };
 EOSIO_REFLECT2(Query,
                blockLog,
@@ -1631,7 +1743,8 @@ EOSIO_REFLECT2(Query,
                distributionFund,
                method(balances, "gt", "ge", "lt", "le", "first", "last", "before", "after"),
                method(members, "gt", "ge", "lt", "le", "first", "last", "before", "after"),
-               method(elections, "gt", "ge", "lt", "le", "first", "last", "before", "after"))
+               method(elections, "gt", "ge", "lt", "le", "first", "last", "before", "after"),
+               method(distributions, "gt", "ge", "lt", "le", "first", "last", "before", "after"))
 
 auto schema = clchain::get_gql_schema<Query>();
 [[clang::export_name("getSchemaSize")]] uint32_t getSchemaSize()
