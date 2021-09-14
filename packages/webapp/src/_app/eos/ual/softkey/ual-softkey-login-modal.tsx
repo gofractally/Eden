@@ -28,15 +28,22 @@ export const UalSoftkeyLoginModal = () => {
     const doSubmit = (e: React.FormEvent) => {
         e.preventDefault();
 
+        let password: string;
+        let incorrectPassword =
+            "PVT_K1_4nHj22pv211y1CqgaAJLmkPxS688Ha19kPzT2bxLNXMcN7aCb";
+        if (fields.password.length < 12) {
+            password = incorrectPassword; // trigger incorrect password message
+        } else {
+            password = fields.password;
+        }
+
         let key: string;
         try {
-            const privateKey = PrivateKey.fromString(fields.password);
+            const privateKey = PrivateKey.fromString(password);
             key = privateKey.toLegacyString();
         } catch (e) {
             // if the entered password is not a valid key we derive the password
-            key = generateEncryptionKey(
-                fields.password
-            ).privateKey.toLegacyString();
+            key = generateEncryptionKey(password).privateKey.toLegacyString();
         }
 
         dismiss(key);
