@@ -2,8 +2,7 @@ import { useEffect, useState } from "react";
 
 import { appName, availableWallets, chainConfig } from "config";
 import { anchor, scatter, ledger } from "./config";
-import { useUALSoftkeyLogin } from "_app/hooks/softkey-ual";
-import { SoftkeyAuthenticator } from "_app/utils/softkey-ual-authenticator";
+import { useUALSoftkeyLogin, SoftkeyAuthenticator } from "./softkey";
 
 export const EdenUALProvider: React.FC = ({ children }) => {
     const [hasMounted, setHasMounted] = useState(false);

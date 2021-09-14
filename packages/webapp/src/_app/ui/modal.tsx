@@ -2,6 +2,10 @@ import ReactModal from "react-modal";
 
 import { Heading } from "./heading";
 
+// we need to explicitly define the full string for optimal twcss builds
+const modal_index_twcss = "z-50";
+export const MODAL_INDEX = 50; // for external usage
+
 const baseClass =
     "flex flex-col justify-center relative transform inset-1/2 -translate-y-1/2 -translate-x-1/2 px-9 py-8 bg-white shadow-md";
 const mobileClass = "w-screen h-screen";
@@ -35,8 +39,7 @@ export const Modal = ({
             closeTimeoutMS={200}
             className={`${baseClass} ${mobileClass} ${desktopClass}`}
             overlayClassName={{
-                base:
-                    "base fixed inset-0 bg-gray-900 bg-opacity-0 opacity-0 transition ease-in-out duration-200 z-50",
+                base: `base fixed inset-0 bg-gray-900 bg-opacity-0 opacity-0 transition ease-in-out duration-200 ${modal_index_twcss}`,
                 beforeClose: "bg-opacity-0 opacity-0",
                 afterOpen: props.isOpen ? "bg-opacity-50 opacity-100" : "",
             }}
