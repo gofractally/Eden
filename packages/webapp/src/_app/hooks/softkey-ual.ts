@@ -1,9 +1,12 @@
+import { putEncryptionKey } from "encryption";
 import { actionShowUALSoftkeyModal, useGlobalStore } from "_app";
+import { actionSetEncryptionPassword } from "_app/actions";
 
 export interface UALSoftKeyLoginHook {
     isOpen: boolean;
     show: () => Promise<string>;
     dismiss: (privateKey: string) => void;
+    updateEncryptionPassword: (publicKey: string, privateKey: string) => void;
 }
 
 export const useUALSoftkeyLogin = (): UALSoftKeyLoginHook => {
@@ -27,6 +30,7 @@ export const useUALSoftkeyLogin = (): UALSoftKeyLoginHook => {
     const dismiss = (privateKey: string) => {
         dispatch(actionShowUALSoftkeyModal(false, null));
         resolver?.(privateKey);
+        console.info("password modal dismissed");
 
         // hack to send ual box back to their normal z-index
         const ualBox = document.getElementById("ual-box");
@@ -36,9 +40,18 @@ export const useUALSoftkeyLogin = (): UALSoftKeyLoginHook => {
         }
     };
 
+    const updateEncryptionPassword = (
+        publicKey: string,
+        privateKey: string
+    ) => {
+        putEncryptionKey(publicKey, privateKey);
+        dispatch(actionSetEncryptionPassword(publicKey, privateKey));
+    };
+
     return {
         isOpen,
         show,
         dismiss,
+        updateEncryptionPassword,
     };
 };

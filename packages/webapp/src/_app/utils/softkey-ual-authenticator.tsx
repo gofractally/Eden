@@ -1,6 +1,12 @@
+import { setEncryptionPublicKeyTransaction } from "encryption";
 import { Api, JsonRpc } from "eosjs";
 import { SignatureProvider } from "eosjs/dist/eosjs-api-interfaces";
-import { JsSignatureProvider, PublicKey } from "eosjs/dist/eosjs-jssig";
+import {
+    JsSignatureProvider,
+    PrivateKey,
+    PublicKey,
+} from "eosjs/dist/eosjs-jssig";
+import { getEdenMember } from "members";
 import React from "react";
 import {
     Authenticator,
@@ -12,6 +18,7 @@ import {
     UALErrorType,
     User,
 } from "universal-authenticator-library";
+import { generateEncryptionKey } from "_app/eos";
 
 import { useFormFields } from "_app/hooks";
 import {
@@ -42,7 +49,11 @@ export class SoftkeyUser extends User {
     private chainId =
         "f16b1833c747c43682f4386fca9cbb327929334a762755ebec17f6f23c9b8a12";
 
-    constructor(private chain: Chain, private accountName: string) {
+    constructor(
+        private chain: Chain,
+        private accountName: string,
+        private loginHook: UALSoftKeyLoginHook
+    ) {
         super();
 
         if (chain?.chainId) {
@@ -78,7 +89,37 @@ export class SoftkeyUser extends User {
             );
         }
 
+        await this.updateEncryptionKeyWithSoftKey(privateKey);
+
         localStorage.setItem(UAL_SOFTKEY_STORAGE_KEY, privateKey);
+    }
+
+    private async updateEncryptionKeyWithSoftKey(
+        privateKey: string
+    ): Promise<void> {
+        try {
+            const edenMember = await getEdenMember(this.accountName);
+            const publicKey = PrivateKey.fromString(privateKey)
+                .getPublicKey()
+                .toLegacyString();
+            if (publicKey === edenMember?.encryption_key) {
+                return; // we don't need to update the encryption key, it's already set
+            }
+
+            const trx = setEncryptionPublicKeyTransaction(
+                this.accountName,
+                publicKey
+            );
+            await this.signTransaction(trx);
+
+            this.loginHook.updateEncryptionPassword(publicKey, privateKey);
+
+            console.info(
+                "updated the encryption key to the same as the password successfully!"
+            );
+        } catch (e) {
+            console.error("fail to set encryption key", e);
+        }
     }
 
     private async isAccountValid(): Promise<boolean> {
@@ -243,7 +284,7 @@ export class SoftkeyAuthenticator extends Authenticator {
             throw new UALSoftkeyError("Empty password.", UALErrorType.Login);
         }
         for (const chain of this.chains) {
-            const user = new SoftkeyUser(chain, accountName);
+            const user = new SoftkeyUser(chain, accountName, this.loginHook);
             await user.init(privateKey);
             this.users.push(user);
         }
@@ -284,7 +325,19 @@ export const UalSoftKeyModals = () => {
 
     const doSubmit = (e: React.FormEvent) => {
         e.preventDefault();
-        dismiss(fields.password);
+
+        let key: string;
+        try {
+            const privateKey = PrivateKey.fromString(fields.password);
+            key = privateKey.toLegacyString();
+        } catch (e) {
+            // if the entered password is not a valid key we derive the password
+            key = generateEncryptionKey(
+                fields.password
+            ).privateKey.toLegacyString();
+        }
+
+        dismiss(key);
     };
 
     return (
@@ -304,7 +357,7 @@ export const UalSoftKeyModals = () => {
                 >
                     <Form.Input
                         id="password"
-                        type="text"
+                        type="password"
                         required
                         value={fields.password}
                         onChange={onChangeFields}
