@@ -82,12 +82,20 @@ export function useQuery<T = any>(query: string): Query<T> {
         state.cachedClient = client;
         setCachedQuery(query);
         if (client?.subchain) {
-            const queryResult = client.subchain.query(query);
-            state.cachedQueryResult = {
-                ...queryResult,
-                isLoading: false,
-                isError: Boolean(queryResult.errors),
-            };
+            try {
+                const queryResult = client.subchain.query(query);
+                state.cachedQueryResult = {
+                    ...queryResult,
+                    isLoading: false,
+                    isError: Boolean(queryResult.errors),
+                };
+            } catch (e: any) {
+                state.cachedQueryResult = {
+                    isLoading: false,
+                    isError: true,
+                    errors: [{ message: e + "" }],
+                };
+            }
         } else {
             state.cachedQueryResult = {
                 isLoading: true,
