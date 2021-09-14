@@ -18,8 +18,11 @@ const logger = winston.createLogger({
         env === "development"
             ? winston.format.colorize()
             : winston.format.uncolorize(),
+        winston.format.timestamp(),
         winston.format.splat(),
-        winston.format.printf(({ level, message }) => `${level}: ${message}`)
+        winston.format.printf(
+            (info) => `${info.timestamp} ${info.level}: ${info.message}`
+        )
     ),
     transports: [
         new winston.transports.Console({
