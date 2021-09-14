@@ -82,7 +82,9 @@ export class SoftkeyUser extends User {
                 .getPublicKey()
                 .toLegacyString();
             if (publicKey === edenMember?.encryption_key) {
-                return; // we don't need to update the encryption key, it's already set
+                // key already set on account; just set as encryption password in browser
+                this.loginHook.updateEncryptionPassword(publicKey, privateKey);
+                return;
             }
 
             const trx = setEncryptionPublicKeyTransaction(
