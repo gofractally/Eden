@@ -1,5 +1,6 @@
 import { Api, JsonRpc } from "eosjs";
-import { JsSignatureProvider } from "eosjs/dist/eosjs-jssig";
+import { SignatureProvider } from "eosjs/dist/eosjs-api-interfaces";
+import { JsSignatureProvider, PublicKey } from "eosjs/dist/eosjs-jssig";
 import React from "react";
 import {
     Authenticator,
@@ -33,9 +34,9 @@ class UALSoftkeyError extends UALError {
 }
 
 export class SoftkeyUser extends User {
-    private keys: string[] = [];
-    private api: Api | null = null;
-    private rpc: JsonRpc | null = null;
+    public signatureProvider: SignatureProvider | undefined;
+    private api: Api | undefined;
+    private rpc: JsonRpc | undefined;
 
     // Default to WAX Testnet
     private chainId =
@@ -54,13 +55,66 @@ export class SoftkeyUser extends User {
         const rpcEndpoint = this.chain.rpcEndpoints[0];
         const rpcEndpointString = this.buildRpcEndpoint(rpcEndpoint);
 
-        this.rpc = new JsonRpc(rpcEndpointString);
-        this.api = new Api({
-            rpc: this.rpc,
-            signatureProvider: new JsSignatureProvider([privateKey]),
-        });
+        try {
+            this.rpc = new JsonRpc(rpcEndpointString);
+            this.signatureProvider = new JsSignatureProvider([privateKey]);
+            this.api = new Api({
+                rpc: this.rpc,
+                signatureProvider: this.signatureProvider,
+            });
+        } catch (e) {
+            throw new UALSoftkeyError(
+                `Fail to initialize Softkey EOS RPC/Api`,
+                UALErrorType.Initialization,
+                e
+            );
+        }
+
+        if (!(await this.isAccountValid())) {
+            throw new UALSoftkeyError(
+                `Invalid password for account ${this.accountName}`,
+                UALErrorType.Initialization
+            );
+        }
 
         localStorage.setItem(UAL_SOFTKEY_STORAGE_KEY, privateKey);
+    }
+
+    private async isAccountValid(): Promise<boolean> {
+        try {
+            const account =
+                this.rpc && (await this.rpc.get_account(this.accountName));
+            const actualKeys = this.extractAccountKeys(account);
+            const authorizationKeys = await this.getKeys();
+            const legacyAuthorizationKeys = authorizationKeys.map((key) =>
+                PublicKey.fromString(key).toLegacyString()
+            );
+
+            console.info(legacyAuthorizationKeys, actualKeys);
+
+            return (
+                actualKeys.filter((key) => {
+                    return legacyAuthorizationKeys.indexOf(key) !== -1;
+                }).length > 0
+            );
+        } catch (e) {
+            throw new UALSoftkeyError(
+                `Account validation failed for account ${this.accountName}.`,
+                UALErrorType.Validation,
+                e
+            );
+        }
+    }
+
+    private extractAccountKeys(account: any): string[] {
+        const keySubsets = account.permissions.map((permission: any) =>
+            permission.required_auth.keys.map((key: any) => key.key)
+        );
+        let keys: string[] = [];
+        for (const keySubset of keySubsets) {
+            keys = keys.concat(keySubset);
+        }
+        return keys;
     }
 
     public async signTransaction(
@@ -109,7 +163,7 @@ export class SoftkeyUser extends User {
     }
 
     public async getKeys(): Promise<string[]> {
-        return this.keys;
+        return this.signatureProvider?.getAvailableKeys() || [];
     }
 }
 
@@ -187,7 +241,6 @@ export class SoftkeyAuthenticator extends Authenticator {
         if (!privateKey) {
             throw new UALSoftkeyError("Empty password.", UALErrorType.Login);
         }
-        console.info("retrieved privateKey", privateKey);
         for (const chain of this.chains) {
             const user = new SoftkeyUser(chain, accountName);
             await user.init(privateKey);
