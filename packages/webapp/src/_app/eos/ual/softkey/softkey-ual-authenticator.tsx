@@ -87,7 +87,10 @@ export class SoftkeyAuthenticator extends Authenticator {
             localStorage.getItem(UAL_SOFTKEY_STORAGE_KEY) ||
             (await this.loginHook.show());
         if (!privateKey) {
-            throw new UALSoftkeyError("Empty password.", UALErrorType.Login);
+            throw new UALSoftkeyError(
+                "No password provided.",
+                UALErrorType.Login
+            );
         }
         for (const chain of this.chains) {
             const user = new SoftkeyUser(chain, accountName, this.loginHook);

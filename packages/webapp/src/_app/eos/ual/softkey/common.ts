@@ -1,6 +1,6 @@
 import { UALError, UALErrorType } from "universal-authenticator-library";
 
-export const AUTHENTICATOR_NAME = "SoftKey";
+export const AUTHENTICATOR_NAME = "Password";
 export const UAL_SOFTKEY_STORAGE_KEY = "ualSoftKey";
 
 export class UALSoftkeyError extends UALError {
@@ -9,6 +9,6 @@ export class UALSoftkeyError extends UALError {
         type: UALErrorType,
         cause: Error | null = null
     ) {
-        super(message, type, cause, "Soft Key");
+        super(message, type, cause, "We");
     }
 }

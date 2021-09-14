@@ -53,7 +53,7 @@ export const UalSoftkeyLoginModal = () => {
         >
             <form onSubmit={doSubmit} className="space-y-3">
                 <Form.LabeledSet
-                    label="Your Account Password"
+                    label="Enter your account password"
                     htmlFor="password"
                     className="col-span-6 sm:col-span-3"
                 >
