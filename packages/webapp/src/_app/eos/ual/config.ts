@@ -26,5 +26,3 @@ export const anchor = new Anchor([chainConfig], {
 export const scatter = new Scatter([chainConfig], { appName: shortAppName });
 
 export const ledger = new Ledger([chainConfig]);
-
-export const softkey = new SoftkeyAuthenticator([chainConfig]);

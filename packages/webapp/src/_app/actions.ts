@@ -36,7 +36,7 @@ export const actionShowPasswordModal = (
  */
 export const actionShowUALSoftkeyModal = (
     isOpen: boolean,
-    resolver: ((value: unknown) => void) | null
+    resolver: ((value: string) => void) | null
 ) => ({
     type: ActionType.ShowUALSoftkeyModal,
     payload: { isOpen, resolver },
