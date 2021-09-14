@@ -1,5 +1,6 @@
 import { Api, JsonRpc } from "eosjs";
 import { JsSignatureProvider } from "eosjs/dist/eosjs-jssig";
+import React from "react";
 import {
     Authenticator,
     ButtonStyle,
@@ -11,7 +12,25 @@ import {
     User,
 } from "universal-authenticator-library";
 
+import { useFormFields } from "_app/hooks";
+import {
+    UALSoftKeyLoginHook,
+    useUALSoftkeyLogin,
+} from "_app/hooks/softkey-ual";
+import { Button, Form, Modal } from "_app/ui";
+
 const AUTHENTICATOR_NAME = "Password";
+const UAL_SOFTKEY_STORAGE_KEY = "ualSoftKey";
+
+class UALSoftkeyError extends UALError {
+    constructor(
+        message: string,
+        type: UALErrorType,
+        cause: Error | null = null
+    ) {
+        super(message, type, cause, "Soft Key");
+    }
+}
 
 export class SoftkeyUser extends User {
     private keys: string[] = [];
@@ -40,26 +59,28 @@ export class SoftkeyUser extends User {
             rpc: this.rpc,
             signatureProvider: new JsSignatureProvider([privateKey]),
         });
+
+        localStorage.setItem(UAL_SOFTKEY_STORAGE_KEY, privateKey);
     }
 
-    // TODO: Implement
     public async signTransaction(
         transaction: any,
-        // tslint:disable-next-line:variable-name
-        _config: SignTransactionConfig
+        config?: SignTransactionConfig
     ): Promise<SignTransactionResponse> {
-        let result;
-
         try {
-            // result = await window.lynxMobile.transact(transaction);
-
-            return {
-                wasBroadcast: true,
-                transactionId: "boom",
-                transaction: result,
-            };
+            const result = await this.api?.transact(transaction, {
+                blocksBehind: 3,
+                expireSeconds: 30,
+                broadcast: true,
+                ...config,
+            });
+            return result;
         } catch (e) {
-            throw new Error("Error signing transaction");
+            throw new UALSoftkeyError(
+                `Error signing transaction: ${e.message}`,
+                UALErrorType.Signing,
+                e
+            );
         }
     }
 
@@ -99,7 +120,7 @@ export class SoftkeyAuthenticator extends Authenticator {
         f16b1833c747c43682f4386fca9cbb327929334a762755ebec17f6f23c9b8a12: {},
     };
 
-    constructor(chains: Chain[]) {
+    constructor(chains: Chain[], private loginHook: UALSoftKeyLoginHook) {
         super(chains);
     }
 
@@ -158,16 +179,25 @@ export class SoftkeyAuthenticator extends Authenticator {
         return true;
     }
 
-    // TODO: Add key to localstorage
     public async login(accountName?: string): Promise<User[]> {
         if (!accountName) throw new Error("Account name required");
-        if (this.users.length !== 0) return this.users;
-        this.users.push(new SoftkeyUser(this.chains[0], accountName));
+        const privateKey =
+            localStorage.getItem(UAL_SOFTKEY_STORAGE_KEY) ||
+            (await this.loginHook.show());
+        if (!privateKey) {
+            throw new UALSoftkeyError("Empty password.", UALErrorType.Login);
+        }
+        console.info("retrieved privateKey", privateKey);
+        for (const chain of this.chains) {
+            const user = new SoftkeyUser(chain, accountName);
+            await user.init(privateKey);
+            this.users.push(user);
+        }
         return this.users;
     }
 
-    // TODO: Clear key from localstorage
     public async logout(): Promise<void> {
+        localStorage.removeItem(UAL_SOFTKEY_STORAGE_KEY);
         this.users = [];
     }
 
@@ -179,3 +209,60 @@ export class SoftkeyAuthenticator extends Authenticator {
         return AUTHENTICATOR_NAME;
     }
 }
+
+export const UalSoftKeyModals = () => {
+    const { isOpen, dismiss } = useUALSoftkeyLogin();
+    const [fields, setFields] = useFormFields({
+        password: "",
+    });
+    const onChangeFields = (e: React.ChangeEvent<HTMLInputElement>) =>
+        setFields(e);
+
+    const close = () => {
+        alert(
+            "You can't close the authentication modal without confirming or cancelling the password form."
+        );
+    };
+
+    const onCancel = () => {
+        dismiss("");
+    };
+
+    const doSubmit = (e: React.FormEvent) => {
+        e.preventDefault();
+        dismiss(fields.password);
+    };
+
+    return (
+        <Modal
+            isOpen={isOpen}
+            onRequestClose={close}
+            contentLabel="UAL SoftKey Login"
+            preventScroll
+            shouldCloseOnOverlayClick={false}
+            shouldCloseOnEsc={false}
+        >
+            <form onSubmit={doSubmit} className="space-y-3">
+                <Form.LabeledSet
+                    label="Your Account Password"
+                    htmlFor="password"
+                    className="col-span-6 sm:col-span-3"
+                >
+                    <Form.Input
+                        id="password"
+                        type="text"
+                        required
+                        value={fields.password}
+                        onChange={onChangeFields}
+                    />
+                </Form.LabeledSet>
+                <div className="flex space-x-3">
+                    <Button type="neutral" onClick={onCancel}>
+                        Cancel
+                    </Button>
+                    <Button isSubmit>Submit</Button>
+                </div>
+            </form>
+        </Modal>
+    );
+};
