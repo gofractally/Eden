@@ -71,6 +71,7 @@ export class SoftkeyUser extends User {
         }
 
         if (!(await this.isAccountValid())) {
+            localStorage.removeItem(UAL_SOFTKEY_STORAGE_KEY);
             throw new UALSoftkeyError(
                 `Invalid password for account ${this.accountName}`,
                 UALErrorType.Initialization
