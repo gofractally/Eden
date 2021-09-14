@@ -66,7 +66,7 @@ export class Storage {
                 config.subchainConfig.stateFile + ".tmp",
                 config.subchainConfig.stateFile
             );
-            logger.info("saved", config.subchainConfig.stateFile);
+            logger.info(`saved ${config.subchainConfig.stateFile}`);
         });
     }
 
