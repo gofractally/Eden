@@ -2,7 +2,6 @@ import { chainConfig, shortAppName } from "config";
 import { Anchor } from "ual-anchor";
 import { Scatter } from "ual-scatter";
 import { Ledger } from "ual-ledger";
-import { SoftkeyAuthenticator } from "_app/utils/softkey-ual-authenticator";
 
 export const anchor = new Anchor([chainConfig], {
     // Required: The app name, required by anchor-link. Short string identifying the app

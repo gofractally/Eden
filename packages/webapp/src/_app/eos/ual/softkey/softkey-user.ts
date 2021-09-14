@@ -6,39 +6,18 @@ import {
     PrivateKey,
     PublicKey,
 } from "eosjs/dist/eosjs-jssig";
-import { getEdenMember } from "members";
-import React from "react";
 import {
-    Authenticator,
-    ButtonStyle,
     Chain,
     SignTransactionConfig,
     SignTransactionResponse,
-    UALError,
     UALErrorType,
     User,
 } from "universal-authenticator-library";
-import { generateEncryptionKey } from "_app/eos";
 
-import { useFormFields } from "_app/hooks";
-import {
-    UALSoftKeyLoginHook,
-    useUALSoftkeyLogin,
-} from "_app/hooks/softkey-ual";
-import { Button, Form, Modal } from "_app/ui";
+import { getEdenMember } from "members";
 
-const AUTHENTICATOR_NAME = "Password";
-const UAL_SOFTKEY_STORAGE_KEY = "ualSoftKey";
-
-class UALSoftkeyError extends UALError {
-    constructor(
-        message: string,
-        type: UALErrorType,
-        cause: Error | null = null
-    ) {
-        super(message, type, cause, "Soft Key");
-    }
-}
+import { UALSoftKeyLoginHook } from "./hooks";
+import { UALSoftkeyError, UAL_SOFTKEY_STORAGE_KEY } from "./common";
 
 export class SoftkeyUser extends User {
     public signatureProvider: SignatureProvider | undefined;
@@ -208,168 +187,3 @@ export class SoftkeyUser extends User {
         return this.signatureProvider?.getAvailableKeys() || [];
     }
 }
-
-export class SoftkeyAuthenticator extends Authenticator {
-    private users: SoftkeyUser[] = [];
-    private readonly supportedChains = {
-        // SoftkeyAuthenticator only supports WAX Testnet
-        f16b1833c747c43682f4386fca9cbb327929334a762755ebec17f6f23c9b8a12: {},
-    };
-
-    constructor(chains: Chain[], private loginHook: UALSoftKeyLoginHook) {
-        super(chains);
-    }
-
-    private supportsAllChains(): boolean {
-        if (this.chains.length < 1) {
-            return false;
-        }
-
-        for (const chain of this.chains) {
-            if (!this.supportedChains.hasOwnProperty(chain.chainId)) {
-                return false;
-            }
-        }
-        return true;
-    }
-
-    public async init() {}
-
-    public reset(): void {}
-
-    public isErrored(): boolean {
-        return false;
-    }
-
-    public getOnboardingLink(): string {
-        return "https://github.com/eoscommunity/Eden";
-    }
-
-    public getError(): UALError | null {
-        return null;
-    }
-
-    public isLoading(): boolean {
-        return false;
-    }
-
-    // TODO: Style it up
-    public getStyle(): ButtonStyle {
-        return {
-            icon: "./images/eden-logo-penta.svg",
-            text: AUTHENTICATOR_NAME,
-            textColor: "black",
-            background: "gray",
-        };
-    }
-
-    public shouldRender(): boolean {
-        return this.supportsAllChains();
-    }
-
-    public shouldAutoLogin(): boolean {
-        return this.shouldRender();
-    }
-
-    public async shouldRequestAccountName(): Promise<boolean> {
-        return true;
-    }
-
-    public async login(accountName?: string): Promise<User[]> {
-        if (!accountName) throw new Error("Account name required");
-        const privateKey =
-            localStorage.getItem(UAL_SOFTKEY_STORAGE_KEY) ||
-            (await this.loginHook.show());
-        if (!privateKey) {
-            throw new UALSoftkeyError("Empty password.", UALErrorType.Login);
-        }
-        for (const chain of this.chains) {
-            const user = new SoftkeyUser(chain, accountName, this.loginHook);
-            await user.init(privateKey);
-            this.users.push(user);
-        }
-        return this.users;
-    }
-
-    public async logout(): Promise<void> {
-        localStorage.removeItem(UAL_SOFTKEY_STORAGE_KEY);
-        this.users = [];
-    }
-
-    public requiresGetKeyConfirmation(): boolean {
-        return false;
-    }
-
-    public getName(): string {
-        return AUTHENTICATOR_NAME;
-    }
-}
-
-export const UalSoftKeyModals = () => {
-    const { isOpen, dismiss } = useUALSoftkeyLogin();
-    const [fields, setFields] = useFormFields({
-        password: "",
-    });
-    const onChangeFields = (e: React.ChangeEvent<HTMLInputElement>) =>
-        setFields(e);
-
-    const close = () => {
-        alert(
-            "You can't close the authentication modal without confirming or cancelling the password form."
-        );
-    };
-
-    const onCancel = () => {
-        dismiss("");
-    };
-
-    const doSubmit = (e: React.FormEvent) => {
-        e.preventDefault();
-
-        let key: string;
-        try {
-            const privateKey = PrivateKey.fromString(fields.password);
-            key = privateKey.toLegacyString();
-        } catch (e) {
-            // if the entered password is not a valid key we derive the password
-            key = generateEncryptionKey(
-                fields.password
-            ).privateKey.toLegacyString();
-        }
-
-        dismiss(key);
-    };
-
-    return (
-        <Modal
-            isOpen={isOpen}
-            onRequestClose={close}
-            contentLabel="UAL SoftKey Login"
-            preventScroll
-            shouldCloseOnOverlayClick={false}
-            shouldCloseOnEsc={false}
-        >
-            <form onSubmit={doSubmit} className="space-y-3">
-                <Form.LabeledSet
-                    label="Your Account Password"
-                    htmlFor="password"
-                    className="col-span-6 sm:col-span-3"
-                >
-                    <Form.Input
-                        id="password"
-                        type="password"
-                        required
-                        value={fields.password}
-                        onChange={onChangeFields}
-                    />
-                </Form.LabeledSet>
-                <div className="flex space-x-3">
-                    <Button type="neutral" onClick={onCancel}>
-                        Cancel
-                    </Button>
-                    <Button isSubmit>Submit</Button>
-                </div>
-            </form>
-        </Modal>
-    );
-};
