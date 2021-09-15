@@ -62,7 +62,7 @@ export class SoftkeyAuthenticator extends Authenticator {
     // TODO: Style it up
     public getStyle(): ButtonStyle {
         return {
-            icon: "./images/eden-logo-penta.svg",
+            icon: "/images/eden-logo-penta.svg",
             text: AUTHENTICATOR_NAME,
             textColor: "black",
             background: "gray",
