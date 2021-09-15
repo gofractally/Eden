@@ -81,7 +81,7 @@ export const ZoomOauthPage = ({ newZoomAccountJWT, oauthState }: Props) => {
     }, []);
 
     return (
-        <SideNavLayout title="Zoom Test" className="divide-y border-b">
+        <SideNavLayout title="Video Conferencing" className="divide-y border-b">
             <Container>
                 <Heading size={1}>Video conferencing for EdenOS</Heading>
             </Container>
