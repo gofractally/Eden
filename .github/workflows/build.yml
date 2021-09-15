@@ -339,6 +339,7 @@ jobs:
     webapp-e2e:
         needs: build-micro-chain
         name: WebApp E2E Tests
+        environment: e2e_tests
         runs-on: ubuntu-latest
 
         steps:
