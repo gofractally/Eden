@@ -1,7 +1,11 @@
 import { ValidUploadActions } from "@edenos/common";
 import { assetFromString } from "./_app/utils/asset";
 
+const baseUrl =
+    process.env.NEXT_PUBLIC_VERCEL_URL ?? process.env.NEXT_PUBLIC_BASE_URL;
+
 if (
+    !baseUrl ||
     !process.env.NEXT_PUBLIC_EOS_RPC_PROTOCOL ||
     !process.env.NEXT_PUBLIC_EOS_RPC_HOST ||
     !process.env.NEXT_PUBLIC_EOS_RPC_PORT ||
@@ -34,6 +38,8 @@ if (
 }
 
 console.info(`>>> Loaded Configs:
+VERCEL_URL="${process.env.NEXT_PUBLIC_VERCEL_URL}"
+BASE_URL="${process.env.NEXT_PUBLIC_BASE_URL}"
 EOS_RPC_PROTOCOL="${process.env.NEXT_PUBLIC_EOS_RPC_PROTOCOL}"
 EOS_RPC_HOST="${process.env.NEXT_PUBLIC_EOS_RPC_HOST}"
 EOS_RPC_PORT="${process.env.NEXT_PUBLIC_EOS_RPC_PORT}"
@@ -167,5 +173,5 @@ export const devUseFixtureData =
 export const zoom = {
     clientKey: process.env.NEXT_PUBLIC_ZOOM_CLIENT_ID || "",
     clientSecret: process.env.ZOOM_CLIENT_SECRET || "",
-    oauthRedirect: `http://localhost:3000/oauth/videoconf`, // TODO: make the domain dynamic
+    oauthRedirect: `${baseUrl}/oauth/videoconf`,
 };
