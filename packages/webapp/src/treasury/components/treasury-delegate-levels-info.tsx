@@ -52,11 +52,6 @@ export const TreasuryDelegateLevelsInfo = () => {
             levelDistribution / (rankDelegatesCount + nextRankDelegatesCount);
         const rankAmount = { ...treasuryStats, quantity: rankAmountQuantity };
 
-        console.info("nextRankDelegatesArray", electedRanks.slice(currentRank));
-        console.info("currentRank", currentRank);
-        console.info("nextRankDelegatesCount", nextRankDelegatesCount);
-        console.info("rankAmountQuantity", rankAmountQuantity);
-
         const label =
             currentRank === electedRanksSize
                 ? RankLabel.HeadChief
