@@ -43,6 +43,7 @@ export const NavProfile = ({ location }: Props) => {
                     size="sm"
                     className="md:hidden"
                     title="Sign in"
+                    dataTestId="signin-nav-button"
                 >
                     <span className="block xs:hidden">Sign in</span>
                     <IoMdLogIn size="24" className="hidden xs:block" />
@@ -51,6 +52,7 @@ export const NavProfile = ({ location }: Props) => {
                     onClick={ualShowModal}
                     className="hidden md:block"
                     title="Sign in"
+                    dataTestId="signin-nav-buttonsm"
                 >
                     <span className="hidden lg:block">Sign in</span>
                     <IoMdLogIn size="24" className="block lg:hidden" />

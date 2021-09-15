@@ -24,4 +24,18 @@
 // -- This will overwrite an existing command --
 // Cypress.Commands.overwrite('visit', (originalFn, url, options) => { ... })
 
+Cypress.Commands.add("login", (account) => {
+    cy.get(`[data-testid="signin-nav-buttonsm"]`).first().click();
+    cy.wait(500);
+    cy.get("#ual-box div").contains("Password").click();
+    cy.wait(500);
+    cy.get('#ual-box input[type="text"]').type(account);
+    cy.wait(500);
+    cy.get("#ual-box div").contains("Continue").click();
+    cy.wait(500);
+    cy.get('input[type="password"]').type(Cypress.env("test_users_pk"));
+    cy.get('button[type="submit"]').click();
+    cy.wait(500);
+});
+
 export {};

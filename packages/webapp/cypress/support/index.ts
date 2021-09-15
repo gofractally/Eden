@@ -14,7 +14,14 @@
 // ***********************************************************
 
 // Import commands.js using ES2015 syntax:
-import './commands'
+import "./commands";
 
-// Alternatively you can use CommonJS syntax:
-// require('./commands')
+declare namespace Cypress {
+    interface Chainable {
+        /**
+         * Custom command to login with a specified account
+         * @example cy.login('alice.edev')
+         */
+        login(account: string): Chainable;
+    }
+}
