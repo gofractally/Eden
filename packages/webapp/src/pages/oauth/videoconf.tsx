@@ -67,8 +67,6 @@ export const ZoomOauthPage = ({ newZoomAccountJWT, oauthState }: Props) => {
     const router = useRouter();
     const [redirectMessage, setRedirectMessage] = useState("");
 
-    console.log(currentMember);
-
     useEffect(() => {
         if (newZoomAccountJWT) {
             setZoomAccountJWT(newZoomAccountJWT);
