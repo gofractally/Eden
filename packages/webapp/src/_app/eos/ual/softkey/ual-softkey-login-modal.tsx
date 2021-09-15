@@ -1,6 +1,7 @@
 import React from "react";
 import { PrivateKey } from "eosjs/dist/eosjs-jssig";
 
+import { onError } from "_app";
 import { generateEncryptionKey } from "_app/eos";
 import { useFormFields } from "_app/hooks";
 import { Button, Form, Modal } from "_app/ui";
@@ -21,31 +22,38 @@ export const UalSoftkeyLoginModal = () => {
         );
     };
 
+    const clearPassword = () => {
+        setFields({ target: { id: "password", value: "" } });
+    };
+
     const onCancel = () => {
+        clearPassword();
         dismiss("");
     };
 
     const doSubmit = (e: React.FormEvent) => {
         e.preventDefault();
 
-        let password: string;
-        let incorrectPassword =
-            "PVT_K1_4nHj22pv211y1CqgaAJLmkPxS688Ha19kPzT2bxLNXMcN7aCb";
         if (fields.password.length < 12) {
-            password = incorrectPassword; // trigger incorrect password message
-        } else {
-            password = fields.password;
+            onError(
+                new Error("Password must be at least 12 characters"),
+                "Incorrect password"
+            );
+            return;
         }
 
         let key: string;
         try {
-            const privateKey = PrivateKey.fromString(password);
+            const privateKey = PrivateKey.fromString(fields.password);
             key = privateKey.toLegacyString();
         } catch (e) {
             // if the entered password is not a valid key we derive the password
-            key = generateEncryptionKey(password).privateKey.toLegacyString();
+            key = generateEncryptionKey(
+                fields.password
+            ).privateKey.toLegacyString();
         }
 
+        clearPassword();
         dismiss(key);
     };
 
