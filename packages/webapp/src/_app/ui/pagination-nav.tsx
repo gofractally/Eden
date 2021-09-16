@@ -20,7 +20,7 @@ export const PaginationNav = ({
     pageNumber,
     totalPages,
 }: Props) => (
-    <div className="flex items-center justify-center md:justify-end space-x-3">
+    <div className="flex items-center justify-center space-x-3">
         {Boolean(totalPages && pageNumber) && (
             <Text size="sm" className="mr-4">
                 Page {pageNumber} of {totalPages}
