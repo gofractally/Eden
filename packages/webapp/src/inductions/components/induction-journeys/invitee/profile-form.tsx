@@ -100,23 +100,7 @@ export const InductionProfileForm = ({
                         )
                     }
                 />
-                {selectedImage || fields.img ? (
-                    <Image
-                        src={
-                            selectedImage
-                                ? URL.createObjectURL(selectedImage)
-                                : `https://ipfs.io/ipfs/${fields.img}`
-                        }
-                        alt="profile pic"
-                        className="object-cover rounded-full h-24 w-24 mt-4 mx-auto"
-                    />
-                ) : (
-                    <Image
-                        src="/images/blank-profile-picture.svg"
-                        alt="blank profile pic"
-                        className="rounded-full h-24 w-24 my-2 mx-auto"
-                    />
-                )}
+                <ProfileImage image={selectedImage ?? fields.img} />
             </Form.LabeledSet>
 
             <Form.LabeledSet
@@ -236,6 +220,34 @@ export const InductionProfileForm = ({
                 </div>
             )}
         </form>
+    );
+};
+
+const ProfileImage = ({ image }: { image?: File | string }) => {
+    if (!image)
+        return (
+            <Image
+                src="/images/blank-profile-picture.svg"
+                alt="blank profile pic"
+                className="rounded-full h-24 w-24 my-2 mx-auto"
+                key="blank-profile-placeholder-image"
+            />
+        );
+
+    let imageUrl: string;
+    if (typeof image === "string") {
+        imageUrl = `https://ipfs.io/ipfs/${image}`;
+    } else {
+        imageUrl = URL.createObjectURL(image);
+    }
+
+    return (
+        <Image
+            src={imageUrl}
+            alt="profile pic"
+            className="object-cover rounded-full h-24 w-24 mt-4 mx-auto"
+            key={imageUrl}
+        />
     );
 };
 
