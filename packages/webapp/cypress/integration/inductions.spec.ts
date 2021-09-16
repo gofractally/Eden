@@ -31,6 +31,7 @@ describe("Inductions", () => {
 
         const successMessage = cy.get("main h1");
         successMessage.should("contain", "Success!");
+        cy.wait(2000); // allow blocks to sync
 
         cleanupInvitations();
     });
