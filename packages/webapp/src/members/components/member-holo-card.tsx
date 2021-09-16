@@ -43,6 +43,7 @@ export const MemberHoloCard = ({ member, inducted = true }: Props) => {
                         width: width / 4,
                         height: width / 4,
                     }}
+                    key={member.image}
                 />
                 <div>
                     {inducted && (
