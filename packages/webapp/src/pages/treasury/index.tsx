@@ -13,7 +13,7 @@ export const TreasuryPage = () => {
             <div className="divide-y">
                 <TreasuryHeader />
                 <TreasuryDisbursementsInfo />
-                {/* <TreasuryDelegateLevelsInfo /> */}
+                <TreasuryDelegateLevelsInfo />
             </div>
         </SideNavLayout>
     );

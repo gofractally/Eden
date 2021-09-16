@@ -14,6 +14,7 @@ export interface Route {
     Icon: React.ComponentType;
     exactPath?: boolean;
     hideNav?: boolean;
+    requiresActiveCommunity?: boolean;
 }
 
 export const ROUTES: { [key: string]: Route } = {
@@ -38,6 +39,7 @@ export const ROUTES: { [key: string]: Route } = {
         label: "My Delegates",
         hideNav: true,
         Icon: DelegationNav,
+        requiresActiveCommunity: true,
     },
     TREASURY: {
         href: "/treasury",
@@ -48,5 +50,6 @@ export const ROUTES: { [key: string]: Route } = {
         href: "/election",
         label: "Election",
         Icon: ElectionNav,
+        requiresActiveCommunity: true,
     },
 };

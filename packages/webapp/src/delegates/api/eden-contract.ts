@@ -4,6 +4,8 @@ import { queryClient } from "pages/_app";
 import {
     CONTRACT_DISTRIBUTION_ACCOUNTS_TABLE,
     CONTRACT_DISTRIBUTION_TABLE,
+    CONTRACT_POOLS_TABLE,
+    getRow,
     getTableRawRows,
     getTableRows,
     i128BoundsForAccount,
@@ -20,10 +22,12 @@ import {
     DistributionState,
     DistributionStateData,
     Distribution,
+    Pool,
 } from "../interfaces";
 import {
     fixtureDistributionAccounts,
     fixtureNextDistribution,
+    fixturePool,
 } from "./fixtures";
 
 const queryElectionStateHelper = async () =>
@@ -124,6 +128,10 @@ export const getDistributionState = async (): Promise<
 
     const rawRows = await getTableRawRows<any>(CONTRACT_DISTRIBUTION_TABLE);
 
+    if (!rawRows || !rawRows.length || !rawRows[0].length) {
+        return undefined;
+    }
+
     const state: DistributionState = rawRows[0][0];
     const rows = rawRows.map((row) => row[1]);
 
@@ -132,4 +140,11 @@ export const getDistributionState = async (): Promise<
     }
 
     return { state, data: rows[0] as Distribution };
+};
+
+export const getMasterPool = async (): Promise<Pool | undefined> => {
+    if (devUseFixtureData) {
+        return fixturePool;
+    }
+    return getRow<Pool>(CONTRACT_POOLS_TABLE, "name", "master");
 };
