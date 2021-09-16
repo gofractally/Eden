@@ -29,7 +29,8 @@ if (
     !process.env.NEXT_PUBLIC_SUBCHAIN_WASM_URL ||
     !process.env.NEXT_PUBLIC_SUBCHAIN_STATE_URL ||
     !process.env.NEXT_PUBLIC_SUBCHAIN_WS_URL ||
-    !process.env.NEXT_PUBLIC_SUBCHAIN_SLOW_MO
+    !process.env.NEXT_PUBLIC_SUBCHAIN_SLOW_MO ||
+    !process.env.NEXT_PUBLIC_FREE_MEETING_LINKS_ENABLED
 ) {
     throw new Error("Eden WebApp Environment Variables are not set");
 }
@@ -69,6 +70,9 @@ NEXT_PUBLIC_TOKEN_CONTRACT="${process.env.NEXT_PUBLIC_TOKEN_CONTRACT}"
 NEXT_PUBLIC_SUBCHAIN_WASM_URL="${process.env.NEXT_PUBLIC_SUBCHAIN_WASM_URL}"
 NEXT_PUBLIC_SUBCHAIN_STATE_URL="${process.env.NEXT_PUBLIC_SUBCHAIN_STATE_URL}"
 NEXT_PUBLIC_SUBCHAIN_WS_URL="${process.env.NEXT_PUBLIC_SUBCHAIN_WS_URL}"
+NEXT_PUBLIC_FREE_MEETING_LINKS_ENABLED="${
+    process.env.NEXT_PUBLIC_FREE_MEETING_LINKS_ENABLED
+}"
 `);
 
 console.info(`>>> Dev Configs:
@@ -136,6 +140,9 @@ export const validUploadActions: ValidUploadActions = {
         },
     },
 };
+
+export const freeMeetingLinksEnabled =
+    process.env.NEXT_PUBLIC_FREE_MEETING_LINKS_ENABLED === "true";
 
 export const electionMeetingDurationMs =
     Number(process.env.NEXT_PUBLIC_ELECTION_MEETING_DURATION_MS) ||
