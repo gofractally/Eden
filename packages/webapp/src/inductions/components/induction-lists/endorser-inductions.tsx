@@ -37,16 +37,18 @@ export const EndorserInductions = ({
     );
 };
 
+// TODO: Show witness names again once we have the blockchain microchain state machine in place for these tables.
+// They're kicking off too many requests and causing the RPC nodes to rate limit individual user IPs.
 const ENDORSER_INDUCTION_COLUMNS: InductionTable.Column[] = [
     {
         key: "invitee",
         label: "Invitee",
     },
-    {
-        key: "inviterAndWitnesses",
-        label: "Inviter & witnesses",
-        className: "hidden md:flex",
-    },
+    // {
+    //     key: "inviterAndWitnesses",
+    //     label: "Inviter & witnesses",
+    //     className: "hidden md:flex",
+    // },
     {
         key: "time_remaining",
         label: "Time remaining",
@@ -76,14 +78,14 @@ const getTableData = (
         return {
             key: `${endorsement.induction_id}-${endorsement.id}`,
             invitee,
-            inviterAndWitnesses: induction ? (
-                <EndorsersNames
-                    induction={induction}
-                    skipEndorser={endorsement.endorser}
-                />
-            ) : (
-                "Unknown"
-            ),
+            // inviterAndWitnesses: induction ? (
+            //     <EndorsersNames
+            //         induction={induction}
+            //         skipEndorser={endorsement.endorser}
+            //     />
+            // ) : (
+            //     "Unknown"
+            // ),
             time_remaining: getInductionRemainingTimeDays(induction),
             status: induction ? (
                 <InductionStatusButton
