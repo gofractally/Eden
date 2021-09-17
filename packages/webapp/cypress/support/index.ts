@@ -19,9 +19,19 @@ import "./commands";
 declare namespace Cypress {
     interface Chainable {
         /**
-         * Custom command to login with a specified account
+         * Logins with a specified account
          * @example cy.login('alice.edev')
          */
         login(account: string): Chainable;
+
+        /**
+         * Intercepts and creates default aliases for main EOS RPC Api Calls
+         */
+        interceptEosApis(): Chainable;
+
+        /**
+         * Wait for blocks propagation in the blockchain
+         */
+        waitForBlocksPropagation(blocks: number): Chainable;
     }
 }

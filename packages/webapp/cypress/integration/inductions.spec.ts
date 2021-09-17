@@ -1,7 +1,8 @@
 describe("Inductions", () => {
     beforeEach(() => {
         cy.visit(`/induction`);
-        cy.wait(1);
+        cy.interceptEosApis();
+        cy.wait("@eosGetTableRows");
     });
 
     it("should not see the invitation button when not logged in", () => {
@@ -21,17 +22,16 @@ describe("Inductions", () => {
 
         const inviteButton = getInviteButton();
         inviteButton.click();
-        cy.wait(500);
 
         cy.get("#invitee").type("test235.edev");
         cy.get("#witness1").type("egeon.edev");
         cy.get("#witness2").type("pip.edev");
         cy.get('button[type="submit"]').click();
-        cy.wait(500);
+        cy.wait("@eosPushTransaction");
 
         const successMessage = cy.get("main h1");
         successMessage.should("contain", "Success!");
-        cy.wait(2000); // allow blocks to sync
+        cy.waitForBlocksPropagation();
 
         cleanupInvitations();
     });
@@ -43,12 +43,12 @@ const getInviteButton = () => {
 
 const cleanupInvitations = () => {
     cy.visit(`/induction`);
-    cy.wait(1);
 
     const inductionsAvailableForDeleting = cy.get(
         `[data-testid="cancel-induction"]`
     );
     inductionsAvailableForDeleting.click({ multiple: true });
+    cy.wait("@eosPushTransaction");
 };
 
 export {};
