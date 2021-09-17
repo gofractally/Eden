@@ -146,7 +146,7 @@ const ModalStepGetLink = ({
             </Text>
             <form onSubmit={onContinue}>
                 {freeMeetingLinksEnabled && (
-                    <>
+                    <div className="space-y-3 mb-3">
                         <Text>
                             Please use one of the validated softwares by the
                             Eden community to generate a secure protected
@@ -168,7 +168,7 @@ const ModalStepGetLink = ({
                                 ) => setFields(e)}
                             />
                         </Form.LabeledSet>
-                    </>
+                    </div>
                 )}
                 <div className="flex space-x-3">
                     <Button type="neutral" onClick={close}>
