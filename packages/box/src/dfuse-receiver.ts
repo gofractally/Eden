@@ -83,6 +83,7 @@ async function webSocketFactory(
 
 export default class DfuseReceiver {
     storage: Storage;
+    stream: Stream | null = null;
     jsonTransactions: JsonTrx[] = [];
     unpushedTransactions: JsonTrx[] = [];
     numSaved = 0;
@@ -205,15 +206,27 @@ export default class DfuseReceiver {
                 stream.mark({
                     cursor: trx.cursor,
                 });
+            } else if (message.type === "complete") {
+                logger.error(`DfuseReceiver.onMessage: ${message.type}`);
+                logger.error("DfuseReceiver.onMessage: closing stream");
+                this.disconnect();
+                logger.error(
+                    "DfuseReceiver.onMessage: scheduling retry in 1 sec"
+                );
+                setTimeout(() => {
+                    this.connect();
+                }, 1000);
             } else if (message.type === "error") {
                 logger.error(JSON.stringify(message, null, 4));
             } else {
-                logger.info(`DfuseReceiver.onMessage: ${message.type}`);
+                logger.info(
+                    `DfuseReceiver.onMessage: ${(message as any).type}`
+                );
             }
         } catch (e: any) {
             logger.error(e);
             logger.error("DfuseReceiver.onMessage: closing stream");
-            stream.close();
+            this.disconnect();
         }
     }
 
@@ -245,6 +258,10 @@ export default class DfuseReceiver {
     } // start()
 
     async connect() {
+        if (this.stream) {
+            logger.info(`already connected`);
+            return;
+        }
         try {
             logger.info(`connecting to ${dfuseConfig.apiNetwork}`);
             if (!this.jsonTransactions.length && dfuseConfig.firstBlock === 1)
@@ -252,7 +269,7 @@ export default class DfuseReceiver {
                     "Don't have an existing dfuse cursor and DFUSE_FIRST_BLOCK isn't greater than 1; " +
                         "this may take a while before the first result comes..."
                 );
-            const stream = await this.dfuseClient.graphql(
+            this.stream = await this.dfuseClient.graphql(
                 query,
                 this.onMessage.bind(this),
                 {
@@ -267,6 +284,18 @@ export default class DfuseReceiver {
             setTimeout(() => {
                 this.connect();
             }, 10 * 60 * 1000);
+        }
+    }
+
+    disconnect() {
+        if (this.stream) {
+            try {
+                this.stream.close();
+            } catch (e: any) {
+                logger.error(e);
+                logger.error("DfuseReceiver.disconnect: close failed");
+            }
+            this.stream = null;
         }
     }
 }
