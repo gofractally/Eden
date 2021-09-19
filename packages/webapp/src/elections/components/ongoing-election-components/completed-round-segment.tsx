@@ -56,7 +56,7 @@ export const CompletedRoundSegment = ({
                 }}
             </MembersGrid>
             <Container>
-                <VideoUploadButton />
+                <VideoUploadButton roundIndex={roundIndex} />
             </Container>
         </Expander>
     );

@@ -2,7 +2,6 @@ import React, { useEffect, useState } from "react";
 import { useQueryClient } from "react-query";
 import dayjs, { Dayjs } from "dayjs";
 import { BiCheck } from "react-icons/bi";
-import { RiVideoUploadLine } from "react-icons/ri";
 
 import { electionMeetingDurationMs as meetingDurationMs } from "config";
 import { onError, useCountdown, useTimeout, useUALAccount } from "_app";
@@ -284,10 +283,6 @@ export const OngoingRoundSegment = ({
                                     ? "Change vote"
                                     : "Submit vote"}
                             </Button>
-                            <Button size="sm">
-                                <RiVideoUploadLine size={18} className="mr-2" />
-                                Upload round {roundIndex + 1} recording
-                            </Button>
                         </div>
                     </Container>
                 </>
@@ -303,9 +298,11 @@ export const OngoingRoundSegment = ({
                     )}
                 </MembersGrid>
             )}
-            <Container>
-                <VideoUploadButton />
-            </Container>
+            {stage === RoundStage.Complete && (
+                <Container>
+                    <VideoUploadButton roundIndex={roundIndex} />
+                </Container>
+            )}
         </Expander>
     );
 };

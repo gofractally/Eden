@@ -135,6 +135,7 @@ const RoundVideoUploadList = ({ election }: { election: CurrentElection }) => {
     const [videoSubmissionPhase, setVideoSubmissionPhase] = useState<
         VideoSubmissionPhase | undefined
     >(undefined);
+    const [uploadCompleteMessage, setUploadCompleteMessage] = useState("");
 
     const isLoading =
         isLoadingGlobals && isLoadingElection && isLoadingOngoingElectionData;
@@ -181,7 +182,7 @@ const RoundVideoUploadList = ({ election }: { election: CurrentElection }) => {
             console.info(transaction);
             setVideoSubmissionPhase("signing");
             const signedTrx = await ualAccount.signTransaction(transaction, {
-                broadcast: false,
+                broadcast: true,
                 expireSeconds: 1200,
             });
             console.info("electvideo trx", signedTrx);
@@ -197,6 +198,7 @@ const RoundVideoUploadList = ({ election }: { election: CurrentElection }) => {
             setRoundVideoList(roundVideoList);
 
             setVideoSubmissionPhase(undefined);
+            setUploadCompleteMessage("Election video uploaded successfully!");
         } catch (error) {
             onError(error, "Unable to set the election round video");
             setVideoSubmissionPhase(undefined);
@@ -241,6 +243,9 @@ const RoundVideoUploadList = ({ election }: { election: CurrentElection }) => {
                                     title="Upload your election video recording."
                                     subtitle=""
                                     action="electvideo"
+                                    uploadCompleteMessage={
+                                        uploadCompleteMessage
+                                    }
                                 />
                             </Container>
                         </Expander>
@@ -249,7 +254,7 @@ const RoundVideoUploadList = ({ election }: { election: CurrentElection }) => {
             })}
             {
                 /* Ongoing Round */
-                roundIndex &&
+                roundIndex !== undefined &&
                     Number.isInteger(roundIndex) &&
                     ongoingElectionData.ongoingRound.participantsMemberData?.find(
                         (m) => m.account === ualAccount.accountName
@@ -257,7 +262,7 @@ const RoundVideoUploadList = ({ election }: { election: CurrentElection }) => {
                         <Expander
                             header={
                                 <Header
-                                    isOngoing={true}
+                                    isOngoing
                                     roundIndex={roundIndex}
                                     roundStartTime={roundStartTime}
                                     roundEndTime={roundEndTime}
@@ -285,6 +290,9 @@ const RoundVideoUploadList = ({ election }: { election: CurrentElection }) => {
                                         roundIndex + 1
                                     } here.`}
                                     action="electvideo"
+                                    uploadCompleteMessage={
+                                        uploadCompleteMessage
+                                    }
                                 />
                             </Container>
                         </Expander>
@@ -327,7 +335,7 @@ const Header = ({
             isRoundActive={isOngoing}
             headlineComponent={
                 <Text size="sm" className="font-semibold">
-                    Round {roundIndex + 1} completed
+                    Round {roundIndex + 1} {!isOngoing && "completed"}
                 </Text>
             }
             sublineComponent={
