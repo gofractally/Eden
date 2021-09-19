@@ -33,7 +33,7 @@ import RoundHeader from "./round-header";
 import { MeetingLink } from "./meeting-link";
 import VotingRoundParticipants from "./voting-round-participants";
 import { setVote } from "../../transactions";
-import { VideoUploadButton } from "pages/election/round-video-upload";
+import { VideoUploadButton } from "../video-upload-button";
 
 export interface RoundSegmentProps {
     ongoingElectionData?: Election;

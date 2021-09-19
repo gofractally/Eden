@@ -35,9 +35,6 @@ import {
 import { EncryptionPasswordAlert } from "encryption";
 import { EdenMember } from "members";
 import { RoundHeader } from "elections/components/ongoing-election-components";
-import router from "next/router";
-import { ROUTES } from "_app/config";
-import { FiUpload } from "react-icons/fi";
 
 // TODO:
 // 1) add buttons that launch video upload service in new tab
@@ -341,26 +338,3 @@ const Header = ({
         />
     );
 };
-
-export const VideoUloadLink = () => (
-    <Link
-        href={ROUTES.ELECTION_SLASH_ROUND_VIDEO_UPLOAD.href}
-        target="_blank"
-        className=""
-    >
-        <FiUpload />
-        <span className="ml-2">Upload meeting video</span>
-    </Link>
-);
-
-export const VideoUploadButton = () => (
-    <Button
-        type="secondary"
-        onClick={() =>
-            window.open(ROUTES.ELECTION_SLASH_ROUND_VIDEO_UPLOAD.href)
-        }
-    >
-        <FiUpload />
-        <span className="ml-2">Upload meeting video</span>
-    </Button>
-);
