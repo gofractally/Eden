@@ -16,6 +16,7 @@ interface Props {
     target?: string;
     isExternal?: boolean;
     title?: string;
+    dataTestId?: string;
 }
 
 export type ButtonSize = "sm" | "md" | "lg";
@@ -76,6 +77,7 @@ export const Button = ({
     target,
     isExternal,
     title,
+    dataTestId,
 }: Props) => {
     const baseClass = "inline-block border focus:outline-none text-center";
     const widthClass = fullWidth ? "w-full" : "";
@@ -98,6 +100,7 @@ export const Button = ({
                 className={buttonClass}
                 disabled={disabled}
                 title={title}
+                data-testid={dataTestId}
             >
                 {buttonContents()}
             </button>
@@ -112,6 +115,7 @@ export const Button = ({
                 rel="noopener noreferrer"
                 target={target}
                 title={title}
+                data-testid={dataTestId}
             >
                 {buttonContents()}
             </a>
@@ -120,7 +124,12 @@ export const Button = ({
 
     return (
         <NextLink href={href}>
-            <a className={buttonClass} target={target} title={title}>
+            <a
+                className={buttonClass}
+                target={target}
+                data-testid={dataTestId}
+                title={title}
+            >
                 {buttonContents()}
             </a>
         </NextLink>

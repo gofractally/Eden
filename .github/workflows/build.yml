@@ -339,6 +339,7 @@ jobs:
     webapp-e2e:
         needs: build-micro-chain
         name: WebApp E2E Tests
+        environment: e2e_tests
         runs-on: ubuntu-latest
 
         steps:
@@ -384,6 +385,8 @@ jobs:
               if: steps.filter.outputs.src == 'true'
               run: |
                   yarn test --stream
+              env:
+                  cypress_test_users_pk: ${{ secrets.CYPRESS_TEST_USERS_PK }}
 
             - name: 🎥 Upload Cypress Results
               if: always() && steps.filter.outputs.src == 'true'
