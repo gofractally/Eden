@@ -1,7 +1,7 @@
 const acceptedMeetingRegexes = [
     // Zoom Meeting Link with Password
     // eg: https://us05web.zoom.us/j/12340622987?pwd=Z3EvYWpaNk5mWURXMlZWbUU4Lzd56789
-    /https?:\/\/[\S.]*\zoom\.us\/j\/[\S]+\?pwd=[\S]+/,
+    /^https?:\/\/[\S.]*\zoom\.us\/j\/[\S]+\?pwd=[\S]+$/,
 ];
 
 export const validateMeetingLink = (meetingLink: string) => {
