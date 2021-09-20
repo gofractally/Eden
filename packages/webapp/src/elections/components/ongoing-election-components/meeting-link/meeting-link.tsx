@@ -20,6 +20,7 @@ import { useEncryptionPassword, usePasswordModal } from "encryption";
 import MeetingButtons from "./meeting-buttons";
 import MeetingLinkModal from "./meeting-link-modal";
 import { freeMeetingLinksEnabled } from "config";
+import { validateMeetingLink } from "_app/utils/meetings";
 
 export enum MeetingStep {
     LinkZoomAccount,
@@ -124,9 +125,7 @@ export const MeetingLink = ({
     };
 
     const submitMeetingLink = async (meetingLink: string) => {
-        if (!meetingLink) {
-            throw new Error("Meeting Link is empty");
-        }
+        validateMeetingLink(meetingLink);
         await checkSubmissionIsAllowed();
         await signAndPublishMeeting(meetingLink);
     };

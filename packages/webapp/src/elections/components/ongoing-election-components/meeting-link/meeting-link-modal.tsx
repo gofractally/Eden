@@ -148,8 +148,7 @@ const ModalStepGetLink = ({
                 {freeMeetingLinksEnabled && (
                     <div className="space-y-3 mb-3">
                         <Text>
-                            Please use one of the validated softwares by the
-                            Eden community to generate a secure protected
+                            Please use Zoom to generate a secure protected
                             meeting link and paste the one-click with enclosed
                             password link here.
                         </Text>
