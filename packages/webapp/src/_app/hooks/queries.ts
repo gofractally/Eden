@@ -253,9 +253,9 @@ export const queryEndorsementsByInductionId = (inductionId: string) => ({
     queryFn: () => getEndorsementsByInductionId(inductionId),
 });
 
-export const useMemberByAccountName = (accountName: string) =>
+export const useMemberByAccountName = (accountName?: string) =>
     useQuery<EdenMember | undefined, Error>({
-        ...queryMemberByAccountName(accountName),
+        ...queryMemberByAccountName(accountName ?? ""),
         enabled: Boolean(accountName),
     });
 

@@ -15,6 +15,7 @@ import { Induction } from "../../../interfaces";
 import { getInductionRemainingTimeDays } from "../../../utils";
 import { setInductionVideoTransaction } from "../../../transactions";
 import { InductionVideoForm, VideoSubmissionPhase } from "./video-form";
+import { InductionNames } from "inductions/components/induction-lists/induction-names";
 
 interface Props {
     induction: Induction;
@@ -65,7 +66,7 @@ export const InductionVideoFormContainer = ({
 
             setSubmittedVideo(true);
         } catch (error) {
-            onError(error, "Unable to set the induction video");
+            onError(error as Error, "Unable to set the induction video");
             setVideoSubmissionPhase(undefined);
         }
     };
@@ -87,6 +88,7 @@ export const InductionVideoFormContainer = ({
                     and prospective Eden member will record a short, scripted
                     video conference call inducting the new member.
                 </Text>
+                <InductionNames inductionId={induction.id} />
             </div>
             <InductionVideoForm
                 video={induction.video}
