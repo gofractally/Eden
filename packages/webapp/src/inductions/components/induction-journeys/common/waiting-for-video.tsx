@@ -1,7 +1,6 @@
 import { Heading, Text } from "_app";
-import { getInductionRemainingTimeDays } from "inductions";
+import { getInductionRemainingTimeDays, InductionNames } from "inductions";
 import { Induction } from "inductions/interfaces";
-import { InductionNames } from "inductions/components/induction-lists/induction-names";
 
 export const WaitingForVideo = ({ induction }: { induction: Induction }) => {
     return (

@@ -10,12 +10,12 @@ import {
     uploadToIpfs,
     useUALAccount,
 } from "_app";
+import { InductionNames } from "inductions";
 
 import { Induction } from "../../../interfaces";
 import { getInductionRemainingTimeDays } from "../../../utils";
 import { setInductionVideoTransaction } from "../../../transactions";
 import { InductionVideoForm, VideoSubmissionPhase } from "./video-form";
-import { InductionNames } from "inductions/components/induction-lists/induction-names";
 
 interface Props {
     induction: Induction;

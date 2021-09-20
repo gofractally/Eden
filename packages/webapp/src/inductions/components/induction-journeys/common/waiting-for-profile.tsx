@@ -1,8 +1,7 @@
 import { Button, Heading, Link, Text } from "_app";
 import { ROUTES } from "_app/config";
-import { getInductionRemainingTimeDays } from "inductions";
+import { getInductionRemainingTimeDays, InductionNames } from "inductions";
 import { Induction } from "inductions/interfaces";
-import { InductionNames } from "inductions/components/induction-lists/induction-names";
 
 export const WaitingForProfile = ({ induction }: { induction: Induction }) => {
     return (

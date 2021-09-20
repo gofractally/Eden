@@ -1,7 +1,10 @@
 import { Heading } from "_app";
-import { InductionExpiresIn, InductionProfileForm } from "inductions";
+import {
+    InductionExpiresIn,
+    InductionNames,
+    InductionProfileForm,
+} from "inductions";
 import { Induction, NewMemberProfile } from "inductions/interfaces";
-import { InductionNames } from "inductions/components/induction-lists/induction-names";
 
 interface Props {
     induction: Induction;
