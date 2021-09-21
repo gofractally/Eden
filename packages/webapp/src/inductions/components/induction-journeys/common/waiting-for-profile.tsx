@@ -1,7 +1,7 @@
 import { Button, Heading, Link, Text } from "_app";
-import { getInductionRemainingTimeDays } from "inductions";
-import { Induction } from "inductions/interfaces";
 import { ROUTES } from "_app/config";
+import { getInductionRemainingTimeDays, InductionNames } from "inductions";
+import { Induction } from "inductions/interfaces";
 
 export const WaitingForProfile = ({ induction }: { induction: Induction }) => {
     return (
@@ -29,6 +29,7 @@ export const WaitingForProfile = ({ induction }: { induction: Induction }) => {
                     This invitation expires in{" "}
                     {getInductionRemainingTimeDays(induction)}.
                 </Text>
+                <InductionNames inductionId={induction.id} />
             </div>
             <Button href={ROUTES.INDUCTION.href} size="lg">
                 Membership dashboard

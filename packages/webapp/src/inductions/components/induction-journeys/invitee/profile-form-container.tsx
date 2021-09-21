@@ -1,5 +1,9 @@
 import { Heading } from "_app";
-import { InductionExpiresIn, InductionProfileForm } from "inductions";
+import {
+    InductionExpiresIn,
+    InductionNames,
+    InductionProfileForm,
+} from "inductions";
 import { Induction, NewMemberProfile } from "inductions/interfaces";
 
 interface Props {
@@ -30,6 +34,7 @@ export const InductionProfileFormContainer = ({
                     : "Create your Eden profile"}
             </Heading>
             <InductionExpiresIn induction={induction} />
+            <InductionNames inductionId={induction.id} className="pb-8" />
             <InductionProfileForm
                 newMemberProfile={profileInfo || induction.new_member_profile}
                 onSubmit={setProfilePreview}

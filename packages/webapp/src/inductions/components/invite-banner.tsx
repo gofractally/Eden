@@ -10,6 +10,7 @@ export const InviteBanner = ({ canInvite }: InviteBannerProps) => {
     return (
         <CallToAction
             buttonLabel="Invite to Eden"
+            dataTestId="invite-button"
             href={`${ROUTES.INDUCTION.href}/init`}
         >
             Spread the love! Invite your trusted contacts in the EOS community
