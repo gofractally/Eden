@@ -27,7 +27,7 @@ namespace eden
 
       migrations migrations{get_self()};
 
-      if (is_possible_deposit_account(from))
+      if (is_possible_deposit_account(from) && memo != "donate")
       {
          accounts{get_self()}.add_balance(from, quantity);
          if (auto migration = migrations.get<migrate_account_v0>())

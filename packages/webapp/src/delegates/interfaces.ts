@@ -34,3 +34,8 @@ export interface DistributionStateData {
     state: DistributionState;
     data: Distribution;
 }
+
+export interface Pool {
+    name: string;
+    monthly_distribution_pct: number;
+}

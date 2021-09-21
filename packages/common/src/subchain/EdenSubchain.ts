@@ -57,10 +57,27 @@ export class EdenSubchain {
     }
 
     async instantiateStreaming(response: Response | PromiseLike<Response>) {
-        const result = await WebAssembly.instantiateStreaming(
-            response,
-            this.imports
-        );
+        const result = await (async () => {
+            if (WebAssembly.instantiateStreaming) {
+                return await WebAssembly.instantiateStreaming(
+                    response,
+                    this.imports
+                );
+            } else {
+                console.log("instantiateStreaming missing; using fallback");
+                const module = await WebAssembly.compile(
+                    await (await Promise.resolve(response)).arrayBuffer()
+                );
+                const instance = await WebAssembly.instantiate(
+                    module,
+                    this.imports
+                );
+                return {
+                    module,
+                    instance,
+                };
+            }
+        })();
         this.module = result.module;
         this.instance = result.instance;
         this.exports = result.instance.exports;

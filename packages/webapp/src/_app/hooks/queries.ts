@@ -23,6 +23,7 @@ import {
     getChiefDelegates,
     getDistributionsForAccount,
     getDistributionState,
+    getMasterPool,
     getHeadDelegate,
     getMyDelegation,
 } from "delegates/api";
@@ -205,6 +206,11 @@ export const queryDistributionState = () => ({
     queryFn: getDistributionState,
 });
 
+export const queryMasterPool = () => ({
+    queryKey: ["query_master_pool"],
+    queryFn: getMasterPool,
+});
+
 export const queryDistributionsForAccount = (account: string) => ({
     queryKey: ["query_distributions_for_account", account],
     queryFn: () => getDistributionsForAccount(account),
@@ -247,9 +253,9 @@ export const queryEndorsementsByInductionId = (inductionId: string) => ({
     queryFn: () => getEndorsementsByInductionId(inductionId),
 });
 
-export const useMemberByAccountName = (accountName: string) =>
+export const useMemberByAccountName = (accountName?: string) =>
     useQuery<EdenMember | undefined, Error>({
-        ...queryMemberByAccountName(accountName),
+        ...queryMemberByAccountName(accountName ?? ""),
         enabled: Boolean(accountName),
     });
 
@@ -262,6 +268,11 @@ export const useDistributionsForAccount = (account: string) =>
 export const useDistributionState = () =>
     useQuery({
         ...queryDistributionState(),
+    });
+
+export const useMasterPool = () =>
+    useQuery({
+        ...queryMasterPool(),
     });
 
 export const useTreasuryStats = () => useQuery({ ...queryTreasuryStats });

@@ -1,4 +1,4 @@
-import { useCurrentElection } from "_app";
+import { useCurrentElection, useIsCommunityActive } from "_app";
 import { ROUTES } from "_app/config";
 import { Container, Heading, Link, Loader, Text } from "_app/ui";
 import { ElectionStatus } from "elections/interfaces";
@@ -9,11 +9,15 @@ interface Props {
     className?: string;
 }
 
-export const ElectionSegment = ({ className = "" }: Props) => (
-    <div className={className}>
-        <ElectionSegmentContents />
-    </div>
-);
+export const ElectionSegment = ({ className = "" }: Props) => {
+    const { data: isActiveCommunity } = useIsCommunityActive();
+
+    return isActiveCommunity ? (
+        <div className={className}>
+            <ElectionSegmentContents />
+        </div>
+    ) : null;
+};
 
 export default ElectionSegment;
 

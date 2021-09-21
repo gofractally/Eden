@@ -1,5 +1,6 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { GetServerSideProps } from "next";
+import { useRouter } from "next/router";
 
 import {
     SideNavLayout,
@@ -7,12 +8,14 @@ import {
     useZoomAccountJWT,
     encryptSecretForPublishing,
     onError,
+    useCurrentMember,
 } from "_app";
 import {
     Button,
     CallToAction,
     Container,
     Heading,
+    Link,
     Loader,
     Text,
 } from "_app/ui";
@@ -24,8 +27,7 @@ import {
     zoomConnectAccountLink,
     generateZoomMeetingLink,
 } from "_api/zoom-commons";
-import { useRouter } from "next/router";
-import { useState } from "react";
+import { ROUTES } from "_app/config";
 
 export const getServerSideProps: GetServerSideProps = async ({
     query,
@@ -36,15 +38,12 @@ export const getServerSideProps: GetServerSideProps = async ({
     let newZoomAccountJWT = null;
 
     if (oauthCode) {
-        const oauthDataResponse = await zoomRequestAuth(oauthCode);
-        if (oauthDataResponse.error) {
-            console.error(
-                "fail to auth zoom code",
-                oauthCode,
-                oauthDataResponse
-            );
-        } else {
+        try {
+            const oauthDataResponse = await zoomRequestAuth(oauthCode);
+            if (oauthDataResponse.error) throw oauthDataResponse;
             newZoomAccountJWT = oauthDataResponse;
+        } catch (e) {
+            console.error("Failed to auth Zoom code", oauthCode, e);
         }
     }
 
@@ -63,6 +62,7 @@ interface Props {
 
 export const ZoomOauthPage = ({ newZoomAccountJWT, oauthState }: Props) => {
     const [ualAccount, _, ualShowModal] = useUALAccount();
+    const { data: currentMember } = useCurrentMember();
     const [_zoomAccountJWT, setZoomAccountJWT] = useZoomAccountJWT(undefined);
     const router = useRouter();
     const [redirectMessage, setRedirectMessage] = useState("");
@@ -81,15 +81,31 @@ export const ZoomOauthPage = ({ newZoomAccountJWT, oauthState }: Props) => {
     }, []);
 
     return (
-        <SideNavLayout title="Zoom Test">
+        <SideNavLayout title="Video Conferencing" className="divide-y border-b">
+            <Container>
+                <Heading size={1}>Video conferencing for EdenOS</Heading>
+            </Container>
             {redirectMessage ? (
                 <Container className="space-y-4 py-16 text-center">
                     <Heading size={2}>Your Zoom account is linked</Heading>
                     <Text className="pb-8">{redirectMessage}</Text>
                     <Loader />
                 </Container>
-            ) : ualAccount ? ( // TODO: maybe we can even remove the ualAccount guard from this to allow the Zoom Marketplace review
-                <ZoomTestContainer ualAccount={ualAccount} />
+            ) : currentMember ? (
+                <Container className="space-y-4">
+                    <Heading size={2}>Your Zoom account is linked</Heading>
+                    <Text>You're ready to participate in Eden elections!</Text>
+                </Container>
+            ) : ualAccount ? (
+                <Container className="space-y-4">
+                    <Heading size={2}>Your Zoom account is linked</Heading>
+                    <Text>
+                        <Link href={ROUTES.INDUCTION.href}>
+                            Become a member of Eden
+                        </Link>{" "}
+                        to participate in Eden elections.
+                    </Text>
+                </Container>
             ) : (
                 <CallToAction buttonLabel="Sign in" onClick={ualShowModal}>
                     Welcome to Eden. Sign in using your wallet.
@@ -101,6 +117,7 @@ export const ZoomOauthPage = ({ newZoomAccountJWT, oauthState }: Props) => {
 
 export default ZoomOauthPage;
 
+// Use this component to easily test the Zoom integration
 const ZoomTestContainer = ({ ualAccount }: any) => {
     const [zoomAccountJWT, setZoomAccountJWT] = useZoomAccountJWT(undefined);
 
@@ -149,7 +166,7 @@ const ZoomTestContainer = ({ ualAccount }: any) => {
             alert(JSON.stringify(responseData, undefined, 2));
         } catch (error) {
             console.error(error);
-            onError(error);
+            onError(error as Error);
         }
     };
 

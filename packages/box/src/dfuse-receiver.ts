@@ -162,47 +162,59 @@ export default class DfuseReceiver {
     }
 
     onMessage(message: GraphqlStreamMessage<any>, stream: Stream): void {
-        if (message.type === "data") {
-            const trx: JsonTrx = message.data.searchTransactionsForward;
-            const prev =
-                this.jsonTransactions.length > 0
-                    ? this.jsonTransactions[this.jsonTransactions.length - 1]
-                    : null;
-            logger.info(
-                `${trx.undo ? "undo block" : "recv block"} ${trx.block.num} ${
-                    trx.trace
-                        ? "trx " + trx.trace.id
-                        : "no matching transactions"
-                }`
-            );
-            if (trx.trace || (prev && prev.trace)) {
-                this.jsonTransactions.push(trx);
-                this.pushTrx(trx);
-                if (
-                    this.jsonTransactions.length - this.numSaved > 10 ||
-                    !trx.trace
-                ) {
-                    logger.info(
-                        `save ${dfuseConfig.jsonTrxFile}: ${this.jsonTransactions.length} transactions and undo entries`
-                    );
-                    fs.writeFileSync(
-                        dfuseConfig.jsonTrxFile + ".tmp",
-                        JSON.stringify(this.jsonTransactions)
-                    );
-                    fs.renameSync(
-                        dfuseConfig.jsonTrxFile + ".tmp",
-                        dfuseConfig.jsonTrxFile
-                    );
-                    this.storage.saveState();
-                    this.numSaved = this.jsonTransactions.length;
+        try {
+            if (message.type === "data") {
+                const trx: JsonTrx = message.data.searchTransactionsForward;
+                const prev =
+                    this.jsonTransactions.length > 0
+                        ? this.jsonTransactions[
+                              this.jsonTransactions.length - 1
+                          ]
+                        : null;
+                logger.info(
+                    `${trx.undo ? "undo block" : "recv block"} ${
+                        trx.block.num
+                    } ${
+                        trx.trace
+                            ? "trx " + trx.trace.id
+                            : "no matching transactions"
+                    }`
+                );
+                if (trx.trace || (prev && prev.trace)) {
+                    this.jsonTransactions.push(trx);
+                    this.pushTrx(trx);
+                    if (
+                        this.jsonTransactions.length - this.numSaved > 10 ||
+                        !trx.trace
+                    ) {
+                        logger.info(
+                            `save ${dfuseConfig.jsonTrxFile}: ${this.jsonTransactions.length} transactions and undo entries`
+                        );
+                        fs.writeFileSync(
+                            dfuseConfig.jsonTrxFile + ".tmp",
+                            JSON.stringify(this.jsonTransactions)
+                        );
+                        fs.renameSync(
+                            dfuseConfig.jsonTrxFile + ".tmp",
+                            dfuseConfig.jsonTrxFile
+                        );
+                        this.storage.saveState();
+                        this.numSaved = this.jsonTransactions.length;
+                    }
                 }
+                stream.mark({
+                    cursor: trx.cursor,
+                });
+            } else if (message.type === "error") {
+                logger.error(JSON.stringify(message, null, 4));
+            } else {
+                logger.info(`DfuseReceiver.onMessage: ${message.type}`);
             }
-            stream.mark({
-                cursor: trx.cursor,
-            });
+        } catch (e: any) {
+            logger.error(e);
+            logger.error("DfuseReceiver.onMessage: closing stream");
+            stream.close();
         }
-        if (message.type === "error")
-            logger.error(JSON.stringify(message, null, 4));
     }
 
     async start() {
@@ -234,7 +246,7 @@ export default class DfuseReceiver {
 
     async connect() {
         try {
-            logger.info("connecting to", dfuseConfig.apiNetwork);
+            logger.info(`connecting to ${dfuseConfig.apiNetwork}`);
             if (!this.jsonTransactions.length && dfuseConfig.firstBlock === 1)
                 logger.warn(
                     "Don't have an existing dfuse cursor and DFUSE_FIRST_BLOCK isn't greater than 1; " +

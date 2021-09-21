@@ -1,4 +1,6 @@
 {
     "baseUrl": "http://localhost:3000",
-    "env": {}
+    "env": {
+        "test_users_pk": "<please override in cypress.env.json>"
+    }
 }

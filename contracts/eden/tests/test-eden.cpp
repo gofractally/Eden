@@ -1166,6 +1166,9 @@ TEST_CASE("deposit and spend")
    t.alice.act<actions::withdraw>("alice"_n, s2a("6.0000 EOS"));
    CHECK(get_eden_account("alice"_n) == std::nullopt);
    CHECK(get_token_balance("alice"_n) == s2a("1000.0000 EOS"));
+   t.alice.act<token::actions::transfer>("alice"_n, "eden.gm"_n, s2a("100.0000 EOS"), "donate");
+   CHECK(get_eden_account("alice"_n) == std::nullopt);
+   CHECK(get_token_balance("alice"_n) == s2a("900.0000 EOS"));
 }
 
 TEST_CASE("election config")

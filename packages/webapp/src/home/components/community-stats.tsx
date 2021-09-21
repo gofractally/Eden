@@ -3,7 +3,8 @@ import { useQuery } from "react-query";
 import { assetToString, queryMembersStats, queryTreasuryStats } from "_app";
 import { Container, Heading, Link, Loader, Text } from "_app/ui";
 import { ROUTES } from "_app/config";
-import { CommunityNav, MembershipNav, TreasuryNav } from "_app/ui/nav-icons";
+import { PendingInvites } from "_app/ui/icons";
+import { MembershipNav, TreasuryNav } from "_app/ui/nav-icons";
 
 interface CommunityStatsProps {
     className?: string;
@@ -73,7 +74,7 @@ const CommunityStatsContents = () => {
                         </div>
                         <div className="flex items-center space-x-2 group">
                             <div className="flex justify-center w-5 group-hover:text-blue-500 transition">
-                                <CommunityNav />
+                                <PendingInvites />
                             </div>
                             <Link
                                 href={`${ROUTES.INDUCTION.href}/pending-invitations`}

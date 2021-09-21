@@ -16,7 +16,7 @@ When round participants enter pre-round, the race is on to create, encrypt and c
 3. When user clicks OK button in password confirmation (if applicable), the modal displays a "Create meeting link" screen that says:
     > Sign in with your Zoom account to create a meeting link for participants in this round. After you sign in, you will be redirected back to the ongoing election.
 4. When user clicks "Link Zoom account" button, they're redirected to Zoom Oauth.
-5. User completes permissions for zoom and is redirected to our `/oauth/zoom` page where they see a friendly message telling them to hold on while redirecting to the Election page.
+5. User completes permissions for zoom and is redirected to our `/oauth/videoconf` page where they see a friendly message telling them to hold on while redirecting to the Election page.
 6. When user returns to the page, the button now says "Get meeting link".
     - If another user in the group finished creating the link before this user redirects:
         - if the round is in the pre-round stage, the button will say "Join Meeting" and will be disabled with a message above it saying: "Join meeting link will become active when the round starts."

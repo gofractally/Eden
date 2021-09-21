@@ -17,7 +17,7 @@ const dfuseReceiver = new DfuseReceiver(storage);
 export const subchainHandler = express.Router();
 
 subchainHandler.get("/eden-micro-chain.wasm", (req, res) => {
-    res.sendFile(path.resolve("../../build/eden-micro-chain.wasm"));
+    res.sendFile(path.resolve(subchainConfig.wasmFile));
 });
 
 subchainHandler.get("/state", (req, res) => {
@@ -110,6 +110,7 @@ class ConnectionState {
         } catch (e) {
             // TODO: report some errors to client
             logger.error(e);
+            logger.error("closing incoming websocket");
             this.ws.close();
             this.ws = null;
         }
@@ -122,8 +123,8 @@ export function createWSServer(path: string, server: http.Server) {
         path: `${path}/eden-microchain`,
     });
 
-    wss.on("connection", (ws: WebSocket) => {
-        logger.info("incoming ws connection");
+    wss.on("connection", (ws: WebSocket, req: http.IncomingMessage) => {
+        logger.info(`incoming ws connection, origin: ${req.headers.origin}`);
         ws.on("message", (message: string) => {
             const wsa = ws as any;
             if (!wsa.connectionState)
@@ -135,6 +136,7 @@ export function createWSServer(path: string, server: http.Server) {
             } catch (e) {
                 // TODO: report some errors to client
                 logger.error(e);
+                logger.error("closing incoming websocket");
                 cs.ws = null;
                 ws.close();
             }

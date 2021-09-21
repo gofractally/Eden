@@ -15,7 +15,7 @@ function Members() {
     const pagedResult = usePagedQuery(
         query,
         10,
-        (result) => result?.data?.members.pageInfo
+        (result) => result.data?.members.pageInfo
     );
     return (
         <Fragment>

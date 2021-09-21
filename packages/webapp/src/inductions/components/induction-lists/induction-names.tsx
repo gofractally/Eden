@@ -1,8 +1,7 @@
 import { useQuery } from "react-query";
 
 import { queryEndorsementsByInductionId, useMemberByAccountName } from "_app";
-
-import { Endorsement, Induction } from "../../interfaces";
+import { Endorsement, Induction } from "inductions/interfaces";
 
 interface Props {
     induction: Induction;
