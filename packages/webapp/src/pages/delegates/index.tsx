@@ -4,9 +4,9 @@ import dayjs from "dayjs";
 
 import {
     Container,
-    FluidLayout,
     Heading,
     queryMembers,
+    SideNavLayout,
     Text,
     useCurrentElection,
     useCurrentMember,
@@ -45,7 +45,7 @@ export const DelegatesPage = (props: Props) => {
 
     if (isElectionInProgress) {
         return (
-            <FluidLayout title="My Delegation">
+            <SideNavLayout title="My Delegation">
                 <Container>
                     <Heading size={1}>Election in Progress</Heading>
                     <Heading size={2}>
@@ -53,25 +53,26 @@ export const DelegatesPage = (props: Props) => {
                         delegation.
                     </Heading>
                 </Container>
-            </FluidLayout>
+            </SideNavLayout>
         );
     }
     if (!activeUser)
         return (
-            <FluidLayout>
-                <div>must be logged in</div>
-            </FluidLayout>
+            <SideNavLayout>
+                <div>Must be logged in</div>
+            </SideNavLayout>
         );
     if (!currentMember)
         return (
-            <FluidLayout>
-                <div>not an Eden Member</div>
-            </FluidLayout>
+            <SideNavLayout>
+                <div>Not an Eden Member</div>
+            </SideNavLayout>
         );
+
     // TODO: Handle the no-election-has-ever-happened scenario (just after genesis induction is complete)
     if (!myDelegation || !myDelegationMemberData)
         return (
-            <FluidLayout>
+            <SideNavLayout>
                 <Container className="flex flex-col justify-center items-center py-16 text-center">
                     <Heading size={4}>No Delegation to display</Heading>
                     <Text>
@@ -79,11 +80,11 @@ export const DelegatesPage = (props: Props) => {
                         election completes.
                     </Text>
                 </Container>
-            </FluidLayout>
+            </SideNavLayout>
         );
 
     return (
-        <FluidLayout title="My Delegation">
+        <SideNavLayout title="My Delegation">
             <div className="divide-y">
                 <Container>
                     <Heading size={1}>My Delegation</Heading>
@@ -97,7 +98,7 @@ export const DelegatesPage = (props: Props) => {
                     members={myDelegationMemberData}
                 />
             </div>
-        </FluidLayout>
+        </SideNavLayout>
     );
 };
 
