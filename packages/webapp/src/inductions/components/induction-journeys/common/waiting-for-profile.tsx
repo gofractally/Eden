@@ -1,5 +1,6 @@
 import { Button, Heading, Link, Text } from "_app";
-import { ROUTES } from "_app/config";
+import { ROUTES } from "_app/routes";
+
 import { getInductionRemainingTimeDays, InductionNames } from "inductions";
 import { Induction } from "inductions/interfaces";
 

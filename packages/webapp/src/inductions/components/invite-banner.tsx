@@ -1,5 +1,5 @@
 import { CallToAction } from "_app";
-import { ROUTES } from "_app/config";
+import { ROUTES } from "_app/routes";
 
 interface InviteBannerProps {
     canInvite?: boolean;

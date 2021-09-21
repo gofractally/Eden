@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 
-import { Route, ROUTES } from "../config";
+import { Route, ROUTES } from "../routes";
 import { useIsCommunityActive } from "../hooks";
 
 const AVAILABLE_ROUTES = Object.keys(ROUTES)

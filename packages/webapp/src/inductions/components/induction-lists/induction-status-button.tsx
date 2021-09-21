@@ -10,7 +10,7 @@ import {
     useUALAccount,
     queryEndorsementsByInductionId,
 } from "_app";
-import { ROUTES } from "_app/config";
+import { ROUTES } from "_app/routes";
 
 import { Induction, InductionRole, InductionStatus } from "../../interfaces";
 import { cancelInductionTransaction } from "../../transactions";

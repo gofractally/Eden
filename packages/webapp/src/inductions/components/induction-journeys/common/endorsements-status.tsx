@@ -1,5 +1,5 @@
 import { Link, useMemberListByAccountNames } from "_app";
-import { ROUTES } from "_app/config";
+import { ROUTES } from "_app/routes";
 import { Endorsement } from "inductions/interfaces";
 
 export const EndorsementsStatus = ({

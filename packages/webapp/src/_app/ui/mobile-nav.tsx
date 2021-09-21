@@ -3,7 +3,7 @@ import { useRouter } from "next/router";
 import Link from "next/link";
 
 import { useNavItems } from "_app";
-import { Route } from "_app/config";
+import { Route } from "_app/routes";
 
 import NavProfile from "./nav-profile";
 import { Image } from "./image";

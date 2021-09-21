@@ -37,7 +37,6 @@ export const ROUTES: { [key: string]: Route } = {
     DELEGATION: {
         href: "/delegates",
         label: "My Delegates",
-        hideNav: true,
         Icon: DelegationNav,
         requiresActiveCommunity: true,
     },

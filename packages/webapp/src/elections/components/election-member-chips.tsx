@@ -7,7 +7,7 @@ import {
     useChiefDelegates,
     useHeadDelegate,
 } from "_app";
-import { ROUTES } from "_app/config";
+import { ROUTES } from "_app/routes";
 import { GenericMemberChip } from "_app/ui";
 import { MemberData } from "members/interfaces";
 
