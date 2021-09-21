@@ -148,9 +148,13 @@ const ModalStepGetLink = ({
                 {freeMeetingLinksEnabled && (
                     <div className="space-y-3 mb-3">
                         <Text>
-                            Please use Zoom to generate a secure protected
-                            meeting link and paste the one-click with enclosed
-                            password link here.
+                            Use Zoom to generate a password-protected meeting
+                            link and paste the meeting link (with the password
+                            appended to the end) here. E.g.,{" "}
+                            <code className="text-xs bg-gray-200 text-red-500 p-1">
+                                https://us06web.zoom.us/j/71043116043?pwd=RZFqdZ1TUFBzSVREzFRPS
+                            </code>
+                            .
                         </Text>
                         <Form.LabeledSet
                             label="Meeting Link"

@@ -17,6 +17,6 @@ export const validateMeetingLink = (meetingLink: string) => {
     }
 
     throw new Error(
-        "Invalid Meeting link. Please paste a generated Zoom Meeting link with the enclosed Password"
+        "Invalid meeting link. Please enter a generated Zoom meeting link with the password appended to the end. E.g., https://us06web.zoom.us/j/71043116043?pwd=RZFqdZ1TUFBzSVRE."
     );
 };
