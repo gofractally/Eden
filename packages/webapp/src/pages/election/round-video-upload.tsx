@@ -1,9 +1,9 @@
 import React, { useEffect, useState } from "react";
 import { RiVideoUploadLine } from "react-icons/ri";
-import { Dayjs } from "dayjs";
+import dayjs from "dayjs";
 
 import {
-    FluidLayout,
+    SideNavLayout,
     isValidDelegate,
     onError,
     uploadIpfsFileWithTransaction,
@@ -13,6 +13,7 @@ import {
     useLocalStorage,
     useOngoingElectionData,
     useUALAccount,
+    useElectionState,
 } from "_app";
 import {
     Container,
@@ -22,8 +23,6 @@ import {
     Loader,
     VideoSubmissionFormAndPreview,
     VideoSubmissionPhase,
-    Button,
-    Link,
 } from "_app/ui";
 import {
     CurrentElection,
@@ -32,28 +31,38 @@ import {
     setElectionRoundVideo,
     getRoundTimes,
 } from "elections";
-import { EncryptionPasswordAlert } from "encryption";
 import { EdenMember } from "members";
 import { RoundHeader } from "elections/components/ongoing-election-components";
 
-// TODO:
-// 1) add buttons that launch video upload service in new tab
-// 2) test inductions to ensure I haven't screwed up their video upload
-// 3) Test video uploads during (and after) an election
-
 export const RoundVideoUploadPage = () => {
     const [isElectionComplete, setIsElectionComplete] = useState(false);
+    const [uploadLimitTime, setUploadLimitTime] = useState(dayjs());
+
     const {
         data: currentElection,
         isLoading: isLoadingElection,
         isError: isErrorElection,
     } = useCurrentElection();
+    const { data: electionState } = useElectionState();
 
     useEffect(() => {
-        if (currentElection?.electionState === ElectionStatus.Registration) {
+        if (electionState) {
+            const newUploadLimitTime = dayjs(
+                electionState.last_election_time + "Z"
+            ).add(48, "hour");
+            setUploadLimitTime(newUploadLimitTime);
+        }
+    }, [electionState]);
+
+    useEffect(() => {
+        const isAfterUploadLimitTime = dayjs().isAfter(uploadLimitTime);
+        if (
+            isAfterUploadLimitTime &&
+            currentElection?.electionState === ElectionStatus.Registration
+        ) {
             setIsElectionComplete(true);
         }
-    }, [currentElection]);
+    }, [currentElection, uploadLimitTime]);
 
     const isLoading = isLoadingElection;
     const isError = isErrorElection;
@@ -64,46 +73,39 @@ export const RoundVideoUploadPage = () => {
     const renderBanner = true; // TODO: get end time for video submission
 
     return (
-        <FluidLayout
-            title="Election-video upload service"
-            banner={
-                renderBanner && (
-                    <EncryptionPasswordAlert
-                        promptSetupEncryptionKey={
-                            currentElection?.electionState !==
-                            ElectionStatus.Registration
-                        }
-                    />
-                )
-            }
-        >
-            {isElectionComplete ? (
-                <div>Election is complete.</div>
-            ) : (
-                <div className="divide-y">
-                    <Container>
-                        <Heading size={1}>
-                            Election-video upload service
-                        </Heading>
-                    </Container>
-                    <Container className="space-y-6 pb-5">
-                        <Text>
-                            Election video files are typically large and require
-                            many minutes to upload completely. Do not close this
-                            tab during the upload. A confirmation will be
-                            displayed when your upload is complete, along with a
-                            preview of your video.
-                        </Text>
-                        <Text>
-                            Be patient, and remember you have 48 hours from the
-                            beginning of the election to complete your election
-                            video uploads.
-                        </Text>
-                    </Container>
+        <SideNavLayout title="Election-video upload service">
+            <div className="divide-y">
+                <Container>
+                    <Heading size={1}>Election-video upload service</Heading>
+                </Container>
+                <Container className="space-y-6 pb-5">
+                    {isElectionComplete ? (
+                        <div>
+                            Election is complete and upload videos time is
+                            expired.
+                        </div>
+                    ) : (
+                        <>
+                            <Text>
+                                Election video files are typically large and
+                                require many minutes to upload completely. Do
+                                not close this tab during the upload. A
+                                confirmation will be displayed when your upload
+                                is complete, along with a preview of your video.
+                            </Text>
+                            <Text>
+                                Be patient, and remember you have 48 hours from
+                                the beginning of the election to complete your
+                                election video uploads.
+                            </Text>
+                        </>
+                    )}
+                </Container>
+                {!isElectionComplete && (
                     <RoundVideoUploadList election={currentElection} />
-                </div>
-            )}
-        </FluidLayout>
+                )}
+            </div>
+        </SideNavLayout>
     );
 };
 
@@ -312,8 +314,8 @@ interface HeaderProps {
     isOngoing: boolean;
     roundIndex: number;
     winner?: EdenMember;
-    roundStartTime?: Dayjs;
-    roundEndTime?: Dayjs;
+    roundStartTime?: dayjs.Dayjs;
+    roundEndTime?: dayjs.Dayjs;
 }
 
 const Header = ({
