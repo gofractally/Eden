@@ -1,6 +1,4 @@
-import dayjs from "dayjs";
-import * as eosjsSerialize from "eosjs/dist/eosjs-serialize";
-import * as eosjsNumeric from "eosjs/dist/eosjs-numeric";
+import dayjs, { Dayjs } from "dayjs";
 
 import { ActiveStateConfigType, VoteData } from "./interfaces";
 import { getMemberGroupFromIndex } from "./api";
@@ -93,4 +91,24 @@ export const calculateGroupId = (
     );
 
     return `${(round << 16) | groupNumber}`;
+};
+
+export const getRoundTimes = (
+    communityGlobals: any,
+    currentElection: any
+): {
+    roundDurationMs: number;
+    roundEndTime: Dayjs;
+    roundStartTime: Dayjs;
+} => {
+    const roundDurationSec = communityGlobals.election_round_time_sec;
+    const roundEndTimeRaw =
+        currentElection.round_end ?? currentElection.seed.end_time;
+    const roundDurationMs = roundDurationSec * 1000;
+    const roundEndTime = dayjs(roundEndTimeRaw + "Z");
+    return {
+        roundDurationMs,
+        roundEndTime,
+        roundStartTime: dayjs(roundEndTime).subtract(roundDurationMs),
+    };
 };
