@@ -31,7 +31,7 @@ export const CompletedRoundSegment = ({
     return (
         <Expander
             header={<Header roundIndex={roundIndex} winner={commonDelegate} />}
-            inactive
+            type="inactive"
         >
             <MembersGrid members={participantsMemberData}>
                 {(member) => {
