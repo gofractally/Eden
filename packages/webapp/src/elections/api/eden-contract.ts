@@ -173,11 +173,11 @@ export const getVoteData = getVoteDataRows;
 const getCommonDelegateAccountForGroupWithThisMember = (
     roundIndexRequested: number,
     member: EdenMember,
-    voteData: VoteData
+    voteData?: VoteData
 ) => {
     let electionRankIndex = member.election_rank; // if member table has been updated for this election
     // if the member has an open voteData record (i.e., still participating), get their election rank from that
-    if (voteData.member === member.account) {
+    if (voteData?.member === member.account) {
         electionRankIndex = voteData.round;
     }
 
@@ -194,10 +194,17 @@ const getCommonDelegateAccountForGroupWithThisMember = (
     return commonDelegate;
 };
 
+/**
+ * Get round participants and any delegate-elect for the given member's completed election round at the given round index during an ongoing election.
+ * @param {number} electionRoundIndex
+ * @param {EdenMember} member
+ * @param {VoteData} voteData - optional and not present for a member who is no longer participating
+ * @returns {ElectionCompletedRound} - participant EdenMembers and the delegate-elect, if any, for the member's completed election round
+ */
 export const getParticipantsInCompletedRound = async (
     electionRoundIndex: number,
     member: EdenMember,
-    voteData: VoteData
+    voteData?: VoteData
 ): Promise<ElectionCompletedRound> => {
     // TODO: Add no-consensus scenario to this function
     const commonDelegate = getCommonDelegateAccountForGroupWithThisMember(
@@ -319,20 +326,10 @@ const getMemberDataFromEdenMemberList = async (memberList: EdenMember[]) => {
 const getParticipantsOfCompletedRounds = async (myDelegation: EdenMember[]) => {
     const pCompletedRounds = myDelegation.map(
         async (member, electionRoundIndex) => {
-            const {
-                queryKey: queryKeyVote,
-                queryFn: queryFnVote,
-            } = queryVoteDataRow(member.account);
-            const voteData = await queryClient.fetchQuery(
-                queryKeyVote,
-                queryFnVote
-            );
-
             // get EdenMembers in group with this member
             const { queryKey, queryFn } = queryParticipantsInCompletedRound(
                 electionRoundIndex,
-                member,
-                voteData
+                member
             );
             const edenMembersInThisRound = await queryClient.fetchQuery(
                 queryKey,

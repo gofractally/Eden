@@ -119,7 +119,7 @@ export const queryParticipantsInCompletedRound = (
         electionRound,
     ],
     queryFn: () => {
-        if (!member || !voteData)
+        if (!member)
             throw new Error(
                 "useParticipantsInCompletedRound() requires a value for 'memberAccount'"
             );
