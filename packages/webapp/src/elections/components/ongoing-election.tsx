@@ -8,9 +8,10 @@ import {
     useCurrentMember,
     useOngoingElectionData,
     useCurrentElection,
+    useElectionStatus,
 } from "_app";
 import { Button, Container, Heading, Loader, Link, Text } from "_app/ui";
-import { ErrorLoadingElection, getRoundTimes } from "elections";
+import { Avatars, ErrorLoadingElection, getRoundTimes } from "elections";
 import {
     ActiveStateConfigType,
     Election,
@@ -22,6 +23,7 @@ import * as Ongoing from "./ongoing-election-components";
 // TODO: Make sure time zone changes during election are handled properly
 export const OngoingElection = ({ election }: { election: any }) => {
     const [awaitingNextRound, setAwaitingNextRound] = useState(false);
+    const { data: statusQueryResult } = useElectionStatus();
     const {
         data: globals,
         isLoading: isLoadingGlobals,
@@ -67,9 +69,16 @@ export const OngoingElection = ({ election }: { election: any }) => {
 
     return (
         <div className="divide-y">
-            <Container darkBg>
-                <Heading size={2}>Today's election</Heading>
-                <Text>Currently in progress</Text>
+            <Container darkBg className="flex flex-col sm:flex-row">
+                <div className="flex-1 flex flex-col justify-center">
+                    <Heading size={2}>Today's election</Heading>
+                    <Text>
+                        In progress
+                        {statusQueryResult &&
+                            ` - ${statusQueryResult.status.numElectionParticipants} participants`}
+                    </Text>
+                </div>
+                <Avatars showAll className="flex-1" />
             </Container>
             <Ongoing.SupportSegment />
 
