@@ -263,6 +263,7 @@ export const OngoingRoundSegment = ({
                     />
                     <Container>
                         <div className="flex flex-col xs:flex-row justify-center space-y-2 xs:space-y-0 xs:space-x-2">
+                            <VideoUploadButton roundIndex={roundIndex} />
                             <Button
                                 size="sm"
                                 disabled={
