@@ -185,7 +185,7 @@ const RoundVideoUploadList = () => {
                                 />
                             }
                             startExpanded
-                            darkBg={true}
+                            type="inactive"
                         >
                             <Container>
                                 <VideoSubmissionFormAndPreview

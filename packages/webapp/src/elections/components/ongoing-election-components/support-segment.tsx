@@ -4,6 +4,7 @@ import { Button, Container, Expander, Text } from "_app/ui";
 
 export const SupportSegment = () => (
     <Expander
+        type="info"
         header={
             <div className="flex justify-center items-center space-x-2">
                 <GoSync size={24} className="text-gray-400" />
