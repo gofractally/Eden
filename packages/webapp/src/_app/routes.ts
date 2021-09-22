@@ -15,6 +15,7 @@ export interface Route {
     exactPath?: boolean;
     hideNav?: boolean;
     requiresActiveCommunity?: boolean;
+    requiresCompletedElection?: boolean;
 }
 
 export const ROUTES: { [key: string]: Route } = {
@@ -39,6 +40,7 @@ export const ROUTES: { [key: string]: Route } = {
         label: "My Delegates",
         Icon: DelegationNav,
         requiresActiveCommunity: true,
+        requiresCompletedElection: true,
     },
     TREASURY: {
         href: "/treasury",
