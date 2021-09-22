@@ -85,7 +85,11 @@ export const VideoSubmissionFormAndPreview = ({
                 {(video || uploadedVideo) && <VideoClip url={videoUrl} />}
             </Form.LabeledSet>
             {uploadCompleteMessage ? (
-                <Text>{uploadCompleteMessage}</Text>
+                <div className="text-center">
+                    <Text size="lg" type="success">
+                        {uploadCompleteMessage}
+                    </Text>
+                </div>
             ) : (
                 <div className="flex justify-evenly items-center">
                     <div>

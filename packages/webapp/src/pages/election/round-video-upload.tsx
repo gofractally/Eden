@@ -70,13 +70,11 @@ export const RoundVideoUploadPage = () => {
     if (isLoading || !currentElection) return <LoaderSection />;
     if (isError) return <ErrorLoadingElection />;
 
-    const renderBanner = true; // TODO: get end time for video submission
-
     return (
-        <SideNavLayout title="Election-video upload service">
+        <SideNavLayout title="Election video upload service">
             <div className="divide-y">
                 <Container>
-                    <Heading size={1}>Election-video upload service</Heading>
+                    <Heading size={1}>Election video upload service</Heading>
                 </Container>
                 <Container className="space-y-6 pb-5">
                     {isElectionComplete ? (
@@ -91,7 +89,7 @@ export const RoundVideoUploadPage = () => {
                                 require many minutes to upload completely. Do
                                 not close this tab during the upload. A
                                 confirmation will be displayed when your upload
-                                is complete, along with a preview of your video.
+                                is complete.
                             </Text>
                             <Text>
                                 Be patient, and remember you have 48 hours from
@@ -140,19 +138,21 @@ const RoundVideoUploadList = ({ election }: { election: CurrentElection }) => {
     const [uploadCompleteMessage, setUploadCompleteMessage] = useState("");
 
     const isLoading =
-        isLoadingGlobals && isLoadingElection && isLoadingOngoingElectionData;
+        isLoadingGlobals || isLoadingElection || isLoadingOngoingElectionData;
     const isError =
-        isErrorGlobals && isErrorElection && isErrorOngoingElectionData;
+        isErrorGlobals || isErrorElection || isErrorOngoingElectionData;
 
-    if (isLoading || !ongoingElectionData) {
+    if (isLoading) {
         return <LoaderSection />;
     } else if (isError) {
         return <ErrorLoadingElection />;
     }
 
     if (
-        ongoingElectionData.completedRounds.length === 0 &&
-        ongoingElectionData.ongoingRound.participantsMemberData.length === 0
+        !ongoingElectionData ||
+        (ongoingElectionData.completedRounds.length === 0 &&
+            ongoingElectionData.ongoingRound.participantsMemberData.length ===
+                0)
     )
         return (
             <Text className="p-8">
@@ -184,7 +184,7 @@ const RoundVideoUploadList = ({ election }: { election: CurrentElection }) => {
             console.info(transaction);
             setVideoSubmissionPhase("signing");
             const signedTrx = await ualAccount.signTransaction(transaction, {
-                broadcast: true,
+                broadcast: false,
                 expireSeconds: 1200,
             });
             console.info("electvideo trx", signedTrx);
