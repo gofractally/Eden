@@ -1,14 +1,15 @@
 import { useState } from "react";
 import { RiVideoUploadLine } from "react-icons/ri";
 
-import { Button, Modal, Text } from "_app";
+import { Button, ButtonType, Modal, Text } from "_app";
 import { ROUTES } from "_app/routes";
 
 interface Props {
+    buttonType: ButtonType;
     roundIndex: number;
 }
 
-export const VideoUploadButton = ({ roundIndex }: Props) => {
+export const VideoUploadButton = ({ buttonType, roundIndex }: Props) => {
     const [isConfirmationModalOpen, setIsConfirmationModalOpen] = useState(
         false
     );
@@ -24,7 +25,11 @@ export const VideoUploadButton = ({ roundIndex }: Props) => {
 
     return (
         <>
-            <Button size="sm" onClick={() => setIsConfirmationModalOpen(true)}>
+            <Button
+                size="sm"
+                type={buttonType}
+                onClick={() => setIsConfirmationModalOpen(true)}
+            >
                 <RiVideoUploadLine size={18} className="mr-2" />
                 Upload round {roundIndex + 1} recording
             </Button>

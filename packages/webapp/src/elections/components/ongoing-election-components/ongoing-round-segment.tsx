@@ -223,89 +223,128 @@ export const OngoingRoundSegment = ({
             startExpanded
             locked
         >
-            <Container className="space-y-4 -mt-5">
-                {[RoundStage.PreMeeting, RoundStage.Meeting].includes(
-                    stage
-                ) && (
-                    <MeetingLink
-                        stage={stage}
-                        roundIndex={roundIndex}
-                        meetingStartTime={meetingStartTime}
-                        meetingDurationMs={meetingDurationMs}
-                        electionConfig={electionConfig!}
-                    />
-                )}
-                <section>
-                    <Heading size={3}>Meeting group members</Heading>
-                    <Text>
-                        {stage === RoundStage.PreMeeting
-                            ? "Make sure you have your meeting link ready and stand by. You'll be on a video call with the following Eden members momentarily."
-                            : stage === RoundStage.Meeting
-                            ? "Meet with your group. Align on a leader >2/3 majority. Select your leader and submit your vote below."
-                            : stage === RoundStage.Complete
-                            ? "If you're the delegate, stand by. The next round will start momentarily."
-                            : "This round is finalizing. Please submit any outstanding votes now. You will be able to come back later to upload election videos if your video isn't ready yet."}
-                    </Text>
-                </section>
-                {voteData && isVotingOpen && (
-                    <Consensometer voteData={voteData} />
-                )}
-            </Container>
-            {voteData && isVotingOpen ? (
-                <>
-                    <VotingRoundParticipants
-                        members={members}
-                        voteData={voteData}
-                        selectedMember={selectedMember}
-                        onSelectMember={(m) => setSelected(m)}
-                        userVotingFor={userVotingFor?.account}
-                    />
-                    <Container>
-                        <div className="flex flex-col xs:flex-row justify-center space-y-2 xs:space-y-0 xs:space-x-2">
-                            <VideoUploadButton roundIndex={roundIndex} />
-                            <Button
-                                size="sm"
-                                disabled={
-                                    !selectedMember ||
-                                    isSubmittingVote ||
-                                    userVotingFor?.account ===
-                                        selectedMember.account
-                                }
-                                onClick={onSubmitVote}
-                                isLoading={isSubmittingVote}
-                            >
-                                {!isSubmittingVote && (
-                                    <BiCheck size={21} className="-mt-1 mr-1" />
-                                )}
-                                {isSubmittingVote
-                                    ? "Submitting vote"
-                                    : userVotingFor
-                                    ? "Change vote"
-                                    : "Submit vote"}
-                            </Button>
+            <div className="flex flex-col lg:flex-row-reverse">
+                <Container className="flex flex-col space-y-4 -mt-5 lg:flex-1">
+                    <section className="lg:order-3 lg:my-4 space-y-4">
+                        {[RoundStage.PreMeeting, RoundStage.Meeting].includes(
+                            stage
+                        ) && (
+                            <div>
+                                <MeetingLink
+                                    stage={stage}
+                                    roundIndex={roundIndex}
+                                    meetingStartTime={meetingStartTime}
+                                    meetingDurationMs={meetingDurationMs}
+                                    electionConfig={electionConfig!}
+                                />
+                            </div>
+                        )}
+                        <div className="hidden lg:block">
+                            <VideoUploadButton
+                                roundIndex={roundIndex}
+                                buttonType="secondary"
+                            />
                         </div>
-                    </Container>
-                </>
-            ) : (
-                <MembersGrid members={members}>
-                    {(member) => (
-                        <ElectionParticipantChip
-                            key={`round-${roundIndex + 1}-participant-${
-                                member.account
-                            }`}
-                            member={member}
-                        />
-                    )}
-                </MembersGrid>
-            )}
-            {stage === RoundStage.Complete && (
-                <Container>
-                    <VideoUploadButton roundIndex={roundIndex} />
+                    </section>
+                    <section className="lg:order-1">
+                        <Heading size={3}>Meeting group members</Heading>
+                        <Text>
+                            {stage === RoundStage.PreMeeting
+                                ? "Make sure you have your meeting link ready and stand by. You'll be on a video call with the following Eden members momentarily."
+                                : stage === RoundStage.Meeting
+                                ? "Meet with your group. Align on a leader >2/3 majority. Select your leader and submit your vote below."
+                                : stage === RoundStage.Complete
+                                ? "If you're the delegate elect, stand by. The next round will start momentarily."
+                                : "This round is finalizing. Please submit any outstanding votes now. You will be able to come back later to upload election videos if your video isn't ready yet."}
+                        </Text>
+                    </section>
+                    <section className="lg:order-2">
+                        {voteData && isVotingOpen && (
+                            <Consensometer voteData={voteData} />
+                        )}
+                    </section>
                 </Container>
-            )}
+                <section className="lg:flex-1">
+                    {voteData && isVotingOpen ? (
+                        <>
+                            <VotingRoundParticipants
+                                members={members}
+                                voteData={voteData}
+                                selectedMember={selectedMember}
+                                onSelectMember={(m) => setSelected(m)}
+                                userVotingFor={userVotingFor?.account}
+                            />
+                            <Container>
+                                <div className="flex flex-col sm:flex-row justify-around items-center space-y-3 sm:space-y-0 md:px-16">
+                                    <div className="hidden sm:block lg:hidden">
+                                        <VideoUploadButton
+                                            buttonType="link"
+                                            roundIndex={roundIndex}
+                                        />
+                                    </div>
+                                    <VoteButton
+                                        selectedMember={selectedMember}
+                                        isSubmittingVote={isSubmittingVote}
+                                        userVotingFor={userVotingFor}
+                                        onSubmitVote={onSubmitVote}
+                                    />
+                                    <div className="sm:hidden">
+                                        <VideoUploadButton
+                                            buttonType="link"
+                                            roundIndex={roundIndex}
+                                        />
+                                    </div>
+                                </div>
+                            </Container>
+                        </>
+                    ) : (
+                        <div className="grid grid-cols-1 gap-px">
+                            {members?.map((member) => (
+                                <ElectionParticipantChip
+                                    key={`round-${roundIndex + 1}-participant-${
+                                        member.account
+                                    }`}
+                                    member={member}
+                                />
+                            ))}
+                        </div>
+                    )}
+                </section>
+            </div>
         </Expander>
     );
 };
+
+interface VoteButtonProps {
+    selectedMember: MemberData | null;
+    isSubmittingVote: boolean;
+    userVotingFor?: MemberData;
+    onSubmitVote: () => Promise<void>;
+}
+
+const VoteButton = ({
+    selectedMember,
+    isSubmittingVote,
+    userVotingFor,
+    onSubmitVote,
+}: VoteButtonProps) => (
+    <Button
+        disabled={
+            !selectedMember ||
+            isSubmittingVote ||
+            userVotingFor?.account === selectedMember.account
+        }
+        onClick={onSubmitVote}
+        isLoading={isSubmittingVote}
+    >
+        {!isSubmittingVote && <BiCheck size={21} className="-mt-1 mr-1" />}
+        {isSubmittingVote
+            ? "Submitting vote"
+            : userVotingFor
+            ? "Change vote"
+            : "Submit vote"}
+    </Button>
+);
 
 interface HeaderProps {
     stage: RoundStage;
