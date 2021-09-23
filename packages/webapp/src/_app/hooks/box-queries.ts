@@ -93,14 +93,12 @@ export const useCurrentMemberElectionVotingData = (
             : ""
     );
 
-    let data = query.data;
-    if (data) {
+    if (query.data) {
         const lastElection =
-            data.members.edges?.[0]?.node.elections?.edges?.[0].node;
-        console.info(lastElection);
+            query.data.members.edges?.[0]?.node.elections?.edges?.[0].node;
         if (lastElection) {
-            data.electionTime = dayjs(lastElection.time);
-            data.votes =
+            query.data.electionTime = dayjs(lastElection.time);
+            query.data.votes =
                 lastElection.votes?.edges?.map((voteEdge: any) => ({
                     roundIndex: voteEdge.node.group.round.round,
                     votingBegin: dayjs(voteEdge.node.group.round.votingBegin),
@@ -126,5 +124,5 @@ export const useCurrentMemberElectionVotingData = (
         }
     }
 
-    return { ...query, data };
+    return query;
 };
