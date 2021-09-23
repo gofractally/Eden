@@ -36,8 +36,8 @@ const VotingRoundParticipants = ({
 
     return (
         <Flipper flipKey={sortMembersByVotes}>
-            <MembersGrid members={sortMembersByVotes}>
-                {(member, index) => {
+            <div className="grid grid-cols-1 gap-px">
+                {sortMembersByVotes.map((member, index) => {
                     const voteInfo = voteData.find(
                         (vd) => vd.member === member.account
                     );
@@ -70,8 +70,8 @@ const VotingRoundParticipants = ({
                             />
                         </Flipped>
                     );
-                }}
-            </MembersGrid>
+                })}
+            </div>
         </Flipper>
     );
 };

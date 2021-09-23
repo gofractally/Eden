@@ -53,7 +53,7 @@ export const VotingMemberChip = ({
                     )}
                     <p className="flex group-hover:underline">
                         {member.name}
-                        <OpensInNewTabIcon size={8} className="mt-1" />
+                        <OpensInNewTabIcon className="mt-1" />
                     </p>
                     {votingFor && (
                         <p className="text-xs text-gray-500">
@@ -172,7 +172,7 @@ export const ElectionParticipantChip = ({
                     </p>
                     <p className="flex group-hover:underline">
                         {member.name}
-                        <OpensInNewTabIcon size={8} className="mt-1" />
+                        <OpensInNewTabIcon className="mt-1" />
                     </p>
                     {delegateLevel && (
                         <p className="text-xs text-gray-500 font-light">
