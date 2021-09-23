@@ -1,4 +1,4 @@
-import { useRouter } from "next/router";
+import React from "react";
 import { FaCheckSquare, FaPlayCircle, FaRegSquare } from "react-icons/fa";
 
 import {
@@ -8,7 +8,7 @@ import {
     useHeadDelegate,
 } from "_app";
 import { ROUTES } from "_app/routes";
-import { GenericMemberChip } from "_app/ui";
+import { GenericMemberChip, OpensInNewTabIcon } from "_app/ui";
 import { MemberData } from "members/interfaces";
 
 interface VotingMemberChipProps {
@@ -33,11 +33,9 @@ export const VotingMemberChip = ({
     electionVideoCid,
     ...containerProps
 }: VotingMemberChipProps) => {
-    const router = useRouter();
-
     const goToMemberPage = (e: React.MouseEvent) => {
         e.stopPropagation();
-        router.push(`${ROUTES.MEMBERS.href}/${member.account}`);
+        window.open(`${ROUTES.MEMBERS.href}/${member.account}`, "_blank");
     };
 
     return (
@@ -53,7 +51,10 @@ export const VotingMemberChip = ({
                             Votes Received: {votesReceived}
                         </p>
                     )}
-                    <p className="group-hover:underline">{member.name}</p>
+                    <p className="flex group-hover:underline">
+                        {member.name}
+                        <OpensInNewTabIcon size={8} className="mt-1" />
+                    </p>
                     {votingFor && (
                         <p className="text-xs text-gray-500">
                             Voting for {votingFor}
@@ -140,12 +141,10 @@ export const ElectionParticipantChip = ({
     isDelegate = false,
     electionVideoCid,
 }: ElectionParticipantChipProps) => {
-    const router = useRouter();
-
     const goToMemberPage = (e: React.MouseEvent) => {
         if (!member) return;
         e.stopPropagation();
-        router.push(`${ROUTES.MEMBERS.href}/${member.account}`);
+        window.open(`${ROUTES.MEMBERS.href}/${member.account}`, "_blank");
     };
 
     if (!member) {
@@ -171,7 +170,10 @@ export const ElectionParticipantChip = ({
                     <p className="text-xs text-gray-500 font-light">
                         @{member.account}
                     </p>
-                    <p className="group-hover:underline">{member.name}</p>
+                    <p className="flex group-hover:underline">
+                        {member.name}
+                        <OpensInNewTabIcon size={8} className="mt-1" />
+                    </p>
                     {delegateLevel && (
                         <p className="text-xs text-gray-500 font-light">
                             {delegateLevel}
