@@ -201,7 +201,7 @@ export const OngoingRoundSegment = ({
             );
         } catch (error) {
             console.error(error);
-            onError(error);
+            onError(error as Error);
         }
         setIsSubmittingVote(false);
     };
@@ -223,7 +223,7 @@ export const OngoingRoundSegment = ({
             startExpanded
             locked
         >
-            <Container className="space-y-2">
+            <Container className="space-y-4 -mt-5">
                 {[RoundStage.PreMeeting, RoundStage.Meeting].includes(
                     stage
                 ) && (
@@ -235,25 +235,24 @@ export const OngoingRoundSegment = ({
                         electionConfig={electionConfig!}
                     />
                 )}
-                <Heading size={3}>Meeting group members</Heading>
-                <Text>
-                    {stage === RoundStage.PreMeeting
-                        ? "Make sure you have your meeting link ready and stand by. You'll be on a video call with the following Eden members momentarily."
-                        : stage === RoundStage.Meeting
-                        ? "Meet with your group. Align on a leader >2/3 majority. Select your leader and submit your vote below."
-                        : stage === RoundStage.Complete
-                        ? "If you're the delegate, stand by. The next round will start momentarily."
-                        : "This round is finalizing. Please submit any outstanding votes now. You will be able to come back later to upload election videos if your video isn't ready yet."}
-                </Text>
+                <section>
+                    <Heading size={3}>Meeting group members</Heading>
+                    <Text>
+                        {stage === RoundStage.PreMeeting
+                            ? "Make sure you have your meeting link ready and stand by. You'll be on a video call with the following Eden members momentarily."
+                            : stage === RoundStage.Meeting
+                            ? "Meet with your group. Align on a leader >2/3 majority. Select your leader and submit your vote below."
+                            : stage === RoundStage.Complete
+                            ? "If you're the delegate, stand by. The next round will start momentarily."
+                            : "This round is finalizing. Please submit any outstanding votes now. You will be able to come back later to upload election videos if your video isn't ready yet."}
+                    </Text>
+                </section>
+                {voteData && isVotingOpen && (
+                    <Consensometer voteData={voteData} />
+                )}
             </Container>
             {voteData && isVotingOpen ? (
                 <>
-                    <Container className="flex justify-between">
-                        <Heading size={4} className="inline-block">
-                            Consensus
-                        </Heading>
-                        <Consensometer voteData={voteData} />
-                    </Container>
                     <VotingRoundParticipants
                         members={members}
                         voteData={voteData}
