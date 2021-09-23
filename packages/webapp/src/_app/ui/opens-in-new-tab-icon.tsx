@@ -1,13 +1,10 @@
-import { FaExternalLinkAlt } from "react-icons/fa";
+import { FiArrowUpRight } from "react-icons/fi";
 
 interface Props {
     className?: string;
     size?: number;
 }
 
-export const OpensInNewTabIcon = ({ className = "", size = 10 }: Props) => (
-    <FaExternalLinkAlt
-        size={size}
-        className={`ml-1 text-gray-500 self-start ${className}`}
-    />
+export const OpensInNewTabIcon = ({ className = "", size = 12 }: Props) => (
+    <FiArrowUpRight size={size} className={`text-gray-600 ${className}`} />
 );
