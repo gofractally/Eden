@@ -34,7 +34,9 @@ import { MemberAccountData } from "members";
 
 export const RoundVideoUploadPage = () => {
     const [isElectionComplete, setIsElectionComplete] = useState(false);
-    const [uploadLimitTime, setUploadLimitTime] = useState(dayjs());
+    const [uploadLimitTime, setUploadLimitTime] = useState(
+        dayjs().add(1, "day") // set default limit in the future while election data is being loaded
+    );
 
     const {
         data: currentElection,
