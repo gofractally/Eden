@@ -239,11 +239,6 @@ export default class DfuseReceiver {
                 this.numSaved = this.jsonTransactions.length;
             } catch (e) {}
 
-            if (this.jsonTransactions.length)
-                this.variables.cursor = this.jsonTransactions[
-                    this.jsonTransactions.length - 1
-                ].cursor;
-
             const begin = performance.now();
             logger.info("pushing existing blocks...");
             for (let trx of this.jsonTransactions) this.pushTrx(trx);
@@ -269,6 +264,10 @@ export default class DfuseReceiver {
                     "Don't have an existing dfuse cursor and DFUSE_FIRST_BLOCK isn't greater than 1; " +
                         "this may take a while before the first result comes..."
                 );
+            if (this.jsonTransactions.length)
+                this.variables.cursor = this.jsonTransactions[
+                    this.jsonTransactions.length - 1
+                ].cursor;
             this.stream = await this.dfuseClient.graphql(
                 query,
                 this.onMessage.bind(this),
