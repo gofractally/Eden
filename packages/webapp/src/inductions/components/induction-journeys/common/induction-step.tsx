@@ -107,8 +107,7 @@ export const Steps = ({
         <section className="text-gray-600 body-font">
             <div className="container p-5 mx-auto flex flex-wrap">
                 <div className="flex flex-wrap">
-                    {/* z-index of -1 ensures relative positioned children do not appear over profile popover. */}
-                    <div className="md:pr-10 md:py-6" style={{ zIndex: -1 }}>
+                    <div className="md:pr-10 md:py-6">
                         {steps.map((s, i) => {
                             return (
                                 <SingleStep
