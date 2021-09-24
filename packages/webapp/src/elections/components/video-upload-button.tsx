@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { RiVideoUploadLine } from "react-icons/ri";
 
-import { Button, ButtonType, Modal, Text } from "_app";
+import { Button, ButtonType, Modal, OpensInNewTabIcon, Text } from "_app";
 import { ROUTES } from "_app/config";
 
 interface Props {
@@ -32,6 +32,7 @@ export const VideoUploadButton = ({ buttonType, roundIndex }: Props) => {
             >
                 <RiVideoUploadLine size={18} className="mr-2" />
                 Upload round {roundIndex + 1} recording
+                <OpensInNewTabIcon className="mb-1.5" />
             </Button>
             <Modal
                 isOpen={isConfirmationModalOpen}

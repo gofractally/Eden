@@ -55,7 +55,7 @@ export const InductionEndorsementForm = ({
                 queryInductionWithEndorsements(induction.id).queryKey
             );
         } catch (error) {
-            onError(error, "Unable to submit endorsement");
+            onError(error as Error, "Unable to submit endorsement");
             setLoading(false);
         }
     };
@@ -110,7 +110,7 @@ export const InductionEndorsementForm = ({
                         >
                             <FaPlayCircle className="mr-2" />
                             Review video
-                            <OpensInNewTabIcon />
+                            <OpensInNewTabIcon className="mb-1.5" />
                         </Button>
                         <Button
                             type="link"
