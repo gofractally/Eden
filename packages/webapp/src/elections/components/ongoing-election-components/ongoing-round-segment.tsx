@@ -13,7 +13,6 @@ import {
     useVoteData,
 } from "_app/hooks/queries";
 import { Button, Container, Expander, Heading, Loader, Text } from "_app/ui";
-import { MembersGrid } from "members";
 import { MemberData } from "members/interfaces";
 import {
     ErrorLoadingElection,
@@ -243,10 +242,7 @@ export const OngoingRoundSegment = ({
                             stage
                         ) && (
                             <div className="hidden lg:block">
-                                <VideoUploadButton
-                                    roundIndex={roundIndex}
-                                    buttonType="secondary"
-                                />
+                                <VideoUploadButton buttonType="secondary" />
                             </div>
                         )}
                     </section>
@@ -281,10 +277,7 @@ export const OngoingRoundSegment = ({
                             <Container>
                                 <div className="flex flex-col sm:flex-row justify-around items-center space-y-3 sm:space-y-0 md:px-16">
                                     <div className="hidden sm:block lg:hidden">
-                                        <VideoUploadButton
-                                            buttonType="link"
-                                            roundIndex={roundIndex}
-                                        />
+                                        <VideoUploadButton buttonType="link" />
                                     </div>
                                     <VoteButton
                                         selectedMember={selectedMember}
@@ -293,10 +286,7 @@ export const OngoingRoundSegment = ({
                                         onSubmitVote={onSubmitVote}
                                     />
                                     <div className="sm:hidden">
-                                        <VideoUploadButton
-                                            buttonType="link"
-                                            roundIndex={roundIndex}
-                                        />
+                                        <VideoUploadButton buttonType="link" />
                                     </div>
                                 </div>
                             </Container>
