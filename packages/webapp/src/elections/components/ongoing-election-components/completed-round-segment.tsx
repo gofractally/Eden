@@ -41,7 +41,6 @@ export const CompletedRoundSegment = ({
                                 key={`round-${roundIndex + 1}-winner`}
                                 member={member}
                                 delegateLevel="Delegate elect"
-                                electionVideoCid="QmeKPeuSai8sbEfvbuVXzQUzYRsntL3KSj5Xok7eRiX5Fp/edenTest2ElectionRoom12.mp4"
                             />
                         );
                     }
