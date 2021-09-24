@@ -6,5 +6,5 @@ interface Props {
 }
 
 export const OpensInNewTabIcon = ({ className = "", size = 12 }: Props) => (
-    <FiArrowUpRight size={size} className={`text-gray-600 ${className}`} />
+    <FiArrowUpRight size={size} className={className} />
 );
