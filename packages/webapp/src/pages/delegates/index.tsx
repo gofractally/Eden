@@ -1,110 +1,141 @@
+import React from "react";
 import { useQuery } from "react-query";
-import { BsArrowDown } from "react-icons/bs";
 import dayjs from "dayjs";
+import { CgArrowDown } from "react-icons/cg";
 
 import {
-    Container,
-    Heading,
     queryMembers,
     SideNavLayout,
-    Text,
     useCurrentElection,
-    useCurrentMember,
     useElectionState,
     useMemberDataFromEdenMembers,
     useMemberListByAccountNames,
     useMemberStats,
     useMyDelegation,
-    useUALAccount,
 } from "_app";
+import { Container, Heading, LoadingContainer, Text } from "_app/ui";
 import { DelegateChip } from "elections";
-import { EdenMember, MemberData } from "members/interfaces";
 import { ElectionStatus } from "elections/interfaces";
+import { MemberGateContainer } from "members";
+import { EdenMember, MemberData } from "members/interfaces";
 
-interface Props {
-    delegatesPage: number;
-}
-
-export const DelegatesPage = (props: Props) => {
-    const [activeUser] = useUALAccount();
-    const currentMember = useCurrentMember();
-
-    const { data: currentElection } = useCurrentElection();
+export const DelegatesPage = () => {
+    const {
+        data: currentElection,
+        isLoading: isLoadingCurrentElection,
+        isError: isErrorCurrentElection,
+    } = useCurrentElection();
     const isElectionInProgress =
         currentElection?.electionState !== ElectionStatus.Registration;
 
-    const { data: myDelegation } = useMyDelegation({
+    const {
+        data: myDelegation,
+        isLoading: isLoadingMyDelegation,
+        isError: isErrorMyDelegation,
+    } = useMyDelegation({
         queryOptions: { enabled: !isElectionInProgress },
     });
 
-    const { data: electionState } = useElectionState();
+    const {
+        data: electionState,
+        isLoading: isLoadingElectionState,
+        isError: isErrorElectionState,
+    } = useElectionState();
 
-    const { data: myDelegationMemberData } = useMemberDataFromEdenMembers(
-        myDelegation
-    );
+    const {
+        data: myDelegationMemberData,
+        isLoading: isLoadingMemberData,
+        isError: isErrorMemberData,
+    } = useMemberDataFromEdenMembers(myDelegation);
 
-    if (isElectionInProgress) {
-        return (
-            <SideNavLayout title="My Delegation">
-                <Container>
-                    <Heading size={1}>Election in Progress</Heading>
-                    <Heading size={2}>
-                        Come back after the election is complete to see your
-                        delegation.
-                    </Heading>
-                </Container>
-            </SideNavLayout>
-        );
-    }
-    if (!activeUser)
-        return (
-            <SideNavLayout>
-                <div>Must be logged in</div>
-            </SideNavLayout>
-        );
-    if (!currentMember)
-        return (
-            <SideNavLayout>
-                <div>Not an Eden Member</div>
-            </SideNavLayout>
-        );
+    const isLoading =
+        isLoadingCurrentElection ||
+        isLoadingMyDelegation ||
+        isLoadingElectionState ||
+        isLoadingMemberData ||
+        !myDelegationMemberData;
 
-    // TODO: Handle the no-election-has-ever-happened scenario (just after genesis induction is complete)
-    if (!myDelegation || !myDelegationMemberData)
-        return (
-            <SideNavLayout>
-                <Container className="flex flex-col justify-center items-center py-16 text-center">
-                    <Heading size={4}>No Delegation to display</Heading>
-                    <Text>
-                        Your delegation will appear here after the first
-                        election completes.
-                    </Text>
-                </Container>
-            </SideNavLayout>
-        );
+    const isError =
+        isErrorCurrentElection ||
+        isErrorMyDelegation ||
+        isErrorElectionState ||
+        isErrorMemberData;
 
     return (
         <SideNavLayout title="My Delegation">
             <div className="divide-y">
                 <Container>
                     <Heading size={1}>My Delegation</Heading>
-                    <Text size="sm">
-                        Elected{" "}
-                        {dayjs(electionState?.last_election_time).format("LL")}
-                    </Text>
+                    {!isLoading &&
+                        !isError &&
+                        !isElectionInProgress &&
+                        myDelegation && (
+                            <Text size="sm">
+                                Elected{" "}
+                                {dayjs(
+                                    electionState?.last_election_time
+                                ).format("LL")}
+                            </Text>
+                        )}
                 </Container>
-                <Delegates
-                    myDelegation={myDelegation}
-                    members={myDelegationMemberData}
-                />
+                {isLoading ? (
+                    <LoadingContainer />
+                ) : isError ? (
+                    <ErrorLoadingDelegation />
+                ) : isElectionInProgress ? (
+                    <ElectionInProgress />
+                ) : !myDelegation || !myDelegationMemberData ? (
+                    <NoDelegationToDisplay />
+                ) : (
+                    <MemberGateContainer>
+                        <Delegates
+                            myDelegation={myDelegation}
+                            members={myDelegationMemberData}
+                        />
+                    </MemberGateContainer>
+                )}
             </div>
         </SideNavLayout>
     );
 };
 
+const ErrorLoadingDelegation = () => (
+    <Container className="flex flex-col justify-center items-center py-16 text-center">
+        <Heading size={4}>Error loading delegation information</Heading>
+        <Text>Please reload the page to try again.</Text>
+    </Container>
+);
+
+const ElectionInProgress = () => (
+    <Container className="flex flex-col justify-center items-center py-16 text-center">
+        <Heading size={4}>Election in progress</Heading>
+        <Text>
+            Come back after the election is complete to see your delegation.
+        </Text>
+    </Container>
+);
+
+const NoDelegationToDisplay = () => (
+    <Container className="flex flex-col justify-center items-center py-16 text-center">
+        <Heading size={4}>No delegation to display</Heading>
+        <MemberGateContainer>
+            <Text>
+                Your delegation will appear here after the first election
+                completes.
+            </Text>
+        </MemberGateContainer>
+    </Container>
+);
+
 const MyDelegationArrow = () => (
+    <Container className="py-1.5 bg-gray-100">
+        <CgArrowDown size={28} className="ml-3.5 text-gray-400" />
+    </Container>
+);
+
+const LevelHeading = ({ children }: { children: React.ReactNode }) => (
     <Container className="py-2.5">
-        <BsArrowDown size={28} className="ml-3.5 text-gray-400" />
+        <Heading size={2}>{children}</Heading>
     </Container>
 );
 
@@ -115,32 +146,46 @@ const Delegates = ({
     members: MemberData[];
     myDelegation: EdenMember[];
 }) => {
-    const { data: membersStats, isLoading } = useMemberStats();
-    const { data: loggedInMember } = useCurrentMember();
+    const { data: membersStats, isLoading, isError } = useMemberStats();
 
-    if (isLoading) return <div>Loading...</div>;
-    if (!loggedInMember || !membersStats)
-        return <div>Error fetching member data...</div>;
+    if (isLoading) return <LoadingContainer />;
+    if (isError || !membersStats) return <ErrorLoadingDelegation />;
 
     const heightOfDelegationWithoutChiefs = membersStats.ranks.length - 2;
     const diff = heightOfDelegationWithoutChiefs - myDelegation.length;
     const numLevelsWithNoRepresentation = diff > 0 ? diff : 0;
 
+    // TODO: Test with multiple levels
+    // TODO: Test with no representation at some levels
     return (
         <>
             {myDelegation
                 .slice(0, heightOfDelegationWithoutChiefs)
                 .map((delegate, index) => (
-                    <div
-                        className="-mt-px"
-                        key={`my-delegation-${index}-${delegate.account}`}
-                    >
-                        <DelegateChip
-                            member={members.find(
-                                (d) => d.account === delegate.account
-                            )}
-                            level={index + 1}
-                        />
+                    <div key={`my-delegation-${index}-${delegate.account}`}>
+                        {index === 0 ? (
+                            <DelegateChip
+                                member={members.find(
+                                    (d) => d.account === delegate.account
+                                )}
+                                level={index + 1}
+                            />
+                        ) : (
+                            <>
+                                <LevelHeading>
+                                    Delegate Level {index}
+                                </LevelHeading>
+                                <div className="-mt-px">
+                                    <DelegateChip
+                                        member={members.find(
+                                            (d) =>
+                                                d.account === delegate.account
+                                        )}
+                                        level={index + 1}
+                                    />
+                                </div>
+                            </>
+                        )}
                         <MyDelegationArrow />
                     </div>
                 ))}
@@ -156,8 +201,16 @@ const Delegates = ({
 };
 
 const Chiefs = () => {
-    const { data: electionState } = useElectionState();
-    const { data: membersStats } = useMemberStats();
+    const {
+        data: electionState,
+        isLoading: isLoadingElectionState,
+        isError: isErrorElectionState,
+    } = useElectionState();
+    const {
+        data: membersStats,
+        isLoading: isLoadingMemberStats,
+        isError: isErrorMemberStats,
+    } = useMemberStats();
 
     const allChiefAccountNames = electionState?.board || [];
     // Get EdenMember data, unwrap the QueryResults[] into an EdenMember[], and filter out non-existent members
@@ -169,16 +222,36 @@ const Chiefs = () => {
         (member) => member!.nft_template_id
     );
 
-    const { data: memberData } = useQuery({
+    const {
+        data: memberData,
+        isLoading: isLoadingMemberData,
+        isError: isErrorMemberData,
+    } = useQuery({
         ...queryMembers(1, allChiefAccountNames.length, nftTemplateIds),
         staleTime: Infinity,
         enabled: Boolean(chiefsAsMembers?.length),
     });
 
-    // TODO: Handle the no-election-has-ever-happened scenario (just after genesis induction is complete)
-    if (!electionState || !memberData || !membersStats)
-        return <div>fetching data</div>;
+    const isLoading =
+        isLoadingElectionState || isLoadingMemberStats || isLoadingMemberData;
 
+    const isError =
+        isErrorElectionState ||
+        isErrorMemberStats ||
+        isErrorMemberData ||
+        !electionState ||
+        !memberData ||
+        !membersStats;
+
+    if (isLoading) {
+        return <LoadingContainer />;
+    }
+
+    if (isError) {
+        return <ErrorLoadingDelegation />;
+    }
+
+    // TODO: Handle the no-election-has-ever-happened scenario (just after genesis induction is complete)
     const headChiefAsEdenMember = chiefsAsMembers!.find(
         (d) => d?.account === electionState.lead_representative
     );
@@ -186,14 +259,13 @@ const Chiefs = () => {
         (d) => d?.account === electionState.lead_representative
     );
 
-    if (!headChiefAsEdenMember || !headChiefAsMemberData)
-        return <div>Error fetching data</div>;
+    if (!headChiefAsEdenMember || !headChiefAsMemberData) {
+        return <ErrorLoadingDelegation />;
+    }
 
     return (
-        <>
-            <Container>
-                <Text>Chief Delegates</Text>
-            </Container>
+        <div className="mb-16">
+            <LevelHeading>Chief Delegates</LevelHeading>
             {chiefsAsMembers.map((delegate) => {
                 if (!delegate) return null;
                 return (
@@ -203,19 +275,19 @@ const Chiefs = () => {
                                 (d) => d.account === delegate.account
                             )}
                             level={membersStats.ranks.length - 1}
+                            delegateTitle=""
                         />
                     </div>
                 );
             })}
             <MyDelegationArrow />
-            <Container>
-                <Text>Head Chief</Text>
-            </Container>
+            <LevelHeading>Head Chief</LevelHeading>
             <DelegateChip
                 member={headChiefAsMemberData}
                 level={headChiefAsEdenMember.election_rank + 1}
+                delegateTitle=""
             />
-        </>
+        </div>
     );
 };
 
