@@ -239,12 +239,16 @@ export const OngoingRoundSegment = ({
                                 />
                             </div>
                         )}
-                        <div className="hidden lg:block">
-                            <VideoUploadButton
-                                roundIndex={roundIndex}
-                                buttonType="secondary"
-                            />
-                        </div>
+                        {[RoundStage.Meeting, RoundStage.PostMeeting].includes(
+                            stage
+                        ) && (
+                            <div className="hidden lg:block">
+                                <VideoUploadButton
+                                    roundIndex={roundIndex}
+                                    buttonType="secondary"
+                                />
+                            </div>
+                        )}
                     </section>
                     <section className="lg:order-1">
                         <Heading size={3}>Meeting group members</Heading>
