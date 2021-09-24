@@ -44,8 +44,6 @@ const LowerDelegates = ({ members, myDelegation }: Props) => {
     const diff = heightOfDelegationWithoutChiefs - myDelegation.length;
     const numLevelsWithNoRepresentation = diff > 0 ? diff : 0;
 
-    // TODO: Test with multiple levels
-    // TODO: Test with no representation at some levels
     return (
         <>
             {myDelegation
