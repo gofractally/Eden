@@ -22,10 +22,9 @@ export const GenericMemberChip = ({
     ...containerProps
 }: Props) => (
     <div {...containerProps}>
-        {/* z-index of -1 ensures relative positioned children do not appear over profile popover. */}
         <div
             className="relative p-2.5 hover:bg-gray-100 active:bg-gray-200 transition select-none cursor-pointer"
-            style={{ boxShadow: "0 0 0 1px #e5e5e5", zIndex: -1 }}
+            style={{ boxShadow: "0 0 0 1px #e5e5e5" }}
             onClick={onClickChip}
         >
             <div
