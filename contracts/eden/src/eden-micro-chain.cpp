@@ -19,6 +19,11 @@ eosio::name token_account;
 eosio::name atomic_account;
 eosio::name atomicmarket_account;
 
+constexpr eosio::name pool_account(eosio::name pool)
+{
+   return eosio::name{pool.value | 0x0f};
+}
+constexpr eosio::name master_pool = pool_account("master"_n);
 eosio::name distribution_fund;
 
 // TODO: switch to uint64_t (js BigInt) after we upgrade to nodejs >= 15
@@ -190,8 +195,9 @@ using status_index = mic<status_object, ordered_by_id<status_object>>;
 // * sum of amount across all balance records = 0
 // * token_account record holds negative of total tokens held
 //   in eden_account's balance in token_account contract
-// * eden_account record holds general funds
-// * distribution_fund record holds funds which are distributed but not yet spent
+// * pool_account() (LSBs = 0x0f) records hold pool funds
+// * distribution_fund record holds funds which are distributed, or in the middle
+//   of being distributed, but not yet spent
 struct balance_object : public chainbase::object<balance_table, balance_object>
 {
    CHAINBASE_DEFAULT_CONSTRUCTOR(balance_object)
@@ -1082,7 +1088,7 @@ void notify_transfer(const action_context& context,
    {
       transfer_funds(context.block.timestamp, token_account, from, quantity, history_desc::deposit);
       if (!eden::is_possible_deposit_account(from, atomic_account, atomicmarket_account))
-         transfer_funds(context.block.timestamp, from, eden_account, quantity, history_desc::fund);
+         transfer_funds(context.block.timestamp, from, master_pool, quantity, history_desc::fund);
    }
    else if (context.block_state.in_withdraw)
    {
@@ -1091,7 +1097,7 @@ void notify_transfer(const action_context& context,
    }
    else
    {
-      transfer_funds(context.block.timestamp, eden_account, to, quantity,
+      transfer_funds(context.block.timestamp, master_pool, to, quantity,
                      context.block_state.in_manual_transfer ? history_desc::manual_transfer
                                                             : history_desc::external_spend);
       transfer_funds(context.block.timestamp, to, token_account, quantity, history_desc::withdraw);
@@ -1109,11 +1115,12 @@ void withdraw(const action_context& context, eosio::name owner, const eosio::ass
 {
    check_transfer_order(context);
    context.block_state.in_withdraw = true;
+   // notify_transfer records the withdraw
 }
 
 void donate(const action_context& context, eosio::name payer, const eosio::asset& quantity)
 {
-   transfer_funds(context.block.timestamp, payer, eden_account, quantity, history_desc::donate);
+   transfer_funds(context.block.timestamp, payer, master_pool, quantity, history_desc::donate);
 }
 
 void transfer(const action_context& context,
@@ -1123,6 +1130,7 @@ void transfer(const action_context& context,
 {
    check_transfer_order(context);
    context.block_state.in_manual_transfer = true;
+   // notify_transfer records the transfer
 }
 
 void genesis(std::string community,
@@ -1211,7 +1219,7 @@ void inductdonate(const action_context& context,
       obj.member.profile = induction.induction.profile;
       obj.member.inductionVideo = induction.induction.video;
    });
-   transfer_funds(context.block.timestamp, payer, eden_account, quantity,
+   transfer_funds(context.block.timestamp, payer, master_pool, quantity,
                   history_desc::inductdonate);
 
    auto& index = db.inductions.get<by_invitee>();
@@ -1236,9 +1244,7 @@ void clear_participating()
    for (auto it = idx.begin(); it != idx.end(); ++it)
       if (it->member.participating)
          db.members.modify(*it, [](auto& obj) { obj.member.participating = false; });
-   db.status.modify(get_status(), [&](auto& status) {
-      status.status.numElectionParticipants = 0;
-   });
+   db.status.modify(get_status(), [&](auto& status) { status.status.numElectionParticipants = 0; });
 }
 
 void electopt(eosio::name voter, bool participating)
@@ -1403,8 +1409,8 @@ void handle_event(const eden::distribution_event_schedule& event)
 void handle_event(const action_context& context, const eden::distribution_event_reserve& event)
 {
    modify<by_pk>(db.distributions, event.distribution_time, [&](auto& dist) {
-      transfer_funds(context.block.timestamp, eden_account, distribution_fund, event.target_amount,
-                     history_desc::reserve_distribution);
+      transfer_funds(context.block.timestamp, pool_account(event.pool), distribution_fund,
+                     event.target_amount, history_desc::reserve_distribution);
       dist.target_amount = event.target_amount;
    });
 }
@@ -1514,10 +1520,10 @@ void filter_block(const subchain::eosio_block& block)
             for (auto& event : events)
                handle_event(context, event);
          }
-      }
-   }
-   eosio::check(!block_state.in_withdraw && !block_state.in_manual_transfer,
-                "missing transfer notification");
+      }  // for(action)
+      eosio::check(!block_state.in_withdraw && !block_state.in_manual_transfer,
+                   "missing transfer notification");
+   }  // for(trx)
 }  // filter_block
 
 subchain::block_log block_log;
@@ -1686,7 +1692,7 @@ struct Query
           [](auto& balances, auto key) { return balances.upper_bound(key); });
    }
 
-   Balance generalFund() const { return get_balance(eden_account); }
+   Balance masterPool() const { return get_balance(master_pool); }
    Balance distributionFund() const { return get_balance(distribution_fund); }
 
    MemberConnection members(std::optional<eosio::name> gt,
@@ -1748,7 +1754,7 @@ struct Query
 EOSIO_REFLECT2(Query,
                blockLog,
                status,
-               generalFund,
+               masterPool,
                distributionFund,
                method(balances, "gt", "ge", "lt", "le", "first", "last", "before", "after"),
                method(members, "gt", "ge", "lt", "le", "first", "last", "before", "after"),

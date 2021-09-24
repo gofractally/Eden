@@ -36,6 +36,7 @@
     "distribution_event_reserve",
     {
         "distribution_time": "2020-07-04T15:30:00.000",
+        "pool": "master",
         "target_amount": "1.5000 EOS"
     }
 ]
@@ -167,6 +168,7 @@
     "distribution_event_reserve",
     {
         "distribution_time": "2020-08-03T15:30:00.000",
+        "pool": "master",
         "target_amount": "51.4250 EOS"
     }
 ]
@@ -189,6 +191,7 @@
     "distribution_event_reserve",
     {
         "distribution_time": "2020-09-02T15:30:00.000",
+        "pool": "master",
         "target_amount": "48.8537 EOS"
     }
 ]
@@ -211,6 +214,7 @@
     "distribution_event_reserve",
     {
         "distribution_time": "2020-10-02T15:30:00.000",
+        "pool": "master",
         "target_amount": "46.4110 EOS"
     }
 ]
@@ -233,6 +237,7 @@
     "distribution_event_reserve",
     {
         "distribution_time": "2020-11-01T15:30:00.000",
+        "pool": "master",
         "target_amount": "44.0905 EOS"
     }
 ]
@@ -255,6 +260,7 @@
     "distribution_event_reserve",
     {
         "distribution_time": "2020-12-01T15:30:00.000",
+        "pool": "master",
         "target_amount": "41.8859 EOS"
     }
 ]
@@ -277,6 +283,7 @@
     "distribution_event_reserve",
     {
         "distribution_time": "2020-12-31T15:30:00.000",
+        "pool": "master",
         "target_amount": "2.6527 EOS"
     }
 ]
@@ -299,6 +306,7 @@
     "distribution_event_reserve",
     {
         "distribution_time": "2021-01-02T15:30:00.000",
+        "pool": "master",
         "target_amount": "39.6590 EOS"
     }
 ]
@@ -1826,6 +1834,7 @@
     "distribution_event_reserve",
     {
         "distribution_time": "2021-02-01T15:30:00.000",
+        "pool": "master",
         "target_amount": "37.6761 EOS"
     }
 ]

@@ -149,6 +149,8 @@ namespace eden
                                                     account->balance().amount / prorate_den,
                                                 account->balance().symbol)
                                  : (pool.monthly_distribution_pct() * account->balance() / 100);
+               push_event(distribution_event_reserve{distribution_time, pool.name(), amount},
+                          contract);
                accounts.sub_balance(pool.name(), amount);
                if (!total.amount)
                {
@@ -166,7 +168,6 @@ namespace eden
             distribution_tb.modify(iter, contract, [&](auto& row) {
                if (next_election_time && *next_election_time > distribution_time)
                {
-                  push_event(distribution_event_reserve{distribution_time, total}, contract);
                   auto d = make_distribution(contract, distribution_time, used);
                   push_event(
                       distribution_event_begin{
@@ -178,7 +179,6 @@ namespace eden
                }
                else
                {
-                  push_event(distribution_event_reserve{distribution_time, total}, contract);
                   row.value = election_distribution{distribution_time, total};
                }
             });
@@ -196,7 +196,6 @@ namespace eden
          }
          else
          {
-            push_event(distribution_event_reserve{distribution_time, total}, contract);
             push_event(
                 distribution_event_begin{
                     .distribution_time = distribution_time,
