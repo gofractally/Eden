@@ -6,10 +6,9 @@ import { ROUTES } from "_app/config";
 
 interface Props {
     buttonType: ButtonType;
-    roundIndex: number;
 }
 
-export const VideoUploadButton = ({ buttonType, roundIndex }: Props) => {
+export const VideoUploadButton = ({ buttonType }: Props) => {
     const [isConfirmationModalOpen, setIsConfirmationModalOpen] = useState(
         false
     );
@@ -31,7 +30,7 @@ export const VideoUploadButton = ({ buttonType, roundIndex }: Props) => {
                 onClick={() => setIsConfirmationModalOpen(true)}
             >
                 <RiVideoUploadLine size={18} className="mr-2" />
-                Upload round {roundIndex + 1} recording
+                Upload round recording
                 <OpensInNewTabIcon className="mb-1.5" />
             </Button>
             <Modal
