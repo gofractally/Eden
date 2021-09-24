@@ -15,7 +15,7 @@ import {
     ErrorLoadingDelegation,
     ElectionInProgress,
     NoDelegationToDisplay,
-} from "delegates";
+} from "delegates/components/statuses";
 import MyDelegation from "delegates/components/my-delegation"; // avoid circular depenency
 
 export const DelegatesPage = () => {
@@ -51,8 +51,7 @@ export const DelegatesPage = () => {
         isLoadingCurrentElection ||
         isLoadingMyDelegation ||
         isLoadingElectionState ||
-        isLoadingMemberData ||
-        !myDelegationMemberData; // prevents flicker
+        isLoadingMemberData;
 
     const isError =
         isErrorCurrentElection ||
