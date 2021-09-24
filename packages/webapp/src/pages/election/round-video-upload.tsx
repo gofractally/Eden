@@ -30,45 +30,33 @@ import {
     setElectionRoundVideo,
 } from "elections";
 import { RoundHeader } from "elections/components/ongoing-election-components";
-import { MemberAccountData } from "members";
+import { MemberAccountData, MemberGateContainer } from "members";
 
 export const RoundVideoUploadPage = () => {
-    const [isElectionComplete, setIsElectionComplete] = useState(false);
-    const [uploadLimitTime, setUploadLimitTime] = useState(
-        dayjs().add(1, "day") // set default limit in the future while election data is being loaded
-    );
-
     const {
         data: currentElection,
         isLoading: isLoadingElection,
         isError: isErrorElection,
     } = useCurrentElection();
-    const { data: electionState } = useElectionState();
+    const {
+        data: electionState,
+        isLoading: isLoadingElectionState,
+        isError: isErrorElectionState,
+    } = useElectionState();
 
-    useEffect(() => {
-        if (electionState) {
-            const newUploadLimitTime = dayjs(
-                electionState.last_election_time + "Z"
-            ).add(48, "hour");
-            setUploadLimitTime(newUploadLimitTime);
-        }
-    }, [electionState]);
+    const isLoading = isLoadingElection || isLoadingElectionState;
+    const isError = isErrorElection || isErrorElectionState;
 
-    useEffect(() => {
-        const isAfterUploadLimitTime = dayjs().isAfter(uploadLimitTime);
-        if (
-            isAfterUploadLimitTime &&
-            currentElection?.electionState === ElectionStatus.Registration
-        ) {
-            setIsElectionComplete(true);
-        }
-    }, [currentElection, uploadLimitTime]);
+    if (isLoading) return <LoaderSection />;
+    if (isError || !currentElection) return <ErrorLoadingElection />;
 
-    const isLoading = isLoadingElection;
-    const isError = isErrorElection;
+    const uploadLimitTime = electionState
+        ? dayjs(electionState.last_election_time + "Z").add(48, "hour")
+        : dayjs().add(1, "day");
 
-    if (isLoading || !currentElection) return <LoaderSection />;
-    if (isError) return <ErrorLoadingElection />;
+    const isUploadExpired =
+        dayjs().isAfter(uploadLimitTime) &&
+        currentElection?.electionState === ElectionStatus.Registration;
 
     return (
         <SideNavLayout title="Election video upload service">
@@ -77,7 +65,7 @@ export const RoundVideoUploadPage = () => {
                     <Heading size={1}>Election video upload service</Heading>
                 </Container>
                 <Container className="space-y-6 pb-5">
-                    {isElectionComplete ? (
+                    {isUploadExpired ? (
                         <div>
                             Election is complete and upload videos time is
                             expired.
@@ -99,9 +87,9 @@ export const RoundVideoUploadPage = () => {
                         </>
                     )}
                 </Container>
-                {!isElectionComplete && (
-                    <RoundVideoUploadList election={currentElection} />
-                )}
+                <MemberGateContainer>
+                    {!isUploadExpired && <RoundVideoUploadList />}
+                </MemberGateContainer>
             </div>
         </SideNavLayout>
     );
@@ -109,7 +97,7 @@ export const RoundVideoUploadPage = () => {
 
 export default RoundVideoUploadPage;
 
-const RoundVideoUploadList = ({ election }: { election: CurrentElection }) => {
+const RoundVideoUploadList = () => {
     const [ualAccount] = useUALAccount();
     const {
         data: currentMemberElectionVotingData,
@@ -135,10 +123,12 @@ const RoundVideoUploadList = ({ election }: { election: CurrentElection }) => {
         !currentMemberElectionVotingData.votes.length
     )
         return (
-            <Text className="p-8">
-                It appears you haven't participated in any election round.
-                Nothing to upload.
-            </Text>
+            <Container>
+                <Text>
+                    It appears you haven't participated in any election round.
+                    Nothing to upload.
+                </Text>
+            </Container>
         );
 
     const submitElectionRoundVideo = (roundIndex: number) => async (
@@ -175,7 +165,7 @@ const RoundVideoUploadList = ({ election }: { election: CurrentElection }) => {
                 message: "Election video uploaded successfully!",
             });
         } catch (error) {
-            onError(error, "Unable to set the election round video");
+            onError(error as Error, "Unable to set the election round video");
             setVideoSubmissionPhase(undefined);
         }
     };
@@ -258,7 +248,7 @@ const Header = ({
 }: HeaderProps) => {
     const subText =
         winner && isValidDelegate(winner.account)
-            ? `Delegate elect: ${winner.name}`
+            ? `Delegate: ${winner.name}`
             : roundStartTime && roundEndTime
             ? `${roundStartTime.format("LT")} - ${roundEndTime.format("LT z")}`
             : "Consensus not achieved";

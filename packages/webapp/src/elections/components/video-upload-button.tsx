@@ -31,19 +31,19 @@ export const VideoUploadButton = ({ roundIndex }: Props) => {
             <Modal
                 isOpen={isConfirmationModalOpen}
                 onRequestClose={onClose}
-                title="Upload and Confirmation"
+                title="Election video upload"
             >
                 <div className="space-y-3">
                     <Text>
-                        The election video upload service will open a new
-                        browser tab. After completing the upload, your video
-                        will be recorded on the blockchain and viewable here on
-                        this device. The rest of the community will not see it
-                        until some time after the election.
+                        The election video upload service will open in a new
+                        browser tab. It is available during the 48 hours after
+                        the beginning of the election. Any election videos must
+                        be uploaded during this period.
                     </Text>
                     <Text>
-                        We highly recommend uploading election videos from your
-                        desktop computer.
+                        Due to the large size of election videos, we recommend
+                        uploading them from a desktop computer whenever
+                        possible.
                     </Text>
                     <Text size="sm">
                         <strong>Note:</strong> You can still upload the video up
