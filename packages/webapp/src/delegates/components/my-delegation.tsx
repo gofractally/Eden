@@ -8,6 +8,7 @@ import {
 } from "_app";
 import { LoadingContainer } from "_app/ui";
 import { DelegateChip, ElectionState } from "elections";
+import { MembersGrid } from "members";
 import { EdenMember, MemberData } from "members/interfaces";
 
 import { ErrorLoadingDelegation } from "./statuses";
@@ -144,29 +145,33 @@ const ChiefDelegates = ({
     }
 
     return (
-        <div className="mb-16">
-            <LevelHeading>Chief Delegates</LevelHeading>
-            {chiefsAsMembers.map((delegate) => {
-                if (!delegate) return null;
-                return (
-                    <div key={`chiefs-${delegate.account}`}>
-                        <DelegateChip
-                            member={memberData.find(
-                                (d) => d.account === delegate.account
-                            )}
-                            level={membersStats.ranks.length - 1}
-                            delegateTitle=""
-                        />
-                    </div>
-                );
-            })}
-            <MyDelegationArrow />
-            <LevelHeading>Head Chief</LevelHeading>
-            <DelegateChip
-                member={headChiefAsMemberData}
-                level={headChiefAsEdenMember.election_rank + 1}
-                delegateTitle=""
-            />
-        </div>
+        <>
+            <div>
+                <LevelHeading className="border-b">
+                    Chief Delegates
+                </LevelHeading>
+                <MembersGrid members={memberData}>
+                    {(chiefDelegate) => {
+                        if (!chiefDelegate) return null;
+                        return (
+                            <DelegateChip
+                                key={`chiefs-${chiefDelegate.account}`}
+                                member={chiefDelegate}
+                                level={membersStats.ranks.length - 1}
+                            />
+                        );
+                    }}
+                </MembersGrid>
+                <MyDelegationArrow />
+            </div>
+            <div className="mb-16">
+                <LevelHeading>Head Chief</LevelHeading>
+                <DelegateChip
+                    member={headChiefAsMemberData}
+                    level={headChiefAsEdenMember.election_rank + 1}
+                    delegateTitle=""
+                />
+            </div>
+        </>
     );
 };
