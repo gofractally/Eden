@@ -24,3 +24,4 @@ export * from "./side-nav";
 export * from "./mobile-nav";
 export * from "./nav-profile";
 export * from "./image";
+export * from "./video-form";

@@ -20,6 +20,7 @@ import {
     queryMemberByAccountName,
     queryMembers,
     queryParticipantsInCompletedRound,
+    queryVoteDataRow,
     TABLE_INDEXES,
 } from "_app";
 import { EdenMember, MemberData, VoteDataQueryOptionsByField } from "members";
@@ -28,6 +29,7 @@ import {
     CONFIG_SORTITION_ROUND_DEFAULTS,
     CurrentElection,
     Election,
+    ElectionCompletedRound,
     ElectionState,
     ElectionStatus,
     VoteData,
@@ -40,9 +42,12 @@ import {
     fixtureRegistrationElection,
 } from "./fixtures";
 
-const CONSENSUS_RESULT_NO_DELEGATE = "no delegate";
+const COMMON_DELEGATE_OF_NO_ROUND = "no round";
 import { TableQueryOptions } from "_app/eos/interfaces";
-import { fixtureEdenMembersInGroup } from "members/api/fixtures";
+import {
+    fixtureEdenMembers,
+    fixtureEdenMembersInGroup,
+} from "members/api/fixtures";
 
 export const getMemberGroupFromIndex = (
     memberIdx: number,
@@ -180,23 +185,27 @@ const getCommonDelegateAccountForGroupWithThisMember = (
     if (electionRankIndex > roundIndexRequested) {
         commonDelegate = member.account;
     } else if (electionRankIndex < roundIndexRequested) {
-        // TODO: No Consensus Scenario 2: this member was in Round 1, which didn't reach consensus, and we're asking about Round 2 for them, which never happened
-        return CONSENSUS_RESULT_NO_DELEGATE;
-        // throw new Error(
-        //     "Cannot fetch round participants in round member did not participate in."
-        // );
+        // No Consensus Scenario 2: this member was in Round 1, which didn't reach consensus, and we're asking about Round 2 for them, which never happened
+        return COMMON_DELEGATE_OF_NO_ROUND;
     }
 
-    // No Conensus Scenario 1: requestedRound === electionRankIndex.
+    // No Consensus Scenario 1: requestedRound === electionRankIndex.
     // We'll get a commonDelegate; it just won't be a delegate, it'll be a group identifier
     return commonDelegate;
 };
 
+/**
+ * Get round participants and any delegate-elect for the given member's completed election round at the given round index during an ongoing election.
+ * @param {number} electionRoundIndex
+ * @param {EdenMember} member
+ * @param {VoteData} voteData - optional and not present for a member who is no longer participating
+ * @returns {ElectionCompletedRound} - participant EdenMembers and the delegate-elect, if any, for the member's completed election round
+ */
 export const getParticipantsInCompletedRound = async (
     electionRoundIndex: number,
     member: EdenMember,
     voteData?: VoteData
-): Promise<{ participants: EdenMember[]; delegate?: string } | undefined> => {
+): Promise<ElectionCompletedRound> => {
     // TODO: Add no-consensus scenario to this function
     const commonDelegate = getCommonDelegateAccountForGroupWithThisMember(
         electionRoundIndex,
@@ -210,15 +219,16 @@ export const getParticipantsInCompletedRound = async (
                 electionRoundIndex,
                 commonDelegate
             ),
-            delegate: commonDelegate,
-        };
+            delegate: fixtureEdenMembers.find(
+                (m) => m.account === commonDelegate
+            ),
+        } as ElectionCompletedRound;
 
-    if (commonDelegate === CONSENSUS_RESULT_NO_DELEGATE) {
+    if (commonDelegate === COMMON_DELEGATE_OF_NO_ROUND) {
         // TODO: No Consensus scenario 2: Consider and test this further. I don't know that this works yet
         return {
             participants: [],
-            delegate: "",
-        };
+        } as ElectionCompletedRound;
     }
     const serialBuffer = new eosjsSerialize.SerialBuffer();
     serialBuffer.pushName(commonDelegate);
@@ -254,7 +264,7 @@ export const getParticipantsInCompletedRound = async (
     const delegate = await queryClient.fetchQuery(queryKey, queryFn);
     return {
         participants: [delegate, ...participants],
-        delegate: delegateAccountName,
+        delegate: delegate,
     };
 };
 
@@ -330,13 +340,19 @@ const getParticipantsOfCompletedRounds = async (myDelegation: EdenMember[]) => {
                 edenMembersInThisRound?.participants || []
             );
 
+            const commonDelegate = edenMembersInThisRound?.participants.find(
+                (m) => m.representative !== member.account
+            );
+            const bDidReachConsensus = didReachConsensus(
+                electionRoundIndex,
+                edenMembersInThisRound?.participants
+            );
+
             return {
                 participants: edenMembersInThisRound?.participants, // .length will be number of participants and empty if no round happened
                 participantsMemberData,
-                didReachConsensus: didReachConsensus(
-                    electionRoundIndex,
-                    edenMembersInThisRound?.participants
-                ),
+                didReachConsensus: bDidReachConsensus,
+                delegate: bDidReachConsensus && commonDelegate,
             };
         }
     );
@@ -366,7 +382,10 @@ export const getOngoingElectionData = async (
 
     const isMemberStillParticipating = votingMemberData.length > 0;
 
-    const ongoingRound = { participantsMemberData: votingMemberData };
+    const ongoingRound = {
+        participantsMemberData: votingMemberData,
+        roundIndex: isElectionOngoing ? myDelegation.length : undefined,
+    };
 
     const completedRounds = await getParticipantsOfCompletedRounds(
         myDelegation

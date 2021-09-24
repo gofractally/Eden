@@ -2,7 +2,6 @@ import React, { useEffect, useState } from "react";
 import { useQueryClient } from "react-query";
 import dayjs, { Dayjs } from "dayjs";
 import { BiCheck } from "react-icons/bi";
-import { RiVideoUploadLine } from "react-icons/ri";
 
 import { electionMeetingDurationMs as meetingDurationMs } from "config";
 import { onError, useCountdown, useTimeout, useUALAccount } from "_app";
@@ -33,6 +32,7 @@ import RoundHeader from "./round-header";
 import { MeetingLink } from "./meeting-link";
 import VotingRoundParticipants from "./voting-round-participants";
 import { setVote } from "../../transactions";
+import { VideoUploadButton } from "../video-upload-button";
 
 export interface RoundSegmentProps {
     ongoingElectionData?: Election;
@@ -263,6 +263,7 @@ export const OngoingRoundSegment = ({
                     />
                     <Container>
                         <div className="flex flex-col xs:flex-row justify-center space-y-2 xs:space-y-0 xs:space-x-2">
+                            <VideoUploadButton roundIndex={roundIndex} />
                             <Button
                                 size="sm"
                                 disabled={
@@ -283,10 +284,6 @@ export const OngoingRoundSegment = ({
                                     ? "Change vote"
                                     : "Submit vote"}
                             </Button>
-                            <Button size="sm">
-                                <RiVideoUploadLine size={18} className="mr-2" />
-                                Upload round {roundIndex + 1} recording
-                            </Button>
                         </div>
                     </Container>
                 </>
@@ -301,6 +298,11 @@ export const OngoingRoundSegment = ({
                         />
                     )}
                 </MembersGrid>
+            )}
+            {stage === RoundStage.Complete && (
+                <Container>
+                    <VideoUploadButton roundIndex={roundIndex} />
+                </Container>
             )}
         </Expander>
     );
