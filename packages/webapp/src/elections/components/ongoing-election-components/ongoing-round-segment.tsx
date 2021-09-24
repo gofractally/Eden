@@ -1,10 +1,10 @@
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import { useQueryClient } from "react-query";
 import dayjs, { Dayjs } from "dayjs";
 import { BiCheck } from "react-icons/bi";
 
 import { election as electionEnvVars } from "config";
-import { onError, useCountdown, useTimeout, useUALAccount } from "_app";
+import { onError, useCountdown, useUALAccount } from "_app";
 import {
     queryMemberGroupParticipants,
     useCurrentMember,
@@ -25,6 +25,7 @@ import {
     Election,
     ElectionStatus,
     RoundStage,
+    VoteData,
 } from "elections/interfaces";
 
 import Consensometer from "./consensometer";
@@ -45,7 +46,7 @@ export interface RoundSegmentProps {
     onRoundEnd: () => void;
 }
 
-// TODO: Much of the building up of the data shouldn't be done in the UI layer. What do we want the API to provide? What data does this UI really need? We could even define a new OngoingElection type to provide to this UI.
+// TODO: After first election, refactor to use new box election state engine.
 export const OngoingRoundSegment = ({
     electionState,
     roundIndex,
@@ -55,8 +56,6 @@ export const OngoingRoundSegment = ({
     electionConfig,
     onRoundEnd,
 }: RoundSegmentProps) => {
-    const queryClient = useQueryClient();
-
     // duration of time periods before and after election meeting call
     // stages: meeting prep -> meeting -> post-meeting finalization -> round end
     const meetingBreakDurationMs =
@@ -77,10 +76,6 @@ export const OngoingRoundSegment = ({
         stage
     );
 
-    const [selectedMember, setSelected] = useState<MemberData | null>(null);
-    const [isSubmittingVote, setIsSubmittingVote] = useState<boolean>(false);
-
-    const [ualAccount] = useUALAccount();
     const {
         data: loggedInMember,
         isLoading: isLoadingCurrentMember,
@@ -141,6 +136,138 @@ export const OngoingRoundSegment = ({
         return <ErrorLoadingElection />;
     }
 
+    return (
+        <Expander
+            header={
+                <Header
+                    stage={stage}
+                    roundIndex={roundIndex}
+                    currentStageEndTime={currentStageEndTime}
+                    roundStartTime={roundStartTime}
+                    roundEndTime={roundEndTime}
+                    meetingStartTime={meetingStartTime}
+                    postMeetingStartTime={postMeetingStartTime}
+                />
+            }
+            startExpanded
+            locked
+        >
+            <div className="flex flex-col lg:flex-row-reverse">
+                <section className="-mt-5 lg:flex-1">
+                    <RoundInfoPanel
+                        stage={stage}
+                        roundIndex={roundIndex}
+                        meetingStartTime={meetingStartTime}
+                        electionConfig={electionConfig}
+                        voteData={voteData}
+                        isVotingOpen={isVotingOpen}
+                    />
+                </section>
+                <section className="lg:flex-1">
+                    {voteData && isVotingOpen ? (
+                        <RoundParticipantsVotingPanel
+                            members={members}
+                            voteData={voteData}
+                            roundIndex={roundIndex}
+                            electionConfig={electionConfig}
+                        />
+                    ) : (
+                        <RoundParticipantsWaitingPanel
+                            members={members}
+                            roundIndex={roundIndex}
+                        />
+                    )}
+                </section>
+            </div>
+        </Expander>
+    );
+};
+
+interface RoundInfoPanelProps {
+    stage: RoundStage;
+    roundIndex: number;
+    meetingStartTime: dayjs.Dayjs;
+    electionConfig?: ActiveStateConfigType;
+    voteData?: VoteData[];
+    isVotingOpen: boolean;
+}
+
+const RoundInfoPanel = ({
+    stage,
+    roundIndex,
+    meetingStartTime,
+    electionConfig,
+    voteData,
+    isVotingOpen,
+}: RoundInfoPanelProps) => {
+    return (
+        <Container className="flex flex-col space-y-4">
+            <section className="lg:order-3 lg:my-4 space-y-4">
+                {[RoundStage.PreMeeting, RoundStage.Meeting].includes(
+                    stage
+                ) && (
+                    <div>
+                        <MeetingLink
+                            stage={stage}
+                            roundIndex={roundIndex}
+                            meetingStartTime={meetingStartTime}
+                            meetingDurationMs={
+                                electionEnvVars.meetingDurationMs
+                            }
+                            electionConfig={electionConfig!}
+                        />
+                    </div>
+                )}
+                {[RoundStage.Meeting, RoundStage.PostMeeting].includes(
+                    stage
+                ) && (
+                    <div className="hidden lg:block">
+                        <VideoUploadButton buttonType="secondary" />
+                    </div>
+                )}
+            </section>
+            <section className="lg:order-1">
+                <Heading size={3}>Meeting group members</Heading>
+                <Text>
+                    {stage === RoundStage.PreMeeting
+                        ? "Make sure you have your meeting link ready and stand by. You'll be on a video call with the following Eden members momentarily."
+                        : stage === RoundStage.Meeting
+                        ? "Meet with your group. Align on a leader >2/3 majority. Select your leader and submit your vote below."
+                        : stage === RoundStage.Complete
+                        ? "If you're the delegate elect, stand by. The next round will start momentarily."
+                        : "This round is finalizing. Please submit any outstanding votes now. You will be able to come back later to upload election videos if your video isn't ready yet."}
+                </Text>
+            </section>
+            <section className="lg:order-2">
+                {voteData && isVotingOpen && (
+                    <Consensometer voteData={voteData} />
+                )}
+            </section>
+        </Container>
+    );
+};
+
+interface RoundParticipantsVotingPanelProps {
+    members?: MemberData[];
+    voteData: VoteData[];
+    roundIndex: number;
+    electionConfig?: ActiveStateConfigType;
+}
+
+const RoundParticipantsVotingPanel = ({
+    members,
+    voteData,
+    roundIndex,
+    electionConfig,
+}: RoundParticipantsVotingPanelProps) => {
+    const [selectedMember, setSelected] = useState<MemberData | null>(null);
+    const [isSubmittingVote, setIsSubmittingVote] = useState<boolean>(false);
+
+    const queryClient = useQueryClient();
+
+    const [ualAccount] = useUALAccount();
+    const { data: loggedInMember } = useCurrentMember();
+
     const userVoterStats = voteData!.find(
         (vs) => vs.member === loggedInMember?.account
     );
@@ -180,108 +307,31 @@ export const OngoingRoundSegment = ({
     };
 
     return (
-        // TODO: Move this out into a separate component to simplify and make this more readable
-        <Expander
-            header={
-                <Header
-                    stage={stage}
-                    roundIndex={roundIndex}
-                    currentStageEndTime={currentStageEndTime}
-                    roundStartTime={roundStartTime}
-                    roundEndTime={roundEndTime}
-                    meetingStartTime={meetingStartTime}
-                    postMeetingStartTime={postMeetingStartTime}
-                />
-            }
-            startExpanded
-            locked
-        >
-            <div className="flex flex-col lg:flex-row-reverse">
-                <Container className="flex flex-col space-y-4 -mt-5 lg:flex-1">
-                    <section className="lg:order-3 lg:my-4 space-y-4">
-                        {[RoundStage.PreMeeting, RoundStage.Meeting].includes(
-                            stage
-                        ) && (
-                            <div>
-                                <MeetingLink
-                                    stage={stage}
-                                    roundIndex={roundIndex}
-                                    meetingStartTime={meetingStartTime}
-                                    meetingDurationMs={
-                                        electionEnvVars.meetingDurationMs
-                                    }
-                                    electionConfig={electionConfig!}
-                                />
-                            </div>
-                        )}
-                        {[RoundStage.Meeting, RoundStage.PostMeeting].includes(
-                            stage
-                        ) && (
-                            <div className="hidden lg:block">
-                                <VideoUploadButton buttonType="secondary" />
-                            </div>
-                        )}
-                    </section>
-                    <section className="lg:order-1">
-                        <Heading size={3}>Meeting group members</Heading>
-                        <Text>
-                            {stage === RoundStage.PreMeeting
-                                ? "Make sure you have your meeting link ready and stand by. You'll be on a video call with the following Eden members momentarily."
-                                : stage === RoundStage.Meeting
-                                ? "Meet with your group. Align on a delegate >2/3 majority. Select your delegate and submit your vote below."
-                                : stage === RoundStage.Complete
-                                ? "If you're the delegate elect, stand by. The next round will start momentarily."
-                                : "This round is finalizing. Please submit any outstanding votes now. You will be able to come back later to upload election videos if your video isn't ready yet."}
-                        </Text>
-                    </section>
-                    <section className="lg:order-2">
-                        {voteData && isVotingOpen && (
-                            <Consensometer voteData={voteData} />
-                        )}
-                    </section>
-                </Container>
-                <section className="lg:flex-1">
-                    {voteData && isVotingOpen ? (
-                        <>
-                            <VotingRoundParticipants
-                                members={members}
-                                voteData={voteData}
-                                selectedMember={selectedMember}
-                                onSelectMember={(m) => setSelected(m)}
-                                userVotingFor={userVotingFor?.account}
-                            />
-                            <Container>
-                                <div className="flex flex-col sm:flex-row justify-around items-center space-y-3 sm:space-y-0 md:px-16">
-                                    <div className="hidden sm:block lg:hidden">
-                                        <VideoUploadButton buttonType="link" />
-                                    </div>
-                                    <VoteButton
-                                        selectedMember={selectedMember}
-                                        isSubmittingVote={isSubmittingVote}
-                                        userVotingFor={userVotingFor}
-                                        onSubmitVote={onSubmitVote}
-                                    />
-                                    <div className="sm:hidden">
-                                        <VideoUploadButton buttonType="link" />
-                                    </div>
-                                </div>
-                            </Container>
-                        </>
-                    ) : (
-                        <div className="grid grid-cols-1 gap-px">
-                            {members?.map((member) => (
-                                <ElectionParticipantChip
-                                    key={`round-${roundIndex + 1}-participant-${
-                                        member.account
-                                    }`}
-                                    member={member}
-                                />
-                            ))}
-                        </div>
-                    )}
-                </section>
-            </div>
-        </Expander>
+        <>
+            <VotingRoundParticipants
+                members={members}
+                voteData={voteData}
+                selectedMember={selectedMember}
+                onSelectMember={(m) => setSelected(m)}
+                userVotingFor={userVotingFor?.account}
+            />
+            <Container>
+                <div className="flex flex-col sm:flex-row justify-around items-center space-y-3 sm:space-y-0 md:px-16">
+                    <div className="hidden sm:block lg:hidden">
+                        <VideoUploadButton buttonType="link" />
+                    </div>
+                    <VoteButton
+                        selectedMember={selectedMember}
+                        isSubmittingVote={isSubmittingVote}
+                        userVotingFor={userVotingFor}
+                        onSubmitVote={onSubmitVote}
+                    />
+                    <div className="sm:hidden">
+                        <VideoUploadButton buttonType="link" />
+                    </div>
+                </div>
+            </Container>
+        </>
     );
 };
 
@@ -314,6 +364,25 @@ const VoteButton = ({
             ? "Change vote"
             : "Submit vote"}
     </Button>
+);
+
+interface RoundParticipantsWaitingPanelProps {
+    members?: MemberData[];
+    roundIndex: number;
+}
+
+const RoundParticipantsWaitingPanel = ({
+    members,
+    roundIndex,
+}: RoundParticipantsWaitingPanelProps) => (
+    <section className="grid grid-cols-1 gap-px">
+        {members?.map((member) => (
+            <ElectionParticipantChip
+                key={`round-${roundIndex + 1}-participant-${member.account}`}
+                member={member}
+            />
+        ))}
+    </section>
 );
 
 interface HeaderProps {
