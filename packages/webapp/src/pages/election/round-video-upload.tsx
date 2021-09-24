@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import { RiVideoUploadLine } from "react-icons/ri";
 import dayjs from "dayjs";
 
@@ -24,7 +24,6 @@ import {
 } from "_app/ui";
 
 import {
-    CurrentElection,
     ElectionStatus,
     ErrorLoadingElection,
     setElectionRoundVideo,
@@ -118,10 +117,7 @@ const RoundVideoUploadList = () => {
         return <ErrorLoadingElection />;
     }
 
-    if (
-        !currentMemberElectionVotingData ||
-        !currentMemberElectionVotingData.votes.length
-    )
+    if (!currentMemberElectionVotingData?.votes.length)
         return (
             <Container>
                 <Text>

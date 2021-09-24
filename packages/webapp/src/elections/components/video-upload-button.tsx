@@ -45,10 +45,6 @@ export const VideoUploadButton = ({ roundIndex }: Props) => {
                         uploading them from a desktop computer whenever
                         possible.
                     </Text>
-                    <Text size="sm">
-                        <strong>Note:</strong> You can still upload the video up
-                        to 48 hours from the beginning of the election.
-                    </Text>
                     <div className="flex space-x-3">
                         <Button type="neutral" onClick={onClose}>
                             Cancel
