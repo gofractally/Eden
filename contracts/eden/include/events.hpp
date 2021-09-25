@@ -141,6 +141,8 @@ namespace eden
    //    distribution_event_return_excess (optional)
    //    distribution_event_fund
    //    distribution_event_end
+   // No particular order:
+   //    distribution_event_return
 
    struct distribution_event_schedule
    {
@@ -186,6 +188,16 @@ namespace eden
    };
    EOSIO_REFLECT(distribution_event_end, distribution_time)
 
+   struct distribution_event_return
+   {
+      eosio::name owner;
+      eosio::block_timestamp distribution_time;
+      uint8_t rank;
+      eosio::asset amount;
+      eosio::name pool;
+   };
+   EOSIO_REFLECT(distribution_event_return, owner, distribution_time, rank, amount, pool)
+
    using event = std::variant<election_event_schedule,
                               election_event_begin,
                               election_event_seeding,
@@ -203,7 +215,8 @@ namespace eden
                               distribution_event_begin,
                               distribution_event_return_excess,
                               distribution_event_fund,
-                              distribution_event_end>;
+                              distribution_event_end,
+                              distribution_event_return>;
 
    void push_event(const event& e, eosio::name self);
    void send_events(eosio::name self);

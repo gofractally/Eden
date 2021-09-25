@@ -351,6 +351,15 @@ namespace eden
                 end = member_idx.end();
            max_steps > 0 && iter != end && iter->owner() == member; --max_steps)
       {
+         push_event(
+             distribution_event_return{
+                 .owner = iter->owner(),
+                 .distribution_time = iter->distribution_time(),
+                 .rank = iter->rank(),
+                 .amount = iter->balance(),
+                 .pool = "master"_n,
+             },
+             contract);
          owned_accounts.add_balance("master"_n, iter->balance());
          iter = member_idx.erase(iter);
       }
@@ -366,6 +375,15 @@ namespace eden
                 end = member_idx.end();
            iter != end && iter->owner() == member.account();)
       {
+         push_event(
+             distribution_event_return{
+                 .owner = iter->owner(),
+                 .distribution_time = iter->distribution_time(),
+                 .rank = iter->rank(),
+                 .amount = iter->balance(),
+                 .pool = "master"_n,
+             },
+             contract);
          owned_accounts.add_balance("master"_n, iter->balance());
          iter = member_idx.erase(iter);
       }
@@ -402,6 +420,13 @@ namespace eden
                {
                   eosio::check(amount.amount == 0, "insufficient balance");
                }
+               push_event(
+                   distribution_event_return_excess{
+                       .distribution_time = dist->distribution_time,
+                       .pool = "master"_n,
+                       .amount = amount,
+                   },
+                   contract);
                owned_accounts.add_balance("master"_n, amount);
             }
          }
