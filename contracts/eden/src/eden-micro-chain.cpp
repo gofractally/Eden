@@ -213,27 +213,29 @@ using balance_index =
 
 enum class history_desc
 {
-   deposit,               // incoming eosio::token
-   withdraw,              // outgoing eosio::token
-   external_spend,        // non-contract spend of general funds
-                          //    e.g. powerup
-                          //    e.g. transfer before contract installed
-   manual_transfer,       // manual spend of general funds (contract's transfer action)
-   fund,                  // received general funds from external source
-   donate,                // user donated to general fund
-   inductdonate,          // user donated to general fund during induction
-   reserve_distribution,  // reserve funds for distribution
+   deposit,                     // incoming eosio::token
+   withdraw,                    // outgoing eosio::token
+   external_spend,              // non-contract spend of general funds
+                                //    e.g. powerup
+                                //    e.g. transfer before contract installed
+   manual_transfer,             // manual spend of general funds (contract's transfer action)
+   fund,                        // received general funds from external source
+   donate,                      // user donated to general fund
+   inductdonate,                // user donated to general fund during induction
+   reserve_distribution,        // reserve funds for distribution
+   return_excess_distribution,  // return excess distribution funds to pool
 };
 
 const char* history_desc_str[] = {
-    "deposit",               //
-    "withdraw",              //
-    "external spend",        //
-    "manual transfer",       //
-    "fund",                  //
-    "donate",                //
-    "inductdonate",          //
-    "reserve_distribution",  //
+    "deposit",                     //
+    "withdraw",                    //
+    "external spend",              //
+    "manual transfer",             //
+    "fund",                        //
+    "donate",                      //
+    "inductdonate",                //
+    "reserve distribution",        //
+    "return excess distribution",  //
 };
 
 using balance_history_key = std::tuple<eosio::name, eosio::block_timestamp, uint64_t>;
@@ -1421,6 +1423,13 @@ void handle_event(const eden::distribution_event_begin& event)
       dist.started = true;
       dist.target_rank_distribution = event.rank_distribution;
    });
+}
+
+void handle_event(const action_context& context,
+                  const eden::distribution_event_return_excess& event)
+{
+   transfer_funds(context.block.timestamp, distribution_fund, pool_account(event.pool),
+                  event.amount, history_desc::return_excess_distribution);
 }
 
 void handle_event(const eden::distribution_event_fund& event)

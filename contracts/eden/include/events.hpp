@@ -138,6 +138,7 @@ namespace eden
    //    distribution_event_schedule
    //    distribution_event_reserve
    //    distribution_event_begin
+   //    distribution_event_return_excess (optional)
    //    distribution_event_fund
    //    distribution_event_end
 
@@ -161,6 +162,14 @@ namespace eden
       std::vector<eosio::asset> rank_distribution;
    };
    EOSIO_REFLECT(distribution_event_begin, distribution_time, rank_distribution)
+
+   struct distribution_event_return_excess
+   {
+      eosio::block_timestamp distribution_time;
+      eosio::name pool;
+      eosio::asset amount;
+   };
+   EOSIO_REFLECT(distribution_event_return_excess, distribution_time, pool, amount)
 
    struct distribution_event_fund
    {
@@ -192,6 +201,7 @@ namespace eden
                               distribution_event_schedule,
                               distribution_event_reserve,
                               distribution_event_begin,
+                              distribution_event_return_excess,
                               distribution_event_fund,
                               distribution_event_end>;
 

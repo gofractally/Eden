@@ -184,6 +184,13 @@ namespace eden
             });
             if (used != total)
             {
+               push_event(
+                   distribution_event_return_excess{
+                       .distribution_time = distribution_time,
+                       .pool = "master"_n,
+                       .amount = total - used,
+                   },
+                   contract);
                accounts.add_balance("master"_n, total - used);
             }
             dist_accounts.emplace(contract, [&](auto& row) {
