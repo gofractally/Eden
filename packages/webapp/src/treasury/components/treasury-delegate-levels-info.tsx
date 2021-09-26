@@ -1,6 +1,6 @@
 import {
     Asset,
-    assetToString,
+    assetToLocaleString,
     Text,
     useMasterPool,
     useMemberStats,
@@ -100,7 +100,7 @@ const RankLevelDistribution = ({
                 <Text size="sm">
                     <strong>Amount:</strong>
                 </Text>
-                <Text size="sm">{assetToString(amount)}</Text>
+                <Text size="sm">{assetToLocaleString(amount)}</Text>
             </div>
         </div>
     );

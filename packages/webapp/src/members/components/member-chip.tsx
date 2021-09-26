@@ -4,7 +4,7 @@ import dayjs from "dayjs";
 import { FaGavel } from "react-icons/fa";
 
 import { atomicAssets, blockExplorerAccountBaseUrl } from "config";
-import { assetToString, openInNewTab } from "_app";
+import { assetToLocaleString, openInNewTab } from "_app";
 import { GenericMemberChip } from "_app/ui";
 import { ROUTES } from "_app/config";
 
@@ -104,7 +104,7 @@ const AuctionBadge = ({ member }: { member: MemberData }) => {
                 className="text-gray-600 group-hover:text-gray-800"
             />
             <p className="text-sm tracking-tight leading-none p-t-px group-hover:underline">
-                {assetToString(member.auctionData.price, 2)} (#
+                {assetToLocaleString(member.auctionData.price, 2)} (#
                 {member.assetData?.templateMint})
             </p>
         </div>
