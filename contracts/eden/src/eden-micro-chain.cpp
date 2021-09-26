@@ -219,11 +219,14 @@ enum class history_desc
                                 //    e.g. powerup
                                 //    e.g. transfer before contract installed
    manual_transfer,             // manual spend of general funds (contract's transfer action)
+   fund_transfer,               // fundtransfer action
+   user_transfer,               // usertransfer action
    fund,                        // received general funds from external source
    donate,                      // user donated to general fund
    inductdonate,                // user donated to general fund during induction
    reserve_distribution,        // reserve funds for distribution
    return_excess_distribution,  // return excess distribution funds to pool
+   return_distribution,         // return distribution funds to pool. e.g. member resigns
 };
 
 const char* history_desc_str[] = {
@@ -231,11 +234,14 @@ const char* history_desc_str[] = {
     "withdraw",                    //
     "external spend",              //
     "manual transfer",             //
+    "fund transfer",               //
+    "user transfer",               //
     "fund",                        //
     "donate",                      //
     "inductdonate",                //
     "reserve distribution",        //
     "return excess distribution",  //
+    "return distribution",         //
 };
 
 using balance_history_key = std::tuple<eosio::name, eosio::block_timestamp, uint64_t>;
@@ -1135,6 +1141,29 @@ void transfer(const action_context& context,
    // notify_transfer records the transfer
 }
 
+void fundtransfer(const action_context& context,
+                  eosio::name from,
+                  eosio::block_timestamp distribution_time,
+                  uint8_t rank,
+                  eosio::name to,
+                  eosio::asset amount,
+                  const std::string& memo)
+{
+   transfer_funds(context.block.timestamp, distribution_fund, to, amount,
+                  history_desc::fund_transfer);
+   modify<by_pk>(db.distribution_funds, distribution_fund_key{from, distribution_time, rank},
+                 [&](auto& fund) { fund.current_balance -= amount; });
+}
+
+void usertransfer(const action_context& context,
+                  eosio::name from,
+                  eosio::name to,
+                  eosio::asset amount,
+                  const std::string& memo)
+{
+   transfer_funds(context.block.timestamp, from, to, amount, history_desc::user_transfer);
+}
+
 void genesis(std::string community,
              eosio::symbol community_symbol,
              eosio::asset minimum_donation,
@@ -1432,6 +1461,15 @@ void handle_event(const action_context& context,
                   event.amount, history_desc::return_excess_distribution);
 }
 
+void handle_event(const action_context& context, const eden::distribution_event_return& event)
+{
+   transfer_funds(context.block.timestamp, distribution_fund, pool_account(event.pool),
+                  event.amount, history_desc::return_distribution);
+   modify<by_pk>(db.distribution_funds,
+                 distribution_fund_key{event.owner, event.distribution_time, event.rank},
+                 [&](auto& fund) { fund.current_balance -= event.amount; });
+}
+
 void handle_event(const eden::distribution_event_fund& event)
 {
    db.distribution_funds.emplace([&](auto& fund) {
@@ -1495,6 +1533,10 @@ void filter_block(const subchain::eosio_block& block)
                call(donate, context, action.hexData.data);
             else if (action.name == "transfer"_n)
                call(transfer, context, action.hexData.data);
+            else if (action.name == "fundtransfer"_n)
+               call(fundtransfer, context, action.hexData.data);
+            else if (action.name == "usertransfer"_n)
+               call(usertransfer, context, action.hexData.data);
             else if (action.name == "genesis"_n)
                call(genesis, context, action.hexData.data);
             else if (action.name == "addtogenesis"_n)
