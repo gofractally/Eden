@@ -10,6 +10,12 @@ namespace eden
    void init_pools(eosio::name contract)
    {
       pool_table_type pool_tb{contract, default_scope};
+      push_event(
+          set_pool_event{
+              .pool = "master"_n,
+              .monthly_distribution_pct = 5,
+          },
+          contract);
       pool_tb.emplace(contract, [](auto& row) { row.value = pool_v0{"master"_n, 5}; });
    }
 
@@ -136,6 +142,12 @@ namespace eden
          pool_table_type pool_tb{contract, default_scope};
          if (pool_tb.begin() == pool_tb.end())
          {
+            push_event(
+                set_pool_event{
+                    .pool = "master"_n,
+                    .monthly_distribution_pct = 5,
+                },
+                contract);
             pool_tb.emplace(contract, [](auto& row) { row.value = pool_v0{"master"_n, 5}; });
          }
          eosio::asset total = {};

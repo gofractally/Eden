@@ -1,4 +1,11 @@
 [
+    "set_pool_event",
+    {
+        "pool": "master",
+        "monthly_distribution_pct": 5
+    }
+]
+[
     "election_event_schedule",
     {
         "election_time": "2020-07-04T15:30:00.000",

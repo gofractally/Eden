@@ -143,6 +143,14 @@ namespace eden
    //    distribution_event_end
    // No particular order:
    //    distribution_event_return
+   //    set_pool_event
+
+   struct set_pool_event
+   {
+      eosio::name pool;
+      uint8_t monthly_distribution_pct;
+   };
+   EOSIO_REFLECT(set_pool_event, pool, monthly_distribution_pct)
 
    struct distribution_event_schedule
    {
@@ -210,6 +218,7 @@ namespace eden
                               election_event_report_group,
                               election_event_end_round,
                               election_event_end,
+                              set_pool_event,
                               distribution_event_schedule,
                               distribution_event_reserve,
                               distribution_event_begin,
