@@ -5,7 +5,6 @@ const acceptedMeetingRegexes = [
 ];
 
 export const validateMeetingLink = (meetingLink: string) => {
-    console.info("validating meeting link", meetingLink);
     if (!meetingLink) {
         throw new Error("Meeting link is empty");
     }
