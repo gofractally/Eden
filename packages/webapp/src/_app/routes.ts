@@ -42,16 +42,17 @@ export const ROUTES: { [key: string]: Route } = {
         requiresActiveCommunity: true,
         requiresCompletedElection: true,
     },
-    TREASURY: {
-        href: "/treasury",
-        label: "Treasury",
-        Icon: TreasuryNav,
-    },
     ELECTION: {
         href: "/election",
         label: "Election",
         Icon: ElectionNav,
         requiresActiveCommunity: true,
+    },
+    // >>> MOBILE NAV BAR ENDS HERE, IT ONLY SHOWS THE FIRST 5 ITEMS, THE ONES ABOVE THIS LINE <<<
+    TREASURY: {
+        href: "/treasury",
+        label: "Treasury",
+        Icon: TreasuryNav,
     },
     ELECTION_SLASH_ROUND_VIDEO_UPLOAD: {
         href: "/election/round-video-upload",
