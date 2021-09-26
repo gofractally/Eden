@@ -2,7 +2,7 @@ import { useState } from "react";
 import { RiVideoUploadLine } from "react-icons/ri";
 
 import { Button, Modal, Text } from "_app";
-import { ROUTES } from "_app/config";
+import { ROUTES } from "_app/routes";
 
 interface Props {
     roundIndex: number;
