@@ -3,7 +3,7 @@ import { useState } from "react";
 import { useQueryClient } from "react-query";
 
 import {
-    assetToString,
+    assetToLocaleString,
     Button,
     Heading,
     onError,
@@ -86,7 +86,7 @@ export const DelegateFundsAvailable = ({ account }: Props) => {
                     <Heading size={3}>Delegate funds available</Heading>
                     <Text>
                         {availableFunds
-                            ? assetToString(availableFunds)
+                            ? assetToLocaleString(availableFunds)
                             : "None"}
                     </Text>
                 </div>

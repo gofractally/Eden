@@ -8,7 +8,7 @@ import {
     Text,
     Link,
     Form,
-    assetToString,
+    assetToLocaleString,
     useUALAccount,
     onError,
     queryMemberByAccountName,
@@ -104,7 +104,9 @@ export const InductionDonateForm = ({
                 >
                     {isLoading
                         ? "Submitting donation..."
-                        : `Donate ${assetToString(minimumDonationAmount)}`}
+                        : `Donate ${assetToLocaleString(
+                              minimumDonationAmount
+                          )}`}
                 </Button>
             </div>
         </div>
