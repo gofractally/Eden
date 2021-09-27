@@ -1,5 +1,6 @@
-import { ROUTES } from "_app/config";
+import { ROUTES } from "_app/routes";
 import { Text, Link } from "_app/ui";
+
 import { useInductionParticipants } from "inductions/hooks";
 
 export const InductionNames = ({

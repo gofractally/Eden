@@ -7,7 +7,7 @@ import { IoMdLogIn } from "react-icons/io";
 
 import { useCurrentMember, useMemberDataFromEdenMembers } from "_app/hooks";
 import { Button, ProfileImage, Text } from "_app/ui";
-import { ROUTES } from "_app/config";
+import { ROUTES } from "_app/routes";
 import { MemberStatus } from "_app";
 
 import { useUALAccount } from "../eos";

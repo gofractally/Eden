@@ -3,7 +3,7 @@ import { useRouter } from "next/router";
 import Link from "next/link";
 
 import { useNavItems } from "_app";
-import { Route } from "_app/config";
+import { Route } from "_app/routes";
 
 import NavProfile from "./nav-profile";
 import { Image } from "./image";
@@ -39,7 +39,7 @@ const TopNav = () => {
 };
 
 const BottomNav = () => {
-    const navMenuItems = useNavItems();
+    const navMenuItems = useNavItems().slice(0, 5);
     return (
         <div className="flex items-center z-50 h-16 xs:hidden fixed bottom-0 left-0 right-0 bg-white border-t">
             <div className="w-full flex justify-around">

@@ -1,6 +1,6 @@
 import { useIsCommunityActive, Link } from "_app";
 
-import { ROUTES } from "_app/config";
+import { ROUTES } from "_app/routes";
 
 export const PendingInvitationsLink = () => {
     const { data: isCommunityActive } = useIsCommunityActive();

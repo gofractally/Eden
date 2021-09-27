@@ -4,7 +4,7 @@ import { useQueryClient } from "react-query";
 import { FaSignOutAlt } from "react-icons/fa";
 
 import { useCurrentMember, useNavItems } from "_app";
-import { ROUTES } from "_app/config";
+import { ROUTES } from "_app/routes";
 
 import { useUALAccount } from "../eos";
 import { Button } from "./button";

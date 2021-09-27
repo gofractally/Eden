@@ -13,10 +13,10 @@ import {
     onError,
     queryMemberByAccountName,
 } from "_app";
+import { ROUTES } from "_app/routes";
 
 import { donateAndCompleteInductionTransaction } from "inductions";
 import { Induction } from "inductions/interfaces";
-import { ROUTES } from "_app/config";
 
 interface Props {
     induction: Induction;

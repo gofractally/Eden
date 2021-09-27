@@ -1,6 +1,7 @@
 import { useCurrentElection, useIsCommunityActive } from "_app";
-import { ROUTES } from "_app/config";
+import { ROUTES } from "_app/routes";
 import { Container, Heading, Link, Loader, Text } from "_app/ui";
+
 import { ElectionStatus } from "elections/interfaces";
 import { ParticipationCard } from "elections/components/registration-election-components";
 import { ErrorLoadingElection } from "elections";

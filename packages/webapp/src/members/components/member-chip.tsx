@@ -6,7 +6,7 @@ import { FaGavel } from "react-icons/fa";
 import { atomicAssets, blockExplorerAccountBaseUrl } from "config";
 import { assetToLocaleString, openInNewTab } from "_app";
 import { GenericMemberChip } from "_app/ui";
-import { ROUTES } from "_app/config";
+import { ROUTES } from "_app/routes";
 
 import { MemberData } from "../interfaces";
 

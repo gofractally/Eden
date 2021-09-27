@@ -1,5 +1,5 @@
 import { Link } from "_app/ui";
-import { ROUTES } from "_app/config";
+import { ROUTES } from "_app/routes";
 
 export const Footer = () => (
     <footer className="border-t text-gray-600 body-font border-gray-200 bg-white xs:pb-0">

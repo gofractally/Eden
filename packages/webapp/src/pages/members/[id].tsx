@@ -10,7 +10,7 @@ import {
     queryMemberData,
     SingleColLayout,
 } from "_app";
-import { ROUTES } from "_app/config";
+import { ROUTES } from "_app/routes";
 
 import { MemberCard, MemberCollections, MemberHoloCard } from "members";
 import { DelegateFundsAvailable } from "delegates/components";
