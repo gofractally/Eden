@@ -295,12 +295,12 @@ struct vote_object : public chainbase::object<vote_table, vote_object>
    std::string video;
 
    vote_key by_pk() const { return {voter, election_time, round}; }
-   auto by_round() const { return std::tuple{group_id, voter}; }
+   auto by_group() const { return std::tuple{group_id, voter}; }
 };
 using vote_index = mic<vote_object,
                        ordered_by_id<vote_object>,
                        ordered_by_pk<vote_object>,
-                       ordered_by_round<vote_object>>;
+                       ordered_by_group<vote_object>>;
 
 struct database
 {
@@ -676,7 +676,7 @@ EOSIO_REFLECT2(Vote, voter, candidate, video, group)
 std::vector<Vote> ElectionGroup::votes() const
 {
    std::vector<Vote> result;
-   auto& idx = db.votes.get<by_round>();
+   auto& idx = db.votes.get<by_group>();
    for (auto it = idx.lower_bound(std::tuple{obj->id._id, eosio::name{0}});
         it != idx.end() && it->group_id == obj->id._id; ++it)
    {
