@@ -120,18 +120,17 @@ const ChiefDelegates = ({
 
     const isLoading = isLoadingMemberStats || isLoadingMemberData;
     const isError = isErrorMemberStats || isErrorMemberData;
-    const isDataMissing = !electionState || !memberData || !membersStats;
 
     if (isLoading) {
         return <LoadingContainer />;
     }
 
-    if (isError || isDataMissing) {
+    if (isError || !electionState || !memberData || !membersStats) {
         return <ErrorLoadingDelegation />;
     }
 
     // TODO: Handle the no-election-has-ever-happened scenario (just after genesis induction is complete)
-    const headChiefAsEdenMember = chiefsAsMembers!.find(
+    const headChiefAsEdenMember = chiefsAsMembers.find(
         (d) => d?.account === electionState.lead_representative
     );
     const headChiefAsMemberData = memberData.find(
