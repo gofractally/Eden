@@ -1,7 +1,6 @@
 import { Flipper, Flipped } from "react-flip-toolkit";
 import { VotingMemberChip } from "elections";
 import { VoteData } from "elections/interfaces";
-import { MembersGrid } from "members";
 import { MemberData } from "members/interfaces";
 
 interface VotingRoundParticipantsProps {

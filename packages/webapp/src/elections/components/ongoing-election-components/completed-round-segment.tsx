@@ -8,7 +8,7 @@ import { ElectionParticipantChip } from "elections";
 import { EdenMember, MembersGrid } from "members";
 
 import RoundHeader from "./round-header";
-import { VideoUploadButton } from "../video-upload-button";
+import { VideoUploadButton } from "./video-upload-button";
 
 interface CompletedRoundSegmentProps {
     roundIndex: number;
