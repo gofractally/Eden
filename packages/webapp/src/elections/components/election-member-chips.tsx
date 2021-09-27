@@ -151,7 +151,7 @@ export const ElectionParticipantChip = ({
     if (!member) {
         return (
             <div
-                className="p-2.5 select-none"
+                className="p-2.5 select-none border-b"
                 style={{ boxShadow: "0 0 0 1px #e5e5e5" }}
             >
                 <div className="flex items-center space-x-2.5">

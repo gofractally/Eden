@@ -1,6 +1,6 @@
 import { FaSpinner } from "react-icons/fa";
 
-import { Card } from "_app";
+import { Card, Container } from "_app";
 
 export const Loader = ({ size = 56 }: { size?: number }) => (
     <div className="w-full h-full flex justify-center items-center">
@@ -12,4 +12,10 @@ export const LoadingCard = () => (
     <Card>
         <Loader />
     </Card>
+);
+
+export const LoadingContainer = () => (
+    <Container className="py-12">
+        <Loader />
+    </Container>
 );

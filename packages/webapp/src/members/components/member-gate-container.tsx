@@ -1,6 +1,7 @@
 import React from "react";
 
-import { Button, Container, useCurrentMember, useUALAccount } from "_app";
+import { useCurrentMember, useUALAccount } from "_app";
+import { Button, Container, LoadingContainer } from "_app/ui";
 
 export interface Props {
     children: React.ReactNode;
@@ -14,7 +15,9 @@ export const MemberGateContainer = ({
     children,
 }: Props) => {
     const [ualAccount, _, ualShowModal] = useUALAccount();
-    const { data: currentMember } = useCurrentMember();
+    const { data: currentMember, isLoading } = useCurrentMember();
+
+    if (isLoading) return <LoadingContainer />;
 
     if (!ualAccount) {
         return (
