@@ -69,6 +69,7 @@ export const useCurrentMemberElectionVotingData = (
                             account
                             profile {
                               name
+                              img
                             }
                           }
                         }
@@ -76,6 +77,7 @@ export const useCurrentMemberElectionVotingData = (
                           account
                           profile {
                             name
+                            img
                           }
                         }
                         video
@@ -99,30 +101,154 @@ export const useCurrentMemberElectionVotingData = (
         if (lastElection) {
             query.data.electionTime = dayjs(lastElection.time);
             query.data.votes =
-                lastElection.votes?.edges?.map((voteEdge: any) => ({
-                    roundIndex: voteEdge.node.group.round.round,
-                    votingBegin: dayjs(voteEdge.node.group.round.votingBegin),
-                    votingEnd: dayjs(voteEdge.node.group.round.votingEnd),
-                    votingStarted: voteEdge.node.group.round.votingStarted,
-                    votingFinished: voteEdge.node.group.round.votingFinished,
-                    resultsAvailable:
-                        voteEdge.node.group.round.resultsAvailable,
-                    candidate: voteEdge.node.candidate
-                        ? {
-                              account: voteEdge.node.candidate.account,
-                              name: voteEdge.node.candidate.profile.name,
-                          }
-                        : undefined,
-                    winner: voteEdge.node.group.winner
-                        ? {
-                              account: voteEdge.node.group.winner.account,
-                              name: voteEdge.node.group.winner.profile.name,
-                          }
-                        : undefined,
-                    video: voteEdge.node.video,
+                lastElection.votes?.edges?.map(({ node: voteNode }: any) => ({
+                    roundIndex: voteNode.group.round.round,
+                    votingBegin: dayjs(voteNode.group.round.votingBegin),
+                    votingEnd: dayjs(voteNode.group.round.votingEnd),
+                    votingStarted: voteNode.group.round.votingStarted,
+                    votingFinished: voteNode.group.round.votingFinished,
+                    resultsAvailable: voteNode.group.round.resultsAvailable,
+                    candidate: formatQueriedMemberAccountData(
+                        voteNode.candidate
+                    ),
+                    winner: formatQueriedMemberAccountData(
+                        voteNode.group.winner
+                    ),
+                    video: voteNode.video,
                 })) || [];
         }
     }
 
     return query;
 };
+
+export interface CurrentElectionGlobalData {
+    time: dayjs.Dayjs;
+    rounds: [
+        {
+            roundIndex: number;
+            votingBegin: dayjs.Dayjs;
+            votingEnd: dayjs.Dayjs;
+            votingStarted: boolean;
+            votingFinished: boolean;
+            resultsAvailable: boolean;
+            groups: [
+                {
+                    winner?: MemberAccountData;
+                    votes: [
+                        {
+                            voter: MemberAccountData;
+                            candidate: MemberAccountData;
+                            video: string;
+                        }
+                    ];
+                }
+            ];
+        }
+    ];
+}
+
+const currentElectionGlobalDataQuery = `
+{
+  elections(last: 1) {
+    edges {
+      node {
+        time
+        rounds {
+          edges {
+            node {
+              round
+              votingBegin
+              votingEnd
+              votingStarted
+              votingFinished
+              resultsAvailable
+              groups {
+                edges {
+                  node {
+                    winner {
+                      account
+                      profile {
+                        name
+                        img
+                      }
+                    }
+                    votes {
+                      voter {
+                        account
+                        profile {
+                          name
+                          img
+                        }
+                      }
+                      candidate {
+                        account
+                        profile {
+                          name
+                          img
+                        }
+                      }
+                      video
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
+`;
+
+export const useCurrentGlobalElectionData = (): Query<CurrentElectionGlobalData> => {
+    const query = useQuery<any>(currentElectionGlobalDataQuery);
+
+    if (query.data) {
+        const currentElection = query.data.elections.edges?.[0]?.node;
+        if (currentElection) {
+            query.data.time = dayjs(currentElection.time);
+            query.data.rounds = mapQueriedRounds(currentElection.rounds?.edges);
+        }
+    }
+
+    return query;
+};
+
+const mapQueriedRounds = (queriedRoundsEdges: any) =>
+    queriedRoundsEdges?.map(({ node: roundNode }: any) => ({
+        roundIndex: roundNode.round,
+        votingBegin: dayjs(roundNode.votingBegin),
+        votingEnd: dayjs(roundNode.votingEnd),
+        votingStarted: roundNode.votingStarted,
+        votingFinished: roundNode.votingFinished,
+        resultsAvailable: roundNode.resultsAvailable,
+        groups: mapQueriedRoundsGroups(roundNode.groups?.edges),
+    })) || [];
+
+const mapQueriedRoundsGroups = (queriedRoundsGroupsEdges: any) =>
+    queriedRoundsGroupsEdges?.map(({ node: groupNode }: any) => ({
+        winner: formatQueriedMemberAccountData(groupNode.winner),
+        votes: mapQueriedGroupVotes(groupNode.votes),
+    })) || [];
+
+const mapQueriedGroupVotes = (votes: any) => {
+    // console.info(queriedGroupsVotesEdges);
+    return (
+        votes?.map((vote: any) => ({
+            voter: formatQueriedMemberAccountData(vote.voter),
+            candidate: formatQueriedMemberAccountData(vote.candidate),
+            video: vote.video,
+        })) || []
+    );
+};
+
+const formatQueriedMemberAccountData = (memberAccountData: any) =>
+    memberAccountData
+        ? {
+              account: memberAccountData.account.account,
+              name: memberAccountData.profile.name,
+              image: memberAccountData.profile.img,
+          }
+        : undefined;
