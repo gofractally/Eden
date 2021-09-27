@@ -94,7 +94,11 @@ const AccountMenu = () => {
             </a>
         </div>
     ) : (
-        <Button onClick={ualShowModal} className="mt-4 md:mt-0">
+        <Button
+            onClick={ualShowModal}
+            className="mt-4 md:mt-0"
+            dataTestId="signin-header-button"
+        >
             Sign in
         </Button>
     );

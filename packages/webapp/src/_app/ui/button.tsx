@@ -16,6 +16,7 @@ interface Props {
     target?: string;
     isExternal?: boolean;
     title?: string;
+    dataTestId?: string;
 }
 
 export type ButtonSize = "sm" | "md" | "lg";
@@ -28,6 +29,7 @@ const SIZES: { [key in ButtonSize]: string } = {
 export type ButtonType =
     | "primary"
     | "disabled"
+    | "secondary"
     | "neutral"
     | "caution"
     | "danger"
@@ -38,6 +40,7 @@ export type ButtonType =
     | "link";
 const TYPES: { [key in ButtonType]: string } = {
     primary: "bg-blue-500 border-blue-500 text-white hover:bg-blue-600",
+    secondary: "border-blue-500 text-blue-500 hover:text-blue-400",
     disabled: "border-gray-300 bg-gray-300 text-white",
     neutral: "bg-gray-50 text-gray-800 hover:bg-gray-200",
     caution: "bg-yellow-500 text-white hover:bg-yellow-600 border-white",
@@ -76,6 +79,7 @@ export const Button = ({
     target,
     isExternal,
     title,
+    dataTestId,
 }: Props) => {
     const baseClass = "inline-block border focus:outline-none text-center";
     const widthClass = fullWidth ? "w-full" : "";
@@ -98,6 +102,7 @@ export const Button = ({
                 className={buttonClass}
                 disabled={disabled}
                 title={title}
+                data-testid={dataTestId}
             >
                 {buttonContents()}
             </button>
@@ -112,6 +117,7 @@ export const Button = ({
                 rel="noopener noreferrer"
                 target={target}
                 title={title}
+                data-testid={dataTestId}
             >
                 {buttonContents()}
             </a>
@@ -120,7 +126,12 @@ export const Button = ({
 
     return (
         <NextLink href={href}>
-            <a className={buttonClass} target={target} title={title}>
+            <a
+                className={buttonClass}
+                target={target}
+                data-testid={dataTestId}
+                title={title}
+            >
                 {buttonContents()}
             </a>
         </NextLink>

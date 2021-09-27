@@ -1,15 +1,14 @@
-import { RiVideoUploadLine } from "react-icons/ri";
-
 import {
     isValidDelegate,
     useMemberDataFromEdenMembers,
     useParticipantsInMyCompletedRound,
 } from "_app";
-import { Button, Container, Expander, Text } from "_app/ui";
+import { Container, Expander, Text } from "_app/ui";
 import { ElectionParticipantChip } from "elections";
 import { EdenMember, MembersGrid } from "members";
 
 import RoundHeader from "./round-header";
+import { VideoUploadButton } from "../video-upload-button";
 
 interface CompletedRoundSegmentProps {
     roundIndex: number;
@@ -26,7 +25,7 @@ export const CompletedRoundSegment = ({
     if (!participantsMemberData || !participantsMemberData.length) return null;
 
     const commonDelegate = data?.participants.find(
-        (p) => p.account === data.delegate
+        (p: EdenMember) => p.account === data?.delegate?.account
     );
 
     return (
@@ -57,10 +56,7 @@ export const CompletedRoundSegment = ({
                 }}
             </MembersGrid>
             <Container>
-                <Button size="sm">
-                    <RiVideoUploadLine size={18} className="mr-2" />
-                    Upload round {roundIndex + 1} recording
-                </Button>
+                <VideoUploadButton roundIndex={roundIndex} />
             </Container>
         </Expander>
     );

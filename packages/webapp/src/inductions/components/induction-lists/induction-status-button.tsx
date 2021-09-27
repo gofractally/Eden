@@ -149,6 +149,7 @@ export const InductionStatusButton = ({ induction, role }: Props) => {
                     size="sm"
                     className="ml-2"
                     onClick={cancelInduction}
+                    dataTestId="cancel-induction"
                 >
                     <FaTrash />
                 </Button>

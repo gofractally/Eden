@@ -40,6 +40,8 @@ import {
     ActiveStateConfigType,
     CurrentElection,
     Election,
+    ElectionCompletedRound,
+    ElectionState,
     VoteData,
 } from "elections/interfaces";
 import { EncryptionScope, getEncryptedData } from "encryption/api";
@@ -253,9 +255,9 @@ export const queryEndorsementsByInductionId = (inductionId: string) => ({
     queryFn: () => getEndorsementsByInductionId(inductionId),
 });
 
-export const useMemberByAccountName = (accountName: string) =>
+export const useMemberByAccountName = (accountName?: string) =>
     useQuery<EdenMember | undefined, Error>({
-        ...queryMemberByAccountName(accountName),
+        ...queryMemberByAccountName(accountName ?? ""),
         enabled: Boolean(accountName),
     });
 
@@ -359,11 +361,13 @@ export const useHeadDelegate = () =>
         ...queryHeadDelegate,
     });
 
-export const useParticipantsInMyCompletedRound = (electionRound: number) => {
+export const useParticipantsInMyCompletedRound = (
+    electionRound: number
+): UseQueryResult<ElectionCompletedRound> => {
     const { data: member } = useCurrentMember();
     const { data: voteData } = useVoteDataRow(member?.account);
 
-    return useQuery({
+    return useQuery<ElectionCompletedRound>({
         ...queryParticipantsInCompletedRound(electionRound, member, voteData),
         enabled: Boolean(member),
     });

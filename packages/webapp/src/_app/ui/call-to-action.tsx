@@ -6,6 +6,7 @@ interface Props {
     href?: string;
     target?: string;
     isExternal?: boolean;
+    dataTestId?: string;
     children: React.ReactNode;
 }
 
@@ -16,6 +17,7 @@ export const CallToAction = ({
     children,
     target,
     isExternal,
+    dataTestId,
 }: Props) => (
     <section className="text-gray-600 body-font">
         <div className="container px-5 py-24 mx-auto">
@@ -31,6 +33,7 @@ export const CallToAction = ({
                         className="flex-shrink-0 mt-10 sm:mt-0"
                         target={target}
                         isExternal={isExternal}
+                        dataTestId={dataTestId}
                     >
                         {buttonLabel || "Go"}
                     </Button>

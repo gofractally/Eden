@@ -1,5 +1,6 @@
-import dayjs, { Dayjs } from "dayjs";
+import { useEffect, useState } from "react";
 import { BsInfoCircle } from "react-icons/bs";
+import { Dayjs } from "dayjs";
 
 import {
     useUALAccount,
@@ -9,7 +10,7 @@ import {
     useCurrentElection,
 } from "_app";
 import { Button, Container, Heading, Loader, Link, Text } from "_app/ui";
-import { ErrorLoadingElection } from "elections";
+import { ErrorLoadingElection, getRoundTimes } from "elections";
 import {
     ActiveStateConfigType,
     Election,
@@ -17,7 +18,6 @@ import {
 } from "elections/interfaces";
 
 import * as Ongoing from "./ongoing-election-components";
-import { useEffect, useState } from "react";
 
 // TODO: Make sure time zone changes during election are handled properly
 export const OngoingElection = ({ election }: { election: any }) => {
@@ -60,11 +60,10 @@ export const OngoingElection = ({ election }: { election: any }) => {
         return <ErrorLoadingElection />;
     }
 
-    const roundDurationSec = globals.election_round_time_sec;
-    const roundDurationMs = roundDurationSec * 1000;
-    const roundEndTimeRaw = election.round_end ?? election.seed.end_time;
-    const roundEndTime = dayjs(roundEndTimeRaw + "Z");
-    const roundStartTime = dayjs(roundEndTime).subtract(roundDurationMs);
+    const { roundDurationMs, roundEndTime, roundStartTime } = getRoundTimes(
+        globals,
+        election
+    );
 
     return (
         <div className="divide-y">

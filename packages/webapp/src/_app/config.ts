@@ -52,4 +52,11 @@ export const ROUTES: { [key: string]: Route } = {
         Icon: ElectionNav,
         requiresActiveCommunity: true,
     },
+    ELECTION_SLASH_ROUND_VIDEO_UPLOAD: {
+        href: "/election/round-video-upload",
+        label: "Video Upload Service",
+        hideNav: true,
+        Icon: ElectionNav, // TODO: pick a better Icon
+        requiresActiveCommunity: true,
+    },
 };

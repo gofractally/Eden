@@ -1,11 +1,12 @@
 import React from "react";
 
-export type TextType = "regular" | "note" | "danger" | "info";
+export type TextType = "regular" | "note" | "danger" | "info" | "success";
 const TYPES: { [key in TextType]: string } = {
     regular: "text-gray-700",
     note: "text-gray-500",
     danger: "text-red-500",
     info: "text-blue-500",
+    success: "text-green-500",
 };
 
 export type TextSize = "xs" | "sm" | "base" | "lg" | "inherit";

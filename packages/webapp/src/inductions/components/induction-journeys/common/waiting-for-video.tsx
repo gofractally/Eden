@@ -1,5 +1,5 @@
 import { Heading, Text } from "_app";
-import { getInductionRemainingTimeDays } from "inductions";
+import { getInductionRemainingTimeDays, InductionNames } from "inductions";
 import { Induction } from "inductions/interfaces";
 
 export const WaitingForVideo = ({ induction }: { induction: Induction }) => {
@@ -13,6 +13,7 @@ export const WaitingForVideo = ({ induction }: { induction: Induction }) => {
                     Your inviter or one of the witnesses will be in touch with
                     you to schedule a short, recorded video induction ceremony.
                 </Text>
+                <InductionNames inductionId={induction.id} />
                 <Text className="leading-normal">
                     If you've already completed the ceremony, ask your inviter
                     or a witness to attach the video recording here.

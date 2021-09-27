@@ -1,18 +1,20 @@
 describe("Community", () => {
     beforeEach(() => {
         cy.visit(`/members`);
-        cy.wait(1);
+        cy.interceptEosApis();
     });
 
     it("should display members", () => {
         const newMembersGrid = cy.get(`[data-testid="new-members-grid"]`);
-        expect(newMembersGrid).to.exist;
+        newMembersGrid.should("exist");
         const membersGrid = cy.get(`[data-testid="members-grid"]`);
-        expect(membersGrid).to.exist;
+        membersGrid.should("exist");
         membersGrid.find("div").should("have.length.greaterThan", 0);
     });
 
     it("should allow to view a member profile", () => {
+        cy.wait("@eosGetTableRows");
+
         const firstMember = cy
             .get(`[data-testid="members-grid"]`)
             .children()
@@ -22,7 +24,7 @@ describe("Community", () => {
         const memberCard = cy.get(`[data-testid^="member-card-"]`, {
             timeout: 30000,
         });
-        expect(memberCard).to.exist;
+        memberCard.should("exist");
 
         cy.get("head title").should("contain", `'s Profile`);
 
