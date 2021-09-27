@@ -295,7 +295,7 @@ struct vote_object : public chainbase::object<vote_table, vote_object>
    std::string video;
 
    vote_key by_pk() const { return {voter, election_time, round}; }
-   auto by_round() const { return std::tuple{election_time, round, voter}; }
+   auto by_round() const { return std::tuple{group_id, voter}; }
 };
 using vote_index = mic<vote_object,
                        ordered_by_id<vote_object>,
@@ -677,8 +677,8 @@ std::vector<Vote> ElectionGroup::votes() const
 {
    std::vector<Vote> result;
    auto& idx = db.votes.get<by_round>();
-   for (auto it = idx.lower_bound(std::tuple{obj->election_time, obj->round, eosio::name{0}});
-        it != idx.end() && it->election_time == obj->election_time && it->round == obj->round; ++it)
+   for (auto it = idx.lower_bound(std::tuple{obj->id._id, eosio::name{0}});
+        it != idx.end() && it->group_id == obj->id._id; ++it)
    {
       result.push_back(Vote{&*it});
    }
@@ -861,7 +861,7 @@ void electvote(uint8_t round, eosio::name voter, eosio::name candidate)
    auto& election_idx = db.elections.get<by_pk>();
    eosio::check(!election_idx.empty(), "electvote without any elections");
    auto& election = *--election_idx.end();
-   auto& vote = get<by_round>(db.votes, std::tuple{election.time, round, voter});
+   auto& vote = get<by_pk>(db.votes, std::tuple{voter, election.time, round});
    db.votes.modify(vote, [&](auto& vote) { vote.candidate = candidate; });
 }
 
@@ -871,7 +871,7 @@ void electvideo(uint8_t round, eosio::name voter, const std::string& video)
    if (election_idx.empty())
       return;
    auto& election = *--election_idx.end();
-   auto* vote = get_ptr<by_round>(db.votes, std::tuple{election.time, round, voter});
+   auto* vote = get_ptr<by_pk>(db.votes, std::tuple{voter, election.time, round});
    if (vote)
       db.votes.modify(*vote, [&](auto& vote) { vote.video = video; });
 }
@@ -975,7 +975,7 @@ void handle_event(const eden::election_event_report_group& event)
    db.election_groups.modify(group, [&](auto& group) { group.winner = event.winner; });
    for (auto& v : event.votes)
    {
-      auto& vote = get<by_round>(db.votes, std::tuple{event.election_time, event.round, v.voter});
+      auto& vote = get<by_pk>(db.votes, std::tuple{v.voter, event.election_time, event.round});
       db.votes.modify(vote, [&](auto& vote) { vote.candidate = v.candidate; });
    }
 }
