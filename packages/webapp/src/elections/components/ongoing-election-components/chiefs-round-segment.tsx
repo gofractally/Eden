@@ -1,5 +1,4 @@
 import { useEffect } from "react";
-import { RiVideoUploadLine } from "react-icons/ri";
 import dayjs, { Dayjs } from "dayjs";
 
 import { useCountdown } from "_app";
@@ -8,9 +7,10 @@ import {
     useMemberDataFromVoteData,
     useVoteData,
 } from "_app/hooks/queries";
-import { Button, Container, Expander, Heading, Loader, Text } from "_app/ui";
+import { Container, Expander, Heading, Loader, Text } from "_app/ui";
 import { DelegateChip, ErrorLoadingElection } from "elections";
 import { MembersGrid } from "members";
+import { VideoUploadButton } from "../video-upload-button";
 
 import RoundHeader from "./round-header";
 
@@ -107,12 +107,7 @@ export const ChiefsRoundSegment = ({
             </MembersGrid>
             {isUserParticipant && (
                 <Container>
-                    <div className="flex flex-col xs:flex-row justify-center space-y-2 xs:space-y-0 xs:space-x-2">
-                        <Button size="sm">
-                            <RiVideoUploadLine size={18} className="mr-2" />
-                            Upload recording
-                        </Button>
-                    </div>
+                    <VideoUploadButton buttonType="link" />
                 </Container>
             )}
         </Expander>

@@ -7,13 +7,14 @@ import {
     useIsCommunityActive,
     useUALAccount,
 } from "_app";
+import { ROUTES } from "_app/routes";
+
 import {
     getInductionStatus,
     InductionJourneyContainer,
     InductionStatus,
     useGetInductionWithEndorsements,
 } from "inductions";
-import { ROUTES } from "_app/config";
 
 export const InductionDetailsPage = () => {
     const router = useRouter();

@@ -1,8 +1,12 @@
 import { useQuery } from "react-query";
 
-import { assetToString, queryMembersStats, queryTreasuryStats } from "_app";
+import {
+    assetToLocaleString,
+    queryMembersStats,
+    queryTreasuryStats,
+} from "_app";
 import { Container, Heading, Link, Loader, Text } from "_app/ui";
-import { ROUTES } from "_app/config";
+import { ROUTES } from "_app/routes";
 import { PendingInvites } from "_app/ui/icons";
 import { MembershipNav, TreasuryNav } from "_app/ui/nav-icons";
 
@@ -56,7 +60,7 @@ const CommunityStatsContents = () => {
                             <TreasuryNav />
                         </div>
                         <Link href={ROUTES.TREASURY.href}>
-                            Treasury: {assetToString(treasuryBalance, 4)}
+                            Treasury: {assetToLocaleString(treasuryBalance, 4)}
                         </Link>
                     </div>
                 )}

@@ -3,13 +3,13 @@ import { useRouter } from "next/router";
 import Link from "next/link";
 
 import { useNavItems } from "_app";
-import { Route } from "_app/config";
+import { Route } from "_app/routes";
 
 import NavProfile from "./nav-profile";
 import { Image } from "./image";
 
 export const SideNav = () => (
-    <header className="hidden xs:block w-24 md:w-32 lg:w-48 xl:w-64">
+    <header className="hidden xs:block w-24 md:w-32 lg:w-48 xl:w-64 z-50">
         <nav className="fixed flex flex-col h-screen w-24 md:w-32 lg:w-48 xl:w-64 pl-5 pr-6 xl:pr-4 border-r border-lighter">
             <HeaderLogo />
             <HeaderItems />

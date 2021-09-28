@@ -8,8 +8,9 @@ import {
     useCurrentMember,
     usePrevious,
 } from "_app";
-import { ROUTES } from "_app/config";
+import { ROUTES } from "_app/routes";
 import { Container, Heading, Loader } from "_app/ui";
+
 import {
     ErrorLoadingElection,
     OngoingElection,

@@ -19,6 +19,7 @@ import {
     Loader,
     Text,
 } from "_app/ui";
+import { ROUTES } from "_app/routes";
 
 import { setElectionMeeting } from "elections";
 
@@ -27,7 +28,6 @@ import {
     zoomConnectAccountLink,
     generateZoomMeetingLink,
 } from "_api/zoom-commons";
-import { ROUTES } from "_app/config";
 
 export const getServerSideProps: GetServerSideProps = async ({
     query,

@@ -1,16 +1,19 @@
-import { useState } from "react";
+import React, { useState } from "react";
 
-import { Button, Heading, Modal, Text } from "_app/ui";
+import { Button, Form, Heading, Modal, Text } from "_app/ui";
 import { zoomConnectAccountLink } from "_api/zoom-commons";
 import { RoundStage } from "elections/interfaces";
 
 import { MeetingStep } from "./meeting-link";
+import { freeformMeetingLinksEnabled } from "config";
+import { onError, useFormFields } from "_app";
 
 interface Props {
     isOpen: boolean;
     close: () => void;
     meetingStep: MeetingStep;
-    requestMeetingLink: (throwOnError: boolean) => Promise<void>;
+    requestMeetingLink: () => Promise<void>;
+    submitMeetingLink: (meetingLink: string) => Promise<void>;
     stage: RoundStage;
 }
 
@@ -19,6 +22,7 @@ export const MeetingLinkModal = ({
     close,
     meetingStep,
     requestMeetingLink,
+    submitMeetingLink,
     stage,
 }: Props) => (
     <Modal
@@ -35,6 +39,7 @@ export const MeetingLinkModal = ({
             <ModalStepGetLink
                 close={close}
                 requestMeetingLink={requestMeetingLink}
+                submitMeetingLink={submitMeetingLink}
                 stage={stage}
             />
         )}
@@ -70,23 +75,36 @@ const ModalStepZoom = ({ close }: ModalStepProps) => {
 };
 
 interface ModalStepGetLinkProps extends ModalStepProps {
-    requestMeetingLink: (throwOnError: boolean) => Promise<void>;
+    requestMeetingLink: () => Promise<void>;
+    submitMeetingLink: (meetingLink: string) => Promise<void>;
     stage: RoundStage;
 }
 
 const ModalStepGetLink = ({
     close,
     requestMeetingLink,
+    submitMeetingLink,
     stage,
 }: ModalStepGetLinkProps) => {
     const [isSuccess, setIsSuccess] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
-    const onContinue = async () => {
+    const [fields, setFields] = useFormFields({
+        meetingLink: "",
+    });
+
+    const onContinue = async (e: React.FormEvent) => {
+        e.preventDefault();
         setIsLoading(true);
         try {
-            await requestMeetingLink(true);
+            if (freeformMeetingLinksEnabled) {
+                await submitMeetingLink(fields.meetingLink);
+            } else {
+                await requestMeetingLink();
+            }
             setIsSuccess(true);
         } catch (error) {
+            console.error(error);
+            onError(error as Error);
             setIsSuccess(false);
         }
         setIsLoading(false);
@@ -126,18 +144,44 @@ const ModalStepGetLink = ({
                 In the next step, you may be asked to sign a transaction setting
                 the meeting link up.
             </Text>
-            <div className="flex space-x-3">
-                <Button type="neutral" onClick={close}>
-                    Cancel
-                </Button>
-                <Button
-                    onClick={onContinue}
-                    isLoading={isLoading}
-                    disabled={isLoading}
-                >
-                    Continue
-                </Button>
-            </div>
+            <form onSubmit={onContinue}>
+                {freeformMeetingLinksEnabled && (
+                    <div className="space-y-3 mb-3">
+                        <Text>
+                            Use Zoom to generate a password-protected meeting
+                            link and paste the meeting link (with the password
+                            appended to the end) here. E.g.,{" "}
+                            <code className="text-xs bg-gray-200 text-red-500 p-1">
+                                https://us06web.zoom.us/j/71043116043?pwd=RZFqdZ1TUFBzSVREzFRPS
+                            </code>
+                            .
+                        </Text>
+                        <Form.LabeledSet
+                            label="Meeting Link"
+                            htmlFor="meetingLink"
+                            className="col-span-6 sm:col-span-3"
+                        >
+                            <Form.Input
+                                id="meetingLink"
+                                type="text"
+                                required
+                                value={fields.meetingLink}
+                                onChange={(
+                                    e: React.ChangeEvent<HTMLInputElement>
+                                ) => setFields(e)}
+                            />
+                        </Form.LabeledSet>
+                    </div>
+                )}
+                <div className="flex space-x-3">
+                    <Button type="neutral" onClick={close}>
+                        Cancel
+                    </Button>
+                    <Button isSubmit isLoading={isLoading} disabled={isLoading}>
+                        Continue
+                    </Button>
+                </div>
+            </form>
         </div>
     );
 };

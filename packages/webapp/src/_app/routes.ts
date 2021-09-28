@@ -15,6 +15,7 @@ export interface Route {
     exactPath?: boolean;
     hideNav?: boolean;
     requiresActiveCommunity?: boolean;
+    requiresCompletedElection?: boolean;
 }
 
 export const ROUTES: { [key: string]: Route } = {
@@ -37,20 +38,21 @@ export const ROUTES: { [key: string]: Route } = {
     DELEGATION: {
         href: "/delegates",
         label: "My Delegates",
-        hideNav: true,
         Icon: DelegationNav,
         requiresActiveCommunity: true,
-    },
-    TREASURY: {
-        href: "/treasury",
-        label: "Treasury",
-        Icon: TreasuryNav,
+        requiresCompletedElection: true,
     },
     ELECTION: {
         href: "/election",
         label: "Election",
         Icon: ElectionNav,
         requiresActiveCommunity: true,
+    },
+    // >>> MOBILE NAV BAR ENDS HERE, IT ONLY SHOWS THE FIRST 5 ITEMS, THE ONES ABOVE THIS LINE <<<
+    TREASURY: {
+        href: "/treasury",
+        label: "Treasury",
+        Icon: TreasuryNav,
     },
     ELECTION_SLASH_ROUND_VIDEO_UPLOAD: {
         href: "/election/round-video-upload",

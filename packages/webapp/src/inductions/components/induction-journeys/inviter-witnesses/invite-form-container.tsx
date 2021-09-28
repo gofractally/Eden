@@ -1,6 +1,8 @@
 import { useState } from "react";
+
 import { Text, Link, onError, Heading, Button } from "_app";
-import { ROUTES } from "_app/config";
+import { ROUTES } from "_app/routes";
+
 import {
     InductionInviteForm,
     InductionStepInviter,

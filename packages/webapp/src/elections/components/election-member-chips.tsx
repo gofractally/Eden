@@ -1,4 +1,4 @@
-import { useRouter } from "next/router";
+import React from "react";
 import { FaCheckSquare, FaPlayCircle, FaRegSquare } from "react-icons/fa";
 
 import {
@@ -7,8 +7,8 @@ import {
     useChiefDelegates,
     useHeadDelegate,
 } from "_app";
-import { ROUTES } from "_app/config";
-import { GenericMemberChip } from "_app/ui";
+import { ROUTES } from "_app/routes";
+import { GenericMemberChip, OpensInNewTabIcon } from "_app/ui";
 import { MemberData } from "members/interfaces";
 
 interface VotingMemberChipProps {
@@ -33,11 +33,9 @@ export const VotingMemberChip = ({
     electionVideoCid,
     ...containerProps
 }: VotingMemberChipProps) => {
-    const router = useRouter();
-
     const goToMemberPage = (e: React.MouseEvent) => {
         e.stopPropagation();
-        router.push(`${ROUTES.MEMBERS.href}/${member.account}`);
+        window.open(`${ROUTES.MEMBERS.href}/${member.account}`, "_blank");
     };
 
     return (
@@ -53,7 +51,10 @@ export const VotingMemberChip = ({
                             Votes Received: {votesReceived}
                         </p>
                     )}
-                    <p className="group-hover:underline">{member.name}</p>
+                    <p className="flex group-hover:underline">
+                        {member.name}
+                        <OpensInNewTabIcon className="mt-0.5" />
+                    </p>
                     {votingFor && (
                         <p className="text-xs text-gray-500">
                             Voting for {votingFor}
@@ -140,18 +141,16 @@ export const ElectionParticipantChip = ({
     isDelegate = false,
     electionVideoCid,
 }: ElectionParticipantChipProps) => {
-    const router = useRouter();
-
     const goToMemberPage = (e: React.MouseEvent) => {
         if (!member) return;
         e.stopPropagation();
-        router.push(`${ROUTES.MEMBERS.href}/${member.account}`);
+        window.open(`${ROUTES.MEMBERS.href}/${member.account}`, "_blank");
     };
 
     if (!member) {
         return (
             <div
-                className="p-2.5 select-none"
+                className="p-2.5 select-none border-b"
                 style={{ boxShadow: "0 0 0 1px #e5e5e5" }}
             >
                 <div className="flex items-center space-x-2.5">
@@ -171,7 +170,10 @@ export const ElectionParticipantChip = ({
                     <p className="text-xs text-gray-500 font-light">
                         @{member.account}
                     </p>
-                    <p className="group-hover:underline">{member.name}</p>
+                    <p className="flex group-hover:underline">
+                        {member.name}
+                        <OpensInNewTabIcon className="mt-0.5" />
+                    </p>
                     {delegateLevel && (
                         <p className="text-xs text-gray-500 font-light">
                             {delegateLevel}

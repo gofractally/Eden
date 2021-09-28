@@ -31,7 +31,7 @@ export const CompletedRoundSegment = ({
     return (
         <Expander
             header={<Header roundIndex={roundIndex} winner={commonDelegate} />}
-            inactive
+            type="inactive"
         >
             <MembersGrid members={participantsMemberData}>
                 {(member) => {
@@ -41,7 +41,6 @@ export const CompletedRoundSegment = ({
                                 key={`round-${roundIndex + 1}-winner`}
                                 member={member}
                                 delegateLevel="Delegate elect"
-                                electionVideoCid="QmeKPeuSai8sbEfvbuVXzQUzYRsntL3KSj5Xok7eRiX5Fp/edenTest2ElectionRoom12.mp4"
                             />
                         );
                     }
@@ -56,7 +55,7 @@ export const CompletedRoundSegment = ({
                 }}
             </MembersGrid>
             <Container>
-                <VideoUploadButton roundIndex={roundIndex} />
+                <VideoUploadButton buttonType="link" />
             </Container>
         </Expander>
     );
