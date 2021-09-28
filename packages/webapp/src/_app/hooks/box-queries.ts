@@ -21,21 +21,24 @@ export const useElectionStatus = () =>
 }
 `);
 
+export interface RoundBasicQueryData {
+    roundIndex: number;
+    votingBegin: dayjs.Dayjs;
+    votingEnd: dayjs.Dayjs;
+    votingStarted: boolean;
+    votingFinished: boolean;
+    resultsAvailable: boolean;
+}
+
+export interface RoundForUserVotingQueryData extends RoundBasicQueryData {
+    candidate?: MemberAccountData;
+    winner?: MemberAccountData;
+    video: string;
+}
+
 export interface CurrentMemberElectionVotingDataQuery {
     electionTime: dayjs.Dayjs;
-    votes: [
-        {
-            roundIndex: number;
-            votingBegin: dayjs.Dayjs;
-            votingEnd: dayjs.Dayjs;
-            votingStarted: boolean;
-            votingFinished: boolean;
-            resultsAvailable: boolean;
-            candidate?: MemberAccountData;
-            winner?: MemberAccountData;
-            video: string;
-        }
-    ];
+    votes: RoundForUserVotingQueryData[];
 }
 
 export const useCurrentMemberElectionVotingData = (
@@ -122,30 +125,24 @@ export const useCurrentMemberElectionVotingData = (
     return query;
 };
 
-export interface CurrentElectionGlobalData {
+export interface VoteQueryData {
+    voter: MemberAccountData;
+    candidate?: MemberAccountData;
+    video: string;
+}
+
+export interface RoundGroupQueryData {
+    winner?: MemberAccountData;
+    votes: VoteQueryData[];
+}
+
+export interface RoundWithGroupQueryData extends RoundBasicQueryData {
+    groups: RoundGroupQueryData[];
+}
+
+export interface ElectionGlobalQueryData {
     time: dayjs.Dayjs;
-    rounds: [
-        {
-            roundIndex: number;
-            votingBegin: dayjs.Dayjs;
-            votingEnd: dayjs.Dayjs;
-            votingStarted: boolean;
-            votingFinished: boolean;
-            resultsAvailable: boolean;
-            groups: [
-                {
-                    winner?: MemberAccountData;
-                    votes: [
-                        {
-                            voter: MemberAccountData;
-                            candidate: MemberAccountData;
-                            video: string;
-                        }
-                    ];
-                }
-            ];
-        }
-    ];
+    rounds: RoundWithGroupQueryData[];
 }
 
 const currentElectionGlobalDataQuery = `
@@ -202,7 +199,7 @@ const currentElectionGlobalDataQuery = `
 }
 `;
 
-export const useCurrentGlobalElectionData = (): Query<CurrentElectionGlobalData> => {
+export const useCurrentGlobalElectionData = (): Query<ElectionGlobalQueryData> => {
     const query = useQuery<any>(currentElectionGlobalDataQuery);
 
     if (query.data) {
@@ -247,7 +244,7 @@ const mapQueriedGroupVotes = (votes: any) => {
 const formatQueriedMemberAccountData = (memberAccountData: any) =>
     memberAccountData
         ? {
-              account: memberAccountData.account.account,
+              account: memberAccountData.account,
               name: memberAccountData.profile.name,
               image: memberAccountData.profile.img,
           }
