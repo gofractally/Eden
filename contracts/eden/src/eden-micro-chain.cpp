@@ -258,6 +258,7 @@ struct balance_history_object
    eosio::block_timestamp time;
    eosio::name account;
    eosio::asset delta;
+   eosio::asset new_amount;
    eosio::name other_account;
    history_desc description;
 
@@ -589,10 +590,11 @@ struct BalanceHistory
    eosio::block_timestamp time() const { return obj->time; }
    Balance balance() const { return get_balance(obj->account); }
    eosio::asset delta() const { return obj->delta; }
+   eosio::asset newAmount() const { return obj->new_amount; }
    Balance otherBalance() const { return get_balance(obj->other_account); }
    std::string description() const { return history_desc_str[(int)obj->description]; }
 };
-EOSIO_REFLECT2(BalanceHistory, time, balance, delta, otherBalance, description)
+EOSIO_REFLECT2(BalanceHistory, time, balance, delta, newAmount, otherBalance, description)
 
 BalanceHistoryConnection Balance::history(std::optional<eosio::block_timestamp> gt,
                                           std::optional<eosio::block_timestamp> ge,
@@ -1048,8 +1050,9 @@ void clearall()
    clear_table(db.distribution_funds);
 }
 
-void add_balance(eosio::name account, const eosio::asset& delta)
+eosio::asset add_balance(eosio::name account, const eosio::asset& delta)
 {
+   eosio::asset result;
    add_or_modify<by_pk>(db.balances, account, [&](bool is_new, auto& a) {
       if (is_new)
       {
@@ -1058,7 +1061,9 @@ void add_balance(eosio::name account, const eosio::asset& delta)
       }
       else
          a.amount += delta;
+      result = a.amount;
    });
+   return result;
 }
 
 void transfer_funds(eosio::block_timestamp time,
@@ -1067,12 +1072,13 @@ void transfer_funds(eosio::block_timestamp time,
                     eosio::asset amount,
                     history_desc description)
 {
-   add_balance(from, -amount);
-   add_balance(to, amount);
+   auto new_from = add_balance(from, -amount);
+   auto new_to = add_balance(to, amount);
    db.balance_history.emplace([&](auto& h) {
       h.time = time;
       h.account = from;
       h.delta = -amount;
+      h.new_amount = new_from;
       h.other_account = to;
       h.description = description;
    });
@@ -1080,6 +1086,7 @@ void transfer_funds(eosio::block_timestamp time,
       h.time = time;
       h.account = to;
       h.delta = amount;
+      h.new_amount = new_to;
       h.other_account = from;
       h.description = description;
    });
