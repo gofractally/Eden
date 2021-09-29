@@ -8,6 +8,16 @@
 
 namespace eden
 {
+   inline bool is_possible_deposit_account(eosio::name account,
+                                           eosio::name atomic_account = atomic_assets_account,
+                                           eosio::name market_account = atomic_market_account)
+   {
+      constexpr auto eosio_prefix = "eosio"_n;
+      constexpr auto eosio_mask = 0xFFFFFFFC00000000;
+      return account != market_account && account != atomic_account &&
+             (account.value & eosio_mask) != eosio_prefix.value;
+   }
+
    struct migrate_account_v0
    {
       eosio::name last_visited;

@@ -32,7 +32,7 @@ extern "C" void printi(int64_t value)
    if (value < 0)
    {
       prints("-");
-      printui(-value);
+      printui(-(uint64_t)value);
    }
    else
       printui(value);
