@@ -1,6 +1,6 @@
 import dayjs, { Dayjs } from "dayjs";
 
-import { ActiveStateConfigType, VoteData } from "./interfaces";
+import { ActiveStateConfigType, SimpleVoteData } from "./interfaces";
 import { getMemberGroupFromIndex } from "./api";
 
 export const extractElectionDates = (election: any) => {
@@ -28,7 +28,9 @@ export const extractElectionDates = (election: any) => {
     };
 };
 
-export const tallyVotesFromVoteData = (participantVoteData: VoteData[]) => {
+export const tallyVotesFromVoteData = (
+    participantVoteData: SimpleVoteData[]
+) => {
     const votes = participantVoteData.filter((pv) => pv.candidate);
     const threshold = Math.floor(votes.length * (2 / 3) + 1);
 
