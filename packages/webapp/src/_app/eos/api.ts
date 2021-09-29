@@ -1,4 +1,5 @@
 import { edenContractAccount, rpcEndpoint } from "config";
+import { eosDefaultApi } from "_app";
 import { TableQueryIndexOptions, TableQueryOptions } from "./interfaces";
 
 const RPC_URL = `${rpcEndpoint.protocol}://${rpcEndpoint.host}:${rpcEndpoint.port}`;
@@ -148,12 +149,10 @@ export const getTableRawRows = async <T = any>(
         upper_bound: options.upperBound,
     };
 
-    const response = await fetch(RPC_GET_TABLE_ROWS, {
-        method: "POST",
-        body: JSON.stringify(requestBody),
-    });
+    const data = (await eosDefaultApi.rpc.get_table_rows(
+        requestBody
+    )) as TableResponse<T>;
 
-    const data = (await response.json()) as TableResponse<T>;
     console.info(
         `fetched table ${edenContractAccount}.${table} (index ${options.index_position}-${options.key_type}) rows`,
         data
