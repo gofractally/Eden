@@ -8,7 +8,11 @@ import {
 } from "_app";
 import { Container, Heading, Loader, Expander, Text } from "_app/ui";
 
-import { ElectionParticipantChip, ErrorLoadingElection } from "elections";
+import {
+    ElectionParticipantChip,
+    ErrorLoadingElection,
+    tallyVotesFromVoteData,
+} from "elections";
 import { MemberData, MembersGrid } from "members";
 import { RoundHeader } from "elections/components/ongoing-election-components";
 
@@ -101,8 +105,6 @@ interface GroupSegmentProps {
 }
 
 const GroupSegment = ({ group, groupIndex }: GroupSegmentProps) => {
-    console.info(group);
-
     // TODO: revisit this, unfortunately the MembersGrid only accepts MemberData,
     // even though we don't need it to display the required summarized member
     // chip data
@@ -140,14 +142,25 @@ const GroupSegment = ({ group, groupIndex }: GroupSegmentProps) => {
 };
 
 const GroupHeader = ({ group, groupIndex }: GroupSegmentProps) => {
-    const submittedVotes = group.votes.filter((vote) => vote.candidate).length;
-    const winner = group.winner?.account || "(None)";
+    const groupVoteData = group.votes.map((data) => ({
+        member: data.voter.account,
+        candidate: data.candidate?.account || "",
+    }));
+    const { totalVotesCast, leadCandidates } = tallyVotesFromVoteData(
+        groupVoteData
+    );
+
+    const leadCandidatesLabel = leadCandidates.length
+        ? leadCandidates.join(", ")
+        : "(None)";
+
+    const winner = group.winner?.account || leadCandidatesLabel;
 
     return (
         <div className="w-full flex justify-between space-x-6 items-center">
             <div className="w-20">Group {groupIndex + 1}</div>
             <div className="w-8 p-2 text-lg text-center font-bold leading-none text-blue-100 transform bg-blue-600 rounded-full">
-                {submittedVotes}
+                {totalVotesCast}
             </div>
             <div className="flex-1">{winner}</div>
         </div>

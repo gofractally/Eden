@@ -86,11 +86,14 @@ export type CurrentElection = CurrentElectionBase &
         | CurrentElection_seedingState
     );
 
-export interface VoteData {
+export interface SimpleVoteData {
     member: string;
+    candidate: string;
+}
+
+export interface VoteData extends SimpleVoteData {
     round: number;
     index: number;
-    candidate: string;
 }
 
 export enum RoundStage {
