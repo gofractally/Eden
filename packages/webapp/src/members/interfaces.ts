@@ -9,10 +9,11 @@ export type VoteDataQueryOptionsByField = {
 export interface MemberAccountData {
     account: string;
     name: string;
+    image: string;
 }
+
 export interface MemberData extends MemberAccountData {
     templateId: number;
-    image: string;
     bio: string;
     attributions: string;
     socialHandles: EdenNftSocialHandles;
