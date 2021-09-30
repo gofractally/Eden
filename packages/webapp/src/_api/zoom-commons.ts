@@ -69,7 +69,9 @@ export const zoomAccountJWTIsExpired = (zoomAccountJWT: ZoomAccountJWT) => {
 };
 
 export const zoomResponseIsInvalidAccess = (response: any) => {
-    return response && response.error && response.error.code === 124; // invalid access token
+    const invalidAccessToken = response?.error?.code === 124; // invalid access token
+    const unauthorizedRequest = response?.type === "UnauthorizedRequestError"; // cookie missing
+    return invalidAccessToken || unauthorizedRequest;
 };
 
 export const generateZoomMeetingLink = async (
