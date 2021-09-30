@@ -1,5 +1,4 @@
 import { useState } from "react";
-import { ZoomAccountJWT } from "_api/zoom-commons";
 
 export const useLocalStorage = (key: string, initialValue: any) => {
     if (typeof window === "undefined") {
