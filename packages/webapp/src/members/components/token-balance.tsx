@@ -1,4 +1,9 @@
-import { assetToString, Link, Text, useTokenBalanceForAccount } from "_app";
+import {
+    assetToLocaleString,
+    Link,
+    Text,
+    useTokenBalanceForAccount,
+} from "_app";
 import { blockExplorerAccountBaseUrl } from "config";
 
 import { MemberData } from "../interfaces";
@@ -14,7 +19,7 @@ export const TokenBalance = ({ member }: Props) => {
         <div>
             <Text>
                 <strong>Balance:</strong>{" "}
-                {balance ? assetToString(balance) : "loading..."}{" "}
+                {balance ? assetToLocaleString(balance) : "loading..."}{" "}
                 <Link
                     href={`${blockExplorerAccountBaseUrl}/${member.account}`}
                     target="_blank"

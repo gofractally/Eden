@@ -1,5 +1,5 @@
 import {
-    assetToString,
+    assetToLocaleString,
     Container,
     Heading,
     Loader,
@@ -22,7 +22,7 @@ export const TreasuryHeader = () => {
             ) : treasuryStats ? (
                 <div className="text-right">
                     <Text className="font-medium">Balance</Text>
-                    <Text size="lg">{assetToString(treasuryStats)}</Text>
+                    <Text size="lg">{assetToLocaleString(treasuryStats)}</Text>
                 </div>
             ) : null}
         </Container>

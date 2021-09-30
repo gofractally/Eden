@@ -1,6 +1,7 @@
 import Image from "next/image";
+
 import { Container, Heading, Link, Text } from "_app/ui";
-import { ROUTES } from "_app/config";
+import { ROUTES } from "_app/routes";
 
 export const ZoomDocumentation = () => (
     <Container className="space-y-10">

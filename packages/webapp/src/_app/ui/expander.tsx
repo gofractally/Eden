@@ -7,18 +7,42 @@ interface ExpanderProps {
     header: React.ReactNode;
     showContentDivider?: boolean;
     startExpanded?: boolean;
-    darkBg?: boolean;
     inactive?: boolean;
     locked?: boolean;
+    type?: ExpanderType;
     children: React.ReactNode;
 }
+
+export type ExpanderType = "default" | "info" | "inactive";
+const TYPES: {
+    [key in ExpanderType]: {
+        bgColor: string;
+        bgColorHover: string;
+        bgColorActive: string;
+    };
+} = {
+    default: {
+        bgColor: "",
+        bgColorHover: "hover:bg-gray-100",
+        bgColorActive: "active:bg-gray-200",
+    },
+    info: {
+        bgColor: "bg-blue-50",
+        bgColorHover: "hover:bg-blue-100",
+        bgColorActive: "active:bg-blue-200",
+    },
+    inactive: {
+        bgColor: "bg-gray-50",
+        bgColorHover: "hover:bg-gray-100",
+        bgColorActive: "active:bg-gray-200",
+    },
+};
 
 export const Expander = ({
     header,
     showContentDivider = false,
     startExpanded = false,
-    darkBg,
-    inactive,
+    type = "default",
     locked = false,
     children,
 }: ExpanderProps) => {
@@ -26,7 +50,7 @@ export const Expander = ({
     const containerClass =
         "flex justify-between items-center group select-none";
     const interactionClass = !locked
-        ? "cursor-pointer hover:bg-gray-100 active:bg-gray-200"
+        ? `cursor-pointer ${TYPES[type].bgColorHover} ${TYPES[type].bgColorActive}`
         : "";
     const contentDividerClass =
         isExpanded && showContentDivider ? "border-b border-gray-100" : "";
@@ -37,11 +61,10 @@ export const Expander = ({
     };
 
     return (
-        <div className={darkBg || inactive ? "bg-gray-50" : ""}>
+        <div className={TYPES[type].bgColor}>
             <Container
                 className={`${containerClass} ${interactionClass} ${contentDividerClass}`}
                 onClick={onExpand}
-                darkBg={darkBg || inactive}
             >
                 {header}
                 <ExpansionIndicator isExpanded={isExpanded} locked={locked} />

@@ -1,14 +1,17 @@
 import React, { useState } from "react";
 import Link from "next/link";
-import { useQueryClient } from "react-query";
 import { Popover } from "@headlessui/react";
 import { usePopper } from "react-popper";
 import { IoMdLogIn } from "react-icons/io";
 
-import { useCurrentMember, useMemberDataFromEdenMembers } from "_app/hooks";
-import { Button, ProfileImage, Text } from "_app/ui";
-import { ROUTES } from "_app/config";
 import { MemberStatus } from "_app";
+import {
+    useCurrentMember,
+    useMemberDataFromEdenMembers,
+    useSignOut,
+} from "_app/hooks";
+import { Button, ProfileImage, Text } from "_app/ui";
+import { ROUTES } from "_app/routes";
 
 import { useUALAccount } from "../eos";
 
@@ -113,14 +116,9 @@ const PopoverWrapper = ({
         { placement: location === "mobile-nav" ? "bottom-end" : "top-start" }
     );
 
-    const queryClient = useQueryClient();
-    const [ualAccount, ualLogout] = useUALAccount();
+    const [ualAccount] = useUALAccount();
     const accountName = ualAccount?.accountName;
-
-    const onSignOut = () => {
-        queryClient.clear();
-        ualLogout();
-    };
+    const signOut = useSignOut();
 
     return (
         <Popover
@@ -151,7 +149,7 @@ const PopoverWrapper = ({
                         </Link>
                     )}
                     <button
-                        onClick={onSignOut}
+                        onClick={signOut}
                         title="Sign out"
                         className="block p-6 w-full hover:bg-gray-100 text-left"
                     >

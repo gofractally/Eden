@@ -5,10 +5,10 @@ import { useRouter } from "next/router";
 import {
     SideNavLayout,
     useUALAccount,
-    useZoomAccountJWT,
     encryptSecretForPublishing,
     onError,
     useCurrentMember,
+    useZoomLinkedAccount,
 } from "_app";
 import {
     Button,
@@ -19,6 +19,7 @@ import {
     Loader,
     Text,
 } from "_app/ui";
+import { ROUTES } from "_app/routes";
 
 import { setElectionMeeting } from "elections";
 
@@ -26,51 +27,54 @@ import {
     zoomRequestAuth,
     zoomConnectAccountLink,
     generateZoomMeetingLink,
+    setZoomJWTCookie,
 } from "_api/zoom-commons";
-import { ROUTES } from "_app/config";
 
 export const getServerSideProps: GetServerSideProps = async ({
     query,
-    req,
+    res,
 }) => {
     const oauthCode = (query.code as string) || "";
     const oauthState = (query.state as string) || "";
-    let newZoomAccountJWT = null;
+    let isZoomLinked = false;
 
     if (oauthCode) {
         try {
             const oauthDataResponse = await zoomRequestAuth(oauthCode);
             if (oauthDataResponse.error) throw oauthDataResponse;
-            newZoomAccountJWT = oauthDataResponse;
+            setZoomJWTCookie(oauthDataResponse, res);
+            isZoomLinked = true;
         } catch (e) {
+            setZoomJWTCookie(undefined, res);
             console.error("Failed to auth Zoom code", oauthCode, e);
         }
     }
 
     return {
         props: {
-            newZoomAccountJWT,
+            isZoomLinked,
             oauthState,
         },
     };
 };
 
 interface Props {
-    newZoomAccountJWT: any;
+    isZoomLinked: boolean;
     oauthState: string;
 }
 
-export const ZoomOauthPage = ({ newZoomAccountJWT, oauthState }: Props) => {
+export const ZoomOauthPage = ({ isZoomLinked, oauthState }: Props) => {
     const [ualAccount, _, ualShowModal] = useUALAccount();
     const { data: currentMember } = useCurrentMember();
-    const [_zoomAccountJWT, setZoomAccountJWT] = useZoomAccountJWT(undefined);
+    const [_zoomLinkedAccount, setZoomLinkedAccount] = useZoomLinkedAccount(
+        false
+    );
     const router = useRouter();
     const [redirectMessage, setRedirectMessage] = useState("");
 
     useEffect(() => {
-        if (newZoomAccountJWT) {
-            setZoomAccountJWT(newZoomAccountJWT);
-
+        if (isZoomLinked) {
+            setZoomLinkedAccount(isZoomLinked);
             if (oauthState === "request-election-link") {
                 setRedirectMessage(
                     "Hold tight while we redirect you back to your in-progress election round."
@@ -85,6 +89,7 @@ export const ZoomOauthPage = ({ newZoomAccountJWT, oauthState }: Props) => {
             <Container>
                 <Heading size={1}>Video conferencing for EdenOS</Heading>
             </Container>
+            {/* Easy Zoom Tester Container: <ZoomTestContainer ualAccount={ualAccount} /> */}
             {redirectMessage ? (
                 <Container className="space-y-4 py-16 text-center">
                     <Heading size={2}>Your Zoom account is linked</Heading>
@@ -119,13 +124,14 @@ export default ZoomOauthPage;
 
 // Use this component to easily test the Zoom integration
 const ZoomTestContainer = ({ ualAccount }: any) => {
-    const [zoomAccountJWT, setZoomAccountJWT] = useZoomAccountJWT(undefined);
+    const [zoomLinkedAccount, setZoomLinkedAccount] = useZoomLinkedAccount(
+        false
+    );
 
     const doGenerateZoomMeetingLink = async () => {
         try {
             const responseData = await generateZoomMeetingLink(
-                zoomAccountJWT,
-                setZoomAccountJWT,
+                setZoomLinkedAccount,
                 `Test Eden Election #${Math.floor(
                     Math.random() * 100_000_000
                 )}`,
@@ -172,7 +178,7 @@ const ZoomTestContainer = ({ ualAccount }: any) => {
 
     return (
         <Container className="space-y-4">
-            {zoomAccountJWT ? (
+            {zoomLinkedAccount ? (
                 <>
                     <Text>
                         Thanks for connecting Eden to your Zoom account.

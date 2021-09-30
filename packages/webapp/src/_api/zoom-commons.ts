@@ -1,3 +1,5 @@
+import { setCookie, destroyCookie } from "nookies";
+
 import { zoom } from "config";
 
 import { AvailableMeetingClients } from "./schemas";
@@ -57,7 +59,9 @@ export const zoomAccountJWTIsExpired = (zoomAccountJWT: ZoomAccountJWT) => {
     if (accessTokenEncodedData.length !== 3)
         throw new Error("invalid zoom jwt payload");
 
-    const accessTokenData = JSON.parse(atob(accessTokenEncodedData[1]));
+    const accessTokenData = JSON.parse(
+        Buffer.from(accessTokenEncodedData[1], "base64").toString()
+    );
     if (!accessTokenData.exp) {
         throw new Error("can't parse zoom jwt expiration date");
     }
@@ -65,42 +69,21 @@ export const zoomAccountJWTIsExpired = (zoomAccountJWT: ZoomAccountJWT) => {
 };
 
 export const zoomResponseIsInvalidAccess = (response: any) => {
-    return response && response.error && response.error.code === 124; // invalid access token
+    const invalidAccessToken = response?.error?.code === 124; // invalid access token
+    const unauthorizedRequest = response?.type === "UnauthorizedRequestError"; // cookie missing
+    return invalidAccessToken || unauthorizedRequest;
 };
 
 export const generateZoomMeetingLink = async (
-    zoomAccountJWT: any,
-    setZoomAccountJWT: (updatedJwt: any) => void,
+    setZoomLinkedAccount: (isZoomAccountLinked: boolean) => void,
     topic: string,
     durationInMinutes: number,
     startTime: string
 ) => {
-    let accessToken = zoomAccountJWT.access_token;
-    if (!accessToken) {
-        throw new Error("Invalid AccessToken");
-    }
-
-    if (zoomAccountJWTIsExpired(zoomAccountJWT)) {
-        const newTokensResponse = await fetch(`/api/refresh-zoom`, {
-            method: "POST",
-            body: JSON.stringify({
-                refreshToken: zoomAccountJWT.refresh_token,
-            }),
-        });
-
-        const newTokens = await newTokensResponse.json();
-        if (!newTokensResponse.ok) {
-            setZoomAccountJWT(undefined);
-        }
-
-        setZoomAccountJWT(newTokens);
-        accessToken = newTokens.access_token;
-    }
-
     const response = await fetch(`/api/meeting-links`, {
         method: "POST",
+        credentials: "include",
         body: JSON.stringify({
-            accessToken,
             client: AvailableMeetingClients.Zoom,
             topic,
             duration: durationInMinutes,
@@ -110,8 +93,31 @@ export const generateZoomMeetingLink = async (
 
     const responseData = await response.json();
     if (zoomResponseIsInvalidAccess(responseData)) {
-        setZoomAccountJWT(undefined);
+        // TODO: clear any zoom cookies that might be present?
+        setZoomLinkedAccount(false);
     }
 
     return responseData;
+};
+
+export const setZoomJWTCookie = (zoomAccountJWT: any, res: any) => {
+    if (zoomAccountJWT) {
+        setCookie(
+            { res },
+            "zoomAccountJWT",
+            Buffer.from(JSON.stringify(zoomAccountJWT)).toString("base64"),
+            {
+                httpOnly: true,
+                path: "/api",
+                secure: true,
+            }
+        );
+    } else {
+        console.info("destroying cookie");
+        destroyCookie({ res }, "zoomAccountJWT", {
+            httpOnly: true,
+            path: "/api",
+            secure: true,
+        });
+    }
 };

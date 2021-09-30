@@ -1,5 +1,6 @@
 #pragma once
 
+#include <eosio/asset.hpp>
 #include <eosio/fixed_bytes.hpp>
 #include <eosio/name.hpp>
 #include <eosio/reflection.hpp>
@@ -133,6 +134,78 @@ namespace eden
    };
    EOSIO_REFLECT(election_event_end, election_time)
 
+   // Distribution event order:
+   //    distribution_event_schedule
+   //    distribution_event_reserve
+   //    distribution_event_begin
+   //    distribution_event_return_excess (optional)
+   //    distribution_event_fund
+   //    distribution_event_end
+   // No particular order:
+   //    distribution_event_return
+   //    set_pool_event
+
+   struct set_pool_event
+   {
+      eosio::name pool;
+      uint8_t monthly_distribution_pct;
+   };
+   EOSIO_REFLECT(set_pool_event, pool, monthly_distribution_pct)
+
+   struct distribution_event_schedule
+   {
+      eosio::block_timestamp distribution_time;
+   };
+   EOSIO_REFLECT(distribution_event_schedule, distribution_time)
+
+   struct distribution_event_reserve
+   {
+      eosio::block_timestamp distribution_time;
+      eosio::name pool;
+      eosio::asset target_amount;
+   };
+   EOSIO_REFLECT(distribution_event_reserve, distribution_time, pool, target_amount)
+
+   struct distribution_event_begin
+   {
+      eosio::block_timestamp distribution_time;
+      std::vector<eosio::asset> rank_distribution;
+   };
+   EOSIO_REFLECT(distribution_event_begin, distribution_time, rank_distribution)
+
+   struct distribution_event_return_excess
+   {
+      eosio::block_timestamp distribution_time;
+      eosio::name pool;
+      eosio::asset amount;
+   };
+   EOSIO_REFLECT(distribution_event_return_excess, distribution_time, pool, amount)
+
+   struct distribution_event_fund
+   {
+      eosio::name owner;
+      eosio::block_timestamp distribution_time;
+      uint8_t rank;
+      eosio::asset balance;
+   };
+   EOSIO_REFLECT(distribution_event_fund, owner, distribution_time, rank, balance)
+
+   struct distribution_event_end
+   {
+      eosio::block_timestamp distribution_time;
+   };
+   EOSIO_REFLECT(distribution_event_end, distribution_time)
+
+   struct distribution_event_return
+   {
+      eosio::name owner;
+      eosio::block_timestamp distribution_time;
+      uint8_t rank;
+      eosio::asset amount;
+      eosio::name pool;
+   };
+   EOSIO_REFLECT(distribution_event_return, owner, distribution_time, rank, amount, pool)
+
    using event = std::variant<election_event_schedule,
                               election_event_begin,
                               election_event_seeding,
@@ -144,7 +217,15 @@ namespace eden
                               election_event_end_round_voting,
                               election_event_report_group,
                               election_event_end_round,
-                              election_event_end>;
+                              election_event_end,
+                              set_pool_event,
+                              distribution_event_schedule,
+                              distribution_event_reserve,
+                              distribution_event_begin,
+                              distribution_event_return_excess,
+                              distribution_event_fund,
+                              distribution_event_end,
+                              distribution_event_return>;
 
    void push_event(const event& e, eosio::name self);
    void send_events(eosio::name self);

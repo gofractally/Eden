@@ -25,7 +25,7 @@ export const FileInput: React.FC<
 > = (props) => (
     <label
         htmlFor={props.id}
-        className="relative cursor-pointer bg-white rounded-md font-medium text-yellow-500 hover:text-yellow-400 focus-within:outline-none focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-yellow-400"
+        className="relative cursor-pointer rounded-md font-medium text-blue-500 hover:text-blue-400 focus-within:outline-none focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-blue-400"
     >
         <span>{props.label || "Attach File..."}</span>
         <input type="file" className="sr-only" {...props} />

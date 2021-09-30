@@ -1,5 +1,4 @@
 import { useState } from "react";
-import { ZoomAccountJWT } from "_api/zoom-commons";
 
 export const useLocalStorage = (key: string, initialValue: any) => {
     if (typeof window === "undefined") {
@@ -33,5 +32,5 @@ export const useLocalStorage = (key: string, initialValue: any) => {
     return [storedValue, setValue];
 };
 
-export const useZoomAccountJWT = (zoomAccountJWT?: ZoomAccountJWT) =>
-    useLocalStorage("zoomAccountJWT", zoomAccountJWT);
+export const useZoomLinkedAccount = (zoomLinkedAccount: boolean) =>
+    useLocalStorage("zoomLinkedAccount", zoomLinkedAccount);

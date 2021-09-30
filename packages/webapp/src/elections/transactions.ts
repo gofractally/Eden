@@ -74,3 +74,27 @@ export const setVote = (
         },
     ],
 });
+
+export const setElectionRoundVideo = (
+    authorizerAccount: string,
+    round: number,
+    video: string
+) => ({
+    actions: [
+        {
+            account: edenContractAccount,
+            name: "electvideo",
+            authorization: [
+                {
+                    actor: authorizerAccount,
+                    permission: "active",
+                },
+            ],
+            data: {
+                round,
+                voter: authorizerAccount,
+                video,
+            },
+        },
+    ],
+});

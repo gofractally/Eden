@@ -1,7 +1,7 @@
 import React from "react";
 
 import { minimumDonationAmount } from "config";
-import { assetToString, Card } from "_app";
+import { assetToLocaleString } from "_app";
 
 import { Step, Steps } from ".";
 
@@ -37,7 +37,7 @@ export const INVITEE_INDUCTION_STEPS: Step[] = [
     {
         key: InductionStepInvitee.Donate,
         title: "DONATE",
-        text: `Give ${assetToString(
+        text: `Give ${assetToLocaleString(
             minimumDonationAmount
         )} to the Eden community.`,
     },
@@ -76,7 +76,7 @@ export const INVITER_INDUCTION_STEPS: Step[] = [
     {
         key: InductionStepInviter.PendingDonation,
         title: "INVITEE DONATION",
-        text: `Invitee donates ${assetToString(
+        text: `Invitee donates ${assetToLocaleString(
             minimumDonationAmount
         )} to the Eden community.`,
     },
@@ -103,7 +103,7 @@ export const GENESIS_INDUCTION_STEPS: Step[] = [
     {
         key: InductionStepGenesis.Donate,
         title: "DONATE",
-        text: `Give ${assetToString(
+        text: `Give ${assetToLocaleString(
             minimumDonationAmount
         )} to the Eden community.`,
     },

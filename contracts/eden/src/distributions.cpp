@@ -1,6 +1,7 @@
 #include <accounts.hpp>
 #include <distributions.hpp>
 #include <elections.hpp>
+#include <events.hpp>
 #include <members.hpp>
 #include <numeric>
 
@@ -9,6 +10,12 @@ namespace eden
    void init_pools(eosio::name contract)
    {
       pool_table_type pool_tb{contract, default_scope};
+      push_event(
+          set_pool_event{
+              .pool = "master"_n,
+              .monthly_distribution_pct = 5,
+          },
+          contract);
       pool_tb.emplace(contract, [](auto& row) { row.value = pool_v0{"master"_n, 5}; });
    }
 
@@ -54,7 +61,14 @@ namespace eden
             auto amount = dist->amount;
             auto old = amount;
             distribution_tb.modify(iter, contract, [&](auto& row) {
-               row.value = make_distribution(contract, dist->distribution_time, amount);
+               auto d = make_distribution(contract, dist->distribution_time, amount);
+               push_event(
+                   distribution_event_begin{
+                       .distribution_time = d.distribution_time,
+                       .rank_distribution = d.rank_distribution,
+                   },
+                   contract);
+               row.value = std::move(d);
             });
             eosio::check(
                 amount == old,
@@ -81,6 +95,7 @@ namespace eden
       {
          if (init != eosio::block_timestamp())
          {
+            push_event(distribution_event_schedule{init}, contract);
             distribution_tb.emplace(contract,
                                     [&](auto& row) { row.value = next_distribution{init}; });
          }
@@ -127,6 +142,12 @@ namespace eden
          pool_table_type pool_tb{contract, default_scope};
          if (pool_tb.begin() == pool_tb.end())
          {
+            push_event(
+                set_pool_event{
+                    .pool = "master"_n,
+                    .monthly_distribution_pct = 5,
+                },
+                contract);
             pool_tb.emplace(contract, [](auto& row) { row.value = pool_v0{"master"_n, 5}; });
          }
          eosio::asset total = {};
@@ -140,6 +161,8 @@ namespace eden
                                                     account->balance().amount / prorate_den,
                                                 account->balance().symbol)
                                  : (pool.monthly_distribution_pct() * account->balance() / 100);
+               push_event(distribution_event_reserve{distribution_time, pool.name(), amount},
+                          contract);
                accounts.sub_balance(pool.name(), amount);
                if (!total.amount)
                {
@@ -157,7 +180,14 @@ namespace eden
             distribution_tb.modify(iter, contract, [&](auto& row) {
                if (next_election_time && *next_election_time > distribution_time)
                {
-                  row.value = make_distribution(contract, distribution_time, used);
+                  auto d = make_distribution(contract, distribution_time, used);
+                  push_event(
+                      distribution_event_begin{
+                          .distribution_time = d.distribution_time,
+                          .rank_distribution = d.rank_distribution,
+                      },
+                      contract);
+                  row.value = std::move(d);
                }
                else
                {
@@ -166,6 +196,13 @@ namespace eden
             });
             if (used != total)
             {
+               push_event(
+                   distribution_event_return_excess{
+                       .distribution_time = distribution_time,
+                       .pool = "master"_n,
+                       .amount = total - used,
+                   },
+                   contract);
                accounts.add_balance("master"_n, total - used);
             }
             dist_accounts.emplace(contract, [&](auto& row) {
@@ -178,8 +215,16 @@ namespace eden
          }
          else
          {
+            push_event(
+                distribution_event_begin{
+                    .distribution_time = distribution_time,
+                    .rank_distribution = {},
+                },
+                contract);
+            push_event(distribution_event_end{distribution_time}, contract);
             distribution_tb.erase(iter);
          }
+         push_event(distribution_event_schedule{next_time}, contract);
          iter = distribution_tb.emplace(
              contract, [&](auto& row) { row.value = next_distribution{next_time}; });
          result = true;
@@ -203,11 +248,20 @@ namespace eden
          {
             auto amount = dist.rank_distribution[rank];
             dist_accounts_tb.emplace(contract, [&](auto& row) {
-               row.value = distribution_account_v0{.id = dist_accounts_tb.available_primary_key(),
+               auto fund = distribution_account_v0{.id = dist_accounts_tb.available_primary_key(),
                                                    .owner = iter->account(),
                                                    .distribution_time = dist.distribution_time,
                                                    .rank = static_cast<uint8_t>(rank + 1),
                                                    .balance = amount};
+               push_event(
+                   distribution_event_fund{
+                       .owner = fund.owner,
+                       .distribution_time = fund.distribution_time,
+                       .rank = fund.rank,
+                       .balance = fund.balance,
+                   },
+                   contract);
+               row.value = fund;
             });
             if (dist_iter != dist_idx.end())
             {
@@ -251,6 +305,7 @@ namespace eden
             max_steps = distribute_monthly(contract, max_steps, copy);
             if (max_steps)
             {
+               push_event(distribution_event_end{current->distribution_time}, contract);
                iter = distribution_tb.erase(iter);
                --max_steps;
             }
@@ -308,6 +363,15 @@ namespace eden
                 end = member_idx.end();
            max_steps > 0 && iter != end && iter->owner() == member; --max_steps)
       {
+         push_event(
+             distribution_event_return{
+                 .owner = iter->owner(),
+                 .distribution_time = iter->distribution_time(),
+                 .rank = iter->rank(),
+                 .amount = iter->balance(),
+                 .pool = "master"_n,
+             },
+             contract);
          owned_accounts.add_balance("master"_n, iter->balance());
          iter = member_idx.erase(iter);
       }
@@ -323,6 +387,15 @@ namespace eden
                 end = member_idx.end();
            iter != end && iter->owner() == member.account();)
       {
+         push_event(
+             distribution_event_return{
+                 .owner = iter->owner(),
+                 .distribution_time = iter->distribution_time(),
+                 .rank = iter->rank(),
+                 .amount = iter->balance(),
+                 .pool = "master"_n,
+             },
+             contract);
          owned_accounts.add_balance("master"_n, iter->balance());
          iter = member_idx.erase(iter);
       }
@@ -359,6 +432,13 @@ namespace eden
                {
                   eosio::check(amount.amount == 0, "insufficient balance");
                }
+               push_event(
+                   distribution_event_return_excess{
+                       .distribution_time = dist->distribution_time,
+                       .pool = "master"_n,
+                       .amount = amount,
+                   },
+                   contract);
                owned_accounts.add_balance("master"_n, amount);
             }
          }

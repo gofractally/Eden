@@ -94,7 +94,10 @@ export const MembersPage = (props: Props) => {
     return (
         <SideNavLayout title="Community">
             <Container>
-                <Heading size={1}>New members</Heading>
+                <Heading size={1}>Community</Heading>
+            </Container>
+            <Container>
+                <Heading size={2}>New members</Heading>
                 {newMembers.isLoading && "Loading new members..."}
                 {newMembers.error && "Fail to load new members"}
             </Container>
@@ -125,7 +128,7 @@ export const MembersPage = (props: Props) => {
                 </>
             )}
             <Container>
-                <Heading size={1}>All members</Heading>
+                <Heading size={2}>All members</Heading>
                 {members.isLoading && "Loading members..."}
                 {members.error && "Fail to load members"}
             </Container>

@@ -1,4 +1,5 @@
 import { Request, Response } from "express";
+import logger from "../logger";
 import multer from "multer";
 import fs from "fs";
 import FormData from "form-data";
@@ -47,6 +48,7 @@ export const ipfsUploadHandler = async (req: Request, res: Response) => {
 
         return await ipfsUpload(requestData, file, res);
     } catch (error) {
+        logger.error(error);
         if (file) {
             fs.rm(file.path, () => {});
         }
@@ -115,7 +117,7 @@ const uploadAndPinToIpfs = async (
     const data = new FormData();
     data.append("file", fs.createReadStream(file.path));
 
-    console.info("uploading to pinata...");
+    logger.info("uploading to pinata...");
 
     const headers = {
         maxBodyLength: Number.POSITIVE_INFINITY,
@@ -131,10 +133,8 @@ const uploadAndPinToIpfs = async (
         headers
     );
 
-    console.info(
-        "pinata upload result >>> ",
-        uploadResult.status,
-        uploadResult.data
+    logger.info(
+        `pinata upload result >>> ${uploadResult.status} ${uploadResult.data}`
     );
 
     await fs.rm(file.path, () => {});
