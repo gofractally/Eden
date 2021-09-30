@@ -72,6 +72,10 @@ export const dfuseConfig = {
     authNetwork: process.env.DFUSE_AUTH_NETWORK || "https://auth.eosnation.io",
     firstBlock: +(process.env.DFUSE_FIRST_BLOCK as any) || 1,
     jsonTrxFile: process.env.DFUSE_JSON_TRX_FILE || "dfuse-transactions.json",
+    interval:
+        "DFUSE_INTERVAL" in process.env
+            ? +(process.env.DFUSE_INTERVAL as any)
+            : 30,
     preventConnect: "DFUSE_PREVENT_CONNECT" in process.env,
 };
 console.info({ ...dfuseConfig, apiKey: "<secret>" });
