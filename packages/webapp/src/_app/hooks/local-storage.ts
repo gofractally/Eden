@@ -33,5 +33,5 @@ export const useLocalStorage = (key: string, initialValue: any) => {
     return [storedValue, setValue];
 };
 
-export const useZoomAccountJWT = (zoomAccountJWT?: ZoomAccountJWT) =>
-    useLocalStorage("zoomAccountJWT", zoomAccountJWT);
+export const useZoomLinkedAccount = (zoomLinkedAccount: boolean) =>
+    useLocalStorage("zoomLinkedAccount", zoomLinkedAccount);
