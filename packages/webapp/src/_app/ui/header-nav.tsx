@@ -1,9 +1,8 @@
 import Link from "next/link";
 import { useRouter } from "next/router";
-import { useQueryClient } from "react-query";
 import { FaSignOutAlt } from "react-icons/fa";
 
-import { useCurrentMember, useNavItems } from "_app";
+import { useCurrentMember, useNavItems, useSignOut } from "_app";
 import { ROUTES } from "_app/routes";
 
 import { useUALAccount } from "../eos";
@@ -73,23 +72,18 @@ const HeaderItemLink = ({
 };
 
 const AccountMenu = () => {
-    const [ualAccount, ualLogout, ualShowModal] = useUALAccount();
+    const [ualAccount, _, ualShowModal] = useUALAccount();
     const accountName = ualAccount?.accountName;
+    const signOut = useSignOut();
 
-    const queryClient = useQueryClient();
     const { data: member } = useCurrentMember();
-
-    const onSignOut = () => {
-        queryClient.clear();
-        ualLogout();
-    };
 
     return ualAccount ? (
         <div className="mt-2 md:mt-0 space-x-3 hover:text-gray-900">
             <Link href={`${ROUTES.MEMBERS.href}/${accountName}`}>
                 <a>{member?.name || accountName || "(unknown)"}</a>
             </Link>
-            <a href="#" onClick={onSignOut}>
+            <a href="#" onClick={signOut}>
                 <FaSignOutAlt className="inline-block mb-1" />
             </a>
         </div>

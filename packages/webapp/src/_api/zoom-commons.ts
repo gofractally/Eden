@@ -93,6 +93,7 @@ export const generateZoomMeetingLink = async (
 
     const responseData = await response.json();
     if (zoomResponseIsInvalidAccess(responseData)) {
+        // TODO: clear any zoom cookies that might be present?
         setZoomLinkedAccount(false);
     }
 
