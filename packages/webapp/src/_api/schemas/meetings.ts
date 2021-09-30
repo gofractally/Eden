@@ -6,7 +6,6 @@ export enum AvailableMeetingClients {
 
 export const meetingLinkRequestSchema = z.object({
     client: z.nativeEnum(AvailableMeetingClients),
-    accessToken: z.string(),
     topic: z.string(),
     duration: z.number(),
     startTime: z.string(),

@@ -4,12 +4,11 @@ import { Dayjs } from "dayjs";
 import {
     delay,
     encryptSecretForPublishing,
-    onError,
     useEncryptedData,
     useMemberGroupParticipants,
     useUALAccount,
     useVoteDataRow,
-    useZoomAccountJWT,
+    useZoomLinkedAccount,
 } from "_app";
 import { generateZoomMeetingLink } from "_api/zoom-commons";
 import { setElectionMeeting } from "elections/transactions";
@@ -48,7 +47,9 @@ export const MeetingLink = ({
     stage,
 }: RequestMeetingLinkProps) => {
     const [ualAccount] = useUALAccount();
-    const [zoomAccountJWT, setZoomAccountJWT] = useZoomAccountJWT(undefined);
+    const [zoomLinkedAccount, setZoomLinkedAccount] = useZoomLinkedAccount(
+        false
+    );
     const [showMeetingModal, setShowMeetingModal] = useState(false);
 
     const { show: showPasswordModal } = usePasswordModal();
@@ -78,7 +79,7 @@ export const MeetingLink = ({
     let meetingStep = MeetingStep.LinkZoomAccount;
     if (encryptedData) {
         meetingStep = MeetingStep.RetrieveMeetingLink;
-    } else if (zoomAccountJWT || freeformMeetingLinksEnabled) {
+    } else if (zoomLinkedAccount || freeformMeetingLinksEnabled) {
         meetingStep = MeetingStep.CreateMeetingLink;
     }
 
@@ -137,8 +138,7 @@ export const MeetingLink = ({
         const durationInMinutes = meetingDurationMs / 1000 / 60;
 
         const responseData = await generateZoomMeetingLink(
-            zoomAccountJWT,
-            setZoomAccountJWT,
+            setZoomLinkedAccount,
             topic,
             durationInMinutes,
             meetingStartTime.toISOString()
