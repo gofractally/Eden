@@ -21,7 +21,7 @@ class UnloggedinUser extends User {
         config?: SignTransactionConfig
     ): Promise<SignTransactionResponse> {
         throw new Error(
-            "UnloggedinUser does not currently support signArbitrary"
+            "UnloggedinUser does not currently support signTransaction"
         );
     }
 
