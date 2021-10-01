@@ -1,4 +1,6 @@
 import { useQueryClient } from "react-query";
+import { v4 as uuidv4 } from "uuid";
+
 import { useUALAccount, useZoomLinkedAccount } from "_app";
 
 export const useSignOut = () => {
@@ -11,7 +13,12 @@ export const useSignOut = () => {
     const signOut = async () => {
         queryClient.clear();
         try {
-            await fetch("/api/signout");
+            await fetch("/api/signout", {
+                method: "POST",
+                body: JSON.stringify({
+                    signoutUuid: uuidv4(),
+                }),
+            });
         } catch (error) {
             console.error("error clearing cookies signing out", error as Error);
         }
