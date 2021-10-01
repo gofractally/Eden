@@ -2,7 +2,7 @@ import React from "react";
 import { BiWebcam } from "react-icons/bi";
 import { GoSync } from "react-icons/go";
 
-import { electionCommunityRoomUrl } from "config";
+import { election as electionConfig } from "config";
 import { ROUTES } from "_app/routes";
 import { Button, Container, Expander, OpensInNewTabIcon, Text } from "_app/ui";
 
@@ -21,8 +21,8 @@ export const SupportSegment = () => (
         <Container className="flex justify-between sm:justify-start items-center space-x-4">
             <Button
                 size="sm"
-                disabled={!electionCommunityRoomUrl}
-                href={electionCommunityRoomUrl}
+                disabled={!electionConfig.communityRoomUrl}
+                href={electionConfig.communityRoomUrl}
                 title="Election community video conference room"
                 target="_blank"
                 isExternal
