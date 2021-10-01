@@ -2,7 +2,7 @@ import { useRouter } from "next/router";
 import { useContext } from "react";
 import { GetServerSideProps } from "next";
 import { UALContext } from "ual-reactjs-renderer";
-import { LoadingCard, SingleColLayout } from "_app";
+import { SideNavLayout, LoadingContainer } from "_app";
 import { ROUTES } from "_app/routes";
 import {
     SignTransactionConfig,
@@ -71,9 +71,9 @@ export const AsForwardPage = ({ account }: Props) => {
     }
 
     return (
-        <SingleColLayout title="Loading...">
-            <LoadingCard />
-        </SingleColLayout>
+        <SideNavLayout title="Loading...">
+            <LoadingContainer />
+        </SideNavLayout>
     );
 };
 
