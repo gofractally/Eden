@@ -15,7 +15,7 @@ export default async (req: NextApiRequest, res: NextApiResponse) => {
     }
 };
 
-const handleSignOut = async (req: NextApiRequest, res: NextApiResponse) => {
+const handleSignOut = async (_req: NextApiRequest, res: NextApiResponse) => {
     try {
         setZoomJWTCookie(null, res); // clear zoom JWT cookie
         res.send("success");

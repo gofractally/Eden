@@ -1,4 +1,4 @@
-import { setCookie, destroyCookie } from "nookies";
+import { setCookie } from "nookies";
 
 import { zoom } from "config";
 
@@ -114,6 +114,6 @@ export const setZoomJWTCookie = (zoomAccountJWT: any, res: any) => {
         );
     } else {
         console.info("destroying cookie");
-        destroyCookie({ res }, "zoomAccountJWT");
+        res.setHeader("Set-Cookie", "zoomAccountJWT=; Path=/api; Max-Age=-1;");
     }
 };
