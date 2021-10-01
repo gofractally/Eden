@@ -113,7 +113,7 @@ export const Button = ({
         return (
             <a
                 className={buttonClass}
-                href={href}
+                href={disabled ? undefined : href}
                 rel="noopener noreferrer"
                 target={target}
                 title={title}
