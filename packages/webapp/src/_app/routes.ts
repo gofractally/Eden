@@ -61,4 +61,11 @@ export const ROUTES: { [key: string]: Route } = {
         Icon: ElectionNav, // TODO: pick a better Icon
         requiresActiveCommunity: true,
     },
+    ELECTION_STATS: {
+        href: "/election/stats",
+        label: "Election Results &amp; Stats",
+        hideNav: true,
+        Icon: ElectionNav,
+        requiresActiveCommunity: true,
+    },
 };
