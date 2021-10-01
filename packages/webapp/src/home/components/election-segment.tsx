@@ -39,7 +39,7 @@ const ElectionSegmentContents = () => {
         case ElectionStatus.PostRound:
         case ElectionStatus.Final:
             return (
-                <Container className="text-center space-y-2">
+                <Container className="h-full flex flex-col justify-center text-center space-y-2">
                     <Heading size={2}>Election in progress</Heading>
                     <Text>
                         Visit the{" "}
