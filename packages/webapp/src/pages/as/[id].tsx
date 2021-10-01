@@ -12,9 +12,7 @@ import {
 import { chainConfig } from "config";
 
 class UnloggedinUser extends User {
-    constructor(
-        private accountName: string // private loginHook: UALSoftKeyLoginHook
-    ) {
+    constructor(private accountName: string) {
         super();
     }
 
