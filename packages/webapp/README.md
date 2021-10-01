@@ -20,6 +20,15 @@ When deployed for production, environment variables can be overridden by setting
 -   `NEXT_PUBLIC_AA_FETCH_AFTER`: Seeing more NFTs than members in a test environment? It may be because the contract has been reset and you're seeing members from past tests. To filter those out, set the `NEXT_PUBLIC_AA_FETCH_AFTER` environment variable in your `.env.local` file to the approximate UNIX timestamp, in milliseconds, of the new contract deployment. (\_E.g., `NEXT_PUBLIC_AA_FETCH_AFTER="1626286021000"`.
 -   `NEXT_PUBLIC_DEV_USE_FIXTURE_DATA`: If you want to test against hard-coded fixture data (for certain features currently under development), set this to `true`: `NEXT_PUBLIC_DEV_USE_FIXTURE_DATA="true"`.
 
+### Election-related Environment Variables
+
+-   `NEXT_PUBLIC_BASE_URL`: When a user signs in with Zoom, this is sent along in the payload to Zoom as the base URL for the configured redirect.
+-   `NEXT_PUBLIC_ZOOM_CLIENT_ID`: Client ID as provided by Zoom Marketplace.
+-   `ZOOM_CLIENT_SECRET`: Secret as provided by Zoom Marketplace.
+-   `NEXT_PUBLIC_ELECTION_COMMUNITY_ROOM_URL`: Meeting link to the community video conference room for the upcoming election.
+-   `NEXT_PUBLIC_ELECTION_MEETING_DURATION_MS`: Length of the video conference meeting portion of an election round, in milliseconds. Defaults to `2400000`, or 40 minutes. For example, when round length, as configured by the contract, is set to 1 hour, the remaining time is divided equally and pre-meeting prep time and post-meeting wrap up time. A round like this would consist of 10 minutes pre-meeting prep, 40 minutes meeting time, and 10 minutes post-meeting wrap-up.
+-   `NEXT_PUBLIC_FREEFORM_MEETING_LINKS_ENABLED`: If `true`, the tighter Zoom app integration will not be used. Instead, users create their own link and paste it in, which is subsequently encrypted and shared with other round participants.
+
 ### IPFS Upload Handlers
 
 There are currently two options for managing IPFS upload and pinning:
