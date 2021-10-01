@@ -1,8 +1,6 @@
 import React, { useState } from "react";
 import { useQueryClient } from "react-query";
 import dayjs from "dayjs";
-import AddToCalendar from "@culturehq/add-to-calendar";
-import { CalendarEvent } from "@culturehq/add-to-calendar/dist/makeUrls";
 
 import {
     delay,
@@ -34,8 +32,9 @@ import {
     EncryptionPassword,
 } from "encryption";
 import { CurrentElection, ElectionStatus } from "elections/interfaces";
-import { Avatars } from "elections/components";
+import { Avatars, ElectionCommunityRoomButton } from "elections/components";
 
+import AddToCalendarButton from "./add-to-calendar-button";
 import { extractElectionDates } from "../../utils";
 import { setElectionParticipation } from "../../transactions";
 
@@ -48,6 +47,10 @@ export const ParticipationCard = ({ election }: Props) => {
 
     const [ualAccount, _, ualShowModal] = useUALAccount();
     const { data: currentMember } = useCurrentMember();
+
+    const isMemberParticipating =
+        currentMember?.election_participation_status ===
+        ElectionParticipationStatus.InElection;
 
     const isProcessing = election?.electionState === ElectionStatus.InitVoters;
     useCurrentElection({
@@ -80,7 +83,7 @@ export const ParticipationCard = ({ election }: Props) => {
     try {
         electionDates = extractElectionDates(election);
     } catch (e) {
-        return <Text>{e.message}</Text>;
+        return <Text>{(e as Error).message}</Text>;
     }
 
     const electionDate = electionDates.startDateTime.format("LL");
@@ -91,6 +94,10 @@ export const ParticipationCard = ({ election }: Props) => {
 
     const isPastElectionParticipationTimeLimit = dayjs().isAfter(
         electionDates.participationTimeLimit
+    );
+
+    const isElectionWithin30Minutes = dayjs().isAfter(
+        electionDates.startDateTime.subtract(30, "minutes")
     );
 
     let statusLabel = "";
@@ -105,10 +112,7 @@ export const ParticipationCard = ({ election }: Props) => {
             <Button onClick={ualShowModal}>Sign in to participate</Button>
         );
     } else if (currentMember?.status === MemberStatus.ActiveMember) {
-        if (
-            currentMember.election_participation_status !==
-            ElectionParticipationStatus.InElection
-        ) {
+        if (!isMemberParticipating) {
             participationOpenModalFn = () =>
                 setShowConfirmParticipationModal(true);
             statusLabel = "Status: You ARE NOT participating.";
@@ -133,14 +137,6 @@ export const ParticipationCard = ({ election }: Props) => {
         );
     }
 
-    const calendarEvent: CalendarEvent = {
-        name: "Eden Election",
-        details: "Join us at https://genesis.eden.eoscommunity.org/election",
-        location: "Remote",
-        startsAt: electionDates.startDateTime.toISOString(),
-        endsAt: electionDates.estimatedEndDateTime.toISOString(),
-    };
-
     return (
         <Container className="space-y-2.5">
             <div className="flex justify-between">
@@ -163,6 +159,8 @@ export const ParticipationCard = ({ election }: Props) => {
                     <Text>
                         Registration is closed. Waiting for the election to
                         begin on {electionDate} at {electionStartTime}.
+                        {isElectionWithin30Minutes &&
+                            " Join the community video conference room below for election updates and announcements."}
                     </Text>
                 </>
             ) : (
@@ -177,19 +175,9 @@ export const ParticipationCard = ({ election }: Props) => {
 
             <div className="flex flex-col sm:flex-row items-start sm:justify-between space-y-2 sm:space-y-0">
                 {!isPastElectionParticipationTimeLimit && statusButton}
-                {currentMember?.election_participation_status ===
-                    ElectionParticipationStatus.InElection && (
-                    <div className="-my-1">
-                        <AddToCalendar event={calendarEvent}>
-                            <Button
-                                type="neutral"
-                                onClick={() => {}}
-                                className="-ml-2.5 -mt-1"
-                            >
-                                Add to calendar
-                            </Button>
-                        </AddToCalendar>
-                    </div>
+                {isElectionWithin30Minutes && <ElectionCommunityRoomButton />}
+                {isMemberParticipating && !isElectionWithin30Minutes && (
+                    <AddToCalendarButton election={election} />
                 )}
             </div>
             <ParticipationCounter />
@@ -331,7 +319,7 @@ const ConfirmParticipationModal = ({ isOpen, close, deadline }: ModalProps) => {
             setStep(ParticipationStep.ConfirmParticipationSuccess);
         } catch (error) {
             console.error(error);
-            onError(error);
+            onError(error as Error);
         }
         setIsLoading(false);
     };
@@ -550,7 +538,7 @@ const CancelParticipationModal = ({ isOpen, close }: ModalProps) => {
             close();
         } catch (error) {
             console.error(error);
-            onError(error);
+            onError(error as Error);
         }
 
         setIsLoading(false);
