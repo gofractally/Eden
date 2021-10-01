@@ -1,8 +1,11 @@
+import React from "react";
 import { CurrentElection } from "elections/interfaces";
 
 import {
     ElectionFAQ,
+    ElectionVideoUploadCTA,
     ParticipationCard,
+    ViewPreviousElectionResultsCTA,
 } from "./registration-election-components";
 
 interface Props {
@@ -14,6 +17,8 @@ export const RegistrationElection = ({ election }: Props) => {
         <>
             <ParticipationCard election={election} />
             {/* <ElectionFAQ /> */}
+            <ElectionVideoUploadCTA />
+            <ViewPreviousElectionResultsCTA />
         </>
     );
 };

@@ -19,8 +19,9 @@ interface Props {
     dataTestId?: string;
 }
 
-export type ButtonSize = "sm" | "md" | "lg";
+export type ButtonSize = "xs" | "sm" | "md" | "lg";
 const SIZES: { [key in ButtonSize]: string } = {
+    xs: "py-0.5 px-2 text-sm",
     sm: "py-1.5 px-3 text-sm",
     md: "py-1.5 px-5",
     lg: "py-3 px-6 text-lg",
