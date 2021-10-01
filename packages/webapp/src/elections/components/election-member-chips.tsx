@@ -133,6 +133,7 @@ interface ElectionParticipantChipProps {
     delegateLevel?: string;
     isDelegate?: boolean;
     electionVideoCid?: string;
+    subText?: string;
 }
 
 export const ElectionParticipantChip = ({
@@ -140,6 +141,7 @@ export const ElectionParticipantChip = ({
     delegateLevel,
     isDelegate = false,
     electionVideoCid,
+    subText,
 }: ElectionParticipantChipProps) => {
     const goToMemberPage = (e: React.MouseEvent) => {
         if (!member) return;
@@ -174,9 +176,9 @@ export const ElectionParticipantChip = ({
                         {member.name}
                         <OpensInNewTabIcon className="mt-0.5" />
                     </p>
-                    {delegateLevel && (
+                    {(delegateLevel || subText) && (
                         <p className="text-xs text-gray-500 font-light">
-                            {delegateLevel}
+                            {subText ?? delegateLevel}
                         </p>
                     )}
                 </div>
