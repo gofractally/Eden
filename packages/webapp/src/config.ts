@@ -24,6 +24,7 @@ if (
     !process.env.NEXT_PUBLIC_BOX_UPLOAD_IPFS ||
     !process.env.NEXT_PUBLIC_BOX_ADDRESS ||
     !process.env.NEXT_PUBLIC_ZOOM_CLIENT_ID ||
+    !process.env.NEXT_PUBLIC_ELECTION_COMMUNITY_ROOM_URL ||
     !process.env.NEXT_PUBLIC_ELECTION_MEETING_DURATION_MS ||
     !process.env.NEXT_PUBLIC_TOKEN_CONTRACT ||
     !process.env.NEXT_PUBLIC_SUBCHAIN_WASM_URL ||
@@ -65,6 +66,9 @@ BOX_ADDRESS="${process.env.NEXT_PUBLIC_BOX_ADDRESS}"
 ZOOM_CLIENT_ID="${process.env.NEXT_PUBLIC_ZOOM_CLIENT_ID}"
 ELECTION_MEETING_DURATION_MS="${
     process.env.NEXT_PUBLIC_ELECTION_MEETING_DURATION_MS
+}"
+ELECTION_COMMUNITY_ROOM_URL="${
+    process.env.NEXT_PUBLIC_ELECTION_COMMUNITY_ROOM_URL
 }"
 NEXT_PUBLIC_TOKEN_CONTRACT="${process.env.NEXT_PUBLIC_TOKEN_CONTRACT}"
 NEXT_PUBLIC_SUBCHAIN_WASM_URL="${process.env.NEXT_PUBLIC_SUBCHAIN_WASM_URL}"
@@ -140,6 +144,11 @@ export const validUploadActions: ValidUploadActions = {
         },
     },
 };
+
+export const electionCommunityRoomUrl =
+    process.env.NEXT_PUBLIC_ELECTION_COMMUNITY_ROOM_URL === "[NOT SET]"
+        ? ""
+        : process.env.NEXT_PUBLIC_ELECTION_COMMUNITY_ROOM_URL;
 
 export const freeformMeetingLinksEnabled =
     process.env.NEXT_PUBLIC_FREEFORM_MEETING_LINKS_ENABLED === "true";
