@@ -5,7 +5,7 @@ import { zoomConnectAccountLink } from "_api/zoom-commons";
 import { RoundStage } from "elections/interfaces";
 
 import { MeetingStep } from "./meeting-link";
-import { freeformMeetingLinksEnabled } from "config";
+import { election as electionConfig } from "config";
 import { onError, useFormFields } from "_app";
 
 interface Props {
@@ -96,7 +96,7 @@ const ModalStepGetLink = ({
         e.preventDefault();
         setIsLoading(true);
         try {
-            if (freeformMeetingLinksEnabled) {
+            if (electionConfig.freeformMeetingLinksEnabled) {
                 await submitMeetingLink(fields.meetingLink);
             } else {
                 await requestMeetingLink();
@@ -145,7 +145,7 @@ const ModalStepGetLink = ({
                 the meeting link up.
             </Text>
             <form onSubmit={onContinue}>
-                {freeformMeetingLinksEnabled && (
+                {electionConfig.freeformMeetingLinksEnabled && (
                     <div className="space-y-3 mb-3">
                         <Text>
                             Use Zoom to generate a password-protected meeting

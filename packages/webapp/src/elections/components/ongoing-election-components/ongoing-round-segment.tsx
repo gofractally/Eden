@@ -3,7 +3,7 @@ import { useQueryClient } from "react-query";
 import dayjs, { Dayjs } from "dayjs";
 import { BiCheck } from "react-icons/bi";
 
-import { electionMeetingDurationMs as meetingDurationMs } from "config";
+import { election as electionEnvVars } from "config";
 import { onError, useCountdown, useTimeout, useUALAccount } from "_app";
 import {
     queryMemberGroupParticipants,
@@ -58,12 +58,15 @@ export const OngoingRoundSegment = ({
 
     // duration of time periods before and after election meeting call
     // stages: meeting prep -> meeting -> post-meeting finalization -> round end
-    const meetingBreakDurationMs = (roundDurationMs - meetingDurationMs) / 2;
+    const meetingBreakDurationMs =
+        (roundDurationMs - electionEnvVars.meetingDurationMs) / 2;
 
     const now = dayjs();
 
     const meetingStartTime = roundStartTime.add(meetingBreakDurationMs);
-    const postMeetingStartTime = meetingStartTime.add(meetingDurationMs);
+    const postMeetingStartTime = meetingStartTime.add(
+        electionEnvVars.meetingDurationMs
+    );
 
     let currentStage = RoundStage.PreMeeting;
     let timeRemainingToNextStageMs: number | null = meetingStartTime.diff(now);
@@ -233,7 +236,9 @@ export const OngoingRoundSegment = ({
                                     stage={stage}
                                     roundIndex={roundIndex}
                                     meetingStartTime={meetingStartTime}
-                                    meetingDurationMs={meetingDurationMs}
+                                    meetingDurationMs={
+                                        electionEnvVars.meetingDurationMs
+                                    }
                                     electionConfig={electionConfig!}
                                 />
                             </div>
