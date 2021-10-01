@@ -11,7 +11,7 @@ export const useSignOut = () => {
     const signOut = async () => {
         queryClient.clear();
         try {
-            await fetch("/api/signout");
+            await fetch("/api/signout", { method: "POST" });
         } catch (error) {
             console.error("error clearing cookies signing out", error as Error);
         }

@@ -5,7 +5,7 @@ import { setZoomJWTCookie } from "_api/zoom-commons";
 
 export default async (req: NextApiRequest, res: NextApiResponse) => {
     switch (req.method) {
-        case "GET":
+        case "POST":
             return handleSignOut(req, res);
         default:
             return handleErrors(
