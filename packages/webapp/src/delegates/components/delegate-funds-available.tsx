@@ -1,21 +1,20 @@
+import React, { useState } from "react";
 import dayjs from "dayjs";
-import { useState } from "react";
 import { useQueryClient } from "react-query";
+import { RiDownloadLine } from "react-icons/ri";
 
 import {
     assetToLocaleString,
-    Button,
-    Heading,
     onError,
     queryDistributionsForAccount,
     queryTokenBalanceForAccount,
     sumAssetStrings,
-    Text,
     useDistributionsForAccount,
     useDistributionState,
     useMemberByAccountName,
     useUALAccount,
 } from "_app";
+import { Button, Container, Heading, Text } from "_app/ui";
 
 import { withdrawDelegateAvailableFunds } from "../transactions";
 
@@ -69,7 +68,7 @@ export const DelegateFundsAvailable = ({ account }: Props) => {
             );
         } catch (error) {
             console.error(error);
-            onError(error.message);
+            onError(error as Error);
         }
 
         setIsLoading(false);
@@ -80,10 +79,15 @@ export const DelegateFundsAvailable = ({ account }: Props) => {
     );
 
     return (
-        <>
+        <Container className="space-y-2.5">
             <div className="flex justify-between items-center">
                 <div>
-                    <Heading size={3}>Delegate funds available</Heading>
+                    <Heading size={4} className="hidden xs:block">
+                        Delegate funds available
+                    </Heading>
+                    <Text className="font-medium xs:hidden">
+                        Delegate funds available
+                    </Text>
                     <Text>
                         {availableFunds
                             ? assetToLocaleString(availableFunds)
@@ -101,13 +105,16 @@ export const DelegateFundsAvailable = ({ account }: Props) => {
                             }
                             isLoading={isLoading}
                         >
+                            {!isLoading && (
+                                <RiDownloadLine className="-ml-1 mr-1" />
+                            )}
                             Withdraw
                         </Button>
                     )}
                 </div>
             </div>
             {isLoggedMember && <NextDisbursementInfo />}
-        </>
+        </Container>
     );
 };
 
