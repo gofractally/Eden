@@ -114,10 +114,6 @@ export const setZoomJWTCookie = (zoomAccountJWT: any, res: any) => {
         );
     } else {
         console.info("destroying cookie");
-        destroyCookie({ res }, "zoomAccountJWT", {
-            httpOnly: true,
-            path: "/api",
-            secure: true,
-        });
+        destroyCookie({ res }, "zoomAccountJWT");
     }
 };
