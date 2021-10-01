@@ -26,10 +26,13 @@ export const assetToString = (price: Asset, decimals = 2) =>
     }`;
 
 export const assetToLocaleString = (price: Asset, decimals = 2) =>
-    (price.quantity / Math.pow(10, price.precision)).toLocaleString(undefined, {
-        minimumFractionDigits: decimals,
-        maximumFractionDigits: decimals,
-    });
+    `${(price.quantity / Math.pow(10, price.precision)).toLocaleString(
+        undefined,
+        {
+            minimumFractionDigits: decimals,
+            maximumFractionDigits: decimals,
+        }
+    )} ${price.symbol}`;
 
 export const sumAssetStrings = (assets: string[]): Asset | undefined => {
     if (!assets.length) {
