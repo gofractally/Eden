@@ -1,6 +1,7 @@
 import { setCookie } from "nookies";
+import crypto from "crypto";
 
-import { zoom } from "config";
+import { zoom, meetingsSecretKey } from "config";
 
 import { AvailableMeetingClients } from "./schemas";
 
@@ -104,8 +105,8 @@ export const setZoomJWTCookie = (zoomAccountJWT: any, res: any) => {
     if (zoomAccountJWT) {
         setCookie(
             { res },
-            "zoomAccountJWT",
-            Buffer.from(JSON.stringify(zoomAccountJWT)).toString("base64"),
+            "meetings",
+            encryptMeetingsCookie({ zoomAccountJWT }),
             {
                 httpOnly: true,
                 path: "/api",
@@ -114,6 +115,25 @@ export const setZoomJWTCookie = (zoomAccountJWT: any, res: any) => {
         );
     } else {
         console.info("destroying cookie");
-        res.setHeader("Set-Cookie", "zoomAccountJWT=; Path=/api; Max-Age=-1;");
+        res.setHeader("Set-Cookie", "meetings=; Path=/api; Max-Age=-1;");
     }
+};
+
+const algorithm = "aes-256-gcm";
+const fixedIv = new Uint8Array(8);
+
+const encryptMeetingsCookie = (jwts: any) => {
+    const cipher = crypto.createCipheriv(algorithm, meetingsSecretKey, fixedIv);
+    const encryptedData = cipher.update(JSON.stringify(jwts), "utf8", "hex");
+    return encryptedData;
+};
+
+export const decryptMeetingsCookie = (jwts: string): any => {
+    const decipher = crypto.createDecipheriv(
+        algorithm,
+        meetingsSecretKey,
+        fixedIv
+    );
+    const decryptedData = decipher.update(jwts, "hex", "utf8");
+    return JSON.parse(decryptedData);
 };

@@ -170,10 +170,13 @@ if (
         !process.env.IPFS_PINATA_JWT ||
         !process.env.JOBS_AUTH_GC ||
         !process.env.EOS_PRIVATE_KEY_GC_JOB ||
-        !process.env.ZOOM_CLIENT_SECRET)
+        !process.env.ZOOM_CLIENT_SECRET ||
+        !process.env.MEETINGS_SECRET_KEY)
 ) {
     throw new Error("Missing Config Secrets are not set");
 }
+
+export const meetingsSecretKey = process.env.MEETINGS_SECRET_KEY || "";
 
 export const ipfsConfig = {
     pinataApi: process.env.IPFS_PINATA_API || "",
