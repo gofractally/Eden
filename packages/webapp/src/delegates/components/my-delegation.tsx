@@ -7,7 +7,11 @@ import {
     queryMembers,
 } from "_app";
 import { LoadingContainer } from "_app/ui";
-import { DelegateChip, ElectionState } from "elections";
+import {
+    DelegateChip,
+    ElectionParticipantChip,
+    ElectionState,
+} from "elections";
 import { MembersGrid } from "members";
 import { EdenMember, MemberData } from "members/interfaces";
 
@@ -51,11 +55,11 @@ const LowerDelegates = ({ members, myDelegation }: Props) => {
                 .map((delegate, index) => (
                     <div key={`my-delegation-${index}-${delegate.account}`}>
                         {index === 0 ? (
-                            <DelegateChip
+                            <ElectionParticipantChip
                                 member={members.find(
                                     (d) => d.account === delegate.account
                                 )}
-                                level={index + 1}
+                                subText="Member"
                             />
                         ) : (
                             <>

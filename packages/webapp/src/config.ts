@@ -24,6 +24,7 @@ if (
     !process.env.NEXT_PUBLIC_BOX_UPLOAD_IPFS ||
     !process.env.NEXT_PUBLIC_BOX_ADDRESS ||
     !process.env.NEXT_PUBLIC_ZOOM_CLIENT_ID ||
+    !process.env.NEXT_PUBLIC_ELECTION_COMMUNITY_ROOM_URL ||
     !process.env.NEXT_PUBLIC_ELECTION_MEETING_DURATION_MS ||
     !process.env.NEXT_PUBLIC_TOKEN_CONTRACT ||
     !process.env.NEXT_PUBLIC_SUBCHAIN_WASM_URL ||
@@ -65,6 +66,9 @@ BOX_ADDRESS="${process.env.NEXT_PUBLIC_BOX_ADDRESS}"
 ZOOM_CLIENT_ID="${process.env.NEXT_PUBLIC_ZOOM_CLIENT_ID}"
 ELECTION_MEETING_DURATION_MS="${
     process.env.NEXT_PUBLIC_ELECTION_MEETING_DURATION_MS
+}"
+ELECTION_COMMUNITY_ROOM_URL="${
+    process.env.NEXT_PUBLIC_ELECTION_COMMUNITY_ROOM_URL
 }"
 NEXT_PUBLIC_TOKEN_CONTRACT="${process.env.NEXT_PUBLIC_TOKEN_CONTRACT}"
 NEXT_PUBLIC_SUBCHAIN_WASM_URL="${process.env.NEXT_PUBLIC_SUBCHAIN_WASM_URL}"
@@ -141,12 +145,23 @@ export const validUploadActions: ValidUploadActions = {
     },
 };
 
-export const freeformMeetingLinksEnabled =
-    process.env.NEXT_PUBLIC_FREEFORM_MEETING_LINKS_ENABLED === "true";
+export const election = {
+    communityRoomUrl:
+        process.env.NEXT_PUBLIC_ELECTION_COMMUNITY_ROOM_URL === "[NOT SET]"
+            ? ""
+            : process.env.NEXT_PUBLIC_ELECTION_COMMUNITY_ROOM_URL,
+    freeformMeetingLinksEnabled:
+        process.env.NEXT_PUBLIC_FREEFORM_MEETING_LINKS_ENABLED === "true",
+    meetingDurationMs:
+        Number(process.env.NEXT_PUBLIC_ELECTION_MEETING_DURATION_MS) ||
+        40 * 60 * 1000, // 40 min default
+};
 
-export const electionMeetingDurationMs =
-    Number(process.env.NEXT_PUBLIC_ELECTION_MEETING_DURATION_MS) ||
-    40 * 60 * 1000; // 40 min default
+export const zoom = {
+    clientKey: process.env.NEXT_PUBLIC_ZOOM_CLIENT_ID || "",
+    clientSecret: process.env.ZOOM_CLIENT_SECRET || "",
+    oauthRedirect: `${process.env.NEXT_PUBLIC_BASE_URL}/oauth/videoconf`,
+};
 
 // SECRETS CONFIG
 if (
@@ -155,10 +170,13 @@ if (
         !process.env.IPFS_PINATA_JWT ||
         !process.env.JOBS_AUTH_GC ||
         !process.env.EOS_PRIVATE_KEY_GC_JOB ||
-        !process.env.ZOOM_CLIENT_SECRET)
+        !process.env.ZOOM_CLIENT_SECRET ||
+        !process.env.MEETINGS_SECRET_KEY)
 ) {
     throw new Error("Missing Config Secrets are not set");
 }
+
+export const meetingsSecretKey = process.env.MEETINGS_SECRET_KEY || "";
 
 export const ipfsConfig = {
     pinataApi: process.env.IPFS_PINATA_API || "",
@@ -176,9 +194,3 @@ export const eosPrivateKeys = {
 // DEV CONFIGS
 export const devUseFixtureData =
     process.env.NEXT_PUBLIC_DEV_USE_FIXTURE_DATA === "true";
-
-export const zoom = {
-    clientKey: process.env.NEXT_PUBLIC_ZOOM_CLIENT_ID || "",
-    clientSecret: process.env.ZOOM_CLIENT_SECRET || "",
-    oauthRedirect: `${process.env.NEXT_PUBLIC_BASE_URL}/oauth/videoconf`,
-};

@@ -1,6 +1,9 @@
-import { BiWebcam } from "react-icons/bi";
+import React from "react";
 import { GoSync } from "react-icons/go";
-import { Button, Container, Expander, Text } from "_app/ui";
+
+import { ROUTES } from "_app/routes";
+import { Button, Container, Expander, OpensInNewTabIcon, Text } from "_app/ui";
+import { ElectionCommunityRoomButton } from "elections";
 
 export const SupportSegment = () => (
     <Expander
@@ -9,15 +12,19 @@ export const SupportSegment = () => (
             <div className="flex justify-center items-center space-x-2">
                 <GoSync size={24} className="text-gray-400" />
                 <Text className="font-semibold">
-                    Community room &amp; support
+                    Community room &amp; live results
                 </Text>
             </div>
         }
     >
-        <Container>
-            <Button size="sm">
-                <BiWebcam className="mr-1" />
-                Join community room
+        <Container className="flex justify-between sm:justify-start items-center space-x-4">
+            <ElectionCommunityRoomButton />
+            <Button
+                type="link"
+                href={ROUTES.ELECTION_STATS.href}
+                target="_blank"
+            >
+                Live results <OpensInNewTabIcon />
             </Button>
         </Container>
     </Expander>

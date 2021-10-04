@@ -18,7 +18,7 @@ import { useEncryptionPassword, usePasswordModal } from "encryption";
 
 import MeetingButtons from "./meeting-buttons";
 import MeetingLinkModal from "./meeting-link-modal";
-import { freeformMeetingLinksEnabled } from "config";
+import { election as electionEnvVars } from "config";
 import { validateMeetingLink } from "_app/utils/meetings";
 
 export enum MeetingStep {
@@ -79,7 +79,10 @@ export const MeetingLink = ({
     let meetingStep = MeetingStep.LinkZoomAccount;
     if (encryptedData) {
         meetingStep = MeetingStep.RetrieveMeetingLink;
-    } else if (zoomLinkedAccount || freeformMeetingLinksEnabled) {
+    } else if (
+        zoomLinkedAccount ||
+        electionEnvVars.freeformMeetingLinksEnabled
+    ) {
         meetingStep = MeetingStep.CreateMeetingLink;
     }
 
