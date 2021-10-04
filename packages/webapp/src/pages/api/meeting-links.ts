@@ -16,6 +16,7 @@ import {
     zoomRefreshAuth,
     zoomAccountJWTIsExpired,
     setZoomJWTCookie,
+    decryptMeetingsCookie,
 } from "_api/zoom-commons";
 
 export default async (req: NextApiRequest, res: NextApiResponse) => {
@@ -69,13 +70,11 @@ const generateZoomMeeting = async (
     meetingRequest: MeetingLinkRequest,
     res: NextApiResponse
 ) => {
-    if (!cookies.zoomAccountJWT) {
-        throw new UnauthorizedRequestError(["missing zoom account JWT"]);
+    if (!cookies.meetings) {
+        throw new UnauthorizedRequestError(["missing meetings authorization"]);
     }
 
-    let zoomAccountJWT = JSON.parse(
-        Buffer.from(cookies.zoomAccountJWT, "base64").toString()
-    );
+    let { zoomAccountJWT } = decryptMeetingsCookie(cookies.meetings);
     if (zoomAccountJWTIsExpired(zoomAccountJWT)) {
         zoomAccountJWT = await zoomRefreshAuth(zoomAccountJWT.refresh_token);
         setZoomJWTCookie(zoomAccountJWT, res);
