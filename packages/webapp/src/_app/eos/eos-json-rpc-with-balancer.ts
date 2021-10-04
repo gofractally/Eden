@@ -1,6 +1,10 @@
 import { JsonRpc } from "eosjs/dist/eosjs-jsonrpc";
 
-const LOCKING_MESSAGES = ["many requests", "failed to fetch"];
+const LOCKING_MESSAGES = [
+    "many requests",
+    "failed to fetch",
+    "unexpected token",
+];
 
 export class EosJsonRpcWithBalancer extends JsonRpc {
     private endpoints: string[];
@@ -40,6 +44,7 @@ export class EosJsonRpcWithBalancer extends JsonRpc {
     }
 
     processLockedError(error: Error, currentBalancerIndex: number) {
+        console.error("eosrpc balancer processing error:", error);
         const message = error.message.toLowerCase();
         const isLocked = LOCKING_MESSAGES.some((retryable) =>
             message.includes(retryable)
