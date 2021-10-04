@@ -181,7 +181,10 @@ export default class DfuseReceiver {
                             : "no matching transactions"
                     }`
                 );
-                if (trx.trace || (prev && prev.trace)) {
+                if (
+                    trx.trace ||
+                    (prev && prev.trace && prev.block.num < trx.block.num)
+                ) {
                     this.jsonTransactions.push(trx);
                     this.pushTrx(trx);
                     if (
