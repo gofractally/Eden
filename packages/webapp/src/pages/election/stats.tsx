@@ -26,34 +26,38 @@ export const ElectionStatsPage = () => {
         isError: isError,
     } = useCurrentGlobalElectionData();
 
-    if (isError || !globalElectionData) return <ErrorLoadingElection />;
-
     return (
         <SideNavLayout title="Election Stats">
-            {isLoading ? (
+            <div className="divide-y">
                 <Container>
-                    <Loader />
+                    <Heading size={1}>Election</Heading>
                 </Container>
-            ) : (
-                <div className="divide-y">
+                {isLoading ? (
                     <Container>
-                        <Heading size={1}>Election</Heading>
+                        <Loader />
                     </Container>
-                    <Container darkBg className="flex flex-col sm:flex-row">
-                        <div className="flex-1 flex flex-col justify-center">
-                            <Heading size={2}>All results</Heading>
-                            <Text>{globalElectionData.time.format("LL")}</Text>
-                        </div>
-                        <Avatars showAll className="flex-1" />
-                    </Container>
-                    {globalElectionData.rounds.map((round) => (
-                        <RoundSegment
-                            key={`election-round-${round.roundIndex}`}
-                            round={round}
-                        />
-                    ))}
-                </div>
-            )}
+                ) : isError || !globalElectionData ? (
+                    <ErrorLoadingElection />
+                ) : (
+                    <>
+                        <Container darkBg className="flex flex-col sm:flex-row">
+                            <div className="flex-1 flex flex-col justify-center">
+                                <Heading size={2}>All results</Heading>
+                                <Text>
+                                    {globalElectionData.time.format("LL")}
+                                </Text>
+                            </div>
+                            <Avatars showAll className="flex-1" />
+                        </Container>
+                        {globalElectionData.rounds.map((round) => (
+                            <RoundSegment
+                                key={`election-round-${round.roundIndex}`}
+                                round={round}
+                            />
+                        ))}
+                    </>
+                )}
+            </div>
         </SideNavLayout>
     );
 };
