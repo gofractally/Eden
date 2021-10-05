@@ -1,3 +1,4 @@
+import React from "react";
 import {
     RoundBasicQueryData,
     RoundGroupQueryData,
@@ -9,6 +10,7 @@ import {
 import { Container, Heading, Loader, Expander, Text } from "_app/ui";
 
 import {
+    Avatars,
     ErrorLoadingElection,
     RoundStage,
     useRoundStageTimes,
@@ -37,8 +39,12 @@ export const ElectionStatsPage = () => {
                     <Container>
                         <Heading size={1}>Election</Heading>
                     </Container>
-                    <Container>
-                        <Heading size={2}>All results</Heading>
+                    <Container darkBg className="flex flex-col sm:flex-row">
+                        <div className="flex-1 flex flex-col justify-center">
+                            <Heading size={2}>All results</Heading>
+                            <Text>{globalElectionData.time.format("LL")}</Text>
+                        </div>
+                        <Avatars showAll className="flex-1" />
                     </Container>
                     {globalElectionData.rounds.map((round) => (
                         <RoundSegment
