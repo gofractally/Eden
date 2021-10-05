@@ -161,7 +161,7 @@ const GroupSegment = ({ group, groupIndex, isFinished }: GroupSegmentProps) => {
     const membersVotes = group.votes.reduce((membersVotingMap, vote) => {
         membersVotingMap[vote.voter.account] = {
             receivedVotes: 0,
-            votedFor: vote.candidate?.account,
+            votedFor: vote.candidate?.name,
         };
         return membersVotingMap;
     }, {} as { [key: string]: { receivedVotes: number; votedFor?: string } });
