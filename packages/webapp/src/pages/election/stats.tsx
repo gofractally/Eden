@@ -156,7 +156,8 @@ const GroupSegment = ({ group, groupIndex, isFinished }: GroupSegmentProps) => {
         );
 
     const getVideoVoteData = (member: MemberData) =>
-        ((member as unknown) as VoteQueryData).video;
+        group.votes.find((vote) => vote.voter.account === member.account)
+            ?.video;
 
     return (
         <Expander
