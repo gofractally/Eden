@@ -42,8 +42,15 @@ export const VotingMemberChip = ({
     ...containerProps
 }: VotingMemberChipProps) => {
     const goToMemberPage = (e: React.MouseEvent) => {
+        if (!member) return;
         e.stopPropagation();
         window.open(`${ROUTES.MEMBERS.href}/${member.account}`, "_blank");
+    };
+
+    const goToTelegram = (e: React.MouseEvent) => {
+        if (!member) return;
+        e.stopPropagation();
+        openInNewTab(`https://t.me/${telegramHandle}`);
     };
 
     const telegramHandle = getValidSocialLink(member.socialHandles.telegram);
@@ -55,16 +62,26 @@ export const VotingMemberChip = ({
             contentComponent={
                 <div
                     onClick={goToMemberPage}
-                    className="flex-1 flex flex-col justify-center group"
+                    className="flex-1 flex flex-col justify-center"
                 >
-                    <div className="flex space-x-1">
+                    <div className="flex xs:space-x-1">
                         {telegramHandle && (
-                            <p className="flex items-center text-xs text-gray-500 font-light">
-                                <FaTelegram className="mr-1" /> {telegramHandle}
-                            </p>
+                            <div
+                                onClick={goToTelegram}
+                                className="hidden xs:block"
+                            >
+                                <p className="flex items-center text-xs text-gray-500 font-light hover:underline">
+                                    <FaTelegram className="mr-1" />
+                                    {telegramHandle}
+                                    <OpensInNewTabIcon
+                                        size={8}
+                                        className="mb-1.5"
+                                    />
+                                </p>
+                            </div>
                         )}
                         {telegramHandle && votesReceived > 0 && (
-                            <p className="text-xs text-gray-600 font-light">
+                            <p className="hidden xs:block text-xs text-gray-600 font-light">
                                 •
                             </p>
                         )}
@@ -74,7 +91,7 @@ export const VotingMemberChip = ({
                             </p>
                         )}
                     </div>
-                    <p className="flex group-hover:underline">
+                    <p className="flex hover:underline">
                         {member.name}
                         <OpensInNewTabIcon className="mt-0.5" />
                     </p>
@@ -183,6 +200,12 @@ export const ElectionParticipantChip = ({
         window.open(`${ROUTES.MEMBERS.href}/${member.account}`, "_blank");
     };
 
+    const goToTelegram = (e: React.MouseEvent) => {
+        if (!member) return;
+        e.stopPropagation();
+        openInNewTab(`https://t.me/${telegramHandle}`);
+    };
+
     if (!member) {
         return (
             <div
@@ -202,13 +225,20 @@ export const ElectionParticipantChip = ({
             member={member}
             isDelegate={isDelegate || Boolean(delegateLevel)} // TODO: This will be inferred from member
             contentComponent={
-                <div className="flex-1 flex flex-col justify-center group">
+                <div className="flex-1 flex flex-col justify-center">
                     {telegramHandle && (
-                        <p className="flex items-center text-xs text-gray-500 font-light">
-                            <FaTelegram className="mr-1" /> {telegramHandle}
-                        </p>
+                        <div onClick={goToTelegram}>
+                            <p className="flex items-center text-xs text-gray-500 font-light hover:underline">
+                                <FaTelegram className="mr-1" />
+                                {telegramHandle}
+                                <OpensInNewTabIcon
+                                    size={8}
+                                    className="mb-1.5"
+                                />
+                            </p>
+                        </div>
                     )}
-                    <p className="flex group-hover:underline">
+                    <p className="flex hover:underline">
                         {member.name}
                         <OpensInNewTabIcon className="mt-0.5" />
                     </p>

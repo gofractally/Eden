@@ -5,7 +5,7 @@ import { FaGavel, FaTelegram } from "react-icons/fa";
 
 import { atomicAssets, blockExplorerAccountBaseUrl } from "config";
 import { assetToLocaleString, openInNewTab } from "_app";
-import { GenericMemberChip } from "_app/ui";
+import { GenericMemberChip, OpensInNewTabIcon } from "_app/ui";
 import { ROUTES } from "_app/routes";
 import { getValidSocialLink } from "members/helpers/social-links";
 
@@ -42,21 +42,29 @@ interface MemberDetailsProps {
 
 export const MemberDetails = ({ member, onClick }: MemberDetailsProps) => {
     const telegramHandle = getValidSocialLink(member?.socialHandles.telegram);
+
+    const goToTelegram = (e: React.MouseEvent) => {
+        if (!member) return;
+        e.stopPropagation();
+        openInNewTab(`https://t.me/${telegramHandle}`);
+    };
+
     return (
-        <div
-            onClick={onClick}
-            className="flex-1 flex flex-col justify-center group"
-        >
+        <div onClick={onClick} className="flex-1 flex flex-col justify-center">
             <p className="text-xs text-gray-500 font-light">
                 {member.createdAt === 0
                     ? "not an eden member"
                     : dayjs(member.createdAt).format("YYYY.MM.DD")}
             </p>
-            <p className="group-hover:underline">{member.name}</p>
+            <p className="hover:underline">{member.name}</p>
             {telegramHandle && (
-                <p className="flex items-center text-xs text-gray-500 font-light">
-                    <FaTelegram className="mr-1" /> {telegramHandle}
-                </p>
+                <div onClick={goToTelegram}>
+                    <p className="flex items-center text-xs text-gray-500 font-light hover:underline">
+                        <FaTelegram className="mr-1" />
+                        {telegramHandle}
+                        <OpensInNewTabIcon size={8} className="mb-1.5" />
+                    </p>
+                </div>
             )}
         </div>
     );
