@@ -14,10 +14,14 @@ import {
     ErrorLoadingElection,
     RoundStage,
     useRoundStageTimes,
+    VoteData,
     VotingMemberChip,
 } from "elections";
 import { MemberData, MembersGrid } from "members";
-import { RoundHeader } from "elections/components/ongoing-election-components";
+import {
+    ConsensometerBlocks,
+    RoundHeader,
+} from "elections/components/ongoing-election-components";
 
 export const ElectionStatsPage = () => {
     const {
@@ -210,14 +214,25 @@ const GroupSegment = ({ group, groupIndex, isFinished }: GroupSegmentProps) => {
 };
 
 const GroupHeader = ({ group, groupIndex, isFinished }: GroupSegmentProps) => {
-    console.info(group);
+    const consensusData = group.votes.map((groupVotes) => ({
+        member: groupVotes.voter.account,
+        round: groupIndex,
+        index: 0,
+        candidate: groupVotes.candidate?.account,
+    })) as VoteData[];
+
     const groupLabel =
         group.winner?.name || (isFinished ? "[no consensus]" : "");
 
     return (
-        <div className="flex">
-            <Text className="w-24">Group {groupIndex + 1}</Text>
-            <Text className="flex-1">{groupLabel}</Text>
+        <div className="flex w-full items-center pr-4 sm:pr-8">
+            <Text className="w-20 xs:w-24 flex-grow sm:flex-grow-0">
+                Group {groupIndex + 1}
+            </Text>
+            <div className="flex flex-1 flex-col sm:flex-row items-end sm:items-center justify-end sm:justify-between">
+                <Text className="mb-1 sm:mb-0">{groupLabel}</Text>
+                <ConsensometerBlocks voteData={consensusData} />
+            </div>
         </div>
     );
 };
