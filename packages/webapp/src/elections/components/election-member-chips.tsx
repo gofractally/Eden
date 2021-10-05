@@ -1,5 +1,10 @@
 import React from "react";
-import { FaCheckSquare, FaPlayCircle, FaRegSquare } from "react-icons/fa";
+import {
+    FaCheckSquare,
+    FaPlayCircle,
+    FaRegSquare,
+    FaTelegram,
+} from "react-icons/fa";
 
 import {
     ipfsUrl,
@@ -10,6 +15,7 @@ import {
 import { ROUTES } from "_app/routes";
 import { GenericMemberChip, OpensInNewTabIcon } from "_app/ui";
 import { MemberData } from "members/interfaces";
+import { getValidSocialLink } from "members/helpers/social-links";
 
 interface VotingMemberChipProps {
     member: MemberData;
@@ -40,6 +46,8 @@ export const VotingMemberChip = ({
         window.open(`${ROUTES.MEMBERS.href}/${member.account}`, "_blank");
     };
 
+    const telegramHandle = getValidSocialLink(member.socialHandles.telegram);
+
     return (
         <GenericMemberChip
             member={member}
@@ -49,11 +57,23 @@ export const VotingMemberChip = ({
                     onClick={goToMemberPage}
                     className="flex-1 flex flex-col justify-center group"
                 >
-                    {votesReceived > 0 && (
-                        <p className="text-xs text-blue-500 font-medium">
-                            Votes Received: {votesReceived}
-                        </p>
-                    )}
+                    <div className="flex space-x-1">
+                        {telegramHandle && (
+                            <p className="flex items-center text-xs text-gray-500 font-light">
+                                <FaTelegram className="mr-1" /> {telegramHandle}
+                            </p>
+                        )}
+                        {telegramHandle && votesReceived > 0 && (
+                            <p className="text-xs text-gray-600 font-light">
+                                •
+                            </p>
+                        )}
+                        {votesReceived > 0 && (
+                            <p className="text-xs text-blue-500 font-medium">
+                                Votes Received: {votesReceived}
+                            </p>
+                        )}
+                    </div>
                     <p className="flex group-hover:underline">
                         {member.name}
                         <OpensInNewTabIcon className="mt-0.5" />
@@ -155,6 +175,8 @@ export const ElectionParticipantChip = ({
     electionVideoCid,
     subText,
 }: ElectionParticipantChipProps) => {
+    const telegramHandle = getValidSocialLink(member?.socialHandles.telegram);
+
     const goToMemberPage = (e: React.MouseEvent) => {
         if (!member) return;
         e.stopPropagation();
@@ -181,9 +203,11 @@ export const ElectionParticipantChip = ({
             isDelegate={isDelegate || Boolean(delegateLevel)} // TODO: This will be inferred from member
             contentComponent={
                 <div className="flex-1 flex flex-col justify-center group">
-                    <p className="text-xs text-gray-500 font-light">
-                        @{member.account}
-                    </p>
+                    {telegramHandle && (
+                        <p className="flex items-center text-xs text-gray-500 font-light">
+                            <FaTelegram className="mr-1" /> {telegramHandle}
+                        </p>
+                    )}
                     <p className="flex group-hover:underline">
                         {member.name}
                         <OpensInNewTabIcon className="mt-0.5" />

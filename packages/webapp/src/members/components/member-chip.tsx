@@ -1,12 +1,13 @@
 import React from "react";
 import { useRouter } from "next/router";
 import dayjs from "dayjs";
-import { FaGavel } from "react-icons/fa";
+import { FaGavel, FaTelegram } from "react-icons/fa";
 
 import { atomicAssets, blockExplorerAccountBaseUrl } from "config";
 import { assetToLocaleString, openInNewTab } from "_app";
 import { GenericMemberChip } from "_app/ui";
 import { ROUTES } from "_app/routes";
+import { getValidSocialLink } from "members/helpers/social-links";
 
 import { MemberData } from "../interfaces";
 
@@ -39,24 +40,27 @@ interface MemberDetailsProps {
     onClick?: (e: React.MouseEvent) => void;
 }
 
-export const MemberDetails = ({ member, onClick }: MemberDetailsProps) => (
-    <div
-        onClick={onClick}
-        className="flex-1 flex flex-col justify-center group"
-    >
-        <p className="text-xs text-gray-500 font-light">
-            {member.createdAt === 0
-                ? "not an eden member"
-                : dayjs(member.createdAt).format("YYYY.MM.DD")}
-        </p>
-        <p className="group-hover:underline">{member.name}</p>
-        {member.account && (
+export const MemberDetails = ({ member, onClick }: MemberDetailsProps) => {
+    const telegramHandle = getValidSocialLink(member?.socialHandles.telegram);
+    return (
+        <div
+            onClick={onClick}
+            className="flex-1 flex flex-col justify-center group"
+        >
             <p className="text-xs text-gray-500 font-light">
-                @{member.account}
+                {member.createdAt === 0
+                    ? "not an eden member"
+                    : dayjs(member.createdAt).format("YYYY.MM.DD")}
             </p>
-        )}
-    </div>
-);
+            <p className="group-hover:underline">{member.name}</p>
+            {telegramHandle && (
+                <p className="flex items-center text-xs text-gray-500 font-light">
+                    <FaTelegram className="mr-1" /> {telegramHandle}
+                </p>
+            )}
+        </div>
+    );
+};
 
 export const MemberChipNFTBadges = ({ member }: { member: MemberData }) => (
     <div className="absolute right-0 bottom-0 p-2.5 space-y-0.5">
