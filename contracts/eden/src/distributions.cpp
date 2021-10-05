@@ -203,7 +203,7 @@ namespace eden
                        .amount = total - used,
                    },
                    contract);
-               accounts.add_balance("master"_n, total - used);
+               accounts.add_balance("master"_n, total - used, false);
             }
             dist_accounts.emplace(contract, [&](auto& row) {
                row.value = distribution_account_v0{.id = dist_accounts.available_primary_key(),
@@ -372,7 +372,7 @@ namespace eden
                  .pool = "master"_n,
              },
              contract);
-         owned_accounts.add_balance("master"_n, iter->balance());
+         owned_accounts.add_balance("master"_n, iter->balance(), false);
          iter = member_idx.erase(iter);
       }
       return max_steps;
@@ -396,7 +396,7 @@ namespace eden
                  .pool = "master"_n,
              },
              contract);
-         owned_accounts.add_balance("master"_n, iter->balance());
+         owned_accounts.add_balance("master"_n, iter->balance(), false);
          iter = member_idx.erase(iter);
       }
       // handle distributions that are in progress
@@ -439,7 +439,7 @@ namespace eden
                        .amount = amount,
                    },
                    contract);
-               owned_accounts.add_balance("master"_n, amount);
+               owned_accounts.add_balance("master"_n, amount, false);
             }
          }
          else
