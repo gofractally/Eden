@@ -139,12 +139,13 @@ export const MeetingLink = ({
 
         const topic = `Eden Election - Round #${roundIndex + 1}`;
         const durationInMinutes = meetingDurationMs / 1000 / 60;
+        const startTime = meetingStartTime.toISOString().split(".")[0] + "Z";
 
         const responseData = await generateZoomMeetingLink(
             setZoomLinkedAccount,
             topic,
             durationInMinutes,
-            meetingStartTime.toISOString()
+            startTime
         );
 
         console.info("generated meeting data", responseData);
