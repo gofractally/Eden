@@ -228,7 +228,7 @@ export const OngoingRoundSegment = ({
                             {stage === RoundStage.PreMeeting
                                 ? "Make sure you have your meeting link ready and stand by. You'll be on a video call with the following Eden members momentarily."
                                 : stage === RoundStage.Meeting
-                                ? "Meet with your group. Align on a leader >2/3 majority. Select your leader and submit your vote below."
+                                ? "Meet with your group. Align on a delegate >2/3 majority. Select your delegate and submit your vote below."
                                 : stage === RoundStage.Complete
                                 ? "If you're the delegate elect, stand by. The next round will start momentarily."
                                 : "This round is finalizing. Please submit any outstanding votes now. You will be able to come back later to upload election videos if your video isn't ready yet."}
