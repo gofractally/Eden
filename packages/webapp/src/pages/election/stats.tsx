@@ -5,7 +5,6 @@ import {
     SideNavLayout,
     useCountdown,
     useCurrentGlobalElectionData,
-    VoteQueryData,
 } from "_app";
 import { Container, Heading, Loader, Expander, Text } from "_app/ui";
 
@@ -36,14 +35,17 @@ export const ElectionStatsPage = () => {
             ) : (
                 <div className="divide-y">
                     <Container>
-                        <Heading size={1}>Election Stats</Heading>
-                        {globalElectionData.rounds.map((round) => (
-                            <RoundSegment
-                                key={`election-round-${round.roundIndex}`}
-                                round={round}
-                            />
-                        ))}
+                        <Heading size={1}>Election</Heading>
                     </Container>
+                    <Container>
+                        <Heading size={2}>All results</Heading>
+                    </Container>
+                    {globalElectionData.rounds.map((round) => (
+                        <RoundSegment
+                            key={`election-round-${round.roundIndex}`}
+                            round={round}
+                        />
+                    ))}
                 </div>
             )}
         </SideNavLayout>
@@ -58,15 +60,20 @@ interface RoundSegmentProps {
 
 const RoundSegment = ({ round }: RoundSegmentProps) => {
     return (
-        <Expander header={<GlobalRoundHeader round={round} />}>
-            {round.groups.map((group, i) => (
-                <GroupSegment
-                    key={`election-round-${round.roundIndex}-group-${i}`}
-                    group={group}
-                    groupIndex={i}
-                    isFinished={round.votingFinished}
-                />
-            ))}
+        <Expander
+            header={<GlobalRoundHeader round={round} />}
+            showContentDivider
+        >
+            <div className="divide-y">
+                {round.groups.map((group, i) => (
+                    <GroupSegment
+                        key={`election-round-${round.roundIndex}-group-${i}`}
+                        group={group}
+                        groupIndex={i}
+                        isFinished={round.votingFinished}
+                    />
+                ))}
+            </div>
         </Expander>
     );
 };
@@ -194,12 +201,13 @@ const GroupSegment = ({ group, groupIndex, isFinished }: GroupSegmentProps) => {
 
 const GroupHeader = ({ group, groupIndex, isFinished }: GroupSegmentProps) => {
     console.info(group);
-    const groupLabel = group.winner?.name || (isFinished ? "No consensus" : "");
+    const groupLabel =
+        group.winner?.name || (isFinished ? "[no consensus]" : "");
 
     return (
-        <div className="w-full flex justify-between space-x-6 items-center">
-            <div className="w-20">Group {groupIndex + 1}</div>
-            <div className="flex-1">{groupLabel}</div>
+        <div className="flex">
+            <Text className="w-24">Group {groupIndex + 1}</Text>
+            <Text className="flex-1">{groupLabel}</Text>
         </div>
     );
 };
