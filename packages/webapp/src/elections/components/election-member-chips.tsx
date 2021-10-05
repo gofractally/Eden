@@ -13,9 +13,10 @@ import { MemberData } from "members/interfaces";
 
 interface VotingMemberChipProps {
     member: MemberData;
-    onSelect: () => void;
-    isSelected: boolean;
-    hasCurrentMembersVote: boolean;
+    onSelect?: () => void;
+    isSelected?: boolean;
+    hasCurrentMembersVote?: boolean;
+    isDelegate?: boolean;
     votesReceived: number;
     votingFor?: string;
     electionVideoCid?: string;
@@ -31,6 +32,7 @@ export const VotingMemberChip = ({
     votesReceived,
     votingFor,
     electionVideoCid,
+    isDelegate,
     ...containerProps
 }: VotingMemberChipProps) => {
     const goToMemberPage = (e: React.MouseEvent) => {
@@ -41,6 +43,7 @@ export const VotingMemberChip = ({
     return (
         <GenericMemberChip
             member={member}
+            isDelegate={isDelegate}
             contentComponent={
                 <div
                     onClick={goToMemberPage}
@@ -67,20 +70,10 @@ export const VotingMemberChip = ({
                     <ElectionVideoPlayButton
                         electionVideoCid={electionVideoCid}
                     />
-                    {hasCurrentMembersVote ? (
-                        <FaCheckSquare
-                            size={31}
-                            className="ml-4 mr-2 text-gray-400"
-                        />
-                    ) : isSelected ? (
-                        <FaCheckSquare
-                            size={31}
-                            className="ml-4 mr-2 text-blue-500"
-                        />
-                    ) : (
-                        <FaRegSquare
-                            size={31}
-                            className="ml-4 mr-2 text-gray-300 hover:text-gray-400"
+                    {onSelect && (
+                        <VotingSelectionIcons
+                            hasCurrentMembersVote={hasCurrentMembersVote}
+                            isSelected={isSelected}
                         />
                     )}
                 </div>
@@ -90,6 +83,25 @@ export const VotingMemberChip = ({
         />
     );
 };
+
+interface VotingSelectionIconsProps {
+    hasCurrentMembersVote?: boolean;
+    isSelected?: boolean;
+}
+const VotingSelectionIcons = ({
+    hasCurrentMembersVote,
+    isSelected,
+}: VotingSelectionIconsProps) =>
+    hasCurrentMembersVote ? (
+        <FaCheckSquare size={31} className="ml-4 mr-2 text-gray-400" />
+    ) : isSelected ? (
+        <FaCheckSquare size={31} className="ml-4 mr-2 text-blue-500" />
+    ) : (
+        <FaRegSquare
+            size={31}
+            className="ml-4 mr-2 text-gray-300 hover:text-gray-400"
+        />
+    );
 
 const getDelegateLevelDescription = (
     memberAccount: string | undefined,

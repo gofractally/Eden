@@ -3,15 +3,17 @@ import {
     RoundGroupQueryData,
     RoundWithGroupQueryData,
     SideNavLayout,
+    useCountdown,
     useCurrentGlobalElectionData,
     VoteQueryData,
 } from "_app";
 import { Container, Heading, Loader, Expander, Text } from "_app/ui";
 
 import {
-    ElectionParticipantChip,
     ErrorLoadingElection,
-    tallyVotesFromVoteData,
+    RoundStage,
+    useRoundStageTimes,
+    VotingMemberChip,
 } from "elections";
 import { MemberData, MembersGrid } from "members";
 import { RoundHeader } from "elections/components/ongoing-election-components";
@@ -62,6 +64,7 @@ const RoundSegment = ({ round }: RoundSegmentProps) => {
                     key={`election-round-${round.roundIndex}-group-${i}`}
                     group={group}
                     groupIndex={i}
+                    isFinished={round.votingFinished}
                 />
             ))}
         </Expander>
@@ -73,21 +76,46 @@ interface GlobalRoundHeaderProps {
 }
 
 const GlobalRoundHeader = ({ round }: GlobalRoundHeaderProps) => {
-    const isRoundActive = round.votingStarted && !round.votingFinished;
-    const roundStatusLabel = isRoundActive
-        ? "in progress"
-        : round.votingFinished
-        ? "completed"
-        : "";
+    const { stage, currentStageEndTime } = useRoundStageTimes(
+        round.votingBegin,
+        round.votingEnd
+    );
+
+    const { hmmss } = useCountdown({ endTime: currentStageEndTime.toDate() });
+    const roundNum = round.roundIndex + 1;
+
+    const roundStatusLabel = () => {
+        switch (stage) {
+            case RoundStage.PreMeeting:
+                return (
+                    <>
+                        starts in: <span className="font-normal">{hmmss}</span>
+                    </>
+                );
+            case RoundStage.PostMeeting:
+                return (
+                    <>
+                        finalizes in:{" "}
+                        <span className="font-normal">{hmmss}</span>
+                    </>
+                );
+            case RoundStage.Complete:
+                return <>completed</>;
+            default:
+                return <>in progress</>;
+        }
+    };
+
     const subText = `${round.votingBegin.format(
         "LT"
     )} - ${round.votingEnd.format("LT z")}`;
+
     return (
         <RoundHeader
-            isRoundActive={isRoundActive}
+            isRoundActive={stage !== RoundStage.Complete}
             headlineComponent={
                 <Text size="sm" className="font-semibold">
-                    Round {round.roundIndex + 1} {roundStatusLabel}
+                    Round {roundNum} {roundStatusLabel()}
                 </Text>
             }
             sublineComponent={
@@ -102,37 +130,59 @@ const GlobalRoundHeader = ({ round }: GlobalRoundHeaderProps) => {
 interface GroupSegmentProps {
     group: RoundGroupQueryData;
     groupIndex: number;
+    isFinished: boolean;
 }
 
-const GroupSegment = ({ group, groupIndex }: GroupSegmentProps) => {
+const GroupSegment = ({ group, groupIndex, isFinished }: GroupSegmentProps) => {
     // TODO: revisit this, unfortunately the MembersGrid only accepts MemberData,
     // even though we don't need it to display the required summarized member
     // chip data
     const members: MemberData[] = group.votes.map(
         (vote) => vote.voter as MemberData
     );
+
+    const membersVotes = group.votes.reduce((membersVotingMap, vote) => {
+        membersVotingMap[vote.voter.account] = {
+            receivedVotes: 0,
+            votedFor: vote.candidate?.account,
+        };
+        return membersVotingMap;
+    }, {} as { [key: string]: { receivedVotes: number; votedFor?: string } });
+
+    group.votes
+        .filter((vote) => vote.candidate)
+        .forEach(
+            (vote) => (membersVotes[vote.candidate!.account].receivedVotes += 1)
+        );
+
     const getVideoVoteData = (member: MemberData) =>
         ((member as unknown) as VoteQueryData).video;
 
     return (
         <Expander
-            header={<GroupHeader groupIndex={groupIndex} group={group} />}
+            header={
+                <GroupHeader
+                    groupIndex={groupIndex}
+                    group={group}
+                    isFinished={isFinished}
+                />
+            }
             type="inactive"
         >
             <MembersGrid members={members}>
-                {(member, i) => {
-                    return member.account === group.winner?.account ? (
-                        <ElectionParticipantChip
-                            key={`delegate-member-chip-${i}`}
+                {(member) => {
+                    return (
+                        <VotingMemberChip
+                            key={`voting-member-${member.account}`}
                             member={member}
-                            delegateLevel="Delegate"
+                            votesReceived={
+                                membersVotes[member.account].receivedVotes
+                            }
                             electionVideoCid={getVideoVoteData(member)}
-                        />
-                    ) : (
-                        <ElectionParticipantChip
-                            key={`participant-member-chip-${i}`}
-                            member={member}
-                            electionVideoCid={getVideoVoteData(member)}
+                            votingFor={membersVotes[member.account].votedFor}
+                            isDelegate={
+                                member.account === group.winner?.account
+                            }
                         />
                     );
                 }}
@@ -141,28 +191,14 @@ const GroupSegment = ({ group, groupIndex }: GroupSegmentProps) => {
     );
 };
 
-const GroupHeader = ({ group, groupIndex }: GroupSegmentProps) => {
-    const groupVoteData = group.votes.map((data) => ({
-        member: data.voter.account,
-        candidate: data.candidate?.account || "",
-    }));
-    const { totalVotesCast, leadCandidates } = tallyVotesFromVoteData(
-        groupVoteData
-    );
-
-    const leadCandidatesLabel = leadCandidates.length
-        ? leadCandidates.join(", ")
-        : "(None)";
-
-    const winner = group.winner?.account || leadCandidatesLabel;
+const GroupHeader = ({ group, groupIndex, isFinished }: GroupSegmentProps) => {
+    console.info(group);
+    const groupLabel = group.winner?.name || (isFinished ? "No consensus" : "");
 
     return (
         <div className="w-full flex justify-between space-x-6 items-center">
             <div className="w-20">Group {groupIndex + 1}</div>
-            <div className="w-8 p-2 text-lg text-center font-bold leading-none text-blue-100 transform bg-blue-600 rounded-full">
-                {totalVotesCast}
-            </div>
-            <div className="flex-1">{winner}</div>
+            <div className="flex-1">{groupLabel}</div>
         </div>
     );
 };
