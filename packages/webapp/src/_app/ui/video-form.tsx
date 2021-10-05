@@ -17,6 +17,7 @@ interface Props {
     subtitle?: string;
     action: string;
     uploadCompleteMessage?: string;
+    uploadErrorMessage?: string;
 }
 
 export const VideoSubmissionFormAndPreview = ({
@@ -30,6 +31,7 @@ export const VideoSubmissionFormAndPreview = ({
     title = "",
     subtitle = "",
     uploadCompleteMessage = "",
+    uploadErrorMessage = "",
 }: Props) => {
     const [isLoading, setIsLoading] = useState(false);
     const [uploadedVideo, setUploadedVideo] = useState<File | undefined>(
@@ -84,6 +86,13 @@ export const VideoSubmissionFormAndPreview = ({
             >
                 {(video || uploadedVideo) && <VideoClip url={videoUrl} />}
             </Form.LabeledSet>
+            {uploadErrorMessage && (
+                <div className="text-center">
+                    <Text size="lg" type="danger">
+                        {uploadErrorMessage}
+                    </Text>
+                </div>
+            )}
             {uploadCompleteMessage ? (
                 <div className="text-center">
                     <Text size="lg" type="success">
@@ -117,11 +126,9 @@ export const VideoSubmissionFormAndPreview = ({
                         <div>
                             <Button
                                 isSubmit
-                                disabled={
-                                    isLoading || (!uploadedVideo && !video)
-                                }
+                                disabled={isLoading || !uploadedVideo}
                                 isLoading={isLoading}
-                                type={"secondary"}
+                                type="secondary"
                             >
                                 {submitButtonIcon}
                                 {getSubmissionText()}
