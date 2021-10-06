@@ -77,7 +77,7 @@ struct CompareFile
       if (write_expected)
          eosio::execute("cp " + actual_path + " " + expected_path);
       else
-         eosio::check(!eosio::execute("diff " + expected_path + " " + actual_path),
+         eosio::check(!eosio::execute("diff -u " + expected_path + " " + actual_path),
                       "file mismatch between " + expected_path + ", " + actual_path);
    }
 
@@ -1234,7 +1234,7 @@ TEST_CASE("election")
    eden::election_state_singleton results("eden.gm"_n, eden::default_scope);
    auto result = std::get<eden::election_state_v0>(results.get());
    // This is likely to change as it depends on the exact random number algorithm and seed
-   CHECK(result.lead_representative == "pip"_n);
+   CHECK(result.lead_representative == "egeon"_n);
    std::sort(result.board.begin(), result.board.end());
    CHECK(result.board == std::vector{"alice"_n, "egeon"_n, "pip"_n});
 }
@@ -1393,30 +1393,30 @@ TEST_CASE("budget distribution")
    t.alice.act<actions::distribute>(5000);
    CHECK(t.get_total_budget() == s2a("10.9435 EOS"));
 
-   expect(t.egeon.trace<actions::fundtransfer>("egeon"_n, s2t("2020-07-04T15:30:00.000"), 1,
-                                               "alice"_n, s2a("1.8001 EOS"), "memo"),
+   expect(t.alice.trace<actions::fundtransfer>("alice"_n, s2t("2020-07-04T15:30:00.000"), 1,
+                                               "egeon"_n, s2a("1.8001 EOS"), "memo"),
           "insufficient balance");
-   expect(t.egeon.trace<actions::fundtransfer>("egeon"_n, s2t("2020-07-04T15:30:00.000"), 1,
-                                               "alice"_n, s2a("-1.0000 EOS"), "memo"),
+   expect(t.alice.trace<actions::fundtransfer>("alice"_n, s2t("2020-07-04T15:30:00.000"), 1,
+                                               "egeon"_n, s2a("-1.0000 EOS"), "memo"),
           "amount must be positive");
-   expect(t.egeon.trace<actions::fundtransfer>("egeon"_n, s2t("2020-07-04T15:30:00.000"), 1,
+   expect(t.alice.trace<actions::fundtransfer>("alice"_n, s2t("2020-07-04T15:30:00.000"), 1,
                                                "ahab"_n, s2a("1.0000 EOS"), "memo"),
           "member ahab not found");
 
-   t.egeon.act<actions::fundtransfer>("egeon"_n, s2t("2020-07-04T15:30:00.000"), 1, "alice"_n,
+   t.alice.act<actions::fundtransfer>("alice"_n, s2t("2020-07-04T15:30:00.000"), 1, "egeon"_n,
                                       s2a("1.8000 EOS"), "memo");
-   CHECK(get_eden_account("alice"_n)->balance() == s2a("91.8000 EOS"));
+   CHECK(get_eden_account("egeon"_n)->balance() == s2a("1.8000 EOS"));
 
    expect(t.alice.trace<actions::usertransfer>("alice"_n, "ahab"_n, s2a("10.0000 EOS"), "memo"),
           "member ahab not found");
    t.ahab.act<token::actions::transfer>("ahab"_n, "eden.gm"_n, s2a("10.0000 EOS"), "memo");
-   expect(t.ahab.trace<actions::usertransfer>("ahab"_n, "alice"_n, s2a("10.0000 EOS"), "memo"),
+   expect(t.ahab.trace<actions::usertransfer>("ahab"_n, "egeon"_n, s2a("10.0000 EOS"), "memo"),
           "member ahab not found");
-   expect(t.egeon.trace<actions::usertransfer>("egeon"_n, "alice"_n, s2a("-1.0000 EOS"), "memo"),
+   expect(t.alice.trace<actions::usertransfer>("alice"_n, "egeon"_n, s2a("-1.0000 EOS"), "memo"),
           "amount must be positive");
    t.alice.act<actions::usertransfer>("alice"_n, "egeon"_n, s2a("10.0000 EOS"), "memo");
-   CHECK(get_eden_account("alice"_n)->balance() == s2a("81.8000 EOS"));
-   CHECK(get_eden_account("egeon"_n)->balance() == s2a("10.0000 EOS"));
+   CHECK(get_eden_account("egeon"_n)->balance() == s2a("11.8000 EOS"));
+   CHECK(get_eden_account("alice"_n)->balance() == s2a("80.0000 EOS"));
    CHECK(get_eden_account("ahab"_n)->balance() == s2a("10.0000 EOS"));
 }
 
@@ -1528,8 +1528,8 @@ TEST_CASE("budget adjustment on resignation")
    t.run_election();
    t.set_balance(s2a("1000.0000 EOS"));
    t.skip_to("2020-09-02T15:30:00.000");
-   // egeon is satoshi, and receives the whole budget
-   t.egeon.act<actions::resign>("egeon"_n);
+   // alice is satoshi, and receives the whole budget
+   t.alice.act<actions::resign>("alice"_n);
    std::map<eosio::block_timestamp, eosio::asset> expected{};
    CHECK(t.get_budgets_by_period() == expected);
    t.skip_to("2020-10-02T15:30:00.000");
