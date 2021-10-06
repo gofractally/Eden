@@ -77,7 +77,7 @@ struct CompareFile
       if (write_expected)
          eosio::execute("cp " + actual_path + " " + expected_path);
       else
-         eosio::check(!eosio::execute("diff -u " + expected_path + " " + actual_path),
+         eosio::check(!eosio::execute("diff " + expected_path + " " + actual_path),
                       "file mismatch between " + expected_path + ", " + actual_path);
    }
 
