@@ -2,7 +2,7 @@ import React from "react";
 import { CurrentElection } from "elections/interfaces";
 
 import {
-    ElectionFAQ,
+    ElectionScheduleSegment,
     ElectionVideoUploadCTA,
     ParticipationCard,
     ViewPreviousElectionResultsCTA,
@@ -16,7 +16,7 @@ export const RegistrationElection = ({ election }: Props) => {
     return (
         <>
             <ParticipationCard election={election} />
-            {/* <ElectionFAQ /> */}
+            <ElectionScheduleSegment />
             <ElectionVideoUploadCTA />
             <ViewPreviousElectionResultsCTA />
         </>
