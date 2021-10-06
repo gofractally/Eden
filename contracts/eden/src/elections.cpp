@@ -48,6 +48,9 @@ namespace eden
       eosio::check(bytes.remaining() >= 80, "Stream overrun");
       auto hash1 = eosio::sha256(bytes.pos, 80);
       auto hash2 = eosio::sha256(reinterpret_cast<char*>(hash1.extract_as_byte_array().data()), 32);
+      auto swapped = hash2.extract_as_byte_array();
+      std::reverse(swapped.begin(), swapped.end());
+      hash2 = eosio::checksum256(swapped);
       eosio::check(hash2 < current, "New seed block must have greater POW than previous seed.");
       eosio::time_point_sec block_time;
       bytes.skip(4 + 32 + 32);
