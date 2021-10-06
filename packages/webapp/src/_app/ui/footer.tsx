@@ -1,4 +1,4 @@
-import { Link } from "_app/ui";
+import { Image, Link } from "_app/ui";
 import { ROUTES } from "_app/routes";
 
 export const Footer = () => (
@@ -9,7 +9,7 @@ export const Footer = () => (
                     <h2 className="title-font font-medium text-gray-900 tracking-widest text-sm mb-1">
                         EDEN
                     </h2>
-                    <nav className="list-none mb-10">
+                    <nav className="list-none mb-5">
                         <li>
                             <Link
                                 className="text-gray-400"
@@ -37,6 +37,14 @@ export const Footer = () => (
                             </Link>
                         </li>
                     </nav>
+                    <div className="flex items-center space-x-1 mb-6">
+                        <Image
+                            src="/images/clarion-logo.svg"
+                            alt="Clarion logo"
+                            className="h-4"
+                        />
+                        <p className="text-gray-400">ClarionOS</p>
+                    </div>
                 </div>
                 <div className="lg:w-1/4 md:w-1/2 w-full">
                     <h2 className="title-font font-medium text-gray-900 tracking-widest text-sm mb-1">

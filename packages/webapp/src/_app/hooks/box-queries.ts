@@ -73,6 +73,7 @@ export const useCurrentMemberElectionVotingData = (
                             profile {
                               name
                               img
+                              social
                             }
                           }
                         }
@@ -81,6 +82,7 @@ export const useCurrentMemberElectionVotingData = (
                           profile {
                             name
                             img
+                            social
                           }
                         }
                         video
@@ -168,6 +170,7 @@ const currentElectionGlobalDataQuery = `
                       profile {
                         name
                         img
+                        social
                       }
                     }
                     votes {
@@ -176,6 +179,7 @@ const currentElectionGlobalDataQuery = `
                         profile {
                           name
                           img
+                          social
                         }
                       }
                       candidate {
@@ -183,6 +187,7 @@ const currentElectionGlobalDataQuery = `
                         profile {
                           name
                           img
+                          social
                         }
                       }
                       video
@@ -241,11 +246,14 @@ const mapQueriedGroupVotes = (votes: any) => {
     );
 };
 
-const formatQueriedMemberAccountData = (memberAccountData: any) =>
+const formatQueriedMemberAccountData = (
+    memberAccountData: any
+): MemberAccountData | undefined =>
     memberAccountData
         ? {
               account: memberAccountData.account,
               name: memberAccountData.profile.name,
               image: memberAccountData.profile.img,
+              socialHandles: JSON.parse(memberAccountData.profile.social),
           }
         : undefined;

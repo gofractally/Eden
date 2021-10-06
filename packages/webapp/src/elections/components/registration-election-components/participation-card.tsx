@@ -48,6 +48,7 @@ export const ParticipationCard = ({ election }: Props) => {
     const [ualAccount, _, ualShowModal] = useUALAccount();
     const { data: currentMember } = useCurrentMember();
 
+    const isActiveMember = currentMember?.status === MemberStatus.ActiveMember;
     const isMemberParticipating =
         currentMember?.election_participation_status ===
         ElectionParticipationStatus.InElection;
@@ -159,7 +160,8 @@ export const ParticipationCard = ({ election }: Props) => {
                     <Text>
                         Registration is closed. Waiting for the election to
                         begin on {electionDate} at {electionStartTime}.
-                        {isElectionWithin30Minutes &&
+                        {isActiveMember &&
+                            isElectionWithin30Minutes &&
                             " Join the community video conference room below for election updates and announcements."}
                     </Text>
                 </>
@@ -175,7 +177,9 @@ export const ParticipationCard = ({ election }: Props) => {
 
             <div className="flex flex-col sm:flex-row items-start sm:justify-between space-y-2 sm:space-y-0">
                 {!isPastElectionParticipationTimeLimit && statusButton}
-                {isElectionWithin30Minutes && <ElectionCommunityRoomButton />}
+                {isActiveMember && isElectionWithin30Minutes && (
+                    <ElectionCommunityRoomButton />
+                )}
                 {isMemberParticipating && !isElectionWithin30Minutes && (
                     <AddToCalendarButton election={election} />
                 )}

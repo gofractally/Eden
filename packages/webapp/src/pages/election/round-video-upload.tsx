@@ -110,6 +110,10 @@ const RoundVideoUploadList = () => {
         roundIndex: 0,
         message: "",
     });
+    const [uploadErrorMessage, setUploadErrorMessage] = useState({
+        roundIndex: 0,
+        message: "",
+    });
 
     if (isLoadingCurrentMemberElectionVotingData) {
         return <LoaderSection />;
@@ -117,7 +121,7 @@ const RoundVideoUploadList = () => {
         return <ErrorLoadingElection />;
     }
 
-    if (!currentMemberElectionVotingData?.votes.length)
+    if (!currentMemberElectionVotingData?.votes.length) {
         return (
             <Container>
                 <Text>
@@ -126,10 +130,19 @@ const RoundVideoUploadList = () => {
                 </Text>
             </Container>
         );
+    }
+
+    const resetErrorMessage = () => {
+        setUploadErrorMessage({
+            roundIndex: 0,
+            message: "",
+        });
+    };
 
     const submitElectionRoundVideo = (roundIndex: number) => async (
         videoFile: File
     ) => {
+        resetErrorMessage();
         try {
             setVideoSubmissionPhase("uploading");
             const videoHash = await uploadToIpfs(videoFile);
@@ -161,8 +174,13 @@ const RoundVideoUploadList = () => {
                 message: "Election video uploaded successfully!",
             });
         } catch (error) {
-            onError(error as Error, "Unable to set the election round video");
+            onError(error as Error, "Error uploading election round video");
             setVideoSubmissionPhase(undefined);
+            setUploadErrorMessage({
+                roundIndex,
+                message:
+                    "There was an error uploading your video. Please try again.",
+            });
         }
     };
 
@@ -205,6 +223,12 @@ const RoundVideoUploadList = () => {
                                     title="Upload your election video recording."
                                     subtitle=""
                                     action="electvideo"
+                                    uploadErrorMessage={
+                                        uploadErrorMessage.roundIndex ===
+                                        vote.roundIndex
+                                            ? uploadErrorMessage.message
+                                            : undefined
+                                    }
                                     uploadCompleteMessage={
                                         uploadCompleteMessage.roundIndex ===
                                         vote.roundIndex
