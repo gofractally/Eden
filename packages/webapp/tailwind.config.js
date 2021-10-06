@@ -11,6 +11,7 @@ module.exports = {
             },
         },
         fontFamily: {
+            ...defaultTheme.fontFamily,
             sans: [
                 "Inter",
                 "ui-sans-serif",
