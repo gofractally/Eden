@@ -268,11 +268,13 @@ const ChiefDelegateGroup = ({
     groupMembersStats,
     isFinished,
 }: GroupProps) => {
-    const delegateTitle = !isFinished ? "Elected Chief Delegate" : undefined;
-
     return (
         <MembersGrid members={members}>
             {(member) => {
+                const delegateTitle =
+                    isFinished && groupMembersStats[member.account].isDelegate
+                        ? "Head Chief"
+                        : "Chief Delegate";
                 return (
                     <DelegateChip
                         key={`${member.account}-chief-delegate`}
