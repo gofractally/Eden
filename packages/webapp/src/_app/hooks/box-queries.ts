@@ -28,6 +28,7 @@ export interface RoundBasicQueryData {
     votingStarted: boolean;
     votingFinished: boolean;
     resultsAvailable: boolean;
+    numGroups: number;
 }
 
 export interface RoundForUserVotingQueryData extends RoundBasicQueryData {
@@ -67,6 +68,7 @@ export const useCurrentMemberElectionVotingData = (
                             votingStarted
                             votingFinished
                             resultsAvailable
+                            numGroups
                           }
                           winner {
                             account
@@ -113,6 +115,7 @@ export const useCurrentMemberElectionVotingData = (
                     votingStarted: voteNode.group.round.votingStarted,
                     votingFinished: voteNode.group.round.votingFinished,
                     resultsAvailable: voteNode.group.round.resultsAvailable,
+                    numGroups: voteNode.group.round.numGroups,
                     candidate: formatQueriedMemberAccountData(
                         voteNode.candidate
                     ),
@@ -162,6 +165,7 @@ const currentElectionGlobalDataQuery = `
               votingStarted
               votingFinished
               resultsAvailable
+              numGroups
               groups {
                 edges {
                   node {
@@ -226,6 +230,7 @@ const mapQueriedRounds = (queriedRoundsEdges: any) =>
         votingStarted: roundNode.votingStarted,
         votingFinished: roundNode.votingFinished,
         resultsAvailable: roundNode.resultsAvailable,
+        numGroups: roundNode.numGroups,
         groups: mapQueriedRoundsGroups(roundNode.groups?.edges),
     })) || [];
 
@@ -236,7 +241,6 @@ const mapQueriedRoundsGroups = (queriedRoundsGroupsEdges: any) =>
     })) || [];
 
 const mapQueriedGroupVotes = (votes: any) => {
-    // console.info(queriedGroupsVotesEdges);
     return (
         votes?.map((vote: any) => ({
             voter: formatQueriedMemberAccountData(vote.voter),

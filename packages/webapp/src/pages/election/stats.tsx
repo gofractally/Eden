@@ -11,6 +11,7 @@ import { Container, Heading, Loader, Expander, Text } from "_app/ui";
 
 import {
     Avatars,
+    DelegateChip,
     ErrorLoadingElection,
     RoundStage,
     useRoundStageTimes,
@@ -85,6 +86,7 @@ const RoundSegment = ({ round }: RoundSegmentProps) => {
                         group={group}
                         groupIndex={i}
                         isFinished={round.votingFinished}
+                        isChiefDelegateGroup={round.numGroups === 1}
                     />
                 ))}
             </div>
@@ -105,7 +107,17 @@ const GlobalRoundHeader = ({ round }: GlobalRoundHeaderProps) => {
     const { hmmss } = useCountdown({ endTime: currentStageEndTime.toDate() });
     const roundNum = round.roundIndex + 1;
 
+    const isChiefDelegateRound = round.numGroups === 1;
+    const roundTitle = isChiefDelegateRound
+        ? "Chief Delegates"
+        : `Round ${roundNum}`;
+
     const roundStatusLabel = () => {
+        if (isChiefDelegateRound) {
+            return round.resultsAvailable ? "" : "elected";
+        } else if (round.resultsAvailable) {
+            return <>completed</>;
+        }
         switch (stage) {
             case RoundStage.PreMeeting:
                 return (
@@ -136,7 +148,7 @@ const GlobalRoundHeader = ({ round }: GlobalRoundHeaderProps) => {
             isRoundActive={stage !== RoundStage.Complete}
             headlineComponent={
                 <Text size="sm" className="font-semibold">
-                    Round {roundNum} {roundStatusLabel()}
+                    {roundTitle} {roundStatusLabel()}
                 </Text>
             }
             sublineComponent={
@@ -152,9 +164,24 @@ interface GroupSegmentProps {
     group: RoundGroupQueryData;
     groupIndex: number;
     isFinished: boolean;
+    isChiefDelegateGroup?: boolean;
 }
 
-const GroupSegment = ({ group, groupIndex, isFinished }: GroupSegmentProps) => {
+interface GroupMembersStats {
+    [key: string]: {
+        receivedVotes: number;
+        votedFor?: string;
+        video?: string;
+        isDelegate: boolean;
+    };
+}
+
+const GroupSegment = ({
+    group,
+    groupIndex,
+    isFinished,
+    isChiefDelegateGroup,
+}: GroupSegmentProps) => {
     // TODO: revisit this, unfortunately the MembersGrid only accepts MemberData,
     // even though we don't need it to display the required summarized member
     // chip data
@@ -162,26 +189,30 @@ const GroupSegment = ({ group, groupIndex, isFinished }: GroupSegmentProps) => {
         (vote) => vote.voter as MemberData
     );
 
-    const membersVotes = group.votes.reduce((membersVotingMap, vote) => {
+    const membersStats = group.votes.reduce((membersVotingMap, vote) => {
         membersVotingMap[vote.voter.account] = {
             receivedVotes: 0,
             votedFor: vote.candidate?.name,
+            video: vote.video,
+            isDelegate: group.winner?.account === vote.voter.account,
         };
         return membersVotingMap;
-    }, {} as { [key: string]: { receivedVotes: number; votedFor?: string } });
+    }, {} as GroupMembersStats);
 
     group.votes
         .filter((vote) => vote.candidate)
         .forEach(
-            (vote) => (membersVotes[vote.candidate!.account].receivedVotes += 1)
+            (vote) => (membersStats[vote.candidate!.account].receivedVotes += 1)
         );
 
-    const getVideoVoteData = (member: MemberData) =>
-        group.votes.find((vote) => vote.voter.account === member.account)
-            ?.video;
-
-    return (
-        <Expander
+    return isChiefDelegateGroup ? (
+        <ChiefDelegateGroup
+            members={members}
+            groupMembersStats={membersStats}
+            isFinished={isFinished}
+        />
+    ) : (
+        <RegularGroup
             header={
                 <GroupHeader
                     groupIndex={groupIndex}
@@ -189,8 +220,23 @@ const GroupSegment = ({ group, groupIndex, isFinished }: GroupSegmentProps) => {
                     isFinished={isFinished}
                 />
             }
-            type="inactive"
-        >
+            members={members}
+            groupMembersStats={membersStats}
+            isFinished={isFinished}
+        />
+    );
+};
+
+interface GroupProps {
+    members: MemberData[];
+    isFinished: boolean;
+    groupMembersStats: GroupMembersStats;
+    header?: React.ReactNode;
+}
+
+const RegularGroup = ({ members, groupMembersStats, header }: GroupProps) => {
+    return (
+        <Expander header={header} type="inactive">
             <MembersGrid members={members}>
                 {(member) => {
                     return (
@@ -198,18 +244,47 @@ const GroupSegment = ({ group, groupIndex, isFinished }: GroupSegmentProps) => {
                             key={`voting-member-${member.account}`}
                             member={member}
                             votesReceived={
-                                membersVotes[member.account].receivedVotes
+                                groupMembersStats[member.account].receivedVotes
                             }
-                            electionVideoCid={getVideoVoteData(member)}
-                            votingFor={membersVotes[member.account].votedFor}
+                            electionVideoCid={
+                                groupMembersStats[member.account].video
+                            }
+                            votingFor={
+                                groupMembersStats[member.account].votedFor
+                            }
                             isDelegate={
-                                member.account === group.winner?.account
+                                groupMembersStats[member.account].isDelegate
                             }
                         />
                     );
                 }}
             </MembersGrid>
         </Expander>
+    );
+};
+
+const ChiefDelegateGroup = ({
+    members,
+    groupMembersStats,
+    isFinished,
+}: GroupProps) => {
+    const delegateTitle = !isFinished ? "Elected Chief Delegate" : undefined;
+
+    return (
+        <MembersGrid members={members}>
+            {(member) => {
+                return (
+                    <DelegateChip
+                        key={`${member.account}-chief-delegate`}
+                        member={member}
+                        delegateTitle={delegateTitle}
+                        electionVideoCid={
+                            groupMembersStats[member.account].video
+                        }
+                    />
+                );
+            }}
+        </MembersGrid>
     );
 };
 
