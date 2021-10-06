@@ -161,18 +161,21 @@ interface DelegateChipProps {
     member?: MemberData;
     level?: number;
     delegateTitle?: string;
+    electionVideoCid?: string;
 }
 
 export const DelegateChip = ({
     member,
     level,
     delegateTitle,
+    electionVideoCid,
 }: DelegateChipProps) => (
     <ElectionParticipantChip
         member={member}
         delegateLevel={
             delegateTitle ?? getDelegateLevelDescription(member?.account, level)
         }
+        electionVideoCid={electionVideoCid}
         isDelegate
     />
 );
