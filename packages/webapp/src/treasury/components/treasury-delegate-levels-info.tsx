@@ -4,6 +4,7 @@ import {
     Text,
     useMasterPool,
     useMemberStats,
+    useScheduledDistributionTargetAmount,
     useTreasuryStats,
 } from "_app";
 
@@ -17,6 +18,7 @@ export const TreasuryDelegateLevelsInfo = () => {
     const { data: memberStats } = useMemberStats();
     const { data: pool } = useMasterPool();
     const { data: treasuryStats } = useTreasuryStats();
+    const scheduled = useScheduledDistributionTargetAmount();
 
     if (
         !memberStats ||
@@ -33,8 +35,10 @@ export const TreasuryDelegateLevelsInfo = () => {
     const electedRanks = memberStats.ranks.slice(1);
     const electedRanksSize = electedRanks.length;
 
-    const totalDistributionAmount =
-        (treasuryStats.quantity * pool.monthly_distribution_pct) / 100;
+    const totalDistributionAmount = scheduled
+        ? scheduled.quantity
+        : (treasuryStats.quantity * pool.monthly_distribution_pct) / 100;
+
     const levelDistribution = totalDistributionAmount / electedRanksSize;
 
     const calculateAndRenderRankLevelComponent = (
