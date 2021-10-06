@@ -50,15 +50,15 @@ namespace eden
       auto hash2 = eosio::sha256(reinterpret_cast<char*>(hash1.extract_as_byte_array().data()), 32);
       auto swapped = hash2.extract_as_byte_array();
       std::reverse(swapped.begin(), swapped.end());
-      hash2 = eosio::checksum256(swapped);
-      eosio::check(hash2 < current, "New seed block must have greater POW than previous seed.");
+      auto reversed_hash = eosio::checksum256(swapped);
+      eosio::check(reversed_hash < current, "New seed block must have greater POW than previous seed.");
       eosio::time_point_sec block_time;
       bytes.skip(4 + 32 + 32);
       eosio::from_bin(block_time, bytes);
       bytes.skip(4 + 4);
       eosio::check(block_time >= eosio::time_point_sec(start_time), "Seed block is too early");
       eosio::check(block_time < eosio::time_point_sec(end_time), "Seed block is too late");
-      current = hash2;
+      current = reversed_hash;
    }
 
    static uint32_t int_pow(uint32_t base, uint32_t exponent)
