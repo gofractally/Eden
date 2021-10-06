@@ -48,22 +48,15 @@ namespace eden
       eosio::check(bytes.remaining() >= 80, "Stream overrun");
       auto hash1 = eosio::sha256(bytes.pos, 80);
       auto hash2 = eosio::sha256(reinterpret_cast<char*>(hash1.extract_as_byte_array().data()), 32);
-      auto swapped = hash2.extract_as_byte_array();
-      for (auto iter = swapped.begin(), end = swapped.end(); iter < end; ++iter)
-      {
-         --end;
-         std::swap(*iter, *end);
-      }
-      auto reversed_hash = eosio::checksum256(swapped);
-      eosio::check(reversed_hash < current,
-                   "New seed block must have greater POW than previous seed.");
+      std::reverse((unsigned char*)&hash2, (unsigned char*)(&hash2 + 1));
+      eosio::check(hash2 < current, "New seed block must have greater POW than previous seed.");
       eosio::time_point_sec block_time;
       bytes.skip(4 + 32 + 32);
       eosio::from_bin(block_time, bytes);
       bytes.skip(4 + 4);
       eosio::check(block_time >= eosio::time_point_sec(start_time), "Seed block is too early");
       eosio::check(block_time < eosio::time_point_sec(end_time), "Seed block is too late");
-      current = reversed_hash;
+      current = hash2;
    }
 
    static uint32_t int_pow(uint32_t base, uint32_t exponent)
