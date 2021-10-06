@@ -35,6 +35,7 @@ import { CurrentElection, ElectionStatus } from "elections/interfaces";
 import { Avatars, ElectionCommunityRoomButton } from "elections/components";
 
 import AddToCalendarButton from "./add-to-calendar-button";
+import MoreInformationLink from "./more-information-link";
 import { extractElectionDates } from "../../utils";
 import { setElectionParticipation } from "../../transactions";
 
@@ -185,6 +186,7 @@ export const ParticipationCard = ({ election }: Props) => {
                 )}
             </div>
             <ParticipationCounter />
+            <MoreInformationLink />
             <ConfirmParticipationModal
                 isOpen={showConfirmParticipationModal}
                 close={() => setShowConfirmParticipationModal(false)}
