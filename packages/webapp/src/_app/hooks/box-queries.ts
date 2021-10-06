@@ -1,6 +1,7 @@
 import { Query, useQuery } from "@edenos/common/dist/subchain";
 import dayjs from "dayjs";
 import { MemberAccountData } from "members";
+import { assetFromString } from "_app";
 
 export interface ElectionStatusQuery {
     status: {
@@ -261,3 +262,39 @@ const formatQueriedMemberAccountData = (
               socialHandles: JSON.parse(memberAccountData.profile.social),
           }
         : undefined;
+
+export interface ScheduledDistributionTargetAmountQuery {
+    distributions: {
+        edges: [
+            {
+                node: {
+                    time: string;
+                    targetAmount: string;
+                    started: boolean;
+                };
+            }
+        ];
+    };
+}
+
+export const useScheduledDistributionTargetAmount = () => {
+    const edges = useQuery<ScheduledDistributionTargetAmountQuery>(`
+      {
+        distributions(last: 2) {
+          edges {
+            node {
+              time
+              targetAmount
+              started
+            }
+          }
+        }
+      }`).data?.distributions.edges;
+    if (!edges) return;
+    edges.reverse();
+    for (const edge of edges) {
+        if (edge.node.started) break;
+        if (edge.node.targetAmount !== null)
+            return assetFromString(edge.node.targetAmount);
+    }
+};
