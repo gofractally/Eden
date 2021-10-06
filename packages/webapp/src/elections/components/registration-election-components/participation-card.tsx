@@ -97,8 +97,8 @@ export const ParticipationCard = ({ election }: Props) => {
         electionDates.participationTimeLimit
     );
 
-    const isElectionWithin30Minutes = dayjs().isAfter(
-        electionDates.startDateTime.subtract(30, "minutes")
+    const isTimeForCommunityRoom = dayjs().isAfter(
+        electionDates.startDateTime.subtract(1, "hour")
     );
 
     let statusLabel = "";
@@ -161,7 +161,7 @@ export const ParticipationCard = ({ election }: Props) => {
                         Registration is closed. Waiting for the election to
                         begin on {electionDate} at {electionStartTime}.
                         {isActiveMember &&
-                            isElectionWithin30Minutes &&
+                            isTimeForCommunityRoom &&
                             " Join the community video conference room below for election updates and announcements."}
                     </Text>
                 </>
@@ -177,10 +177,10 @@ export const ParticipationCard = ({ election }: Props) => {
 
             <div className="flex flex-col sm:flex-row items-start sm:justify-between space-y-2 sm:space-y-0">
                 {!isPastElectionParticipationTimeLimit && statusButton}
-                {isActiveMember && isElectionWithin30Minutes && (
+                {isActiveMember && isTimeForCommunityRoom && (
                     <ElectionCommunityRoomButton />
                 )}
-                {isMemberParticipating && !isElectionWithin30Minutes && (
+                {isMemberParticipating && !isTimeForCommunityRoom && (
                     <AddToCalendarButton election={election} />
                 )}
             </div>
