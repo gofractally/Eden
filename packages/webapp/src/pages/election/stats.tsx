@@ -237,7 +237,7 @@ interface GroupProps {
 const RegularGroup = ({ members, groupMembersStats, header }: GroupProps) => {
     return (
         <Expander header={header} type="inactive">
-            <MembersGrid members={members}>
+            <MembersGrid members={members} maxCols={2}>
                 {(member) => {
                     return (
                         <VotingMemberChip
