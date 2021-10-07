@@ -11,7 +11,7 @@ export const ElectionVideoUploadCTA = () => {
     if (isLoading) return <LoadingContainer />;
     if (!electionState?.last_election_time) return null;
 
-    const deadline = dayjs(electionState?.last_election_time + "z").add(
+    const deadline = dayjs(electionState?.last_election_time + "Z").add(
         2,
         "days"
     );

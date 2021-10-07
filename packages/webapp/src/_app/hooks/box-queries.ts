@@ -1,6 +1,7 @@
 import { Query, useQuery } from "@edenos/common/dist/subchain";
 import dayjs from "dayjs";
 import { MemberAccountData } from "members";
+import { assetFromString } from "_app";
 
 export interface ElectionStatusQuery {
     status: {
@@ -28,6 +29,7 @@ export interface RoundBasicQueryData {
     votingStarted: boolean;
     votingFinished: boolean;
     resultsAvailable: boolean;
+    numGroups: number;
 }
 
 export interface RoundForUserVotingQueryData extends RoundBasicQueryData {
@@ -67,12 +69,14 @@ export const useCurrentMemberElectionVotingData = (
                             votingStarted
                             votingFinished
                             resultsAvailable
+                            numGroups
                           }
                           winner {
                             account
                             profile {
                               name
                               img
+                              social
                             }
                           }
                         }
@@ -81,6 +85,7 @@ export const useCurrentMemberElectionVotingData = (
                           profile {
                             name
                             img
+                            social
                           }
                         }
                         video
@@ -111,6 +116,7 @@ export const useCurrentMemberElectionVotingData = (
                     votingStarted: voteNode.group.round.votingStarted,
                     votingFinished: voteNode.group.round.votingFinished,
                     resultsAvailable: voteNode.group.round.resultsAvailable,
+                    numGroups: voteNode.group.round.numGroups,
                     candidate: formatQueriedMemberAccountData(
                         voteNode.candidate
                     ),
@@ -160,6 +166,7 @@ const currentElectionGlobalDataQuery = `
               votingStarted
               votingFinished
               resultsAvailable
+              numGroups
               groups {
                 edges {
                   node {
@@ -168,6 +175,7 @@ const currentElectionGlobalDataQuery = `
                       profile {
                         name
                         img
+                        social
                       }
                     }
                     votes {
@@ -176,6 +184,7 @@ const currentElectionGlobalDataQuery = `
                         profile {
                           name
                           img
+                          social
                         }
                       }
                       candidate {
@@ -183,6 +192,7 @@ const currentElectionGlobalDataQuery = `
                         profile {
                           name
                           img
+                          social
                         }
                       }
                       video
@@ -221,6 +231,7 @@ const mapQueriedRounds = (queriedRoundsEdges: any) =>
         votingStarted: roundNode.votingStarted,
         votingFinished: roundNode.votingFinished,
         resultsAvailable: roundNode.resultsAvailable,
+        numGroups: roundNode.numGroups,
         groups: mapQueriedRoundsGroups(roundNode.groups?.edges),
     })) || [];
 
@@ -231,7 +242,6 @@ const mapQueriedRoundsGroups = (queriedRoundsGroupsEdges: any) =>
     })) || [];
 
 const mapQueriedGroupVotes = (votes: any) => {
-    // console.info(queriedGroupsVotesEdges);
     return (
         votes?.map((vote: any) => ({
             voter: formatQueriedMemberAccountData(vote.voter),
@@ -241,11 +251,50 @@ const mapQueriedGroupVotes = (votes: any) => {
     );
 };
 
-const formatQueriedMemberAccountData = (memberAccountData: any) =>
+const formatQueriedMemberAccountData = (
+    memberAccountData: any
+): MemberAccountData | undefined =>
     memberAccountData
         ? {
               account: memberAccountData.account,
               name: memberAccountData.profile.name,
               image: memberAccountData.profile.img,
+              socialHandles: JSON.parse(memberAccountData.profile.social),
           }
         : undefined;
+
+export interface ScheduledDistributionTargetAmountQuery {
+    distributions: {
+        edges: [
+            {
+                node: {
+                    time: string;
+                    targetAmount: string;
+                    started: boolean;
+                };
+            }
+        ];
+    };
+}
+
+export const useScheduledDistributionTargetAmount = () => {
+    const edges = useQuery<ScheduledDistributionTargetAmountQuery>(`
+      {
+        distributions(last: 2) {
+          edges {
+            node {
+              time
+              targetAmount
+              started
+            }
+          }
+        }
+      }`).data?.distributions.edges;
+    if (!edges) return;
+    edges.reverse();
+    for (const edge of edges) {
+        if (edge.node.started) break;
+        if (edge.node.targetAmount !== null)
+            return assetFromString(edge.node.targetAmount);
+    }
+};

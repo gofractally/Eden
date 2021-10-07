@@ -29,7 +29,7 @@ namespace eden
 
       if (is_possible_deposit_account(from) && memo != "donate")
       {
-         accounts{get_self()}.add_balance(from, quantity);
+         accounts{get_self()}.add_balance(from, quantity, true);
          if (auto migration = migrations.get<migrate_account_v0>())
          {
             migration->adjust_balance(from, quantity);
@@ -48,7 +48,7 @@ namespace eden
       accounts internal{get_self(), "owned"_n};
       setup_distribution(get_self(), internal);
       internal.sub_balance("master"_n, quantity);
-      accounts{get_self(), "outgoing"_n}.add_balance(to, quantity);
+      accounts{get_self(), "outgoing"_n}.add_balance(to, quantity, false);
       eosio::action{{get_self(), "active"_n},
                     token_contract,
                     "transfer"_n,
@@ -71,7 +71,7 @@ namespace eden
          migration->adjust_balance(owner, -quantity);
          migrations.set(*migration);
       }
-      accounts{get_self(), "outgoing"_n}.add_balance(owner, quantity);
+      accounts{get_self(), "outgoing"_n}.add_balance(owner, quantity, false);
       token::actions::transfer{token_contract, get_self()}.send(  //
           get_self(), owner, quantity, "withdraw");
    }
@@ -111,7 +111,7 @@ namespace eden
       distributions distributions{get_self()};
       accounts accounts{get_self()};
       distributions.sub_balance(from, distribution_time, rank, amount);
-      accounts.add_balance(to, amount);
+      accounts.add_balance(to, amount, false);
    }
 
    void eden::usertransfer(eosio::name from,
@@ -127,7 +127,7 @@ namespace eden
       members.check_active_member(to);
       accounts accounts{get_self()};
       accounts.sub_balance(from, amount);
-      accounts.add_balance(to, amount);
+      accounts.add_balance(to, amount, false);
    }
 
 }  // namespace eden

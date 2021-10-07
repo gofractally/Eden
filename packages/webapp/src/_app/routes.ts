@@ -16,6 +16,7 @@ export interface Route {
     hideNav?: boolean;
     requiresActiveCommunity?: boolean;
     requiresCompletedElection?: boolean;
+    requiresMembership?: boolean;
 }
 
 export const ROUTES: { [key: string]: Route } = {
@@ -41,6 +42,7 @@ export const ROUTES: { [key: string]: Route } = {
         Icon: DelegationNav,
         requiresActiveCommunity: true,
         requiresCompletedElection: true,
+        requiresMembership: true,
     },
     ELECTION: {
         href: "/election",

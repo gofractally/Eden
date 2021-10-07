@@ -18,6 +18,7 @@ import {
     ErrorLoadingElection,
     ElectionParticipantChip,
     VotePieMer,
+    useRoundStageTimes,
 } from "elections";
 import {
     ActiveStateConfigType,
@@ -61,50 +62,20 @@ export const OngoingRoundSegment = ({
     const meetingBreakDurationMs =
         (roundDurationMs - electionEnvVars.meetingDurationMs) / 2;
 
-    const now = dayjs();
-
     const meetingStartTime = roundStartTime.add(meetingBreakDurationMs);
     const postMeetingStartTime = meetingStartTime.add(
         electionEnvVars.meetingDurationMs
     );
 
-    let currentStage = RoundStage.PreMeeting;
-    let timeRemainingToNextStageMs: number | null = meetingStartTime.diff(now);
-    let currentStageEndTime: Dayjs = meetingStartTime;
-
-    if (now.isAfter(roundEndTime)) {
-        currentStage = RoundStage.Complete;
-        timeRemainingToNextStageMs = null;
-        currentStageEndTime = roundEndTime;
-    } else if (now.isAfter(postMeetingStartTime)) {
-        currentStage = RoundStage.PostMeeting;
-        timeRemainingToNextStageMs = roundEndTime.diff(now);
-        currentStageEndTime = roundEndTime;
-    } else if (now.isAfter(meetingStartTime)) {
-        currentStage = RoundStage.Meeting;
-        timeRemainingToNextStageMs = postMeetingStartTime.diff(now);
-        currentStageEndTime = postMeetingStartTime;
-    }
-
-    const [stage, setStage] = useState<RoundStage>(currentStage);
+    const { stage, currentStageEndTime } = useRoundStageTimes(
+        roundStartTime,
+        roundEndTime,
+        onRoundEnd
+    );
 
     const isVotingOpen = [RoundStage.Meeting, RoundStage.PostMeeting].includes(
         stage
     );
-
-    useTimeout(() => {
-        const nextStage = stage + 1;
-        setStage(nextStage);
-        if (nextStage === RoundStage.Complete) onRoundEnd();
-    }, timeRemainingToNextStageMs);
-
-    useEffect(() => {
-        if (currentStage === RoundStage.Complete) {
-            // if mounted after end of round but before results processed,
-            // we call this to trigger polling for next state
-            onRoundEnd();
-        }
-    }, []);
 
     const [selectedMember, setSelected] = useState<MemberData | null>(null);
     const [isSubmittingVote, setIsSubmittingVote] = useState<boolean>(false);
@@ -257,7 +228,7 @@ export const OngoingRoundSegment = ({
                             {stage === RoundStage.PreMeeting
                                 ? "Make sure you have your meeting link ready and stand by. You'll be on a video call with the following Eden members momentarily."
                                 : stage === RoundStage.Meeting
-                                ? "Meet with your group. Align on a leader >2/3 majority. Select your leader and submit your vote below."
+                                ? "Meet with your group. Align on a delegate >2/3 majority. Select your delegate and submit your vote below."
                                 : stage === RoundStage.Complete
                                 ? "If you're the delegate elect, stand by. The next round will start momentarily."
                                 : "This round is finalizing. Please submit any outstanding votes now. You will be able to come back later to upload election videos if your video isn't ready yet."}

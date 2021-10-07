@@ -10,13 +10,13 @@ export interface MemberAccountData {
     account: string;
     name: string;
     image: string;
+    socialHandles: EdenNftSocialHandles;
 }
 
 export interface MemberData extends MemberAccountData {
     templateId: number;
     bio: string;
     attributions: string;
-    socialHandles: EdenNftSocialHandles;
     inductionVideo: string;
     createdAt: number;
     auctionData?: MemberAuctionData;

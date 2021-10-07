@@ -1,10 +1,10 @@
 import hash from "hash.js";
 import * as eosjsSerialize from "eosjs/dist/eosjs-serialize";
 import * as eosjsNumeric from "eosjs/dist/eosjs-numeric";
-import * as eosjsJsonRpc from "eosjs/dist/eosjs-jsonrpc";
 import * as eosjsApi from "eosjs/dist/eosjs-api";
 
-import { rpcEndpoint } from "config";
+import { readRpcEndpointUrls } from "config";
+import { EosJsonRpcWithBalancer } from "./eos-json-rpc-with-balancer";
 
 export const accountTo32BitHash = (account: string): number[] =>
     hash.sha256().update(account).digest().slice(0, 4);
@@ -34,8 +34,7 @@ export const accountsToI128 = (account1: string, account2: string): string => {
     return eosjsNumeric.binaryToDecimal(bytes);
 };
 
-const rpcEndpointUrl = `${rpcEndpoint.protocol}://${rpcEndpoint.host}:${rpcEndpoint.port}`;
-export const eosJsonRpc = new eosjsJsonRpc.JsonRpc(rpcEndpointUrl);
+export const eosJsonRpc = new EosJsonRpcWithBalancer(readRpcEndpointUrls);
 const initialTypes = eosjsSerialize.createInitialTypes();
 
 export const eosDefaultApi = new eosjsApi.Api({

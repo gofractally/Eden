@@ -74,7 +74,7 @@ namespace eden
       auto iter = token_accounts_tb.find(globals.default_token().code().raw());
       if (iter != token_accounts_tb.end())
       {
-         add_balance("master"_n, iter->balance);
+         add_balance("master"_n, iter->balance, false);
       }
    }
 
@@ -86,14 +86,14 @@ namespace eden
       return std::nullopt;
    }
 
-   void accounts::add_balance(eosio::name owner, const eosio::asset& quantity)
+   void accounts::add_balance(eosio::name owner, const eosio::asset& quantity, bool enforce_minimum)
    {
       auto record = account_tb.find(owner.value);
       if (record == account_tb.end())
       {
          // TODO: create another global
          auto minimum_donation = globals.get().minimum_donation;
-         eosio::check(account_tb.get_scope() != default_scope || quantity >= minimum_donation,
+         eosio::check(!enforce_minimum || quantity >= minimum_donation,
                       "insufficient deposit to open an account");
          account_tb.emplace(
              contract, [&](auto& a) { a.value = account_v0{.owner = owner, .balance = quantity}; });
@@ -121,7 +121,7 @@ namespace eden
    {
       accounts accounts{contract, "owned"_n};
       setup_distribution(contract, accounts);
-      accounts.add_balance(pool, amount);
+      accounts.add_balance(pool, amount, false);
    }
 
 }  // namespace eden

@@ -9,14 +9,28 @@ interface Props {
         index: number,
         array: MemberData[]
     ): React.ReactNode;
+    maxCols?: 1 | 2 | 3;
 }
 
-export const MembersGrid = ({ members, dataTestId, children }: Props) => {
+export const MembersGrid = ({
+    members,
+    maxCols = 3,
+    dataTestId,
+    children,
+}: Props) => {
+    let containerClass =
+        "grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-px";
+
+    if (maxCols === 2) {
+        containerClass = "grid grid-cols-1 md:grid-cols-2 gap-px";
+    }
+
+    if (maxCols === 1) {
+        containerClass = "grid grid-cols-1 gap-px";
+    }
+
     return (
-        <div
-            className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-px"
-            data-testid={dataTestId}
-        >
+        <div className={containerClass} data-testid={dataTestId}>
             {members?.length ? members.map(children) : "No members to list."}
         </div>
     );

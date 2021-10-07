@@ -35,6 +35,7 @@ import { CurrentElection, ElectionStatus } from "elections/interfaces";
 import { Avatars, ElectionCommunityRoomButton } from "elections/components";
 
 import AddToCalendarButton from "./add-to-calendar-button";
+import MoreInformationLink from "./more-information-link";
 import { extractElectionDates } from "../../utils";
 import { setElectionParticipation } from "../../transactions";
 
@@ -48,6 +49,7 @@ export const ParticipationCard = ({ election }: Props) => {
     const [ualAccount, _, ualShowModal] = useUALAccount();
     const { data: currentMember } = useCurrentMember();
 
+    const isActiveMember = currentMember?.status === MemberStatus.ActiveMember;
     const isMemberParticipating =
         currentMember?.election_participation_status ===
         ElectionParticipationStatus.InElection;
@@ -96,8 +98,8 @@ export const ParticipationCard = ({ election }: Props) => {
         electionDates.participationTimeLimit
     );
 
-    const isElectionWithin30Minutes = dayjs().isAfter(
-        electionDates.startDateTime.subtract(30, "minutes")
+    const isTimeForCommunityRoom = dayjs().isAfter(
+        electionDates.startDateTime.subtract(1, "hour")
     );
 
     let statusLabel = "";
@@ -159,7 +161,8 @@ export const ParticipationCard = ({ election }: Props) => {
                     <Text>
                         Registration is closed. Waiting for the election to
                         begin on {electionDate} at {electionStartTime}.
-                        {isElectionWithin30Minutes &&
+                        {isActiveMember &&
+                            isTimeForCommunityRoom &&
                             " Join the community video conference room below for election updates and announcements."}
                     </Text>
                 </>
@@ -175,12 +178,15 @@ export const ParticipationCard = ({ election }: Props) => {
 
             <div className="flex flex-col sm:flex-row items-start sm:justify-between space-y-2 sm:space-y-0">
                 {!isPastElectionParticipationTimeLimit && statusButton}
-                {isElectionWithin30Minutes && <ElectionCommunityRoomButton />}
-                {isMemberParticipating && !isElectionWithin30Minutes && (
+                {isActiveMember && isTimeForCommunityRoom && (
+                    <ElectionCommunityRoomButton />
+                )}
+                {isMemberParticipating && !isTimeForCommunityRoom && (
                     <AddToCalendarButton election={election} />
                 )}
             </div>
             <ParticipationCounter />
+            <MoreInformationLink />
             <ConfirmParticipationModal
                 isOpen={showConfirmParticipationModal}
                 close={() => setShowConfirmParticipationModal(false)}
