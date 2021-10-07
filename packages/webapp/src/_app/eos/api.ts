@@ -1,4 +1,10 @@
-import { edenContractAccount, rpcEndpoint } from "config";
+import { RateLimit } from "async-sema";
+
+import {
+    edenContractAccount,
+    rpcEndpoint,
+    tableRowsMaxFetchPerSecond,
+} from "config";
 import { eosDefaultApi } from "_app";
 import { TableQueryIndexOptions, TableQueryOptions } from "./interfaces";
 
@@ -131,6 +137,8 @@ export const getTableRows = async <T = any>(
     return rows;
 };
 
+const rateLimit = RateLimit(tableRowsMaxFetchPerSecond);
+
 export const getTableRawRows = async <T = any>(
     table: string,
     options?: TableQueryOptions
@@ -149,6 +157,7 @@ export const getTableRawRows = async <T = any>(
         upper_bound: options.upperBound,
     };
 
+    await rateLimit();
     const data = (await eosDefaultApi.rpc.get_table_rows(
         requestBody
     )) as TableResponse<T>;

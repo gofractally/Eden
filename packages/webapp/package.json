@@ -15,6 +15,7 @@
         "@edenos/common": "^0.1.0",
         "@headlessui/react": "^1.4.1",
         "@popperjs/core": "^2.9.3",
+        "async-sema": "^3.1.1",
         "cids": "^1.1.6",
         "dayjs": "^1.10.4",
         "eosjs": "^21.0.3",

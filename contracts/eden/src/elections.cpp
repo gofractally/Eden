@@ -48,6 +48,10 @@ namespace eden
       eosio::check(bytes.remaining() >= 80, "Stream overrun");
       auto hash1 = eosio::sha256(bytes.pos, 80);
       auto hash2 = eosio::sha256(reinterpret_cast<char*>(hash1.extract_as_byte_array().data()), 32);
+      // TODO: Find a saner way to implement this.  The first method I tried
+      // (extract/reverse/assign) miscompiles in some environments for unknown
+      // reasons.  This implementation relies on the layout of checksum256.
+      std::reverse((unsigned char*)&hash2, (unsigned char*)(&hash2 + 1));
       eosio::check(hash2 < current, "New seed block must have greater POW than previous seed.");
       eosio::time_point_sec block_time;
       bytes.skip(4 + 32 + 32);

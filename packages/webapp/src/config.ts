@@ -32,7 +32,8 @@ if (
     !process.env.NEXT_PUBLIC_SUBCHAIN_STATE_URL ||
     !process.env.NEXT_PUBLIC_SUBCHAIN_WS_URL ||
     !process.env.NEXT_PUBLIC_SUBCHAIN_SLOW_MO ||
-    !process.env.NEXT_PUBLIC_FREEFORM_MEETING_LINKS_ENABLED
+    !process.env.NEXT_PUBLIC_FREEFORM_MEETING_LINKS_ENABLED ||
+    !process.env.NEXT_PUBLIC_TABLE_ROWS_MAX_FETCH_PER_SEC
 ) {
     throw new Error("Eden WebApp Environment Variables are not set");
 }
@@ -78,6 +79,9 @@ SUBCHAIN_STATE_URL="${process.env.NEXT_PUBLIC_SUBCHAIN_STATE_URL}"
 SUBCHAIN_WS_URL="${process.env.NEXT_PUBLIC_SUBCHAIN_WS_URL}"
 FREEFORM_MEETING_LINKS_ENABLED="${
     process.env.NEXT_PUBLIC_FREEFORM_MEETING_LINKS_ENABLED
+}"
+TABLE_ROWS_MAX_FETCH_PER_SEC="${
+    process.env.NEXT_PUBLIC_TABLE_ROWS_MAX_FETCH_PER_SEC
 }"
 `);
 
@@ -136,6 +140,10 @@ export const chainConfig = {
 export const availableWallets = (
     process.env.NEXT_PUBLIC_ENABLED_WALLETS || ""
 ).split(",");
+
+export const tableRowsMaxFetchPerSecond = Number(
+    process.env.NEXT_PUBLIC_TABLE_ROWS_MAX_FETCH_PER_SEC
+);
 
 export const validUploadActions: ValidUploadActions = {
     [edenContractAccount]: {
