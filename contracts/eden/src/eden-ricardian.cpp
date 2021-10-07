@@ -2,12 +2,12 @@
 
 const char* eden::withdraw_ricardian = R"(---
 spec_version: "0.2.0"
-title: Withdraw my unspent balance
-summary: Withdraw {{nowrap quantity}} from unspent balance
+title: Withdraw from my Eden balance
+summary: Withdraw {{nowrap quantity}} from my Eden balance
 icon: https://ipfs.io/ipfs/QmToeuuNcTXgZPhGLShi9E18qFyQfr92b8fmjWS3roJwq5#aae9c37e262c08f73151a6d415df37d4317de36d76aabfaa1a6249cfdeaffeb2
 ---
 
-I am withdrawing {{quantity}} from my remaining available balance. (This action should rarely need to be used, and currently only if a transfer is made to the contract but that balance isn't followed-up by a donation action spending it to the recipient account.))";
+I am withdrawing {{quantity}} from my available Eden balance.)";
 
 const char* eden::genesis_ricardian = R"(---
 spec_version: "0.2.0"
