@@ -30,7 +30,7 @@ The Eden webapp uses a subchain to track history. This subchain contains a subse
 
 When a client starts up, it fetches a copy of `eden-micro-chain.wasm` and a copy of the most-recent state from the Box server. It then subscribes to block updates through a websocket connection.
 
-https://genesis.eden.eoscommunity.org/ uses https://box.prod.eoscommunity.org . Third parties may host apps which use https://box.prod.eoscommunity.org to gain access to Eden history.
+https://genesis.eden.eoscommunity.org/ uses https://box.prod.eoscommunity.org . Third parties may host apps which also use https://box.prod.eoscommunity.org to gain access to Eden history.
 
 Third parties may also host their own box server instances. The box server sources live at https://github.com/eoscommunity/Eden/tree/main/packages/box . The box container is available as `ghcr.io/eoscommunity/eden-box:<git commit>`, https://github.com/eoscommunity/Eden/pkgs/container/eden-box .
 

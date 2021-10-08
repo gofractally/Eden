@@ -10,7 +10,7 @@ It needs the following NPM packages:
 * `node-fetch`
 * `ws`
 
-```
+```js
 const SubchainClient = require('@edenos/eden-subchain-client/dist/SubchainClient.js').default;
 const ws = require('ws');
 

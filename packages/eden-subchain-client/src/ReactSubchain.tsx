@@ -1,18 +1,39 @@
 import SubchainClient, { SubchainClientOptions } from "./SubchainClient";
 import { useContext, useEffect, useState, createContext } from "react";
 
+export interface UseSubchainClientOptions {
+    fetch: any;
+    edenAccount?: string;
+    tokenAccount?: string;
+    atomicAccount?: string;
+    atomicmarketAccount?: string;
+    wasmUrl: string;
+    stateUrl: string;
+    blocksUrl: string;
+    slowmo?: boolean;
+}
+
 export function useCreateEdenChain(
-    options: SubchainClientOptions
+    options: UseSubchainClientOptions
 ): SubchainClient | null {
     const [subchain, setSubchain] = useState<SubchainClient | null>(null);
     useEffect(() => {
-        if (typeof window !== "undefined") {
+        if (options.fetch) {
             let client: SubchainClient;
             (async () => {
                 try {
-                    console.log("create SubchainClient");
+                    const fetch = options.fetch;
                     client = new SubchainClient(WebSocket);
-                    await client.instantiateStreaming(options);
+                    await client.instantiateStreaming({
+                        edenAccount: options.edenAccount,
+                        tokenAccount: options.tokenAccount,
+                        atomicAccount: options.atomicAccount,
+                        atomicmarketAccount: options.atomicmarketAccount,
+                        wasmResponse: fetch(options.wasmUrl),
+                        stateResponse: fetch(options.stateUrl),
+                        blocksUrl: options.blocksUrl,
+                        slowmo: options.slowmo,
+                    });
                     setSubchain(client);
                 } catch (e) {
                     console.error(e);

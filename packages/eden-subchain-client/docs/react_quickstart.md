@@ -10,7 +10,7 @@ It needs the following NPM packages:
 * `react`
 * `react-dom`
 
-```
+```js
 import React from "react";
 import ReactDOM from "react-dom";
 import {
@@ -25,8 +25,9 @@ const box = "box.prod.eoscommunity.org/v1/subchain";
 function Top() {
     // Start up the client
     const subchain = useCreateEdenChain({
-        wasmResponse: fetch(`https://${box}/eden-micro-chain.wasm`),
-        stateResponse: fetch(`https://${box}/state`),
+        fetch,
+        wasmUrl: `https://${box}/eden-micro-chain.wasm`,
+        stateUrl: `https://${box}/state`,
         blocksUrl: `wss://${box}/eden-microchain`,
     });
 
