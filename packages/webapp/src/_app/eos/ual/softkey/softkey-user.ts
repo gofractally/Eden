@@ -145,13 +145,20 @@ export class SoftkeyUser extends User {
         config?: SignTransactionConfig
     ): Promise<SignTransactionResponse> {
         try {
-            const result = await this.api?.transact(transaction, {
+            const finalConfig = {
                 blocksBehind: 3,
                 expireSeconds: 30,
                 broadcast: true,
                 ...config,
-            });
-            return result;
+            };
+            const completedTransaction = await this.api?.transact(
+                transaction,
+                finalConfig
+            );
+            return this.returnEosjsTransaction(
+                finalConfig.broadcast,
+                completedTransaction
+            );
         } catch (e) {
             throw new UALSoftkeyError(
                 `Error signing transaction: ${e.message}`,
