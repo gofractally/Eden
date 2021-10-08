@@ -16,7 +16,7 @@ export const RegistrationElection = ({ election }: Props) => {
     return (
         <>
             <ParticipationCard election={election} />
-            {election?.electionState === ElectionStatus.Registration && (
+            {election?.electionState !== ElectionStatus.InitVoters && (
                 <>
                     <ElectionScheduleSegment />
                     <ElectionVideoUploadCTA />
