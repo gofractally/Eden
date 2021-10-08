@@ -64,7 +64,6 @@ export class EdenSubchain {
                     this.imports
                 );
             } else {
-                console.log("instantiateStreaming missing; using fallback");
                 const module = await WebAssembly.compile(
                     await (await Promise.resolve(response)).arrayBuffer()
                 );

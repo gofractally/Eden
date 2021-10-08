@@ -1,4 +1,4 @@
-import { EdenSubchain } from "@edenos/common/dist/subchain";
+import { EdenSubchain } from "@edenos/eden-subchain-client/dist/EdenSubchain";
 import * as config from "./config";
 import * as fs from "fs";
 import logger from "./logger";
