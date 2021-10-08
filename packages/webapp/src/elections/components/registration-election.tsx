@@ -1,5 +1,5 @@
 import React from "react";
-import { CurrentElection } from "elections/interfaces";
+import { CurrentElection, ElectionStatus } from "elections/interfaces";
 
 import {
     ElectionScheduleSegment,
@@ -16,9 +16,13 @@ export const RegistrationElection = ({ election }: Props) => {
     return (
         <>
             <ParticipationCard election={election} />
-            <ElectionScheduleSegment />
-            <ElectionVideoUploadCTA />
-            <ViewPreviousElectionResultsCTA />
+            {election?.electionState === ElectionStatus.Registration && (
+                <>
+                    <ElectionScheduleSegment />
+                    <ElectionVideoUploadCTA />
+                    <ViewPreviousElectionResultsCTA />
+                </>
+            )}
         </>
     );
 };
