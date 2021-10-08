@@ -4,6 +4,12 @@
 
 This displays the current Eden treasury. It automatically updates whenever the treasury changes.
 
+It needs the following NPM packages:
+* `@edenos/eden-subchain-client`
+* `eosjs` (eden-subchain-client needs it)
+* `react`
+* `react-dom`
+
 ```
 import React from "react";
 import ReactDOM from "react-dom";
@@ -11,7 +17,7 @@ import {
     EdenChainContext,
     useCreateEdenChain,
     useQuery,
-} from "../dist2/ReactSubchain";
+} from "@edenos/eden-subchain-client/dist/ReactSubchain";
 
 const box = "box.prod.eoscommunity.org/v1/subchain";
 

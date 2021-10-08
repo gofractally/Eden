@@ -2,27 +2,34 @@
 
 ## Minimal Example
 
-This starts up, runs a single query, and exits:
+This starts up, runs a single query, and exits.
+
+It needs the following NPM packages:
+* `@edenos/eden-subchain-client`
+* `eosjs` (eden-subchain-client needs it)
+* `node-fetch`
+* `ws`
 
 ```
-const SubchainClient = require('./dist/SubchainClient.js').default;
-const fetch = require('node-fetch');
+const SubchainClient = require('@edenos/eden-subchain-client/dist/SubchainClient.js').default;
 const ws = require('ws');
 
 const box = "box.prod.eoscommunity.org/v1/subchain";
 
 (async () => {
-   try {
-      // Start up the client
-      const client = new SubchainClient(ws);
-      await client.instantiateStreaming({
-         wasmResponse: fetch(`https://${box}/eden-micro-chain.wasm`),
-         stateResponse: fetch(`https://${box}/state`),
-         blocksUrl: `wss://${box}/eden-microchain`,
-      });
+    try {
+        const fetch = (await import('node-fetch')).default;
 
-      // Run a query
-      const member = client.subchain.query(`
+        // Start up the client
+        const client = new SubchainClient(ws);
+        await client.instantiateStreaming({
+            wasmResponse: fetch(`https://${box}/eden-micro-chain.wasm`),
+            stateResponse: fetch(`https://${box}/state`),
+            blocksUrl: `wss://${box}/eden-microchain`,
+        });
+
+        // Run a query
+        const member = client.subchain.query(`
       {
         members(ge:"dlarimer.gm", le:"dlarimer.gm") {
           edges {
@@ -38,13 +45,13 @@ const box = "box.prod.eoscommunity.org/v1/subchain";
         }
       }`).data?.members.edges[0]?.node;
 
-      // Show result
-      console.log(JSON.stringify(member, null, 4));
-      process.exit(0);
-   } catch (e) {
-      console.error(e);
-      process.exit(1);
-   }
+        // Show result
+        console.log(JSON.stringify(member, null, 4));
+        process.exit(0);
+    } catch (e) {
+        console.error(e);
+        process.exit(1);
+    }
 })();
 ```
 ## Notes
