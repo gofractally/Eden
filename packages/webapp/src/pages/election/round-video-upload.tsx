@@ -157,7 +157,7 @@ const RoundVideoUploadList = () => {
             setVideoSubmissionPhase("signing");
             const signedTrx = await ualAccount.signTransaction(transaction, {
                 broadcast: false,
-                expireSeconds: 1200,
+                expireSeconds: 2 * 60 * 60,
             });
             console.info("electvideo trx", signedTrx);
 
