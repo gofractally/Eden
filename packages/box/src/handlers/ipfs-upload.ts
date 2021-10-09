@@ -48,7 +48,7 @@ export const ipfsUploadHandler = async (req: Request, res: Response) => {
 
         return await ipfsUpload(requestData, file, res);
     } catch (error) {
-        logger.error(error);
+        logger.error(`ipfsUploadHandler: ${error.message}`);
         if (file) {
             fs.rm(file.path, () => {});
         }
