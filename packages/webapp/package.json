@@ -37,7 +37,7 @@
         "react-popper": "^2.2.5",
         "react-query": "^3.15.2",
         "secure-random-password": "^0.2.3",
-        "ual-anchor": "^1.0.6",
+        "ual-anchor": "^1.1.2",
         "ual-ledger": "^0.3.0",
         "ual-reactjs-renderer": "^0.3.1",
         "ual-scatter": "^0.3.0",
