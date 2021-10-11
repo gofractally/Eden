@@ -24,6 +24,8 @@
 // -- This will overwrite an existing command --
 // Cypress.Commands.overwrite('visit', (originalFn, url, options) => { ... })
 
+import "cypress-file-upload";
+
 /**
  * Logins with UAL using Eden SoftKey mode
  */
@@ -60,7 +62,7 @@ Cypress.Commands.add("interceptEosApis", () => {
  * Also it makes our tests free of undesirable waits, if we have a new legit
  * case for `cy.wait()` we can just add a new command here.
  */
-Cypress.Commands.add("waitForBlocksPropagation", (blocks = 3) => {
+Cypress.Commands.add("waitForBlocksPropagation", (blocks = 5) => {
     cy.wait(blocks * 500);
 });
 
