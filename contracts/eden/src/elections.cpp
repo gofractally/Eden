@@ -992,7 +992,7 @@ namespace eden
          election_state_singleton state{contract, default_scope};
          auto end_time =
              std::get<election_state_v0>(state.get()).last_election_time.to_time_point() +
-             eosio::hours(48);
+             eosio::hours(48) + eosio::days(7);
          return valid_state && eosio::current_time_point() <= end_time &&
                 boost::logic::tribool(boost::logic::indeterminate);
       }
