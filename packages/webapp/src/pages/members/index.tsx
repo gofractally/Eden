@@ -9,11 +9,10 @@ import {
     SideNavLayout,
     Heading,
     PaginationNav,
-    queryMembersStats,
-    queryMembers,
     queryNewMembers,
+    usePagedMembers,
 } from "_app";
-import { MemberChip, MembersGrid } from "members";
+import { MemberChip, MemberData, MembersGrid } from "members";
 
 const MEMBERS_PAGE_SIZE = 18;
 const NEW_MEMBERS_PAGE_SIZE = 12;
@@ -21,12 +20,9 @@ const NEW_MEMBERS_PAGE_SIZE = 12;
 export const getServerSideProps: GetServerSideProps = async ({ query }) => {
     const queryClient = new QueryClient();
 
-    const membersPage = parseInt((query.membersPage as string) || "1");
     const newMembersPage = parseInt((query.newMembersPage as string) || "1");
 
     await Promise.all([
-        queryClient.prefetchQuery(queryMembersStats),
-        queryClient.prefetchQuery(queryMembers(membersPage, MEMBERS_PAGE_SIZE)),
         queryClient.prefetchQuery(
             queryNewMembers(newMembersPage, NEW_MEMBERS_PAGE_SIZE)
         ),
@@ -35,7 +31,6 @@ export const getServerSideProps: GetServerSideProps = async ({ query }) => {
     return {
         props: {
             dehydratedState: dehydrate(queryClient),
-            membersPage,
             newMembersPage,
         },
     };
@@ -48,37 +43,12 @@ interface Props {
 
 export const MembersPage = (props: Props) => {
     const router = useRouter();
-    const [membersPage, setMembersPage] = useState(props.membersPage);
     const [newMembersPage, setNewMembersPage] = useState(props.newMembersPage);
-
-    const { data: memberStats } = useQuery({
-        ...queryMembersStats,
-        keepPreviousData: true,
-    });
-    const totalMembersPages =
-        memberStats &&
-        Math.ceil(memberStats.active_members / MEMBERS_PAGE_SIZE);
-
-    const members = useQuery({
-        ...queryMembers(membersPage, MEMBERS_PAGE_SIZE),
-        keepPreviousData: true,
-    });
 
     const newMembers = useQuery({
         ...queryNewMembers(newMembersPage, NEW_MEMBERS_PAGE_SIZE),
         keepPreviousData: true,
     });
-
-    const paginateMembers = (increment: number) => {
-        setMembersPage(membersPage + increment);
-        router.push(
-            {
-                query: { membersPage: membersPage + increment },
-            },
-            undefined,
-            { scroll: false }
-        );
-    };
 
     const paginateNewMembers = (increment: number) => {
         setNewMembersPage(newMembersPage + increment);
@@ -90,6 +60,8 @@ export const MembersPage = (props: Props) => {
             { scroll: false }
         );
     };
+
+    const queriedMembers = usePagedMembers(MEMBERS_PAGE_SIZE);
 
     return (
         <SideNavLayout title="Community">
@@ -129,14 +101,14 @@ export const MembersPage = (props: Props) => {
             )}
             <Container>
                 <Heading size={2}>All members</Heading>
-                {members.isLoading && "Loading members..."}
-                {members.error && "Fail to load members"}
+                {queriedMembers.result.isLoading && "Loading members..."}
+                {queriedMembers.result.isError && "Fail to load members"}
             </Container>
-            {members.data && (
+            {queriedMembers.result.data && (
                 <>
                     <div className="border-t border-b">
                         <MembersGrid
-                            members={members.data}
+                            members={queriedMembers.result.data as MemberData[]}
                             dataTestId="members-grid"
                         >
                             {(member) => (
@@ -149,11 +121,10 @@ export const MembersPage = (props: Props) => {
                     </div>
                     <Container>
                         <PaginationNav
-                            paginate={paginateMembers}
-                            hasNext={members.data.length >= MEMBERS_PAGE_SIZE}
-                            hasPrevious={membersPage > 1}
-                            pageNumber={membersPage}
-                            totalPages={totalMembersPages}
+                            hasNext={queriedMembers.hasNextPage}
+                            hasPrevious={queriedMembers.hasPreviousPage}
+                            goToNextPage={queriedMembers.next}
+                            goToPrevPage={queriedMembers.previous}
                         />
                     </Container>
                 </>
