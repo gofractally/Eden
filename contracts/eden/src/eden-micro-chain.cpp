@@ -602,6 +602,9 @@ struct Member;
 std::optional<Member> get_member(eosio::name account, bool allow_lsb = false);
 std::vector<Member> get_members(const std::vector<eosio::name>& v);
 
+struct Induction;
+std::optional<Induction> get_induction(uint64_t id);
+
 struct BalanceHistory;
 constexpr const char BalanceHistoryConnection_name[] = "BalanceHistoryConnection";
 constexpr const char BalanceHistoryEdge_name[] = "BalanceHistoryEdge";
@@ -774,6 +777,34 @@ std::vector<Member> get_members(const std::vector<eosio::name>& v)
          result.push_back(*m);
    }
    return result;
+}
+
+struct Induction {
+   uint64_t id;
+   const induction* induction;
+
+   auto inviteeAccount() const { return induction->invitee; }
+   auto inviter() const { return get_member(induction->inviter); }
+   std::vector<Member> witnesses() const { return get_members(induction->witnesses); }
+   auto profile() const { return induction->profile; }
+   auto video() const { return induction->video; }
+};
+EOSIO_REFLECT2(
+   Induction,
+   id,
+   inviteeAccount,
+   inviter,
+   witnesses,
+   profile,
+   video
+)
+
+std::optional<Induction> get_induction(uint64_t id)
+{
+   if (auto* induction_object = get_ptr<by_pk>(db.inductions, id))
+      return Induction{id, &induction_object->induction};
+   else
+      return std::nullopt;
 }
 
 Member Balance::account() const
@@ -2058,6 +2089,11 @@ constexpr const char MemberEdge_name[] = "MemberEdge";
 using MemberConnection =
     clchain::Connection<clchain::ConnectionConfig<Member, MemberConnection_name, MemberEdge_name>>;
 
+constexpr const char InductionConnection_name[] = "InductionConnection";
+constexpr const char InductionEdge_name[] = "InductionEdge";
+using InductionConnection =
+    clchain::Connection<clchain::ConnectionConfig<Induction, InductionConnection_name, InductionEdge_name>>;
+
 constexpr const char ElectionConnection_name[] = "ElectionConnection";
 constexpr const char ElectionEdge_name[] = "ElectionEdge";
 using ElectionConnection = clchain::Connection<
@@ -2151,6 +2187,26 @@ struct Query
           [](auto& members, auto key) { return members.upper_bound(key); });
    }
 
+   InductionConnection inductions(std::optional<uint64_t> gt,
+                                  std::optional<uint64_t> ge,
+                                  std::optional<uint64_t> lt,
+                                  std::optional<uint64_t> le,
+                                  std::optional<uint32_t> first,
+                                  std::optional<uint32_t> last,
+                                  std::optional<std::string> before,
+                                  std::optional<std::string> after) const
+   {
+      return clchain::make_connection<InductionConnection, uint64_t>(
+          gt, ge, lt, le, first, last, before, after,    //
+          db.inductions.get<by_pk>(),                    //
+          [](auto& obj) { return obj.induction.id; },    //
+          [](auto& obj) {
+             return Induction{obj.induction.id, &obj.induction};
+          },
+          [](auto& inductions, auto key) { return inductions.lower_bound(key); },
+          [](auto& inductions, auto key) { return inductions.upper_bound(key); });
+   }
+
    ElectionConnection elections(std::optional<eosio::block_timestamp> gt,
                                 std::optional<eosio::block_timestamp> ge,
                                 std::optional<eosio::block_timestamp> lt,
@@ -2196,6 +2252,7 @@ EOSIO_REFLECT2(
     method(balances, "gt", "ge", "lt", "le", "first", "last", "before", "after"),
     method(members, "gt", "ge", "lt", "le", "first", "last", "before", "after"),
     method(membersByCreatedAt, "gt", "ge", "lt", "le", "first", "last", "before", "after"),
+    method(inductions, "gt", "ge", "lt", "le", "first", "last", "before", "after"),
     method(elections, "gt", "ge", "lt", "le", "first", "last", "before", "after"),
     method(distributions, "gt", "ge", "lt", "le", "first", "last", "before", "after"))
 
