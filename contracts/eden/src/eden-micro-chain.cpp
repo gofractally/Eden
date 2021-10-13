@@ -119,6 +119,11 @@ using ordered_by_invitee = boost::multi_index::ordered_unique<  //
     boost::multi_index::key<&T::by_invitee>>;
 
 template <typename T>
+using ordered_by_inviter = boost::multi_index::ordered_unique<  //
+    boost::multi_index::tag<by_invitee>,
+    boost::multi_index::key<&T::by_inviter>>;
+
+template <typename T>
 using ordered_by_group = boost::multi_index::ordered_unique<  //
     boost::multi_index::tag<by_group>,
     boost::multi_index::key<&T::by_group>>;
@@ -320,11 +325,13 @@ struct induction_object : public chainbase::object<induction_table, induction_ob
 
    uint64_t by_pk() const { return induction.id; }
    std::pair<eosio::name, uint64_t> by_invitee() const { return {induction.invitee, induction.id}; }
+   std::pair<eosio::name, uint64_t> by_inviter() const { return {induction.inviter, induction.id}; }
 };
 using induction_index = mic<induction_object,
                             ordered_by_id<induction_object>,
                             ordered_by_pk<induction_object>,
-                            ordered_by_invitee<induction_object>>;
+                            ordered_by_invitee<induction_object>,
+                            ordered_by_inviter<induction_object>>;
 
 using MemberCreatedAtKey = std::pair<eosio::block_timestamp, eosio::name>;
 
@@ -742,6 +749,22 @@ struct Member
                                                 std::optional<uint32_t> last,
                                                 std::optional<std::string> before,
                                                 std::optional<std::string> after) const;
+   InductionConnection inviterInductions(std::optional<eosio::block_timestamp> gt,
+                                         std::optional<eosio::block_timestamp> ge,
+                                         std::optional<eosio::block_timestamp> lt,
+                                         std::optional<eosio::block_timestamp> le,
+                                         std::optional<uint32_t> first,
+                                         std::optional<uint32_t> last,
+                                         std::optional<std::string> before,
+                                         std::optional<std::string> after) const;
+   // InductionConnection witnessInductions(std::optional<eosio::block_timestamp> gt,
+   //                                       std::optional<eosio::block_timestamp> ge,
+   //                                       std::optional<eosio::block_timestamp> lt,
+   //                                       std::optional<eosio::block_timestamp> le,
+   //                                       std::optional<uint32_t> first,
+   //                                       std::optional<uint32_t> last,
+   //                                       std::optional<std::string> before,
+   //                                       std::optional<std::string> after) const;
 };
 EOSIO_REFLECT2(
     Member,
@@ -757,7 +780,9 @@ EOSIO_REFLECT2(
     method(nfts, "gt", "ge", "lt", "le", "first", "last", "before", "after"),
     method(collectedNfts, "gt", "ge", "lt", "le", "first", "last", "before", "after"),
     method(elections, "gt", "ge", "lt", "le", "first", "last", "before", "after"),
-    method(distributionFunds, "gt", "ge", "lt", "le", "first", "last", "before", "after"))
+    method(distributionFunds, "gt", "ge", "lt", "le", "first", "last", "before", "after"),
+    method(inviterInductions, "gt", "ge", "lt", "le", "first", "last", "before", "after"))
+    // method(witnessInductions, "gt", "ge", "lt", "le", "first", "last", "before", "after"))
 
 std::optional<Member> get_member(eosio::name account, bool allow_lsb)
 {
@@ -815,6 +840,33 @@ std::optional<Induction> get_induction(uint64_t id)
       return Induction{id, &induction_object->induction};
    else
       return std::nullopt;
+}
+
+InductionConnection Member::inviterInductions(std::optional<eosio::block_timestamp> gt,
+                                              std::optional<eosio::block_timestamp> ge,
+                                              std::optional<eosio::block_timestamp> lt,
+                                              std::optional<eosio::block_timestamp> le,
+                                              std::optional<uint32_t> first,
+                                              std::optional<uint32_t> last,
+                                              std::optional<std::string> before,
+                                              std::optional<std::string> after) const
+{
+   return clchain::make_connection<InductionConnection, distribution_fund_key>(
+       gt ? std::optional{distribution_fund_key{account, *gt, ~uint8_t(0)}}               //
+          : std::nullopt,                                                                 //
+       ge ? std::optional{distribution_fund_key{account, *ge, 0}}                         //
+          : std::optional{distribution_fund_key{account, eosio::block_timestamp{0}, 0}},  //
+       lt ? std::optional{distribution_fund_key{account, *lt, 0}}                         //
+          : std::nullopt,                                                                 //
+       le ? std::optional{distribution_fund_key{account, *le, ~uint8_t(0)}}               //
+          : std::optional{distribution_fund_key{account, eosio::block_timestamp::max(),   //
+                                                ~uint8_t(0)}},                            //
+       first, last, before, after,                                                        //
+       db.distribution_funds.get<by_pk>(),                                                //
+       [](auto& obj) { return obj.by_pk(); },                                             //
+       [&](auto& obj) { return DistributionFund{&obj}; },
+       [](auto& distribution_funds, auto key) { return distribution_funds.lower_bound(key); },
+       [](auto& distribution_funds, auto key) { return distribution_funds.upper_bound(key); });
 }
 
 struct Status
