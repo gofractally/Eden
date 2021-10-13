@@ -307,8 +307,9 @@ struct induction
    std::vector<eosio::name> witnesses;
    eden::new_member_profile profile;
    std::string video;
+   eosio::block_timestamp createdAt;
 };
-EOSIO_REFLECT(induction, id, inviter, invitee, witnesses, profile, video)
+EOSIO_REFLECT(induction, id, inviter, invitee, witnesses, profile, video, created_at)
 
 struct induction_object : public chainbase::object<induction_table, induction_object>
 {
@@ -697,6 +698,7 @@ struct Member
 
    auto balance() const { return get_balance(account); }
    auto inviter() const { return get_member(member ? member->inviter : ""_n); }
+   eosio::block_timestamp createdAt() const { return member->createdAt; }
    std::optional<std::vector<Member>> inductionWitnesses() const
    {
       return member ? std::optional{get_members(member->inductionWitnesses)} : std::nullopt;
@@ -746,6 +748,7 @@ EOSIO_REFLECT2(
     account,
     balance,
     inviter,
+    createdAt,
     inductionWitnesses,
     profile,
     inductionVideo,
@@ -779,6 +782,11 @@ std::vector<Member> get_members(const std::vector<eosio::name>& v)
    return result;
 }
 
+Member Balance::account() const
+{
+   return *get_member(_account, true);
+}
+
 struct Induction {
    uint64_t id;
    const induction* induction;
@@ -788,6 +796,7 @@ struct Induction {
    std::vector<Member> witnesses() const { return get_members(induction->witnesses); }
    auto profile() const { return induction->profile; }
    auto video() const { return induction->video; }
+   eosio::block_timestamp createdAt() const { return induction->createdAt; }
 };
 EOSIO_REFLECT2(
    Induction,
@@ -796,7 +805,8 @@ EOSIO_REFLECT2(
    inviter,
    witnesses,
    profile,
-   video
+   video,
+   createdAt
 )
 
 std::optional<Induction> get_induction(uint64_t id)
@@ -805,11 +815,6 @@ std::optional<Induction> get_induction(uint64_t id)
       return Induction{id, &induction_object->induction};
    else
       return std::nullopt;
-}
-
-Member Balance::account() const
-{
-   return *get_member(_account, true);
 }
 
 struct Status
@@ -1394,7 +1399,8 @@ void addtogenesis(eosio::name new_genesis_member)
    add_genesis_member(status.status, new_genesis_member);
 }
 
-void inductinit(uint64_t id,
+void inductinit(const action_context& context,
+                uint64_t id,
                 eosio::name inviter,
                 eosio::name invitee,
                 std::vector<eosio::name> witnesses)
@@ -1411,6 +1417,7 @@ void inductinit(uint64_t id,
       obj.induction.inviter = inviter;
       obj.induction.invitee = invitee;
       obj.induction.witnesses = witnesses;
+      obj.induction.createdAt = eosio::block_timestamp(context.block.timestamp);
    });
 }
 
