@@ -302,6 +302,7 @@ struct member
    eden::new_member_profile profile;
    std::string inductionVideo;
    bool participating = false;
+   eosio::block_timestamp createdAt;
 };
 
 struct member_object : public chainbase::object<member_table, member_object>
@@ -637,6 +638,7 @@ struct Member
    const eden::new_member_profile* profile() const { return member ? &member->profile : nullptr; }
    const std::string* inductionVideo() const { return member ? &member->inductionVideo : nullptr; }
    bool participating() const { return member && member->participating; }
+   eosio::block_timestamp createdAt() const { return member->createdAt; }
 
    MemberElectionConnection elections(std::optional<eosio::block_timestamp> gt,
                                       std::optional<eosio::block_timestamp> ge,
@@ -664,6 +666,7 @@ EOSIO_REFLECT2(
     profile,
     inductionVideo,
     participating,
+    createdAt,
     method(elections, "gt", "ge", "lt", "le", "first", "last", "before", "after"),
     method(distributionFunds, "gt", "ge", "lt", "le", "first", "last", "before", "after"))
 
@@ -1256,6 +1259,7 @@ void inductdonate(const action_context& context,
       obj.member.inductionWitnesses = induction.induction.witnesses;
       obj.member.profile = induction.induction.profile;
       obj.member.inductionVideo = induction.induction.video;
+      obj.member.createdAt = eosio::block_timestamp(context.block.timestamp);
    });
    transfer_funds(context.block.timestamp, payer, master_pool, quantity,
                   history_desc::inductdonate);
