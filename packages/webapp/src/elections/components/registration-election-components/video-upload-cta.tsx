@@ -12,8 +12,8 @@ export const ElectionVideoUploadCTA = () => {
     if (!electionState?.last_election_time) return null;
 
     const deadline = dayjs(electionState?.last_election_time + "Z").add(
-        9,
-        "days"
+        2,
+        "weeks"
     );
 
     if (dayjs().isAfter(deadline)) return null;
