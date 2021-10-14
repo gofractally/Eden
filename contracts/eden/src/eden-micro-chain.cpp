@@ -1806,14 +1806,14 @@ struct Query
                                        std::optional<std::string> after) const
    {
       return clchain::make_connection<MemberConnection, MemberCreatedAtKey>(
-          gt ? std::optional{MemberCreatedAtKey{*gt, account_min}}                  //
+          gt ? std::optional{MemberCreatedAtKey{*gt, account_max}}                  //
              : std::nullopt,                                                        //
           ge ? std::optional{MemberCreatedAtKey{*ge, account_min}}                  //
-             : std::optional{MemberCreatedAtKey{block_timestamp_min, account_min}}, //
-          lt ? std::optional{MemberCreatedAtKey{*lt, account_max}}                  //
+             : std::nullopt,                                                        //
+          lt ? std::optional{MemberCreatedAtKey{*lt, account_min}}                  //
              : std::nullopt,                                                        //
           le ? std::optional{MemberCreatedAtKey{*le, account_max}}                  //
-             : std::optional{MemberCreatedAtKey{block_timestamp_max, account_max}}, //
+             : std::nullopt,                                                        //
           first, last, before, after,                                               //
           db.members.get<by_createdAt>(),                                           //
           [](auto& obj) { return obj.by_createdAt(); },                             //
