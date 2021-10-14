@@ -52,6 +52,13 @@ Cypress.Commands.add("interceptEosApis", () => {
 });
 
 /**
+ * Intercept Subchain Calls
+ */
+Cypress.Commands.add("interceptSubchain", () => {
+    cy.intercept("**/v1/subchain/**").as("boxGetSubchain");
+});
+
+/**
  * This is a wrapper around the `cy.wait()` command for now; since adding
  * `cy.wait()` should almost never be used, we actually have a genuine case
  * for that since we need to wait for blocks to read some data from the chain.
