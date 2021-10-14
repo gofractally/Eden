@@ -26,6 +26,11 @@ constexpr eosio::name pool_account(eosio::name pool)
 constexpr eosio::name master_pool = pool_account("master"_n);
 eosio::name distribution_fund;
 
+const eosio::name account_min = eosio::name{0}; 
+const eosio::name account_max = eosio::name{~uint64_t(0)}; 
+const eosio::block_timestamp block_timestamp_min = eosio::block_timestamp{0}; 
+const eosio::block_timestamp block_timestamp_max = eosio::block_timestamp{~uint32_t(0)}; 
+
 // TODO: switch to uint64_t (js BigInt) after we upgrade to nodejs >= 15
 extern "C" void __wasm_call_ctors();
 [[clang::export_name("initialize")]] void initialize(uint32_t eden_account_low,
@@ -89,6 +94,7 @@ struct by_pk;
 struct by_invitee;
 struct by_group;
 struct by_round;
+struct by_createdAt;
 
 template <typename T, typename... Indexes>
 using mic = boost::
@@ -118,6 +124,11 @@ template <typename T>
 using ordered_by_round = boost::multi_index::ordered_unique<  //
     boost::multi_index::tag<by_round>,
     boost::multi_index::key<&T::by_round>>;
+
+template <typename T>
+using ordered_by_createdAt = boost::multi_index::ordered_unique<  //
+    boost::multi_index::tag<by_createdAt>,
+    boost::multi_index::key<&T::by_createdAt>>;
 
 uint64_t available_pk(const auto& table, const auto& first)
 {
@@ -294,6 +305,8 @@ using induction_index = mic<induction_object,
                             ordered_by_pk<induction_object>,
                             ordered_by_invitee<induction_object>>;
 
+using MemberCreatedAtKey = std::pair<eosio::block_timestamp, eosio::name>;
+
 struct member
 {
    eosio::name account;
@@ -313,8 +326,14 @@ struct member_object : public chainbase::object<member_table, member_object>
    member member;
 
    eosio::name by_pk() const { return member.account; }
+   MemberCreatedAtKey by_createdAt() const { 
+      return {member.createdAt, member.account}; 
+   }
 };
-using member_index = mic<member_object, ordered_by_id<member_object>, ordered_by_pk<member_object>>;
+using member_index = mic<member_object, 
+                         ordered_by_id<member_object>, 
+                         ordered_by_pk<member_object>,
+                         ordered_by_createdAt<member_object>>;
 
 struct election_object : public chainbase::object<election_table, election_object>
 {
@@ -1777,6 +1796,34 @@ struct Query
           [](auto& members, auto key) { return members.upper_bound(key); });
    }
 
+   MemberConnection membersByCreatedAt(std::optional<eosio::block_timestamp> gt,
+                                       std::optional<eosio::block_timestamp> ge,
+                                       std::optional<eosio::block_timestamp> lt,
+                                       std::optional<eosio::block_timestamp> le,
+                                       std::optional<uint32_t> first,
+                                       std::optional<uint32_t> last,
+                                       std::optional<std::string> before,
+                                       std::optional<std::string> after) const
+   {
+      return clchain::make_connection<MemberConnection, MemberCreatedAtKey>(
+          gt ? std::optional{MemberCreatedAtKey{*gt, account_min}}                  //
+             : std::nullopt,                                                        //
+          ge ? std::optional{MemberCreatedAtKey{*ge, account_min}}                  //
+             : std::optional{MemberCreatedAtKey{block_timestamp_min, account_min}}, //
+          lt ? std::optional{MemberCreatedAtKey{*lt, account_max}}                  //
+             : std::nullopt,                                                        //
+          le ? std::optional{MemberCreatedAtKey{*le, account_max}}                  //
+             : std::optional{MemberCreatedAtKey{block_timestamp_max, account_max}}, //
+          first, last, before, after,                                               //
+          db.members.get<by_createdAt>(),                                           //
+          [](auto& obj) { return obj.by_createdAt(); },                             //
+          [](auto& obj) {
+             return Member{obj.member.account, &obj.member};
+          },
+          [](auto& members, auto key) { return members.lower_bound(key); },
+          [](auto& members, auto key) { return members.upper_bound(key); });
+   }
+
    ElectionConnection elections(std::optional<eosio::block_timestamp> gt,
                                 std::optional<eosio::block_timestamp> ge,
                                 std::optional<eosio::block_timestamp> lt,
@@ -1820,6 +1867,7 @@ EOSIO_REFLECT2(Query,
                distributionFund,
                method(balances, "gt", "ge", "lt", "le", "first", "last", "before", "after"),
                method(members, "gt", "ge", "lt", "le", "first", "last", "before", "after"),
+               method(membersByCreatedAt, "gt", "ge", "lt", "le", "first", "last", "before", "after"),
                method(elections, "gt", "ge", "lt", "le", "first", "last", "before", "after"),
                method(distributions, "gt", "ge", "lt", "le", "first", "last", "before", "after"))
 
