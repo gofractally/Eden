@@ -50,7 +50,7 @@ export const RoundVideoUploadPage = () => {
     if (isError || !currentElection) return <ErrorLoadingElection />;
 
     const uploadLimitTime = electionState
-        ? dayjs(electionState.last_election_time + "Z").add(48, "hour")
+        ? dayjs(electionState.last_election_time + "Z").add(2, "weeks")
         : dayjs().add(1, "day");
 
     const isUploadExpired =
@@ -157,7 +157,7 @@ const RoundVideoUploadList = () => {
             setVideoSubmissionPhase("signing");
             const signedTrx = await ualAccount.signTransaction(transaction, {
                 broadcast: false,
-                expireSeconds: 1200,
+                expireSeconds: 1 * 60 * 60, // 1 hour (max expiration)
             });
             console.info("electvideo trx", signedTrx);
 
