@@ -16,6 +16,7 @@
     "dependencies": {
         "@dfuse/client": "^0.3.20",
         "@edenos/common": "^0.1.0",
+        "@edenos/eden-subchain-client": "^0.1.2",
         "axios": "^0.21.1",
         "body-parser": "^1.19.0",
         "cids": "^1.1.6",
