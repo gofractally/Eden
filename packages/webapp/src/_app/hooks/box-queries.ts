@@ -1,5 +1,7 @@
 import {
-    Query,
+    QueryResult,
+    PagedQueryResult,
+    PagedQuery,
     usePagedQuery,
     useQuery,
 } from "@edenos/eden-subchain-client/dist/ReactSubchain";
@@ -8,16 +10,31 @@ import dayjs from "dayjs";
 import { assetFromString } from "_app";
 import { MemberAccountData } from "members";
 
+interface MemberQueryEdge {
+    node: {
+        account: string;
+        createdAt: string;
+        profile: {
+            name: string;
+            img: string;
+            social: string;
+        };
+    };
+}
+interface PagedMembersQuery {
+    members: PagedQuery<MemberQueryEdge>;
+}
+
 export const usePagedMembers = (
     pageSize: number = 20
-): ReturnType<typeof usePagedQuery> => {
+): PagedQueryResult<MemberAccountData[]> => {
     const query = `{
     members(@page@) {
         pageInfo {
-          hasPreviousPage
-          hasNextPage
-          startCursor
-          endCursor
+            hasPreviousPage
+            hasNextPage
+            startCursor
+            endCursor
         }
         edges {
             node {
@@ -34,7 +51,7 @@ export const usePagedMembers = (
 }
     `;
 
-    const pagedResult = usePagedQuery<any>(
+    const pagedResult = usePagedQuery<PagedMembersQuery>(
         query,
         pageSize,
         (result) => result.data?.members.pageInfo
@@ -45,9 +62,13 @@ export const usePagedMembers = (
     if (pagedResult.result.data) {
         const memberNodes = pagedResult.result.data.members.edges;
         if (memberNodes) {
-            formattedMembers = memberNodes.map((member: any) =>
-                formatQueriedMemberAccountData(member.node)
-            );
+            formattedMembers = memberNodes
+                .map((member: MemberQueryEdge) =>
+                    formatQueriedMemberAccountData(member.node)
+                )
+                .filter((member): member is MemberAccountData =>
+                    Boolean(member)
+                );
         }
     }
 
@@ -99,7 +120,7 @@ export interface CurrentMemberElectionVotingDataQuery {
 
 export const useCurrentMemberElectionVotingData = (
     account?: string
-): Query<CurrentMemberElectionVotingDataQuery> => {
+): QueryResult<CurrentMemberElectionVotingDataQuery> => {
     const query = useQuery<any>(
         account
             ? `
@@ -263,7 +284,7 @@ const currentElectionGlobalDataQuery = `
 }
 `;
 
-export const useCurrentGlobalElectionData = (): Query<ElectionGlobalQueryData> => {
+export const useCurrentGlobalElectionData = (): QueryResult<ElectionGlobalQueryData> => {
     const query = useQuery<any>(currentElectionGlobalDataQuery);
 
     if (query.data) {
