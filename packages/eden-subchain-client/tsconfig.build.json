@@ -2,7 +2,6 @@
     "extends": "../../tsconfig.build.json",
     "compilerOptions": {
         "resolveJsonModule": true,
-        "target": "ES2019", // todo: upgrade webpack so it supports ?.
         "strict": true,
         "outDir": "./dist",
         "jsx": "react"

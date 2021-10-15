@@ -8,6 +8,7 @@ ENV PATH /app/node_modules/.bin:$PATH
 
 COPY package.json yarn.lock ./
 COPY ./packages/common/package.json ./packages/common/
+COPY ./packages/eden-subchain-client/package.json ./packages/eden-subchain-client/
 COPY ./packages/webapp/package.json ./packages/webapp/
 
 RUN yarn install --frozen-lockfile
@@ -17,6 +18,7 @@ FROM node:alpine AS builder
 WORKDIR /app
 
 COPY ./packages/common ./packages/common
+COPY ./packages/eden-subchain-client ./packages/eden-subchain-client
 COPY ./packages/webapp ./packages/webapp
 COPY .eslintignore .eslintrc.js .prettierrc.json lerna.json package.json tsconfig.build.json tsconfig.json yarn.lock ./
 
