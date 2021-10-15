@@ -37,6 +37,13 @@ Cypress.Commands.add("login", (account) => {
 });
 
 /**
+ * Intercept Subchain Calls
+ */
+Cypress.Commands.add("interceptSubchain", () => {
+    cy.intercept("**/v1/subchain/**").as("boxGetSubchain");
+});
+
+/**
  * Intercept EOS RPC API Calls
  */
 Cypress.Commands.add("interceptEosApis", () => {

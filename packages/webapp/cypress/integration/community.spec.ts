@@ -1,7 +1,10 @@
 describe("Community", () => {
     beforeEach(() => {
-        cy.visit(`/members`);
+        cy.interceptSubchain();
         cy.interceptEosApis();
+        cy.viewport(1000, 1000);
+        cy.visit(`/members`);
+        cy.wait("@boxGetSubchain");
     });
 
     it("should display members", () => {

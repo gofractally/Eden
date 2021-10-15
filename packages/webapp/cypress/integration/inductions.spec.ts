@@ -1,7 +1,9 @@
 describe("Inductions", () => {
     beforeEach(() => {
-        cy.visit(`/induction`);
+        cy.interceptSubchain();
         cy.interceptEosApis();
+        cy.visit(`/induction`);
+        cy.wait("@boxGetSubchain");
         cy.wait("@eosGetTableRows");
     });
 
