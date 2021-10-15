@@ -1,19 +1,44 @@
-import { Query, usePagedQuery, useQuery } from "@edenos/common/dist/subchain";
+import {
+    PagedQuery,
+    PageInfo,
+    Query,
+    usePagedQuery,
+    useQuery,
+} from "@edenos/common/dist/subchain";
 import dayjs from "dayjs";
 
 import { assetFromString } from "_app";
 import { MemberAccountData } from "members";
 
+interface PagedQueryBody<T> {
+    pageInfo: PageInfo;
+    edges: T[];
+}
+interface MemberQueryNode {
+    node: {
+        account: string;
+        createdAt: string;
+        profile: {
+            name: string;
+            img: string;
+            social: string;
+        };
+    };
+}
+interface PagedMembersQuery {
+    members: PagedQueryBody<MemberQueryNode>;
+}
+
 export const usePagedMembers = (
     pageSize: number = 20
-): ReturnType<typeof usePagedQuery> => {
+): PagedQuery<MemberAccountData[]> => {
     const query = `{
     members(@page@) {
         pageInfo {
-          hasPreviousPage
-          hasNextPage
-          startCursor
-          endCursor
+            hasPreviousPage
+            hasNextPage
+            startCursor
+            endCursor
         }
         edges {
             node {
@@ -30,7 +55,7 @@ export const usePagedMembers = (
 }
     `;
 
-    const pagedResult = usePagedQuery<any>(
+    const pagedResult = usePagedQuery<PagedMembersQuery>(
         query,
         pageSize,
         (result) => result.data?.members.pageInfo
@@ -41,9 +66,13 @@ export const usePagedMembers = (
     if (pagedResult.result.data) {
         const memberNodes = pagedResult.result.data.members.edges;
         if (memberNodes) {
-            formattedMembers = memberNodes.map((member: any) =>
-                formatQueriedMemberAccountData(member.node)
-            );
+            formattedMembers = memberNodes
+                .map((member: MemberQueryNode) =>
+                    formatQueriedMemberAccountData(member.node)
+                )
+                .filter((member): member is MemberAccountData =>
+                    Boolean(member)
+                );
         }
     }
 
