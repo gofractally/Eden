@@ -45,14 +45,14 @@ export function useCreateEdenChain(
 
 export const EdenChainContext = createContext<SubchainClient | null>(null);
 
-export interface Query<T> {
+export interface QueryResult<T> {
     isLoading: boolean; // flags if the query is loading
     data?: T; // has the query data when it's loaded or empty if not found
     isError: boolean; // flags that an error happened
     errors?: any; // contains the errors if there are any
 }
 
-export function useQuery<T = any>(query: string): Query<T> {
+export function useQuery<T = any>(query: string): QueryResult<T> {
     const client = useContext(EdenChainContext);
     const [cachedQuery, setCachedQuery] = useState<string | null>();
     // non-signalling state
@@ -60,7 +60,10 @@ export function useQuery<T = any>(query: string): Query<T> {
         mounted: true,
         cachedClient: null as SubchainClient | null,
         subscribed: null as SubchainClient | null,
-        cachedQueryResult: { isLoading: false, isError: false } as Query<T>,
+        cachedQueryResult: {
+            isLoading: false,
+            isError: false,
+        } as QueryResult<T>,
     });
     useEffect(() => {
         return () => {
@@ -106,7 +109,7 @@ export function useQuery<T = any>(query: string): Query<T> {
     return state.cachedQueryResult;
 }
 
-export interface PageInfo {
+interface PageInfo {
     hasPreviousPage: boolean;
     hasNextPage: boolean;
     startCursor: string;
@@ -114,7 +117,12 @@ export interface PageInfo {
 }
 
 export interface PagedQuery<T> {
-    result: Query<T>;
+    pageInfo: PageInfo;
+    edges: T[];
+}
+
+export interface PagedQueryResult<T> {
+    result: QueryResult<T>;
     hasPreviousPage: boolean;
     hasNextPage: boolean;
     next(): void;
@@ -126,8 +134,8 @@ export interface PagedQuery<T> {
 export function usePagedQuery<T = any>(
     query: string,
     pageSize: number,
-    getPageInfo: (result: Query<T>) => PageInfo | null | undefined
-): PagedQuery<T> {
+    getPageInfo: (result: QueryResult<T>) => PageInfo | null | undefined
+): PagedQueryResult<T> {
     const [args, setArgs] = useState(`first:${pageSize}`);
     const result = useQuery<T>(query.replace("@page@", args));
     const pageInfo = getPageInfo(result) || {
