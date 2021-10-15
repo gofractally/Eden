@@ -13,6 +13,7 @@
     "dependencies": {
         "@culturehq/add-to-calendar": "^1.1.2",
         "@edenos/common": "^0.1.0",
+        "@edenos/eden-subchain-client": "^0.1.2",
         "@headlessui/react": "^1.4.1",
         "@popperjs/core": "^2.9.3",
         "async-sema": "^3.1.1",

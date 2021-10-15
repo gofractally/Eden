@@ -11,6 +11,7 @@
     },
     "dependencies": {
         "@edenos/common": "^0.1.0",
+        "@edenos/eden-subchain-client": "^0.1.2",
         "next": "^11.0.1",
         "react": "^17.0.2",
         "react-dom": "^17.0.2"
