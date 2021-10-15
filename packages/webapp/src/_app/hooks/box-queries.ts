@@ -18,6 +18,7 @@ export const usePagedMembers = (
         edges {
             node {
                 account
+                createdAt
                 profile {
                     name
                     img
@@ -309,6 +310,9 @@ const formatQueriedMemberAccountData = (
               name: memberAccountData.profile.name,
               image: memberAccountData.profile.img,
               socialHandles: JSON.parse(memberAccountData.profile.social),
+              createdAt: memberAccountData.createdAt
+                  ? new Date(memberAccountData.createdAt).getTime()
+                  : 0,
           }
         : undefined;
 
