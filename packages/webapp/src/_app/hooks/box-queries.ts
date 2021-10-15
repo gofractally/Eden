@@ -10,7 +10,7 @@ import dayjs from "dayjs";
 import { assetFromString } from "_app";
 import { MemberAccountData } from "members";
 
-interface MemberQueryNode {
+interface MemberQueryEdge {
     node: {
         account: string;
         createdAt: string;
@@ -22,7 +22,7 @@ interface MemberQueryNode {
     };
 }
 interface PagedMembersQuery {
-    members: PagedQuery<MemberQueryNode>;
+    members: PagedQuery<MemberQueryEdge>;
 }
 
 export const usePagedMembers = (
@@ -63,7 +63,7 @@ export const usePagedMembers = (
         const memberNodes = pagedResult.result.data.members.edges;
         if (memberNodes) {
             formattedMembers = memberNodes
-                .map((member: MemberQueryNode) =>
+                .map((member: MemberQueryEdge) =>
                     formatQueriedMemberAccountData(member.node)
                 )
                 .filter((member): member is MemberAccountData =>
