@@ -377,6 +377,7 @@ jobs:
               if: steps.filter.outputs.src == 'true'
               run: |
                   export SUBCHAIN_DFUSE_PREVENT_CONNECT=1
+                  export NODE_ENV=test
                   yarn
                   yarn build --stream --ignore @edenos/example-history-app
                   yarn start --stream --ignore @edenos/example-history-app &
