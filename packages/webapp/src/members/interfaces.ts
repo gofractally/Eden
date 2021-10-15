@@ -11,6 +11,7 @@ export interface MemberAccountData {
     name: string;
     image: string;
     socialHandles: EdenNftSocialHandles;
+    createdAt: number;
 }
 
 export interface MemberData extends MemberAccountData {
@@ -18,7 +19,6 @@ export interface MemberData extends MemberAccountData {
     bio: string;
     attributions: string;
     inductionVideo: string;
-    createdAt: number;
     auctionData?: MemberAuctionData;
     assetData?: AssetData;
     saleId?: string;

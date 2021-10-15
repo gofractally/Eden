@@ -9,11 +9,12 @@ import {
     SideNavLayout,
     Heading,
     PaginationNav,
-    queryMembersStats,
-    queryMembers,
     queryNewMembers,
+    usePagedMembers,
+    LoadingContainer,
+    Text,
 } from "_app";
-import { MemberChip, MembersGrid } from "members";
+import { MemberChip, MemberData, MembersGrid } from "members";
 
 const MEMBERS_PAGE_SIZE = 18;
 const NEW_MEMBERS_PAGE_SIZE = 12;
@@ -21,12 +22,9 @@ const NEW_MEMBERS_PAGE_SIZE = 12;
 export const getServerSideProps: GetServerSideProps = async ({ query }) => {
     const queryClient = new QueryClient();
 
-    const membersPage = parseInt((query.membersPage as string) || "1");
     const newMembersPage = parseInt((query.newMembersPage as string) || "1");
 
     await Promise.all([
-        queryClient.prefetchQuery(queryMembersStats),
-        queryClient.prefetchQuery(queryMembers(membersPage, MEMBERS_PAGE_SIZE)),
         queryClient.prefetchQuery(
             queryNewMembers(newMembersPage, NEW_MEMBERS_PAGE_SIZE)
         ),
@@ -35,7 +33,6 @@ export const getServerSideProps: GetServerSideProps = async ({ query }) => {
     return {
         props: {
             dehydratedState: dehydrate(queryClient),
-            membersPage,
             newMembersPage,
         },
     };
@@ -48,37 +45,12 @@ interface Props {
 
 export const MembersPage = (props: Props) => {
     const router = useRouter();
-    const [membersPage, setMembersPage] = useState(props.membersPage);
     const [newMembersPage, setNewMembersPage] = useState(props.newMembersPage);
-
-    const { data: memberStats } = useQuery({
-        ...queryMembersStats,
-        keepPreviousData: true,
-    });
-    const totalMembersPages =
-        memberStats &&
-        Math.ceil(memberStats.active_members / MEMBERS_PAGE_SIZE);
-
-    const members = useQuery({
-        ...queryMembers(membersPage, MEMBERS_PAGE_SIZE),
-        keepPreviousData: true,
-    });
 
     const newMembers = useQuery({
         ...queryNewMembers(newMembersPage, NEW_MEMBERS_PAGE_SIZE),
         keepPreviousData: true,
     });
-
-    const paginateMembers = (increment: number) => {
-        setMembersPage(membersPage + increment);
-        router.push(
-            {
-                query: { membersPage: membersPage + increment },
-            },
-            undefined,
-            { scroll: false }
-        );
-    };
 
     const paginateNewMembers = (increment: number) => {
         setNewMembersPage(newMembersPage + increment);
@@ -127,38 +99,66 @@ export const MembersPage = (props: Props) => {
                     </Container>
                 </>
             )}
+            <AllMembers />
+        </SideNavLayout>
+    );
+};
+
+const AllMembers = () => {
+    const { result, ...pagination } = usePagedMembers(MEMBERS_PAGE_SIZE);
+    const { data: members, isLoading, isError } = result;
+
+    if (isLoading) {
+        return <LoadingContainer />;
+    }
+
+    if (isError || !members) {
+        return (
+            <Container className="flex flex-col justify-center items-center py-16 text-center">
+                <Heading size={4}>Error loading member information</Heading>
+                <Text>Please reload the page to try again.</Text>
+            </Container>
+        );
+    }
+
+    if (!(members as MemberData[]).length) {
+        return (
+            <Container className="flex flex-col justify-center items-center py-16 text-center">
+                <Heading size={4}>No members found</Heading>
+                <Text>
+                    There don't seem to be any members in this community yet.
+                </Text>
+            </Container>
+        );
+    }
+
+    return (
+        <>
             <Container>
                 <Heading size={2}>All members</Heading>
-                {members.isLoading && "Loading members..."}
-                {members.error && "Fail to load members"}
             </Container>
-            {members.data && (
-                <>
-                    <div className="border-t border-b">
-                        <MembersGrid
-                            members={members.data}
-                            dataTestId="members-grid"
-                        >
-                            {(member) => (
-                                <MemberChip
-                                    key={`all-members-${member.account}`}
-                                    member={member}
-                                />
-                            )}
-                        </MembersGrid>
-                    </div>
-                    <Container>
-                        <PaginationNav
-                            paginate={paginateMembers}
-                            hasNext={members.data.length >= MEMBERS_PAGE_SIZE}
-                            hasPrevious={membersPage > 1}
-                            pageNumber={membersPage}
-                            totalPages={totalMembersPages}
+            <div className="border-t border-b">
+                <MembersGrid
+                    members={members as MemberData[]}
+                    dataTestId="members-grid"
+                >
+                    {(member) => (
+                        <MemberChip
+                            key={`all-members-${member.account}`}
+                            member={member}
                         />
-                    </Container>
-                </>
-            )}
-        </SideNavLayout>
+                    )}
+                </MembersGrid>
+            </div>
+            <Container>
+                <PaginationNav
+                    hasNext={pagination.hasNextPage}
+                    hasPrevious={pagination.hasPreviousPage}
+                    goToNextPage={pagination.next}
+                    goToPrevPage={pagination.previous}
+                />
+            </Container>
+        </>
     );
 };
 

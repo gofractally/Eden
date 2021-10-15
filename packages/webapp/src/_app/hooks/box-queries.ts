@@ -1,7 +1,57 @@
-import { Query, useQuery } from "@edenos/common/dist/subchain";
+import { Query, usePagedQuery, useQuery } from "@edenos/common/dist/subchain";
 import dayjs from "dayjs";
-import { MemberAccountData } from "members";
+
 import { assetFromString } from "_app";
+import { MemberAccountData } from "members";
+
+export const usePagedMembers = (
+    pageSize: number = 20
+): ReturnType<typeof usePagedQuery> => {
+    const query = `{
+    members(@page@) {
+        pageInfo {
+          hasPreviousPage
+          hasNextPage
+          startCursor
+          endCursor
+        }
+        edges {
+            node {
+                account
+                createdAt
+                profile {
+                    name
+                    img
+                    social
+                }
+            }
+        }
+    }
+}
+    `;
+
+    const pagedResult = usePagedQuery<any>(
+        query,
+        pageSize,
+        (result) => result.data?.members.pageInfo
+    );
+
+    let formattedMembers: MemberAccountData[] = [];
+
+    if (pagedResult.result.data) {
+        const memberNodes = pagedResult.result.data.members.edges;
+        if (memberNodes) {
+            formattedMembers = memberNodes.map((member: any) =>
+                formatQueriedMemberAccountData(member.node)
+            );
+        }
+    }
+
+    return {
+        ...pagedResult,
+        result: { ...pagedResult.result, data: formattedMembers },
+    };
+};
 
 export interface ElectionStatusQuery {
     status: {
@@ -260,6 +310,9 @@ const formatQueriedMemberAccountData = (
               name: memberAccountData.profile.name,
               image: memberAccountData.profile.img,
               socialHandles: JSON.parse(memberAccountData.profile.social),
+              createdAt: memberAccountData.createdAt
+                  ? new Date(memberAccountData.createdAt).getTime()
+                  : 0,
           }
         : undefined;
 
