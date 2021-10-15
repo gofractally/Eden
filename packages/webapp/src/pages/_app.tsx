@@ -46,7 +46,7 @@ export const queryClient = new QueryClient();
 
 const WebApp = ({ Component, pageProps }: AppProps) => {
     const subchain = useCreateEdenChain({
-        fetch,
+        fetch: global.window?.fetch, // undefined for nodejs to prevent lambda perf issues
         edenAccount: process.env.NEXT_PUBLIC_EDEN_CONTRACT,
         tokenAccount: process.env.NEXT_PUBLIC_TOKEN_CONTRACT,
         atomicAccount: process.env.NEXT_PUBLIC_AA_CONTRACT,
