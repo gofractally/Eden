@@ -1,7 +1,7 @@
 import {
+    QueryResult,
+    PagedQueryResult,
     PagedQuery,
-    PageInfo,
-    Query,
     usePagedQuery,
     useQuery,
 } from "@edenos/common/dist/subchain";
@@ -10,10 +10,6 @@ import dayjs from "dayjs";
 import { assetFromString } from "_app";
 import { MemberAccountData } from "members";
 
-interface PagedQueryBody<T> {
-    pageInfo: PageInfo;
-    edges: T[];
-}
 interface MemberQueryNode {
     node: {
         account: string;
@@ -26,12 +22,12 @@ interface MemberQueryNode {
     };
 }
 interface PagedMembersQuery {
-    members: PagedQueryBody<MemberQueryNode>;
+    members: PagedQuery<MemberQueryNode>;
 }
 
 export const usePagedMembers = (
     pageSize: number = 20
-): PagedQuery<MemberAccountData[]> => {
+): PagedQueryResult<MemberAccountData[]> => {
     const query = `{
     members(@page@) {
         pageInfo {
@@ -124,7 +120,7 @@ export interface CurrentMemberElectionVotingDataQuery {
 
 export const useCurrentMemberElectionVotingData = (
     account?: string
-): Query<CurrentMemberElectionVotingDataQuery> => {
+): QueryResult<CurrentMemberElectionVotingDataQuery> => {
     const query = useQuery<any>(
         account
             ? `
@@ -288,7 +284,7 @@ const currentElectionGlobalDataQuery = `
 }
 `;
 
-export const useCurrentGlobalElectionData = (): Query<ElectionGlobalQueryData> => {
+export const useCurrentGlobalElectionData = (): QueryResult<ElectionGlobalQueryData> => {
     const query = useQuery<any>(currentElectionGlobalDataQuery);
 
     if (query.data) {
