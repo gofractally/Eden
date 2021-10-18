@@ -6,3 +6,4 @@ export * from "./member-holo-card";
 export * from "./member-social-links";
 export * from "./members-grid";
 export * from "./token-balance";
+export * from "./virtual-members-list";
