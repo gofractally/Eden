@@ -1479,19 +1479,27 @@ void logmint(const action_context& context,
       || schema_name != eden::schema_name)
       return;
    
-   auto account_pos = std::find_if(immutable_data.begin(), immutable_data.end(),
+   auto account_pos = std::find_if(immutable_template_data.begin(), immutable_data.end(),
                                    [](const auto& attr) { return attr.key == "account"; });
-   if (account_pos == immutable_data.end())
+   if (account_pos == immutable_template_data.end())
       return; // this nft has no eden member account value
 
    eosio::name member_account(std::get<std::string>(account_pos->value));
+
+   uint64_t template_mint = 0;
+   auto& index = db.nfts.get<by_member>();
+   for (auto it = index.lower_bound(nft_account_key{member_account, eosio::block_timestamp(0), 0});
+        it != index.end() && it->member == member_account; it++)
+   {
+      template_mint++;
+   }
 
    db.nfts.emplace([&](auto& nft) {
       nft.member = member_account;
       nft.owner = new_asset_owner;
       nft.templateId = template_id;
       nft.assetId = asset_id;
-      nft.templateMint = 0; // todo: derive sequential mint
+      nft.templateMint = template_mint;
       nft.createdAt = eosio::block_timestamp(context.block.timestamp);
       nft.auctionBegin = eosio::block_timestamp(0);
       nft.auctionEnd = eosio::block_timestamp(0);
