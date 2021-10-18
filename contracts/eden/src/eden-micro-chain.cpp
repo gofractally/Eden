@@ -97,6 +97,7 @@ struct by_round;
 struct by_createdAt;
 struct by_member;
 struct by_owner;
+struct by_auctionId;
 
 template <typename T, typename... Indexes>
 using mic = boost::
@@ -141,6 +142,11 @@ template <typename T>
 using ordered_by_owner = boost::multi_index::ordered_unique<  //
     boost::multi_index::tag<by_owner>,
     boost::multi_index::key<&T::by_owner>>;
+
+template <typename T>
+using ordered_by_auctionId = boost::multi_index::ordered_unique<  //
+    boost::multi_index::tag<by_auctionId>,
+    boost::multi_index::key<&T::by_auctionId>>;
 
 uint64_t available_pk(const auto& table, const auto& first)
 {
@@ -491,17 +497,23 @@ struct nft_object
    int32_t templateId;
    uint64_t assetId;
    uint32_t templateMint;
+   uint64_t auctionId;
+   eosio::block_timestamp auctionBegin;
+   eosio::block_timestamp auctionEnd;
+   eosio::asset auctionPrice;
    eosio::block_timestamp createdAt;
 
    auto by_pk() const { return assetId; }
    nft_account_key by_member() const { return {member, createdAt, assetId}; }
    nft_account_key by_owner() const { return {owner, createdAt, assetId}; }
+   std::pair<uint64_t, uint64_t> by_auctionId() const { return {auctionId, assetId}; }
 };
 using nft_index = mic<nft_object,
                       ordered_by_id<nft_object>,
                       ordered_by_pk<nft_object>,
                       ordered_by_member<nft_object>,
-                      ordered_by_owner<nft_object>>;
+                      ordered_by_owner<nft_object>,
+                      ordered_by_auctionId<nft_object>>;
 
 
 struct database
@@ -717,15 +729,6 @@ struct Member
                       std::optional<std::string> before,
                       std::optional<std::string> after) const;
 
-   NftConnection collectedNfts(std::optional<eosio::block_timestamp> gt,
-                               std::optional<eosio::block_timestamp> ge,
-                               std::optional<eosio::block_timestamp> lt,
-                               std::optional<eosio::block_timestamp> le,
-                               std::optional<uint32_t> first,
-                               std::optional<uint32_t> last,
-                               std::optional<std::string> before,
-                               std::optional<std::string> after) const;
-
    MemberElectionConnection elections(std::optional<eosio::block_timestamp> gt,
                                       std::optional<eosio::block_timestamp> ge,
                                       std::optional<eosio::block_timestamp> lt,
@@ -756,7 +759,8 @@ EOSIO_REFLECT2(
     method(nfts, "gt", "ge", "lt", "le", "first", "last", "before", "after"),
     method(collectedNfts, "gt", "ge", "lt", "le", "first", "last", "before", "after"),
     method(elections, "gt", "ge", "lt", "le", "first", "last", "before", "after"),
-    method(distributionFunds, "gt", "ge", "lt", "le", "first", "last", "before", "after"))
+    method(distributionFunds, "gt", "ge", "lt", "le", "first", "last", "before", "after"),
+    method(nfts, "gt", "ge", "lt", "le", "first", "last", "before", "after"))
 
 std::optional<Member> get_member(eosio::name account, bool allow_lsb)
 {
@@ -1109,6 +1113,10 @@ struct Nft {
    auto templateId() const { return obj->templateId; }
    auto assetId() const { return obj->assetId; }
    auto templateMint() const { return obj->templateMint; }
+   auto auctionId() const { return obj->auctionId; }
+   auto auctionBegin() const { return obj->auctionBegin; }
+   auto auctionEnd() const { return obj->auctionEnd; }
+   const auto& auctionPrice() const { return obj->auctionPrice; }
    auto createdAt() const { return obj->createdAt; }
 };
 EOSIO_REFLECT2(Nft, 
@@ -1117,6 +1125,10 @@ EOSIO_REFLECT2(Nft,
                templateId, 
                assetId, 
                templateMint, 
+               auctionId,
+               auctionBegin, 
+               auctionEnd, 
+               auctionPrice, 
                createdAt)
 
 NftConnection Member::nfts(std::optional<eosio::block_timestamp> gt,
@@ -1129,45 +1141,18 @@ NftConnection Member::nfts(std::optional<eosio::block_timestamp> gt,
                            std::optional<std::string> after) const
 {
    return clchain::make_connection<NftConnection, nft_account_key>(
-       gt ? std::optional{nft_account_key{account, *gt, ~uint64_t(0)}}              //
-          : std::nullopt,                                                           //
+       gt ? std::optional{nft_account_key{account, *gt, ~uint64_t(0)}}               //
+          : std::nullopt,                                                                 //
        ge ? std::optional{nft_account_key{account, *ge, 0}}                         //
           : std::optional{nft_account_key{account, eosio::block_timestamp{0}, 0}},  //
        lt ? std::optional{nft_account_key{account, *lt, 0}}                         //
-          : std::nullopt,                                                           //
-       le ? std::optional{nft_account_key{account, *le, ~uint64_t(0)}}              //
+          : std::nullopt,                                                                 //
+       le ? std::optional{nft_account_key{account, *le, ~uint64_t(0)}}               //
           : std::optional{nft_account_key{account, eosio::block_timestamp::max(),   //
-                                                ~uint64_t(0)}},                     //
-       first, last, before, after,                                                  //
-       db.nfts.get<by_member>(),                                                    //
-       [](auto& obj) { return obj.by_member(); },                                   //
-       [&](auto& obj) { return Nft{&obj}; },
-       [](auto& nfts, auto key) { return nfts.lower_bound(key); },
-       [](auto& nfts, auto key) { return nfts.upper_bound(key); });
-}
-
-NftConnection Member::collectedNfts(std::optional<eosio::block_timestamp> gt,
-                                    std::optional<eosio::block_timestamp> ge,
-                                    std::optional<eosio::block_timestamp> lt,
-                                    std::optional<eosio::block_timestamp> le,
-                                    std::optional<uint32_t> first,
-                                    std::optional<uint32_t> last,
-                                    std::optional<std::string> before,
-                                    std::optional<std::string> after) const
-{
-   return clchain::make_connection<NftConnection, nft_account_key>(
-       gt ? std::optional{nft_account_key{account, *gt, ~uint64_t(0)}}              //
-          : std::nullopt,                                                           //
-       ge ? std::optional{nft_account_key{account, *ge, 0}}                         //
-          : std::optional{nft_account_key{account, eosio::block_timestamp{0}, 0}},  //
-       lt ? std::optional{nft_account_key{account, *lt, 0}}                         //
-          : std::nullopt,                                                           //
-       le ? std::optional{nft_account_key{account, *le, ~uint64_t(0)}}              //
-          : std::optional{nft_account_key{account, eosio::block_timestamp::max(),   //
-                                                ~uint64_t(0)}},                     //
-       first, last, before, after,                                                  //
-       db.nfts.get<by_owner>(),                                                    //
-       [](auto& obj) { return obj.by_owner(); },                                    //
+                                                ~uint64_t(0)}},                            //
+       first, last, before, after,                                                        //
+       db.nfts.get<by_member>(),                                                //
+       [](auto& obj) { return obj.by_member(); },                                             //
        [&](auto& obj) { return Nft{&obj}; },
        [](auto& nfts, auto key) { return nfts.lower_bound(key); },
        [](auto& nfts, auto key) { return nfts.upper_bound(key); });
@@ -1496,51 +1481,61 @@ void logmint(const action_context& context,
       || schema_name != eden::schema_name)
       return;
    
-   auto account_pos = std::find_if(immutable_template_data.begin(), immutable_data.end(),
+   auto account_pos = std::find_if(immutable_data.begin(), immutable_data.end(),
                                    [](const auto& attr) { return attr.key == "account"; });
-   if (account_pos == immutable_template_data.end())
+   if (account_pos == immutable_data.end())
       return; // this nft has no eden member account value
 
    eosio::name member_account(std::get<std::string>(account_pos->value));
-
-   uint64_t template_mint = 0;
-   auto& index = db.nfts.get<by_member>();
-   for (auto it = index.lower_bound(nft_account_key{member_account, eosio::block_timestamp(0), 0});
-        it != index.end() && it->member == member_account; it++)
-   {
-      template_mint++;
-   }
 
    db.nfts.emplace([&](auto& nft) {
       nft.member = member_account;
       nft.owner = new_asset_owner;
       nft.templateId = template_id;
       nft.assetId = asset_id;
-      nft.templateMint = template_mint;
+      nft.templateMint = 0; // todo: derive sequential mint
       nft.createdAt = eosio::block_timestamp(context.block.timestamp);
+      nft.auctionBegin = eosio::block_timestamp(0);
+      nft.auctionEnd = eosio::block_timestamp(0);
    });
 }
 
-void logtransfer(const action_context& context,
-                 eosio::name collection_name,
-                 eosio::name from,
-                 eosio::name to,
-                 std::vector<uint64_t> asset_ids,
-                 std::string memo)
+void lognewauct(const action_context& context,
+                uint64_t auction_id,
+                eosio::name seller,
+                std::vector<uint64_t> asset_ids,
+                eosio::asset starting_bid,
+                uint32_t duration,
+                uint32_t end_time,
+                eosio::name maker_marketplace,
+                eosio::name collection_name,
+                double collection_fee) 
 {
    if (collection_name != eden_account)
       return;
 
-   auto& index = db.nfts.get<by_pk>();
-
    for (const auto& asset_id : asset_ids) {
-      auto it = index.find(asset_id);
-      if (it == index.end()) {
-         continue;
-      }
-      
+      modify<by_pk>(db.nfts, asset_id, [&](auto& nft) {
+         nft.auctionId = auction_id;
+         nft.auctionBegin = eosio::block_timestamp(context.block.timestamp);
+         nft.auctionEnd = eosio::block_timestamp(end_time);
+         nft.auctionPrice = starting_bid;
+      });
+   }
+}
+
+void auctionbid(const action_context& context,
+                eosio::name bidder,
+                uint64_t auction_id,
+                eosio::asset bid,
+                eosio::name taker_marketplace) 
+{
+   auto& index = db.nfts.get<by_auctionId>();
+   for (auto it = index.lower_bound(std::pair<uint64_t, uint64_t>{auction_id, 0});
+        it != index.end() && it->auctionId == auction_id; it++)
+   {
       db.nfts.modify(*it, [&](auto& nft) {
-         nft.owner = to;
+         nft.auctionPrice = bid;
       });
    }
 }
@@ -1814,8 +1809,13 @@ void filter_block(const subchain::eosio_block& block)
          {
             if (action.name == "logmint"_n)
                call(logmint, context, action.hexData.data);
-            else if (action.name == "logtransfer"_n)
-               call(logtransfer, context, action.hexData.data);
+         }
+         else if (action.firstReceiver == atomicmarket_account)
+         {
+            if (action.name == "lognewauct"_n)
+               call(lognewauct, context, action.hexData.data);
+            else if (action.name == "auctionbid"_n)
+               call(auctionbid, context, action.hexData.data);
          }
       }  // for(action)
       eosio::check(!block_state.in_withdraw && !block_state.in_manual_transfer,
