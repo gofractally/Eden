@@ -2,7 +2,6 @@ import React from "react";
 import { GetServerSideProps } from "next";
 import { QueryClient } from "react-query";
 import { dehydrate } from "react-query/hydration";
-import { useVirtual } from "react-virtual";
 
 import {
     Container,
@@ -14,11 +13,11 @@ import {
     Text,
     useWindowSize,
 } from "_app";
-import { MemberChip, MemberData } from "members";
+import { MemberChip, MemberData, VirtualMembersList } from "members";
 
 const NEW_MEMBERS_PAGE_SIZE = 10000;
 
-export const getServerSideProps: GetServerSideProps = async ({ query }) => {
+export const getServerSideProps: GetServerSideProps = async () => {
     const queryClient = new QueryClient();
 
     await Promise.all([
@@ -37,7 +36,6 @@ interface Props {
 }
 
 export const MembersPage = (props: Props) => {
-    const { height } = useWindowSize();
     // const newMembers = useQuery({
     //     ...queryNewMembers(1, NEW_MEMBERS_PAGE_SIZE),
     //     keepPreviousData: true,
@@ -51,27 +49,18 @@ export const MembersPage = (props: Props) => {
             <Container>
                 <Heading size={1}>Community</Heading>
             </Container>
-            <div className="flex-1">
-                <AllMembers height={height} />
-            </div>
+            <AllMembers />
         </SideNavLayout>
     );
 };
 
-const AllMembers = ({ height = 0 }: { height?: number }) => {
-    const parentRef = React.useRef<HTMLDivElement>(null);
+const AllMembers = () => {
+    const { height } = useWindowSize();
     const { data: members, isLoading, isError } = useMembers();
 
     const HEADER_HEIGHT = 77;
     const FOOTER_HEIGHT = 205;
-
-    const rowVirtualizer = useVirtual({
-        size: members.length,
-        parentRef,
-        estimateSize: React.useCallback(() => 77, []),
-        overscan: 10,
-        paddingEnd: 40,
-    });
+    const listHeight = height ? height - HEADER_HEIGHT - FOOTER_HEIGHT : 0;
 
     if (isLoading) {
         return <LoadingContainer />;
@@ -98,55 +87,16 @@ const AllMembers = ({ height = 0 }: { height?: number }) => {
     }
 
     return (
-        <div
-            ref={parentRef}
-            className="overflow-auto"
-            style={{
-                height: height - HEADER_HEIGHT - FOOTER_HEIGHT,
-            }}
-        >
-            <VirtualizedMembersGrid
+        <div className="flex-1">
+            <VirtualMembersList
                 members={members as MemberData[]}
-                rowVirtualizer={rowVirtualizer}
+                height={listHeight}
                 dataTestId="members-grid"
-            />
+            >
+                {(member) => <MemberChip member={member} />}
+            </VirtualMembersList>
         </div>
     );
 };
 
 export default MembersPage;
-
-interface VirtualizedProps {
-    dataTestId?: string;
-    members: MemberData[];
-    rowVirtualizer: ReturnType<typeof useVirtual>;
-}
-
-export const VirtualizedMembersGrid = ({
-    members,
-    rowVirtualizer,
-    dataTestId,
-}: VirtualizedProps) => {
-    return (
-        <div
-            className="w-full relative"
-            data-testid={dataTestId}
-            style={{
-                height: `${rowVirtualizer.totalSize}px`,
-            }}
-        >
-            {rowVirtualizer.virtualItems.map((item) => (
-                <div
-                    key={item.index}
-                    className="absolute top-0 left-0 w-full"
-                    style={{
-                        height: `${item.size}px`,
-                        transform: `translateY(${item.start}px)`,
-                    }}
-                >
-                    <MemberChip member={members[item.index]} />
-                </div>
-            ))}
-        </div>
-    );
-};
