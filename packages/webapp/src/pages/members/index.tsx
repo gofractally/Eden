@@ -1,112 +1,77 @@
-import { useState } from "react";
+import React from "react";
 import { GetServerSideProps } from "next";
-import { useRouter } from "next/router";
-import { QueryClient, useQuery } from "react-query";
+import { QueryClient } from "react-query";
 import { dehydrate } from "react-query/hydration";
+import { useVirtual } from "react-virtual";
 
 import {
     Container,
     SideNavLayout,
     Heading,
-    PaginationNav,
     queryNewMembers,
-    usePagedMembers,
+    useMembers,
     LoadingContainer,
     Text,
+    useWindowSize,
 } from "_app";
-import { MemberChip, MemberData, MembersGrid } from "members";
+import { MemberChip, MemberData } from "members";
 
-const MEMBERS_PAGE_SIZE = 18;
-const NEW_MEMBERS_PAGE_SIZE = 12;
+const NEW_MEMBERS_PAGE_SIZE = 10000;
 
 export const getServerSideProps: GetServerSideProps = async ({ query }) => {
     const queryClient = new QueryClient();
 
-    const newMembersPage = parseInt((query.newMembersPage as string) || "1");
-
     await Promise.all([
-        queryClient.prefetchQuery(
-            queryNewMembers(newMembersPage, NEW_MEMBERS_PAGE_SIZE)
-        ),
+        queryClient.prefetchQuery(queryNewMembers(1, NEW_MEMBERS_PAGE_SIZE)),
     ]);
 
     return {
         props: {
             dehydratedState: dehydrate(queryClient),
-            newMembersPage,
         },
     };
 };
 
 interface Props {
     membersPage: number;
-    newMembersPage: number;
 }
 
 export const MembersPage = (props: Props) => {
-    const router = useRouter();
-    const [newMembersPage, setNewMembersPage] = useState(props.newMembersPage);
-
-    const newMembers = useQuery({
-        ...queryNewMembers(newMembersPage, NEW_MEMBERS_PAGE_SIZE),
-        keepPreviousData: true,
-    });
-
-    const paginateNewMembers = (increment: number) => {
-        setNewMembersPage(newMembersPage + increment);
-        router.push(
-            {
-                query: { newMembersPage: newMembersPage + increment },
-            },
-            undefined,
-            { scroll: false }
-        );
-    };
+    const { height } = useWindowSize();
+    // const newMembers = useQuery({
+    //     ...queryNewMembers(1, NEW_MEMBERS_PAGE_SIZE),
+    //     keepPreviousData: true,
+    // });
 
     return (
-        <SideNavLayout title="Community">
+        <SideNavLayout
+            title="Community"
+            className="divide-y flex-1 flex flex-col"
+        >
             <Container>
                 <Heading size={1}>Community</Heading>
             </Container>
-            <Container>
-                <Heading size={2}>New members</Heading>
-                {newMembers.isLoading && "Loading new members..."}
-                {newMembers.error && "Fail to load new members"}
-            </Container>
-            {newMembers.data && (
-                <>
-                    <div className="border-t border-b">
-                        <MembersGrid
-                            members={newMembers.data}
-                            dataTestId="new-members-grid"
-                        >
-                            {(member) => (
-                                <MemberChip
-                                    key={`new-members-${member.account}`}
-                                    member={member}
-                                />
-                            )}
-                        </MembersGrid>
-                    </div>
-                    <Container>
-                        <PaginationNav
-                            paginate={paginateNewMembers}
-                            hasNext={
-                                newMembers.data.length >= NEW_MEMBERS_PAGE_SIZE
-                            }
-                            hasPrevious={newMembersPage > 1}
-                        />
-                    </Container>
-                </>
-            )}
-            <AllMembers />
+            <div className="flex-1">
+                <AllMembers height={height} />
+            </div>
         </SideNavLayout>
     );
 };
 
-const AllMembers = () => {
-    const { result, ...pagination } = usePagedMembers(MEMBERS_PAGE_SIZE);
-    const { data: members, isLoading, isError } = result;
+const AllMembers = ({ height = 0 }: { height?: number }) => {
+    const parentRef = React.useRef<HTMLDivElement>(null);
+    const { data: members, isLoading, isError } = useMembers();
+
+    const HEADER_HEIGHT = 77;
+    const FOOTER_HEIGHT = 205;
+
+    const rowVirtualizer = useVirtual({
+        size: members.length,
+        parentRef,
+        estimateSize: React.useCallback(() => 77, []),
+        overscan: 10,
+        paddingEnd: 40,
+    });
 
     if (isLoading) {
         return <LoadingContainer />;
@@ -133,33 +98,55 @@ const AllMembers = () => {
     }
 
     return (
-        <>
-            <Container>
-                <Heading size={2}>All members</Heading>
-            </Container>
-            <div className="border-t border-b">
-                <MembersGrid
-                    members={members as MemberData[]}
-                    dataTestId="members-grid"
-                >
-                    {(member) => (
-                        <MemberChip
-                            key={`all-members-${member.account}`}
-                            member={member}
-                        />
-                    )}
-                </MembersGrid>
-            </div>
-            <Container>
-                <PaginationNav
-                    hasNext={pagination.hasNextPage}
-                    hasPrevious={pagination.hasPreviousPage}
-                    goToNextPage={pagination.next}
-                    goToPrevPage={pagination.previous}
-                />
-            </Container>
-        </>
+        <div
+            ref={parentRef}
+            className="overflow-auto"
+            style={{
+                height: height - HEADER_HEIGHT - FOOTER_HEIGHT,
+            }}
+        >
+            <VirtualizedMembersGrid
+                members={members as MemberData[]}
+                rowVirtualizer={rowVirtualizer}
+                dataTestId="members-grid"
+            />
+        </div>
     );
 };
 
 export default MembersPage;
+
+interface VirtualizedProps {
+    dataTestId?: string;
+    members: MemberData[];
+    rowVirtualizer: ReturnType<typeof useVirtual>;
+}
+
+export const VirtualizedMembersGrid = ({
+    members,
+    rowVirtualizer,
+    dataTestId,
+}: VirtualizedProps) => {
+    return (
+        <div
+            className="w-full relative"
+            data-testid={dataTestId}
+            style={{
+                height: `${rowVirtualizer.totalSize}px`,
+            }}
+        >
+            {rowVirtualizer.virtualItems.map((item) => (
+                <div
+                    key={item.index}
+                    className="absolute top-0 left-0 w-full"
+                    style={{
+                        height: `${item.size}px`,
+                        transform: `translateY(${item.start}px)`,
+                    }}
+                >
+                    <MemberChip member={members[item.index]} />
+                </div>
+            ))}
+        </div>
+    );
+};
