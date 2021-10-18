@@ -21,6 +21,48 @@ interface MemberQueryEdge {
         };
     };
 }
+
+interface MembersQuery {
+    members: {
+        edges: MemberQueryEdge[];
+    };
+}
+
+export const useMembers = () => {
+    const result = useQuery<MembersQuery>(`{
+        members {
+            edges {
+                node {
+                    account
+                    createdAt
+                    profile {
+                        name
+                        img
+                        social
+                    }
+                }
+            }
+        }
+    }`);
+
+    let formattedMembers: MemberAccountData[] = [];
+
+    if (result.data) {
+        const memberNodes = result.data.members.edges;
+        if (memberNodes) {
+            formattedMembers = memberNodes
+                .map((member: MemberQueryEdge) =>
+                    formatQueriedMemberAccountData(member.node)
+                )
+                .filter((member): member is MemberAccountData =>
+                    Boolean(member)
+                );
+        }
+    }
+
+    return { ...result, data: formattedMembers };
+};
+
 interface PagedMembersQuery {
     members: PagedQuery<MemberQueryEdge>;
 }
