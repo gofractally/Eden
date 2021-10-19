@@ -43,10 +43,7 @@ const reducer = (state: State, action: Action): State => {
     const { type, payload } = action;
     switch (type) {
         case ActionType.SetEncryptionPassword:
-            return {
-                ...state,
-                encryptionPassword: payload,
-            };
+            return { ...state, encryptionPassword: payload };
         case ActionType.ShowPasswordModal:
             return { ...state, passwordModal: payload };
         case ActionType.ShowUALSoftkeyModal:
