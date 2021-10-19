@@ -1,4 +1,5 @@
 import React from "react";
+import { useQuery } from "react-query";
 import {
     List,
     ListRowProps,
@@ -17,35 +18,33 @@ import {
 } from "_app";
 import { MemberChip, MemberData } from "members";
 
-// const NEW_MEMBERS_PAGE_SIZE = 10000;
+const NEW_MEMBERS_PAGE_SIZE = 10000;
 
 interface Props {
     membersPage: number;
 }
 
-export const MembersPage = (props: Props) => {
-    // const newMembers = useQuery({
-    //     ...queryNewMembers(1, NEW_MEMBERS_PAGE_SIZE),
-    // });
-
-    return (
-        <SideNavLayout title="Community">
-            <Container className="lg:sticky lg:top-0 lg:z-10 bg-white border-b">
-                <Heading size={1}>Community</Heading>
-            </Container>
-            <AllMembers />
-        </SideNavLayout>
-    );
-};
+export const MembersPage = (props: Props) => (
+    <SideNavLayout title="Community">
+        <Container className="lg:sticky lg:top-0 lg:z-10 bg-white border-b">
+            <Heading size={1}>Community</Heading>
+        </Container>
+        <AllMembers />
+    </SideNavLayout>
+);
 
 const AllMembers = () => {
-    const { data: members, isLoading, isError } = useMembers();
+    const newMembers = useQuery({
+        ...queryNewMembers(1, NEW_MEMBERS_PAGE_SIZE),
+    });
 
-    if (isLoading) {
+    const allMembers = useMembers();
+
+    if (newMembers.isLoading || allMembers.isLoading) {
         return <LoadingContainer />;
     }
 
-    if (isError || !members) {
+    if (newMembers.isError || allMembers.isError || !allMembers.data) {
         return (
             <Container className="flex flex-col justify-center items-center py-16 text-center">
                 <Heading size={4}>Error loading member information</Heading>
@@ -54,7 +53,7 @@ const AllMembers = () => {
         );
     }
 
-    if (!(members as MemberData[]).length) {
+    if (!(allMembers.data as MemberData[]).length) {
         return (
             <Container className="flex flex-col justify-center items-center py-16 text-center">
                 <Heading size={4}>No members found</Heading>
@@ -64,6 +63,15 @@ const AllMembers = () => {
             </Container>
         );
     }
+
+    let members = (allMembers.data as MemberData[])
+        .sort((a, b) => b.createdAt - a.createdAt)
+        .map((member: MemberData) => {
+            const newMemberRecord = newMembers.data?.find(
+                (newMember) => newMember.account === member.account
+            );
+            return newMemberRecord ?? member;
+        });
 
     return (
         <WindowScroller>
