@@ -11,9 +11,9 @@ import {
     useMembers,
     LoadingContainer,
     Text,
-    useWindowSize,
 } from "_app";
 import { MemberChip, MemberData, VirtualMembersList } from "members";
+import { useCommunityWindowInfo } from "members/hooks";
 
 const NEW_MEMBERS_PAGE_SIZE = 10000;
 
@@ -36,6 +36,8 @@ interface Props {
 }
 
 export const MembersPage = (props: Props) => {
+    const { isSmallScreen } = useCommunityWindowInfo();
+
     // const newMembers = useQuery({
     //     ...queryNewMembers(1, NEW_MEMBERS_PAGE_SIZE),
     //     keepPreviousData: true,
@@ -45,22 +47,23 @@ export const MembersPage = (props: Props) => {
         <SideNavLayout
             title="Community"
             className="divide-y flex-1 flex flex-col"
+            hideFooter={isSmallScreen}
         >
-            <Container>
-                <Heading size={1}>Community</Heading>
-            </Container>
+            {!isSmallScreen && <CommunityHeading />}
             <AllMembers />
         </SideNavLayout>
     );
 };
 
-const AllMembers = () => {
-    const { height } = useWindowSize();
-    const { data: members, isLoading, isError } = useMembers();
+const CommunityHeading = () => (
+    <Container>
+        <Heading size={1}>Community</Heading>
+    </Container>
+);
 
-    const HEADER_HEIGHT = 77;
-    const FOOTER_HEIGHT = 205;
-    const listHeight = height ? height - HEADER_HEIGHT - FOOTER_HEIGHT : 0;
+const AllMembers = () => {
+    const { isSmallScreen, listHeight } = useCommunityWindowInfo();
+    const { data: members, isLoading, isError } = useMembers();
 
     if (isLoading) {
         return <LoadingContainer />;
@@ -91,6 +94,7 @@ const AllMembers = () => {
             <VirtualMembersList
                 members={members as MemberData[]}
                 height={listHeight}
+                header={isSmallScreen && <CommunityHeading />}
                 dataTestId="members-grid"
             >
                 {(member) => <MemberChip member={member} />}

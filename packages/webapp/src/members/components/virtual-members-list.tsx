@@ -6,6 +6,7 @@ import { MemberData } from "members";
 interface Props {
     members: MemberData[];
     height: number;
+    header?: React.ReactNode;
     dataTestId?: string;
     children(member: MemberData): React.ReactNode;
 }
@@ -13,6 +14,7 @@ interface Props {
 export const VirtualMembersList = ({
     members,
     height,
+    header,
     dataTestId,
     children,
 }: Props) => {
@@ -34,6 +36,7 @@ export const VirtualMembersList = ({
                 height,
             }}
         >
+            {header}
             <div
                 className="w-full relative"
                 data-testid={dataTestId}

@@ -6,6 +6,7 @@ interface Props {
     title?: string;
     children: React.ReactNode;
     banner?: React.ReactNode;
+    hideFooter?: boolean;
     className?: string;
 }
 
@@ -13,6 +14,7 @@ export const SideNavLayout = ({
     children,
     title,
     banner,
+    hideFooter = false,
     className = "",
 }: Props) => (
     <div className="flex flex-col xs:flex-row min-h-screen w-full container max-w-screen-xl mx-auto border-r">
@@ -26,7 +28,7 @@ export const SideNavLayout = ({
                 {banner}
                 <main className={className}>{children}</main>
             </div>
-            <Footer />
+            {!hideFooter && <Footer />}
         </div>
     </div>
 );
