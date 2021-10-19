@@ -94,7 +94,8 @@ export default class DfuseReceiver {
         receiver:${subchainConfig.eden} account:${subchainConfig.token} ||
         receiver:${subchainConfig.eden} account:${subchainConfig.atomic} ||
         receiver:${subchainConfig.eden} account:${subchainConfig.atomicMarket} ||
-        receiver:${subchainConfig.atomicMarket} account:${subchainConfig.atomicMarket}
+        receiver:${subchainConfig.atomicMarket} account:${subchainConfig.atomicMarket} action:lognewauct ||
+        receiver:${subchainConfig.atomicMarket} account:${subchainConfig.atomicMarket} action:auctionbid
     )`;
 
     variables = {
