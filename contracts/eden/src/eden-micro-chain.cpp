@@ -729,6 +729,15 @@ struct Member
                       std::optional<std::string> before,
                       std::optional<std::string> after) const;
 
+   NftConnection collectedNfts(std::optional<eosio::block_timestamp> gt,
+                               std::optional<eosio::block_timestamp> ge,
+                               std::optional<eosio::block_timestamp> lt,
+                               std::optional<eosio::block_timestamp> le,
+                               std::optional<uint32_t> first,
+                               std::optional<uint32_t> last,
+                               std::optional<std::string> before,
+                               std::optional<std::string> after) const;
+
    MemberElectionConnection elections(std::optional<eosio::block_timestamp> gt,
                                       std::optional<eosio::block_timestamp> ge,
                                       std::optional<eosio::block_timestamp> lt,
@@ -756,9 +765,10 @@ EOSIO_REFLECT2(
     inductionVideo,
     participating,
     createdAt,
+    method(nfts, "gt", "ge", "lt", "le", "first", "last", "before", "after"),
+    method(collectedNfts, "gt", "ge", "lt", "le", "first", "last", "before", "after"),
     method(elections, "gt", "ge", "lt", "le", "first", "last", "before", "after"),
-    method(distributionFunds, "gt", "ge", "lt", "le", "first", "last", "before", "after"),
-    method(nfts, "gt", "ge", "lt", "le", "first", "last", "before", "after"))
+    method(distributionFunds, "gt", "ge", "lt", "le", "first", "last", "before", "after"))
 
 std::optional<Member> get_member(eosio::name account, bool allow_lsb)
 {
@@ -1139,18 +1149,45 @@ NftConnection Member::nfts(std::optional<eosio::block_timestamp> gt,
                            std::optional<std::string> after) const
 {
    return clchain::make_connection<NftConnection, nft_account_key>(
-       gt ? std::optional{nft_account_key{account, *gt, ~uint64_t(0)}}               //
-          : std::nullopt,                                                                 //
+       gt ? std::optional{nft_account_key{account, *gt, ~uint64_t(0)}}              //
+          : std::nullopt,                                                           //
        ge ? std::optional{nft_account_key{account, *ge, 0}}                         //
           : std::optional{nft_account_key{account, eosio::block_timestamp{0}, 0}},  //
        lt ? std::optional{nft_account_key{account, *lt, 0}}                         //
-          : std::nullopt,                                                                 //
-       le ? std::optional{nft_account_key{account, *le, ~uint64_t(0)}}               //
+          : std::nullopt,                                                           //
+       le ? std::optional{nft_account_key{account, *le, ~uint64_t(0)}}              //
           : std::optional{nft_account_key{account, eosio::block_timestamp::max(),   //
-                                                ~uint64_t(0)}},                            //
-       first, last, before, after,                                                        //
-       db.nfts.get<by_member>(),                                                //
-       [](auto& obj) { return obj.by_member(); },                                             //
+                                                ~uint64_t(0)}},                     //
+       first, last, before, after,                                                  //
+       db.nfts.get<by_member>(),                                                    //
+       [](auto& obj) { return obj.by_member(); },                                   //
+       [&](auto& obj) { return Nft{&obj}; },
+       [](auto& nfts, auto key) { return nfts.lower_bound(key); },
+       [](auto& nfts, auto key) { return nfts.upper_bound(key); });
+}
+
+NftConnection Member::collectedNfts(std::optional<eosio::block_timestamp> gt,
+                                    std::optional<eosio::block_timestamp> ge,
+                                    std::optional<eosio::block_timestamp> lt,
+                                    std::optional<eosio::block_timestamp> le,
+                                    std::optional<uint32_t> first,
+                                    std::optional<uint32_t> last,
+                                    std::optional<std::string> before,
+                                    std::optional<std::string> after) const
+{
+   return clchain::make_connection<NftConnection, nft_account_key>(
+       gt ? std::optional{nft_account_key{account, *gt, ~uint64_t(0)}}              //
+          : std::nullopt,                                                           //
+       ge ? std::optional{nft_account_key{account, *ge, 0}}                         //
+          : std::optional{nft_account_key{account, eosio::block_timestamp{0}, 0}},  //
+       lt ? std::optional{nft_account_key{account, *lt, 0}}                         //
+          : std::nullopt,                                                           //
+       le ? std::optional{nft_account_key{account, *le, ~uint64_t(0)}}              //
+          : std::optional{nft_account_key{account, eosio::block_timestamp::max(),   //
+                                                ~uint64_t(0)}},                     //
+       first, last, before, after,                                                  //
+       db.nfts.get<by_owner>(),                                                    //
+       [](auto& obj) { return obj.by_owner(); },                                    //
        [&](auto& obj) { return Nft{&obj}; },
        [](auto& nfts, auto key) { return nfts.lower_bound(key); },
        [](auto& nfts, auto key) { return nfts.upper_bound(key); });
