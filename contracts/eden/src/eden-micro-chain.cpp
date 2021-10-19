@@ -1543,6 +1543,30 @@ void logmint(const action_context& context,
    });
 }
 
+void logtransfer(const action_context& context,
+                 eosio::name collection_name,
+                 eosio::name from,
+                 eosio::name to,
+                 std::vector<uint64_t> asset_ids,
+                 std::string memo)
+{
+   if (collection_name != eden_account)
+      return;
+
+   auto& index = db.nfts.get<by_pk>();
+
+   for (const auto& asset_id : asset_ids) {
+      auto it = index.find(asset_id);
+      if (it == index.end()) {
+         continue;
+      }
+      
+      db.nfts.modify(*it, [&](auto& nft) {
+         nft.owner = to;
+      });
+   }
+}
+
 void lognewauct(const action_context& context,
                 uint64_t auction_id,
                 eosio::name seller,
@@ -1852,6 +1876,8 @@ void filter_block(const subchain::eosio_block& block)
          {
             if (action.name == "logmint"_n)
                call(logmint, context, action.hexData.data);
+            else if (action.name == "logtransfer"_n)
+               call(logtransfer, context, action.hexData.data);
          }
          else if (action.firstReceiver == atomicmarket_account)
          {
