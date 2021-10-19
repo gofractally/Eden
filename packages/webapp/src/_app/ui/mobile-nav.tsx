@@ -2,15 +2,17 @@ import React, { MouseEventHandler } from "react";
 import { useRouter } from "next/router";
 import Link from "next/link";
 
-import { useNavItems } from "_app";
 import { Route } from "_app/routes";
+import { useNavItems } from "_app";
+import { useGlobalStore } from "_app/store";
+import { actionDidTapMobileAppHeaderEvent } from "_app/actions";
 
 import NavProfile from "./nav-profile";
 import { Image } from "./image";
 
-export const MobileNav = () => (
+export const MobileNav = ({ onClick }: { onClick?: () => void }) => (
     <>
-        <TopNav />
+        <TopNav onClick={onClick} />
         <BottomNav />
     </>
 );
@@ -29,9 +31,18 @@ const HeaderLogo = () => (
     </div>
 );
 
-const TopNav = () => {
+const TopNav = ({ onClick }: { onClick?: () => void }) => {
+    const { dispatch } = useGlobalStore();
+
+    const handleHeaderTap = () => {
+        dispatch(actionDidTapMobileAppHeaderEvent());
+    };
+
     return (
-        <header className="xs:hidden fixed z-50 top-0 left-0 right-0 h-14 flex items-center border-b px-4 bg-white">
+        <header
+            onClick={handleHeaderTap}
+            className="xs:hidden fixed z-50 top-0 left-0 right-0 h-14 flex items-center border-b px-4 bg-white"
+        >
             <HeaderLogo />
             <NavProfile location="mobile-nav" />
         </header>

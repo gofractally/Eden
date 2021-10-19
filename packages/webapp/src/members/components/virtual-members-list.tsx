@@ -2,6 +2,7 @@ import React from "react";
 import { useVirtual } from "react-virtual";
 
 import { MemberData } from "members";
+import { ActionType, useReduxEvent } from "_app";
 
 interface Props {
     members: MemberData[];
@@ -9,6 +10,10 @@ interface Props {
     header?: React.ReactNode;
     dataTestId?: string;
     children(member: MemberData): React.ReactNode;
+}
+
+function easeInOutQuint(t: number) {
+    return t < 0.5 ? 16 * t * t * t * t * t : 1 + 16 * --t * t * t * t * t;
 }
 
 export const VirtualMembersList = ({
@@ -19,6 +24,31 @@ export const VirtualMembersList = ({
     children,
 }: Props) => {
     const parentRef = React.useRef<HTMLDivElement>(null);
+    const scrollingRef = React.useRef<number | null>(null);
+
+    const scrollToFn = React.useCallback((offset, defaultScrollTo) => {
+        const duration = 500;
+        if (!parentRef?.current) return null;
+        const start = parentRef.current.scrollTop;
+        const startTime = (scrollingRef.current = Date.now());
+
+        const run = () => {
+            if (scrollingRef.current !== startTime) return;
+            const now = Date.now();
+            const elapsed = now - startTime;
+            const progress = easeInOutQuint(Math.min(elapsed / duration, 1));
+            const interpolated = start + (offset - start) * progress;
+
+            if (elapsed < duration) {
+                defaultScrollTo(interpolated);
+                requestAnimationFrame(run);
+            } else {
+                defaultScrollTo(interpolated);
+            }
+        };
+
+        requestAnimationFrame(run);
+    }, []);
 
     const rowVirtualizer = useVirtual({
         size: members.length,
@@ -26,7 +56,12 @@ export const VirtualMembersList = ({
         estimateSize: React.useCallback(() => 77, []),
         overscan: 10,
         paddingEnd: 40,
+        scrollToFn,
     });
+
+    useReduxEvent(ActionType.EventDidTapMobileAppHeader, () =>
+        rowVirtualizer.scrollToIndex(0)
+    );
 
     return (
         <div

@@ -1,5 +1,6 @@
 import { EncryptionPassword } from "encryption";
 import React, { createContext, useContext, useMemo, useReducer } from "react";
+import { actionClearEvent } from "_app";
 
 import { ActionType } from "./actions";
 
@@ -10,6 +11,10 @@ interface ContextType {
 
 type State = {
     encryptionPassword: EncryptionPassword;
+    event: {
+        type: ActionType | null;
+        payload: any;
+    };
     passwordModal: {
         isOpen: boolean;
         resolver: ((success: boolean) => void) | null;
@@ -25,6 +30,7 @@ type Action = { type: ActionType; payload: any };
 
 const initialState: State = {
     encryptionPassword: {},
+    event: { type: null, payload: null },
     passwordModal: {
         isOpen: false,
         resolver: null,
@@ -42,11 +48,18 @@ const reducer = (state: State, action: Action): State => {
     const { type, payload } = action;
     switch (type) {
         case ActionType.SetEncryptionPassword:
-            return { ...state, encryptionPassword: payload };
+            return {
+                ...state,
+                encryptionPassword: payload,
+            };
         case ActionType.ShowPasswordModal:
             return { ...state, passwordModal: payload };
         case ActionType.ShowUALSoftkeyModal:
             return { ...state, ualSoftkeyModal: payload };
+        case ActionType.EventDidTapMobileAppHeader:
+            return { ...state, event: action };
+        case ActionType.EventClear:
+            return { ...state, event: { type: null, payload: null } };
         default:
             return state;
     }
@@ -70,4 +83,11 @@ export const useGlobalStore = () => {
     const globalStore = useContext(Store.store);
     if (!globalStore) throw new Error("hook should be within store provider");
     return globalStore;
+};
+
+export const useReduxEvent = (type: ActionType, effect: () => void) => {
+    const { dispatch, state } = useGlobalStore();
+    if (state.event.type !== type) return;
+    effect();
+    dispatch(actionClearEvent());
 };
