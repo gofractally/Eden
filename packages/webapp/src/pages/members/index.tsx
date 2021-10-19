@@ -1,7 +1,10 @@
 import React from "react";
-import { GetServerSideProps } from "next";
-import { QueryClient } from "react-query";
-import { dehydrate } from "react-query/hydration";
+import {
+    List,
+    ListRowProps,
+    WindowScroller,
+    WindowScrollerChildProps,
+} from "react-virtualized";
 
 import {
     Container,
@@ -12,57 +15,30 @@ import {
     LoadingContainer,
     Text,
 } from "_app";
-import { MemberChip, MemberData, VirtualMembersList } from "members";
-import { useCommunityWindowInfo } from "members/hooks";
+import { MemberChip, MemberData } from "members";
 
-const NEW_MEMBERS_PAGE_SIZE = 10000;
-
-export const getServerSideProps: GetServerSideProps = async () => {
-    const queryClient = new QueryClient();
-
-    await Promise.all([
-        queryClient.prefetchQuery(queryNewMembers(1, NEW_MEMBERS_PAGE_SIZE)),
-    ]);
-
-    return {
-        props: {
-            dehydratedState: dehydrate(queryClient),
-        },
-    };
-};
+// const NEW_MEMBERS_PAGE_SIZE = 10000;
 
 interface Props {
     membersPage: number;
 }
 
 export const MembersPage = (props: Props) => {
-    const { isSmallScreen } = useCommunityWindowInfo();
-
     // const newMembers = useQuery({
     //     ...queryNewMembers(1, NEW_MEMBERS_PAGE_SIZE),
-    //     keepPreviousData: true,
     // });
 
     return (
-        <SideNavLayout
-            title="Community"
-            className="divide-y flex-1 flex flex-col"
-            hideFooter={isSmallScreen}
-        >
-            {!isSmallScreen && <CommunityHeading />}
+        <SideNavLayout title="Community">
+            <Container className="lg:sticky lg:top-0 lg:z-10 bg-white border-b">
+                <Heading size={1}>Community</Heading>
+            </Container>
             <AllMembers />
         </SideNavLayout>
     );
 };
 
-const CommunityHeading = () => (
-    <Container>
-        <Heading size={1}>Community</Heading>
-    </Container>
-);
-
 const AllMembers = () => {
-    const { isSmallScreen, listHeight } = useCommunityWindowInfo();
     const { data: members, isLoading, isError } = useMembers();
 
     if (isLoading) {
@@ -90,16 +66,33 @@ const AllMembers = () => {
     }
 
     return (
-        <div className="flex-1">
-            <VirtualMembersList
-                members={members as MemberData[]}
-                height={listHeight}
-                header={isSmallScreen && <CommunityHeading />}
-                dataTestId="members-grid"
-            >
-                {(member) => <MemberChip member={member} />}
-            </VirtualMembersList>
-        </div>
+        <WindowScroller>
+            {({
+                height,
+                isScrolling,
+                onChildScroll,
+                scrollTop,
+            }: WindowScrollerChildProps) => (
+                <List
+                    autoHeight
+                    autoWidth
+                    height={height}
+                    isScrolling={isScrolling}
+                    onScroll={onChildScroll}
+                    rowCount={members.length}
+                    rowHeight={77}
+                    rowRenderer={({ index, key, style }: ListRowProps) => (
+                        <MemberChip
+                            member={members[index] as MemberData}
+                            key={key}
+                            style={style}
+                        />
+                    )}
+                    scrollTop={scrollTop}
+                    width={10000}
+                />
+            )}
+        </WindowScroller>
     );
 };
 

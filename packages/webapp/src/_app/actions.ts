@@ -2,8 +2,6 @@ export enum ActionType {
     SetEncryptionPassword = "SET_ENCRYPTION_PASSWORD",
     ShowPasswordModal = "SHOW_PASSWORD_MODAL",
     ShowUALSoftkeyModal = "SHOW_UAL_SOFTKEY_MODAL",
-    EventDidTapMobileAppHeader = "EVENT_DID_TAP_MOBILE_APP_HEADER",
-    EventClear = "EVENT_CLEAR",
 }
 
 export const actionSetEncryptionPassword = (
@@ -42,14 +40,4 @@ export const actionShowUALSoftkeyModal = (
 ) => ({
     type: ActionType.ShowUALSoftkeyModal,
     payload: { isOpen, resolver },
-});
-
-export const actionDidTapMobileAppHeaderEvent = () => ({
-    type: ActionType.EventDidTapMobileAppHeader,
-    payload: null,
-});
-
-export const actionClearEvent = () => ({
-    type: ActionType.EventClear,
-    payload: null,
 });
