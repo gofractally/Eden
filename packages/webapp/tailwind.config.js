@@ -1,5 +1,6 @@
 const colors = require("tailwindcss/colors");
 const defaultTheme = require("tailwindcss/defaultTheme");
+const formReset = require("@tailwindcss/forms");
 
 module.exports = {
     purge: ["./src/**/*.{js,ts,jsx,tsx}"],
@@ -41,5 +42,5 @@ module.exports = {
             backgroundColor: ["active"],
         },
     },
-    plugins: [],
+    plugins: [formReset],
 };
