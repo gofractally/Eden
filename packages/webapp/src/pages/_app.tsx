@@ -24,7 +24,7 @@ import { UalSoftkeyLoginModal } from "_app/eos/ual/softkey";
 import "tailwindcss/tailwind.css";
 import "_app/styles/nprogress.tailwind.css";
 import "_app/styles/add-to-calendar.chq.css";
-import "react-virtualized/styles.css"; // only needs to be imported once
+import "react-virtualized/styles.css";
 
 Router.events.on("routeChangeStart", (url) => {
     console.log(`Loading: ${url}`);
