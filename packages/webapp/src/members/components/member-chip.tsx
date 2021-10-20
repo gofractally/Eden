@@ -11,7 +11,12 @@ import { getValidSocialLink } from "members/helpers/social-links";
 
 import { MemberData } from "../interfaces";
 
-export const MemberChip = ({ member }: { member: MemberData }) => {
+interface MemberChipProps {
+    member: MemberData;
+    [x: string]: any;
+}
+
+export const MemberChip = ({ member, ...containerProps }: MemberChipProps) => {
     const router = useRouter();
 
     const onClick = (e: React.MouseEvent) => {
@@ -31,6 +36,7 @@ export const MemberChip = ({ member }: { member: MemberData }) => {
                 <MemberDetails member={member} onClick={onClick} />
             }
             actionComponent={<MemberChipNFTBadges member={member} />}
+            {...containerProps}
         />
     );
 };

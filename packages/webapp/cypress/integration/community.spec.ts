@@ -8,18 +8,23 @@ describe("Community", () => {
     });
 
     it("should display members", () => {
-        const newMembersGrid = cy.get(`[data-testid="new-members-grid"]`);
-        newMembersGrid.should("exist");
-        const membersGrid = cy.get(`[data-testid="members-grid"]`);
-        membersGrid.should("exist");
-        membersGrid.find("div").should("have.length.greaterThan", 0);
+        const membersList = cy.get(`[data-testid="members-list"]`);
+        membersList.should("exist");
+        membersList
+            .children()
+            .first()
+            .children()
+            .find("div")
+            .should("have.length.greaterThan", 0);
     });
 
     it("should allow to view a member profile", () => {
         cy.wait("@eosGetTableRows");
 
         const firstMember = cy
-            .get(`[data-testid="members-grid"]`)
+            .get(`[data-testid="members-list"]`)
+            .children()
+            .first()
             .children()
             .first();
         firstMember.click();

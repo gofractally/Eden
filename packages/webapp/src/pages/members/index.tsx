@@ -1,118 +1,50 @@
-import { useState } from "react";
-import { GetServerSideProps } from "next";
-import { useRouter } from "next/router";
-import { QueryClient, useQuery } from "react-query";
-import { dehydrate } from "react-query/hydration";
+import React from "react";
+import { useQuery } from "react-query";
+import {
+    List,
+    ListRowProps,
+    WindowScroller,
+    WindowScrollerChildProps,
+} from "react-virtualized";
 
 import {
     Container,
     SideNavLayout,
     Heading,
-    PaginationNav,
     queryNewMembers,
-    usePagedMembers,
+    useMembers,
     LoadingContainer,
     Text,
 } from "_app";
-import { MemberChip, MemberData, MembersGrid } from "members";
+import { MemberChip, MemberData } from "members";
 
-const MEMBERS_PAGE_SIZE = 18;
-const NEW_MEMBERS_PAGE_SIZE = 12;
-
-export const getServerSideProps: GetServerSideProps = async ({ query }) => {
-    const queryClient = new QueryClient();
-
-    const newMembersPage = parseInt((query.newMembersPage as string) || "1");
-
-    await Promise.all([
-        queryClient.prefetchQuery(
-            queryNewMembers(newMembersPage, NEW_MEMBERS_PAGE_SIZE)
-        ),
-    ]);
-
-    return {
-        props: {
-            dehydratedState: dehydrate(queryClient),
-            newMembersPage,
-        },
-    };
-};
+const NEW_MEMBERS_PAGE_SIZE = 10000;
 
 interface Props {
     membersPage: number;
-    newMembersPage: number;
 }
 
-export const MembersPage = (props: Props) => {
-    const router = useRouter();
-    const [newMembersPage, setNewMembersPage] = useState(props.newMembersPage);
-
-    const newMembers = useQuery({
-        ...queryNewMembers(newMembersPage, NEW_MEMBERS_PAGE_SIZE),
-        keepPreviousData: true,
-    });
-
-    const paginateNewMembers = (increment: number) => {
-        setNewMembersPage(newMembersPage + increment);
-        router.push(
-            {
-                query: { newMembersPage: newMembersPage + increment },
-            },
-            undefined,
-            { scroll: false }
-        );
-    };
-
-    return (
-        <SideNavLayout title="Community">
-            <Container>
-                <Heading size={1}>Community</Heading>
-            </Container>
-            <Container>
-                <Heading size={2}>New members</Heading>
-                {newMembers.isLoading && "Loading new members..."}
-                {newMembers.error && "Fail to load new members"}
-            </Container>
-            {newMembers.data && (
-                <>
-                    <div className="border-t border-b">
-                        <MembersGrid
-                            members={newMembers.data}
-                            dataTestId="new-members-grid"
-                        >
-                            {(member) => (
-                                <MemberChip
-                                    key={`new-members-${member.account}`}
-                                    member={member}
-                                />
-                            )}
-                        </MembersGrid>
-                    </div>
-                    <Container>
-                        <PaginationNav
-                            paginate={paginateNewMembers}
-                            hasNext={
-                                newMembers.data.length >= NEW_MEMBERS_PAGE_SIZE
-                            }
-                            hasPrevious={newMembersPage > 1}
-                        />
-                    </Container>
-                </>
-            )}
-            <AllMembers />
-        </SideNavLayout>
-    );
-};
+export const MembersPage = (props: Props) => (
+    <SideNavLayout title="Community">
+        <Container className="lg:sticky lg:top-0 lg:z-10 bg-white border-b">
+            <Heading size={1}>Community</Heading>
+        </Container>
+        <AllMembers />
+    </SideNavLayout>
+);
 
 const AllMembers = () => {
-    const { result, ...pagination } = usePagedMembers(MEMBERS_PAGE_SIZE);
-    const { data: members, isLoading, isError } = result;
+    const newMembers = useQuery({
+        ...queryNewMembers(1, NEW_MEMBERS_PAGE_SIZE),
+    });
 
-    if (isLoading) {
+    const allMembers = useMembers();
+
+    if (newMembers.isLoading || allMembers.isLoading) {
         return <LoadingContainer />;
     }
 
-    if (isError || !members) {
+    if (newMembers.isError || allMembers.isError || !allMembers.data) {
         return (
             <Container className="flex flex-col justify-center items-center py-16 text-center">
                 <Heading size={4}>Error loading member information</Heading>
@@ -121,7 +53,7 @@ const AllMembers = () => {
         );
     }
 
-    if (!(members as MemberData[]).length) {
+    if (!(allMembers.data as MemberData[]).length) {
         return (
             <Container className="flex flex-col justify-center items-center py-16 text-center">
                 <Heading size={4}>No members found</Heading>
@@ -132,33 +64,46 @@ const AllMembers = () => {
         );
     }
 
+    let members = (allMembers.data as MemberData[])
+        .sort((a, b) => b.createdAt - a.createdAt)
+        .map((member: MemberData) => {
+            const newMemberRecord = newMembers.data?.find(
+                (newMember) => newMember.account === member.account
+            );
+            return newMemberRecord ?? member;
+        });
+
     return (
-        <>
-            <Container>
-                <Heading size={2}>All members</Heading>
-            </Container>
-            <div className="border-t border-b">
-                <MembersGrid
-                    members={members as MemberData[]}
-                    dataTestId="members-grid"
-                >
-                    {(member) => (
+        <WindowScroller>
+            {({
+                height,
+                isScrolling,
+                onChildScroll,
+                scrollTop,
+            }: WindowScrollerChildProps) => (
+                <List
+                    autoHeight
+                    autoWidth
+                    height={height}
+                    isScrolling={isScrolling}
+                    onScroll={onChildScroll}
+                    rowCount={members.length}
+                    rowHeight={77}
+                    rowRenderer={({ index, key, style }: ListRowProps) => (
                         <MemberChip
-                            key={`all-members-${member.account}`}
-                            member={member}
+                            member={members[index] as MemberData}
+                            key={key}
+                            style={style}
                         />
                     )}
-                </MembersGrid>
-            </div>
-            <Container>
-                <PaginationNav
-                    hasNext={pagination.hasNextPage}
-                    hasPrevious={pagination.hasPreviousPage}
-                    goToNextPage={pagination.next}
-                    goToPrevPage={pagination.previous}
+                    scrollTop={scrollTop}
+                    width={10000}
+                    containerProps={{
+                        "data-testid": "members-list",
+                    }}
                 />
-            </Container>
-        </>
+            )}
+        </WindowScroller>
     );
 };
 
