@@ -98,6 +98,9 @@ const AllMembers = () => {
                     )}
                     scrollTop={scrollTop}
                     width={10000}
+                    containerProps={{
+                        "data-testid": "members-list",
+                    }}
                 />
             )}
         </WindowScroller>
