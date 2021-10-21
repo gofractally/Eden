@@ -1,4 +1,4 @@
-import React from "react";
+import React, { CSSProperties } from "react";
 import { useQuery } from "react-query";
 import {
     List,
@@ -36,17 +36,16 @@ export const MembersPage = (props: Props) => (
 
 interface CommunityHeaderProps {
     className?: string;
+    style?: CSSProperties;
     children?: React.ReactNode;
 }
 
 const CommunityHeader = ({
     className = "",
+    style,
     children,
 }: CommunityHeaderProps) => (
-    <Container
-        className={`flex items-center justify-between ${className}`}
-        style={{ height: 76, paddingTop: 0, paddingBottom: 0 }}
-    >
+    <Container className={className} style={style}>
         <Heading size={1}>Community</Heading>
         {children}
     </Container>
@@ -74,6 +73,7 @@ const MembersSearch = ({ fields, setFields, className = "" }: SearchProps) => {
                 id="memberSearch"
                 name="memberSearch"
                 type="text"
+                autoComplete="off"
                 value={fields.memberSearch}
                 onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
                     setFields(e)
@@ -107,28 +107,28 @@ const AllMembers = () => {
 
     if (newMembers.isLoading || allMembers.isLoading) {
         return (
-            <>
+            <div className="divide-y">
                 <CommunityHeader />
                 <LoadingContainer />
-            </>
+            </div>
         );
     }
 
     if (newMembers.isError || allMembers.isError || !allMembers.data) {
         return (
-            <>
+            <div className="divide-y">
                 <CommunityHeader />
                 <Container className="flex flex-col justify-center items-center py-16 text-center">
                     <Heading size={4}>Error loading member information</Heading>
                     <Text>Please reload the page to try again.</Text>
                 </Container>
-            </>
+            </div>
         );
     }
 
     if (!(allMembers.data as MemberData[]).length) {
         return (
-            <>
+            <div className="divide-y">
                 <CommunityHeader />
                 <Container className="flex flex-col justify-center items-center py-16 text-center">
                     <Heading size={4}>No members found</Heading>
@@ -137,7 +137,7 @@ const AllMembers = () => {
                         yet.
                     </Text>
                 </Container>
-            </>
+            </div>
         );
     }
 
@@ -162,14 +162,22 @@ const AllMembers = () => {
 
     const XS_BREAKPOINT = 475; // TODO: Move to breakpoints file
     const MOBILE_TOP_NAV_HEIGHT = 56;
+    const COMMUNITY_HEADER_HEIGHT = 76;
 
     return (
         <>
-            <CommunityHeader className="lg:sticky lg:top-0 lg:z-10 bg-white border-b">
+            <CommunityHeader
+                className="lg:sticky lg:top-0 lg:z-10 flex items-center justify-between bg-white border-b"
+                style={{
+                    height: COMMUNITY_HEADER_HEIGHT,
+                    paddingTop: 0,
+                    paddingBottom: 0,
+                }}
+            >
                 <MembersSearch
                     fields={fields}
                     setFields={setFields}
-                    className="hidden lg:flex flex-1 max-w-md border-b"
+                    className="hidden lg:flex flex-1 max-w-md"
                 />
             </CommunityHeader>
             <div
