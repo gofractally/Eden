@@ -6,20 +6,18 @@ import {
     WindowScrollerChildProps,
 } from "react-virtualized";
 
-import { useFormFields, useWindowSize } from "_app";
+import { useFormFields } from "_app";
 import { LoadingContainer, MessageContainer } from "_app/ui";
 import { MemberChip, MemberData, useMembersWithAssets } from "members";
-import * as layoutConstants from "_app/layouts/constants";
 
 import CommunityHeader from "./community-header";
-import { DesktopMembersSearch, MembersSearch } from "./search-control";
+import { CommunityHeadersWithSearch } from "./search-controls";
 
 const findMember = (member: MemberData, query: string) =>
     member.account.includes(query.toLowerCase()) ||
     member.name.toLowerCase().includes(query.toLowerCase());
 
 export const MembersList = () => {
-    const { width: windowWidth } = useWindowSize();
     const { members: allMembers, isLoading, isError } = useMembersWithAssets();
 
     const [fields, setFields] = useFormFields({
@@ -57,36 +55,12 @@ export const MembersList = () => {
 
     return (
         <>
-            <CommunityHeader
-                className="lg:sticky lg:top-0 lg:z-10 flex items-center justify-between bg-white border-b"
-                style={{
-                    height: 76,
-                    paddingTop: 0,
-                    paddingBottom: 0,
-                }}
-            >
-                <DesktopMembersSearch
-                    value={fields.memberSearch}
-                    onChange={search}
-                    onClear={clear}
-                />
-            </CommunityHeader>
-            <div
-                className="lg:hidden sticky z-10 bg-white"
-                style={{
-                    boxShadow: "0 0 0 1px #e5e5e5",
-                    top:
-                        (windowWidth ?? 0) < layoutConstants.breakpoints.xs
-                            ? layoutConstants.navigation.mobileTopNavHeight - 1
-                            : 0,
-                }}
-            >
-                <MembersSearch
-                    value={fields.memberSearch}
-                    onChange={search}
-                    onClear={clear}
-                />
-            </div>
+            <CommunityHeadersWithSearch
+                id="memberSearch"
+                value={fields.memberSearch}
+                onChange={search}
+                onClear={clear}
+            />
             <WindowScroller>
                 {({
                     height,
