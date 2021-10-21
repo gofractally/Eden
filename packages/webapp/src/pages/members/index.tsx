@@ -16,7 +16,6 @@ import {
     LoadingContainer,
     Text,
     useFormFields,
-    SetValuesEvent,
     useWindowSize,
 } from "_app";
 import { MemberChip, MemberData } from "members";
@@ -52,46 +51,41 @@ const CommunityHeader = ({
 );
 
 interface SearchProps {
-    fields: {
-        memberSearch: string;
-    };
-    setFields: SetValuesEvent;
-    className?: string;
+    onClear: () => void;
+    containerClassName?: string;
+    value: string;
+    onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
+    [x: string]: any;
 }
 
-const MembersSearch = ({ fields, setFields, className = "" }: SearchProps) => {
-    const clearSearch = () => {
-        setFields({ target: { id: "memberSearch", value: "" } });
-    };
-
-    return (
-        <div
-            className={`flex items-center pl-2.5 text-gray-300 focus-within:text-gray-400 transition ${className}`}
-        >
-            <MagnifyingGlass size={18} />
-            <input
-                id="memberSearch"
-                name="memberSearch"
-                type="text"
-                autoComplete="off"
-                value={fields.memberSearch}
-                onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-                    setFields(e)
-                }
-                className="flex-1 h-14 focus:ring-0 border-none placeholder-gray-300 text-lg"
-                placeholder="find member"
-            />
-            {fields.memberSearch ? (
-                <div
-                    className="flex items-center p-2.5 text-gray-400"
-                    onClick={clearSearch}
-                >
-                    <CircleX size={18} />
-                </div>
-            ) : null}
-        </div>
-    );
-};
+const MembersSearch = ({
+    onClear,
+    containerClassName = "",
+    ...inputProps
+}: SearchProps) => (
+    <div
+        className={`flex items-center pl-2.5 text-gray-300 focus-within:text-gray-400 transition ${containerClassName}`}
+    >
+        <MagnifyingGlass size={18} />
+        <input
+            id="memberSearch"
+            name="memberSearch"
+            type="text"
+            autoComplete="off"
+            className="flex-1 h-14 focus:ring-0 border-none placeholder-gray-300 text-lg"
+            placeholder="find member"
+            {...inputProps}
+        />
+        {inputProps.value ? (
+            <div
+                className="flex items-center p-2.5 text-gray-400"
+                onClick={onClear}
+            >
+                <CircleX size={18} />
+            </div>
+        ) : null}
+    </div>
+);
 
 const AllMembers = () => {
     const { width: windowWidth } = useWindowSize();
@@ -164,6 +158,10 @@ const AllMembers = () => {
     const MOBILE_TOP_NAV_HEIGHT = 56;
     const COMMUNITY_HEADER_HEIGHT = 76;
 
+    const setSearch = (e: React.ChangeEvent<HTMLInputElement>) => setFields(e);
+    const clearSearch = () =>
+        setFields({ target: { id: "memberSearch", value: "" } });
+
     return (
         <>
             <CommunityHeader
@@ -175,9 +173,10 @@ const AllMembers = () => {
                 }}
             >
                 <MembersSearch
-                    fields={fields}
-                    setFields={setFields}
-                    className="hidden lg:flex flex-1 max-w-md"
+                    containerClassName="hidden lg:flex flex-1 max-w-md"
+                    value={fields.memberSearch}
+                    onChange={setSearch}
+                    onClear={clearSearch}
                 />
             </CommunityHeader>
             <div
@@ -190,7 +189,11 @@ const AllMembers = () => {
                             : 0,
                 }}
             >
-                <MembersSearch fields={fields} setFields={setFields} />
+                <MembersSearch
+                    value={fields.memberSearch}
+                    onChange={setSearch}
+                    onClear={clearSearch}
+                />
             </div>
             <WindowScroller>
                 {({
