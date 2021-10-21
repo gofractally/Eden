@@ -7,10 +7,9 @@ import {
 } from "react-virtualized";
 
 import { useFormFields } from "_app";
-import { LoadingContainer, MessageContainer } from "_app/ui";
+import { LoadingContainer, MessageContainer, PageHeader } from "_app/ui";
 import { MemberChip, MemberData, useMembersWithAssets } from "members";
 
-import CommunityHeader from "./community-header";
 import { CommunityHeadersWithSearch } from "./search-controls";
 
 const findMember = (member: MemberData, query: string) =>
@@ -27,7 +26,7 @@ export const MembersList = () => {
     if (isLoading || isError || !allMembers.length) {
         return (
             <div className="divide-y">
-                <CommunityHeader />
+                <PageHeader header="Community" />
                 {isLoading ? (
                     <LoadingContainer />
                 ) : isError ? (

@@ -11,7 +11,7 @@ export interface SearchProps {
     [x: string]: any;
 }
 
-export const Search = ({ onClear, id, ...inputProps }: SearchProps) => {
+export const SearchControl = ({ onClear, id, ...inputProps }: SearchProps) => {
     const [inputRef, setInputFocus] = useFocus<HTMLInputElement>();
     return (
         <div
@@ -47,4 +47,6 @@ export const Search = ({ onClear, id, ...inputProps }: SearchProps) => {
     );
 };
 
-export default Search;
+export const PageSearchHeaders = () => null;
+
+export default SearchControl;

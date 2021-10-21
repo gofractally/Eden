@@ -2,9 +2,7 @@ import React from "react";
 
 import * as layoutConstants from "_app/layouts/constants";
 import { useWindowSize } from "_app/hooks";
-import { Search, SearchProps } from "_app/ui";
-
-import CommunityHeader from "./community-header";
+import { PageHeader, SearchControl, SearchProps } from "_app/ui";
 
 // TODO: Extrapolate to generic app component when opportunity for reuse arises.
 
@@ -14,7 +12,7 @@ export const CommunityHeadersWithSearch = (props: SearchProps) => (
             className="hidden lg:flex sticky top-0 z-10"
             {...props}
         />
-        <CommunityHeader className="lg:hidden" />
+        <PageHeader header="Community" className="lg:hidden" />
         <InlineStickySearch {...props} className="lg:hidden" />
     </>
 );
@@ -26,7 +24,8 @@ export const CommunityHeaderWithSearch = ({
     value,
     className,
 }: SearchProps) => (
-    <CommunityHeader
+    <PageHeader
+        header="Community"
         className={`flex items-center justify-between w-full border-b bg-white ${className}`}
         style={{
             height: 76,
@@ -36,7 +35,7 @@ export const CommunityHeaderWithSearch = ({
     >
         <div className="h-14 relative flex justify-end flex-1 max-w-md overflow-hidden">
             <div className={`search-expander ${value && "expanded"}`}>
-                <Search
+                <SearchControl
                     id={id}
                     value={value}
                     onChange={onChange}
@@ -58,7 +57,7 @@ export const CommunityHeaderWithSearch = ({
                 }
             `}</style>
         </div>
-    </CommunityHeader>
+    </PageHeader>
 );
 
 export const InlineStickySearch = ({
@@ -80,7 +79,7 @@ export const InlineStickySearch = ({
                         : 0,
             }}
         >
-            <Search
+            <SearchControl
                 id={id}
                 value={value}
                 onChange={onChange}
