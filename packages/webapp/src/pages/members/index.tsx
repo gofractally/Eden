@@ -175,11 +175,11 @@ const AllMembers = () => {
             <div
                 className="lg:hidden sticky z-10 bg-white"
                 style={{
+                    boxShadow: "0 0 0 1px #e5e5e5",
                     top:
                         (windowWidth ?? 0) < XS_BREAKPOINT
                             ? MOBILE_TOP_NAV_HEIGHT - 1
                             : 0,
-                    boxShadow: "0 0 0 1px #e5e5e5",
                 }}
             >
                 <MembersSearch fields={fields} setFields={setFields} />
@@ -199,10 +199,10 @@ const AllMembers = () => {
                         onScroll={onChildScroll}
                         rowCount={members.length}
                         rowHeight={77}
-                        rowRenderer={({ index, key, style }: ListRowProps) => (
+                        rowRenderer={({ index, style }: ListRowProps) => (
                             <MemberChip
                                 member={members[index] as MemberData}
-                                key={key}
+                                key={(members[index] as MemberData).account}
                                 style={style}
                             />
                         )}
