@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef, RefObject } from "react";
 
 // From: https://overreacted.io/making-setinterval-declarative-with-react-hooks
 export const useInterval = (callback: () => void, delay: number | null) => {
@@ -125,4 +125,13 @@ export const useWindowSize = (): Size => {
         return () => window.removeEventListener("resize", handleResize);
     }, []); // Empty array ensures that effect is only run on mount
     return windowSize;
+};
+
+export const useFocus = <T extends HTMLElement>(): [
+    RefObject<T>,
+    ((options?: FocusOptions | undefined) => void) | (() => void)
+] => {
+    const htmlElRef = useRef<T>(null);
+    const setFocus = () => htmlElRef?.current?.focus() ?? {};
+    return [htmlElRef, setFocus];
 };
