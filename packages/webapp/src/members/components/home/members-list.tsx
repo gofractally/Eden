@@ -6,102 +6,84 @@ import {
     WindowScrollerChildProps,
 } from "react-virtualized";
 
-import { useFormFields } from "_app";
-import {
-    LoadingContainer,
-    MessageContainer,
-    PageHeader,
-    PageSearchHeaders,
-} from "_app/ui";
+import { LoadingContainer, MessageContainer } from "_app/ui";
 import { MemberChip, MemberData, useMembersWithAssets } from "members";
 
 const findMember = (member: MemberData, query: string) =>
     member.account.includes(query.toLowerCase()) ||
     member.name.toLowerCase().includes(query.toLowerCase());
 
-export const MembersList = () => {
+interface Props {
+    searchValue: string;
+}
+
+export const MembersList = ({ searchValue }: Props) => {
     const { members: allMembers, isLoading, isError } = useMembersWithAssets();
 
-    const [fields, setFields] = useFormFields({
-        memberSearch: "",
-    });
+    if (isLoading) {
+        return <LoadingContainer />;
+    }
 
-    if (isLoading || isError || !allMembers.length) {
+    if (isError) {
         return (
-            <div className="divide-y">
-                <PageHeader header="Community" />
-                {isLoading ? (
-                    <LoadingContainer />
-                ) : isError ? (
-                    <MessageContainer
-                        title="Error loading member information"
-                        message="Please reload the page to try again."
-                    />
-                ) : (
-                    <MessageContainer
-                        title="No members found"
-                        message="There don't seem to be any members in this community."
-                    />
-                )}
-            </div>
+            <MessageContainer
+                title="Error loading member information"
+                message="Please reload the page to try again."
+            />
+        );
+    }
+
+    if (!allMembers.length) {
+        return (
+            <MessageContainer
+                title="No members found"
+                message="There don't seem to be any members in this community."
+            />
         );
     }
 
     const members = allMembers.filter((member) =>
-        findMember(member, fields.memberSearch)
+        findMember(member, searchValue)
     );
 
-    const search = (e: React.ChangeEvent<HTMLInputElement>) => setFields(e);
-    const clear = () =>
-        setFields({ target: { id: "memberSearch", value: "" } });
-
     return (
-        <>
-            <PageSearchHeaders
-                header="Community"
-                id="memberSearch"
-                value={fields.memberSearch}
-                onChange={search}
-                onClear={clear}
-            />
-            <WindowScroller>
-                {({
-                    height,
-                    isScrolling,
-                    onChildScroll,
-                    scrollTop,
-                }: WindowScrollerChildProps) => (
-                    <List
-                        autoHeight
-                        autoWidth
-                        height={height}
-                        isScrolling={isScrolling}
-                        onScroll={onChildScroll}
-                        rowCount={members.length}
-                        rowHeight={77}
-                        rowRenderer={({ index, style }: ListRowProps) => (
-                            <MemberChip
-                                member={members[index] as MemberData}
-                                key={(members[index] as MemberData).account}
-                                style={style}
-                            />
-                        )}
-                        noRowsRenderer={() => (
-                            <MessageContainer
-                                title="No search results"
-                                message="No members were found with matching names or accounts. Try modifying your search."
-                            />
-                        )}
-                        scrollTop={scrollTop}
-                        width={10000}
-                        className="outline-none"
-                        containerProps={{
-                            "data-testid": "members-list",
-                        }}
-                    />
-                )}
-            </WindowScroller>
-        </>
+        <WindowScroller>
+            {({
+                height,
+                isScrolling,
+                onChildScroll,
+                scrollTop,
+            }: WindowScrollerChildProps) => (
+                <List
+                    autoHeight
+                    autoWidth
+                    height={height}
+                    isScrolling={isScrolling}
+                    onScroll={onChildScroll}
+                    rowCount={members.length}
+                    rowHeight={77}
+                    rowRenderer={({ index, style }: ListRowProps) => (
+                        <MemberChip
+                            member={members[index] as MemberData}
+                            key={(members[index] as MemberData).account}
+                            style={style}
+                        />
+                    )}
+                    noRowsRenderer={() => (
+                        <MessageContainer
+                            title="No search results"
+                            message="No members were found with matching names or accounts. Try modifying your search."
+                        />
+                    )}
+                    scrollTop={scrollTop}
+                    width={10000}
+                    className="outline-none"
+                    containerProps={{
+                        "data-testid": "members-list",
+                    }}
+                />
+            )}
+        </WindowScroller>
     );
 };
 
