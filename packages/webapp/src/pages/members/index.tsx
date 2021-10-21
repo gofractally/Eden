@@ -247,6 +247,7 @@ const AllMembers = () => {
                         )}
                         scrollTop={scrollTop}
                         width={10000}
+                        className="outline-none"
                         containerProps={{
                             "data-testid": "members-list",
                         }}
