@@ -27,4 +27,4 @@ export * from "./image";
 export * from "./video-form";
 export * from "./message-container";
 export * from "./search";
-export * from "./page-header";
+export * from "./page-headers";

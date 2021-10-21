@@ -7,10 +7,13 @@ import {
 } from "react-virtualized";
 
 import { useFormFields } from "_app";
-import { LoadingContainer, MessageContainer, PageHeader } from "_app/ui";
+import {
+    LoadingContainer,
+    MessageContainer,
+    PageHeader,
+    PageSearchHeaders,
+} from "_app/ui";
 import { MemberChip, MemberData, useMembersWithAssets } from "members";
-
-import { CommunityHeadersWithSearch } from "./search-controls";
 
 const findMember = (member: MemberData, query: string) =>
     member.account.includes(query.toLowerCase()) ||
@@ -54,7 +57,8 @@ export const MembersList = () => {
 
     return (
         <>
-            <CommunityHeadersWithSearch
+            <PageSearchHeaders
+                header="Community"
                 id="memberSearch"
                 value={fields.memberSearch}
                 onChange={search}

@@ -1,31 +1,59 @@
-import React from "react";
+import React, { CSSProperties } from "react";
+import { Container, Heading, SearchControl, SearchProps } from "_app/ui";
+import { useWindowSize } from "_app/hooks";
 
 import * as layoutConstants from "_app/layouts/constants";
-import { useWindowSize } from "_app/hooks";
-import { PageHeader, SearchControl, SearchProps } from "_app/ui";
 
-// TODO: Extrapolate to generic app component when opportunity for reuse arises.
+interface Props {
+    header: string;
+    className?: string;
+    style?: CSSProperties;
+    children?: React.ReactNode;
+}
 
-export const CommunityHeadersWithSearch = (props: SearchProps) => (
+export const PageHeader = ({
+    header,
+    className = "",
+    style,
+    children,
+}: Props) => (
+    <Container className={className} style={style}>
+        <Heading size={1}>{header}</Heading>
+        {children}
+    </Container>
+);
+
+export default PageHeader;
+
+interface PageSearchHeaderProps extends SearchProps {
+    header: string;
+}
+
+export const PageSearchHeaders = ({
+    header,
+    ...props
+}: PageSearchHeaderProps) => (
     <>
-        <CommunityHeaderWithSearch
+        <PageHeaderWithSearch
+            header={header}
             className="hidden lg:flex sticky top-0 z-10"
             {...props}
         />
-        <PageHeader header="Community" className="lg:hidden" />
+        <PageHeader header={header} className="lg:hidden" />
         <InlineStickySearch {...props} className="lg:hidden" />
     </>
 );
 
-export const CommunityHeaderWithSearch = ({
+const PageHeaderWithSearch = ({
+    header,
     id,
     onClear,
     onChange,
     value,
     className,
-}: SearchProps) => (
+}: PageSearchHeaderProps) => (
     <PageHeader
-        header="Community"
+        header={header}
         className={`flex items-center justify-between w-full border-b bg-white ${className}`}
         style={{
             height: 76,
@@ -60,7 +88,7 @@ export const CommunityHeaderWithSearch = ({
     </PageHeader>
 );
 
-export const InlineStickySearch = ({
+const InlineStickySearch = ({
     id,
     onClear,
     onChange,

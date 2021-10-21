@@ -47,6 +47,4 @@ export const SearchControl = ({ onClear, id, ...inputProps }: SearchProps) => {
     );
 };
 
-export const PageSearchHeaders = () => null;
-
 export default SearchControl;
