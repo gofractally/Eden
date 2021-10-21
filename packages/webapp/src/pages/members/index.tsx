@@ -21,6 +21,7 @@ import {
 } from "_app";
 import { MemberChip, MemberData } from "members";
 import { CircleX, MagnifyingGlass } from "_app/ui/icons";
+import * as layoutConstants from "_app/layouts/constants";
 
 const NEW_MEMBERS_PAGE_SIZE = 10000;
 
@@ -183,10 +184,6 @@ const AllMembers = () => {
         .sort(sortMembers)
         .map(mergeAuctionData);
 
-    const XS_BREAKPOINT = 475; // TODO: Move to breakpoints file
-    const MOBILE_TOP_NAV_HEIGHT = 56;
-    const COMMUNITY_HEADER_HEIGHT = 76;
-
     const setSearch = (e: React.ChangeEvent<HTMLInputElement>) => setFields(e);
     const clearSearch = () =>
         setFields({ target: { id: "memberSearch", value: "" } });
@@ -196,7 +193,7 @@ const AllMembers = () => {
             <CommunityHeader
                 className="lg:sticky lg:top-0 lg:z-10 flex items-center justify-between bg-white border-b"
                 style={{
-                    height: COMMUNITY_HEADER_HEIGHT,
+                    height: 76,
                     paddingTop: 0,
                     paddingBottom: 0,
                 }}
@@ -212,8 +209,8 @@ const AllMembers = () => {
                 style={{
                     boxShadow: "0 0 0 1px #e5e5e5",
                     top:
-                        (windowWidth ?? 0) < XS_BREAKPOINT
-                            ? MOBILE_TOP_NAV_HEIGHT - 1
+                        (windowWidth ?? 0) < layoutConstants.breakpoints.xs
+                            ? layoutConstants.navigation.mobileTopNavHeight - 1
                             : 0,
                 }}
             >
