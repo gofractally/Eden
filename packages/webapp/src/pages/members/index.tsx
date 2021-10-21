@@ -99,12 +99,8 @@ const AllMembers = () => {
                 className="xs:hidden sticky z-10 bg-white"
                 style={{ top: 53, boxShadow: "0 0 0 1px #e5e5e5" }}
             >
-                <MagnifyingGlass
-                    size={18}
-                    className="text-gray-300 absolute left-3"
-                    style={{ top: 19 }}
-                />
-                <div className="flex items-center">
+                <div className="flex items-center pl-2.5 text-gray-300 focus-within:text-gray-400 transition">
+                    <MagnifyingGlass size={18} />
                     <input
                         id="memberSearch"
                         name="memberSearch"
@@ -113,15 +109,15 @@ const AllMembers = () => {
                         onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
                             setFields(e)
                         }
-                        className="flex-1 h-14 w-full border-none focus:ring-0 placeholder-gray-300 text-lg pl-9"
+                        className="flex-1 h-14 focus:ring-0 border-none placeholder-gray-300 text-lg"
                         placeholder="find member"
                     />
                     {fields.memberSearch ? (
                         <div
-                            className="flex justify-center items-center h-10 px-2.5"
+                            className="flex items-center p-2.5 text-gray-400"
                             onClick={clearSearch}
                         >
-                            <CircleX size={18} className="text-gray-400" />
+                            <CircleX size={18} />
                         </div>
                     ) : null}
                 </div>
