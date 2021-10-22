@@ -62,7 +62,11 @@ const PageHeaderWithSearch = ({
         }}
     >
         <div className="h-14 relative flex justify-end flex-1 max-w-md overflow-hidden">
-            <div className={`search-expander ${value && "expanded"}`}>
+            <div
+                className={`absolute overflow-hidden w-8 focus-within:w-full ${
+                    value && "w-full"
+                } transition-all`}
+            >
                 <SearchControl
                     id={id}
                     value={value}
@@ -70,20 +74,6 @@ const PageHeaderWithSearch = ({
                     onClear={onClear}
                 />
             </div>
-            <style jsx>{`
-                .search-expander {
-                    position: absolute;
-                    transition: width 0.3s ease;
-                    width: 32px;
-                    overflow: hidden;
-                }
-                .search-expander:focus-within {
-                    width: 100%;
-                }
-                .search-expander.expanded {
-                    width: 100%;
-                }
-            `}</style>
         </div>
     </PageHeader>
 );

@@ -40,6 +40,7 @@ module.exports = {
         extend: {
             margin: ["last"],
             backgroundColor: ["active"],
+            width: ["focus-within"],
         },
     },
     plugins: [formReset],
