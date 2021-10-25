@@ -60,9 +60,8 @@ add_test_eden("test-eden" "")
 add_test_eden("test-eden" "-debug")
 eden_tester_test(test-eden)
 
-add_test_eden("setup-genesis" "")
-# add_test_eden("setup-genesis" "-debug")
-eden_tester_test(setup-genesis)
+add_test_eden("run-genesis" "")
+eden_tester_test(run-genesis)
 
 file(CREATE_LINK ${CMAKE_CURRENT_SOURCE_DIR}/tests/data ${ROOT_BINARY_DIR}/eden-test-data SYMBOLIC)
 

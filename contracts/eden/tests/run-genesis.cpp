@@ -1,4 +1,3 @@
-
 #define CATCH_CONFIG_MAIN
 
 #include <tester_base.hpp>
@@ -19,4 +18,12 @@ TEST_CASE("Setup Eden chain with completed genesis")
    eosio::execute("rm -rf " + setup_state_path);
    eosio::execute("mkdir -p " + setup_state_path + "/blocks");
    eosio::execute("cp " + chain_path + "/blocks/blocks.log " + setup_state_path + "/blocks");
+
+   // run nodeos
+   eosio::execute("nodeos -d " + setup_state_path +
+                  " "                                     //
+                  "--config-dir config "                  //
+                  "--plugin eosio::chain_api_plugin "     //
+                  "--plugin eosio::producer_api_plugin "  //
+                  "-e -p eosio");
 }

@@ -141,22 +141,13 @@ jobs:
                       build/eden.wasm
                       build/eden-micro-chain.wasm
 
-            - name: 🧪 Setup Ephemeral Chains Data
-              if: steps.filter.outputs.src == 'true'
-              run: |
-                  cd build
-
-                  # Genesis: basic eden chain with complete genesis
-                  cltester setup-genesis.wasm
-                  tar czf chain-genesis
-
             - name: 📃 Upload Ephemeral Chains Data
               if: steps.filter.outputs.src == 'true'
               uses: actions/upload-artifact@v2
               with:
-                  name: Ephemeral Eden Chains
+                  name: Ephemeral Eden Chains Runners
                   path: |
-                      build/chain-genesis.tar.gz
+                      build/run-genesis.wasm
 
     build-micro-chain:
         name: Build Micro Chain
