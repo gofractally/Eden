@@ -42,22 +42,27 @@ add_custom_command(TARGET eden-abigen POST_BUILD
     COMMAND ${ROOT_BINARY_DIR}/cltester eden-abigen.wasm >${ROOT_BINARY_DIR}/eden.abi
 )
 
-function(add_test_eden suffix)
-    add_executable(test-eden${suffix} tests/test-eden.cpp src/globals.cpp src/accounts.cpp src/members.cpp src/atomicassets.cpp src/elections.cpp)
-    target_include_directories(test-eden${suffix} PUBLIC include)
-    target_include_directories(test-eden${suffix} PUBLIC
+function(add_test_eden test_file suffix)
+    add_executable(${test_file}${suffix} tests/${test_file}.cpp src/globals.cpp src/accounts.cpp src/members.cpp src/atomicassets.cpp src/elections.cpp)
+    target_include_directories(${test_file}${suffix} PUBLIC include)
+    target_include_directories(${test_file}${suffix} PUBLIC
         ../token/include
         ../boot/include
         ../../external/atomicassets-contract/include
         ../../libraries/clchain/include
+        ./tests/include
     )
-    target_link_libraries(test-eden${suffix} catch2 cltestlib${suffix})
-    set_target_properties(test-eden${suffix} PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${ROOT_BINARY_DIR})
+    target_link_libraries(${test_file}${suffix} catch2 cltestlib${suffix})
+    set_target_properties(${test_file}${suffix} PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${ROOT_BINARY_DIR})
 endfunction()
 
-add_test_eden("")
-add_test_eden("-debug")
+add_test_eden("test-eden" "")
+add_test_eden("test-eden" "-debug")
 eden_tester_test(test-eden)
+
+add_test_eden("setup-genesis" "")
+# add_test_eden("setup-genesis" "-debug")
+eden_tester_test(setup-genesis)
 
 file(CREATE_LINK ${CMAKE_CURRENT_SOURCE_DIR}/tests/data ${ROOT_BINARY_DIR}/eden-test-data SYMBOLIC)
 
