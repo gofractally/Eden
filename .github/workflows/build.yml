@@ -141,7 +141,7 @@ jobs:
                       build/eden.wasm
                       build/eden-micro-chain.wasm
 
-            - name: 📃 Upload Ephemeral Chains Data
+            - name: 📃 Upload Ephemeral Eden Chains Runners
               if: steps.filter.outputs.src == 'true'
               uses: actions/upload-artifact@v2
               with:
