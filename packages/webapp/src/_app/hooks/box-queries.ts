@@ -2,60 +2,7 @@ import { QueryResult, useQuery } from "@edenos/common/dist/subchain";
 import dayjs from "dayjs";
 
 import { assetFromString } from "_app";
-import { MemberAccountData } from "members";
-
-interface MemberQueryEdge {
-    node: {
-        account: string;
-        createdAt: string;
-        profile: {
-            name: string;
-            img: string;
-            social: string;
-        };
-    };
-}
-
-interface MembersQuery {
-    members: {
-        edges: MemberQueryEdge[];
-    };
-}
-
-export const useMembers = () => {
-    const result = useQuery<MembersQuery>(`{
-        members {
-            edges {
-                node {
-                    account
-                    createdAt
-                    profile {
-                        name
-                        img
-                        social
-                    }
-                }
-            }
-        }
-    }`);
-
-    let formattedMembers: MemberAccountData[] = [];
-
-    if (result.data) {
-        const memberNodes = result.data.members.edges;
-        if (memberNodes) {
-            formattedMembers = memberNodes
-                .map((member: MemberQueryEdge) =>
-                    formatQueriedMemberAccountData(member.node)
-                )
-                .filter((member): member is MemberAccountData =>
-                    Boolean(member)
-                );
-        }
-    }
-
-    return { ...result, data: formattedMembers };
-};
+import { formatQueriedMemberAccountData, MemberAccountData } from "members";
 
 export interface ElectionStatusQuery {
     status: {
@@ -304,21 +251,6 @@ const mapQueriedGroupVotes = (votes: any) => {
         })) || []
     );
 };
-
-const formatQueriedMemberAccountData = (
-    memberAccountData: any
-): MemberAccountData | undefined =>
-    memberAccountData
-        ? {
-              account: memberAccountData.account,
-              name: memberAccountData.profile.name,
-              image: memberAccountData.profile.img,
-              socialHandles: JSON.parse(memberAccountData.profile.social),
-              createdAt: memberAccountData.createdAt
-                  ? new Date(memberAccountData.createdAt).getTime()
-                  : 0,
-          }
-        : undefined;
 
 export interface ScheduledDistributionTargetAmountQuery {
     distributions: {
