@@ -1,6 +1,8 @@
+#define CATCH_CONFIG_MAIN
+
 #include <nodeos-runner.hpp>
 
-int main(int argc, char* argv[])
+TEST_CASE("Setup Eden chain with basic completed genesis")
 {
    nodeos_runner r("chain-genesis");
 

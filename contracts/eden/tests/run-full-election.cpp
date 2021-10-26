@@ -1,6 +1,8 @@
+#define CATCH_CONFIG_MAIN
+
 #include <nodeos-runner.hpp>
 
-int main(int argc, char* argv[])
+TEST_CASE("Setup Eden chain with full election")
 {
    nodeos_runner r("chain-full-election");
 
@@ -8,8 +10,6 @@ int main(int argc, char* argv[])
    r.tester.run_election(true, 10000, true);
    r.tester.induct_n(100);
    r.tester.run_election(true, 10000, true);
-   r.tester.skip_to("2021-02-01T15:30:00.000");
-   r.tester.alice.act<actions::distribute>(250);
 
    r.start_nodeos();
 }
