@@ -1279,6 +1279,8 @@ void inductdonate(const action_context& context,
       obj.member.profile = induction.induction.profile;
       obj.member.inductionVideo = induction.induction.video;
       obj.member.createdAt = eosio::block_timestamp(context.block.timestamp);
+      if (obj.member.inductionVideo.empty())
+         obj.member.inductionVideo = get_status().status.genesisVideo;
    });
    transfer_funds(context.block.timestamp, payer, master_pool, quantity,
                   history_desc::inductdonate);
