@@ -147,7 +147,18 @@ jobs:
               with:
                   name: Ephemeral Eden Chains Runners
                   path: |
+                      build/atomicassets.abi
+                      build/atomicassets.wasm
+                      build/atomimarket.abi
+                      build/atomimarket.wasm
+                      build/bios.wasm
+                      build/boot.wasm
+                      build/eden.abi
+                      build/eden.wasm
+                      build/token.abi
+                      build/token.wasm
                       build/run-genesis.wasm
+                      build/run-full-election.wasm
 
     build-micro-chain:
         name: Build Micro Chain

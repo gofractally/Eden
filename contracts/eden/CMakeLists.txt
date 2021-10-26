@@ -63,6 +63,9 @@ eden_tester_test(test-eden)
 add_test_eden("run-genesis" "")
 eden_tester_test(run-genesis)
 
+add_test_eden("run-full-election" "")
+eden_tester_test(run-full-election)
+
 file(CREATE_LINK ${CMAKE_CURRENT_SOURCE_DIR}/tests/data ${ROOT_BINARY_DIR}/eden-test-data SYMBOLIC)
 
 function(add_eden_microchain suffix)
