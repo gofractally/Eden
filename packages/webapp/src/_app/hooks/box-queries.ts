@@ -1,10 +1,4 @@
-import {
-    QueryResult,
-    PagedQueryResult,
-    PagedQuery,
-    usePagedQuery,
-    useQuery,
-} from "@edenos/common/dist/subchain";
+import { QueryResult, useQuery } from "@edenos/common/dist/subchain";
 import dayjs from "dayjs";
 
 import { assetFromString } from "_app";
@@ -61,63 +55,6 @@ export const useMembers = () => {
     }
 
     return { ...result, data: formattedMembers };
-};
-
-interface PagedMembersQuery {
-    members: PagedQuery<MemberQueryEdge>;
-}
-
-export const usePagedMembers = (
-    pageSize: number = 20
-): PagedQueryResult<MemberAccountData[]> => {
-    const query = `{
-    members(@page@) {
-        pageInfo {
-            hasPreviousPage
-            hasNextPage
-            startCursor
-            endCursor
-        }
-        edges {
-            node {
-                account
-                createdAt
-                profile {
-                    name
-                    img
-                    social
-                }
-            }
-        }
-    }
-}
-    `;
-
-    const pagedResult = usePagedQuery<PagedMembersQuery>(
-        query,
-        pageSize,
-        (result) => result.data?.members.pageInfo
-    );
-
-    let formattedMembers: MemberAccountData[] = [];
-
-    if (pagedResult.result.data) {
-        const memberNodes = pagedResult.result.data.members.edges;
-        if (memberNodes) {
-            formattedMembers = memberNodes
-                .map((member: MemberQueryEdge) =>
-                    formatQueriedMemberAccountData(member.node)
-                )
-                .filter((member): member is MemberAccountData =>
-                    Boolean(member)
-                );
-        }
-    }
-
-    return {
-        ...pagedResult,
-        result: { ...pagedResult.result, data: formattedMembers },
-    };
 };
 
 export interface ElectionStatusQuery {
