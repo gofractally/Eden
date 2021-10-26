@@ -1,4 +1,4 @@
-import { GenIcon, IconBase, IconBaseProps } from "react-icons/lib";
+import { IconBase, IconBaseProps } from "react-icons/lib";
 
 export const EosCommunityIcon = (props: IconBaseProps) => (
     <IconBase viewBox="0 0 32.2 48" {...props}>
