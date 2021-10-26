@@ -149,8 +149,8 @@ jobs:
                   path: |
                       build/atomicassets.abi
                       build/atomicassets.wasm
-                      build/atomimarket.abi
-                      build/atomimarket.wasm
+                      build/atomicmarket.abi
+                      build/atomicmarket.wasm
                       build/bios.wasm
                       build/boot.wasm
                       build/eden.abi
