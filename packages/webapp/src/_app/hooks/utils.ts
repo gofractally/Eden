@@ -50,16 +50,18 @@ interface Countdown {
     startTime?: Date;
     endTime: Date;
     onEnd?: () => void;
+    interval?: number;
 }
 
 export const useCountdown = ({
     startTime = new Date(),
     endTime,
     onEnd,
+    interval = 500,
 }: Countdown) => {
     const [percentDecimal, setPercent] = useState<number>(0);
 
-    const intervalDelay = percentDecimal > 1 ? null : 500;
+    const intervalDelay = percentDecimal > 1 ? null : interval;
     useInterval(() => {
         const elapsedTimeMs = now().getTime() - startTime.getTime();
         const durationMs = endTime.getTime() - startTime.getTime();
@@ -69,7 +71,8 @@ export const useCountdown = ({
     }, intervalDelay);
 
     const msRemaining = Math.max(endTime.getTime() - now().getTime(), 0);
-    const hrRemaining = Math.floor(msRemaining / 1000 / 60 / 60);
+    const daysRemaining = Math.floor(msRemaining / 1000 / 60 / 60 / 24);
+    const hrRemaining = Math.floor(msRemaining / 1000 / 60 / 60) % 24;
     const minRemaining = Math.floor(msRemaining / 1000 / 60) % 60;
     const secRemaining = Math.floor(msRemaining / 1000) % 60;
 
@@ -78,10 +81,14 @@ export const useCountdown = ({
         secRemaining,
         minRemaining,
         hrRemaining,
+        daysRemaining,
         percentDecimal,
         hmmss: `${Boolean(hrRemaining) ? hrRemaining + ":" : ""}${padTime(
             minRemaining
         )}:${padTime(secRemaining)}`,
+        "d-h-m": `${Boolean(daysRemaining) ? daysRemaining + "d" : ""} ${
+            Boolean(hrRemaining) ? hrRemaining + "h" : ""
+        } ${Boolean(minRemaining) ? minRemaining + "m" : ""}`.trim(),
     };
 };
 
