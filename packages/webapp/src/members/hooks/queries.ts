@@ -49,17 +49,19 @@ interface MembersQuery {
 }
 
 interface MembersQueryEdge {
-    node: MemberQueryNode;
+    node: MembersQueryNode;
 }
 
-interface MemberQueryNode {
+interface MembersQueryNode {
     account: string;
     createdAt: string;
     profile: {
         name: string;
         img: string;
         social: string;
+        bio: string;
     };
+    inductionVideo: string;
 }
 
 export const useMembers = () => {
@@ -73,7 +75,9 @@ export const useMembers = () => {
                         name
                         img
                         social
+                        bio
                     }
+                    inductionVideo
                 }
             }
         }
@@ -82,9 +86,9 @@ export const useMembers = () => {
     let formattedMembers: MemberAccountData[] = [];
 
     if (result.data) {
-        const memberNodes = result.data.members.edges;
-        if (memberNodes) {
-            formattedMembers = memberNodes
+        const memberEdges = result.data.members.edges;
+        if (memberEdges) {
+            formattedMembers = memberEdges
                 .map((member: MembersQueryEdge) =>
                     formatQueriedMemberAccountData(member.node)
                 )
@@ -97,9 +101,35 @@ export const useMembers = () => {
     return { ...result, data: formattedMembers };
 };
 
+export const useMemberByAccountName = (account: string) => {
+    const result = useBoxQuery<MembersQuery>(`{
+        members(ge: "${account}", le: "${account}") {
+            edges {
+                node {
+                    account
+                    createdAt
+                    profile {
+                        name
+                        img
+                        social
+                        bio
+                    }
+                    inductionVideo
+                }
+            }
+        }
+    }`);
+
+    if (!result.data) return { ...result, data: null };
+
+    const memberNode = result.data.members.edges[0]?.node;
+    const member = formatQueriedMemberAccountData(memberNode) ?? null;
+    return { ...result, data: member };
+};
+
 // TODO: Should we break this out into a separate formatters file?
 export const formatQueriedMemberAccountData = (
-    memberAccountData: MemberQueryNode
+    memberAccountData: MembersQueryNode
 ): MemberAccountData | undefined => {
     if (!memberAccountData) return;
     return {
@@ -107,6 +137,8 @@ export const formatQueriedMemberAccountData = (
         name: memberAccountData.profile.name,
         image: memberAccountData.profile.img,
         socialHandles: JSON.parse(memberAccountData.profile.social),
+        bio: memberAccountData.profile.bio,
+        inductionVideo: memberAccountData.inductionVideo,
         createdAt: memberAccountData.createdAt
             ? new Date(memberAccountData.createdAt).getTime()
             : 0,
