@@ -2,8 +2,8 @@ import React, { MouseEventHandler } from "react";
 import { useRouter } from "next/router";
 import Link from "next/link";
 
-import { useNavItems } from "_app";
 import { Route } from "_app/routes";
+import { useNavItems } from "_app";
 
 import NavProfile from "./nav-profile";
 import { Image } from "./image";
@@ -29,14 +29,12 @@ const HeaderLogo = () => (
     </div>
 );
 
-const TopNav = () => {
-    return (
-        <header className="xs:hidden fixed z-50 top-0 left-0 right-0 h-14 flex items-center border-b px-4 bg-white">
-            <HeaderLogo />
-            <NavProfile location="mobile-nav" />
-        </header>
-    );
-};
+const TopNav = () => (
+    <header className="xs:hidden fixed z-50 top-0 left-0 right-0 h-14 flex items-center border-b px-4 bg-white">
+        <HeaderLogo />
+        <NavProfile location="mobile-nav" />
+    </header>
+);
 
 const BottomNav = () => {
     const navMenuItems = useNavItems().slice(0, 5);

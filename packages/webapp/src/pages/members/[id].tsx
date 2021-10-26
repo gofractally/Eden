@@ -8,7 +8,6 @@ import {
     SideNavLayout,
     LoadingCard,
     queryMemberData,
-    SingleColLayout,
 } from "_app";
 import { ROUTES } from "_app/routes";
 
@@ -65,21 +64,21 @@ export const MemberPage = ({ account }: Props) => {
 
     if (isLoading) {
         return (
-            <SingleColLayout title="Loading member details...">
+            <SideNavLayout title="Loading member details...">
                 <LoadingCard />
-            </SingleColLayout>
+            </SideNavLayout>
         );
     }
 
     return (
-        <SingleColLayout title="Member not found">
+        <SideNavLayout title="Member not found">
             <CallToAction
                 href={ROUTES.MEMBERS.href}
                 buttonLabel="Browse members"
             >
                 This account is not an active Eden member.
             </CallToAction>
-        </SingleColLayout>
+        </SideNavLayout>
     );
 };
 

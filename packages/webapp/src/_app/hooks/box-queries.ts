@@ -1,7 +1,124 @@
-import { Query, useQuery } from "@edenos/common/dist/subchain";
+import {
+    QueryResult,
+    PagedQueryResult,
+    PagedQuery,
+    usePagedQuery,
+    useQuery,
+} from "@edenos/common/dist/subchain";
 import dayjs from "dayjs";
-import { MemberAccountData } from "members";
+
 import { assetFromString } from "_app";
+import { MemberAccountData } from "members";
+
+interface MemberQueryEdge {
+    node: {
+        account: string;
+        createdAt: string;
+        profile: {
+            name: string;
+            img: string;
+            social: string;
+        };
+    };
+}
+
+interface MembersQuery {
+    members: {
+        edges: MemberQueryEdge[];
+    };
+}
+
+export const useMembers = () => {
+    const result = useQuery<MembersQuery>(`{
+        members {
+            edges {
+                node {
+                    account
+                    createdAt
+                    profile {
+                        name
+                        img
+                        social
+                    }
+                }
+            }
+        }
+    }`);
+
+    let formattedMembers: MemberAccountData[] = [];
+
+    if (result.data) {
+        const memberNodes = result.data.members.edges;
+        if (memberNodes) {
+            formattedMembers = memberNodes
+                .map((member: MemberQueryEdge) =>
+                    formatQueriedMemberAccountData(member.node)
+                )
+                .filter((member): member is MemberAccountData =>
+                    Boolean(member)
+                );
+        }
+    }
+
+    return { ...result, data: formattedMembers };
+};
+
+interface PagedMembersQuery {
+    members: PagedQuery<MemberQueryEdge>;
+}
+
+export const usePagedMembers = (
+    pageSize: number = 20
+): PagedQueryResult<MemberAccountData[]> => {
+    const query = `{
+    members(@page@) {
+        pageInfo {
+            hasPreviousPage
+            hasNextPage
+            startCursor
+            endCursor
+        }
+        edges {
+            node {
+                account
+                createdAt
+                profile {
+                    name
+                    img
+                    social
+                }
+            }
+        }
+    }
+}
+    `;
+
+    const pagedResult = usePagedQuery<PagedMembersQuery>(
+        query,
+        pageSize,
+        (result) => result.data?.members.pageInfo
+    );
+
+    let formattedMembers: MemberAccountData[] = [];
+
+    if (pagedResult.result.data) {
+        const memberNodes = pagedResult.result.data.members.edges;
+        if (memberNodes) {
+            formattedMembers = memberNodes
+                .map((member: MemberQueryEdge) =>
+                    formatQueriedMemberAccountData(member.node)
+                )
+                .filter((member): member is MemberAccountData =>
+                    Boolean(member)
+                );
+        }
+    }
+
+    return {
+        ...pagedResult,
+        result: { ...pagedResult.result, data: formattedMembers },
+    };
+};
 
 export interface ElectionStatusQuery {
     status: {
@@ -45,7 +162,7 @@ export interface CurrentMemberElectionVotingDataQuery {
 
 export const useCurrentMemberElectionVotingData = (
     account?: string
-): Query<CurrentMemberElectionVotingDataQuery> => {
+): QueryResult<CurrentMemberElectionVotingDataQuery> => {
     const query = useQuery<any>(
         account
             ? `
@@ -209,7 +326,7 @@ const currentElectionGlobalDataQuery = `
 }
 `;
 
-export const useCurrentGlobalElectionData = (): Query<ElectionGlobalQueryData> => {
+export const useCurrentGlobalElectionData = (): QueryResult<ElectionGlobalQueryData> => {
     const query = useQuery<any>(currentElectionGlobalDataQuery);
 
     if (query.data) {
@@ -260,6 +377,9 @@ const formatQueriedMemberAccountData = (
               name: memberAccountData.profile.name,
               image: memberAccountData.profile.img,
               socialHandles: JSON.parse(memberAccountData.profile.social),
+              createdAt: memberAccountData.createdAt
+                  ? new Date(memberAccountData.createdAt).getTime()
+                  : 0,
           }
         : undefined;
 

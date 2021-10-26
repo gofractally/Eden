@@ -250,7 +250,7 @@ jobs:
             - name: 🛠 Build and Start Box
               if: steps.filter.outputs.src == 'true'
               run: |
-                  export SUBCHAIN_DFUSE_PREVENT_CONNECT=1
+                  export DFUSE_PREVENT_CONNECT=1
                   yarn
                   yarn build --stream
                   cd packages/box
@@ -376,7 +376,8 @@ jobs:
             - name: 🛠 Build and Start WebApp
               if: steps.filter.outputs.src == 'true'
               run: |
-                  export SUBCHAIN_DFUSE_PREVENT_CONNECT=1
+                  export DFUSE_PREVENT_CONNECT=1
+                  export NODE_ENV=test
                   yarn
                   yarn build --stream --ignore @edenos/example-history-app
                   yarn start --stream --ignore @edenos/example-history-app &
@@ -463,3 +464,4 @@ jobs:
                   file: docker/eden-webapp.Dockerfile
                   tags: ${{ steps.prep.outputs.tags }}
                   context: .
+

@@ -1,5 +1,6 @@
-import { EncryptionPassword } from "encryption";
 import React, { createContext, useContext, useMemo, useReducer } from "react";
+
+import { EncryptionPassword } from "encryption";
 
 import { ActionType } from "./actions";
 

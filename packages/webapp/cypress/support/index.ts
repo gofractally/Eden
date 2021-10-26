@@ -25,6 +25,11 @@ declare namespace Cypress {
         login(account: string): Chainable;
 
         /**
+         * Intercepts and creates default aliases loading up Box Subchain
+         */
+        interceptSubchain(): Chainable;
+
+        /**
          * Intercepts and creates default aliases for main EOS RPC Api Calls
          */
         interceptEosApis(): Chainable;

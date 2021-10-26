@@ -1,10 +1,5 @@
 import React from "react";
-import {
-    FaCheckSquare,
-    FaPlayCircle,
-    FaRegSquare,
-    FaTelegram,
-} from "react-icons/fa";
+import { FaCheckSquare, FaPlayCircle, FaRegSquare } from "react-icons/fa";
 
 import {
     ipfsUrl,
@@ -16,6 +11,7 @@ import { ROUTES } from "_app/routes";
 import { GenericMemberChip, OpensInNewTabIcon } from "_app/ui";
 import { MemberData } from "members/interfaces";
 import { getValidSocialLink } from "members/helpers/social-links";
+import { MemberChipTelegramLink } from "members/components/member-chip-components";
 
 interface VotingMemberChipProps {
     member: MemberData;
@@ -47,12 +43,6 @@ export const VotingMemberChip = ({
         window.open(`${ROUTES.MEMBERS.href}/${member.account}`, "_blank");
     };
 
-    const goToTelegram = (e: React.MouseEvent) => {
-        if (!member) return;
-        e.stopPropagation();
-        openInNewTab(`https://t.me/${telegramHandle}`);
-    };
-
     const telegramHandle = getValidSocialLink(member.socialHandles.telegram);
 
     return (
@@ -65,21 +55,10 @@ export const VotingMemberChip = ({
                     className="flex-1 flex flex-col justify-center"
                 >
                     <div className="flex xs:space-x-1">
-                        {telegramHandle && (
-                            <div
-                                onClick={goToTelegram}
-                                className="hidden xs:block"
-                            >
-                                <p className="flex items-center text-xs text-gray-500 font-light hover:underline">
-                                    <FaTelegram className="mr-1" />
-                                    {telegramHandle}
-                                    <OpensInNewTabIcon
-                                        size={8}
-                                        className="mb-1.5"
-                                    />
-                                </p>
-                            </div>
-                        )}
+                        <MemberChipTelegramLink
+                            handle={member.socialHandles.telegram}
+                            className="hidden xs:block"
+                        />
                         {telegramHandle && votesReceived > 0 && (
                             <p className="hidden xs:block text-xs text-gray-600 font-light">
                                 •
@@ -195,18 +174,10 @@ export const ElectionParticipantChip = ({
     electionVideoCid,
     subText,
 }: ElectionParticipantChipProps) => {
-    const telegramHandle = getValidSocialLink(member?.socialHandles.telegram);
-
     const goToMemberPage = (e: React.MouseEvent) => {
         if (!member) return;
         e.stopPropagation();
         window.open(`${ROUTES.MEMBERS.href}/${member.account}`, "_blank");
-    };
-
-    const goToTelegram = (e: React.MouseEvent) => {
-        if (!member) return;
-        e.stopPropagation();
-        openInNewTab(`https://t.me/${telegramHandle}`);
     };
 
     if (!member) {
@@ -229,18 +200,9 @@ export const ElectionParticipantChip = ({
             isDelegate={isDelegate || Boolean(delegateLevel)} // TODO: This will be inferred from member
             contentComponent={
                 <div className="flex-1 flex flex-col justify-center">
-                    {telegramHandle && (
-                        <div onClick={goToTelegram}>
-                            <p className="flex items-center text-xs text-gray-500 font-light hover:underline">
-                                <FaTelegram className="mr-1" />
-                                {telegramHandle}
-                                <OpensInNewTabIcon
-                                    size={8}
-                                    className="mb-1.5"
-                                />
-                            </p>
-                        </div>
-                    )}
+                    <MemberChipTelegramLink
+                        handle={member.socialHandles.telegram}
+                    />
                     <p className="flex hover:underline">
                         {member.name}
                         <OpensInNewTabIcon className="mt-0.5" />
