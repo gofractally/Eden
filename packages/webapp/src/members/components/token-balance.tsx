@@ -6,10 +6,10 @@ import {
 } from "_app";
 import { blockExplorerAccountBaseUrl } from "config";
 
-import { MemberData } from "../interfaces";
+import { MemberAccountData, MemberData } from "../interfaces";
 
 interface Props {
-    member: MemberData;
+    member: MemberData | MemberAccountData;
 }
 
 export const TokenBalance = ({ member }: Props) => {

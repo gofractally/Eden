@@ -1,63 +1,72 @@
+import React from "react";
 import { useRouter } from "next/router";
-import { useQuery } from "react-query";
 
 import {
-    CallToAction,
     Container,
     SideNavLayout,
-    LoadingCard,
-    queryMemberData,
+    LoadingContainer,
+    Heading,
+    MessageContainer,
 } from "_app";
-import { ROUTES } from "_app/routes";
-
-import { MemberCard, MemberCollections, MemberHoloCard } from "members";
+import {
+    MemberCard,
+    MemberCollections,
+    MemberData,
+    MemberHoloCard,
+    useMemberByAccountName,
+} from "members";
 import { DelegateFundsAvailable } from "delegates/components";
 
 export const MemberPage = () => {
     const router = useRouter();
-    const { account } = router.query;
-    const { data: member, isLoading } = useQuery(
-        queryMemberData(account as string)
+    const { data: member, isLoading, isError } = useMemberByAccountName(
+        router.query.id as string
     );
-
-    if (member) {
-        return (
-            <SideNavLayout
-                title={`${member.name}'s Profile`}
-                className="divide-y"
-            >
-                <DelegateFundsAvailable account={account as string} />
-                <Container className="space-y-2.5">
-                    <div className="flex items-center space-y-10 xl:space-y-0 xl:space-x-4 flex-col">
-                        <div className="max-w-xl">
-                            <MemberHoloCard member={member} />
-                        </div>
-                        <MemberCard member={member} showBalance />
-                    </div>
-                </Container>
-                <MemberCollections member={member} />
-            </SideNavLayout>
-        );
-    }
 
     if (isLoading) {
         return (
-            <SideNavLayout title="Loading member details...">
-                <LoadingCard />
-            </SideNavLayout>
+            <MemberPageContainer pageTitle="Loading member details...">
+                <LoadingContainer />
+            </MemberPageContainer>
+        );
+    }
+
+    if (isError || !member) {
+        return (
+            <MemberPageContainer pageTitle="Error">
+                <MessageContainer
+                    title="Error loading member information"
+                    message="Please reload the page to try again."
+                />
+            </MemberPageContainer>
         );
     }
 
     return (
-        <SideNavLayout title="Member not found">
-            <CallToAction
-                href={ROUTES.MEMBERS.href}
-                buttonLabel="Browse members"
-            >
-                This account is not an active Eden member.
-            </CallToAction>
-        </SideNavLayout>
+        <MemberPageContainer pageTitle={`${member.name}'s Profile`}>
+            <DelegateFundsAvailable account={member.account} />
+            <Container className="flex justify-center">
+                <MemberHoloCard member={member} className="max-w-xl" />
+            </Container>
+            <MemberCard member={member} showBalance />
+            {/* TODO: Show member collections once we have templateId on MemberAccountData */}
+            <MemberCollections member={member as MemberData} />
+        </MemberPageContainer>
     );
 };
 
 export default MemberPage;
+
+interface ContainerProps {
+    pageTitle: string;
+    children: React.ReactNode;
+}
+
+const MemberPageContainer = ({ pageTitle, children }: ContainerProps) => (
+    <SideNavLayout title={pageTitle} className="divide-y">
+        <Container>
+            <Heading size={1}>Member Profile</Heading>
+        </Container>
+        {children}
+    </SideNavLayout>
+);
