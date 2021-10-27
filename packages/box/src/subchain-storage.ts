@@ -120,4 +120,15 @@ export class Storage {
         this.changed();
         return result;
     }
+
+    pushShipMessage(shipMessage: Uint8Array) {
+        const result = this.protect(() => {
+            const result = this.blocksWasm!.pushShipMessage(shipMessage);
+            this.stateWasm!.pushShipMessage(shipMessage);
+            this.stateWasm!.trimBlocks();
+            return result;
+        });
+        this.changed();
+        return result;
+    }
 }

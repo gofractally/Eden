@@ -13,10 +13,10 @@ const FIRST_BLOCK = 1;
 export class ShipReceiver {
     storage: Storage;
     wsClient: WebSocket | undefined;
-    jsonTransactions: JsonTrx[] = [];
     abi: any;
     types: any;
     blocksQueue: any[] = [];
+    inProcessBlocks = false;
 
     variables = {
         query: "",
@@ -45,18 +45,13 @@ export class ShipReceiver {
         try {
             logger.info(`connecting to ${SHIP_ADDRESS}:${SHIP_PORT}`);
 
-            if (this.jsonTransactions.length)
-                this.variables.cursor = this.jsonTransactions[
-                    this.jsonTransactions.length - 1
-                ].cursor;
-
             // Connecting to SHiP
             this.wsClient = new WebSocket(`ws://${SHIP_ADDRESS}:${SHIP_PORT}`);
             this.wsClient.on("open", () => {
                 logger.info("SHiP is now connected");
             });
             this.wsClient.on("message", (data) => this.onMessage(data));
-            this.wsClient.on("close", this.disconnect);
+            this.wsClient.on("close", (reason) => this.disconnect(reason));
         } catch (e: any) {
             logger.error(e);
             logger.info("scheduling retry in 10 min");
@@ -66,17 +61,7 @@ export class ShipReceiver {
         }
     }
 
-    onMessage(data: any) {
-        if (!this.abi) {
-            this.setupAbi(data);
-            this.requestStatus();
-        } else {
-            const [type, response] = this.deserialize("result", data);
-            this[type](response);
-        }
-    }
-
-    disconnect(reason: string) {
+    disconnect(reason: any) {
         logger.info("closed connection: %s", reason);
         if (this.wsClient) {
             this.abi = undefined;
@@ -85,6 +70,19 @@ export class ShipReceiver {
         setTimeout(() => {
             this.connect();
         }, 1000);
+    }
+
+    onMessage(data: WebSocket.Data) {
+        if (!this.abi) {
+            this.setupAbi(data as string);
+            this.requestBlocks();
+        } else {
+            const bytes = (data as ArrayBuffer) as Uint8Array;
+            logger.info("shipping %s bytes", bytes.length);
+            this.storage.pushShipMessage((data as ArrayBuffer) as Uint8Array);
+            // const [type, response] = this.deserialize("result", data);
+            // this[type](response);
+        }
     }
 
     setupAbi(data: string) {
@@ -116,19 +114,48 @@ export class ShipReceiver {
         ]);
     }
 
-    get_status_result_v0(response: any) {
-        logger.info("get status result head: %s", response.head);
-        this.requestBlocks();
-    }
+    // get_status_result_v0(response: any) {
+    //     logger.info("status result head: %s", response.head);
+    // }
 
-    get_blocks_result_v0(response: any) {
-        logger.info("get status result: %s", response.this_block);
-        this.blocksQueue.push(response);
-        // this.processBlocks();
-    }
+    // get_blocks_result_v0(response: any) {
+    //     logger.info(
+    //         "received block: %s, head: %s",
+    //         response.this_block.block_num,
+    //         response.head.block_num
+    //     );
+    //     this.blocksQueue.push(response);
+    //     this.processBlocks();
+    // }
+
+    // async processBlocks() {
+    //     if (this.inProcessBlocks) {
+    //         return;
+    //     }
+
+    //     this.inProcessBlocks = true;
+
+    //     try {
+    //         while (this.blocksQueue.length) {
+    //             const response = this.blocksQueue.shift();
+    //             if (response.block && response.block.length) {
+    //                 const block = this.deserialize(
+    //                     "signed_block",
+    //                     response.block
+    //                 );
+    //                 logger.info("processed block: %s", block);
+    //                 logger.info("transactions: %s", block.transactions);
+    //             }
+    //         }
+    //     } catch (e) {
+    //         logger.error("process blocks failed: %s", e);
+    //     }
+
+    //     this.inProcessBlocks = false;
+    // }
 
     send(request: any) {
-        this.wsClient.send(this.serialize("request", request));
+        this.wsClient!.send(this.serialize("request", request));
     }
 
     serialize(type: string, value: any) {

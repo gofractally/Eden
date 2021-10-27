@@ -10,6 +10,7 @@
 #include <eosio/abi.hpp>
 #include <eosio/from_bin.hpp>
 #include <eosio/to_bin.hpp>
+#include <eosio/ship_protocol.hpp>
 #include <events.hpp>
 
 using namespace eosio::literals;
@@ -1869,6 +1870,25 @@ bool add_block(subchain::block&& eden_block, uint32_t eosio_irreversible)
    return add_block(std::move(bi), eosio_irreversible);
 }
 
+bool add_block(eosio::ship_protocol::block_position block_position, uint32_t eosio_irreversible,
+               eosio::ship_protocol::signed_block&& signed_block)
+{
+   subchain::eosio_block eosio_block;
+   eosio_block.num = block_position.block_num;
+   eosio_block.id = block_position.block_id;
+   eosio_block.previous = signed_block.previous;
+   eosio_block.timestamp = signed_block.timestamp.to_time_point();
+   
+   //eosio_block.transactions = signed_block.timestamp.to_time_point();
+
+   subchain::block eden_block;
+   eden_block.num = block_position.block_num;
+   eden_block.previous = signed_block.previous;
+   eden_block.eosioBlock = eosio_block;   
+
+   return add_block(std::move(eden_block), eosio_irreversible);
+}
+
 // TODO: prevent from_json from aborting
 [[clang::export_name("addEosioBlockJson")]] bool addEosioBlockJson(const char* json,
                                                                    uint32_t size,
@@ -1907,6 +1927,27 @@ bool add_block(subchain::block&& eden_block, uint32_t eosio_irreversible)
    subchain::block_with_id block;
    eosio::from_bin(block, bin);
    return add_block(std::move(block), eosio_irreversible);
+}
+
+[[clang::export_name("pushShipMessage")]] bool pushShipMessage(const char* data,
+                                                               uint32_t size)
+{
+   dump("ship received message");
+   dump(size);
+   eosio::input_stream bin{data, size};
+   eosio::ship_protocol::result result;
+   eosio::from_bin(result, bin);
+   dump("ship deserialized message");
+
+   if (auto blocks_result = std::get_if<eosio::ship_protocol::get_blocks_result_v0>(&result))
+   {
+      eosio::ship_protocol::signed_block block;
+      eosio::from_bin(block, blocks_result->block.value());
+      return add_block(blocks_result->this_block.value(),
+                       blocks_result->last_irreversible.block_num,
+                       std::move(block));
+   }
+   return false;
 }
 
 [[clang::export_name("setIrreversible")]] uint32_t setIrreversible(uint32_t irreversible)

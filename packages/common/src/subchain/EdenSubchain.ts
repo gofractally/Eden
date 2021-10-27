@@ -187,6 +187,14 @@ export class EdenSubchain {
         });
     }
 
+    pushShipMessage(message: Uint8Array): boolean {
+        return this.protect(() => {
+            return this.withData(message, (addr) => {
+                return this.exports.pushShipMessage(addr, message.length);
+            });
+        });
+    }
+
     trimBlocks() {
         this.protect(() => {
             this.exports.trimBlocks();
