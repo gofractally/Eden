@@ -5,7 +5,7 @@ import path from "path";
 import { Storage } from "../subchain-storage";
 import logger from "../logger";
 import { subchainConfig } from "../config";
-import DfuseReceiver from "../dfuse-receiver";
+import { DfuseReceiver, ShipReceiver } from "../history-receivers";
 import {
     ClientStatus,
     ServerMessage,
@@ -13,7 +13,6 @@ import {
 } from "@edenos/common/dist/subchain/SubchainProtocol";
 
 const storage = new Storage();
-const dfuseReceiver = new DfuseReceiver(storage);
 export const subchainHandler = express.Router();
 
 subchainHandler.get("/eden-micro-chain.wasm", (req, res) => {
@@ -152,7 +151,12 @@ export async function startSubchain() {
             subchainConfig.atomic,
             subchainConfig.atomicMarket
         );
-        await dfuseReceiver.start();
+
+        // TODO: gate through config
+        // const dfuseReceiver = new DfuseReceiver(storage);
+        // await dfuseReceiver.start();
+        const shipReceiver = new ShipReceiver(storage);
+        await shipReceiver.start();
     } catch (e: any) {
         logger.error(e);
     }
