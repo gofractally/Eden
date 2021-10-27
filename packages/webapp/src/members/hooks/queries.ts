@@ -52,7 +52,7 @@ interface MembersQueryEdge {
     node: MembersQueryNode;
 }
 
-interface MembersQueryNode {
+export interface MembersQueryNode {
     account: string;
     createdAt: string;
     profile: {
@@ -85,17 +85,14 @@ export const useMembers = () => {
 
     let formattedMembers: MemberAccountData[] = [];
 
-    if (result.data) {
-        const memberEdges = result.data.members.edges;
-        if (memberEdges) {
-            formattedMembers = memberEdges
-                .map((member: MembersQueryEdge) =>
-                    formatQueriedMemberAccountData(member.node)
-                )
-                .filter((member): member is MemberAccountData =>
-                    Boolean(member)
-                );
-        }
+    if (!result.data) return { ...result, data: formattedMembers };
+
+    const memberEdges = result.data.members.edges;
+    if (memberEdges) {
+        formattedMembers = memberEdges.map(
+            (member) =>
+                formatQueriedMemberAccountData(member.node) as MemberAccountData
+        );
     }
 
     return { ...result, data: formattedMembers };

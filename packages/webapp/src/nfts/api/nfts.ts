@@ -55,13 +55,6 @@ export const getSalesForTemplates = async (
     return data;
 };
 
-export const getOwners = async (templateId: number): Promise<string[]> => {
-    const url = `${atomicAssets.apiBaseUrl}/assets?collection_name=${atomicAssets.collection}&schema_name=${atomicAssets.schema}&template_id=${templateId}&page=1&limit=9999&order=asc&sort=created`;
-    const { data } = await executeAtomicAssetRequest(url);
-    const owners: string[] = data.map((item: any) => item.owner);
-    return owners;
-};
-
 export const getAuctions = async (
     seller?: string,
     templateIds?: string[],
