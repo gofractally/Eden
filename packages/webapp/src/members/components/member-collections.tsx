@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
+import { Tab } from "@headlessui/react";
 
-import { Button, Container, Heading, LoadingCard } from "_app";
+import { Container, LoadingContainer, MessageContainer, Text } from "_app";
 import { MemberChip, MembersGrid } from "members";
 
 import { getCollection, getCollectedBy, memberDataDefaults } from "../api";
@@ -10,80 +11,134 @@ interface Props {
     member: MemberData;
 }
 
+// TODO: Lay out tabs on mobile
+// TODO: If microchain doesn't provide collection/collectors data, use react-query (not ad hoc like below)
 export const MemberCollections = ({ member }: Props) => {
-    const [tab, setTab] = useState<"collection" | "collectedBy">("collection");
-    const [isLoading, setLoading] = useState(false);
-    const [members, setMembers] = useState<MemberData[] | undefined>(undefined);
+    return (
+        <Tab.Group>
+            <Tab.List>
+                <StyledTab>NFT Collection</StyledTab>
+                <StyledTab>NFT Collectors</StyledTab>
+            </Tab.List>
+            <Tab.Panels>
+                <Tab.Panel>
+                    <Collection member={member} />
+                </Tab.Panel>
+                <Tab.Panel>
+                    <Collectors member={member} />
+                </Tab.Panel>
+            </Tab.Panels>
+        </Tab.Group>
+    );
+};
+
+export default MemberCollections;
+
+const tabClassName = ({ selected }: { selected: boolean }) => {
+    const baseClass =
+        "pt-5 px-12 border-b-2 focus:outline-none hover:bg-gray-100";
+    if (!selected)
+        return `${baseClass} text-gray-500 border-white hover:border-gray-100`;
+    return `${baseClass} border-blue-500 text-gray-700`;
+};
+
+const StyledTab = ({ children }: { children: React.ReactNode }) => (
+    <Tab className={tabClassName} style={{ paddingBottom: 18 }}>
+        <p className="text-sm leading-5 font-semibold">{children}</p>
+    </Tab>
+);
+
+const Collection = ({ member }: Props) => {
+    const [isLoading, setIsLoading] = useState(false);
+    const [members, setMembers] = useState<MemberData[] | undefined>([]);
 
     useEffect(() => {
-        const loadMember = async () => {
-            if (tab === "collection") {
-                const members = await getCollection(member.account);
-                setMembers(members);
-            } else {
-                const { members, unknownOwners } = await getCollectedBy(
-                    member.templateId
-                );
-                setMembers([
-                    ...members,
-                    ...unknownOwners.map(externalOwnersCards),
-                ]);
-            }
-            setLoading(false);
+        const loadMembers = async () => {
+            console.log(member.account);
+            const members = await getCollection(member.account);
+            setMembers(members);
+            setIsLoading(false);
         };
-        setLoading(true);
-        loadMember();
-    }, [member, tab]);
+        setIsLoading(true);
+        loadMembers();
+    }, []);
+
+    if (isLoading) return <LoadingContainer />;
+
+    if (!members?.length) {
+        return (
+            <MessageContainer
+                title="No NFTs found"
+                message="This user is not collecting any Eden member NFTs."
+            />
+        );
+    }
 
     return (
-        <div className="divide-y">
-            <Container className="pt-8 space-y-2">
-                <Heading size={1}>NFTs</Heading>
-                <div className="space-x-3">
-                    <Button
-                        onClick={() => setTab("collection")}
-                        size="sm"
-                        type={tab === "collection" ? "primary" : "neutral"}
-                        disabled={tab === "collection"}
-                    >
-                        NFT Collection
-                    </Button>
-                    <Button
-                        onClick={() => setTab("collectedBy")}
-                        size="sm"
-                        type={tab === "collectedBy" ? "primary" : "neutral"}
-                        disabled={tab === "collectedBy"}
-                    >
-                        NFT Collectors
-                    </Button>
-                </div>
-                {tab === "collection" ? (
-                    <p>
-                        <span className="font-medium">{member.name}</span>{" "}
-                        collects NFTs for the following Eden members:
-                    </p>
-                ) : (
-                    <p>
-                        The following Eden members or accounts collect one or
-                        more of{" "}
-                        <span className="font-medium">{member.name}'s</span>{" "}
-                        NFTs.
-                    </p>
-                )}
+        <>
+            <Container>
+                <Text>
+                    <span className="font-medium">{member.name}</span> collects
+                    NFTs for the following Eden members:
+                </Text>
             </Container>
-            {isLoading ? (
-                <LoadingCard />
-            ) : (
-                <MembersGrid members={members || []}>
-                    {(member) => (
-                        <MemberChip
-                            key={`member-collection-${member.account}`}
-                            member={member}
-                        />
-                    )}
-                </MembersGrid>
-            )}
-        </div>
+            <MembersGrid members={members}>
+                {(member) => (
+                    <MemberChip
+                        key={`member-collection-${member.account}`}
+                        member={member}
+                    />
+                )}
+            </MembersGrid>
+        </>
+    );
+};
+
+const Collectors = ({ member }: Props) => {
+    const [isLoading, setIsLoading] = useState(false);
+    const [members, setMembers] = useState<MemberData[]>([]);
+
+    useEffect(() => {
+        const loadMembers = async () => {
+            const { members, unknownOwners } = await getCollectedBy(
+                member.templateId
+            );
+            setMembers([...members, ...unknownOwners.map(externalOwnersCards)]);
+            setIsLoading(false);
+        };
+        setIsLoading(true);
+        loadMembers();
+    }, []);
+
+    if (isLoading) return <LoadingContainer />;
+
+    if (!members?.length) {
+        return (
+            <MessageContainer
+                title="No collectors found"
+                message="No one is collecting this member's NFTs."
+            />
+        );
+    }
+
+    return (
+        <>
+            <Container>
+                <Text>
+                    The following Eden members or accounts collect one or more
+                    of <span className="font-medium">{member.name}'s</span>{" "}
+                    NFTs.
+                </Text>
+            </Container>
+            <MembersGrid members={members}>
+                {(member) => (
+                    <MemberChip
+                        key={`member-collector-${member.account}`}
+                        member={member}
+                    />
+                )}
+            </MembersGrid>
+        </>
     );
 };
 
