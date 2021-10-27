@@ -141,6 +141,25 @@ jobs:
                       build/eden.wasm
                       build/eden-micro-chain.wasm
 
+            - name: 📃 Upload Ephemeral Eden Chains Runners
+              if: steps.filter.outputs.src == 'true'
+              uses: actions/upload-artifact@v2
+              with:
+                  name: Ephemeral Eden Chains Runners
+                  path: |
+                      build/atomicassets.abi
+                      build/atomicassets.wasm
+                      build/atomicmarket.abi
+                      build/atomicmarket.wasm
+                      build/bios.wasm
+                      build/boot.wasm
+                      build/eden.abi
+                      build/eden.wasm
+                      build/token.abi
+                      build/token.wasm
+                      build/run-genesis.wasm
+                      build/run-full-election.wasm
+
     build-micro-chain:
         name: Build Micro Chain
         runs-on: ubuntu-latest
@@ -464,4 +483,3 @@ jobs:
                   file: docker/eden-webapp.Dockerfile
                   tags: ${{ steps.prep.outputs.tags }}
                   context: .
-
