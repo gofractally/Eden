@@ -2,10 +2,10 @@ import dayjs from "dayjs";
 import useDimensions from "react-cool-dimensions";
 
 import { Image, ipfsUrl } from "_app";
-import { MemberAccountData, MemberData } from "../interfaces";
+import { MemberData } from "../interfaces";
 
 interface Props {
-    member: MemberData | MemberAccountData;
+    member: MemberData;
     inducted?: boolean;
     className?: string;
 }

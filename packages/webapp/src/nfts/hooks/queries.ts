@@ -2,7 +2,7 @@ import { useQuery as useReactQuery } from "react-query";
 import { useQuery as useBoxQuery } from "@edenos/common/dist/subchain";
 
 import { atomicAssets, edenContractAccount } from "config";
-import { formatQueriedMemberAccountData, MembersQueryNode } from "members";
+import { formatQueriedMemberData, MembersQueryNode } from "members";
 import { getCollection, memberDataDefaults } from "members/api";
 import { MemberData } from "members/interfaces";
 
@@ -49,6 +49,7 @@ export const useMemberNFTCollectors = (account: string) => {
                                     profile {
                                         name
                                         img
+                                        attributions
                                         social
                                         bio
                                     }
@@ -82,7 +83,7 @@ const isAuction = (account: string) =>
 
 const formatCollectorAsMemberData = (owner: MembersQueryNode) => {
     if (owner.profile) {
-        return formatQueriedMemberAccountData(owner) as MemberData;
+        return formatQueriedMemberData(owner) as MemberData;
     }
     return { ...memberDataDefaults, name: owner.account };
 };

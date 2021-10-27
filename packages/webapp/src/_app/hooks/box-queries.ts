@@ -2,7 +2,7 @@ import { QueryResult, useQuery } from "@edenos/common/dist/subchain";
 import dayjs from "dayjs";
 
 import { assetFromString } from "_app";
-import { formatQueriedMemberAccountData, MemberAccountData } from "members";
+import { formatQueriedMemberData, MemberData } from "members";
 
 export interface ElectionStatusQuery {
     status: {
@@ -34,8 +34,8 @@ export interface RoundBasicQueryData {
 }
 
 export interface RoundForUserVotingQueryData extends RoundBasicQueryData {
-    candidate?: MemberAccountData;
-    winner?: MemberAccountData;
+    candidate?: MemberData;
+    winner?: MemberData;
     video: string;
 }
 
@@ -44,6 +44,7 @@ export interface CurrentMemberElectionVotingDataQuery {
     votes: RoundForUserVotingQueryData[];
 }
 
+// TODO: Pass type arguments to useQuery within this file
 export const useCurrentMemberElectionVotingData = (
     account?: string
 ): QueryResult<CurrentMemberElectionVotingDataQuery> => {
@@ -118,12 +119,8 @@ export const useCurrentMemberElectionVotingData = (
                     votingFinished: voteNode.group.round.votingFinished,
                     resultsAvailable: voteNode.group.round.resultsAvailable,
                     numGroups: voteNode.group.round.numGroups,
-                    candidate: formatQueriedMemberAccountData(
-                        voteNode.candidate
-                    ),
-                    winner: formatQueriedMemberAccountData(
-                        voteNode.group.winner
-                    ),
+                    candidate: formatQueriedMemberData(voteNode.candidate),
+                    winner: formatQueriedMemberData(voteNode.group.winner),
                     video: voteNode.video,
                 })) || [];
         }
@@ -133,13 +130,13 @@ export const useCurrentMemberElectionVotingData = (
 };
 
 export interface VoteQueryData {
-    voter: MemberAccountData;
-    candidate?: MemberAccountData;
+    voter: MemberData;
+    candidate?: MemberData;
     video: string;
 }
 
 export interface RoundGroupQueryData {
-    winner?: MemberAccountData;
+    winner?: MemberData;
     votes: VoteQueryData[];
 }
 
@@ -238,15 +235,15 @@ const mapQueriedRounds = (queriedRoundsEdges: any) =>
 
 const mapQueriedRoundsGroups = (queriedRoundsGroupsEdges: any) =>
     queriedRoundsGroupsEdges?.map(({ node: groupNode }: any) => ({
-        winner: formatQueriedMemberAccountData(groupNode.winner),
+        winner: formatQueriedMemberData(groupNode.winner),
         votes: mapQueriedGroupVotes(groupNode.votes),
     })) || [];
 
 const mapQueriedGroupVotes = (votes: any) => {
     return (
         votes?.map((vote: any) => ({
-            voter: formatQueriedMemberAccountData(vote.voter),
-            candidate: formatQueriedMemberAccountData(vote.candidate),
+            voter: formatQueriedMemberData(vote.voter),
+            candidate: formatQueriedMemberData(vote.candidate),
             video: vote.video,
         })) || []
     );

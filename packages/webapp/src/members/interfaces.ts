@@ -6,19 +6,16 @@ export type VoteDataQueryOptionsByField = {
     fieldValue: string;
 };
 
-export interface MemberAccountData {
+export interface MemberData {
+    createdAt: number;
     account: string;
     name: string;
     image: string;
-    socialHandles: EdenNftSocialHandles;
-    createdAt: number;
-    bio: string;
-    inductionVideo: string;
-}
-
-export interface MemberData extends MemberAccountData {
-    templateId: number;
     attributions: string;
+    bio: string;
+    socialHandles: EdenNftSocialHandles;
+    inductionVideo: string;
+    templateId?: number;
     auctionData?: MemberAuctionData;
     assetData?: AssetData;
     saleId?: string;

@@ -1,4 +1,3 @@
-import { MemberAccountData } from "members";
 import React from "react";
 import { FaVideo } from "react-icons/fa";
 
@@ -10,7 +9,7 @@ import { MemberSocialLinks } from "./member-social-links";
 import { TokenBalance } from "./token-balance";
 
 interface Props {
-    member: MemberData | MemberAccountData;
+    member: MemberData;
     showBalance?: boolean;
 }
 
@@ -18,7 +17,7 @@ export const MemberCard = ({ member, showBalance }: Props) => {
     return (
         <div data-testid={`member-card-${member.account}`} className="divide-y">
             <Container>
-                {showBalance && <TokenBalance member={member} />}
+                {showBalance && <TokenBalance account={member.account} />}
             </Container>
             <Container>
                 <MemberBio bio={member.bio} />

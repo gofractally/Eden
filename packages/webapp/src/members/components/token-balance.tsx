@@ -6,14 +6,12 @@ import {
 } from "_app";
 import { blockExplorerAccountBaseUrl } from "config";
 
-import { MemberAccountData, MemberData } from "../interfaces";
-
 interface Props {
-    member: MemberData | MemberAccountData;
+    account: string;
 }
 
-export const TokenBalance = ({ member }: Props) => {
-    const { data: balance } = useTokenBalanceForAccount(member.account);
+export const TokenBalance = ({ account }: Props) => {
+    const { data: balance } = useTokenBalanceForAccount(account);
 
     return (
         <div>
@@ -21,7 +19,7 @@ export const TokenBalance = ({ member }: Props) => {
                 <strong>Balance:</strong>{" "}
                 {balance ? assetToLocaleString(balance) : "loading..."}{" "}
                 <Link
-                    href={`${blockExplorerAccountBaseUrl}/${member.account}`}
+                    href={`${blockExplorerAccountBaseUrl}/${account}`}
                     target="_blank"
                 >
                     History

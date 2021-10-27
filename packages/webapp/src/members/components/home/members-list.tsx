@@ -64,8 +64,8 @@ export const MembersList = ({ searchValue }: Props) => {
                     rowHeight={77}
                     rowRenderer={({ index, style }: ListRowProps) => (
                         <MemberChip
-                            member={members[index] as MemberData}
-                            key={(members[index] as MemberData).account}
+                            member={members[index]}
+                            key={members[index].account}
                             style={style}
                         />
                     )}

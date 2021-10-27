@@ -5,11 +5,11 @@ import { IoChatbubblesOutline } from "react-icons/io5";
 import { explorerAccountUrl, SocialButton } from "_app";
 import { EosCommunityIcon } from "_app/ui/icons";
 
-import { MemberAccountData, MemberData } from "../interfaces";
+import { MemberData } from "../interfaces";
 import { getValidSocialLink } from "../helpers/social-links";
 
 interface Props {
-    member: MemberData | MemberAccountData;
+    member: MemberData;
 }
 
 export const MemberSocialLinks = ({ member }: Props) => {

@@ -11,7 +11,6 @@ import {
 import {
     MemberCard,
     MemberCollections,
-    MemberData,
     MemberHoloCard,
     useMemberByAccountName,
 } from "members";
@@ -49,8 +48,7 @@ export const MemberPage = () => {
                 <MemberHoloCard member={member} className="max-w-xl" />
             </Container>
             <MemberCard member={member} showBalance />
-            {/* TODO: Show member collections once we have templateId on MemberAccountData */}
-            <MemberCollections member={member as MemberData} />
+            <MemberCollections member={member} />
         </MemberPageContainer>
     );
 };

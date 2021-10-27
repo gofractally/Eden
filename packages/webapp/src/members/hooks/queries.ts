@@ -1,7 +1,7 @@
 import { useQuery as useReactQuery } from "react-query";
 import { useQuery as useBoxQuery } from "@edenos/common/dist/subchain";
 
-import { getNewMembers, MemberAccountData, MemberData } from "members";
+import { getNewMembers, MemberData } from "members";
 
 const sortMembersByDateDESC = (a: MemberData, b: MemberData) =>
     b.createdAt - a.createdAt;
@@ -33,7 +33,7 @@ export const useMembersWithAssets = () => {
             return newMemberRecord ?? member;
         };
 
-        members = (allMembers.data as MemberData[])
+        members = allMembers.data
             .sort(sortMembersByDateDESC)
             .map(mergeAuctionData);
     }
@@ -57,11 +57,12 @@ interface MembersQueryEdge {
 }
 
 export interface MembersQueryNode {
-    account: string;
     createdAt: string;
+    account: string;
     profile: {
         name: string;
         img: string;
+        attributions: string;
         social: string;
         bio: string;
     };
@@ -78,6 +79,7 @@ export const useMembers = () => {
                     profile {
                         name
                         img
+                        attributions
                         social
                         bio
                     }
@@ -87,15 +89,14 @@ export const useMembers = () => {
         }
     }`);
 
-    let formattedMembers: MemberAccountData[] = [];
+    let formattedMembers: MemberData[] = [];
 
     if (!result.data) return { ...result, data: formattedMembers };
 
     const memberEdges = result.data.members.edges;
     if (memberEdges) {
         formattedMembers = memberEdges.map(
-            (member) =>
-                formatQueriedMemberAccountData(member.node) as MemberAccountData
+            (member) => formatQueriedMemberData(member.node) as MemberData
         );
     }
 
@@ -124,24 +125,23 @@ export const useMemberByAccountName = (account: string) => {
     if (!result.data) return { ...result, data: null };
 
     const memberNode = result.data.members.edges[0]?.node;
-    const member = formatQueriedMemberAccountData(memberNode) ?? null;
+    const member = formatQueriedMemberData(memberNode) ?? null;
     return { ...result, data: member };
 };
 
 // TODO: Should we break this out into a separate formatters file?
-export const formatQueriedMemberAccountData = (
-    memberAccountData: MembersQueryNode
-): MemberAccountData | undefined => {
-    if (!memberAccountData) return;
+export const formatQueriedMemberData = (
+    data: MembersQueryNode
+): MemberData | undefined => {
+    if (!data) return;
     return {
-        account: memberAccountData.account,
-        name: memberAccountData.profile.name,
-        image: memberAccountData.profile.img,
-        socialHandles: JSON.parse(memberAccountData.profile.social),
-        bio: memberAccountData.profile.bio,
-        inductionVideo: memberAccountData.inductionVideo,
-        createdAt: memberAccountData.createdAt
-            ? new Date(memberAccountData.createdAt).getTime()
-            : 0,
+        createdAt: data.createdAt ? new Date(data.createdAt).getTime() : 0,
+        account: data.account,
+        name: data.profile.name,
+        image: data.profile.img,
+        attributions: data.profile.attributions,
+        bio: data.profile.bio,
+        socialHandles: JSON.parse(data.profile.social),
+        inductionVideo: data.inductionVideo,
     };
 };

@@ -21,7 +21,7 @@ export const getMembers = async (
         let data = fixtureMemberData;
         if (ids.length) {
             data = fixtureMemberData.filter((md) =>
-                ids.includes(md.templateId.toString())
+                ids.includes(md.templateId!.toString())
             );
         }
         return Promise.resolve(data.slice(0, limit));

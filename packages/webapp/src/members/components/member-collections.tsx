@@ -46,7 +46,6 @@ const StyledTab = ({ children }: { children: React.ReactNode }) => (
     </Tab>
 );
 
-// TODO: bring back support for FOR SALE badges (via saleId in MemberData)
 const Collection = ({ member: { account, name } }: Props) => {
     const { data: nfts, isLoading, isError } = useMemberNFTCollection(account);
 
@@ -96,6 +95,15 @@ const Collectors = ({ member: { account, name } }: Props) => {
     );
 
     if (isLoading) return <LoadingContainer />;
+
+    if (isError) {
+        return (
+            <MessageContainer
+                title="Error loading collector information"
+                message="Please reload the page to try again."
+            />
+        );
+    }
 
     if (!collectors.length) {
         return (
