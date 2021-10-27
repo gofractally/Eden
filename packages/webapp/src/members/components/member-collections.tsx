@@ -11,12 +11,11 @@ interface Props {
     member: MemberData;
 }
 
-// TODO: Lay out tabs on mobile
 // TODO: If microchain doesn't provide collection/collectors data, use react-query (not ad hoc like below)
 export const MemberCollections = ({ member }: Props) => {
     return (
         <Tab.Group>
-            <Tab.List>
+            <Tab.List className="flex">
                 <StyledTab>NFT Collection</StyledTab>
                 <StyledTab>NFT Collectors</StyledTab>
             </Tab.List>
@@ -36,15 +35,15 @@ export default MemberCollections;
 
 const tabClassName = ({ selected }: { selected: boolean }) => {
     const baseClass =
-        "pt-5 px-12 border-b-2 focus:outline-none hover:bg-gray-100";
+        "flex-1 lg:flex-none h-14 lg:px-12 border-b-2 focus:outline-none hover:bg-gray-100";
     if (!selected)
         return `${baseClass} text-gray-500 border-white hover:border-gray-100`;
     return `${baseClass} border-blue-500 text-gray-700`;
 };
 
 const StyledTab = ({ children }: { children: React.ReactNode }) => (
-    <Tab className={tabClassName} style={{ paddingBottom: 18 }}>
-        <p className="text-sm leading-5 font-semibold">{children}</p>
+    <Tab className={tabClassName}>
+        <p className="text-sm font-semibold">{children}</p>
     </Tab>
 );
 
