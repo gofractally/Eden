@@ -1,11 +1,6 @@
 import { atomicAssets } from "config";
 import { AssetData, AuctionableTemplateData } from "../interfaces";
 
-export const getTemplate = async (templateId: string) => {
-    const templates = await getTemplates(1, 20, [templateId]);
-    return templates.length ? templates[0] : undefined;
-};
-
 const FETCH_AFTER_TIMESTAMP = atomicAssets.fetchAfter
     ? `&after=${atomicAssets.fetchAfter}`
     : "&after=1619779033000"; // genesis community launch timestamp
@@ -35,22 +30,6 @@ export const getAccountCollection = async (
     order = "asc"
 ): Promise<AssetData[]> => {
     const url = `${atomicAssets.apiMarketUrl}/assets?owner=${account}&collection_name=${atomicAssets.collection}&schema_name=${atomicAssets.schema}&page=${page}&limit=${limit}&order=${order}&sort=${sortField}${FETCH_AFTER_TIMESTAMP}`;
-    const { data } = await executeAtomicAssetRequest(url);
-    return data;
-};
-
-export const getSalesForTemplates = async (
-    ids: string[],
-    page = 1,
-    limit = 9999,
-    sortField = "created",
-    order = "asc"
-): Promise<any> => {
-    const url = `${atomicAssets.apiMarketUrl}/sales?template_id=${ids.join(
-        ","
-    )}&collection_name=${
-        atomicAssets.collection
-    }&page=${page}&limit=${limit}&order=${order}&sort=${sortField}${FETCH_AFTER_TIMESTAMP}`;
     const { data } = await executeAtomicAssetRequest(url);
     return data;
 };

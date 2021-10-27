@@ -1,10 +1,5 @@
 import { devUseFixtureData, edenContractAccount } from "config";
-import {
-    getAccountCollection,
-    getAuctions,
-    getTemplate,
-    getTemplates,
-} from "nfts/api";
+import { getAccountCollection, getAuctions, getTemplates } from "nfts/api";
 import {
     AssetData,
     AuctionableTemplateData,
@@ -13,20 +8,7 @@ import {
 } from "nfts/interfaces";
 
 import { MemberData } from "../interfaces";
-import { getEdenMember } from "./eden-contract";
 import { fixtureMemberData } from "./fixtures";
-
-export const getMember = async (
-    account: string
-): Promise<MemberData | undefined> => {
-    if (devUseFixtureData)
-        return fixtureMemberData.find((member) => member.account === account);
-    const member = await getEdenMember(account);
-    if (member && member.nft_template_id > 0) {
-        const template = await getTemplate(`${member.nft_template_id}`);
-        return template ? convertAtomicTemplateToMember(template) : undefined;
-    }
-};
 
 export const getMembers = async (
     page: number,

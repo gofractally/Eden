@@ -1,11 +1,15 @@
 import { useQuery as useReactQuery } from "react-query";
 import { useQuery as useBoxQuery } from "@edenos/common/dist/subchain";
 
-import { queryNewMembers } from "_app";
-import { MemberAccountData, MemberData } from "members";
+import { getNewMembers, MemberAccountData, MemberData } from "members";
 
 const sortMembersByDateDESC = (a: MemberData, b: MemberData) =>
     b.createdAt - a.createdAt;
+
+export const queryNewMembers = (page: number, pageSize: number) => ({
+    queryKey: ["query_new_members", page, pageSize],
+    queryFn: () => getNewMembers(page, pageSize),
+});
 
 export const useMembersWithAssets = () => {
     const NEW_MEMBERS_PAGE_SIZE = 10000;
