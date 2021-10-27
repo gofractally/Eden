@@ -97,7 +97,6 @@ struct by_round;
 struct by_createdAt;
 struct by_member;
 struct by_owner;
-struct by_auctionId;
 
 template <typename T, typename... Indexes>
 using mic = boost::
@@ -142,11 +141,6 @@ template <typename T>
 using ordered_by_owner = boost::multi_index::ordered_unique<  //
     boost::multi_index::tag<by_owner>,
     boost::multi_index::key<&T::by_owner>>;
-
-template <typename T>
-using ordered_by_auctionId = boost::multi_index::ordered_unique<  //
-    boost::multi_index::tag<by_auctionId>,
-    boost::multi_index::key<&T::by_auctionId>>;
 
 uint64_t available_pk(const auto& table, const auto& first)
 {
@@ -497,23 +491,17 @@ struct nft_object
    int32_t templateId;
    uint64_t assetId;
    uint32_t templateMint;
-   uint64_t auctionId;
-   eosio::block_timestamp auctionBegin;
-   eosio::block_timestamp auctionEnd;
-   eosio::asset auctionPrice;
    eosio::block_timestamp createdAt;
 
    auto by_pk() const { return assetId; }
    nft_account_key by_member() const { return {member, createdAt, assetId}; }
    nft_account_key by_owner() const { return {owner, createdAt, assetId}; }
-   std::pair<uint64_t, uint64_t> by_auctionId() const { return {auctionId, assetId}; }
 };
 using nft_index = mic<nft_object,
                       ordered_by_id<nft_object>,
                       ordered_by_pk<nft_object>,
                       ordered_by_member<nft_object>,
-                      ordered_by_owner<nft_object>,
-                      ordered_by_auctionId<nft_object>>;
+                      ordered_by_owner<nft_object>>;
 
 
 struct database
@@ -1121,10 +1109,6 @@ struct Nft {
    auto templateId() const { return obj->templateId; }
    auto assetId() const { return obj->assetId; }
    auto templateMint() const { return obj->templateMint; }
-   auto auctionId() const { return obj->auctionId; }
-   auto auctionBegin() const { return obj->auctionBegin; }
-   auto auctionEnd() const { return obj->auctionEnd; }
-   const auto& auctionPrice() const { return obj->auctionPrice; }
    auto createdAt() const { return obj->createdAt; }
 };
 EOSIO_REFLECT2(Nft, 
@@ -1133,10 +1117,6 @@ EOSIO_REFLECT2(Nft,
                templateId, 
                assetId, 
                templateMint, 
-               auctionId,
-               auctionBegin, 
-               auctionEnd, 
-               auctionPrice, 
                createdAt)
 
 NftConnection Member::nfts(std::optional<eosio::block_timestamp> gt,
@@ -1538,8 +1518,6 @@ void logmint(const action_context& context,
       nft.assetId = asset_id;
       nft.templateMint = template_mint;
       nft.createdAt = eosio::block_timestamp(context.block.timestamp);
-      nft.auctionBegin = eosio::block_timestamp(0);
-      nft.auctionEnd = eosio::block_timestamp(0);
    });
 }
 
@@ -1563,46 +1541,6 @@ void logtransfer(const action_context& context,
       
       db.nfts.modify(*it, [&](auto& nft) {
          nft.owner = to;
-      });
-   }
-}
-
-void lognewauct(const action_context& context,
-                uint64_t auction_id,
-                eosio::name seller,
-                std::vector<uint64_t> asset_ids,
-                eosio::asset starting_bid,
-                uint32_t duration,
-                uint32_t end_time,
-                eosio::name maker_marketplace,
-                eosio::name collection_name,
-                double collection_fee) 
-{
-   if (collection_name != eden_account)
-      return;
-
-   for (const auto& asset_id : asset_ids) {
-      modify<by_pk>(db.nfts, asset_id, [&](auto& nft) {
-         nft.auctionId = auction_id;
-         nft.auctionBegin = eosio::block_timestamp(context.block.timestamp);
-         nft.auctionEnd = eosio::block_timestamp(end_time);
-         nft.auctionPrice = starting_bid;
-      });
-   }
-}
-
-void auctionbid(const action_context& context,
-                eosio::name bidder,
-                uint64_t auction_id,
-                eosio::asset bid,
-                eosio::name taker_marketplace) 
-{
-   auto& index = db.nfts.get<by_auctionId>();
-   for (auto it = index.lower_bound(std::pair<uint64_t, uint64_t>{auction_id, 0});
-        it != index.end() && it->auctionId == auction_id; it++)
-   {
-      db.nfts.modify(*it, [&](auto& nft) {
-         nft.auctionPrice = bid;
       });
    }
 }
@@ -1878,13 +1816,6 @@ void filter_block(const subchain::eosio_block& block)
                call(logmint, context, action.hexData.data);
             else if (action.name == "logtransfer"_n)
                call(logtransfer, context, action.hexData.data);
-         }
-         else if (action.firstReceiver == atomicmarket_account)
-         {
-            if (action.name == "lognewauct"_n)
-               call(lognewauct, context, action.hexData.data);
-            else if (action.name == "auctionbid"_n)
-               call(auctionbid, context, action.hexData.data);
          }
       }  // for(action)
       eosio::check(!block_state.in_withdraw && !block_state.in_manual_transfer,
