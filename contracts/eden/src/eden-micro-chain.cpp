@@ -1933,9 +1933,16 @@ bool add_block(eosio::ship_protocol::block_position block,
    }
 
    subchain::block eden_block;
-   eden_block.num = eosio_block.num;
-   eden_block.previous = eosio_block.previous;
-   eden_block.eosioBlock = eosio_block;
+   eden_block.eosioBlock = std::move(eosio_block);
+
+   auto* eden_prev = block_log.block_before_eosio_num(eden_block.eosioBlock.num);
+   if (eden_prev)
+   {
+      eden_block.num = eden_prev->num + 1;
+      eden_block.previous = eden_prev->id;
+   }
+   else
+      eden_block.num = 1;
 
    return add_block(std::move(eden_block), eosio_irreversible);
 }

@@ -65,7 +65,6 @@ export class ShipReceiver {
             logger.info("Requested Blocks from SHiP!");
         } else {
             const bytes = (data as ArrayBuffer) as Uint8Array;
-            logger.info("shipping %s bytes", bytes.length);
             this.storage.pushShipMessage(bytes);
         }
     }
