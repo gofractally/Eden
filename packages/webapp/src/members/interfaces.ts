@@ -57,3 +57,27 @@ export interface MemberStats {
     // NOTE: ranks is set to [] at start of election and has a new entry added at the end of each round
     ranks: any[];
 }
+
+/*********************************
+ * MEMBER GRAPHQL QUERY INTERFACES
+ ********************************/
+export interface MembersQuery {
+    members: {
+        edges: {
+            node: MembersQueryNode;
+        }[];
+    };
+}
+
+export interface MembersQueryNode {
+    createdAt: string;
+    account: string;
+    profile: {
+        name: string;
+        img: string;
+        attributions: string;
+        social: string;
+        bio: string;
+    };
+    inductionVideo: string;
+}

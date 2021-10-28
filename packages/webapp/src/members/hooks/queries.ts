@@ -1,7 +1,64 @@
 import { useQuery as useReactQuery } from "react-query";
 import { useQuery as useBoxQuery } from "@edenos/common/dist/subchain";
 
-import { getNewMembers, MemberData } from "members";
+import { formatQueriedMemberData, getNewMembers } from "members";
+import { MemberData, MembersQuery } from "members/interfaces";
+
+export const MEMBER_DATA_FRAGMENT = `
+    account
+    createdAt
+    profile {
+        name
+        img
+        attributions
+        social
+        bio
+    }
+    inductionVideo
+`;
+
+export const useMembers = () => {
+    const result = useBoxQuery<MembersQuery>(`{
+        members {
+            edges {
+                node {
+                    ${MEMBER_DATA_FRAGMENT}
+                }
+            }
+        }
+    }`);
+
+    let formattedMembers: MemberData[] = [];
+
+    if (!result.data) return { ...result, data: formattedMembers };
+
+    const memberEdges = result.data.members.edges;
+    if (memberEdges) {
+        formattedMembers = memberEdges.map(
+            (member) => formatQueriedMemberData(member.node) as MemberData
+        );
+    }
+
+    return { ...result, data: formattedMembers };
+};
+
+export const useMemberByAccountName = (account: string) => {
+    const result = useBoxQuery<MembersQuery>(`{
+        members(ge: "${account}", le: "${account}") {
+            edges {
+                node {
+                    ${MEMBER_DATA_FRAGMENT}
+                }
+            }
+        }
+    }`);
+
+    if (!result.data) return { ...result, data: null };
+
+    const memberNode = result.data.members.edges[0]?.node;
+    const member = formatQueriedMemberData(memberNode) ?? null;
+    return { ...result, data: member };
+};
 
 const sortMembersByDateDESC = (a: MemberData, b: MemberData) =>
     b.createdAt - a.createdAt;
@@ -38,110 +95,5 @@ export const useMembersWithAssets = () => {
             .map(mergeAuctionData);
     }
 
-    return {
-        members,
-        isLoading,
-        isError,
-    };
-};
-
-// TODO: Move to interfaces file? Seems these are tightly coupled to queries though. Maybe a separate query-interfaces.ts file? Or keep here?
-interface MembersQuery {
-    members: {
-        edges: MembersQueryEdge[];
-    };
-}
-
-interface MembersQueryEdge {
-    node: MembersQueryNode;
-}
-
-export interface MembersQueryNode {
-    createdAt: string;
-    account: string;
-    profile: {
-        name: string;
-        img: string;
-        attributions: string;
-        social: string;
-        bio: string;
-    };
-    inductionVideo: string;
-}
-
-export const useMembers = () => {
-    const result = useBoxQuery<MembersQuery>(`{
-        members {
-            edges {
-                node {
-                    account
-                    createdAt
-                    profile {
-                        name
-                        img
-                        attributions
-                        social
-                        bio
-                    }
-                    inductionVideo
-                }
-            }
-        }
-    }`);
-
-    let formattedMembers: MemberData[] = [];
-
-    if (!result.data) return { ...result, data: formattedMembers };
-
-    const memberEdges = result.data.members.edges;
-    if (memberEdges) {
-        formattedMembers = memberEdges.map(
-            (member) => formatQueriedMemberData(member.node) as MemberData
-        );
-    }
-
-    return { ...result, data: formattedMembers };
-};
-
-export const useMemberByAccountName = (account: string) => {
-    const result = useBoxQuery<MembersQuery>(`{
-        members(ge: "${account}", le: "${account}") {
-            edges {
-                node {
-                    account
-                    createdAt
-                    profile {
-                        name
-                        img
-                        social
-                        bio
-                    }
-                    inductionVideo
-                }
-            }
-        }
-    }`);
-
-    if (!result.data) return { ...result, data: null };
-
-    const memberNode = result.data.members.edges[0]?.node;
-    const member = formatQueriedMemberData(memberNode) ?? null;
-    return { ...result, data: member };
-};
-
-// TODO: Should we break this out into a separate formatters file?
-export const formatQueriedMemberData = (
-    data: MembersQueryNode
-): MemberData | undefined => {
-    if (!data) return;
-    return {
-        createdAt: data.createdAt ? new Date(data.createdAt).getTime() : 0,
-        account: data.account,
-        name: data.profile.name,
-        image: data.profile.img,
-        attributions: data.profile.attributions,
-        bio: data.profile.bio,
-        socialHandles: JSON.parse(data.profile.social),
-        inductionVideo: data.inductionVideo,
-    };
+    return { members, isLoading, isError };
 };

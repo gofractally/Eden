@@ -2,9 +2,10 @@ import { useQuery as useReactQuery } from "react-query";
 import { useQuery as useBoxQuery } from "@edenos/common/dist/subchain";
 
 import { atomicAssets, edenContractAccount } from "config";
-import { formatQueriedMemberData, MembersQueryNode } from "members";
+import { formatQueriedMemberData, MEMBER_DATA_FRAGMENT } from "members";
 import { getCollection, memberDataDefaults } from "members/api";
-import { MemberData } from "members/interfaces";
+import { MemberData, MembersQueryNode } from "members/interfaces";
+import { NFTCollectorsQuery } from "nfts/interfaces";
 
 export const queryMemberNFTCollection = (account: string) => ({
     queryKey: ["query_member_nft_collection", account],
@@ -17,24 +18,6 @@ export const useMemberNFTCollection = (account: string) => {
     });
 };
 
-interface NFTCollectorsQueryNode {
-    owner: MembersQueryNode;
-}
-
-interface NFTCollectorsQuery {
-    members: {
-        edges: {
-            node: {
-                nfts: {
-                    edges: {
-                        node: NFTCollectorsQueryNode;
-                    }[];
-                };
-            };
-        }[];
-    };
-}
-
 export const useMemberNFTCollectors = (account: string) => {
     const result = useBoxQuery<NFTCollectorsQuery>(`{
         members(ge: "${account}", le: "${account}") {
@@ -44,16 +27,7 @@ export const useMemberNFTCollectors = (account: string) => {
                         edges {
                             node {
                                 owner {
-                                    account
-                                    createdAt
-                                    profile {
-                                        name
-                                        img
-                                        attributions
-                                        social
-                                        bio
-                                    }
-                                    inductionVideo
+                                    ${MEMBER_DATA_FRAGMENT}
                                 }
                             }
                         }
@@ -77,7 +51,7 @@ export const useMemberNFTCollectors = (account: string) => {
     return { ...result, data: collectors };
 };
 
-// filter out failed new-member auctions and ongoing after-market auctions
+// filter new-member and after-market auctions
 const isAuction = (account: string) =>
     [edenContractAccount, atomicAssets.marketContract].includes(account);
 
