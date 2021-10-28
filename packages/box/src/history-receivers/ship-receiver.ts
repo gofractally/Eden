@@ -1,40 +1,23 @@
 import WebSocket from "ws";
-import * as eosjsSerialize from "eosjs/dist/eosjs-serialize";
 
-import { dfuseConfig } from "../config";
 import { Storage } from "../subchain-storage";
 import logger from "../logger";
-import { JsonTrx } from "./interfaces";
 
 const SHIP_ADDRESS = "localhost";
 const SHIP_PORT = "8080";
-const FIRST_BLOCK = 1;
 
 export class ShipReceiver {
     storage: Storage;
     wsClient: WebSocket | undefined;
-    abi: any;
-    types: any;
-    blocksQueue: any[] = [];
-    inProcessBlocks = false;
-
-    variables = {
-        query: "",
-        cursor: "",
-        low: FIRST_BLOCK,
-        limit: 0,
-        irrev: false,
-        interval: dfuseConfig.interval,
-    };
+    requestedBlocks = false;
 
     constructor(storage: Storage) {
         this.storage = storage;
     }
 
     async start() {
-        // TODO: add state loader
         await this.connect();
-    } // start()
+    }
 
     async connect() {
         if (this.wsClient) {
@@ -43,15 +26,16 @@ export class ShipReceiver {
         }
 
         try {
-            logger.info(`connecting to ${SHIP_ADDRESS}:${SHIP_PORT}`);
-
-            // Connecting to SHiP
+            logger.info(
+                `Connecting to SHiP on ${SHIP_ADDRESS}:${SHIP_PORT}...`
+            );
             this.wsClient = new WebSocket(`ws://${SHIP_ADDRESS}:${SHIP_PORT}`);
             this.wsClient.on("open", () => {
                 logger.info("SHiP is now connected");
             });
             this.wsClient.on("message", (data) => this.onMessage(data));
             this.wsClient.on("close", (reason) => this.disconnect(reason));
+            this.wsClient.on("error", (error) => this.disconnect(error));
         } catch (e: any) {
             logger.error(e);
             logger.info("scheduling retry in 10 min");
@@ -64,7 +48,7 @@ export class ShipReceiver {
     disconnect(reason: any) {
         logger.info("closed connection: %s", reason);
         if (this.wsClient) {
-            this.abi = undefined;
+            this.requestedBlocks = false;
             this.wsClient = undefined;
         }
         setTimeout(() => {
@@ -73,114 +57,16 @@ export class ShipReceiver {
     }
 
     onMessage(data: WebSocket.Data) {
-        if (!this.abi) {
-            this.setupAbi(data as string);
-            this.requestBlocks();
+        if (!this.requestedBlocks) {
+            logger.info("Requesting Blocks from SHiP...");
+            const request = this.storage.getShipBlocksRequest();
+            this.requestedBlocks = true;
+            this.wsClient!.send(request);
+            logger.info("Requested Blocks from SHiP!");
         } else {
             const bytes = (data as ArrayBuffer) as Uint8Array;
             logger.info("shipping %s bytes", bytes.length);
-            this.storage.pushShipMessage((data as ArrayBuffer) as Uint8Array);
-            // const [type, response] = this.deserialize("result", data);
-            // this[type](response);
+            this.storage.pushShipMessage(bytes);
         }
-    }
-
-    setupAbi(data: string) {
-        this.abi = JSON.parse(data);
-        logger.info("received SHiP abi");
-        this.types = eosjsSerialize.getTypesFromAbi(
-            eosjsSerialize.createInitialTypes(),
-            this.abi
-        );
-    }
-
-    requestStatus() {
-        this.send(["get_status_request_v0", {}]);
-    }
-
-    requestBlocks() {
-        this.send([
-            "get_blocks_request_v0",
-            {
-                start_block_num: this.variables.low,
-                end_block_num: 0xffffffff,
-                max_messages_in_flight: 0xffffffff,
-                have_positions: [],
-                irreversible_only: false,
-                fetch_block: true,
-                fetch_traces: true,
-                fetch_deltas: false,
-            },
-        ]);
-    }
-
-    // get_status_result_v0(response: any) {
-    //     logger.info("status result head: %s", response.head);
-    // }
-
-    // get_blocks_result_v0(response: any) {
-    //     logger.info(
-    //         "received block: %s, head: %s",
-    //         response.this_block.block_num,
-    //         response.head.block_num
-    //     );
-    //     this.blocksQueue.push(response);
-    //     this.processBlocks();
-    // }
-
-    // async processBlocks() {
-    //     if (this.inProcessBlocks) {
-    //         return;
-    //     }
-
-    //     this.inProcessBlocks = true;
-
-    //     try {
-    //         while (this.blocksQueue.length) {
-    //             const response = this.blocksQueue.shift();
-    //             if (response.block && response.block.length) {
-    //                 const block = this.deserialize(
-    //                     "signed_block",
-    //                     response.block
-    //                 );
-    //                 logger.info("processed block: %s", block);
-    //                 logger.info("transactions: %s", block.transactions);
-    //             }
-    //         }
-    //     } catch (e) {
-    //         logger.error("process blocks failed: %s", e);
-    //     }
-
-    //     this.inProcessBlocks = false;
-    // }
-
-    send(request: any) {
-        this.wsClient!.send(this.serialize("request", request));
-    }
-
-    serialize(type: string, value: any) {
-        const buffer = new eosjsSerialize.SerialBuffer({
-            textEncoder: new TextEncoder(),
-            textDecoder: new TextDecoder(),
-        });
-        eosjsSerialize.getType(this.types, type).serialize(buffer, value);
-        return buffer.asUint8Array();
-    }
-
-    deserialize(type: string, bytes: Uint8Array) {
-        const buffer = new eosjsSerialize.SerialBuffer({
-            textEncoder: new TextEncoder(),
-            textDecoder: new TextDecoder(),
-            array: bytes,
-        });
-        let result = eosjsSerialize
-            .getType(this.types, type)
-            .deserialize(
-                buffer,
-                new eosjsSerialize.SerializerState({ bytesAsUint8Array: true })
-            );
-        if (buffer.readPos != bytes.length)
-            throw new Error("deserialization error: " + type); // todo: remove check
-        return result;
     }
 }

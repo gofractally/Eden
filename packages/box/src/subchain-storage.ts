@@ -121,6 +121,10 @@ export class Storage {
         return result;
     }
 
+    getShipBlocksRequest(): Uint8Array {
+        return this.protect(() => this.blocksWasm!.getShipBlocksRequest())!;
+    }
+
     pushShipMessage(shipMessage: Uint8Array) {
         const result = this.protect(() => {
             const result = this.blocksWasm!.pushShipMessage(shipMessage);
