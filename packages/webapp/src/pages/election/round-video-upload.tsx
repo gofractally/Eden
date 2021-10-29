@@ -29,7 +29,7 @@ import {
     setElectionRoundVideo,
 } from "elections";
 import { RoundHeader } from "elections/components/ongoing-election-components";
-import { MemberAccountData, MemberGateContainer } from "members";
+import { MemberData, MemberGateContainer } from "members";
 
 export const RoundVideoUploadPage = () => {
     const {
@@ -254,7 +254,7 @@ const LoaderSection = () => (
 interface HeaderProps {
     isOngoing: boolean;
     roundIndex: number;
-    winner?: MemberAccountData;
+    winner?: MemberData;
     roundStartTime?: dayjs.Dayjs;
     roundEndTime?: dayjs.Dayjs;
 }

@@ -56,14 +56,14 @@ const SaleBadge = ({
     saleId: string;
 }) => (
     <div
-        className="flex items-center space-x-1 text-gray-500 hover:text-gray-600 transition"
+        className="flex items-center space-x-1 text-gray-500 hover:text-gray-600 transition -mb-px"
         onClick={(e) => {
             e.stopPropagation();
             const url = `${atomicAssets.hubUrl}/market/sale/${saleId}`;
             openInNewTab(url);
         }}
     >
-        <NFT size={17} className="pb-px" />
+        <NFT size={17} />
         <p>#{assetData.templateMint} ON SALE</p>
     </div>
 );
@@ -85,10 +85,10 @@ interface NFTBadgeProps {
 
 const NFTBadge = ({ onClick, children }: NFTBadgeProps) => (
     <div
-        className="flex items-center space-x-1 text-gray-500 hover:text-gray-600 transition"
+        className="flex items-center space-x-1 text-gray-500 hover:text-gray-600 transition -mb-px"
         onClick={onClick}
     >
-        <NFT size={17} className="pb-px" />
+        <NFT size={17} />
         {children}
     </div>
 );
