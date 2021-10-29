@@ -64,8 +64,9 @@ export class ShipReceiver {
             this.wsClient!.send(request);
             logger.info("Requested Blocks from SHiP!");
         } else {
-            const bytes = (data as ArrayBuffer) as Uint8Array;
+            const bytes = new Uint8Array(data as ArrayBuffer);
             this.storage.pushShipMessage(bytes);
+            this.storage.saveState();
         }
     }
 }

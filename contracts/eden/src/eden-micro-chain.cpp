@@ -1870,6 +1870,22 @@ bool add_block(subchain::block&& eden_block, uint32_t eosio_irreversible)
    return add_block(std::move(bi), eosio_irreversible);
 }
 
+bool add_block(subchain::eosio_block&& eosioBlock, uint32_t eosio_irreversible) {
+   subchain::block eden_block;
+   eden_block.eosioBlock = std::move(eosioBlock); 
+
+   auto* eden_prev = block_log.block_before_eosio_num(eden_block.eosioBlock.num);
+   if (eden_prev)
+   {
+      eden_block.num = eden_prev->num + 1;
+      eden_block.previous = eden_prev->id;
+   }
+   else
+      eden_block.num = 1;
+
+   return add_block(std::move(eden_block), eosio_irreversible);
+}
+
 bool add_block(eosio::ship_protocol::block_position block,
                eosio::ship_protocol::block_position prev,
                uint32_t eosio_irreversible,
@@ -1921,7 +1937,7 @@ bool add_block(eosio::ship_protocol::block_position block,
                    .receiver = act_trace->receiver,
                    .name = act_trace->act.name,
                    .creatorAction = creatorAction,
-                   .hexData = hexData,
+                   .hexData = std::move(hexData),
                };
 
                transaction.actions.emplace_back(action);
@@ -1931,20 +1947,8 @@ bool add_block(eosio::ship_protocol::block_position block,
          eosio_block.transactions.emplace_back(transaction);
       }
    }
-
-   subchain::block eden_block;
-   eden_block.eosioBlock = std::move(eosio_block);
-
-   auto* eden_prev = block_log.block_before_eosio_num(eden_block.eosioBlock.num);
-   if (eden_prev)
-   {
-      eden_block.num = eden_prev->num + 1;
-      eden_block.previous = eden_prev->id;
-   }
-   else
-      eden_block.num = 1;
-
-   return add_block(std::move(eden_block), eosio_irreversible);
+   
+   return add_block(std::move(eosio_block), eosio_irreversible);
 }
 
 // TODO: prevent from_json from aborting
@@ -1956,19 +1960,7 @@ bool add_block(eosio::ship_protocol::block_position block,
    eosio::json_token_stream s(str.data());
    subchain::eosio_block eosio_block;
    eosio::from_json(eosio_block, s);
-
-   subchain::block eden_block;
-   eden_block.eosioBlock = std::move(eosio_block);
-   auto* prev = block_log.block_before_eosio_num(eden_block.eosioBlock.num);
-   if (prev)
-   {
-      eden_block.num = prev->num + 1;
-      eden_block.previous = prev->id;
-   }
-   else
-      eden_block.num = 1;
-   return add_block(std::move(eden_block), eosio_irreversible);
-
+   return add_block(std::move(eosio_block), eosio_irreversible);
    // printf("%d blocks processed, %d blocks now in log\n", (int)eosio_blocks.size(),
    //        (int)block_log.blocks.size());
    // for (auto& b : block_log.blocks)
