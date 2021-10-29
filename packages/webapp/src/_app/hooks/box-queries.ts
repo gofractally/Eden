@@ -2,7 +2,11 @@ import { QueryResult, useQuery } from "@edenos/common/dist/subchain";
 import dayjs from "dayjs";
 
 import { assetFromString } from "_app";
-import { formatQueriedMemberData, MemberData } from "members";
+import {
+    formatQueriedMemberData,
+    MemberData,
+    MEMBER_DATA_FRAGMENT,
+} from "members";
 
 export interface ElectionStatusQuery {
     status: {
@@ -74,21 +78,11 @@ export const useCurrentMemberElectionVotingData = (
                             numGroups
                           }
                           winner {
-                            account
-                            profile {
-                              name
-                              img
-                              social
-                            }
+                            ${MEMBER_DATA_FRAGMENT}
                           }
                         }
                         candidate {
-                          account
-                          profile {
-                            name
-                            img
-                            social
-                          }
+                          ${MEMBER_DATA_FRAGMENT}
                         }
                         video
                       }
@@ -169,29 +163,14 @@ const currentElectionGlobalDataQuery = `
                 edges {
                   node {
                     winner {
-                      account
-                      profile {
-                        name
-                        img
-                        social
-                      }
+                      ${MEMBER_DATA_FRAGMENT}
                     }
                     votes {
                       voter {
-                        account
-                        profile {
-                          name
-                          img
-                          social
-                        }
+                        ${MEMBER_DATA_FRAGMENT}
                       }
                       candidate {
-                        account
-                        profile {
-                          name
-                          img
-                          social
-                        }
+                        ${MEMBER_DATA_FRAGMENT}
                       }
                       video
                     }
