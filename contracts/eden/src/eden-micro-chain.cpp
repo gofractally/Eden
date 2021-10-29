@@ -1824,6 +1824,59 @@ void filter_block(const subchain::eosio_block& block)
    }  // for(trx)
 }  // filter_block
 
+std::vector<subchain::transaction> ship_to_eden_transactions(
+    std::vector<eosio::ship_protocol::transaction_trace>& traces)
+{
+   std::vector<subchain::transaction> transactions;
+
+   for (const auto& transaction_trace : traces)
+   {
+      if (auto* trx_trace =
+              std::get_if<eosio::ship_protocol::transaction_trace_v0>(&transaction_trace))
+      {
+         subchain::transaction transaction{
+             .id = trx_trace->id,
+         };
+
+         for (const auto& action_trace : trx_trace->action_traces)
+         {
+            if (auto* act_trace = std::get_if<eosio::ship_protocol::action_trace_v0>(&action_trace))
+            {
+               std::optional<subchain::creator_action> creatorAction;
+               if (act_trace->creator_action_ordinal.value > 0)
+               {
+                  const auto& creator_action_trace =
+                      std::get<eosio::ship_protocol::action_trace_v0>(
+                          trx_trace->action_traces[act_trace->creator_action_ordinal.value - 1]);
+                  creatorAction = subchain::creator_action{
+                      .seq = act_trace->creator_action_ordinal,
+                      .receiver = creator_action_trace.receiver,
+                  };
+               }
+
+               std::vector<char> data(act_trace->act.data.pos, act_trace->act.data.end);
+               eosio::bytes hexData{data};
+
+               subchain::action action{
+                   .seq = act_trace->action_ordinal,
+                   .firstReceiver = act_trace->act.account,
+                   .receiver = act_trace->receiver,
+                   .name = act_trace->act.name,
+                   .creatorAction = creatorAction,
+                   .hexData = std::move(hexData),
+               };
+
+               transaction.actions.push_back(action);
+            }
+         }
+
+         transactions.push_back(transaction);
+      }
+   }
+
+   return transactions;
+}
+
 subchain::block_log block_log;
 
 void forked_n_blocks(size_t n)
@@ -1892,62 +1945,12 @@ bool add_block(eosio::ship_protocol::block_position block,
                eosio::block_timestamp timestamp,
                std::vector<eosio::ship_protocol::transaction_trace> traces)
 {
-   printf("received block %d with %d traces\n", block.block_num, (int)traces.size());
-
    subchain::eosio_block eosio_block;
    eosio_block.num = block.block_num;
    eosio_block.id = block.block_id;
    eosio_block.previous = prev.block_id;
    eosio_block.timestamp = timestamp.to_time_point();
-
-   for (const auto& transaction_trace : traces)
-   {
-      if (auto* trx_trace =
-              std::get_if<eosio::ship_protocol::transaction_trace_v0>(&transaction_trace))
-      {
-         subchain::transaction transaction{
-             .id = trx_trace->id,
-         };
-
-         for (const auto& action_trace : trx_trace->action_traces)
-         {
-            if (auto* act_trace = std::get_if<eosio::ship_protocol::action_trace_v0>(&action_trace))
-            {
-               printf("action ordinal %d, creator ordinal %d\n", act_trace->action_ordinal.value,
-                      act_trace->creator_action_ordinal.value);
-
-               std::optional<subchain::creator_action> creatorAction;
-               if (act_trace->creator_action_ordinal.value > 0)
-               {
-                  const auto& creator_action_trace =
-                      std::get<eosio::ship_protocol::action_trace_v0>(
-                          trx_trace->action_traces[act_trace->creator_action_ordinal.value - 1]);
-                  creatorAction = subchain::creator_action{
-                      .seq = act_trace->creator_action_ordinal,
-                      .receiver = creator_action_trace.receiver,
-                  };
-               }
-
-               std::vector<char> data(act_trace->act.data.pos, act_trace->act.data.end);
-               eosio::bytes hexData{data};
-
-               subchain::action action{
-                   .seq = act_trace->action_ordinal,
-                   .firstReceiver = act_trace->act.account,
-                   .receiver = act_trace->receiver,
-                   .name = act_trace->act.name,
-                   .creatorAction = creatorAction,
-                   .hexData = std::move(hexData),
-               };
-
-               transaction.actions.emplace_back(action);
-            }
-         }
-
-         eosio_block.transactions.emplace_back(transaction);
-      }
-   }
-   
+   eosio_block.transactions = std::move(ship_to_eden_transactions(traces));
    return add_block(std::move(eosio_block), eosio_irreversible);
 }
 
