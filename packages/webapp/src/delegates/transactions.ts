@@ -1,17 +1,14 @@
-import { assetToString, sumAssetStrings } from "_app";
+import { Asset, assetToString } from "_app";
 import { edenContractAccount } from "config";
 
 import { DistributionAccount } from "./interfaces";
 
-export const withdrawDelegateAvailableFunds = (
+export const withdrawAvailableFunds = (
     authorizerAccount: string,
+    totalWithdrawal: Asset,
     distributions: DistributionAccount[]
 ) => {
-    const totalWithdraw = sumAssetStrings(
-        distributions.map((distribution) => distribution.balance)
-    );
-
-    if (!totalWithdraw) {
+    if (!totalWithdrawal) {
         throw new Error("The current available balance to withdraw is zero");
     }
 
@@ -32,7 +29,8 @@ export const withdrawDelegateAvailableFunds = (
                     rank: distribution.rank,
                     to: authorizerAccount,
                     amount: distribution.balance,
-                    memo: "Total withdraw from EdenWebApp UI Profile Page",
+                    memo:
+                        "Claiming all available delegate funds from EdenOS profile page",
                 },
             })),
             {
@@ -47,8 +45,8 @@ export const withdrawDelegateAvailableFunds = (
                 data: {
                     owner: authorizerAccount,
                     quantity: assetToString(
-                        totalWithdraw,
-                        totalWithdraw.precision
+                        totalWithdrawal,
+                        totalWithdrawal.precision
                     ),
                 },
             },
