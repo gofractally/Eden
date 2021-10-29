@@ -1,13 +1,12 @@
 import { createDfuseClient, GraphqlStreamMessage, Stream } from "@dfuse/client";
 import * as fs from "fs";
 import nodeFetch from "node-fetch";
+import WebSocketClient from "ws";
 import { performance } from "perf_hooks";
 
 import { dfuseConfig, subchainConfig } from "../config";
 import { Storage } from "../subchain-storage";
 import logger from "../logger";
-import { webSocketFactory } from "../utils";
-import { JsonTrx } from "./interfaces";
 
 const query = `
 subscription ($query: String!, $cursor: String, $limit: Int64, $low: Int64,
@@ -42,6 +41,46 @@ subscription ($query: String!, $cursor: String, $limit: Int64, $low: Int64,
         }
     }
 }`;
+
+interface JsonTrx {
+    undo: boolean;
+    cursor: string;
+    irreversibleBlockNum: number;
+    block: {
+        num: number;
+        id: string;
+        timestamp: string;
+        previous: string;
+    };
+    trace: {
+        id: string;
+        status: string;
+        matchingActions: [
+            {
+                seq: number;
+                receiver: string;
+                account: string;
+                name: string;
+                creatorAction: {
+                    seq: number;
+                    receiver: string;
+                };
+                hexData: string;
+            }
+        ];
+    };
+}
+
+const webSocketFactory = async (
+    url: string,
+    protocols: string[] = []
+): Promise<WebSocketClient> => {
+    const webSocket = new WebSocketClient(url, protocols, {
+        handshakeTimeout: 30 * 1000, // 30s
+        maxPayload: 10 * 1024 * 1024,
+    });
+    return webSocket;
+};
 
 export class DfuseReceiver {
     storage: Storage;

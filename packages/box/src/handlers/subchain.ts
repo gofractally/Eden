@@ -4,7 +4,7 @@ import * as WebSocket from "ws";
 import path from "path";
 import { Storage } from "../subchain-storage";
 import logger from "../logger";
-import { subchainConfig } from "../config";
+import { subchainConfig, SubchainReceivers } from "../config";
 import { DfuseReceiver, ShipReceiver } from "../history-receivers";
 import {
     ClientStatus,
@@ -152,12 +152,21 @@ export async function startSubchain() {
             subchainConfig.atomicMarket
         );
 
-        // TODO: gate through config
-        // const dfuseReceiver = new DfuseReceiver(storage);
-        // await dfuseReceiver.start();
-        const shipReceiver = new ShipReceiver(storage);
-        await shipReceiver.start();
+        await setupReceiver();
     } catch (e: any) {
         logger.error(e);
     }
 }
+
+const setupReceiver = async () => {
+    switch (subchainConfig.receiver) {
+        case SubchainReceivers.DFUSE: {
+            const dfuseReceiver = new DfuseReceiver(storage);
+            return dfuseReceiver.start();
+        }
+        case SubchainReceivers.SHIP: {
+            const shipReceiver = new ShipReceiver(storage);
+            return shipReceiver.start();
+        }
+    }
+};

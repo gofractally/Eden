@@ -2,9 +2,7 @@ import WebSocket from "ws";
 
 import { Storage } from "../subchain-storage";
 import logger from "../logger";
-
-const SHIP_ADDRESS = "localhost";
-const SHIP_PORT = "8080";
+import { shipConfig } from "../config";
 
 export class ShipReceiver {
     storage: Storage;
@@ -27,9 +25,11 @@ export class ShipReceiver {
 
         try {
             logger.info(
-                `Connecting to SHiP on ${SHIP_ADDRESS}:${SHIP_PORT}...`
+                `Connecting to SHiP on ${shipConfig.address}:${shipConfig.port}...`
             );
-            this.wsClient = new WebSocket(`ws://${SHIP_ADDRESS}:${SHIP_PORT}`);
+            this.wsClient = new WebSocket(
+                `ws://${shipConfig.address}:${shipConfig.port}`
+            );
             this.wsClient.on("open", () => {
                 logger.info("SHiP is now connected");
             });
