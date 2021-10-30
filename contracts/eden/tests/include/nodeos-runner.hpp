@@ -25,10 +25,15 @@ struct nodeos_runner
       eosio::execute("nodeos -d " + runner_name +
                      " "                                       //
                      "--config-dir config "                    //
+                     "--plugin eosio::chain_plugin "           //
                      "--plugin eosio::chain_api_plugin "       //
                      "--plugin eosio::producer_api_plugin "    //
                      "--plugin eosio::state_history_plugin "   //
+                     "--plugin eosio::http_plugin "            //
                      "--trace-history --disable-replay-opts "  //
+                     "--access-control-allow-origin \"*\" "    //
+                     "--access-control-allow-header \"*\" "    //
+                     "--http-validate-host 0 "                 //
                      "-e -p eosio");
    }
 };

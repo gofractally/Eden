@@ -69,7 +69,11 @@ export const subchainConfig = {
     atomicMarket: process.env.SUBCHAIN_AA_MARKET_CONTRACT || "atomicmarket",
     wasmFile: process.env.SUBCHAIN_WASM || "../../build/eden-micro-chain.wasm",
     stateFile: process.env.SUBCHAIN_STATE || "state",
-    receiver: SubchainReceivers[process.env.SUBCHAIN_RECEIVER || "DFUSE"],
+    receiver:
+        SubchainReceivers[
+            (process.env.SUBCHAIN_RECEIVER ||
+                "DFUSE") as keyof typeof SubchainReceivers
+        ],
 };
 console.info(subchainConfig);
 
