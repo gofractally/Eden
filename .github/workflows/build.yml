@@ -325,7 +325,8 @@ jobs:
                   export NODE_ENV=test
                   export DFUSE_PREVENT_CONNECT=1
                   tar xf built_packages.tar
-                  mv home/runner /home
+                  mkdir -p /home/runner/.cache
+                  mv home/runner/.cache/Cypress /home/runner/.cache/Cypress
                   cd packages/box
                   yarn start &
 
@@ -461,6 +462,8 @@ jobs:
                   export DFUSE_PREVENT_CONNECT=1
                   export NODE_ENV=test
                   tar xf built_packages.tar
+                  mkdir -p /home/runner/.cache
+                  mv home/runner/.cache/Cypress /home/runner/.cache/Cypress
                   yarn start --stream --ignore @edenos/example-history-app &
 
             - name: 🧪 Run E2E
