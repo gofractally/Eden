@@ -19,12 +19,21 @@ import {
     useMemberByAccountName,
     useUALAccount,
 } from "_app";
-import { Button, Container, Form, Heading, Modal, Text } from "_app/ui";
+import {
+    Button,
+    Container,
+    Form,
+    Heading,
+    Modal,
+    Text,
+    Link,
+    OpensInNewTabIcon,
+} from "_app/ui";
 
 import { withdrawAndTransfer } from "../transactions";
 import { useAccountBalance } from "treasury/hooks";
 import { DistributionAccount } from "delegates/interfaces";
-import { tokenConfig } from "config";
+import { blockExplorerTransactionBaseUrl, tokenConfig } from "config";
 
 interface Props {
     account: string;
@@ -167,7 +176,9 @@ const WithdrawModal = ({
     const [ualAccount] = useUALAccount();
 
     const [step, setStep] = useState<WithdrawStep>(WithdrawStep.Form);
-    const [isLoading, setIsLoading] = useState<boolean>(false); // TODO
+    const [isLoading, setIsLoading] = useState<boolean>(false);
+    const [transactionId, setTransactionId] = useState<string>("");
+    // TODO: clear all modal state on close
 
     const formState = useFormFields<WithdrawForm>({
         to: ualAccount?.accountName,
@@ -210,6 +221,8 @@ const WithdrawModal = ({
             queryClient.invalidateQueries(
                 queryTokenBalanceForAccount(ualAccount.accountName).queryKey
             );
+            setTransactionId(signedTrx.transactionId);
+            setStep(WithdrawStep.Success);
         } catch (error) {
             console.error(error);
             onError(error as Error);
@@ -234,11 +247,20 @@ const WithdrawModal = ({
                     formState={formState}
                     onCancel={close}
                 />
-            ) : (
-                <WithdrawalConfirmationStep
+            ) : step === WithdrawStep.Confirmation ? (
+                <WithdrawConfirmationStep
                     formValues={formState[0]}
                     goBack={() => setStep(WithdrawStep.Form)}
                     onConfirm={submitWithdraw}
+                    isLoading={isLoading}
+                />
+            ) : (
+                <WithdrawalSuccessStep
+                    isThirdPartyTransfer={
+                        ualAccount.accountName !== formState[0].to
+                    }
+                    dismiss={close}
+                    transactionId={transactionId}
                 />
             )}
         </Modal>
@@ -383,12 +405,14 @@ interface ConfirmationProps {
     formValues: WithdrawForm;
     goBack: () => void;
     onConfirm: () => void;
+    isLoading: boolean;
 }
 
-const WithdrawalConfirmationStep = ({
+const WithdrawConfirmationStep = ({
     formValues,
     goBack,
     onConfirm,
+    isLoading,
 }: ConfirmationProps) => {
     const [ualAccount] = useUALAccount();
     if (!ualAccount?.accountName) return null; // TODO: dismiss modal
@@ -449,7 +473,46 @@ const WithdrawalConfirmationStep = ({
                 <Button type="neutral" onClick={goBack}>
                     Make Changes
                 </Button>
-                <Button onClick={onConfirm}>Withdraw</Button>
+                <Button
+                    onClick={onConfirm}
+                    isLoading={isLoading}
+                    disabled={isLoading}
+                >
+                    Withdraw
+                </Button>
+            </div>
+        </div>
+    );
+};
+
+interface SuccessProps {
+    isThirdPartyTransfer: boolean;
+    dismiss: () => void;
+    transactionId: string;
+}
+
+const WithdrawalSuccessStep = ({
+    isThirdPartyTransfer,
+    dismiss,
+    transactionId,
+}: SuccessProps) => {
+    return (
+        <div className="space-y-4">
+            <Heading>
+                Withdrawal {isThirdPartyTransfer && "and transfer"} complete
+            </Heading>
+            <Text>Your transaction was successful. </Text>
+            <div className="flex space-x-3">
+                <Button onClick={dismiss}>Dismiss</Button>
+                <Button
+                    type="link"
+                    isExternal
+                    target="_blank"
+                    href={`${blockExplorerTransactionBaseUrl}/${transactionId}`}
+                >
+                    View transaction
+                    <OpensInNewTabIcon />
+                </Button>
             </div>
         </div>
     );

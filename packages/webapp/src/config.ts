@@ -9,6 +9,7 @@ if (
     !process.env.NEXT_PUBLIC_EOS_READ_RPC_URLS ||
     !process.env.NEXT_PUBLIC_EOS_CHAIN_ID ||
     !process.env.NEXT_PUBLIC_BLOCKEXPLORER_ACCOUNT_BASE_URL ||
+    !process.env.NEXT_PUBLIC_BLOCKEXPLORER_TRANSACTION_BASE_URL ||
     !process.env.NEXT_PUBLIC_AA_BASE_URL ||
     !process.env.NEXT_PUBLIC_AA_MARKET_URL ||
     !process.env.NEXT_PUBLIC_AA_HUB_URL ||
@@ -49,6 +50,9 @@ EOS_READ_RPCS_URLS="${process.env.NEXT_PUBLIC_EOS_READ_RPC_URLS}"
 EOS_CHAIN_ID="${process.env.NEXT_PUBLIC_EOS_CHAIN_ID}"
 BLOCKEXPLORER_ACCOUNT_BASE_URL="${
     process.env.NEXT_PUBLIC_BLOCKEXPLORER_ACCOUNT_BASE_URL
+}"
+BLOCKEXPLORER_TRANSACTION_BASE_URL="${
+    process.env.NEXT_PUBLIC_BLOCKEXPLORER_TRANSACTION_BASE_URL
 }"
 AA_BASE_URL="${process.env.NEXT_PUBLIC_AA_BASE_URL}"
 AA_MARKET_URL="${process.env.NEXT_PUBLIC_AA_MARKET_URL}"
@@ -106,6 +110,8 @@ export const box = {
 
 export const blockExplorerAccountBaseUrl =
     process.env.NEXT_PUBLIC_BLOCKEXPLORER_ACCOUNT_BASE_URL;
+export const blockExplorerTransactionBaseUrl =
+    process.env.NEXT_PUBLIC_BLOCKEXPLORER_TRANSACTION_BASE_URL;
 
 export const shortAppName = process.env.NEXT_PUBLIC_APP_SHORT_NAME;
 export const appName = process.env.NEXT_PUBLIC_APP_NAME;
