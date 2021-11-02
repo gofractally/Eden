@@ -392,11 +392,39 @@ jobs:
                   name: Eden Microchain
                   path: build
 
+            - name: Download Ephemeral Chain Runners
+              if: steps.filter.outputs.src == 'true'
+              uses: actions/download-artifact@v2
+              with:
+                  name: Ephemeral Eden Chains Runners
+                  path: build
+
+            - name: Download clsdk
+              if: steps.filter.outputs.src == 'true'
+              uses: actions/download-artifact@v2
+              with:
+                  name: clsdk
+                  path: build
+
+            # - name: Prepare Ephemeral Chain Directory
+            #   run: |
+            #       cp ./scripts/eden_chain_runner.sh ./build
+            #       cd build
+            #       tar -xvf clsdk-ubuntu-20-04.tar.gz clsdk/bin
+
+            - name: Start Genesis Ephemeral Chain
+              run: |
+                  cp ./scripts/eden_chain_runner.sh ./build
+                  cd build
+                  ls -a
+                  sh -x ./eden_chain_runner.sh run-genesis.wasm
+
             - name: 🛠 Build and Start WebApp
               if: steps.filter.outputs.src == 'true'
               run: |
                   export DFUSE_PREVENT_CONNECT=1
                   export NODE_ENV=test
+                  env
                   yarn
                   yarn build --stream --ignore @edenos/example-history-app
                   yarn start --stream --ignore @edenos/example-history-app &
