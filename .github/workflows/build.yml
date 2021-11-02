@@ -26,6 +26,7 @@ on:
             - "lerna.json"
             - "package.json"
             - "packages/common/**"
+            - "packages/eden-subchain-client/**"
             - "tsconfig.build.json"
             - "tsconfig.json"
             - "yarn.lock"
@@ -230,8 +231,52 @@ jobs:
                   path: |
                       build/eden-micro-chain.wasm
 
+    build-e2e:
+        name: Build E2E Tests
+        runs-on: ubuntu-latest
+
+        steps:
+            - name: ✅ Checkout code
+              uses: actions/checkout@v2
+
+            - uses: dorny/paths-filter@v2
+              id: filter
+              with:
+                  filters: |
+                      src:
+                        - ".github/workflows/build.yml"
+
+                        - ".eslintignore"
+                        - ".eslintrc.js"
+                        - ".prettierrc.json"
+                        - "lerna.json"
+                        - "package.json"
+                        - "packages/common/**"
+                        - "packages/eden-subchain-client/**"
+                        - "tsconfig.build.json"
+                        - "tsconfig.json"
+                        - "yarn.lock"
+
+                        - "packages/box/**"
+                        - "packages/webapp/**"
+
+            - name: 🛠 Build
+              if: steps.filter.outputs.src == 'true'
+              run: |
+                  export NODE_ENV=test
+                  yarn
+                  yarn build --stream --ignore @edenos/example-history-app
+                  tar cf built_packages.tar ./node_modules ./packages/box/dist ./packages/box/node_modules ./packages/common/dist ./packages/common/node_modules ./packages/eden-subchain-client/dist ./packages/example-history-app/dist ./packages/example-history-app/node_modules ./packages/webapp/dist ./packages/webapp/node_modules
+
+            - name: Upload Built Packages
+              if: steps.filter.outputs.src == 'true'
+              uses: actions/upload-artifact@v2
+              with:
+                  name: Built Packages
+                  path: built_packages.tar
+
     box-e2e:
-        needs: build-micro-chain
+        needs: [build-e2e, build-micro-chain]
         name: Eden Box E2E Tests
         runs-on: ubuntu-latest
 
@@ -252,6 +297,7 @@ jobs:
                         - "lerna.json"
                         - "package.json"
                         - "packages/common/**"
+                        - "packages/eden-subchain-client/**"
                         - "tsconfig.build.json"
                         - "tsconfig.json"
                         - "yarn.lock"
@@ -266,12 +312,19 @@ jobs:
                   name: Eden Microchain
                   path: build
 
-            - name: 🛠 Build and Start Box
+            - name: Download Built Packages
+              if: steps.filter.outputs.src == 'true'
+              uses: actions/download-artifact@v2
+              with:
+                  name: Built Packages
+                  path: .
+
+            - name: 🛠 Start Box
               if: steps.filter.outputs.src == 'true'
               run: |
+                  export NODE_ENV=test
                   export DFUSE_PREVENT_CONNECT=1
-                  yarn
-                  yarn build --stream
+                  tar xf built_packages.tar
                   cd packages/box
                   yarn start &
 
@@ -303,6 +356,7 @@ jobs:
                         - "lerna.json"
                         - "package.json"
                         - "packages/common/**"
+                        - "packages/eden-subchain-client/**"
                         - "tsconfig.build.json"
                         - "tsconfig.json"
                         - "yarn.lock"
@@ -356,7 +410,7 @@ jobs:
                   context: .
 
     webapp-e2e:
-        needs: build-micro-chain
+        needs: [build-e2e, build-micro-chain]
         name: WebApp E2E Tests
         environment: e2e_tests
         runs-on: ubuntu-latest
@@ -378,6 +432,7 @@ jobs:
                         - "lerna.json"
                         - "package.json"
                         - "packages/common/**"
+                        - "packages/eden-subchain-client/**"
                         - "tsconfig.build.json"
                         - "tsconfig.json"
                         - "yarn.lock"
@@ -392,13 +447,19 @@ jobs:
                   name: Eden Microchain
                   path: build
 
-            - name: 🛠 Build and Start WebApp
+            - name: Download Built Packages
+              if: steps.filter.outputs.src == 'true'
+              uses: actions/download-artifact@v2
+              with:
+                  name: Built Packages
+                  path: .
+
+            - name: 🛠 Start WebApp
               if: steps.filter.outputs.src == 'true'
               run: |
                   export DFUSE_PREVENT_CONNECT=1
                   export NODE_ENV=test
-                  yarn
-                  yarn build --stream --ignore @edenos/example-history-app
+                  tar xf built_packages.tar
                   yarn start --stream --ignore @edenos/example-history-app &
 
             - name: 🧪 Run E2E
@@ -439,6 +500,7 @@ jobs:
                         - "lerna.json"
                         - "package.json"
                         - "packages/common/**"
+                        - "packages/eden-subchain-client/**"
                         - "tsconfig.build.json"
                         - "tsconfig.json"
                         - "yarn.lock"
