@@ -49,8 +49,8 @@ export const DelegateFundsAvailable = ({ account }: Props) => {
     } = useAccountBalance(account);
     const { data: distributions } = useDistributionsForAccount(account);
 
-    const [isLoading, setIsLoading] = useState(false);
-    const [isWithdrawModalOpen, setIsWithDrawModalOpen] = useState(false);
+    const [isLoading, setIsLoading] = useState(false); // TODO: is this loading state necessary?
+    const [isWithdrawModalOpen, setIsWithdrawModalOpen] = useState(false);
 
     let availableFunds: Asset | undefined = undefined;
     if (accountBalance && distributions) {
@@ -86,7 +86,7 @@ export const DelegateFundsAvailable = ({ account }: Props) => {
                 <div>
                     {profileBelongsToCurrentUser && (
                         <Button
-                            onClick={() => setIsWithDrawModalOpen(true)}
+                            onClick={() => setIsWithdrawModalOpen(true)}
                             disabled={
                                 isLoading ||
                                 !availableFunds ||
@@ -107,7 +107,7 @@ export const DelegateFundsAvailable = ({ account }: Props) => {
             )}
             <WithdrawModal
                 isOpen={isWithdrawModalOpen}
-                close={() => setIsWithDrawModalOpen(false)}
+                close={() => setIsWithdrawModalOpen(false)}
                 availableFunds={availableFunds}
                 distributions={distributions}
             />
@@ -180,13 +180,22 @@ const WithdrawModal = ({
     const [isLoading, setIsLoading] = useState<boolean>(false);
     const [transactionId, setTransactionId] = useState<string>("");
     const [transactionError, setTransactionError] = useState<string>("");
-    // TODO: clear all modal state on close
 
     const formState = useFormFields<WithdrawForm>({
         to: ualAccount?.accountName,
         amount: 0,
         memo: "",
     });
+
+    const resetForm = () => {
+        formState[1]();
+    };
+
+    const dismissModal = () => {
+        close();
+        resetForm();
+        setStep(WithdrawStep.Form);
+    };
 
     const onPreview = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -238,7 +247,7 @@ const WithdrawModal = ({
     return (
         <Modal
             isOpen={isOpen}
-            onRequestClose={close}
+            onRequestClose={dismissModal}
             contentLabel="Withdraw funds from Eden"
             preventScroll
             shouldCloseOnOverlayClick={false}
@@ -249,7 +258,7 @@ const WithdrawModal = ({
                     availableFunds={availableFunds}
                     onPreview={onPreview}
                     formState={formState}
-                    onCancel={close}
+                    onCancel={dismissModal}
                 />
             ) : step === WithdrawStep.Confirmation ? (
                 <WithdrawConfirmationStep
@@ -263,12 +272,12 @@ const WithdrawModal = ({
                     isThirdPartyTransfer={
                         ualAccount.accountName !== formState[0].to
                     }
-                    dismiss={close}
+                    dismiss={dismissModal}
                     transactionId={transactionId}
                 />
             ) : (
                 <WithdrawFailureStep
-                    dismiss={close}
+                    dismiss={dismissModal}
                     tryAgain={() => setStep(WithdrawStep.Confirmation)}
                     errorMessage={transactionError}
                 />
