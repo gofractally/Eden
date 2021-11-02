@@ -59,7 +59,9 @@ export class ShipReceiver {
     onMessage(data: WebSocket.Data) {
         if (!this.requestedBlocks) {
             logger.info("Requesting Blocks from SHiP...");
-            const request = this.storage.getShipBlocksRequest();
+            const request = this.storage.getShipBlocksRequest(
+                shipConfig.firstBlock
+            );
             this.requestedBlocks = true;
             this.wsClient!.send(request);
             logger.info("Requested Blocks from SHiP!");

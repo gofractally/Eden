@@ -158,7 +158,7 @@ export async function startSubchain() {
     }
 }
 
-const setupReceiver = async () => {
+const setupReceiver = () => {
     switch (subchainConfig.receiver) {
         case SubchainReceivers.DFUSE: {
             const dfuseReceiver = new DfuseReceiver(storage);

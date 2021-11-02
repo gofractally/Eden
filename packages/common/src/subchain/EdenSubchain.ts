@@ -187,9 +187,9 @@ export class EdenSubchain {
         });
     }
 
-    getShipBlocksRequest() {
+    getShipBlocksRequest(blockNum: number) {
         return this.protect(() => {
-            if (!this.exports.getShipBlocksRequest()) return null;
+            if (!this.exports.getShipBlocksRequest(blockNum)) return null;
             return this.resultAsUint8Array();
         });
     }

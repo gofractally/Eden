@@ -93,6 +93,7 @@ export const dfuseConfig = {
 export const shipConfig = {
     address: process.env.SHIP_ADDRESS || "127.0.0.1",
     port: process.env.SHIP_PORT || "8080",
+    firstBlock: +(process.env.SHIP_FIRST_BLOCK as any) || 1,
 };
 
 if (subchainConfig.enable) {

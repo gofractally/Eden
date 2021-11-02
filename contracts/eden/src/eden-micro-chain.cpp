@@ -1848,8 +1848,10 @@ std::vector<subchain::transaction> ship_to_eden_transactions(
                   const auto& creator_action_trace =
                       std::get<eosio::ship_protocol::action_trace_v0>(
                           trx_trace->action_traces[act_trace->creator_action_ordinal.value - 1]);
+                  const auto& receipt = std::get<eosio::ship_protocol::action_receipt_v0>(
+                      *creator_action_trace.receipt);
                   creatorAction = subchain::creator_action{
-                      .seq = act_trace->creator_action_ordinal,
+                      .seq = receipt.global_sequence,
                       .receiver = creator_action_trace.receiver,
                   };
                }
@@ -1857,8 +1859,11 @@ std::vector<subchain::transaction> ship_to_eden_transactions(
                std::vector<char> data(act_trace->act.data.pos, act_trace->act.data.end);
                eosio::bytes hexData{data};
 
+               const auto& receipt =
+                   std::get<eosio::ship_protocol::action_receipt_v0>(*act_trace->receipt);
+
                subchain::action action{
-                   .seq = act_trace->action_ordinal,
+                   .seq = receipt.global_sequence,
                    .firstReceiver = act_trace->act.account,
                    .receiver = act_trace->receiver,
                    .name = act_trace->act.name,
@@ -1870,7 +1875,7 @@ std::vector<subchain::transaction> ship_to_eden_transactions(
             }
          }
 
-         transactions.push_back(transaction);
+         transactions.push_back(std::move(transaction));
       }
    }
 
@@ -1950,7 +1955,7 @@ bool add_block(eosio::ship_protocol::block_position block,
    eosio_block.id = block.block_id;
    eosio_block.previous = prev.block_id;
    eosio_block.timestamp = timestamp.to_time_point();
-   eosio_block.transactions = std::move(ship_to_eden_transactions(traces));
+   eosio_block.transactions = ship_to_eden_transactions(traces);
    return add_block(std::move(eosio_block), eosio_irreversible);
 }
 
@@ -1982,11 +1987,8 @@ bool add_block(eosio::ship_protocol::block_position block,
    return add_block(std::move(block), eosio_irreversible);
 }
 
-[[clang::export_name("getShipBlocksRequest")]] bool getShipBlocksRequest()
+[[clang::export_name("getShipBlocksRequest")]] bool getShipBlocksRequest(uint32_t block_num)
 {
-   auto head = block_log.head();
-   auto block_num = head ? head->num : 1;
-
    eosio::ship_protocol::request request = eosio::ship_protocol::get_blocks_request_v0{
        .start_block_num = block_num,
        .end_block_num = 0xffff'ffff,
