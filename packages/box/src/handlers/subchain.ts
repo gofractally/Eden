@@ -4,8 +4,8 @@ import * as WebSocket from "ws";
 import path from "path";
 import { Storage } from "../subchain-storage";
 import logger from "../logger";
-import { subchainConfig } from "../config";
-import DfuseReceiver from "../dfuse-receiver";
+import { subchainConfig, SubchainReceivers } from "../config";
+import { DfuseReceiver, ShipReceiver } from "../history-receivers";
 import {
     ClientStatus,
     ServerMessage,
@@ -13,7 +13,6 @@ import {
 } from "@edenos/common/dist/subchain/SubchainProtocol";
 
 const storage = new Storage();
-const dfuseReceiver = new DfuseReceiver(storage);
 export const subchainHandler = express.Router();
 
 subchainHandler.get("/eden-micro-chain.wasm", (req, res) => {
@@ -152,8 +151,22 @@ export async function startSubchain() {
             subchainConfig.atomic,
             subchainConfig.atomicMarket
         );
-        await dfuseReceiver.start();
+
+        await setupReceiver();
     } catch (e: any) {
         logger.error(e);
     }
 }
+
+const setupReceiver = () => {
+    switch (subchainConfig.receiver) {
+        case SubchainReceivers.DFUSE: {
+            const dfuseReceiver = new DfuseReceiver(storage);
+            return dfuseReceiver.start();
+        }
+        case SubchainReceivers.SHIP: {
+            const shipReceiver = new ShipReceiver(storage);
+            return shipReceiver.start();
+        }
+    }
+};

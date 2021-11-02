@@ -29,6 +29,9 @@ struct nodeos_runner
                      "--plugin eosio::producer_api_plugin "    //
                      "--plugin eosio::state_history_plugin "   //
                      "--trace-history --disable-replay-opts "  //
+                     "--access-control-allow-origin \"*\" "    //
+                     "--access-control-allow-header \"*\" "    //
+                     "--http-validate-host 0 "                 //
                      "-e -p eosio");
    }
 };

@@ -10,6 +10,7 @@
 #include <eosio/abi.hpp>
 #include <eosio/from_bin.hpp>
 #include <eosio/to_bin.hpp>
+#include <eosio/ship_protocol.hpp>
 #include <events.hpp>
 
 using namespace eosio::literals;
@@ -1823,6 +1824,64 @@ void filter_block(const subchain::eosio_block& block)
    }  // for(trx)
 }  // filter_block
 
+std::vector<subchain::transaction> ship_to_eden_transactions(
+    std::vector<eosio::ship_protocol::transaction_trace>& traces)
+{
+   std::vector<subchain::transaction> transactions;
+
+   for (const auto& transaction_trace : traces)
+   {
+      if (auto* trx_trace =
+              std::get_if<eosio::ship_protocol::transaction_trace_v0>(&transaction_trace))
+      {
+         subchain::transaction transaction{
+             .id = trx_trace->id,
+         };
+
+         for (const auto& action_trace : trx_trace->action_traces)
+         {
+            if (auto* act_trace = std::get_if<eosio::ship_protocol::action_trace_v0>(&action_trace))
+            {
+               std::optional<subchain::creator_action> creatorAction;
+               if (act_trace->creator_action_ordinal.value > 0)
+               {
+                  const auto& creator_action_trace =
+                      std::get<eosio::ship_protocol::action_trace_v0>(
+                          trx_trace->action_traces[act_trace->creator_action_ordinal.value - 1]);
+                  const auto& receipt = std::get<eosio::ship_protocol::action_receipt_v0>(
+                      *creator_action_trace.receipt);
+                  creatorAction = subchain::creator_action{
+                      .seq = receipt.global_sequence,
+                      .receiver = creator_action_trace.receiver,
+                  };
+               }
+
+               std::vector<char> data(act_trace->act.data.pos, act_trace->act.data.end);
+               eosio::bytes hexData{data};
+
+               const auto& receipt =
+                   std::get<eosio::ship_protocol::action_receipt_v0>(*act_trace->receipt);
+
+               subchain::action action{
+                   .seq = receipt.global_sequence,
+                   .firstReceiver = act_trace->act.account,
+                   .receiver = act_trace->receiver,
+                   .name = act_trace->act.name,
+                   .creatorAction = creatorAction,
+                   .hexData = std::move(hexData),
+               };
+
+               transaction.actions.push_back(action);
+            }
+         }
+
+         transactions.push_back(std::move(transaction));
+      }
+   }
+
+   return transactions;
+}
+
 subchain::block_log block_log;
 
 void forked_n_blocks(size_t n)
@@ -1869,6 +1928,37 @@ bool add_block(subchain::block&& eden_block, uint32_t eosio_irreversible)
    return add_block(std::move(bi), eosio_irreversible);
 }
 
+bool add_block(subchain::eosio_block&& eosioBlock, uint32_t eosio_irreversible) {
+   subchain::block eden_block;
+   eden_block.eosioBlock = std::move(eosioBlock); 
+
+   auto* eden_prev = block_log.block_before_eosio_num(eden_block.eosioBlock.num);
+   if (eden_prev)
+   {
+      eden_block.num = eden_prev->num + 1;
+      eden_block.previous = eden_prev->id;
+   }
+   else
+      eden_block.num = 1;
+
+   return add_block(std::move(eden_block), eosio_irreversible);
+}
+
+bool add_block(eosio::ship_protocol::block_position block,
+               eosio::ship_protocol::block_position prev,
+               uint32_t eosio_irreversible,
+               eosio::block_timestamp timestamp,
+               std::vector<eosio::ship_protocol::transaction_trace> traces)
+{
+   subchain::eosio_block eosio_block;
+   eosio_block.num = block.block_num;
+   eosio_block.id = block.block_id;
+   eosio_block.previous = prev.block_id;
+   eosio_block.timestamp = timestamp.to_time_point();
+   eosio_block.transactions = ship_to_eden_transactions(traces);
+   return add_block(std::move(eosio_block), eosio_irreversible);
+}
+
 // TODO: prevent from_json from aborting
 [[clang::export_name("addEosioBlockJson")]] bool addEosioBlockJson(const char* json,
                                                                    uint32_t size,
@@ -1878,19 +1968,7 @@ bool add_block(subchain::block&& eden_block, uint32_t eosio_irreversible)
    eosio::json_token_stream s(str.data());
    subchain::eosio_block eosio_block;
    eosio::from_json(eosio_block, s);
-
-   subchain::block eden_block;
-   eden_block.eosioBlock = std::move(eosio_block);
-   auto* prev = block_log.block_before_eosio_num(eden_block.eosioBlock.num);
-   if (prev)
-   {
-      eden_block.num = prev->num + 1;
-      eden_block.previous = prev->id;
-   }
-   else
-      eden_block.num = 1;
-   return add_block(std::move(eden_block), eosio_irreversible);
-
+   return add_block(std::move(eosio_block), eosio_irreversible);
    // printf("%d blocks processed, %d blocks now in log\n", (int)eosio_blocks.size(),
    //        (int)block_log.blocks.size());
    // for (auto& b : block_log.blocks)
@@ -1907,6 +1985,50 @@ bool add_block(subchain::block&& eden_block, uint32_t eosio_irreversible)
    subchain::block_with_id block;
    eosio::from_bin(block, bin);
    return add_block(std::move(block), eosio_irreversible);
+}
+
+[[clang::export_name("getShipBlocksRequest")]] bool getShipBlocksRequest(uint32_t block_num)
+{
+   eosio::ship_protocol::request request = eosio::ship_protocol::get_blocks_request_v0{
+       .start_block_num = block_num,
+       .end_block_num = 0xffff'ffff,
+       .max_messages_in_flight = 0xffff'ffff,
+       .fetch_block = true,
+       .fetch_traces = true,
+   };
+   result = eosio::convert_to_bin(request);
+
+   return true;
+}
+
+[[clang::export_name("pushShipMessage")]] bool pushShipMessage(const char* data,
+                                                               uint32_t size)
+{
+   eosio::input_stream bin{data, size};
+   eosio::ship_protocol::result result;
+   eosio::from_bin(result, bin);
+
+   if (auto* blocks_result = std::get_if<eosio::ship_protocol::get_blocks_result_v0>(&result))
+   {
+      eosio::ship_protocol::signed_block signed_block;
+      if (blocks_result->block)
+      {
+         eosio::from_bin(signed_block, blocks_result->block.value());
+      }
+
+      std::vector<eosio::ship_protocol::transaction_trace> traces;
+      if (blocks_result->traces)
+      {
+         eosio::from_bin(traces, blocks_result->traces.value());
+      }
+
+      auto prev_block = blocks_result->prev_block ? blocks_result->prev_block.value()
+                                                  : eosio::ship_protocol::block_position{};
+
+      return add_block(blocks_result->this_block.value(), prev_block,
+                       blocks_result->last_irreversible.block_num, signed_block.timestamp, traces);
+   }
+   return false;
 }
 
 [[clang::export_name("setIrreversible")]] uint32_t setIrreversible(uint32_t irreversible)
