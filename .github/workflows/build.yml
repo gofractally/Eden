@@ -465,7 +465,7 @@ jobs:
                   mkdir -p /home/runner/.cache
                   mv home/runner/.cache/Cypress /home/runner/.cache/Cypress
                   cd packages/webapp
-                  yarn build --stream
+                  yarn build
                   cd ../..
                   yarn start --stream --ignore @edenos/example-history-app &
 
