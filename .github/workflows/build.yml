@@ -231,8 +231,8 @@ jobs:
                   path: |
                       build/eden-micro-chain.wasm
 
-    build-e2e:
-        name: Build E2E Tests
+    build-common-packages:
+        name: Build Common Packages
         runs-on: ubuntu-latest
 
         steps:
@@ -265,18 +265,18 @@ jobs:
               run: |
                   export NODE_ENV=test
                   yarn
-                  yarn build --stream --ignore @edenos/example-history-app
-                  tar cf built_packages.tar ./node_modules ./packages/box/dist ./packages/box/node_modules ./packages/common/dist ./packages/common/node_modules ./packages/eden-subchain-client/dist ./packages/webapp/dist ./packages/webapp/node_modules /home/runner/.cache/Cypress
+                  yarn build --stream --ignore @edenos/example-history-app --ignore @edenos/webapp
+                  tar cf built_packages.tar ./node_modules ./packages/box/dist ./packages/box/node_modules ./packages/common/dist ./packages/common/node_modules ./packages/eden-subchain-client/dist /home/runner/.cache/Cypress
 
-            - name: Upload Built Packages
+            - name: Upload Built Common Packages
               if: steps.filter.outputs.src == 'true'
               uses: actions/upload-artifact@v2
               with:
-                  name: Built Packages
+                  name: Built Common Packages
                   path: built_packages.tar
 
     box-e2e:
-        needs: [build-e2e, build-micro-chain]
+        needs: [build-box-packages, build-micro-chain]
         name: Eden Box E2E Tests
         runs-on: ubuntu-latest
 
@@ -312,11 +312,11 @@ jobs:
                   name: Eden Microchain
                   path: build
 
-            - name: Download Built Packages
+            - name: Download Built Common Packages
               if: steps.filter.outputs.src == 'true'
               uses: actions/download-artifact@v2
               with:
-                  name: Built Packages
+                  name: Built Common Packages
                   path: .
 
             - name: 🛠 Start Box
@@ -412,7 +412,7 @@ jobs:
                   context: .
 
     webapp-e2e:
-        needs: [build-e2e, build-micro-chain]
+        needs: [build-box-packages, build-micro-chain]
         name: WebApp E2E Tests
         environment: e2e_tests
         runs-on: ubuntu-latest
@@ -449,11 +449,11 @@ jobs:
                   name: Eden Microchain
                   path: build
 
-            - name: Download Built Packages
+            - name: Download Built Common Packages
               if: steps.filter.outputs.src == 'true'
               uses: actions/download-artifact@v2
               with:
-                  name: Built Packages
+                  name: Built Common Packages
                   path: .
 
             - name: 🛠 Start WebApp
@@ -464,6 +464,9 @@ jobs:
                   tar xf built_packages.tar
                   mkdir -p /home/runner/.cache
                   mv home/runner/.cache/Cypress /home/runner/.cache/Cypress
+                  cd packages/webapp
+                  yarn build --stream
+                  cd ../..
                   yarn start --stream --ignore @edenos/example-history-app &
 
             - name: 🧪 Run E2E
