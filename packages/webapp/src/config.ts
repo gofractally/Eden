@@ -28,6 +28,8 @@ if (
     !process.env.NEXT_PUBLIC_ELECTION_COMMUNITY_ROOM_URL ||
     !process.env.NEXT_PUBLIC_ELECTION_MEETING_DURATION_MS ||
     !process.env.NEXT_PUBLIC_TOKEN_CONTRACT ||
+    !process.env.NEXT_PUBLIC_TOKEN_SYMBOL ||
+    !process.env.NEXT_PUBLIC_TOKEN_PRECISION ||
     !process.env.NEXT_PUBLIC_SUBCHAIN_WASM_URL ||
     !process.env.NEXT_PUBLIC_SUBCHAIN_STATE_URL ||
     !process.env.NEXT_PUBLIC_SUBCHAIN_WS_URL ||
@@ -74,6 +76,8 @@ ELECTION_COMMUNITY_ROOM_URL="${
     process.env.NEXT_PUBLIC_ELECTION_COMMUNITY_ROOM_URL
 }"
 TOKEN_CONTRACT="${process.env.NEXT_PUBLIC_TOKEN_CONTRACT}"
+TOKEN_SYMBOL="${process.env.NEXT_PUBLIC_TOKEN_SYMBOL}"
+TOKEN_PRECISION="${process.env.NEXT_PUBLIC_TOKEN_PRECISION}"
 SUBCHAIN_WASM_URL="${process.env.NEXT_PUBLIC_SUBCHAIN_WASM_URL}"
 SUBCHAIN_STATE_URL="${process.env.NEXT_PUBLIC_SUBCHAIN_STATE_URL}"
 SUBCHAIN_WS_URL="${process.env.NEXT_PUBLIC_SUBCHAIN_WS_URL}"
@@ -139,6 +143,8 @@ export const chainConfig = {
 
 export const tokenConfig = {
     contract: process.env.NEXT_PUBLIC_TOKEN_CONTRACT,
+    symbol: process.env.NEXT_PUBLIC_TOKEN_SYMBOL,
+    precision: Number(process.env.NEXT_PUBLIC_TOKEN_PRECISION),
 };
 
 export const availableWallets = (

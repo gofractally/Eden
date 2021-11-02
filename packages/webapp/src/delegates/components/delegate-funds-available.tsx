@@ -5,6 +5,7 @@ import { RiDownloadLine } from "react-icons/ri";
 
 import {
     Asset,
+    assetFromNumber,
     assetToLocaleString,
     assetToString,
     onError,
@@ -23,6 +24,7 @@ import { Button, Container, Form, Heading, Modal, Text } from "_app/ui";
 import { withdrawAndTransfer } from "../transactions";
 import { useAccountBalance } from "treasury/hooks";
 import { DistributionAccount } from "delegates/interfaces";
+import { tokenConfig } from "config";
 
 interface Props {
     account: string;
@@ -65,7 +67,10 @@ export const DelegateFundsAvailable = ({ account }: Props) => {
                     <Heading size={4}>Funds available</Heading>
                     <Text>
                         {availableFunds
-                            ? assetToLocaleString(availableFunds)
+                            ? assetToLocaleString(
+                                  availableFunds,
+                                  tokenConfig.precision
+                              )
                             : "None"}
                     </Text>
                 </div>
@@ -166,11 +171,7 @@ const WithdrawModal = ({
 
     const formState = useFormFields<WithdrawForm>({
         to: ualAccount?.accountName,
-        amount: {
-            quantity: 0,
-            symbol: "WAX",
-            precision: 8,
-        },
+        amount: 0,
         memo: "",
     });
 
@@ -180,15 +181,16 @@ const WithdrawModal = ({
     };
 
     const submitWithdraw = async () => {
+        const { amount, to, memo } = formState[0];
         setIsLoading(true);
 
         try {
             const authorizerAccount = ualAccount.accountName;
             const trx = withdrawAndTransfer(
                 authorizerAccount,
-                formState[0].amount,
-                formState[0].to,
-                formState[0].memo,
+                assetFromNumber(amount),
+                to,
+                memo,
                 distributions!
             );
             console.info("signing trx", trx);
@@ -245,7 +247,7 @@ const WithdrawModal = ({
 
 interface WithdrawForm {
     to: string;
-    amount: Asset;
+    amount: number;
     memo: string;
 }
 
@@ -269,16 +271,6 @@ const WithdrawFundsForm = ({
         setFields(e);
     };
 
-    const setAmount = (value: Asset) =>
-        setFields({ target: { id: "amount", value } });
-
-    const onChangeAmount = (e: React.ChangeEvent<HTMLInputElement>) => {
-        const value = Number(e.target.value);
-        const newAssetQuantity = value * Math.pow(10, fields.amount.precision);
-        const newAmount = { ...fields.amount, quantity: newAssetQuantity };
-        setAmount(newAmount);
-    };
-
     const validateAccountField = (e: React.FormEvent<HTMLInputElement>) => {
         const target = e.target as HTMLInputElement;
         if (target.validity.valueMissing) {
@@ -294,13 +286,14 @@ const WithdrawFundsForm = ({
 
     if (!availableFunds) return null;
 
+    const maxWithdrawal = Number(
+        assetToString(availableFunds!, availableFunds.precision).split(" ")[0]
+    );
+
+    const setMaxAmount = () =>
+        setFields({ target: { id: "amount", value: maxWithdrawal } });
+
     const isThirdPartyWithdrawal = ualAccount.accountName !== formState[0].to;
-
-    const amountInputValue =
-        fields.amount.quantity / Math.pow(10, fields.amount.precision);
-
-    const amountInputMaxValue =
-        availableFunds.quantity / Math.pow(10, fields.amount.precision);
 
     const amountInputPreventChangeOnScroll = (
         e: React.WheelEvent<HTMLInputElement>
@@ -346,11 +339,11 @@ const WithdrawFundsForm = ({
                                 type="number"
                                 inputMode="decimal"
                                 min={0}
-                                max={amountInputMaxValue}
+                                max={maxWithdrawal}
                                 step="any"
                                 required
-                                value={amountInputValue}
-                                onChange={onChangeAmount}
+                                value={fields.amount}
+                                onChange={onChangeFields}
                                 maxLength={12}
                                 onWheel={amountInputPreventChangeOnScroll}
                             />
@@ -360,10 +353,7 @@ const WithdrawFundsForm = ({
                                 </p>
                             </div>
                         </div>
-                        <Button
-                            type="neutral"
-                            onClick={() => setAmount(availableFunds)}
-                        >
+                        <Button type="neutral" onClick={setMaxAmount}>
                             Max
                         </Button>
                     </div>
@@ -403,6 +393,7 @@ const WithdrawalConfirmationStep = ({
     const [ualAccount] = useUALAccount();
     if (!ualAccount?.accountName) return null; // TODO: dismiss modal
 
+    const amountAsAsset = assetFromNumber(formValues.amount);
     const isThirdPartyWithdrawal = ualAccount.accountName !== formValues.to;
 
     return (
@@ -428,8 +419,8 @@ const WithdrawalConfirmationStep = ({
                     <Text className="inline">Amount: </Text>
                     <Text className="inline" type="info">
                         {assetToLocaleString(
-                            formValues.amount,
-                            formValues.amount.precision
+                            amountAsAsset,
+                            amountAsAsset.precision
                         )}
                     </Text>
                 </li>
