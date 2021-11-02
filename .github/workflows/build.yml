@@ -276,7 +276,7 @@ jobs:
                   path: built_packages.tar
 
     box-e2e:
-        needs: [build-box-packages, build-micro-chain]
+        needs: [build-common-packages, build-micro-chain]
         name: Eden Box E2E Tests
         runs-on: ubuntu-latest
 
@@ -412,7 +412,7 @@ jobs:
                   context: .
 
     webapp-e2e:
-        needs: [build-box-packages, build-micro-chain]
+        needs: [build-common-packages, build-micro-chain]
         name: WebApp E2E Tests
         environment: e2e_tests
         runs-on: ubuntu-latest
