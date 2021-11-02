@@ -1,5 +1,5 @@
 import { useRouter } from "next/router";
-import { usePagedQuery } from "@edenos/common/dist/subchain";
+import { usePagedQuery } from "@edenos/eden-subchain-client/dist/ReactSubchain";
 import { Container, SideNavLayout, Heading } from "_app";
 
 export const AsPage = () => {

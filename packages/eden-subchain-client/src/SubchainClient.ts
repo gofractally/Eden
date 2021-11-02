@@ -5,30 +5,34 @@ import {
     sanitizeServerMessage,
 } from "./SubchainProtocol";
 
+export interface SubchainClientOptions {
+    edenAccount?: string;
+    tokenAccount?: string;
+    atomicAccount?: string;
+    atomicmarketAccount?: string;
+    wasmResponse: PromiseLike<Response>;
+    stateResponse: PromiseLike<Response>;
+    blocksUrl: string;
+    slowmo?: boolean;
+}
+
 export default class SubchainClient {
     subchain = new EdenSubchain();
     shuttingDown = false;
     blocksUrl = "";
     slowmo = false;
-    ws: WebSocket | null = null;
+    ws: any;
     notifications: ((client: SubchainClient) => void)[] = [];
 
-    async instantiateStreaming(
-        edenAccount: string,
-        tokenAccount: string,
-        atomicAccount: string,
-        atomicmarketAccount: string,
-        wasmResponse: PromiseLike<Response>,
-        stateResponse: PromiseLike<Response>,
-        blocksUrl: string,
-        slowmo = false
-    ) {
-        this.blocksUrl = blocksUrl;
-        this.slowmo = slowmo;
+    constructor(public WebSocket: any) {}
+
+    async instantiateStreaming(options: SubchainClientOptions) {
+        this.blocksUrl = options.blocksUrl;
+        this.slowmo = !!options.slowmo;
         if (this.shuttingDown) return this.shutdown();
         const [, state] = await Promise.all([
-            this.subchain.instantiateStreaming(wasmResponse),
-            stateResponse.then((resp) => {
+            this.subchain.instantiateStreaming(options.wasmResponse),
+            options.stateResponse.then((resp) => {
                 if (resp.ok) return resp.arrayBuffer();
                 return null;
             }),
@@ -38,10 +42,10 @@ export default class SubchainClient {
             this.subchain.setMemory(state);
         } else {
             this.subchain.initializeMemory(
-                edenAccount,
-                tokenAccount,
-                atomicAccount,
-                atomicmarketAccount
+                options.edenAccount || "genesis.eden",
+                options.tokenAccount || "eosio.token",
+                options.atomicAccount || "atomicassets",
+                options.atomicmarketAccount || "atomicmarket"
             );
         }
         this.connect();
@@ -49,7 +53,7 @@ export default class SubchainClient {
 
     connect() {
         if (this.shuttingDown) return this.shutdown();
-        this.ws = new WebSocket(this.blocksUrl);
+        this.ws = new this.WebSocket(this.blocksUrl);
         this.ws.onclose = () => {
             console.error("Closed connection to " + this.blocksUrl);
             this.ws = null;

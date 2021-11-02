@@ -3,7 +3,8 @@ import GraphiQL from "graphiql";
 import Header from "../components/header";
 import { buildSchema, GraphQLSchema } from "graphql";
 import { useContext } from "react";
-import { EdenChainContext, EdenSubchain } from "@edenos/common/dist/subchain";
+import { EdenChainContext } from "@edenos/eden-subchain-client/dist/ReactSubchain";
+import { EdenSubchain } from "@edenos/eden-subchain-client/dist/EdenSubchain";
 
 function createFetcher(subchain: EdenSubchain) {
     return async ({ query }: { query: string }) => subchain.query(query);

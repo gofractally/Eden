@@ -1,5 +1,5 @@
 import { useQuery as useReactQuery } from "react-query";
-import { useQuery as useBoxQuery } from "@edenos/common/dist/subchain";
+import { useQuery as useBoxQuery } from "@edenos/eden-subchain-client/dist/ReactSubchain";
 
 import { atomicAssets, edenContractAccount } from "config";
 import { formatQueriedMemberData, MEMBER_DATA_FRAGMENT } from "members";

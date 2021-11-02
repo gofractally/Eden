@@ -4,9 +4,9 @@ import { buildSchema, GraphQLSchema } from "graphql";
 import { useContext } from "react";
 import {
     EdenChainContext,
-    EdenSubchain,
     useQuery,
-} from "@edenos/common/dist/subchain";
+} from "@edenos/eden-subchain-client/dist/ReactSubchain";
+import { EdenSubchain } from "@edenos/eden-subchain-client/dist/EdenSubchain";
 import "../../../../node_modules/graphiql/graphiql.min.css";
 
 function createFetcher(subchain: EdenSubchain) {

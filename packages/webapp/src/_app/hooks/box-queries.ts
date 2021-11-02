@@ -1,4 +1,7 @@
-import { QueryResult, useQuery } from "@edenos/common/dist/subchain";
+import {
+    QueryResult,
+    useQuery,
+} from "@edenos/eden-subchain-client/dist/ReactSubchain";
 import dayjs from "dayjs";
 
 import { assetFromString } from "_app";

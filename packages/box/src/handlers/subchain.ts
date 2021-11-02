@@ -10,7 +10,7 @@ import {
     ClientStatus,
     ServerMessage,
     sanitizeClientStatus,
-} from "@edenos/common/dist/subchain/SubchainProtocol";
+} from "@edenos/eden-subchain-client/dist/SubchainProtocol";
 
 const storage = new Storage();
 export const subchainHandler = express.Router();
