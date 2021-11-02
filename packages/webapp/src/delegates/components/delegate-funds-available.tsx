@@ -10,6 +10,7 @@ import {
     onError,
     queryDistributionsForAccount,
     queryTokenBalanceForAccount,
+    SetValuesEvent,
     sumAssetStrings,
     useDistributionsForAccount,
     useDistributionState,
@@ -19,8 +20,9 @@ import {
 } from "_app";
 import { Button, Container, Form, Heading, Modal, Text } from "_app/ui";
 
-import { withdrawAvailableFunds } from "../transactions";
+import { withdrawAndTransfer } from "../transactions";
 import { useAccountBalance } from "treasury/hooks";
+import { DistributionAccount } from "delegates/interfaces";
 
 interface Props {
     account: string;
@@ -37,8 +39,7 @@ export const DelegateFundsAvailable = ({ account }: Props) => {
     const { data: distributions } = useDistributionsForAccount(account);
 
     const [isLoading, setIsLoading] = useState(false);
-    const [isWithdrawModalOpen, setIsWithDrawModalOpen] = useState(true);
-    const queryClient = useQueryClient();
+    const [isWithdrawModalOpen, setIsWithDrawModalOpen] = useState(false);
 
     let availableFunds: Asset | undefined = undefined;
     if (accountBalance && distributions) {
@@ -52,41 +53,6 @@ export const DelegateFundsAvailable = ({ account }: Props) => {
     const isProfileDelegate = Boolean(profile?.election_rank);
 
     if (!isProfileDelegate && !availableFunds?.quantity) return null;
-
-    const submitWithdraw = async () => {
-        setIsLoading(true);
-
-        try {
-            const authorizerAccount = ualAccount.accountName;
-            const trx = withdrawAvailableFunds(
-                authorizerAccount,
-                availableFunds!,
-                distributions!
-            );
-            console.info("signing trx", trx);
-
-            const signedTrx = await ualAccount.signTransaction(trx, {
-                broadcast: true,
-            });
-            console.info("withdraw available funds trx", signedTrx);
-
-            // allow time for chain tables to update
-            await new Promise((resolve) => setTimeout(resolve, 3000));
-
-            // invalidate current member query to update participating status
-            queryClient.invalidateQueries(
-                queryDistributionsForAccount(ualAccount.accountName).queryKey
-            );
-            queryClient.invalidateQueries(
-                queryTokenBalanceForAccount(ualAccount.accountName).queryKey
-            );
-        } catch (error) {
-            console.error(error);
-            onError(error as Error);
-        }
-
-        setIsLoading(false);
-    };
 
     const profileBelongsToCurrentUser = Boolean(
         ualAccount && profile && ualAccount.accountName === profile.account
@@ -106,7 +72,7 @@ export const DelegateFundsAvailable = ({ account }: Props) => {
                 <div>
                     {profileBelongsToCurrentUser && (
                         <Button
-                            onClick={submitWithdraw}
+                            onClick={() => setIsWithDrawModalOpen(true)}
                             disabled={
                                 isLoading ||
                                 !availableFunds ||
@@ -127,8 +93,9 @@ export const DelegateFundsAvailable = ({ account }: Props) => {
             )}
             <WithdrawModal
                 isOpen={isWithdrawModalOpen}
-                close={() => {}}
+                close={() => setIsWithDrawModalOpen(false)}
                 availableFunds={availableFunds}
+                distributions={distributions}
             />
         </Container>
     );
@@ -176,14 +143,77 @@ interface ModalProps {
     isOpen: boolean;
     close: () => void;
     availableFunds?: Asset;
+    distributions?: DistributionAccount[];
 }
 
-const WithdrawModal = ({ isOpen, close, availableFunds }: ModalProps) => {
-    const [isLoading, setIsLoading] = useState<boolean>(false);
+enum WithdrawStep {
+    Form,
+    Confirmation,
+    Success,
+}
 
-    const onSubmit = async (e: React.FormEvent) => {
+const WithdrawModal = ({
+    isOpen,
+    close,
+    availableFunds,
+    distributions,
+}: ModalProps) => {
+    const queryClient = useQueryClient();
+    const [ualAccount] = useUALAccount();
+
+    const [step, setStep] = useState<WithdrawStep>(WithdrawStep.Form);
+    const [isLoading, setIsLoading] = useState<boolean>(false); // TODO
+
+    const formState = useFormFields<WithdrawForm>({
+        to: ualAccount?.accountName,
+        amount: {
+            quantity: 0,
+            symbol: "WAX",
+            precision: 8,
+        },
+        memo: "",
+    });
+
+    const onPreview = async (e: React.FormEvent) => {
         e.preventDefault();
-        console.log(e);
+        setStep(WithdrawStep.Confirmation);
+    };
+
+    const submitWithdraw = async () => {
+        setIsLoading(true);
+
+        try {
+            const authorizerAccount = ualAccount.accountName;
+            const trx = withdrawAndTransfer(
+                authorizerAccount,
+                formState[0].amount,
+                formState[0].to,
+                formState[0].memo,
+                distributions!
+            );
+            console.info("signing trx", trx);
+
+            const signedTrx = await ualAccount.signTransaction(trx, {
+                broadcast: true,
+            });
+            console.info("withdraw available funds trx", signedTrx);
+
+            // allow time for chain tables to update
+            await new Promise((resolve) => setTimeout(resolve, 3000));
+
+            // invalidate current member query to update participating status
+            queryClient.invalidateQueries(
+                queryDistributionsForAccount(ualAccount.accountName).queryKey
+            );
+            queryClient.invalidateQueries(
+                queryTokenBalanceForAccount(ualAccount.accountName).queryKey
+            );
+        } catch (error) {
+            console.error(error);
+            onError(error as Error);
+        }
+
+        setIsLoading(false);
     };
 
     return (
@@ -195,48 +225,86 @@ const WithdrawModal = ({ isOpen, close, availableFunds }: ModalProps) => {
             shouldCloseOnOverlayClick={false}
             shouldCloseOnEsc={false}
         >
-            <WithdrawFundsForm
-                availableFunds={availableFunds}
-                onSubmit={onSubmit}
-            />
+            {step === WithdrawStep.Form ? (
+                <WithdrawFundsForm
+                    availableFunds={availableFunds}
+                    onPreview={onPreview}
+                    formState={formState}
+                    onCancel={close}
+                />
+            ) : (
+                <WithdrawalConfirmationStep
+                    formValues={formState[0]}
+                    goBack={() => setStep(WithdrawStep.Form)}
+                    onConfirm={submitWithdraw}
+                />
+            )}
         </Modal>
     );
 };
 
+interface WithdrawForm {
+    to: string;
+    amount: Asset;
+    memo: string;
+}
+
 interface WithdrawFundsFormProps {
     availableFunds?: Asset;
-    onSubmit: (e: React.FormEvent) => Promise<void>;
+    formState: [WithdrawForm, SetValuesEvent];
+    onPreview: (e: React.FormEvent) => Promise<void>;
+    onCancel: () => void;
 }
 
 const WithdrawFundsForm = ({
     availableFunds,
-    onSubmit,
+    formState,
+    onPreview,
+    onCancel,
 }: WithdrawFundsFormProps) => {
     const [ualAccount] = useUALAccount();
-
-    interface WithdrawForm {
-        to: string;
-        amount: number;
-        memo: string;
-    }
-
-    const [fields, setFields] = useFormFields<WithdrawForm>({
-        to: ualAccount.accountName,
-        amount: 0,
-        memo: "",
-    });
+    const [fields, setFields] = formState;
 
     const onChangeFields = (e: React.ChangeEvent<HTMLInputElement>) => {
         setFields(e);
     };
 
-    const setMaxAmount = (e: React.MouseEvent) => {
-        const max = assetToString(
-            availableFunds!,
-            availableFunds!.precision
-        ).split(" ")[0];
-        setFields({ target: { id: "amount", value: max } });
+    const setAmount = (value: Asset) =>
+        setFields({ target: { id: "amount", value } });
+
+    const onChangeAmount = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const value = Number(e.target.value);
+        const newAssetQuantity = value * Math.pow(10, fields.amount.precision);
+        const newAmount = { ...fields.amount, quantity: newAssetQuantity };
+        setAmount(newAmount);
     };
+
+    const validateAccountField = (e: React.FormEvent<HTMLInputElement>) => {
+        const target = e.target as HTMLInputElement;
+        if (target.validity.valueMissing) {
+            target.setCustomValidity("Enter an account name");
+        } else {
+            target.setCustomValidity("Invalid account name");
+        }
+    };
+
+    const clearErrorMessages = (e: React.FormEvent<HTMLInputElement>) => {
+        (e.target as HTMLInputElement).setCustomValidity("");
+    };
+
+    if (!availableFunds) return null;
+
+    const isThirdPartyWithdrawal = ualAccount.accountName !== formState[0].to;
+
+    const amountInputValue =
+        fields.amount.quantity / Math.pow(10, fields.amount.precision);
+
+    const amountInputMaxValue =
+        availableFunds.quantity / Math.pow(10, fields.amount.precision);
+
+    const amountInputPreventChangeOnScroll = (
+        e: React.WheelEvent<HTMLInputElement>
+    ) => (e.target as HTMLInputElement).blur();
 
     return (
         <div className="space-y-4">
@@ -247,15 +315,13 @@ const WithdrawFundsForm = ({
             <Text>
                 Available:{" "}
                 <span className="font-medium">
-                    {availableFunds
-                        ? assetToLocaleString(
-                              availableFunds,
-                              availableFunds.precision
-                          )
-                        : ""}
+                    {assetToLocaleString(
+                        availableFunds,
+                        availableFunds.precision
+                    )}
                 </span>
             </Text>
-            <form onSubmit={onSubmit} className="space-y-3">
+            <form onSubmit={onPreview} className="space-y-3">
                 <Form.LabeledSet
                     label="EOS account (12 characters)"
                     htmlFor="to"
@@ -266,7 +332,10 @@ const WithdrawFundsForm = ({
                         required
                         value={fields.to}
                         onChange={onChangeFields}
-                        maxLength={12} // TODO: detect if valid EOSIO name
+                        maxLength={12}
+                        pattern="^[a-z,1-5.]{1,12}$"
+                        onInvalid={validateAccountField}
+                        onInput={clearErrorMessages}
                     />
                 </Form.LabeledSet>
                 <Form.LabeledSet label="Amount to withdraw" htmlFor="amount">
@@ -276,15 +345,14 @@ const WithdrawFundsForm = ({
                                 id="amount"
                                 type="number"
                                 inputMode="decimal"
-                                min={0} // TODO: Max should be available
+                                min={0}
+                                max={amountInputMaxValue}
                                 step="any"
                                 required
-                                value={fields.amount}
-                                onChange={onChangeFields}
-                                maxLength={12} // TODO: detect if valid asset
-                                onWheel={(e) =>
-                                    (e.target as HTMLInputElement).blur()
-                                }
+                                value={amountInputValue}
+                                onChange={onChangeAmount}
+                                maxLength={12}
+                                onWheel={amountInputPreventChangeOnScroll}
                             />
                             <div className="absolute top-3 right-2">
                                 <p className="text-sm text-gray-400">
@@ -292,25 +360,105 @@ const WithdrawFundsForm = ({
                                 </p>
                             </div>
                         </div>
-                        <Button onClick={setMaxAmount}>MAX</Button>
+                        <Button
+                            type="neutral"
+                            onClick={() => setAmount(availableFunds)}
+                        >
+                            Max
+                        </Button>
                     </div>
                 </Form.LabeledSet>
-                <Form.LabeledSet label="Memo" htmlFor="memo">
-                    <Form.Input
-                        id="memo"
-                        type="text"
-                        value={fields.memo}
-                        onChange={onChangeFields}
-                    />
-                </Form.LabeledSet>
+                {isThirdPartyWithdrawal && (
+                    <Form.LabeledSet label="Memo" htmlFor="memo">
+                        <Form.Input
+                            id="memo"
+                            type="text"
+                            value={fields.memo}
+                            onChange={onChangeFields}
+                        />
+                    </Form.LabeledSet>
+                )}
+                <div className="flex space-x-3">
+                    <Button type="neutral" onClick={onCancel} disabled={false}>
+                        Cancel
+                    </Button>
+                    <Button isSubmit>Preview</Button>
+                </div>
             </form>
+        </div>
+    );
+};
+
+interface ConfirmationProps {
+    formValues: WithdrawForm;
+    goBack: () => void;
+    onConfirm: () => void;
+}
+
+const WithdrawalConfirmationStep = ({
+    formValues,
+    goBack,
+    onConfirm,
+}: ConfirmationProps) => {
+    const [ualAccount] = useUALAccount();
+    if (!ualAccount?.accountName) return null; // TODO: dismiss modal
+
+    const isThirdPartyWithdrawal = ualAccount.accountName !== formValues.to;
+
+    return (
+        <div className="space-y-4">
+            <Heading>
+                Confirm withdrawal{isThirdPartyWithdrawal && " and transfer"}
+            </Heading>
+            <Text>Please confirm the following details:</Text>
+            <ul className="list-inside list-disc">
+                <li>
+                    <Text className="inline">To: </Text>
+                    <Text className="inline" type="info">
+                        {formValues.to}
+                    </Text>
+                    {isThirdPartyWithdrawal && (
+                        <Text className="inline italic" type="note">
+                            {" "}
+                            via {ualAccount.accountName}
+                        </Text>
+                    )}
+                </li>
+                <li>
+                    <Text className="inline">Amount: </Text>
+                    <Text className="inline" type="info">
+                        {assetToLocaleString(
+                            formValues.amount,
+                            formValues.amount.precision
+                        )}
+                    </Text>
+                </li>
+                {isThirdPartyWithdrawal && formValues.memo ? (
+                    <li>
+                        <Text className="inline">Memo: </Text>
+                        <Text className="inline" type="info">
+                            {formValues.memo}
+                        </Text>
+                    </li>
+                ) : null}
+            </ul>
+            {isThirdPartyWithdrawal && (
+                <Text>
+                    These funds will first be withdrawn to your Eden EOS account
+                    of record (
+                    <span className="font-medium">
+                        {ualAccount.accountName}
+                    </span>
+                    ) and then transferred from your EOS account to{" "}
+                    <span className="font-medium">{formValues.to}</span>. This
+                    will happen within a single transaction.
+                </Text>
+            )}
             <div className="flex space-x-3">
-                <Button type="neutral" onClick={close} disabled={false}>
-                    Cancel
+                <Button type="neutral" onClick={goBack}>
+                    Make Changes
                 </Button>
-                <Button onClick={onSubmit} isLoading={false} disabled={false}>
-                    Preview
-                </Button>
+                <Button onClick={onConfirm}>Withdraw</Button>
             </div>
         </div>
     );

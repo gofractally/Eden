@@ -137,6 +137,10 @@ export const chainConfig = {
     rpcEndpoints: [rpcEndpoint],
 };
 
+export const tokenConfig = {
+    contract: process.env.NEXT_PUBLIC_TOKEN_CONTRACT,
+};
+
 export const availableWallets = (
     process.env.NEXT_PUBLIC_ENABLED_WALLETS || ""
 ).split(",");
