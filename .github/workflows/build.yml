@@ -406,17 +406,12 @@ jobs:
                   name: clsdk
                   path: build
 
-            # - name: Prepare Ephemeral Chain Directory
-            #   run: |
-            #       cp ./scripts/eden_chain_runner.sh ./build
-            #       cd build
-            #       tar -xvf clsdk-ubuntu-20-04.tar.gz clsdk/bin
-
             - name: Start Genesis Ephemeral Chain
               run: |
                   cp ./scripts/eden_chain_runner.sh ./build
                   cd build
-                  ls -a
+                  tar -xvf clsdk-ubuntu-20-04.tar.gz clsdk/bin
+                  ls -la
                   sh -x ./eden_chain_runner.sh run-genesis.wasm
 
             - name: 🛠 Build and Start WebApp
