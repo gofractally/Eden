@@ -1,4 +1,5 @@
 import { Asset } from "_app";
+import { MembersQueryNode } from "members/interfaces";
 
 export interface EdenNftData {
     name: string;
@@ -39,4 +40,25 @@ export interface AuctionableTemplateData extends TemplateData {
     endTime: number;
     assetId: string;
     templateMint: number;
+}
+
+/******************************
+ * NFT GRAPHQL QUERY INTERFACES
+ *****************************/
+interface NFTCollectorsQueryNode {
+    owner: MembersQueryNode;
+}
+
+export interface NFTCollectorsQuery {
+    members: {
+        edges: {
+            node: {
+                nfts: {
+                    edges: {
+                        node: NFTCollectorsQueryNode;
+                    }[];
+                };
+            };
+        }[];
+    };
 }

@@ -186,6 +186,21 @@ export class EdenSubchain {
         });
     }
 
+    getShipBlocksRequest(blockNum: number) {
+        return this.protect(() => {
+            if (!this.exports.getShipBlocksRequest(blockNum)) return null;
+            return this.resultAsUint8Array();
+        });
+    }
+
+    pushShipMessage(message: Uint8Array): boolean {
+        return this.protect(() => {
+            return this.withData(message, (addr) => {
+                return this.exports.pushShipMessage(addr, message.length);
+            });
+        });
+    }
+
     trimBlocks() {
         this.protect(() => {
             this.exports.trimBlocks();

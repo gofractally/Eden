@@ -120,4 +120,21 @@ export class Storage {
         this.changed();
         return result;
     }
+
+    getShipBlocksRequest(blockNum: number): Uint8Array {
+        return this.protect(() =>
+            this.blocksWasm!.getShipBlocksRequest(blockNum)
+        )!;
+    }
+
+    pushShipMessage(shipMessage: Uint8Array) {
+        const result = this.protect(() => {
+            const result = this.blocksWasm!.pushShipMessage(shipMessage);
+            this.stateWasm!.pushShipMessage(shipMessage);
+            this.stateWasm!.trimBlocks();
+            return result;
+        });
+        this.changed();
+        return result;
+    }
 }

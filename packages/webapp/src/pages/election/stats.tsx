@@ -185,9 +185,7 @@ const GroupSegment = ({
     // TODO: revisit this, unfortunately the MembersGrid only accepts MemberData,
     // even though we don't need it to display the required summarized member
     // chip data
-    const members: MemberData[] = group.votes.map(
-        (vote) => vote.voter as MemberData
-    );
+    const members: MemberData[] = group.votes.map((vote) => vote.voter);
 
     const membersStats = group.votes.reduce((membersVotingMap, vote) => {
         membersVotingMap[vote.voter.account] = {

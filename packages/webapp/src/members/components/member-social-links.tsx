@@ -1,9 +1,10 @@
 import { HiOutlineLink } from "react-icons/hi";
 import { FaFacebook, FaLinkedin, FaTelegram, FaTwitter } from "react-icons/fa";
 import { IoChatbubblesOutline } from "react-icons/io5";
-import { GenIcon } from "react-icons/lib";
 
 import { explorerAccountUrl, SocialButton } from "_app";
+import { EosCommunityIcon } from "_app/ui/icons";
+
 import { MemberData } from "../interfaces";
 import { getValidSocialLink } from "../helpers/social-links";
 
@@ -18,7 +19,7 @@ export const MemberSocialLinks = ({ member }: Props) => {
     const telegramHandle = getValidSocialLink(member.socialHandles.telegram);
     return (
         <div
-            className="grid gap-y-2 sm:justify-between mt-5 text-sm"
+            className="grid gap-y-2 sm:justify-between text-sm"
             style={{ gridTemplateColumns: "repeat(auto-fill, 12.5rem)" }}
         >
             <SocialButton
@@ -82,18 +83,3 @@ const urlify = (address: string) => {
 
     return `//${address.substring(domainBeginIndex)}`;
 };
-
-const EosCommunityIcon = (props: any) =>
-    GenIcon({
-        tag: "svg",
-        attr: { viewBox: "0 0 32.2 48" },
-        child: [
-            {
-                tag: "path",
-                attr: {
-                    d:
-                        "M16.1 0L4.8 15.5 0 38.3 16.1 48l16.1-9.7-4.8-22.9L16.1 0zM7.4 15.9L16.1 4l8.7 11.9L16.1 42 7.4 15.9zM26 19.8l3.6 17.4-11.8 7.1L26 19.8zM2.6 37.2l3.6-17.4 8.2 24.5-11.8-7.1z",
-                },
-            },
-        ],
-    } as any)(props);

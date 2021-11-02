@@ -44,3 +44,4 @@ USER box
 EXPOSE 3032
 
 CMD ["yarn", "start", "--stream"]
+

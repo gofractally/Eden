@@ -28,8 +28,10 @@ export const SocialButton = ({ handle, icon, href, className }: Props) => {
             target="_blank"
             rel="noopener noreferrer"
         >
-            {formattedIcon}
-            <span>{handle}</span>
+            <div className="flex items-center">
+                {formattedIcon}
+                <span>{handle}</span>
+            </div>
             <OpensInNewTabIcon />
         </a>
     );

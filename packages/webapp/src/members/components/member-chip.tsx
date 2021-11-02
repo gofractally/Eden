@@ -1,14 +1,12 @@
 import React from "react";
 import { useRouter } from "next/router";
 import dayjs from "dayjs";
-import { FaGavel, FaTelegram } from "react-icons/fa";
 
-import { atomicAssets, blockExplorerAccountBaseUrl } from "config";
-import { assetToLocaleString, openInNewTab } from "_app";
-import { GenericMemberChip, OpensInNewTabIcon } from "_app/ui";
+import { blockExplorerAccountBaseUrl } from "config";
 import { ROUTES } from "_app/routes";
-import { getValidSocialLink } from "members/helpers/social-links";
+import { GenericMemberChip, openInNewTab } from "_app";
 
+import { MemberChipTelegramLink, NFTInfo } from "./member-chip-components";
 import { MemberData } from "../interfaces";
 
 interface MemberChipProps {
@@ -35,118 +33,36 @@ export const MemberChip = ({ member, ...containerProps }: MemberChipProps) => {
             contentComponent={
                 <MemberDetails member={member} onClick={onClick} />
             }
-            actionComponent={<MemberChipNFTBadges member={member} />}
             {...containerProps}
         />
     );
 };
+
+export default MemberChip;
 
 interface MemberDetailsProps {
     member: MemberData;
     onClick?: (e: React.MouseEvent) => void;
 }
 
-export const MemberDetails = ({ member, onClick }: MemberDetailsProps) => {
-    const telegramHandle = getValidSocialLink(member?.socialHandles.telegram);
-
-    const goToTelegram = (e: React.MouseEvent) => {
-        if (!member) return;
-        e.stopPropagation();
-        openInNewTab(`https://t.me/${telegramHandle}`);
-    };
+const MemberDetails = ({ member, onClick }: MemberDetailsProps) => {
+    const hasNftInfo = member.auctionData || member.assetData;
+    const isNotMember = member.createdAt === 0;
+    const formattedJoinDate = dayjs(member.createdAt).format("YYYY.MM.DD");
 
     return (
         <div onClick={onClick} className="flex-1 flex flex-col justify-center">
-            <p className="text-xs text-gray-500 font-light">
-                {member.createdAt === 0
-                    ? "not an eden member"
-                    : dayjs(member.createdAt).format("YYYY.MM.DD")}
-            </p>
+            <div className="flex items-center space-x-1 text-xs text-gray-500 font-light">
+                {hasNftInfo ? (
+                    <NFTInfo member={member} />
+                ) : isNotMember ? (
+                    <p>not an eden member</p>
+                ) : (
+                    <p>Joined {formattedJoinDate}</p>
+                )}
+            </div>
             <p className="hover:underline">{member.name}</p>
-            {telegramHandle && (
-                <div onClick={goToTelegram}>
-                    <p className="flex items-center text-xs text-gray-500 font-light hover:underline">
-                        <FaTelegram className="mr-1" />
-                        {telegramHandle}
-                        <OpensInNewTabIcon size={8} className="mb-1.5" />
-                    </p>
-                </div>
-            )}
+            <MemberChipTelegramLink handle={member.socialHandles.telegram} />
         </div>
     );
 };
-
-export const MemberChipNFTBadges = ({ member }: { member: MemberData }) => (
-    <div className="absolute right-0 bottom-0 p-2.5 space-y-0.5">
-        <AuctionBadge member={member} />
-        <SaleBadge member={member} />
-        {!member.auctionData && !member.saleId && (
-            <AssetBadge member={member} />
-        )}
-    </div>
-);
-
-const AssetBadge = ({ member }: { member: MemberData }) => {
-    if (!member.assetData) return <></>;
-    return (
-        <div
-            className="group flex justify-end items-center space-x-1"
-            onClick={(e) => {
-                e.stopPropagation();
-                openInNewTab(
-                    `${atomicAssets.hubUrl}/explorer/asset/${member?.assetData?.assetId}`
-                );
-            }}
-        >
-            <p className="text-sm tracking-tight leading-none p-t-px group-hover:underline">
-                NFT #{member.assetData.templateMint}
-            </p>
-        </div>
-    );
-};
-
-const AuctionBadge = ({ member }: { member: MemberData }) => {
-    if (!member.auctionData) return <></>;
-    return (
-        <div
-            className="group flex justify-end items-center space-x-1"
-            onClick={(e) => {
-                e.stopPropagation();
-                openInNewTab(
-                    `${atomicAssets.hubUrl}/market/auction/${member?.auctionData?.auctionId}`
-                );
-            }}
-        >
-            <FaGavel
-                size={14}
-                className="text-gray-600 group-hover:text-gray-800"
-            />
-            <p className="text-sm tracking-tight leading-none p-t-px group-hover:underline">
-                {assetToLocaleString(member.auctionData.price, 2)} (#
-                {member.assetData?.templateMint})
-            </p>
-        </div>
-    );
-};
-
-const SaleBadge = ({ member }: { member: MemberData }) => {
-    if (!member.saleId) return <></>;
-    return (
-        <div
-            className="group flex justify-end items-center space-x-1"
-            onClick={(e) => {
-                e.stopPropagation();
-                openInNewTab(
-                    `${atomicAssets.hubUrl}/market/sale/${member.saleId}`
-                );
-            }}
-        >
-            <p className="text-sm tracking-tight leading-none p-t-px group-hover:underline">
-                ON SALE (#
-                {member.assetData?.templateMint})
-            </p>
-        </div>
-    );
-};
-
-export default MemberChip;
