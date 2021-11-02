@@ -266,7 +266,7 @@ jobs:
                   export NODE_ENV=test
                   yarn
                   yarn build --stream --ignore @edenos/example-history-app
-                  tar cf built_packages.tar ./node_modules ./packages/box/dist ./packages/box/node_modules ./packages/common/dist ./packages/common/node_modules ./packages/eden-subchain-client/dist ./packages/example-history-app/dist ./packages/example-history-app/node_modules ./packages/webapp/dist ./packages/webapp/node_modules
+                  tar cf built_packages.tar ./node_modules ./packages/box/dist ./packages/box/node_modules ./packages/common/dist ./packages/common/node_modules ./packages/eden-subchain-client/dist ./packages/webapp/dist ./packages/webapp/node_modules
 
             - name: Upload Built Packages
               if: steps.filter.outputs.src == 'true'
