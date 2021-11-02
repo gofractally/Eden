@@ -164,6 +164,7 @@ enum WithdrawStep {
     Form,
     Confirmation,
     Success,
+    Error,
 }
 
 const WithdrawModal = ({
@@ -178,6 +179,7 @@ const WithdrawModal = ({
     const [step, setStep] = useState<WithdrawStep>(WithdrawStep.Form);
     const [isLoading, setIsLoading] = useState<boolean>(false);
     const [transactionId, setTransactionId] = useState<string>("");
+    const [transactionError, setTransactionError] = useState<string>("");
     // TODO: clear all modal state on close
 
     const formState = useFormFields<WithdrawForm>({
@@ -226,6 +228,8 @@ const WithdrawModal = ({
         } catch (error) {
             console.error(error);
             onError(error as Error);
+            setTransactionError((error as Error).toString());
+            setStep(WithdrawStep.Error);
         }
 
         setIsLoading(false);
@@ -254,13 +258,19 @@ const WithdrawModal = ({
                     onConfirm={submitWithdraw}
                     isLoading={isLoading}
                 />
-            ) : (
-                <WithdrawalSuccessStep
+            ) : step === WithdrawStep.Success ? (
+                <WithdrawSuccessStep
                     isThirdPartyTransfer={
                         ualAccount.accountName !== formState[0].to
                     }
                     dismiss={close}
                     transactionId={transactionId}
+                />
+            ) : (
+                <WithdrawFailureStep
+                    dismiss={close}
+                    tryAgain={() => setStep(WithdrawStep.Confirmation)}
+                    errorMessage={transactionError}
                 />
             )}
         </Modal>
@@ -491,7 +501,7 @@ interface SuccessProps {
     transactionId: string;
 }
 
-const WithdrawalSuccessStep = ({
+const WithdrawSuccessStep = ({
     isThirdPartyTransfer,
     dismiss,
     transactionId,
@@ -501,7 +511,7 @@ const WithdrawalSuccessStep = ({
             <Heading>
                 Withdrawal {isThirdPartyTransfer && "and transfer"} complete
             </Heading>
-            <Text>Your transaction was successful. </Text>
+            <Text>Your transaction was successful.</Text>
             <div className="flex space-x-3">
                 <Button onClick={dismiss}>Dismiss</Button>
                 <Button
@@ -513,6 +523,32 @@ const WithdrawalSuccessStep = ({
                     View transaction
                     <OpensInNewTabIcon />
                 </Button>
+            </div>
+        </div>
+    );
+};
+
+interface FailureProps {
+    dismiss: () => void;
+    tryAgain: () => void;
+    errorMessage: string;
+}
+
+const WithdrawFailureStep = ({
+    dismiss,
+    tryAgain,
+    errorMessage,
+}: FailureProps) => {
+    return (
+        <div className="space-y-4">
+            <Heading>Error</Heading>
+            <Text>There was a problem processing your transaction</Text>
+            {errorMessage ? <Text type="note">{errorMessage}</Text> : null}
+            <div className="flex space-x-3">
+                <Button onClick={dismiss} type="neutral">
+                    Dismiss
+                </Button>
+                <Button onClick={tryAgain}>Try again</Button>
             </div>
         </div>
     );
