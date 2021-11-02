@@ -1,6 +1,6 @@
 describe("Inductions", () => {
     beforeEach(() => {
-        cy.interceptSubchain();
+        cy.interceptBox();
         cy.interceptEosApis();
         cy.visit(`/induction`);
         cy.wait("@boxGetSubchain");
@@ -71,22 +71,23 @@ describe("Inductions", () => {
             cy.get("#consent").click();
 
             cy.get("button").contains("Submit Profile").click();
-            cy.wait("@eosPushTransaction");
+            cy.wait("@boxUploadFile");
 
             const successMessage = cy.get("main h1");
             successMessage.should("contain", "Success!");
             cy.waitForBlocksPropagation();
         });
 
-        it("should be able to endorse with witness 1", () => {
+        it("should be able to upload induction video and endorse with witness 1", () => {
             cy.login(participants.witness1);
 
             cy.contains("Complete ceremony").click();
 
             cy.get("#videoFile0").attachFile("fake-induction.mp4");
             cy.get("button").contains("Upload meeting").click();
+            cy.wait("@boxUploadFile");
 
-            cy.contains("Onward!", { timeout: 10000 }).click();
+            cy.get("button").contains("Onward!", { timeout: 10000 }).click();
 
             endorseInvitee();
         });
@@ -104,7 +105,7 @@ describe("Inductions", () => {
 
             cy.contains("Review & endorse").click();
 
-            endorseInvitee();
+            endorseInvitee(true);
         });
 
         it("should be able to complete induction", () => {
@@ -114,34 +115,23 @@ describe("Inductions", () => {
 
             cy.get("#reviewed").click();
 
-            // Todo: Uncomment when put a system to generate random accounts
-            // for every new induction test
-            // cy.get("button").contains("Donate").click();
-            // cy.wait("@eosPushTransaction");
+            cy.get("button").contains("Donate").click();
+            cy.wait("@eosPushTransaction");
         });
 
-        const endorseInvitee = () => {
+        const endorseInvitee = (isLastEndorsement = false) => {
             cy.get("#photo").click();
             cy.get("#links").click();
             cy.get("#video").click();
             cy.get("#reviewed").click();
             cy.get("button").contains("Endorse").click();
             cy.wait("@eosPushTransaction");
-        };
-
-        after(() => {
-            cleanupInvitations();
-        });
-
-        const cleanupInvitations = () => {
-            cy.visit(`/induction`);
-            cy.login(participants.inviter);
-
-            const inductionsAvailableForDeleting = cy.get(
-                `[data-testid="cancel-induction"]`
-            );
-            inductionsAvailableForDeleting.click({ multiple: true });
-            cy.wait("@eosPushTransaction");
+            cy.contains(
+                isLastEndorsement
+                    ? "This induction is fully endorsed!"
+                    : "Waiting for all witnesses to endorse.",
+                { timeout: 10000 }
+            ).click();
         };
     });
 });

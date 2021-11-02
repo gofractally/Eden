@@ -41,10 +41,11 @@ Cypress.Commands.add("login", (account) => {
 });
 
 /**
- * Intercept Subchain Calls
+ * Intercept Box Calls
  */
-Cypress.Commands.add("interceptSubchain", () => {
+Cypress.Commands.add("interceptBox", () => {
     cy.intercept("**/v1/subchain/**").as("boxGetSubchain");
+    cy.intercept("**/v1/ipfs-upload").as("boxUploadFile");
 });
 
 /**
