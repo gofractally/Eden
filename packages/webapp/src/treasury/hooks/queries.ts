@@ -1,4 +1,5 @@
-import { useQuery as useBoxQuery } from "@edenos/common/dist/subchain";
+import { useQuery as useBoxQuery } from "@edenos/eden-subchain-client/dist/ReactSubchain";
+
 import { assetFromString, assetToLocaleString } from "_app";
 
 export interface AccountBalanceQuery {
