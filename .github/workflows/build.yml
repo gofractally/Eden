@@ -422,7 +422,7 @@ jobs:
                   env
                   yarn
                   yarn build --stream --ignore @edenos/example-history-app
-                  yarn start --stream --ignore @edenos/example-history-app &
+                  yarn start-test --stream --ignore @edenos/example-history-app &
 
             - name: 🧪 Run E2E
               if: steps.filter.outputs.src == 'true'

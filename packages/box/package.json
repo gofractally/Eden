@@ -5,7 +5,8 @@
     "license": "MIT",
     "scripts": {
         "dev": "ts-node-dev -r tsconfig-paths/register src/index.ts",
-        "start": "node dist/src",
+        "start": "NODE_ENV=production node dist/src",
+        "start-test": "node dist/src",
         "build": "yarn run clean && yarn run compile",
         "clean": "rimraf -rf ./dist",
         "compile": "tsc -p tsconfig.build.json",
