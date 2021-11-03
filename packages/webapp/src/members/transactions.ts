@@ -30,7 +30,7 @@ export const withdrawAndTransfer = (
         authorization,
         data: {
             from: authorizerAccount,
-            distribution_time: distribution.distribution_time,
+            distribution_time: distribution.distribution_time.replace(/Z$/, ""),
             rank: distribution.rank,
             to: authorizerAccount,
             amount: distribution.balance,

@@ -2,16 +2,10 @@ import React, { useState } from "react";
 import { RiDownloadLine } from "react-icons/ri";
 
 import { tokenConfig } from "config";
-import {
-    Asset,
-    assetToLocaleString,
-    sumAssetStrings,
-    useDistributionsForAccount,
-    useMemberByAccountName,
-    useUALAccount,
-} from "_app";
+import { useMemberByAccountName, useUALAccount } from "_app";
+import { Asset, assetToLocaleString, getDefaultTokenAsset } from "_app/utils";
 import { Button, Container, Heading, Text } from "_app/ui";
-import { useAccountBalance } from "treasury/hooks";
+import { useAccountBalance, useAvailableDistributions } from "treasury/hooks";
 
 import { NextDisbursementInfo, WithdrawModal } from "./withdraw-funds";
 
@@ -21,28 +15,29 @@ interface Props {
 
 export const FundsAvailableCTA = ({ account }: Props) => {
     const [ualAccount] = useUALAccount();
-    const { data: profile } = useMemberByAccountName(account);
+    const { data: profile, isError: isErrorProfile } = useMemberByAccountName(
+        account
+    );
+    const { data: accountBalance, isError: isErrorBalance } = useAccountBalance(
+        account
+    );
     const {
-        data: accountBalance,
-        isLoading: isLoadingAccountBalance,
-        isError: isErrorAccountBalance,
-    } = useAccountBalance(account);
-    const { data: distributions } = useDistributionsForAccount(account);
+        data: distributionsResult,
+        isError: isErrorDistributions,
+    } = useAvailableDistributions(account);
 
-    const [isLoading, setIsLoading] = useState(false); // TODO: is this loading state necessary?
+    if (isErrorProfile || isErrorBalance || isErrorDistributions) return null;
+
     const [isWithdrawModalOpen, setIsWithdrawModalOpen] = useState(false);
 
-    let availableFunds: Asset | undefined = undefined;
-    if (accountBalance && distributions) {
-        const assetStrings = [
-            ...distributions.map((distribution) => distribution.balance),
-            accountBalance.balanceAsString,
-        ];
-        availableFunds = sumAssetStrings(assetStrings);
+    const availableFunds: Asset = getDefaultTokenAsset();
+    if (accountBalance) availableFunds.quantity += accountBalance.quantity;
+    if (distributionsResult?.sum) {
+        availableFunds.quantity += distributionsResult.sum.quantity;
     }
 
+    // delegates always see banner; others only if funds are available
     const isProfileDelegate = Boolean(profile?.election_rank);
-
     if (!isProfileDelegate && !availableFunds?.quantity) return null;
 
     const profileBelongsToCurrentUser = Boolean(
@@ -68,15 +63,10 @@ export const FundsAvailableCTA = ({ account }: Props) => {
                         <Button
                             onClick={() => setIsWithdrawModalOpen(true)}
                             disabled={
-                                isLoading ||
-                                !availableFunds ||
-                                availableFunds.quantity === 0
+                                !availableFunds || availableFunds.quantity === 0
                             }
-                            isLoading={isLoading}
                         >
-                            {!isLoading && (
-                                <RiDownloadLine className="-ml-1 mr-1" />
-                            )}
+                            <RiDownloadLine className="-ml-1 mr-1" />
                             Withdraw
                         </Button>
                     )}
@@ -89,7 +79,7 @@ export const FundsAvailableCTA = ({ account }: Props) => {
                 isOpen={isWithdrawModalOpen}
                 close={() => setIsWithdrawModalOpen(false)}
                 availableFunds={availableFunds}
-                distributions={distributions}
+                distributions={distributionsResult?.distributions}
             />
         </Container>
     );

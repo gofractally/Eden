@@ -6,6 +6,12 @@ export interface Asset {
     precision: number;
 }
 
+export const getDefaultTokenAsset = () => ({
+    quantity: 0,
+    symbol: tokenConfig.symbol,
+    precision: tokenConfig.precision,
+});
+
 export const assetFromString = (asset: string): Asset => {
     const re = /^[0-9]+\.[0-9]+ [A-Z,a-z]{1,5}$/;
     if (asset.match(re) === null) {
