@@ -73,7 +73,9 @@ jobs:
             - name: show_cache
               if: steps.filter.outputs.src == 'true'
               id: show_cache
-              run: echo "${{ runner.os }}-ccache_whole-${{ steps.ccache_cache_timestamp.outputs.timestamp }}"
+              run: |
+                  echo "${{ runner.os }}-ccache_whole-${{ steps.ccache_cache_timestamp.outputs.timestamp }}"
+                  echo "${{ runner.os }}-clsdk_cache-${{ steps.ccache_cache_timestamp.outputs.timestamp }}"
 
             - name: ccache cache files
               if: steps.filter.outputs.src == 'true'
@@ -83,6 +85,14 @@ jobs:
                   key: ${{ runner.os }}-ccache_whole-${{ steps.ccache_cache_timestamp.outputs.timestamp }}
                   restore-keys: |
                       ${{ runner.os }}-ccache_whole-
+
+            - name: clsdk cache files
+              uses: actions/cache@v1.1.0
+              with:
+                  path: clsdkcache
+                  key: ${{ runner.os }}-clsdk_cache-${{ steps.ccache_cache_timestamp.outputs.timestamp }}
+                  restore-keys: |
+                      ${{ runner.os }}-clsdk_cache-
 
             - name: 🛠 Build
               if: steps.filter.outputs.src == 'true'
@@ -104,6 +114,9 @@ jobs:
                   make -j$(nproc)
 
                   tar czf clsdk-ubuntu-20-04.tar.gz clsdk
+                  rm -rf ../clsdkcache
+                  mkdir -p ../clsdkcache
+                  cp clsdk-ubuntu-20-04.tar.gz ../clsdkcache
 
                   echo =====
                   ls -la ${GITHUB_WORKSPACE}
@@ -124,12 +137,11 @@ jobs:
                       ccache.log
 
             - name: 📃 Upload clsdk
-              if: steps.filter.outputs.src == 'true'
               uses: actions/upload-artifact@v2
               with:
                   name: clsdk
                   path: |
-                      build/clsdk-ubuntu-20-04.tar.gz
+                      clsdkcache/clsdk-ubuntu-20-04.tar.gz
 
             - name: 📃 Upload Eden Smart Contract
               if: steps.filter.outputs.src == 'true'
