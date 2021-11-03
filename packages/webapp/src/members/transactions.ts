@@ -1,7 +1,7 @@
 import { Asset, assetToString } from "_app";
 import { edenContractAccount, tokenConfig } from "config";
 
-import { DistributionAccount } from "./interfaces";
+import { DistributionAccount } from "delegates/interfaces";
 
 export const withdrawAndTransfer = (
     authorizerAccount: string,
