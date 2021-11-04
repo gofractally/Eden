@@ -48,7 +48,12 @@ export const FundsAvailableCTA = ({ account }: Props) => {
         <Container className="space-y-2.5">
             <div className="flex justify-between items-center">
                 <div>
-                    <Heading size={4}>Funds available</Heading>
+                    <Heading size={4} className="hidden xs:block">
+                        Eden funds available
+                    </Heading>
+                    <Heading size={4} className="block xs:hidden">
+                        Funds available
+                    </Heading>
                     <Text>
                         {availableFunds
                             ? assetToLocaleString(

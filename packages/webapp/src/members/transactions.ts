@@ -8,7 +8,7 @@ export const withdrawAndTransfer = (
     totalWithdrawal: Asset,
     destinationAccount: string,
     memo: string,
-    distributions: DistributionAccount[]
+    distributions?: DistributionAccount[]
 ) => {
     if (!totalWithdrawal) {
         throw new Error("The current available balance to withdraw is zero");
@@ -24,19 +24,24 @@ export const withdrawAndTransfer = (
         },
     ];
 
-    const sweepAvailableDistributions = distributions.map((distribution) => ({
-        account: edenContractAccount,
-        name: "fundtransfer",
-        authorization,
-        data: {
-            from: authorizerAccount,
-            distribution_time: distribution.distribution_time.replace(/Z$/, ""),
-            rank: distribution.rank,
-            to: authorizerAccount,
-            amount: distribution.balance,
-            memo: "Claiming available delegate funds from EdenOS profile page",
-        },
-    }));
+    const sweepAvailableDistributions =
+        distributions?.map((distribution) => {
+            const { distributionTime, rank, balance } = distribution;
+            return {
+                account: edenContractAccount,
+                name: "fundtransfer",
+                authorization,
+                data: {
+                    from: authorizerAccount,
+                    distribution_time: distributionTime.replace(/Z$/, ""),
+                    rank,
+                    to: authorizerAccount,
+                    amount: balance,
+                    memo:
+                        "Claiming available delegate funds from EdenOS profile page",
+                },
+            };
+        }) ?? [];
 
     const withdrawFunds = {
         account: edenContractAccount,

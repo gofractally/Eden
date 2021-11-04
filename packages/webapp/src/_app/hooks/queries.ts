@@ -200,11 +200,6 @@ export const queryMasterPool = () => ({
     queryFn: getMasterPool,
 });
 
-export const queryDistributionsForAccount = (account: string) => ({
-    queryKey: ["query_distributions_for_account", account],
-    queryFn: () => getDistributionsForAccount(account),
-});
-
 export const queryTokenBalanceForAccount = (account: string) => ({
     queryKey: ["query_token_balance_for_account", account],
     queryFn: () => getTokenBalanceForAccount(account),
@@ -246,12 +241,6 @@ export const useMemberByAccountName = (accountName?: string) =>
     useQuery<EdenMember | undefined, Error>({
         ...queryMemberByAccountName(accountName ?? ""),
         enabled: Boolean(accountName),
-    });
-
-export const useDistributionsForAccount = (account: string) =>
-    useQuery({
-        ...queryDistributionsForAccount(account),
-        enabled: Boolean(account),
     });
 
 export const useDistributionState = () =>

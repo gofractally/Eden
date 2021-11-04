@@ -1,5 +1,6 @@
 import React from "react";
 
+import { tokenConfig } from "config";
 import { assetFromNumber, assetToLocaleString, useUALAccount } from "_app";
 import { Button, Heading, Text } from "_app/ui";
 
@@ -19,7 +20,7 @@ export const WithdrawModalStepConfirmation = ({
     isLoading,
 }: Props) => {
     const [ualAccount] = useUALAccount();
-    if (!ualAccount?.accountName) return null; // TODO: dismiss modal
+    if (!ualAccount?.accountName) return null;
 
     const amountAsAsset = assetFromNumber(formValues.amount);
     const isThirdPartyWithdrawal = ualAccount.accountName !== formValues.to;
@@ -29,60 +30,67 @@ export const WithdrawModalStepConfirmation = ({
             <Heading>
                 Confirm withdrawal{isThirdPartyWithdrawal && " and transfer"}
             </Heading>
-            <Text>Please confirm the following details:</Text>
-            <ul className="list-inside list-disc">
+            <Text>
+                Your funds will be withdrawn from the Eden contract and sent to
+                the {tokenConfig.symbol} account below. Please confirm the
+                following details:
+            </Text>
+            <ul className="space-y-1">
                 <li>
-                    <Text className="inline">To: </Text>
-                    <Text className="inline" type="info">
-                        {formValues.to}
+                    <Text>
+                        Destination:{" "}
+                        <span className="font-medium">{formValues.to}</span>{" "}
+                        {isThirdPartyWithdrawal && (
+                            <span className="italic">
+                                via {ualAccount.accountName}
+                            </span>
+                        )}
                     </Text>
-                    {isThirdPartyWithdrawal && (
-                        <Text className="inline italic" type="note">
-                            {" "}
-                            via {ualAccount.accountName}
-                        </Text>
-                    )}
                 </li>
                 <li>
-                    <Text className="inline">Amount: </Text>
-                    <Text className="inline" type="info">
-                        {assetToLocaleString(
-                            amountAsAsset,
-                            amountAsAsset.precision
-                        )}
+                    <Text>
+                        Amount:{" "}
+                        <span className="font-medium">
+                            {assetToLocaleString(
+                                amountAsAsset,
+                                amountAsAsset.precision
+                            )}
+                        </span>
                     </Text>
                 </li>
                 {isThirdPartyWithdrawal && formValues.memo ? (
                     <li>
-                        <Text className="inline">Memo: </Text>
-                        <Text className="inline" type="info">
-                            {formValues.memo}
+                        <Text>
+                            Memo:{" "}
+                            <span className="font-medium">
+                                {formValues.memo}
+                            </span>
                         </Text>
                     </li>
                 ) : null}
             </ul>
             {isThirdPartyWithdrawal && (
                 <Text>
-                    These funds will first be withdrawn to your Eden EOS account
-                    of record (
+                    Funds will be withdrawn to your Eden {tokenConfig.symbol}{" "}
+                    account of record (
                     <span className="font-medium">
                         {ualAccount.accountName}
                     </span>
-                    ) and then transferred from your EOS account to{" "}
-                    <span className="font-medium">{formValues.to}</span>. This
-                    will happen within a single transaction.
+                    ) and transferred from your {tokenConfig.symbol} account to{" "}
+                    <span className="font-medium">{formValues.to}</span> within
+                    a single transaction.
                 </Text>
             )}
             <div className="flex space-x-3">
                 <Button type="neutral" onClick={goBack}>
-                    Make Changes
+                    Edit
                 </Button>
                 <Button
                     onClick={onConfirm}
                     isLoading={isLoading}
                     disabled={isLoading}
                 >
-                    Withdraw
+                    Withdraw now
                 </Button>
             </div>
         </div>

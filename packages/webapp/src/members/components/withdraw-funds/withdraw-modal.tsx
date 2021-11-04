@@ -1,17 +1,10 @@
 import React, { useState } from "react";
 import { useQueryClient } from "react-query";
 
-import {
-    Asset,
-    assetFromNumber,
-    Modal,
-    onError,
-    queryDistributionsForAccount,
-    queryTokenBalanceForAccount,
-    useFormFields,
-    useUALAccount,
-} from "_app";
-
+import { useFormFields, useUALAccount } from "_app";
+import { Asset, assetFromNumber, onError } from "_app/utils";
+import { queryTokenBalanceForAccount } from "_app/hooks/queries";
+import { LoadingContainer, Modal } from "_app/ui";
 import { DistributionAccount } from "delegates/interfaces";
 
 import {
@@ -88,7 +81,7 @@ export const WithdrawModal = ({
                 assetFromNumber(amount),
                 to,
                 memo,
-                distributions!
+                distributions
             );
             console.info("signing trx", trx);
 
@@ -100,10 +93,7 @@ export const WithdrawModal = ({
             // allow time for chain tables to update
             await new Promise((resolve) => setTimeout(resolve, 3000));
 
-            // invalidate current member query to update participating status
-            queryClient.invalidateQueries(
-                queryDistributionsForAccount(ualAccount.accountName).queryKey
-            );
+            // invalidate member's queried blockchain account balance to reflect new balance
             queryClient.invalidateQueries(
                 queryTokenBalanceForAccount(ualAccount.accountName).queryKey
             );
@@ -128,7 +118,9 @@ export const WithdrawModal = ({
             shouldCloseOnOverlayClick={false}
             shouldCloseOnEsc={false}
         >
-            {step === WithdrawStep.Form ? (
+            {!ualAccount?.accountName ? (
+                <LoadingContainer />
+            ) : step === WithdrawStep.Form ? (
                 <WithdrawModalStepForm
                     availableFunds={availableFunds}
                     onPreview={onPreview}

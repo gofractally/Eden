@@ -3,7 +3,7 @@ import React, { HTMLProps } from "react";
 export const Label: React.FC<{
     htmlFor: string;
 }> = (props) => (
-    <label className="block text-sm font-medium text-gray-700" {...props}>
+    <label className="block text-sm font-normal text-gray-600" {...props}>
         {props.children}
     </label>
 );

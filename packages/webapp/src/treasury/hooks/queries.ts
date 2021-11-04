@@ -39,9 +39,6 @@ export interface AvailableDistributionsQuery {
                 distributionFunds: {
                     edges: {
                         node: {
-                            owner: {
-                                account: string;
-                            };
                             distributionTime: string;
                             rank: number;
                             currentBalance: string;
@@ -61,9 +58,6 @@ export const useAvailableDistributions = (account: string) => {
                     distributionFunds {
                         edges {
                             node {
-                                owner {
-                                    account
-                                }
                                 distributionTime
                                 rank
                                 currentBalance
@@ -82,8 +76,7 @@ export const useAvailableDistributions = (account: string) => {
 
     const distributions: DistributionAccount[] = distributionFunds.map(
         (fund) => ({
-            owner: fund.node.owner.account,
-            distribution_time: fund.node.distributionTime,
+            distributionTime: fund.node.distributionTime,
             rank: fund.node.rank,
             balance: fund.node.currentBalance,
         })

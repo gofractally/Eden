@@ -1,12 +1,8 @@
 import React from "react";
 
-import {
-    Asset,
-    assetToLocaleString,
-    assetToString,
-    SetValuesEvent,
-    useUALAccount,
-} from "_app";
+import { tokenConfig } from "config";
+import { SetValuesEvent, useUALAccount } from "_app";
+import { Asset, assetToLocaleString, assetToString } from "_app/utils";
 import { Button, Form, Heading, Text } from "_app/ui";
 
 import { WithdrawFundsFormFields } from "./withdraw-modal";
@@ -40,6 +36,15 @@ export const WithdrawModalStepForm = ({
         }
     };
 
+    const validateAmountField = (e: React.FormEvent<HTMLInputElement>) => {
+        const target = e.target as HTMLInputElement;
+        if (target.validity.rangeOverflow) {
+            target.setCustomValidity("Insufficient funds available");
+        } else {
+            target.setCustomValidity("Enter a valid withdrawal amount");
+        }
+    };
+
     const clearErrorMessages = (e: React.FormEvent<HTMLInputElement>) => {
         (e.target as HTMLInputElement).setCustomValidity("");
     };
@@ -63,7 +68,8 @@ export const WithdrawModalStepForm = ({
         <div className="space-y-4">
             <Heading>Withdraw funds</Heading>
             <Text>
-                Withdraw funds from my Eden account to a public EOS account.
+                Withdraw my funds from the Eden contract to a public{" "}
+                {tokenConfig.symbol} account.
             </Text>
             <Text>
                 Available:{" "}
@@ -76,7 +82,7 @@ export const WithdrawModalStepForm = ({
             </Text>
             <form onSubmit={onPreview} className="space-y-3">
                 <Form.LabeledSet
-                    label="EOS account (12 characters)"
+                    label={`${tokenConfig.symbol} account name (12 characters)`}
                     htmlFor="to"
                 >
                     <Form.Input
@@ -98,7 +104,7 @@ export const WithdrawModalStepForm = ({
                                 id="amount"
                                 type="number"
                                 inputMode="decimal"
-                                min={0}
+                                min={1 / Math.pow(10, tokenConfig.precision)}
                                 max={maxWithdrawal}
                                 step="any"
                                 required
@@ -106,6 +112,8 @@ export const WithdrawModalStepForm = ({
                                 onChange={onChangeFields}
                                 maxLength={12}
                                 onWheel={amountInputPreventChangeOnScroll}
+                                onInvalid={validateAmountField}
+                                onInput={clearErrorMessages}
                             />
                             <div className="absolute top-3 right-2">
                                 <p className="text-sm text-gray-400">
