@@ -1,5 +1,3 @@
-#define CATCH_CONFIG_MAIN
-
 #include <nodeos-runner.hpp>
 
 TEST_CASE("Setup Eden chain with basic completed genesis")
