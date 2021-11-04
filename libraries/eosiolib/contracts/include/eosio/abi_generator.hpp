@@ -184,14 +184,16 @@ namespace eosio
       template <uint32_t i, typename T, typename... Ts, typename N, typename... Ns>
       void add_action_args(struct_def& def, std::tuple<T, Ts...>*, N name, Ns... names)
       {
-         def.fields.push_back({name, get_type<T>()});
+         if constexpr (!is_excluded_arg((remove_cvref_t<T>*)nullptr))
+            def.fields.push_back({name, get_type<T>()});
          add_action_args<i + 1>(def, (std::tuple<Ts...>*)nullptr, names...);
       }
 
       template <uint32_t i, typename T, typename... Ts>
       void add_action_args(struct_def& def, std::tuple<T, Ts...>*)
       {
-         def.fields.push_back({"arg" + std::to_string(i), get_type<T>()});
+         if constexpr (!is_excluded_arg((remove_cvref_t<T>*)nullptr))
+            def.fields.push_back({"arg" + std::to_string(i), get_type<T>()});
          add_action_args<i + 1>(def, (std::tuple<Ts...>*)nullptr);
       }
 

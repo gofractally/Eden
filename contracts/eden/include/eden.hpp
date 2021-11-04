@@ -1,6 +1,7 @@
 #pragma once
 
 #include <constants.hpp>
+#include <contract_auth.hpp>
 #include <eden-atomicassets.hpp>
 #include <encrypt.hpp>
 #include <eosio/asset.hpp>
@@ -97,21 +98,33 @@ namespace eden
 
       void clearall();
 
-      void inductinit(uint64_t id,
+      void inductinit(const eosio::excluded_arg<auth_info>& auth,
+                      uint64_t id,
                       eosio::name inviter,
                       eosio::name invitee,
                       std::vector<eosio::name> witnesses);
 
-      void inductprofil(uint64_t id, new_member_profile new_member_profile);
+      void inductprofil(const eosio::excluded_arg<auth_info>& auth,
+                        uint64_t id,
+                        new_member_profile new_member_profile);
 
-      void inductvideo(eosio::name account, uint64_t id, std::string video);
+      void inductvideo(const eosio::excluded_arg<auth_info>& auth,
+                       eosio::name account,
+                       uint64_t id,
+                       std::string video);
 
-      void inductendors(eosio::name account, uint64_t id, eosio::checksum256 induction_data_hash);
+      void inductendors(const eosio::excluded_arg<auth_info>& auth,
+                        eosio::name account,
+                        uint64_t id,
+                        eosio::checksum256 induction_data_hash);
 
       void inductdonate(eosio::name payer, uint64_t id, const eosio::asset& quantity);
 
-      void inductcancel(eosio::name account, uint64_t id);
-      void inductmeetin(eosio::name account,
+      void inductcancel(const eosio::excluded_arg<auth_info>& auth,
+                        eosio::name account,
+                        uint64_t id);
+      void inductmeetin(const eosio::excluded_arg<auth_info>& auth,
+                        eosio::name account,
                         uint64_t id,
                         const std::vector<encrypted_key>& keys,
                         const eosio::bytes& data,
@@ -129,16 +142,25 @@ namespace eden
                        const std::string& election_time,
                        uint32_t round_duration_sec);
 
-      void electopt(eosio::name member, bool participating);
+      void electopt(const eosio::excluded_arg<auth_info>& auth,
+                    eosio::name member,
+                    bool participating);
 
       void electseed(const eosio::bytes& btc_header);
-      void electmeeting(eosio::name account,
+      void electmeeting(const eosio::excluded_arg<auth_info>& auth,
+                        eosio::name account,
                         uint8_t round,
                         const std::vector<encrypted_key>& keys,
                         const eosio::bytes& data,
                         const std::optional<eosio::bytes>& old_data);
-      void electvote(uint8_t round, eosio::name voter, eosio::name candidate);
-      void electvideo(uint8_t round, eosio::name voter, const std::string& video);
+      void electvote(const eosio::excluded_arg<auth_info>& auth,
+                     uint8_t round,
+                     eosio::name voter,
+                     eosio::name candidate);
+      void electvideo(const eosio::excluded_arg<auth_info>& auth,
+                      uint8_t round,
+                      eosio::name voter,
+                      const std::string& video);
       void electprocess(uint32_t max_steps);
 
       void distribute(uint32_t max_steps);

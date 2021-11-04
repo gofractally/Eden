@@ -10,12 +10,13 @@
 
 namespace eden
 {
-   void eden::inductinit(uint64_t id,
+   void eden::inductinit(const eosio::excluded_arg<auth_info>& auth,
+                         uint64_t id,
                          eosio::name inviter,
                          eosio::name invitee,
                          std::vector<eosio::name> witnesses)
    {
-      require_auth(inviter);
+      auth.value.require_auth(inviter);
 
       globals{get_self()}.check_active();
 
@@ -33,13 +34,14 @@ namespace eden
       inductions{get_self()}.initialize_induction(id, inviter, invitee, witnesses);
    }
 
-   void eden::inductmeetin(eosio::name account,
+   void eden::inductmeetin(const eosio::excluded_arg<auth_info>& auth,
+                           eosio::name account,
                            uint64_t id,
                            const std::vector<encrypted_key>& keys,
                            const eosio::bytes& data,
                            const std::optional<eosio::bytes>& old_data)
    {
-      require_auth(account);
+      auth.value.require_auth(account);
       globals{get_self()}.check_active();
 
       members members{get_self()};
@@ -52,11 +54,13 @@ namespace eden
       encrypt.set(id, keys, data, old_data);
    }
 
-   void eden::inductprofil(uint64_t id, new_member_profile new_member_profile)
+   void eden::inductprofil(const eosio::excluded_arg<auth_info>& auth,
+                           uint64_t id,
+                           new_member_profile new_member_profile)
    {
       inductions inductions{get_self()};
       const auto& induction = inductions.get_induction(id);
-      require_auth(induction.invitee());
+      auth.value.require_auth(induction.invitee());
 
       members{get_self()}.check_pending_member(induction.invitee());
 
@@ -69,9 +73,12 @@ namespace eden
       }
    }
 
-   void eden::inductvideo(eosio::name account, uint64_t id, std::string video)
+   void eden::inductvideo(const eosio::excluded_arg<auth_info>& auth,
+                          eosio::name account,
+                          uint64_t id,
+                          std::string video)
    {
-      require_auth(account);
+      auth.value.require_auth(account);
       inductions inductions{get_self()};
       const auto& induction = inductions.get_induction(id);
 
@@ -83,9 +90,12 @@ namespace eden
       inductions.update_video(induction, video);
    }
 
-   void eden::inductendors(eosio::name account, uint64_t id, eosio::checksum256 induction_data_hash)
+   void eden::inductendors(const eosio::excluded_arg<auth_info>& auth,
+                           eosio::name account,
+                           uint64_t id,
+                           eosio::checksum256 induction_data_hash)
    {
-      require_auth(account);
+      auth.value.require_auth(account);
       inductions inductions{get_self()};
       const auto& induction = inductions.get_induction(id);
 
@@ -178,9 +188,11 @@ namespace eden
       }
    }
 
-   void eden::inductcancel(eosio::name account, uint64_t id)
+   void eden::inductcancel(const eosio::excluded_arg<auth_info>& auth,
+                           eosio::name account,
+                           uint64_t id)
    {
-      eosio::require_auth(account);
+      auth.value.require_auth(account);
 
       inductions inductions{get_self()};
       bool is_genesis = globals{get_self()}.get().stage == contract_stage::genesis;
