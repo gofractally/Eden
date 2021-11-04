@@ -19,7 +19,6 @@ import {
 } from "inductions/api";
 import {
     getChiefDelegates,
-    getDistributionsForAccount,
     getDistributionState,
     getMasterPool,
     getHeadDelegate,
