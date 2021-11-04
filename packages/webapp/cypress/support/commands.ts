@@ -34,7 +34,7 @@ Cypress.Commands.add("login", (account) => {
     cy.wait(500);
     cy.get('#ual-box input[type="text"]').type(account);
     cy.get("#ual-box div").contains("Continue").click();
-    cy.get('input[type="password"]').type(Cypress.env("test_users_pk"));
+    cy.get('input[type="password"]').type(Cypress.env("test_user_pk"));
     cy.get('button[type="submit"]').click();
 });
 

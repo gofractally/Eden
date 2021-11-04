@@ -1871,7 +1871,7 @@ std::vector<subchain::transaction> ship_to_eden_transactions(
                    .hexData = std::move(hexData),
                };
 
-               transaction.actions.push_back(action);
+               transaction.actions.push_back(std::move(action));
             }
          }
 
