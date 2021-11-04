@@ -213,7 +213,7 @@ namespace eden
                           eosio::ignore<std::vector<eosio::asset>>);
    };
 
-   EOSIO_ACTIONS(
+   EDEN_ACTIONS(
        eden,
        "eden.gm"_n,
        action(withdraw, owner, quantity, ricardian_contract(withdraw_ricardian)),
