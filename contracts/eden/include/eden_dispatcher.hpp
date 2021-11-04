@@ -38,6 +38,16 @@ namespace eden
 #define EDEN_DISPATCH_AUTH_ACTION(type, MEMBERS) \
    BOOST_PP_SEQ_FOR_EACH(EDEN_DISPATCH_AUTH_ACTION_INTERNAL, type, MEMBERS)
 
+#define EDEN_GET_AUTH_ACTION_INTERNAL_1(r, type, member)    \
+   f(EDEN_EXTRACT_AUTH_ACTION_INDEX(member),                \
+     BOOST_PP_STRINGIZE(EOSIO_EXTRACT_ACTION_NAME(member)), \
+     &type::EOSIO_EXTRACT_ACTION_NAME(member));
+#define EDEN_GET_AUTH_ACTION_INTERNAL(r, type, member)                                        \
+   BOOST_PP_IIF(EDEN_MATCH_AUTH_ACTION(member), EDEN_GET_AUTH_ACTION_INTERNAL_1, EOSIO_EMPTY) \
+   (r, type, member)
+#define EDEN_GET_AUTH_ACTION(type, MEMBERS) \
+   BOOST_PP_SEQ_FOR_EACH(EDEN_GET_AUTH_ACTION_INTERNAL, type, MEMBERS)
+
 #define EDEN_ACTIONS(CONTRACT_CLASS, CONTRACT_ACCOUNT, ...)                                  \
    EOSIO_ACTIONS(CONTRACT_CLASS, CONTRACT_ACCOUNT, __VA_ARGS__)                              \
    namespace actions                                                                         \
@@ -52,5 +62,10 @@ namespace eden
             EDEN_DISPATCH_AUTH_ACTION(CONTRACT_CLASS, BOOST_PP_VARIADIC_TO_SEQ(__VA_ARGS__)) \
          }                                                                                   \
          return false;                                                                       \
+      }                                                                                      \
+      template <typename F>                                                                  \
+      void for_each_auth_action(F f)                                                         \
+      {                                                                                      \
+         EDEN_GET_AUTH_ACTION(CONTRACT_CLASS, BOOST_PP_VARIADIC_TO_SEQ(__VA_ARGS__))         \
       }                                                                                      \
    }
