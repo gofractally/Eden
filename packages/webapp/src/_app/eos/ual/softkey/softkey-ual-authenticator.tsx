@@ -18,8 +18,9 @@ import { SoftkeyUser } from "./softkey-user";
 export class SoftkeyAuthenticator extends Authenticator {
     private users: SoftkeyUser[] = [];
     private readonly supportedChains = {
-        // SoftkeyAuthenticator only supports WAX Testnet
-        f16b1833c747c43682f4386fca9cbb327929334a762755ebec17f6f23c9b8a12: {},
+        // SoftkeyAuthenticator only supports WAX Testnet and Ephemeral Chain
+        "f16b1833c747c43682f4386fca9cbb327929334a762755ebec17f6f23c9b8a12": {},
+        "953486e83a647009b04587879db89dee61f960b894c5df847b4d454575443d73": {},
     };
 
     constructor(chains: Chain[], private loginHook: UALSoftKeyLoginHook) {

@@ -13,21 +13,21 @@ describe("Inductions", () => {
     });
 
     it("should see the invitation button when logged in", () => {
-        cy.login("alice.edev");
+        cy.login("alice");
 
         const inviteButton = getInviteButton();
         inviteButton.should("exist");
     });
 
     it("should allow to invite a new member", () => {
-        cy.login("alice.edev"); // TODO: we should keep sessions
+        cy.login("alice"); // TODO: we should keep sessions
 
         const inviteButton = getInviteButton();
         inviteButton.click();
 
-        cy.get("#invitee").type("test235.edev");
-        cy.get("#witness1").type("egeon.edev");
-        cy.get("#witness2").type("pip.edev");
+        cy.get("#invitee").type("bertie");
+        cy.get("#witness1").type("egeon");
+        cy.get("#witness2").type("pip");
         cy.get('button[type="submit"]').click();
         cy.wait("@eosPushTransaction");
 
