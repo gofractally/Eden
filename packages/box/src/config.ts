@@ -35,7 +35,7 @@ export const ipfsConfig = {
         "https://api.pinata.cloud/pinning/pinFileToIPFS",
     pinataJwt: process.env.IPFS_PINATA_JWT || "<pinata-jwt-here>",
 };
-console.info({ ...ipfsConfig, pinataJwt: "<secret>" });
+console.info({ ...ipfsConfig, pinataJwt: `${ipfsConfig.substr(0,8)}..${ipfsConfig.substr(-8)}` });
 
 export const validUploadActions: ValidUploadActions = {
     [edenContractAccount]: {

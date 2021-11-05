@@ -379,6 +379,7 @@ jobs:
                   path: build
 
             - name: Start Genesis Ephemeral Chain
+              if: steps.filter.outputs.src == 'true'
               run: |
                   cp ./scripts/eden_chain_runner.sh ./build
                   cd build
