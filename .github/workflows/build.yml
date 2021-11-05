@@ -396,13 +396,13 @@ jobs:
                   yarn
                   yarn build --stream --ignore @edenos/example-history-app
                   yarn start-test --stream --ignore @edenos/example-history-app &
+              env:
+                  IPFS_PINATA_JWT: ${{ secrets.IPFS_PINATA_JWT }}
 
             - name: 🧪 Run E2E
               if: steps.filter.outputs.src == 'true'
               run: |
                   yarn test --stream
-              env:
-                  cypress_test_users_pk: ${{ secrets.CYPRESS_TEST_USERS_PK }}
 
             - name: 🎥 Upload Cypress Results
               if: always() && steps.filter.outputs.src == 'true'
