@@ -80,7 +80,7 @@ namespace eden
                            std::string memo);
 
       void runactions(const eosio::signature& sig,
-                      eosio::name account,
+                      eosio::name eden_account,
                       eosio::varuint32 sequence,
                       eosio::ignore<std::vector<action>> actions);
 
@@ -224,7 +224,7 @@ namespace eden
    EDEN_ACTIONS(
        eden,
        "eden.gm"_n,
-       action(runactions, sig, account, sequence, actions),
+       action(runactions, sig, eden_account, sequence, actions),
        action(withdraw, owner, quantity, ricardian_contract(withdraw_ricardian)),
        action(donate, owner, quantity),
        action(transfer, to, quantity, memo),

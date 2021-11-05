@@ -67,6 +67,7 @@ EOSIO_ABIGEN(
     table("memberstats"_n, eden::member_stats_variant),
     table("migration"_n, eden::migration_variant),
     table("pools"_n, eden::pool_variant),
+    table("sessions"_n, eden::session_container_variant),
     table("votes"_n, eden::vote),
     ricardian_clause("peacetreaty", eden::peacetreaty_clause),
     ricardian_clause("bylaws", eden::bylaws_clause))
