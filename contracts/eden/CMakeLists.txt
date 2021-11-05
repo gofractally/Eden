@@ -17,6 +17,7 @@ add_executable(eden
    src/actions/migrate.cpp
    src/actions/encrypt.cpp
    src/actions/tables.cpp
+   src/actions/contract_auth.cpp
    src/eden.cpp
    src/events.cpp
    src/accounts.cpp

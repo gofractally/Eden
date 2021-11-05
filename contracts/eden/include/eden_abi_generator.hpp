@@ -9,6 +9,12 @@
             vdef.types.resize(index + 1, missing_struct_name);                      \
          vdef.types[index] = name;                                                  \
       });                                                                           \
-      gen.def.variants.value.push_back(std::move(vdef));                            \
+      auto& variants = gen.def.variants.value;                                      \
+      auto it = std::find_if(variants.begin(), variants.end(),                      \
+                             [&](auto& d) { return d.name == variant_name; });      \
+      if (it != variants.end())                                                     \
+         *it = std::move(vdef);                                                     \
+      else                                                                          \
+         variants.push_back(std::move(vdef));                                       \
    })();                                                                            \
    , 1
