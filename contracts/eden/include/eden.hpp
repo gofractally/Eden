@@ -79,9 +79,9 @@ namespace eden
                            const eosio::asset& quantity,
                            std::string memo);
 
-      void runactions(const eosio::signature& sig,
-                      eosio::name eden_account,
-                      eosio::varuint32 sequence,
+      void runactions(const eosio::signature& signature,
+                      eosio::ignore<eosio::name> eden_account,
+                      eosio::ignore<eosio::varuint32> sequence,
                       eosio::ignore<std::vector<action>> actions);
 
       void withdraw(eosio::name owner, const eosio::asset& quantity);
