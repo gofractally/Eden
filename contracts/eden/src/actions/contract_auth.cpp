@@ -16,6 +16,73 @@ namespace eden
       sc.earliest_expiration() = expiration;
    }
 
+   void eden::newsession(eosio::name eden_account,
+                         const eosio::public_key& key,
+                         eosio::block_timestamp expiration,
+                         const std::string& description)
+   {
+      eosio::require_auth(eden_account);
+      eosio::check(key.index() < 2, "unsupported key type");
+      eosio::check(expiration > eosio::current_block_time(), "session is expired");
+      eosio::check(expiration <= eosio::current_block_time().to_time_point() + eosio::days(90),
+                   "expiration is too far in the future");
+      eosio::check(description.size() <= 20, "description is too long");
+
+      sessions_table_type table(get_self(), default_scope);
+      auto sc = table.find(eden_account.value);
+      if (sc == table.end())
+      {
+         table.emplace(get_self(), [&](auto& sc) {
+            sc.eden_account() = eden_account;
+            sc.earliest_expiration() = expiration;
+            sc.sessions().push_back(session_v0{
+                .key = key,
+                .expiration = expiration,
+                .description = description,
+            });
+         });
+      }
+      else
+      {
+         table.modify(sc, get_self(), [&](auto& sc) {
+            auto& sessions = sc.sessions();
+            auto session = std::find_if(sessions.begin(), sessions.end(),
+                                        [&](auto& session) { return session.key == key; });
+            eosio::check(session == sessions.end(), "session key already exists");
+            sessions.push_back(session_v0{
+                .key = key,
+                .expiration = expiration,
+                .description = description,
+            });
+            if (sessions.size() > 4)
+               sessions.erase(sessions.begin());
+            expire(sc);  // also sets earliest_expiration
+         });
+      }
+   }  // eden::newsession
+
+   void eden::delsession(const eosio::excluded_arg<auth_info>& auth,
+                         eosio::name eden_account,
+                         const eosio::public_key& key)
+   {
+      auth.value.require_auth(eden_account);
+      sessions_table_type table(get_self(), default_scope);
+      auto sc = table.find(eden_account.value);
+      eosio::check(sc != table.end(), "User has no session keys");
+      bool empty = false;
+      table.modify(sc, get_self(), [&](auto& sc) {
+         auto& sessions = sc.sessions();
+         auto session = std::find_if(sessions.begin(), sessions.end(),
+                                     [&](auto& session) { return session.key == key; });
+         eosio::check(session != sessions.end(), "Session key is either expired or not found");
+         sessions.erase(session);
+         expire(sc);  // also sets earliest_expiration
+         empty = sessions.empty();
+      });
+      if (empty)
+         table.erase(sc);
+   }  // eden::delsession
+
    void eden::runactions(const eosio::signature& signature,
                          eosio::ignore<eosio::name>,
                          eosio::ignore<eosio::varuint32>,
@@ -51,6 +118,8 @@ namespace eden
                eosio::check(false,
                             "sequence " + std::to_string(sequence.value) + " skips too many");
          }
+         else if (sequence.value > 10)
+            eosio::check(false, "sequence " + std::to_string(sequence.value) + " skips too many");
          auto it = std::lower_bound(sequences.begin(), sequences.end(), sequence);
          if (it != sequences.end() && *it == sequence)
             eosio::check(false, "received duplicate sequence " + std::to_string(sequence.value));
@@ -73,7 +142,6 @@ namespace eden
                       "unsupported action index");
       }
 
-      eosio::check(!ds.remaining(), "detected extra action data after post");
-
+      eosio::check(!ds.remaining(), "detected extra action data");
    }  // eden::runactions
 }  // namespace eden

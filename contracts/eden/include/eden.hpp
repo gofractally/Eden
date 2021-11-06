@@ -79,6 +79,15 @@ namespace eden
                            const eosio::asset& quantity,
                            std::string memo);
 
+      void newsession(eosio::name eden_account,
+                      const eosio::public_key& key,
+                      eosio::block_timestamp expiration,
+                      const std::string& description);
+
+      void delsession(const eosio::excluded_arg<auth_info>& auth,
+                      eosio::name eden_account,
+                      const eosio::public_key& key);
+
       void runactions(const eosio::signature& signature,
                       eosio::ignore<eosio::name> eden_account,
                       eosio::ignore<eosio::varuint32> sequence,
@@ -224,6 +233,8 @@ namespace eden
    EDEN_ACTIONS(
        eden,
        "eden.gm"_n,
+       action(newsession, eden_account, key, expiration, description),
+       eden_auth_action(delsession, 0, eden_account, key),
        action(runactions, sig, eden_account, sequence, actions),
        action(withdraw, owner, quantity, ricardian_contract(withdraw_ricardian)),
        action(donate, owner, quantity),
@@ -247,7 +258,7 @@ namespace eden
        action(gensetexpire, id, new_expiration),
        action(clearall, ricardian_contract(clearall_ricardian)),
        eden_auth_action(inductinit,
-                        0,
+                        10,
                         id,
                         inviter,
                         invitee,

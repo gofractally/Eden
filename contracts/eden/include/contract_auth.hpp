@@ -5,31 +5,32 @@
 
 namespace eden
 {
-   struct session
+   struct session_v0
    {
       eosio::public_key key;
       eosio::block_timestamp expiration;
+      std::string description;
       std::vector<eosio::varuint32> sequences;
    };
-   EOSIO_REFLECT(session, key, expiration, sequences)
+   EOSIO_REFLECT(session_v0, key, expiration, description, sequences)
 
    struct session_container_v0
    {
-      eosio::name owner;
+      eosio::name eden_account;
       eosio::block_timestamp earliest_expiration;
-      std::vector<session> sessions;
+      std::vector<session_v0> sessions;
 
-      uint64_t primary_key() const { return owner.value; }
+      uint64_t primary_key() const { return eden_account.value; }
       uint64_t by_expiration() const { return earliest_expiration.slot; }
    };
-   EOSIO_REFLECT(session_container_v0, owner, earliest_expiration, sessions)
+   EOSIO_REFLECT(session_container_v0, eden_account, earliest_expiration, sessions)
 
    using session_container_variant = std::variant<session_container_v0>;
 
    struct session_container
    {
       session_container_variant value;
-      EDEN_FORWARD_MEMBERS(value, owner, earliest_expiration, sessions);
+      EDEN_FORWARD_MEMBERS(value, eden_account, earliest_expiration, sessions);
       EDEN_FORWARD_FUNCTIONS(value, primary_key, by_expiration)
    };
    EOSIO_REFLECT(session_container, value)
