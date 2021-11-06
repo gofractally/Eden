@@ -9,8 +9,8 @@
 #include <eden.hpp>
 #include <eosio/abi.hpp>
 #include <eosio/from_bin.hpp>
-#include <eosio/to_bin.hpp>
 #include <eosio/ship_protocol.hpp>
+#include <eosio/to_bin.hpp>
 #include <events.hpp>
 
 using namespace eosio::literals;
@@ -27,10 +27,10 @@ constexpr eosio::name pool_account(eosio::name pool)
 constexpr eosio::name master_pool = pool_account("master"_n);
 eosio::name distribution_fund;
 
-const eosio::name account_min = eosio::name{0}; 
-const eosio::name account_max = eosio::name{~uint64_t(0)}; 
-const eosio::block_timestamp block_timestamp_min = eosio::block_timestamp{0}; 
-const eosio::block_timestamp block_timestamp_max = eosio::block_timestamp{~uint32_t(0)}; 
+const eosio::name account_min = eosio::name{0};
+const eosio::name account_max = eosio::name{~uint64_t(0)};
+const eosio::block_timestamp block_timestamp_min = eosio::block_timestamp{0};
+const eosio::block_timestamp block_timestamp_max = eosio::block_timestamp{~uint32_t(0)};
 
 // TODO: switch to uint64_t (js BigInt) after we upgrade to nodejs >= 15
 extern "C" void __wasm_call_ctors();
@@ -194,9 +194,7 @@ struct Nft;
 constexpr const char NftConnection_name[] = "NftConnection";
 constexpr const char NftEdge_name[] = "NftEdge";
 using NftConnection =
-    clchain::Connection<clchain::ConnectionConfig<Nft,
-                                                  NftConnection_name,
-                                                  NftEdge_name>>;
+    clchain::Connection<clchain::ConnectionConfig<Nft, NftConnection_name, NftEdge_name>>;
 
 struct status
 {
@@ -348,12 +346,10 @@ struct member_object : public chainbase::object<member_table, member_object>
    member member;
 
    eosio::name by_pk() const { return member.account; }
-   MemberCreatedAtKey by_createdAt() const { 
-      return {member.createdAt, member.account}; 
-   }
+   MemberCreatedAtKey by_createdAt() const { return {member.createdAt, member.account}; }
 };
-using member_index = mic<member_object, 
-                         ordered_by_id<member_object>, 
+using member_index = mic<member_object,
+                         ordered_by_id<member_object>,
                          ordered_by_pk<member_object>,
                          ordered_by_createdAt<member_object>>;
 
@@ -481,8 +477,7 @@ using distribution_fund_index = mic<distribution_fund_object,
 
 using nft_account_key = std::tuple<eosio::name, eosio::block_timestamp, uint64_t>;
 
-struct nft_object
-    : public chainbase::object<nft_table, nft_object>
+struct nft_object : public chainbase::object<nft_table, nft_object>
 {
    CHAINBASE_DEFAULT_CONSTRUCTOR(nft_object)
 
@@ -503,7 +498,6 @@ using nft_index = mic<nft_object,
                       ordered_by_pk<nft_object>,
                       ordered_by_member<nft_object>,
                       ordered_by_owner<nft_object>>;
-
 
 struct database
 {
@@ -708,7 +702,7 @@ struct Member
    const std::string* inductionVideo() const { return member ? &member->inductionVideo : nullptr; }
    bool participating() const { return member && member->participating; }
    eosio::block_timestamp createdAt() const { return member->createdAt; }
-   
+
    NftConnection nfts(std::optional<eosio::block_timestamp> gt,
                       std::optional<eosio::block_timestamp> ge,
                       std::optional<eosio::block_timestamp> lt,
@@ -1102,7 +1096,8 @@ void add_genesis_member(const status& status, eosio::name member)
    });
 }
 
-struct Nft {
+struct Nft
+{
    const nft_object* obj;
 
    auto member() const { return get_member(obj->member); }
@@ -1112,13 +1107,7 @@ struct Nft {
    auto templateMint() const { return obj->templateMint; }
    auto createdAt() const { return obj->createdAt; }
 };
-EOSIO_REFLECT2(Nft, 
-               member, 
-               owner, 
-               templateId, 
-               assetId, 
-               templateMint, 
-               createdAt)
+EOSIO_REFLECT2(Nft, member, owner, templateId, assetId, templateMint, createdAt)
 
 NftConnection Member::nfts(std::optional<eosio::block_timestamp> gt,
                            std::optional<eosio::block_timestamp> ge,
@@ -1138,7 +1127,7 @@ NftConnection Member::nfts(std::optional<eosio::block_timestamp> gt,
           : std::nullopt,                                                           //
        le ? std::optional{nft_account_key{account, *le, ~uint64_t(0)}}              //
           : std::optional{nft_account_key{account, eosio::block_timestamp::max(),   //
-                                                ~uint64_t(0)}},                     //
+                                          ~uint64_t(0)}},                           //
        first, last, before, after,                                                  //
        db.nfts.get<by_member>(),                                                    //
        [](auto& obj) { return obj.by_member(); },                                   //
@@ -1165,9 +1154,9 @@ NftConnection Member::collectedNfts(std::optional<eosio::block_timestamp> gt,
           : std::nullopt,                                                           //
        le ? std::optional{nft_account_key{account, *le, ~uint64_t(0)}}              //
           : std::optional{nft_account_key{account, eosio::block_timestamp::max(),   //
-                                                ~uint64_t(0)}},                     //
+                                          ~uint64_t(0)}},                           //
        first, last, before, after,                                                  //
-       db.nfts.get<by_owner>(),                                                    //
+       db.nfts.get<by_owner>(),                                                     //
        [](auto& obj) { return obj.by_owner(); },                                    //
        [&](auto& obj) { return Nft{&obj}; },
        [](auto& nfts, auto key) { return nfts.lower_bound(key); },
@@ -1491,16 +1480,16 @@ void logmint(const action_context& context,
              eden::atomicassets::attribute_map immutable_data,
              eden::atomicassets::attribute_map mutable_data,
              std::vector<eosio::asset> backed_tokens,
-             eden::atomicassets::attribute_map immutable_template_data) 
+             eden::atomicassets::attribute_map immutable_template_data)
 {
-   if (authorized_minter != eden_account || collection_name != eden_account
-      || schema_name != eden::schema_name)
+   if (authorized_minter != eden_account || collection_name != eden_account ||
+       schema_name != eden::schema_name)
       return;
-   
+
    auto account_pos = std::find_if(immutable_template_data.begin(), immutable_data.end(),
                                    [](const auto& attr) { return attr.key == "account"; });
    if (account_pos == immutable_template_data.end())
-      return; // this nft has no eden member account value
+      return;  // this nft has no eden member account value
 
    eosio::name member_account(std::get<std::string>(account_pos->value));
 
@@ -1534,15 +1523,15 @@ void logtransfer(const action_context& context,
 
    auto& index = db.nfts.get<by_pk>();
 
-   for (const auto& asset_id : asset_ids) {
+   for (const auto& asset_id : asset_ids)
+   {
       auto it = index.find(asset_id);
-      if (it == index.end()) {
+      if (it == index.end())
+      {
          continue;
       }
-      
-      db.nfts.modify(*it, [&](auto& nft) {
-         nft.owner = to;
-      });
+
+      db.nfts.modify(*it, [&](auto& nft) { nft.owner = to; });
    }
 }
 
@@ -1928,9 +1917,10 @@ bool add_block(subchain::block&& eden_block, uint32_t eosio_irreversible)
    return add_block(std::move(bi), eosio_irreversible);
 }
 
-bool add_block(subchain::eosio_block&& eosioBlock, uint32_t eosio_irreversible) {
+bool add_block(subchain::eosio_block&& eosioBlock, uint32_t eosio_irreversible)
+{
    subchain::block eden_block;
-   eden_block.eosioBlock = std::move(eosioBlock); 
+   eden_block.eosioBlock = std::move(eosioBlock);
 
    auto* eden_prev = block_log.block_before_eosio_num(eden_block.eosioBlock.num);
    if (eden_prev)
@@ -2001,8 +1991,7 @@ bool add_block(eosio::ship_protocol::block_position block,
    return true;
 }
 
-[[clang::export_name("pushShipMessage")]] bool pushShipMessage(const char* data,
-                                                               uint32_t size)
+[[clang::export_name("pushShipMessage")]] bool pushShipMessage(const char* data, uint32_t size)
 {
    eosio::input_stream bin{data, size};
    eosio::ship_protocol::result result;
@@ -2144,17 +2133,17 @@ struct Query
                                        std::optional<std::string> after) const
    {
       return clchain::make_connection<MemberConnection, MemberCreatedAtKey>(
-          gt ? std::optional{MemberCreatedAtKey{*gt, account_max}}                  //
-             : std::nullopt,                                                        //
-          ge ? std::optional{MemberCreatedAtKey{*ge, account_min}}                  //
-             : std::nullopt,                                                        //
-          lt ? std::optional{MemberCreatedAtKey{*lt, account_min}}                  //
-             : std::nullopt,                                                        //
-          le ? std::optional{MemberCreatedAtKey{*le, account_max}}                  //
-             : std::nullopt,                                                        //
-          first, last, before, after,                                               //
-          db.members.get<by_createdAt>(),                                           //
-          [](auto& obj) { return obj.by_createdAt(); },                             //
+          gt ? std::optional{MemberCreatedAtKey{*gt, account_max}}  //
+             : std::nullopt,                                        //
+          ge ? std::optional{MemberCreatedAtKey{*ge, account_min}}  //
+             : std::nullopt,                                        //
+          lt ? std::optional{MemberCreatedAtKey{*lt, account_min}}  //
+             : std::nullopt,                                        //
+          le ? std::optional{MemberCreatedAtKey{*le, account_max}}  //
+             : std::nullopt,                                        //
+          first, last, before, after,                               //
+          db.members.get<by_createdAt>(),                           //
+          [](auto& obj) { return obj.by_createdAt(); },             //
           [](auto& obj) {
              return Member{obj.member.account, &obj.member};
           },
@@ -2198,16 +2187,17 @@ struct Query
           [](auto& distributions, auto key) { return distributions.upper_bound(key); });
    }
 };
-EOSIO_REFLECT2(Query,
-               blockLog,
-               status,
-               masterPool,
-               distributionFund,
-               method(balances, "gt", "ge", "lt", "le", "first", "last", "before", "after"),
-               method(members, "gt", "ge", "lt", "le", "first", "last", "before", "after"),
-               method(membersByCreatedAt, "gt", "ge", "lt", "le", "first", "last", "before", "after"),
-               method(elections, "gt", "ge", "lt", "le", "first", "last", "before", "after"),
-               method(distributions, "gt", "ge", "lt", "le", "first", "last", "before", "after"))
+EOSIO_REFLECT2(
+    Query,
+    blockLog,
+    status,
+    masterPool,
+    distributionFund,
+    method(balances, "gt", "ge", "lt", "le", "first", "last", "before", "after"),
+    method(members, "gt", "ge", "lt", "le", "first", "last", "before", "after"),
+    method(membersByCreatedAt, "gt", "ge", "lt", "le", "first", "last", "before", "after"),
+    method(elections, "gt", "ge", "lt", "le", "first", "last", "before", "after"),
+    method(distributions, "gt", "ge", "lt", "le", "first", "last", "before", "after"))
 
 auto schema = clchain::get_gql_schema<Query>();
 [[clang::export_name("getSchemaSize")]] uint32_t getSchemaSize()
