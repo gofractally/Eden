@@ -1723,10 +1723,9 @@ void handle_event(const action_context& context, const eden::event& event)
 }
 
 template <typename... Args>
-void call(void (*f)(Args...), const action_context& context, const std::vector<char>& data)
+void call(void (*f)(Args...), const action_context& context, eosio::input_stream& s)
 {
    std::tuple<eosio::remove_cvref_t<Args>...> t;
-   eosio::input_stream s(data);
    // TODO: prevent abort, indicate what failed
    eosio::from_bin(t, s);
    std::apply([f](auto&&... args) { f(std::move(args)...); }, t);
@@ -1735,13 +1734,79 @@ void call(void (*f)(Args...), const action_context& context, const std::vector<c
 template <typename... Args>
 void call(void (*f)(const action_context&, Args...),
           const action_context& context,
-          const std::vector<char>& data)
+          eosio::input_stream& s)
 {
    std::tuple<eosio::remove_cvref_t<Args>...> t;
-   eosio::input_stream s(data);
    // TODO: prevent abort, indicate what failed
    eosio::from_bin(t, s);
    std::apply([&](auto&&... args) { f(context, std::move(args)...); }, t);
+}
+
+bool dispatch(eosio::name action_name, const action_context& context, eosio::input_stream& s);
+
+void runactions(const action_context& context, eosio::input_stream& s)
+{
+   eosio::signature signature;
+   eosio::name eden_account;
+   eosio::varuint32 sequence;
+   eosio::varuint32 num_actions;
+   from_bin(signature, s);
+   from_bin(eden_account, s);
+   from_bin(sequence, s);
+   from_bin(num_actions, s);
+   for (uint32_t i = 0; i < num_actions.value; ++i)
+   {
+      auto index = eosio::varuint32_from_bin(s);
+      auto name = eden::actions::get_name_for_auth_action(index);
+      if (!dispatch(name, context, s))
+         // fatal because this throws off the rest of the stream
+         eosio::check(false, "runactions dispatch failed for " + std::to_string(index) + " " +
+                                 name.to_string());
+   }
+   eosio::check(!s.remaining(), "unpack error (extra data) within runactions");
+}
+
+bool dispatch(eosio::name action_name, const action_context& context, eosio::input_stream& s)
+{
+   if (action_name == "runactions"_n)
+      runactions(context, s);
+   else if (action_name == "clearall"_n)
+      call(clearall, context, s);
+   else if (action_name == "withdraw"_n)
+      call(withdraw, context, s);
+   else if (action_name == "donate"_n)
+      call(donate, context, s);
+   else if (action_name == "transfer"_n)
+      call(transfer, context, s);
+   else if (action_name == "fundtransfer"_n)
+      call(fundtransfer, context, s);
+   else if (action_name == "usertransfer"_n)
+      call(usertransfer, context, s);
+   else if (action_name == "genesis"_n)
+      call(genesis, context, s);
+   else if (action_name == "addtogenesis"_n)
+      call(addtogenesis, context, s);
+   else if (action_name == "inductinit"_n)
+      call(inductinit, context, s);
+   else if (action_name == "inductprofil"_n)
+      call(inductprofil, context, s);
+   else if (action_name == "inductvideo"_n)
+      call(inductvideo, context, s);
+   else if (action_name == "inductcancel"_n)
+      call(inductcancel, context, s);
+   else if (action_name == "inductdonate"_n)
+      call(inductdonate, context, s);
+   else if (action_name == "resign"_n)
+      call(resign, context, s);
+   else if (action_name == "electopt"_n)
+      call(electopt, context, s);
+   else if (action_name == "electvote"_n)
+      call(electvote, context, s);
+   else if (action_name == "electvideo"_n)
+      call(electvideo, context, s);
+   else
+      return false;
+   return true;
 }
 
 void filter_block(const subchain::eosio_block& block)
@@ -1754,44 +1819,15 @@ void filter_block(const subchain::eosio_block& block)
          action_context context{block, block_state, trx, action};
          if (action.firstReceiver == eden_account)
          {
-            if (action.name == "clearall"_n)
-               call(clearall, context, action.hexData.data);
-            else if (action.name == "withdraw"_n)
-               call(withdraw, context, action.hexData.data);
-            else if (action.name == "donate"_n)
-               call(donate, context, action.hexData.data);
-            else if (action.name == "transfer"_n)
-               call(transfer, context, action.hexData.data);
-            else if (action.name == "fundtransfer"_n)
-               call(fundtransfer, context, action.hexData.data);
-            else if (action.name == "usertransfer"_n)
-               call(usertransfer, context, action.hexData.data);
-            else if (action.name == "genesis"_n)
-               call(genesis, context, action.hexData.data);
-            else if (action.name == "addtogenesis"_n)
-               call(addtogenesis, context, action.hexData.data);
-            else if (action.name == "inductinit"_n)
-               call(inductinit, context, action.hexData.data);
-            else if (action.name == "inductprofil"_n)
-               call(inductprofil, context, action.hexData.data);
-            else if (action.name == "inductvideo"_n)
-               call(inductvideo, context, action.hexData.data);
-            else if (action.name == "inductcancel"_n)
-               call(inductcancel, context, action.hexData.data);
-            else if (action.name == "inductdonate"_n)
-               call(inductdonate, context, action.hexData.data);
-            else if (action.name == "resign"_n)
-               call(resign, context, action.hexData.data);
-            else if (action.name == "electopt"_n)
-               call(electopt, context, action.hexData.data);
-            else if (action.name == "electvote"_n)
-               call(electvote, context, action.hexData.data);
-            else if (action.name == "electvideo"_n)
-               call(electvideo, context, action.hexData.data);
+            eosio::input_stream s(action.hexData.data);
+            dispatch(action.name, context, s);
          }
          else if (action.firstReceiver == token_account && action.receiver == eden_account &&
                   action.name == "transfer"_n)
-            call(notify_transfer, context, action.hexData.data);
+         {
+            eosio::input_stream s(action.hexData.data);
+            call(notify_transfer, context, s);
+         }
          else if (action.firstReceiver == "eosio.null"_n && action.name == "eden.events"_n &&
                   action.creatorAction && action.creatorAction->receiver == eden_account)
          {
@@ -1802,10 +1838,11 @@ void filter_block(const subchain::eosio_block& block)
          }
          else if (action.firstReceiver == atomic_account && action.receiver == eden_account)
          {
+            eosio::input_stream s(action.hexData.data);
             if (action.name == "logmint"_n)
-               call(logmint, context, action.hexData.data);
+               call(logmint, context, s);
             else if (action.name == "logtransfer"_n)
-               call(logtransfer, context, action.hexData.data);
+               call(logtransfer, context, s);
          }
       }  // for(action)
       eosio::check(!block_state.in_withdraw && !block_state.in_manual_transfer,
