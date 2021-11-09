@@ -754,7 +754,6 @@ EOSIO_REFLECT2(
     account,
     balance,
     inviter,
-    createdAt,
     inductionWitnesses,
     profile,
     inductionVideo,
@@ -1780,6 +1779,14 @@ void call(void (*f)(const action_context&, Args...),
 
 void remove_expired_inductions(const subchain::eosio_block& block)
 {
+   auto& idx = db.status.get<by_id>();
+   if (idx.size() < 1) 
+      return; // skip if genesis is not complete
+
+   const auto& status = get_status();
+   if (!status.status.active)
+      return; // skip if not active
+
    auto expiration_time =
        eosio::block_timestamp(block.timestamp).to_time_point().sec_since_epoch() -
        eden::induction_expiration_secs;
