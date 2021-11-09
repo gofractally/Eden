@@ -58,6 +58,8 @@ struct nodeos_runner
                      "--access-control-allow-origin \"*\" "    //
                      "--access-control-allow-header \"*\" "    //
                      "--http-validate-host 0 "                 //
+                     "--http-server-address 0.0.0.0:8888 "     //
+                     "--state-history-endpoint 0.0.0.0:8080 "  //
                      "-e -p eosio");
    }
 };
