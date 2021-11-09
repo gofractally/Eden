@@ -42,6 +42,8 @@ namespace eden
            "byexpiration"_n,
            eosio::const_mem_fun<session_container, uint64_t, &session_container::by_expiration>>>;
 
+   uint32_t gc_sessions(eosio::name contract, uint32_t remaining);
+
    struct auth_info
    {
       eosio::name authorized_eden_account;

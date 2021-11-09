@@ -176,6 +176,7 @@ namespace eden
          auctions auctions{get_self()};
          remaining = auctions.finish_auctions(remaining);
       }
+      remaining = gc_sessions(get_self(), remaining);
       eosio::check(remaining != limit, "Nothing to do.");
       if (!removed_members.empty())
       {

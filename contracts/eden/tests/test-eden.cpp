@@ -1374,3 +1374,64 @@ TEST_CASE("contract-auth-induct")
        alice_session_priv_key, "alice"_n, 3, nullptr,
        auth_act<actions::inductendors>("alice"_n, 1234, t.hash_induction("vid"s, bertie_profile)));
 }  // TEST_CASE("contract-auth-induct")
+
+TEST_CASE("contract-auth-elect")
+{
+   eden_tester t;
+   t.genesis();
+   t.induct_n(100);
+
+   auto create_sessions = [&] {
+      t.alice.trace<actions::gc>(1000);
+      t.newsession("alice"_n, "alice"_n, alice_session_pub_key,
+                   t.chain.get_head_block_info().timestamp.to_time_point() + eosio::days(90), "");
+      t.newsession("pip"_n, "pip"_n, pip_session_pub_key,
+                   t.chain.get_head_block_info().timestamp.to_time_point() + eosio::days(90), "");
+      t.newsession("egeon"_n, "egeon"_n, egeon_session_pub_key,
+                   t.chain.get_head_block_info().timestamp.to_time_point() + eosio::days(90), "");
+   };
+
+   create_sessions();
+   t.runactions(pip_session_priv_key, "pip"_n, 1,
+                "need authority of alice but have authority of pip",
+                auth_act<actions::electopt>("alice"_n, true));
+   t.runactions(alice_session_priv_key, "alice"_n, 1, nullptr,
+                auth_act<actions::electopt>("alice"_n, true));
+   t.chain.finish_block();
+   t.runactions(alice_session_priv_key, "alice"_n, 2, "Not currently opted out",
+                auth_act<actions::electopt>("alice"_n, true));
+
+   t.electdonate_all();
+   t.skip_to(t.next_election_time().to_time_point() - eosio::days(1));
+   t.electseed(t.next_election_time().to_time_point() - eosio::days(1));
+   t.skip_to(t.next_election_time().to_time_point() + eosio::minutes(10));
+   t.setup_election();
+
+   t.runactions(pip_session_priv_key, "pip"_n, 2,
+                "Recovered session key PUB_K1_8YQhKe3x1xTA1KHmkBPznWqa3UGQsaHTUMkJJtcds9giKNsHGv "
+                "is either expired or not found",
+                auth_act<actions::electmeeting>("pip"_n, 0, std::vector<eden::encrypted_key>(0),
+                                                eosio::bytes{}, std::nullopt));
+   create_sessions();
+   t.runactions(pip_session_priv_key, "pip"_n, 2,
+                "need authority of alice but have authority of pip",
+                auth_act<actions::electmeeting>("alice"_n, 0, std::vector<eden::encrypted_key>(0),
+                                                eosio::bytes{}, std::nullopt));
+   t.runactions(pip_session_priv_key, "pip"_n, 2, nullptr,
+                auth_act<actions::electmeeting>("pip"_n, 0, std::vector<eden::encrypted_key>(0),
+                                                eosio::bytes{}, std::nullopt));
+
+   t.runactions(pip_session_priv_key, "pip"_n, 3,
+                "need authority of alice but have authority of pip",
+                auth_act<actions::electvote>(0, "alice"_n, "pip"_n));
+   t.runactions(alice_session_priv_key, "alice"_n, 0, "alice and pip are not in the same group",
+                auth_act<actions::electvote>(0, "alice"_n, "pip"_n));
+
+   t.runactions(pip_session_priv_key, "pip"_n, 3,
+                "need authority of alice but have authority of pip",
+                auth_act<actions::electvideo>(0, "alice"_n,
+                                              "Qmb7WmZiSDXss5HfuKfoSf6jxTDrHzr8AoAUDeDMLNDuws"));
+   t.runactions(alice_session_priv_key, "alice"_n, 1, nullptr,
+                auth_act<actions::electvideo>(0, "alice"_n,
+                                              "Qmb7WmZiSDXss5HfuKfoSf6jxTDrHzr8AoAUDeDMLNDuws"));
+}  // TEST_CASE("contract-auth-elect")

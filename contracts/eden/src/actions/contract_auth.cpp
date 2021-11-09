@@ -17,6 +17,22 @@ namespace eden
       sc.earliest_expiration() = expiration;
    }
 
+   uint32_t gc_sessions(eosio::name contract, uint32_t remaining)
+   {
+      auto now = eosio::current_block_time();
+      sessions_table_type table(contract, default_scope);
+      auto idx = table.get_index<"byexpiration"_n>();
+      while (remaining && idx.begin() != idx.end() && idx.begin()->earliest_expiration() <= now)
+      {
+         auto& sc = *idx.begin();
+         table.modify(sc, contract, [&](auto& sc) { expire(sc); });
+         if (sc.sessions().empty())
+            table.erase(sc);
+         --remaining;
+      }
+      return remaining;
+   }
+
    void eden::newsession(eosio::name eden_account,
                          const eosio::public_key& key,
                          eosio::block_timestamp expiration,
