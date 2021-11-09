@@ -47,8 +47,12 @@ namespace eden
       eosio::name authorized_eden_account;
       void require_auth(eosio::name eden_account) const
       {
-         if (eden_account != authorized_eden_account)
+         if (!authorized_eden_account.value)
             eosio::require_auth(eden_account);
+         else if (eden_account != authorized_eden_account)
+            eosio::check(false, "need authority of " + eden_account.to_string() +
+                                    " but have authority of " +
+                                    authorized_eden_account.to_string());
       }
    };
 }  // namespace eden

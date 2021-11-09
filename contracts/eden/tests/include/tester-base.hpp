@@ -28,26 +28,6 @@ using user_context = test_chain::user_context;
 using eden::accounts;
 using eden::members;
 
-inline const eosio::private_key alice_session_1_priv_key =
-    private_key_from_string("5KdMjZ6vrbQWromznw5v7WLt4q92abv8sKgRKzagpj8SHacnozX");
-inline const eosio::public_key alice_session_1_pub_key =
-    public_key_from_string("EOS665ajq1JUMwWH3bHcRxxTqiZBZBc6CakwUfLkZJxRqp4vyzqsQ");
-
-inline const eosio::private_key alice_session_2_priv_key =
-    private_key_from_string("5KKnoRi3WfLL82sS4WdP8YXmezVR24Y8jxy5JXzwC2SouqoHgu2");
-inline const eosio::public_key alice_session_2_pub_key =
-    public_key_from_string("EOS8VWTR1mogYHEd9HJxgG2Tj3GbPghrnJqMfWfdHbTE11BJmyLRR");
-
-inline const eosio::private_key pip_session_1_priv_key =
-    private_key_from_string("5KZLNGfDrqPM1yVL5zPXMhbAHBSi6ZtU2seqeUdEfudPgv9n93h");
-inline const eosio::public_key pip_session_1_pub_key =
-    public_key_from_string("EOS8YQhKe3x1xTA1KHmkBPznWqa3UGQsaHTUMkJJtcds9giK4Erft");
-
-inline const eosio::private_key pip_session_2_priv_key =
-    private_key_from_string("5Jr4bSzJWhtr3bxY83xRDhUTgir9Mhn6YwVt4Y9SRgu1GopZ5vA");
-inline const eosio::public_key pip_session_2_pub_key =
-    public_key_from_string("EOS5iALbhfqEZvqkUifUGbfMQSFnd1ui8ZsXVHT23XWh1HLyyPrJE");
-
 namespace eosio
 {
    std::ostream& operator<<(std::ostream& os,
@@ -277,6 +257,12 @@ struct eden_tester
          chain.as("eosio.token"_n)
              .act<token::actions::transfer>("eosio.token"_n, account, s2a("1000.0000 EOS"), "memo");
       }
+   }
+
+   auto hash_induction(const std::string& video, const eden::new_member_profile& profile)
+   {
+      auto hash_data = eosio::convert_to_bin(std::tuple(video, profile));
+      return eosio::sha256(hash_data.data(), hash_data.size());
    }
 
    void finish_induction(uint64_t induction_id,

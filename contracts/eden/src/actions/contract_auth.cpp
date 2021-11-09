@@ -1,4 +1,5 @@
 #include <eden.hpp>
+#include <members.hpp>
 
 namespace eden
 {
@@ -27,6 +28,7 @@ namespace eden
       eosio::check(expiration <= eosio::current_block_time().to_time_point() + eosio::days(90),
                    "expiration is too far in the future");
       eosio::check(description.size() <= 20, "description is too long");
+      members(get_self()).get_member(eden_account);
 
       sessions_table_type table(get_self(), default_scope);
       auto sc = table.find(eden_account.value);
@@ -99,7 +101,9 @@ namespace eden
 
       sessions_table_type table(get_self(), default_scope);
       auto sc = table.find(eden_account.value);
-      eosio::check(sc != table.end(), "User has no session keys");
+      if (sc == table.end())
+         eosio::check(false, "Recovered session key " + public_key_to_string(recovered) +
+                                 " is either expired or not found");
       table.modify(sc, get_self(), [&](auto& sc) {
          expire(sc);
          auto& sessions = sc.sessions();
