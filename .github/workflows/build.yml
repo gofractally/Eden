@@ -354,8 +354,8 @@ jobs:
                         - "tsconfig.json"
                         - "yarn.lock"
 
-                        - "docker/eden-webapp.Dockerfile"
-                        - "packages/webapp/**"
+                        - "packages/**"
+                        - "contracts/**"
 
             - name: Download Eden Microchain
               if: steps.filter.outputs.src == 'true'
