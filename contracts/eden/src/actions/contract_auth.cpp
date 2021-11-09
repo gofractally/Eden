@@ -68,7 +68,7 @@ namespace eden
       auth.value.require_auth(eden_account);
       sessions_table_type table(get_self(), default_scope);
       auto sc = table.find(eden_account.value);
-      eosio::check(sc != table.end(), "User has no session keys");
+      eosio::check(sc != table.end(), "Session key is either expired or not found");
       bool empty = false;
       table.modify(sc, get_self(), [&](auto& sc) {
          auto& sessions = sc.sessions();

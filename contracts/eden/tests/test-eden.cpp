@@ -1235,3 +1235,45 @@ TEST_CASE("election-events")
    t.write_dfuse_history("dfuse-test-election.json");
    CompareFile{"test-election"}.write_events(t.chain).compare();
 }
+
+TEST_CASE("contract-auth")
+{
+   eden_tester t;
+   t.genesis();
+
+   t.newsession("pip"_n, "alice"_n, alice_session_1_pub_key,
+                t.chain.get_head_block_info().timestamp.to_time_point() + eosio::days(90),
+                "no, pip, no", "missing authority of alice");
+   t.newsession("alice"_n, "alice"_n, alice_session_1_pub_key,
+                t.chain.get_head_block_info().timestamp.to_time_point(), "my first session",
+                "session is expired");
+   t.newsession("alice"_n, "alice"_n, alice_session_1_pub_key,
+                t.chain.get_head_block_info().timestamp.to_time_point() + eosio::days(91),
+                "my first session", "expiration is too far in the future");
+   t.newsession("alice"_n, "alice"_n, alice_session_1_pub_key,
+                t.chain.get_head_block_info().timestamp.to_time_point() + eosio::days(90),
+                "four score and twenty", "description is too long");
+
+   t.newsession("alice"_n, "alice"_n, alice_session_1_pub_key,
+                t.chain.get_head_block_info().timestamp.to_time_point() + eosio::days(90),
+                "four score and seven");
+   t.newsession("alice"_n, "alice"_n, alice_session_2_pub_key,
+                t.chain.get_head_block_info().timestamp.to_time_point() + eosio::days(90),
+                "another session");
+
+   t.delsession("pip"_n, "alice"_n, alice_session_1_pub_key, "missing authority of alice");
+   t.delsession("alice"_n, "alice"_n, alice_session_1_pub_key);
+   t.chain.start_block();
+   t.delsession("alice"_n, "alice"_n, alice_session_1_pub_key,
+                "Session key is either expired or not found");
+
+   t.runactions(alice_session_1_priv_key, "alice"_n, 1,
+                "Recovered session key PUB_K1_665ajq1JUMwWH3bHcRxxTqiZBZBc6CakwUfLkZJxRqp4vAtJaV "
+                "is either expired or not found",
+                auth_act<actions::delsession>("alice"_n, pip_session_1_pub_key));
+   t.runactions(alice_session_2_priv_key, "alice"_n, 1,
+                "Session key is either expired or not found",
+                auth_act<actions::delsession>("alice"_n, alice_session_1_pub_key));
+   t.runactions(alice_session_2_priv_key, "alice"_n, 1, nullptr,
+                auth_act<actions::delsession>("alice"_n, alice_session_2_pub_key));
+}
