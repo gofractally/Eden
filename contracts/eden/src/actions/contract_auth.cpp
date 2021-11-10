@@ -1,12 +1,16 @@
 #include <eden.hpp>
+#include <events.hpp>
 #include <members.hpp>
 
 namespace eden
 {
-   void expire(session_container& sc)
+   void expire(eosio::name contract, session_container& sc)
    {
       auto now = eosio::current_block_time();
       auto& sessions = sc.sessions();
+      for (auto& session : sessions)
+         if (session.expiration <= now)
+            push_event(session_del_event{sc.eden_account(), session.key}, contract);
       auto new_end = std::remove_if(sessions.begin(), sessions.end(),
                                     [&](auto& session) { return session.expiration <= now; });
       sessions.erase(new_end, sessions.end());
@@ -25,7 +29,7 @@ namespace eden
       while (remaining && idx.begin() != idx.end() && idx.begin()->earliest_expiration() <= now)
       {
          auto& sc = *idx.begin();
-         table.modify(sc, contract, [&](auto& sc) { expire(sc); });
+         table.modify(sc, contract, [&](auto& sc) { expire(contract, sc); });
          if (sc.sessions().empty())
             table.erase(sc);
          --remaining;
@@ -74,9 +78,10 @@ namespace eden
             });
             if (sessions.size() > 4)
                sessions.erase(sessions.begin());
-            expire(sc);  // also sets earliest_expiration
+            expire(get_self(), sc);  // also sets earliest_expiration
          });
       }
+      push_event(session_new_event{eden_account, key, expiration, description}, get_self());
    }  // eden::newsession
 
    void eden::delsession(const eosio::excluded_arg<auth_info>& auth,
@@ -93,8 +98,9 @@ namespace eden
          auto session = std::find_if(sessions.begin(), sessions.end(),
                                      [&](auto& session) { return session.key == key; });
          eosio::check(session != sessions.end(), "Session key is either expired or not found");
+         push_event(session_del_event{sc.eden_account(), session->key}, get_self());
          sessions.erase(session);
-         expire(sc);  // also sets earliest_expiration
+         expire(get_self(), sc);  // also sets earliest_expiration
          empty = sessions.empty();
       });
       if (empty)
@@ -121,7 +127,7 @@ namespace eden
          eosio::check(false, "Recovered session key " + public_key_to_string(recovered) +
                                  " is either expired or not found");
       table.modify(sc, get_self(), [&](auto& sc) {
-         expire(sc);
+         expire(get_self(), sc);
          auto& sessions = sc.sessions();
          auto session = std::find_if(sessions.begin(), sessions.end(),
                                      [&](auto& session) { return session.key == recovered; });

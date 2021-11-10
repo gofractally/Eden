@@ -1,6 +1,7 @@
 #pragma once
 
 #include <eosio/asset.hpp>
+#include <eosio/crypto.hpp>
 #include <eosio/fixed_bytes.hpp>
 #include <eosio/name.hpp>
 #include <eosio/reflection.hpp>
@@ -206,6 +207,24 @@ namespace eden
    };
    EOSIO_REFLECT(distribution_event_return, owner, distribution_time, rank, amount, pool)
 
+   // Session events
+
+   struct session_new_event
+   {
+      eosio::name eden_account;
+      eosio::public_key key;
+      eosio::block_timestamp expiration;
+      std::string description;
+   };
+   EOSIO_REFLECT(session_new_event, eden_account, key, expiration, description)
+
+   struct session_del_event
+   {
+      eosio::name eden_account;
+      eosio::public_key key;
+   };
+   EOSIO_REFLECT(session_del_event, eden_account, key)
+
    using event = std::variant<election_event_schedule,
                               election_event_begin,
                               election_event_seeding,
@@ -225,7 +244,9 @@ namespace eden
                               distribution_event_return_excess,
                               distribution_event_fund,
                               distribution_event_end,
-                              distribution_event_return>;
+                              distribution_event_return,
+                              session_new_event,
+                              session_del_event>;
 
    void push_event(const event& e, eosio::name self);
    void send_events(eosio::name self);

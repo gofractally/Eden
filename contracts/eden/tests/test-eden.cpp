@@ -1373,6 +1373,12 @@ TEST_CASE("contract-auth-induct")
    t.runactions(
        alice_session_priv_key, "alice"_n, 3, nullptr,
        auth_act<actions::inductendors>("alice"_n, 1234, t.hash_induction("vid"s, bertie_profile)));
+
+   t.runactions(pip_session_priv_key, "pip"_n, 4,
+                "need authority of alice but have authority of pip",
+                auth_act<actions::inductcancel>("alice"_n, 1234));
+   t.runactions(pip_session_priv_key, "pip"_n, 4, nullptr,
+                auth_act<actions::inductcancel>("pip"_n, 1234));
 }  // TEST_CASE("contract-auth-induct")
 
 TEST_CASE("contract-auth-elect")
