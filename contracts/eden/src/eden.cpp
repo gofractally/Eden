@@ -51,7 +51,7 @@ EOSIO_ABIGEN(
             "STRING_VEC"),
     variant("action", eden::action),
     actions(eden::actions),
-    auth_actions(eden::actions, "action", "unsupported_action"),
+    eden_session_actions(eden::actions, "action", "unsupported_action"),
     table("account"_n, eden::account_variant),
     table("auction"_n, eden::auction_variant),
     table("bylaws"_n, eden::bylaws_variant),

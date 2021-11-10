@@ -1,6 +1,6 @@
 #pragma once
 
-#define EOSIO_ABIGEN_ITEMauth_actions(ns, variant_name, missing_struct_name)           \
+#define EOSIO_ABIGEN_ITEMeden_session_actions(ns, variant_name, missing_struct_name)   \
    ([&] {                                                                              \
       gen.def.structs.push_back(eosio::struct_def{missing_struct_name});               \
       eosio::variant_def vdef{variant_name};                                           \
