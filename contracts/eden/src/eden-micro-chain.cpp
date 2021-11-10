@@ -305,12 +305,14 @@ using balance_history_index = mic<balance_history_object,
                                   ordered_by_id<balance_history_object>,
                                   ordered_by_pk<balance_history_object>>;
 
+using InductionEndorser = std::pair<eosio::name, bool>;
+
 struct induction
 {
    uint64_t id = 0;
-   eosio::name inviter;
+   InductionEndorser inviter;
    eosio::name invitee;
-   std::vector<eosio::name> witnesses;
+   std::vector<InductionEndorser> witnesses;
    eden::new_member_profile profile;
    std::string video;
    eosio::block_timestamp createdAt;
@@ -792,14 +794,37 @@ Member Balance::account() const
    return *get_member(_account, true);
 }
 
+struct InductionEndorsingMemberStatus
+{
+   eosio::name endorserAccount;
+   bool endorsed;
+
+   InductionEndorsingMemberStatus(const InductionEndorser& endorser)
+   {
+      endorserAccount = endorser.first;
+      endorsed = endorser.second;
+   }
+
+   auto member() const { return get_member(endorserAccount); }
+};
+EOSIO_REFLECT2(InductionEndorsingMemberStatus, member, endorsed)
+
 struct Induction
 {
    uint64_t id;
    const induction* induction;
 
    auto inviteeAccount() const { return induction->invitee; }
-   auto inviter() const { return get_member(induction->inviter); }
-   std::vector<Member> witnesses() const { return get_members(induction->witnesses); }
+   auto inviter() const { return InductionEndorsingMemberStatus{induction->inviter}; }
+   std::vector<InductionEndorsingMemberStatus> witnesses() const
+   {
+      std::vector<InductionEndorsingMemberStatus> endorsers;
+      for (const auto& witness : induction->witnesses)
+      {
+         endorsers.push_back(InductionEndorsingMemberStatus{witness});
+      }
+      return endorsers;
+   }
    auto profile() const { return induction->profile; }
    auto video() const { return induction->video; }
    eosio::block_timestamp createdAt() const { return induction->createdAt; }
@@ -1113,11 +1138,11 @@ void add_genesis_member(const status& status, eosio::name member)
 {
    db.inductions.emplace([&](auto& obj) {
       obj.induction.id = available_pk(db.inductions, 1);
-      obj.induction.inviter = eden_account;
+      obj.induction.inviter = {eden_account, false};
       obj.induction.invitee = member;
       for (auto witness : status.initialMembers)
          if (witness != member)
-            obj.induction.witnesses.push_back(witness);
+            obj.induction.witnesses.push_back({witness, false});
    });
 }
 
@@ -1383,8 +1408,9 @@ void addtogenesis(eosio::name new_genesis_member)
    db.status.modify(get_status(),
                     [&](auto& obj) { obj.status.initialMembers.push_back(new_genesis_member); });
    for (auto& obj : db.inductions)
-      db.inductions.modify(
-          obj, [&](auto& obj) { obj.induction.witnesses.push_back(new_genesis_member); });
+      db.inductions.modify(obj, [&](auto& obj) {
+         obj.induction.witnesses.push_back({new_genesis_member, false});
+      });
    add_genesis_member(status.status, new_genesis_member);
 }
 
@@ -1392,16 +1418,22 @@ void inductinit(const action_context& context,
                 uint64_t id,
                 eosio::name inviter,
                 eosio::name invitee,
-                std::vector<eosio::name> witnesses)
+                std::vector<eosio::name> witnesses_accounts)
 {
    // contract doesn't allow inductinit() until it transitioned to active
    const auto& status = get_status();
    if (!status.status.active)
       db.status.modify(status, [&](auto& obj) { obj.status.active = true; });
 
+   std::vector<InductionEndorser> witnesses;
+   for (const auto& witness : witnesses_accounts)
+   {
+      witnesses.push_back(InductionEndorser{witness, false});
+   }
+
    add_or_replace<by_pk>(db.inductions, id, [&](auto& obj) {
       obj.induction.id = id;
-      obj.induction.inviter = inviter;
+      obj.induction.inviter = {inviter, false};
       obj.induction.invitee = invitee;
       obj.induction.witnesses = witnesses;
       obj.induction.createdAt = eosio::block_timestamp(context.block.timestamp);
@@ -1410,12 +1442,30 @@ void inductinit(const action_context& context,
 
 void inductprofil(uint64_t id, eden::new_member_profile profile)
 {
-   modify<by_pk>(db.inductions, id, [&](auto& obj) { obj.induction.profile = profile; });
+   modify<by_pk>(db.inductions, id, [&](auto& obj) {
+      obj.induction.profile = profile;
+
+      // reset endorsements
+      obj.induction.inviter.second = false;
+      for (auto& witness : obj.induction.witnesses)
+      {
+         witness.second = false;
+      }
+   });
 }
 
 void inductvideo(eosio::name account, uint64_t id, std::string video)
 {
-   modify<by_pk>(db.inductions, id, [&](auto& obj) { obj.induction.video = video; });
+   modify<by_pk>(db.inductions, id, [&](auto& obj) {
+      obj.induction.video = video;
+
+      // reset endorsements
+      obj.induction.inviter.second = false;
+      for (auto& witness : obj.induction.witnesses)
+      {
+         witness.second = false;
+      }
+   });
 }
 
 void inductcancel(eosio::name account, uint64_t id)
@@ -1429,16 +1479,25 @@ void inductdonate(const action_context& context,
                   eosio::asset quantity)
 {
    auto& induction = get<by_pk>(db.inductions, id);
+
    auto& member = db.members.emplace([&](auto& obj) {
       obj.member.account = induction.induction.invitee;
-      obj.member.inviter = induction.induction.inviter;
-      obj.member.inductionWitnesses = induction.induction.witnesses;
+      obj.member.inviter = induction.induction.inviter.first;
+
+      std::vector<eosio::name> inductionWitnesses;
+      for (const auto& witness : induction.induction.witnesses)
+      {
+         inductionWitnesses.push_back(witness.first);
+      }
+      obj.member.inductionWitnesses = std::move(inductionWitnesses);
+
       obj.member.profile = induction.induction.profile;
       obj.member.inductionVideo = induction.induction.video;
       obj.member.createdAt = eosio::block_timestamp(context.block.timestamp);
       if (obj.member.inductionVideo.empty())
          obj.member.inductionVideo = get_status().status.genesisVideo;
    });
+
    transfer_funds(context.block.timestamp, payer, master_pool, quantity,
                   history_desc::inductdonate);
 
@@ -1451,6 +1510,31 @@ void inductdonate(const action_context& context,
       db.inductions.remove(*it);
       it = next;
    }
+}
+
+void inductendors(const action_context& context,
+                  eosio::name account,
+                  uint64_t id,
+                  eosio::checksum256 induction_data_hash)
+{
+   auto& induction = get<by_pk>(db.inductions, id);
+   modify<by_pk>(db.inductions, id, [&](auto& obj) {
+      if (account == obj.induction.inviter.first)
+      {
+         obj.induction.inviter.second = true;
+      }
+      else
+      {
+         for (auto& witness : obj.induction.witnesses)
+         {
+            if (witness.first == account)
+            {
+               witness.second = true;
+               break;
+            }
+         }
+      }
+   });
 }
 
 void resign(eosio::name account)
@@ -1832,6 +1916,8 @@ void filter_block(const subchain::eosio_block& block)
                call(inductcancel, context, action.hexData.data);
             else if (action.name == "inductdonate"_n)
                call(inductdonate, context, action.hexData.data);
+            else if (action.name == "inductendors"_n)
+               call(inductendors, context, action.hexData.data);
             else if (action.name == "resign"_n)
                call(resign, context, action.hexData.data);
             else if (action.name == "electopt"_n)
