@@ -1,5 +1,8 @@
 import React, { HTMLProps } from "react";
 
+import { tokenConfig } from "config";
+import { Button } from "_app";
+
 export const Label: React.FC<{
     htmlFor: string;
 }> = (props) => (
@@ -8,12 +11,17 @@ export const Label: React.FC<{
     </label>
 );
 
-export const Input: React.FC<HTMLProps<HTMLInputElement>> = (props) => (
+export const Input: React.FC<
+    HTMLProps<HTMLInputElement> & {
+        inputRef?: React.Ref<HTMLInputElement> | null;
+    }
+> = ({ inputRef, ...props }) => (
     <input
         name={props.id}
         className={`w-full bg-white border border-gray-300 focus:border-yellow-500 focus:ring-2 focus:ring-yellow-200 text-base outline-none text-gray-700 py-1 px-3 leading-8 transition-colors duration-200 ease-in-out ${
             props.disabled ? "bg-gray-50" : ""
         }`}
+        ref={inputRef}
         {...props}
     />
 );
@@ -99,6 +107,122 @@ export const LabeledSet: React.FC<{
     );
 };
 
+export const ChainAccountInput = (
+    props: HTMLProps<HTMLInputElement> & { id: string }
+) => {
+    const validateAccountField = (e: React.FormEvent<HTMLInputElement>) => {
+        const target = e.target as HTMLInputElement;
+        if (target.validity.valueMissing) {
+            target.setCustomValidity("Enter an account name");
+        } else {
+            target.setCustomValidity("Invalid account name");
+        }
+    };
+
+    const clearErrorMessages = (e: React.FormEvent<HTMLInputElement>) => {
+        (e.target as HTMLInputElement).setCustomValidity("");
+    };
+
+    const onInput = (e: React.FormEvent<HTMLInputElement>) => {
+        clearErrorMessages(e);
+        props.onInput?.(e);
+    };
+
+    const onInvalid = (e: React.FormEvent<HTMLInputElement>) => {
+        validateAccountField(e);
+        props.onInvalid?.(e);
+    };
+
+    return (
+        <Form.LabeledSet
+            label={`${tokenConfig.symbol} account name (12 characters)`}
+            htmlFor={props.id}
+        >
+            <Form.Input
+                type="text"
+                maxLength={12}
+                pattern="^[a-z,1-5.]{1,12}$"
+                {...props}
+                onInvalid={onInvalid}
+                onInput={onInput}
+            />
+        </Form.LabeledSet>
+    );
+};
+
+export const AssetInput = (
+    props: HTMLProps<HTMLInputElement> & {
+        label: string; // required
+        id: string; // required
+        inputRef?: React.RefObject<HTMLInputElement>;
+    }
+) => {
+    const { label, inputRef, ...inputProps } = props;
+
+    const amountRef = inputRef ?? React.useRef<HTMLInputElement>(null);
+
+    const amountInputPreventChangeOnScroll = (
+        e: React.WheelEvent<HTMLInputElement>
+    ) => (e.target as HTMLInputElement).blur();
+
+    const validateAmountField = (e: React.FormEvent<HTMLInputElement>) => {
+        const target = e.target as HTMLInputElement;
+        if (target.validity.rangeOverflow) {
+            target.setCustomValidity("Insufficient funds available");
+        } else {
+            target.setCustomValidity("Enter a valid amount");
+        }
+    };
+
+    const clearErrorMessages = (e: React.FormEvent<HTMLInputElement>) => {
+        (e.target as HTMLInputElement).setCustomValidity("");
+    };
+
+    const setMaxAmount = () => {
+        amountRef.current?.setCustomValidity("");
+
+        // ensures this works with uncontrolled instances of this input too
+        Object.getOwnPropertyDescriptor(
+            window.HTMLInputElement.prototype,
+            "value"
+        )?.set?.call?.(amountRef.current, inputProps.max);
+        amountRef.current?.dispatchEvent(
+            new Event("change", { bubbles: true })
+        );
+        // (adapted from: https://coryrylan.com/blog/trigger-input-updates-with-react-controlled-inputs)
+    };
+
+    return (
+        <Form.LabeledSet label={label} htmlFor={inputProps.id}>
+            <div className="flex space-x-2">
+                <div className="relative flex-1">
+                    <Form.Input
+                        type="number"
+                        inputMode="decimal"
+                        min={1 / Math.pow(10, tokenConfig.precision)}
+                        step="any"
+                        onWheel={amountInputPreventChangeOnScroll}
+                        onInvalid={validateAmountField}
+                        onInput={clearErrorMessages}
+                        inputRef={amountRef}
+                        {...inputProps}
+                    />
+                    <div className="absolute top-3 right-2">
+                        <p className="text-sm text-gray-400">
+                            {tokenConfig.symbol}
+                        </p>
+                    </div>
+                </div>
+                {inputProps.max ? (
+                    <Button type="neutral" onClick={setMaxAmount}>
+                        Max
+                    </Button>
+                ) : null}
+            </div>
+        </Form.LabeledSet>
+    );
+};
+
 export const Form = {
     Label,
     Input,
@@ -107,6 +231,8 @@ export const Form = {
     LabeledSet,
     FileInput,
     Checkbox,
+    ChainAccountInput,
+    AssetInput,
 };
 
 export default Form;
