@@ -1744,7 +1744,7 @@ void call(void (*f)(const action_context&, Args...),
 
 bool dispatch(eosio::name action_name, const action_context& context, eosio::input_stream& s);
 
-void runactions(const action_context& context, eosio::input_stream& s)
+void execsession(const action_context& context, eosio::input_stream& s)
 {
    eosio::signature signature;
    eosio::name eden_account;
@@ -1760,16 +1760,16 @@ void runactions(const action_context& context, eosio::input_stream& s)
       auto name = eden::actions::get_name_for_auth_action(index);
       if (!dispatch(name, context, s))
          // fatal because this throws off the rest of the stream
-         eosio::check(false, "runactions dispatch failed for " + std::to_string(index) + " " +
+         eosio::check(false, "execsession dispatch failed for " + std::to_string(index) + " " +
                                  name.to_string());
    }
-   eosio::check(!s.remaining(), "unpack error (extra data) within runactions");
+   eosio::check(!s.remaining(), "unpack error (extra data) within execsession");
 }
 
 bool dispatch(eosio::name action_name, const action_context& context, eosio::input_stream& s)
 {
-   if (action_name == "runactions"_n)
-      runactions(context, s);
+   if (action_name == "execsession"_n)
+      execsession(context, s);
    else if (action_name == "clearall"_n)
       call(clearall, context, s);
    else if (action_name == "withdraw"_n)

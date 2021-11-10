@@ -107,10 +107,10 @@ namespace eden
          table.erase(sc);
    }  // eden::delsession
 
-   void eden::runactions(const eosio::signature& signature,
-                         eosio::ignore<eosio::name>,
-                         eosio::ignore<eosio::varuint32>,
-                         eosio::ignore<std::vector<action>>)
+   void eden::execsession(const eosio::signature& signature,
+                          eosio::ignore<eosio::name>,
+                          eosio::ignore<eosio::varuint32>,
+                          eosio::ignore<std::vector<action>>)
    {
       auto& ds = get_datastream();
       auto digest = eosio::sha256(ds.pos(), ds.remaining());
@@ -169,5 +169,5 @@ namespace eden
       }
 
       eosio::check(!ds.remaining(), "detected extra action data");
-   }  // eden::runactions
+   }  // eden::execsession
 }  // namespace eden

@@ -52,8 +52,8 @@ namespace eden
          if (!authorized_eden_account.value)
             eosio::require_auth(eden_account);
          else if (eden_account != authorized_eden_account)
-            eosio::check(false, "need authority of " + eden_account.to_string() +
-                                    " but have authority of " +
+            eosio::check(false, "need session key of " + eden_account.to_string() +
+                                    " but have session key of " +
                                     authorized_eden_account.to_string());
       }
    };

@@ -88,10 +88,10 @@ namespace eden
                       eosio::name eden_account,
                       const eosio::public_key& key);
 
-      void runactions(const eosio::signature& signature,
-                      eosio::ignore<eosio::name> eden_account,
-                      eosio::ignore<eosio::varuint32> sequence,
-                      eosio::ignore<std::vector<action>> actions);
+      void execsession(const eosio::signature& signature,
+                       eosio::ignore<eosio::name> eden_account,
+                       eosio::ignore<eosio::varuint32> sequence,
+                       eosio::ignore<std::vector<action>> actions);
 
       void withdraw(eosio::name owner, const eosio::asset& quantity);
 
@@ -235,7 +235,7 @@ namespace eden
        "eden.gm"_n,
        action(newsession, eden_account, key, expiration, description),
        eden_auth_action(delsession, 0, eden_account, key),
-       action(runactions, sig, eden_account, sequence, actions),
+       action(execsession, sig, eden_account, sequence, actions),
        action(withdraw, owner, quantity, ricardian_contract(withdraw_ricardian)),
        action(donate, owner, quantity),
        action(transfer, to, quantity, memo),

@@ -526,11 +526,11 @@ struct eden_tester
    }
 
    template <typename... Ts>
-   void runactions(const private_key& key,
-                   eosio::name eden_account,
-                   eosio::varuint32 sequence,
-                   const char* expected,
-                   const Ts&... actions)
+   void execsession(const private_key& key,
+                    eosio::name eden_account,
+                    eosio::varuint32 sequence,
+                    const char* expected,
+                    const Ts&... actions)
    {
       std::vector<char> data;
       vector_stream s{data};
@@ -547,11 +547,11 @@ struct eden_tester
 
       eosio::action act;
       act.account = "eden.gm"_n;
-      act.name = "runactions"_n;
+      act.name = "execsession"_n;
       act.authorization.push_back({"payer"_n, "active"_n});
       act.data = std::move(data);
 
-      // printf("created runactions with data: %s\n",
+      // printf("created execsession with data: %s\n",
       //        eosio::hex(act.data.begin(), act.data.end()).c_str());
 
       expect(chain.push_transaction(chain.make_transaction({act})), expected);
@@ -565,14 +565,15 @@ struct eden_tester
    }
 };
 
+// session action
 template <typename ActionWrapper, typename... Ts>
-std::vector<char> auth_act(Ts&&... args)
+std::vector<char> sact(Ts&&... args)
 {
    auto index = actions::get_index_for_auth_action(ActionWrapper::action_name);
    eosio::check(index.has_value(), "action index not found");
    auto data = eosio::convert_to_bin(eosio::varuint32(*index));
    auto act = ActionWrapper{""_n}.to_action(std::forward<Ts>(args)...);
    data.insert(data.end(), act.data.begin(), act.data.end());
-   // eosio::print("auth_act: ", eosio::hex(data.begin(), data.end()), "\n");
+   // eosio::print("sact: ", eosio::hex(data.begin(), data.end()), "\n");
    return data;
 }
