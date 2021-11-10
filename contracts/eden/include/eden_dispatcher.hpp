@@ -73,10 +73,10 @@ namespace eden
    EOSIO_ACTIONS(CONTRACT_CLASS, CONTRACT_ACCOUNT, __VA_ARGS__)                              \
    namespace actions                                                                         \
    {                                                                                         \
-      inline bool dispatch_auth(eosio::name contract,                                        \
-                                uint32_t index,                                              \
-                                const eosio::excluded_arg<session_info>& current_session,    \
-                                eosio::datastream<const char*>& ds)                          \
+      inline bool session_dispatch(eosio::name contract,                                     \
+                                   uint32_t index,                                           \
+                                   const eosio::excluded_arg<session_info>& current_session, \
+                                   eosio::datastream<const char*>& ds)                       \
       {                                                                                      \
          switch (index)                                                                      \
          {                                                                                   \
@@ -85,11 +85,11 @@ namespace eden
          return false;                                                                       \
       }                                                                                      \
       template <typename F>                                                                  \
-      void for_each_auth_action(F f)                                                         \
+      void for_each_session_action(F f)                                                      \
       {                                                                                      \
          EDEN_GET_AUTH_ACTION(CONTRACT_CLASS, BOOST_PP_VARIADIC_TO_SEQ(__VA_ARGS__))         \
       }                                                                                      \
-      inline eosio::name get_name_for_auth_action(uint32_t index)                            \
+      inline eosio::name get_name_for_session_action(uint32_t index)                         \
       {                                                                                      \
          switch (index)                                                                      \
          {                                                                                   \
@@ -97,7 +97,7 @@ namespace eden
          }                                                                                   \
          return {};                                                                          \
       }                                                                                      \
-      inline std::optional<uint32_t> get_index_for_auth_action(eosio::name name)             \
+      inline std::optional<uint32_t> get_index_for_session_action(eosio::name name)          \
       {                                                                                      \
          EDEN_INDEX_FOR_AUTH_ACTION(CONTRACT_CLASS, BOOST_PP_VARIADIC_TO_SEQ(__VA_ARGS__))   \
          return {};                                                                          \

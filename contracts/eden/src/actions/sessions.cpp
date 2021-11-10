@@ -154,8 +154,8 @@ namespace eden
             sequences.erase(sequences.begin());
       });
 
-      eosio::excluded_arg<session_info> auth;
-      auth.value.authorized_eden_account = eden_account;
+      eosio::excluded_arg<session_info> current_session;
+      current_session.value.authorized_eden_account = eden_account;
 
       eosio::varuint32 num_actions;
       ds >> num_actions;
@@ -164,7 +164,7 @@ namespace eden
       {
          eosio::varuint32 index;
          ds >> index;
-         eosio::check(actions::dispatch_auth(get_self(), index.value, auth, ds),
+         eosio::check(actions::session_dispatch(get_self(), index.value, current_session, ds),
                       "unsupported action index");
       }
 
