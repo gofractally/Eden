@@ -26,11 +26,11 @@ namespace eden
       globals.set_election_round_duration(round_duration);
    }
 
-   void eden::electopt(const eosio::excluded_arg<auth_info>& auth,
+   void eden::electopt(const eosio::excluded_arg<session_info>& current_session,
                        eosio::name voter,
                        bool participating)
    {
-      auth.value.require_auth(voter);
+      current_session.value.require_auth(voter);
 
       members members{get_self()};
       const auto& member = members.get_member(voter);
@@ -53,14 +53,14 @@ namespace eden
       elections.seed(btc_header);
    }
 
-   void eden::electmeeting(const eosio::excluded_arg<auth_info>& auth,
+   void eden::electmeeting(const eosio::excluded_arg<session_info>& current_session,
                            eosio::name account,
                            uint8_t round,
                            const std::vector<encrypted_key>& keys,
                            const eosio::bytes& data,
                            const std::optional<eosio::bytes>& old_data)
    {
-      auth.value.require_auth(account);
+      current_session.value.require_auth(account);
       members members{get_self()};
       elections elections{get_self()};
       auto group_id = elections.get_group_id(account, round);
@@ -69,22 +69,22 @@ namespace eden
       encrypt.set(group_id, keys, data, old_data);
    }
 
-   void eden::electvote(const eosio::excluded_arg<auth_info>& auth,
+   void eden::electvote(const eosio::excluded_arg<session_info>& current_session,
                         uint8_t round,
                         eosio::name voter,
                         eosio::name candidate)
    {
-      auth.value.require_auth(voter);
+      current_session.value.require_auth(voter);
       elections elections(get_self());
       elections.vote(round, voter, candidate);
    }
 
-   void eden::electvideo(const eosio::excluded_arg<auth_info>& auth,
+   void eden::electvideo(const eosio::excluded_arg<session_info>& current_session,
                          uint8_t round,
                          eosio::name voter,
                          const std::string& video)
    {
-      auth.value.require_auth(voter);
+      current_session.value.require_auth(voter);
       elections elections{get_self()};
       members members{get_self()};
       if (auto check = elections.can_upload_video(round, voter); boost::logic::indeterminate(check))

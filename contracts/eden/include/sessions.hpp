@@ -44,7 +44,7 @@ namespace eden
 
    uint32_t gc_sessions(eosio::name contract, uint32_t remaining);
 
-   struct auth_info
+   struct session_info
    {
       eosio::name authorized_eden_account;
       void require_auth(eosio::name eden_account) const

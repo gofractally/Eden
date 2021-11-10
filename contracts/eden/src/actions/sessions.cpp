@@ -84,11 +84,11 @@ namespace eden
       push_event(session_new_event{eden_account, key, expiration, description}, get_self());
    }  // eden::newsession
 
-   void eden::delsession(const eosio::excluded_arg<auth_info>& auth,
+   void eden::delsession(const eosio::excluded_arg<session_info>& current_session,
                          eosio::name eden_account,
                          const eosio::public_key& key)
    {
-      auth.value.require_auth(eden_account);
+      current_session.value.require_auth(eden_account);
       sessions_table_type table(get_self(), default_scope);
       auto sc = table.find(eden_account.value);
       eosio::check(sc != table.end(), "Session key is either expired or not found");
@@ -154,7 +154,7 @@ namespace eden
             sequences.erase(sequences.begin());
       });
 
-      eosio::excluded_arg<auth_info> auth;
+      eosio::excluded_arg<session_info> auth;
       auth.value.authorized_eden_account = eden_account;
 
       eosio::varuint32 num_actions;
