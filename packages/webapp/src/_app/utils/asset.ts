@@ -1,8 +1,16 @@
+import { tokenConfig } from "config";
+
 export interface Asset {
     quantity: number; // integer without decimals
     symbol: string;
     precision: number;
 }
+
+export const getDefaultTokenAsset = () => ({
+    quantity: 0,
+    symbol: tokenConfig.symbol,
+    precision: tokenConfig.precision,
+});
 
 export const assetFromString = (asset: string): Asset => {
     const re = /^[0-9]+\.[0-9]+ [A-Z,a-z]{1,5}$/;
@@ -19,6 +27,17 @@ export const assetFromString = (asset: string): Asset => {
         precision,
     };
 };
+
+/**
+ * Convert a number to an Asset with the community-configured token symbol and precision
+ * @param {number} value - a number that can contain a decimal
+ * @returns {Asset} the Asset with the community's default token symbol and precision
+ */
+export const assetFromNumber = (value: number): Asset => ({
+    symbol: tokenConfig.symbol,
+    precision: tokenConfig.precision,
+    quantity: value * Math.pow(10, tokenConfig.precision),
+});
 
 export const assetToString = (price: Asset, decimals = 2) =>
     `${(price.quantity / Math.pow(10, price.precision)).toFixed(decimals)} ${

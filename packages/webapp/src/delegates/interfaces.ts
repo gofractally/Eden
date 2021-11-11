@@ -1,6 +1,5 @@
 export interface DistributionAccount {
-    owner: string;
-    distribution_time: string;
+    distributionTime: string;
     rank: number;
     balance: string;
 }
