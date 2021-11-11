@@ -167,6 +167,12 @@ enum tables
    nft_table,
 };
 
+struct Induction;
+constexpr const char InductionConnection_name[] = "InductionConnection";
+constexpr const char InductionEdge_name[] = "InductionEdge";
+using InductionConnection = clchain::Connection<
+    clchain::ConnectionConfig<Induction, InductionConnection_name, InductionEdge_name>>;
+
 struct MemberElection;
 constexpr const char MemberElectionConnection_name[] = "MemberElectionConnection";
 constexpr const char MemberElectionEdge_name[] = "MemberElectionEdge";
@@ -307,8 +313,11 @@ struct induction
    std::vector<eosio::name> witnesses;
    eden::new_member_profile profile;
    std::string video;
+   eosio::block_timestamp createdAt;
 };
-EOSIO_REFLECT(induction, id, inviter, invitee, witnesses, profile, video)
+EOSIO_REFLECT(induction, id, inviter, invitee, witnesses, profile, video, createdAt)
+
+using InductionCreatedAtKey = std::pair<eosio::block_timestamp, uint64_t>;
 
 struct induction_object : public chainbase::object<induction_table, induction_object>
 {
@@ -319,11 +328,13 @@ struct induction_object : public chainbase::object<induction_table, induction_ob
 
    uint64_t by_pk() const { return induction.id; }
    std::pair<eosio::name, uint64_t> by_invitee() const { return {induction.invitee, induction.id}; }
+   InductionCreatedAtKey by_createdAt() const { return {induction.createdAt, induction.id}; }
 };
 using induction_index = mic<induction_object,
                             ordered_by_id<induction_object>,
                             ordered_by_pk<induction_object>,
-                            ordered_by_invitee<induction_object>>;
+                            ordered_by_invitee<induction_object>,
+                            ordered_by_createdAt<induction_object>>;
 
 using MemberCreatedAtKey = std::pair<eosio::block_timestamp, eosio::name>;
 
@@ -780,6 +791,20 @@ Member Balance::account() const
 {
    return *get_member(_account, true);
 }
+
+struct Induction
+{
+   uint64_t id;
+   const induction* induction;
+
+   auto inviteeAccount() const { return induction->invitee; }
+   auto inviter() const { return get_member(induction->inviter); }
+   std::vector<Member> witnesses() const { return get_members(induction->witnesses); }
+   auto profile() const { return induction->profile; }
+   auto video() const { return induction->video; }
+   eosio::block_timestamp createdAt() const { return induction->createdAt; }
+};
+EOSIO_REFLECT2(Induction, id, inviteeAccount, inviter, witnesses, profile, video, createdAt)
 
 struct Status
 {
@@ -1363,13 +1388,12 @@ void addtogenesis(eosio::name new_genesis_member)
    add_genesis_member(status.status, new_genesis_member);
 }
 
-void inductinit(uint64_t id,
+void inductinit(const action_context& context,
+                uint64_t id,
                 eosio::name inviter,
                 eosio::name invitee,
                 std::vector<eosio::name> witnesses)
 {
-   // TODO: expire records
-
    // contract doesn't allow inductinit() until it transitioned to active
    const auto& status = get_status();
    if (!status.status.active)
@@ -1380,6 +1404,7 @@ void inductinit(uint64_t id,
       obj.induction.inviter = inviter;
       obj.induction.invitee = invitee;
       obj.induction.witnesses = witnesses;
+      obj.induction.createdAt = eosio::block_timestamp(context.block.timestamp);
    });
 }
 
@@ -1744,6 +1769,33 @@ void call(void (*f)(const action_context&, Args...),
    std::apply([&](auto&&... args) { f(context, std::move(args)...); }, t);
 }
 
+void remove_expired_inductions(const subchain::eosio_block& block)
+{
+   auto& idx = db.status.get<by_id>();
+   if (idx.size() < 1)
+      return;  // skip if genesis is not complete
+
+   const auto& status = get_status();
+   if (!status.status.active)
+      return;  // skip if not active
+
+   auto expiration_time =
+       eosio::block_timestamp(block.timestamp).to_time_point().sec_since_epoch() -
+       eden::induction_expiration_secs;
+
+   auto& index = db.inductions.get<by_createdAt>();
+   auto it = index.begin();
+
+   while (it != index.end() &&
+          it->induction.createdAt.to_time_point().sec_since_epoch() < expiration_time)
+   {
+      auto next = it;
+      ++next;
+      db.inductions.remove(*it);
+      it = next;
+   }
+}
+
 void filter_block(const subchain::eosio_block& block)
 {
    block_state block_state{};
@@ -1808,6 +1860,10 @@ void filter_block(const subchain::eosio_block& block)
                call(logtransfer, context, action.hexData.data);
          }
       }  // for(action)
+
+      // garbage collection housekeeping
+      remove_expired_inductions(block);
+
       eosio::check(!block_state.in_withdraw && !block_state.in_manual_transfer,
                    "missing transfer notification");
    }  // for(trx)
@@ -2151,6 +2207,54 @@ struct Query
           [](auto& members, auto key) { return members.upper_bound(key); });
    }
 
+   InductionConnection inductions(std::optional<uint64_t> gt,
+                                  std::optional<uint64_t> ge,
+                                  std::optional<uint64_t> lt,
+                                  std::optional<uint64_t> le,
+                                  std::optional<uint32_t> first,
+                                  std::optional<uint32_t> last,
+                                  std::optional<std::string> before,
+                                  std::optional<std::string> after) const
+   {
+      return clchain::make_connection<InductionConnection, uint64_t>(
+          gt, ge, lt, le, first, last, before, after,  //
+          db.inductions.get<by_pk>(),                  //
+          [](auto& obj) { return obj.induction.id; },  //
+          [](auto& obj) {
+             return Induction{obj.induction.id, &obj.induction};
+          },
+          [](auto& inductions, auto key) { return inductions.lower_bound(key); },
+          [](auto& inductions, auto key) { return inductions.upper_bound(key); });
+   }
+
+   InductionConnection inductionsByCreatedAt(std::optional<eosio::block_timestamp> gt,
+                                             std::optional<eosio::block_timestamp> ge,
+                                             std::optional<eosio::block_timestamp> lt,
+                                             std::optional<eosio::block_timestamp> le,
+                                             std::optional<uint32_t> first,
+                                             std::optional<uint32_t> last,
+                                             std::optional<std::string> before,
+                                             std::optional<std::string> after) const
+   {
+      return clchain::make_connection<InductionConnection, InductionCreatedAtKey>(
+          gt ? std::optional{InductionCreatedAtKey{*gt, ~uint64_t(0)}}  //
+             : std::nullopt,                                            //
+          ge ? std::optional{InductionCreatedAtKey{*ge, 0}}             //
+             : std::nullopt,                                            //
+          lt ? std::optional{InductionCreatedAtKey{*lt, 0}}             //
+             : std::nullopt,                                            //
+          le ? std::optional{InductionCreatedAtKey{*le, ~uint64_t(0)}}  //
+             : std::nullopt,                                            //
+          first, last, before, after,                                   //
+          db.inductions.get<by_createdAt>(),                            //
+          [](auto& obj) { return obj.by_createdAt(); },                 //
+          [](auto& obj) {
+             return Induction{obj.induction.id, &obj.induction};
+          },
+          [](auto& inductions, auto key) { return inductions.lower_bound(key); },
+          [](auto& inductions, auto key) { return inductions.upper_bound(key); });
+   }
+
    ElectionConnection elections(std::optional<eosio::block_timestamp> gt,
                                 std::optional<eosio::block_timestamp> ge,
                                 std::optional<eosio::block_timestamp> lt,
@@ -2196,6 +2300,8 @@ EOSIO_REFLECT2(
     method(balances, "gt", "ge", "lt", "le", "first", "last", "before", "after"),
     method(members, "gt", "ge", "lt", "le", "first", "last", "before", "after"),
     method(membersByCreatedAt, "gt", "ge", "lt", "le", "first", "last", "before", "after"),
+    method(inductions, "gt", "ge", "lt", "le", "first", "last", "before", "after"),
+    method(inductionsByCreatedAt, "gt", "ge", "lt", "le", "first", "last", "before", "after"),
     method(elections, "gt", "ge", "lt", "le", "first", "last", "before", "after"),
     method(distributions, "gt", "ge", "lt", "le", "first", "last", "before", "after"))
 
