@@ -47,13 +47,11 @@ struct CompareFile
          for (auto& ttrace : history->traces)
          {
             std::visit(
-                [&](auto& ttrace)
-                {
+                [&](auto& ttrace) {
                    for (auto& atrace : ttrace.action_traces)
                    {
                       std::visit(
-                          [&](auto& atrace)
-                          {
+                          [&](auto& atrace) {
                              if (atrace.receiver == "eosio.null"_n &&
                                  atrace.act.name == "eden.events"_n)
                              {
@@ -412,8 +410,7 @@ TEST_CASE("induction")
               "alice"_n, 4, eosio::sha256(hash_data.data(), hash_data.size() - 1)),
           "Outdated endorsement");
 
-   auto endorse_all = [&]
-   {
+   auto endorse_all = [&] {
       t.alice.act<actions::inductendors>("alice"_n, 4, induction_hash);
       t.pip.act<actions::inductendors>("pip"_n, 4, induction_hash);
       t.egeon.act<actions::inductendors>("egeon"_n, 4, induction_hash);
@@ -675,8 +672,7 @@ TEST_CASE("deposit and spend")
 
 TEST_CASE("election config")
 {
-   auto verify_cfg = [](const auto& config, uint16_t num_participants)
-   {
+   auto verify_cfg = [](const auto& config, uint16_t num_participants) {
       INFO("participants: " << num_participants)
       if (num_participants < 1)
       {
@@ -1001,6 +997,8 @@ TEST_CASE("budget distribution underflow")
    CHECK(t.get_budgets_by_period() == expected);
 }
 
+#ifdef ENABLE_SET_TABLE_ROWS
+
 TEST_CASE("budget distribution min")
 {
    eden_tester t;
@@ -1022,6 +1020,8 @@ TEST_CASE("budget distribution min")
        {s2t("2020-08-03T15:30:00.000"), s2a("0.0001 EOS")}};
    CHECK(t.get_budgets_by_period() == expected);
 }
+
+#endif
 
 TEST_CASE("budget adjustment on resignation")
 {
@@ -1124,20 +1124,14 @@ TEST_CASE("accounting")
    t.genesis();
    // should now have 30.0000 EOS, with a 90.0000 EOS deposit from alice
    CHECK(get_token_balance("eden.gm"_n) == s2a("120.0000 EOS"));
-   expect(t.eden_gm.trace<actions::transfer>("eosio"_n, s2a("30.0001 EOS"), ""),
-          "insufficient balance");
-   t.eden_gm.act<actions::transfer>("eosio"_n, s2a("30.0000 EOS"), "");
-   CHECK(get_token_balance("eden.gm"_n) == s2a("90.0000 EOS"));
-   CHECK(get_token_balance("eosio"_n) == s2a("30.0000 EOS"));
 }
 
 TEST_CASE("pre-genesis balance")
 {
-   eden_tester t{[&]
-                 {
-                    t.eosio_token.act<token::actions::transfer>("eosio.token"_n, "eden.gm"_n,
-                                                                s2a("3.1415 EOS"), "");
-                 }};
+   eden_tester t{[&] {
+      t.eosio_token.act<token::actions::transfer>("eosio.token"_n, "eden.gm"_n, s2a("3.1415 EOS"),
+                                                  "");
+   }};
    t.genesis();
    CHECK(get_token_balance("eden.gm"_n) == t.get_total_balance());
 }
@@ -1155,8 +1149,7 @@ TEST_CASE("account migration")
 {
    eden_tester t;
    t.genesis();
-   auto sum_accounts = [](eden::account_table_type& table)
-   {
+   auto sum_accounts = [](eden::account_table_type& table) {
       auto total = s2a("0.0000 EOS");
       for (auto iter = table.begin(), end = table.end(); iter != end; ++iter)
       {
@@ -1199,11 +1192,13 @@ TEST_CASE("account migration")
             get_token_balance("eden.gm"_n));
    }
 
+#ifdef ENABLE_SET_TABLE_ROWS
    t.set_balance(s2a("0.0000 EOS"));
    t.alice.act<actions::withdraw>("alice"_n, get_eden_account("alice"_n)->balance());
    t.eden_gm.act<token::actions::close>("eden.gm"_n, eosio::symbol("EOS", 4));
    t.eden_gm.act<actions::unmigrate>();
    t.eden_gm.act<actions::migrate>(100);
+#endif
 }
 
 #ifdef ENABLE_SET_TABLE_ROWS

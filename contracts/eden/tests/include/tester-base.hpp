@@ -456,7 +456,17 @@ struct eden_tester
       }
       else if (balance > amount)
       {
-         eden_gm.act<actions::transfer>("eosio.token"_n, balance - amount, "memo");
+#ifdef ENABLE_SET_TABLE_ROWS
+         eden_gm.act<actions::settablerows>(
+             "owned"_n, std::vector<eden::table_variant>{eden::account_v0{"master"_n, amount}});
+         eden_gm.act<actions::settablerows>(
+             "outgoing"_n,
+             std::vector<eden::table_variant>{eden::account_v0{"eosio.token"_n, balance - amount}});
+         eden_gm.act<token::actions::transfer>("eden.gm"_n, "eosio.token"_n, balance - amount,
+                                               "memo");
+#else
+         eosio::check(false, "Cannot decrease balance");
+#endif
       }
    }
 
