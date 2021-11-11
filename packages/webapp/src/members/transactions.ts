@@ -1,4 +1,4 @@
-import { Asset, assetToString } from "_app";
+import { Asset, assetFromString, assetToString } from "_app";
 import { edenContractAccount, tokenConfig } from "config";
 
 import { DistributionAccount } from "delegates/interfaces";
@@ -25,23 +25,25 @@ export const withdrawAndTransfer = (
     ];
 
     const sweepAvailableDistributions =
-        distributions?.map((distribution) => {
-            const { distributionTime, rank, balance } = distribution;
-            return {
-                account: edenContractAccount,
-                name: "fundtransfer",
-                authorization,
-                data: {
-                    from: authorizerAccount,
-                    distribution_time: distributionTime.replace(/Z$/, ""),
-                    rank,
-                    to: authorizerAccount,
-                    amount: balance,
-                    memo:
-                        "Claiming available delegate funds from EdenOS profile page",
-                },
-            };
-        }) ?? [];
+        distributions
+            ?.filter((d) => assetFromString(d.balance).quantity > 0)
+            .map((distribution) => {
+                const { distributionTime, rank, balance } = distribution;
+                return {
+                    account: edenContractAccount,
+                    name: "fundtransfer",
+                    authorization,
+                    data: {
+                        from: authorizerAccount,
+                        distribution_time: distributionTime.replace(/Z$/, ""),
+                        rank,
+                        to: authorizerAccount,
+                        amount: balance,
+                        memo:
+                            "Claiming available delegate funds from EdenOS profile page",
+                    },
+                };
+            }) ?? [];
 
     const withdrawFunds = {
         account: edenContractAccount,
