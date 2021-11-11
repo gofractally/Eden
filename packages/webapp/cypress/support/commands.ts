@@ -24,6 +24,8 @@
 // -- This will overwrite an existing command --
 // Cypress.Commands.overwrite('visit', (originalFn, url, options) => { ... })
 
+import "cypress-file-upload";
+
 /**
  * Logins with UAL using Eden SoftKey mode
  */
@@ -34,15 +36,16 @@ Cypress.Commands.add("login", (account) => {
     cy.wait(500);
     cy.get('#ual-box input[type="text"]').type(account);
     cy.get("#ual-box div").contains("Continue").click();
-    cy.get('input[type="password"]').type(Cypress.env("test_users_pk"));
+    cy.get('input[type="password"]').type(Cypress.env("test_user_pk"));
     cy.get('button[type="submit"]').click();
 });
 
 /**
- * Intercept Subchain Calls
+ * Intercept Box Calls
  */
-Cypress.Commands.add("interceptSubchain", () => {
+Cypress.Commands.add("interceptBox", () => {
     cy.intercept("**/v1/subchain/**").as("boxGetSubchain");
+    cy.intercept("**/v1/ipfs-upload").as("boxUploadFile");
 });
 
 /**
@@ -60,7 +63,7 @@ Cypress.Commands.add("interceptEosApis", () => {
  * Also it makes our tests free of undesirable waits, if we have a new legit
  * case for `cy.wait()` we can just add a new command here.
  */
-Cypress.Commands.add("waitForBlocksPropagation", (blocks = 3) => {
+Cypress.Commands.add("waitForBlocksPropagation", (blocks = 5) => {
     cy.wait(blocks * 500);
 });
 

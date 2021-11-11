@@ -1,6 +1,6 @@
 describe("Community", () => {
     beforeEach(() => {
-        cy.interceptSubchain();
+        cy.interceptBox();
         cy.interceptEosApis();
         cy.viewport(1000, 1000);
         cy.visit(`/members`);

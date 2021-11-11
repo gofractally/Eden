@@ -1,4 +1,6 @@
 import dayjs from "dayjs";
+
+import { tokenConfig } from "config";
 import { Container, Heading, Text, useDistributionState } from "_app";
 
 export const TreasuryDisbursementsInfo = () => {
@@ -13,7 +15,8 @@ export const TreasuryDisbursementsInfo = () => {
             <Heading size={2}>Monthly disbursements</Heading>
             <Text>
                 Eden delegate disbursements occur monthly and are claimed by the
-                delegate from the contract to their personal EOS accounts.
+                delegate from the contract to their personal{" "}
+                {tokenConfig.symbol} accounts.
             </Text>
             <Text>
                 The overall disbursement is equal to 5% of the Eden treasury at

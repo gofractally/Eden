@@ -1,85 +1,70 @@
-import { GetServerSideProps } from "next";
-import { QueryClient, useQuery } from "react-query";
-import { dehydrate } from "react-query/hydration";
+import React from "react";
+import { useRouter } from "next/router";
 
 import {
-    CallToAction,
     Container,
     SideNavLayout,
-    LoadingCard,
-    queryMemberData,
+    LoadingContainer,
+    Heading,
+    MessageContainer,
 } from "_app";
-import { ROUTES } from "_app/routes";
+import {
+    MemberCard,
+    MemberCollections,
+    MemberHoloCard,
+    useMemberByAccountName,
+} from "members";
+import { FundsAvailableCTA } from "members/components";
 
-import { MemberCard, MemberCollections, MemberHoloCard } from "members";
-import { DelegateFundsAvailable } from "delegates/components";
-
-/**
- * We have an issue if the member is not found in the development environment
- * due to dehydration with JSON not being able to serialize `undefined`:
- * Error: Error serializing `.dehydratedState.queries[0].state.data`
- * returned from `getServerSideProps` in "/members/[id]".
- * Reason: `undefined` cannot be serialized as JSON. Please use `null`
- * or omit this value.
- * Let's track this here: https://github.com/tannerlinsley/react-query/issues/1978
- */
-export const getServerSideProps: GetServerSideProps = async ({ params }) => {
-    const account = params!.id as string;
-
-    const queryClient = new QueryClient();
-    await queryClient.prefetchQuery(queryMemberData(account));
-
-    return { props: { account, dehydratedState: dehydrate(queryClient) } };
-};
-
-interface Props {
-    account: string;
-}
-
-export const MemberPage = ({ account }: Props) => {
-    const { data: member, isLoading } = useQuery({
-        ...queryMemberData(account),
-        keepPreviousData: true,
-    });
-
-    if (member) {
-        return (
-            <SideNavLayout
-                title={`${member.name}'s Profile`}
-                className="divide-y"
-            >
-                <DelegateFundsAvailable account={account} />
-                <Container className="space-y-2.5">
-                    <div className="flex items-center space-y-10 xl:space-y-0 xl:space-x-4 flex-col">
-                        <div className="max-w-xl">
-                            <MemberHoloCard member={member} />
-                        </div>
-                        <MemberCard member={member} showBalance />
-                    </div>
-                </Container>
-                <MemberCollections member={member} />
-            </SideNavLayout>
-        );
-    }
+export const MemberPage = () => {
+    const router = useRouter();
+    const { data: member, isLoading, isError } = useMemberByAccountName(
+        router.query.id as string
+    );
 
     if (isLoading) {
         return (
-            <SideNavLayout title="Loading member details...">
-                <LoadingCard />
-            </SideNavLayout>
+            <MemberPageContainer pageTitle="Loading member details...">
+                <LoadingContainer />
+            </MemberPageContainer>
+        );
+    }
+
+    if (isError || !member) {
+        return (
+            <MemberPageContainer pageTitle="Error">
+                <MessageContainer
+                    title="Error loading member information"
+                    message="Please reload the page to try again."
+                />
+            </MemberPageContainer>
         );
     }
 
     return (
-        <SideNavLayout title="Member not found">
-            <CallToAction
-                href={ROUTES.MEMBERS.href}
-                buttonLabel="Browse members"
-            >
-                This account is not an active Eden member.
-            </CallToAction>
-        </SideNavLayout>
+        <MemberPageContainer pageTitle={`${member.name}'s Profile`}>
+            <FundsAvailableCTA account={member.account} />
+            <Container className="flex justify-center">
+                <MemberHoloCard member={member} className="max-w-xl" />
+            </Container>
+            <MemberCard member={member} showBalance />
+            <MemberCollections member={member} />
+        </MemberPageContainer>
     );
 };
 
 export default MemberPage;
+
+interface ContainerProps {
+    pageTitle: string;
+    children: React.ReactNode;
+}
+
+const MemberPageContainer = ({ pageTitle, children }: ContainerProps) => (
+    <SideNavLayout title={pageTitle} className="divide-y">
+        <Container>
+            <Heading size={1}>Member Profile</Heading>
+        </Container>
+        {children}
+    </SideNavLayout>
+);

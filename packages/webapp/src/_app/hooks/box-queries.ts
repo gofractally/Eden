@@ -1,124 +1,15 @@
 import {
     QueryResult,
-    PagedQueryResult,
-    PagedQuery,
-    usePagedQuery,
     useQuery,
-} from "@edenos/common/dist/subchain";
+} from "@edenos/eden-subchain-client/dist/ReactSubchain";
 import dayjs from "dayjs";
 
 import { assetFromString } from "_app";
-import { MemberAccountData } from "members";
-
-interface MemberQueryEdge {
-    node: {
-        account: string;
-        createdAt: string;
-        profile: {
-            name: string;
-            img: string;
-            social: string;
-        };
-    };
-}
-
-interface MembersQuery {
-    members: {
-        edges: MemberQueryEdge[];
-    };
-}
-
-export const useMembers = () => {
-    const result = useQuery<MembersQuery>(`{
-        members {
-            edges {
-                node {
-                    account
-                    createdAt
-                    profile {
-                        name
-                        img
-                        social
-                    }
-                }
-            }
-        }
-    }`);
-
-    let formattedMembers: MemberAccountData[] = [];
-
-    if (result.data) {
-        const memberNodes = result.data.members.edges;
-        if (memberNodes) {
-            formattedMembers = memberNodes
-                .map((member: MemberQueryEdge) =>
-                    formatQueriedMemberAccountData(member.node)
-                )
-                .filter((member): member is MemberAccountData =>
-                    Boolean(member)
-                );
-        }
-    }
-
-    return { ...result, data: formattedMembers };
-};
-
-interface PagedMembersQuery {
-    members: PagedQuery<MemberQueryEdge>;
-}
-
-export const usePagedMembers = (
-    pageSize: number = 20
-): PagedQueryResult<MemberAccountData[]> => {
-    const query = `{
-    members(@page@) {
-        pageInfo {
-            hasPreviousPage
-            hasNextPage
-            startCursor
-            endCursor
-        }
-        edges {
-            node {
-                account
-                createdAt
-                profile {
-                    name
-                    img
-                    social
-                }
-            }
-        }
-    }
-}
-    `;
-
-    const pagedResult = usePagedQuery<PagedMembersQuery>(
-        query,
-        pageSize,
-        (result) => result.data?.members.pageInfo
-    );
-
-    let formattedMembers: MemberAccountData[] = [];
-
-    if (pagedResult.result.data) {
-        const memberNodes = pagedResult.result.data.members.edges;
-        if (memberNodes) {
-            formattedMembers = memberNodes
-                .map((member: MemberQueryEdge) =>
-                    formatQueriedMemberAccountData(member.node)
-                )
-                .filter((member): member is MemberAccountData =>
-                    Boolean(member)
-                );
-        }
-    }
-
-    return {
-        ...pagedResult,
-        result: { ...pagedResult.result, data: formattedMembers },
-    };
-};
+import {
+    formatQueriedMemberData,
+    MemberData,
+    MEMBER_DATA_FRAGMENT,
+} from "members";
 
 export interface ElectionStatusQuery {
     status: {
@@ -150,8 +41,8 @@ export interface RoundBasicQueryData {
 }
 
 export interface RoundForUserVotingQueryData extends RoundBasicQueryData {
-    candidate?: MemberAccountData;
-    winner?: MemberAccountData;
+    candidate?: MemberData;
+    winner?: MemberData;
     video: string;
 }
 
@@ -160,6 +51,7 @@ export interface CurrentMemberElectionVotingDataQuery {
     votes: RoundForUserVotingQueryData[];
 }
 
+// TODO: Pass type arguments to useQuery within this file
 export const useCurrentMemberElectionVotingData = (
     account?: string
 ): QueryResult<CurrentMemberElectionVotingDataQuery> => {
@@ -189,21 +81,11 @@ export const useCurrentMemberElectionVotingData = (
                             numGroups
                           }
                           winner {
-                            account
-                            profile {
-                              name
-                              img
-                              social
-                            }
+                            ${MEMBER_DATA_FRAGMENT}
                           }
                         }
                         candidate {
-                          account
-                          profile {
-                            name
-                            img
-                            social
-                          }
+                          ${MEMBER_DATA_FRAGMENT}
                         }
                         video
                       }
@@ -234,12 +116,8 @@ export const useCurrentMemberElectionVotingData = (
                     votingFinished: voteNode.group.round.votingFinished,
                     resultsAvailable: voteNode.group.round.resultsAvailable,
                     numGroups: voteNode.group.round.numGroups,
-                    candidate: formatQueriedMemberAccountData(
-                        voteNode.candidate
-                    ),
-                    winner: formatQueriedMemberAccountData(
-                        voteNode.group.winner
-                    ),
+                    candidate: formatQueriedMemberData(voteNode.candidate),
+                    winner: formatQueriedMemberData(voteNode.group.winner),
                     video: voteNode.video,
                 })) || [];
         }
@@ -249,13 +127,13 @@ export const useCurrentMemberElectionVotingData = (
 };
 
 export interface VoteQueryData {
-    voter: MemberAccountData;
-    candidate?: MemberAccountData;
+    voter: MemberData;
+    candidate?: MemberData;
     video: string;
 }
 
 export interface RoundGroupQueryData {
-    winner?: MemberAccountData;
+    winner?: MemberData;
     votes: VoteQueryData[];
 }
 
@@ -288,29 +166,14 @@ const currentElectionGlobalDataQuery = `
                 edges {
                   node {
                     winner {
-                      account
-                      profile {
-                        name
-                        img
-                        social
-                      }
+                      ${MEMBER_DATA_FRAGMENT}
                     }
                     votes {
                       voter {
-                        account
-                        profile {
-                          name
-                          img
-                          social
-                        }
+                        ${MEMBER_DATA_FRAGMENT}
                       }
                       candidate {
-                        account
-                        profile {
-                          name
-                          img
-                          social
-                        }
+                        ${MEMBER_DATA_FRAGMENT}
                       }
                       video
                     }
@@ -354,34 +217,19 @@ const mapQueriedRounds = (queriedRoundsEdges: any) =>
 
 const mapQueriedRoundsGroups = (queriedRoundsGroupsEdges: any) =>
     queriedRoundsGroupsEdges?.map(({ node: groupNode }: any) => ({
-        winner: formatQueriedMemberAccountData(groupNode.winner),
+        winner: formatQueriedMemberData(groupNode.winner),
         votes: mapQueriedGroupVotes(groupNode.votes),
     })) || [];
 
 const mapQueriedGroupVotes = (votes: any) => {
     return (
         votes?.map((vote: any) => ({
-            voter: formatQueriedMemberAccountData(vote.voter),
-            candidate: formatQueriedMemberAccountData(vote.candidate),
+            voter: formatQueriedMemberData(vote.voter),
+            candidate: formatQueriedMemberData(vote.candidate),
             video: vote.video,
         })) || []
     );
 };
-
-const formatQueriedMemberAccountData = (
-    memberAccountData: any
-): MemberAccountData | undefined =>
-    memberAccountData
-        ? {
-              account: memberAccountData.account,
-              name: memberAccountData.profile.name,
-              image: memberAccountData.profile.img,
-              socialHandles: JSON.parse(memberAccountData.profile.social),
-              createdAt: memberAccountData.createdAt
-                  ? new Date(memberAccountData.createdAt).getTime()
-                  : 0,
-          }
-        : undefined;
 
 export interface ScheduledDistributionTargetAmountQuery {
     distributions: {

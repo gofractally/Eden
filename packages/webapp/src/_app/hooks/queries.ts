@@ -3,10 +3,8 @@ import { useQueries, useQuery, UseQueryResult } from "react-query";
 import {
     EdenMember,
     getEdenMember,
-    getMember,
     getMembers,
     getTreasuryStats,
-    getNewMembers,
     getMembersStats,
     MemberData,
     MemberStats,
@@ -21,7 +19,6 @@ import {
 } from "inductions/api";
 import {
     getChiefDelegates,
-    getDistributionsForAccount,
     getDistributionState,
     getMasterPool,
     getHeadDelegate,
@@ -41,7 +38,6 @@ import {
     CurrentElection,
     Election,
     ElectionCompletedRound,
-    ElectionState,
     VoteData,
 } from "elections/interfaces";
 import { EncryptionScope, getEncryptedData } from "encryption/api";
@@ -188,19 +184,9 @@ export const queryMembers = (
     };
 };
 
-export const queryNewMembers = (page: number, pageSize: number) => ({
-    queryKey: ["query_new_members", page, pageSize],
-    queryFn: () => getNewMembers(page, pageSize),
-});
-
 export const queryMemberByAccountName = (accountName: string) => ({
     queryKey: ["query_member", accountName],
     queryFn: () => getEdenMember(accountName),
-});
-
-export const queryMemberData = (account: string) => ({
-    queryKey: ["query_member_data", account],
-    queryFn: () => getMember(account),
 });
 
 export const queryDistributionState = () => ({
@@ -211,11 +197,6 @@ export const queryDistributionState = () => ({
 export const queryMasterPool = () => ({
     queryKey: ["query_master_pool"],
     queryFn: getMasterPool,
-});
-
-export const queryDistributionsForAccount = (account: string) => ({
-    queryKey: ["query_distributions_for_account", account],
-    queryFn: () => getDistributionsForAccount(account),
 });
 
 export const queryTokenBalanceForAccount = (account: string) => ({
@@ -259,12 +240,6 @@ export const useMemberByAccountName = (accountName?: string) =>
     useQuery<EdenMember | undefined, Error>({
         ...queryMemberByAccountName(accountName ?? ""),
         enabled: Boolean(accountName),
-    });
-
-export const useDistributionsForAccount = (account: string) =>
-    useQuery({
-        ...queryDistributionsForAccount(account),
-        enabled: Boolean(account),
     });
 
 export const useDistributionState = () =>

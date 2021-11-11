@@ -1,11 +1,5 @@
-import { atomicAssets, devUseFixtureData, edenContractAccount } from "config";
-import {
-    getAccountCollection,
-    getAuctions,
-    getOwners,
-    getTemplate,
-    getTemplates,
-} from "nfts/api";
+import { devUseFixtureData, edenContractAccount } from "config";
+import { getAccountCollection, getAuctions, getTemplates } from "nfts/api";
 import {
     AssetData,
     AuctionableTemplateData,
@@ -14,20 +8,7 @@ import {
 } from "nfts/interfaces";
 
 import { MemberData } from "../interfaces";
-import { getEdenMember } from "./eden-contract";
 import { fixtureMemberData } from "./fixtures";
-
-export const getMember = async (
-    account: string
-): Promise<MemberData | undefined> => {
-    if (devUseFixtureData)
-        return fixtureMemberData.find((member) => member.account === account);
-    const member = await getEdenMember(account);
-    if (member && member.nft_template_id > 0) {
-        const template = await getTemplate(`${member.nft_template_id}`);
-        return template ? convertAtomicTemplateToMember(template) : undefined;
-    }
-};
 
 export const getMembers = async (
     page: number,
@@ -40,7 +21,7 @@ export const getMembers = async (
         let data = fixtureMemberData;
         if (ids.length) {
             data = fixtureMemberData.filter((md) =>
-                ids.includes(md.templateId.toString())
+                ids.includes(md.templateId!.toString())
             );
         }
         return Promise.resolve(data.slice(0, limit));
@@ -65,40 +46,6 @@ export const getCollection = async (account: string): Promise<MemberData[]> => {
         .map(convertAtomicAssetToMemberWithSalesData)
         .forEach((asset) => members.push(asset));
     return members.sort((a, b) => a.createdAt - b.createdAt);
-};
-
-export const getCollectedBy = async (
-    templateId: number
-): Promise<{ members: MemberData[]; unknownOwners: string[] }> => {
-    const [owners, auctions] = await Promise.all([
-        getOwners(templateId),
-        getAuctions(undefined, [`${templateId}`]),
-    ]);
-
-    const auctionsOwners = auctions
-        .filter((auction) => auction.seller !== edenContractAccount)
-        .map((auction) => auction.seller);
-
-    // the real eden owners are the current owners + pending auctions by current owners
-    const edenAccs = owners.concat(auctionsOwners);
-
-    // TODO: revisit very expensive lookups here, we need to revisit
-    // maybe not, since each card will not be minted more than 20 times...
-    // so a given template will have a MAXIMUM number of 20 owners.
-    // even though, it would generate 20 api calls... not good.
-    const collectedMembers = edenAccs.map(getMember);
-    const membersData = await Promise.all(collectedMembers);
-
-    const members = membersData.filter(
-        (member) => member !== undefined
-    ) as MemberData[];
-    const unknownOwners = edenAccs.filter(
-        (acc) =>
-            acc !== atomicAssets.marketContract &&
-            !members.find((member) => member.account === acc)
-    );
-
-    return { members, unknownOwners };
 };
 
 export const memberDataDefaults = {
