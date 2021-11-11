@@ -46,7 +46,7 @@ export const FundsAvailableCTA = ({ account }: Props) => {
 
     return (
         <Container className="space-y-2.5">
-            <div className="flex justify-between items-center">
+            <div className="flex flex-wrap justify-between items-center space-y-2.5">
                 <div>
                     <Heading size={4} className="hidden xs:block">
                         Eden funds available
@@ -63,19 +63,17 @@ export const FundsAvailableCTA = ({ account }: Props) => {
                             : "None"}
                     </Text>
                 </div>
-                <div>
-                    {profileBelongsToCurrentUser && (
-                        <Button
-                            onClick={() => setIsWithdrawModalOpen(true)}
-                            disabled={
-                                !availableFunds || availableFunds.quantity === 0
-                            }
-                        >
-                            <RiDownloadLine className="-ml-1 mr-1" />
-                            Withdraw
-                        </Button>
-                    )}
-                </div>
+                {profileBelongsToCurrentUser && (
+                    <Button
+                        onClick={() => setIsWithdrawModalOpen(true)}
+                        disabled={
+                            !availableFunds || availableFunds.quantity === 0
+                        }
+                    >
+                        <RiDownloadLine className="-ml-1 mr-1" />
+                        Withdraw
+                    </Button>
+                )}
             </div>
             {profileBelongsToCurrentUser && isProfileDelegate && (
                 <NextDisbursementInfo />
