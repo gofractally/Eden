@@ -32,3 +32,4 @@ if (subchainConfig.enable) {
     createWSServer("/v1/subchain", server);
     startSubchain();
 }
+
