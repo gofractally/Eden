@@ -1948,7 +1948,7 @@ void filter_block(const subchain::eosio_block& block)
       }  // for(action)
 
       // garbage collection housekeeping
-      remove_expired_inductions(block);
+      // remove_expired_inductions(block);
 
       eosio::check(!block_state.in_withdraw && !block_state.in_manual_transfer,
                    "missing transfer notification");
