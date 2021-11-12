@@ -353,6 +353,7 @@ jobs:
                         - "tsconfig.build.json"
                         - "tsconfig.json"
                         - "yarn.lock"
+                        - "scripts/eden_chain_runner.sh"
 
                         - "packages/**"
                         - "contracts/**"

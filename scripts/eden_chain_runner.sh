@@ -20,3 +20,5 @@ cleos set abi eosio.token token.abi
 cleos set abi atomicassets atomicassets.abi
 cleos set abi atomicmarket atomicmarket.abi
 cleos set abi eden.gm eden.abi
+
+if [ -n "$2" ]; then tail -fn +1 eden-runner.log; fi
