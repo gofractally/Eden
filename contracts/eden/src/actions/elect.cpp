@@ -39,7 +39,7 @@ namespace eden
       }
       else
       {
-         eosio::check(member.election_participation_status() == in_election,
+         eosio::check(member.election_participation_status() != not_in_election,
                       "Not currently opted in");
       }
       members.election_opt(member, participating);
