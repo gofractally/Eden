@@ -43,6 +43,8 @@ namespace eden
            eosio::const_mem_fun<session_container, uint64_t, &session_container::by_expiration>>>;
 
    uint32_t gc_sessions(eosio::name contract, uint32_t remaining);
+   void clearall_sessions(eosio::name contract);
+   void remove_sessions(eosio::name contract, eosio::name eden_account);
 
    struct session_info
    {

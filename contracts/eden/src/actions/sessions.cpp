@@ -1,3 +1,4 @@
+#include <constants.hpp>
 #include <eden.hpp>
 #include <events.hpp>
 #include <members.hpp>
@@ -35,6 +36,24 @@ namespace eden
          --remaining;
       }
       return remaining;
+   }
+
+   void clearall_sessions(eosio::name contract)
+   {
+      sessions_table_type table(contract, default_scope);
+      while (table.begin() != table.end())
+         table.erase(table.begin());
+   }
+
+   void remove_sessions(eosio::name contract, eosio::name eden_account)
+   {
+      sessions_table_type table(contract, default_scope);
+      auto it = table.find(eden_account.value);
+      if (it == table.end())
+         return;
+      for (auto& session : it->sessions())
+         push_event(session_del_event{eden_account, session.key}, contract);
+      table.erase(it);
    }
 
    void eden::newsession(eosio::name eden_account,
