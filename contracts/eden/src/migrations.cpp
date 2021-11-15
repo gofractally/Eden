@@ -1,3 +1,4 @@
+#include <events.hpp>
 #include <migrations.hpp>
 
 namespace eden
@@ -7,15 +8,16 @@ namespace eden
       eosio::check(migration_sing.get().index() == new_value.index(),
                    "Cannot change current migration");
       migration_sing.set(new_value, contract);
+      push_event(migration_event{static_cast<uint16_t>(new_value.index())}, contract);
    }
 
    void migrations::clear_all() { clear_singleton(migration_sing, contract); }
 
    void migrations::init()
    {
-      migration_sing.set(std::variant_alternative_t<std::variant_size_v<migration_variant> - 1,
-                                                    migration_variant>(),
-                         contract);
+      constexpr size_t index = std::variant_size_v<migration_variant> - 1;
+      migration_sing.set(std::variant_alternative_t<index, migration_variant>(), contract);
+      push_event(migration_event{static_cast<uint16_t>(index)}, contract);
    }
 
    uint32_t migrations::migrate_some(uint32_t max_steps)

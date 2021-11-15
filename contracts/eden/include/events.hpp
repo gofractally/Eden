@@ -30,6 +30,12 @@ namespace eden
    //
    //    election_event_end
 
+   struct migration_event
+   {
+      uint16_t index;
+   };
+   EOSIO_REFLECT(migration_event, index)
+
    struct election_event_schedule
    {
       eosio::block_timestamp election_time;
@@ -225,7 +231,8 @@ namespace eden
                               distribution_event_return_excess,
                               distribution_event_fund,
                               distribution_event_end,
-                              distribution_event_return>;
+                              distribution_event_return,
+                              migration_event>;
 
    void push_event(const event& e, eosio::name self);
    void send_events(eosio::name self);

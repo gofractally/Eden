@@ -108,6 +108,7 @@ namespace eden
       accounts user_accounts{get_self()};
 
       const auto& induction = inductions.get_induction(id);
+      inductions.check_valid_induction(induction);
       eosio::check(payer == induction.invitee(), "only inductee may donate using this action");
       eosio::check(quantity == globals.get().minimum_donation, "incorrect donation");
       user_accounts.sub_balance(payer, quantity);
