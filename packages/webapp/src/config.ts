@@ -9,6 +9,7 @@ if (
     !process.env.NEXT_PUBLIC_EOS_READ_RPC_URLS ||
     !process.env.NEXT_PUBLIC_EOS_CHAIN_ID ||
     !process.env.NEXT_PUBLIC_BLOCKEXPLORER_ACCOUNT_BASE_URL ||
+    !process.env.NEXT_PUBLIC_BLOCKEXPLORER_TRANSACTION_BASE_URL ||
     !process.env.NEXT_PUBLIC_AA_BASE_URL ||
     !process.env.NEXT_PUBLIC_AA_MARKET_URL ||
     !process.env.NEXT_PUBLIC_AA_HUB_URL ||
@@ -28,6 +29,8 @@ if (
     !process.env.NEXT_PUBLIC_ELECTION_COMMUNITY_ROOM_URL ||
     !process.env.NEXT_PUBLIC_ELECTION_MEETING_DURATION_MS ||
     !process.env.NEXT_PUBLIC_TOKEN_CONTRACT ||
+    !process.env.NEXT_PUBLIC_TOKEN_SYMBOL ||
+    !process.env.NEXT_PUBLIC_TOKEN_PRECISION ||
     !process.env.NEXT_PUBLIC_SUBCHAIN_WASM_URL ||
     !process.env.NEXT_PUBLIC_SUBCHAIN_STATE_URL ||
     !process.env.NEXT_PUBLIC_SUBCHAIN_WS_URL ||
@@ -47,6 +50,9 @@ EOS_READ_RPCS_URLS="${process.env.NEXT_PUBLIC_EOS_READ_RPC_URLS}"
 EOS_CHAIN_ID="${process.env.NEXT_PUBLIC_EOS_CHAIN_ID}"
 BLOCKEXPLORER_ACCOUNT_BASE_URL="${
     process.env.NEXT_PUBLIC_BLOCKEXPLORER_ACCOUNT_BASE_URL
+}"
+BLOCKEXPLORER_TRANSACTION_BASE_URL="${
+    process.env.NEXT_PUBLIC_BLOCKEXPLORER_TRANSACTION_BASE_URL
 }"
 AA_BASE_URL="${process.env.NEXT_PUBLIC_AA_BASE_URL}"
 AA_MARKET_URL="${process.env.NEXT_PUBLIC_AA_MARKET_URL}"
@@ -74,6 +80,8 @@ ELECTION_COMMUNITY_ROOM_URL="${
     process.env.NEXT_PUBLIC_ELECTION_COMMUNITY_ROOM_URL
 }"
 TOKEN_CONTRACT="${process.env.NEXT_PUBLIC_TOKEN_CONTRACT}"
+TOKEN_SYMBOL="${process.env.NEXT_PUBLIC_TOKEN_SYMBOL}"
+TOKEN_PRECISION="${process.env.NEXT_PUBLIC_TOKEN_PRECISION}"
 SUBCHAIN_WASM_URL="${process.env.NEXT_PUBLIC_SUBCHAIN_WASM_URL}"
 SUBCHAIN_STATE_URL="${process.env.NEXT_PUBLIC_SUBCHAIN_STATE_URL}"
 SUBCHAIN_WS_URL="${process.env.NEXT_PUBLIC_SUBCHAIN_WS_URL}"
@@ -102,6 +110,8 @@ export const box = {
 
 export const blockExplorerAccountBaseUrl =
     process.env.NEXT_PUBLIC_BLOCKEXPLORER_ACCOUNT_BASE_URL;
+export const blockExplorerTransactionBaseUrl =
+    process.env.NEXT_PUBLIC_BLOCKEXPLORER_TRANSACTION_BASE_URL;
 
 export const shortAppName = process.env.NEXT_PUBLIC_APP_SHORT_NAME;
 export const appName = process.env.NEXT_PUBLIC_APP_NAME;
@@ -135,6 +145,12 @@ export const readRpcEndpointUrls = (
 export const chainConfig = {
     chainId: process.env.NEXT_PUBLIC_EOS_CHAIN_ID,
     rpcEndpoints: [rpcEndpoint],
+};
+
+export const tokenConfig = {
+    contract: process.env.NEXT_PUBLIC_TOKEN_CONTRACT,
+    symbol: process.env.NEXT_PUBLIC_TOKEN_SYMBOL,
+    precision: Number(process.env.NEXT_PUBLIC_TOKEN_PRECISION),
 };
 
 export const availableWallets = (

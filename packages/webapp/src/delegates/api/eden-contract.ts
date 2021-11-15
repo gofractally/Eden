@@ -2,33 +2,23 @@ import { devUseFixtureData } from "config";
 import { EdenMember } from "members";
 import { queryClient } from "pages/_app";
 import {
-    CONTRACT_DISTRIBUTION_ACCOUNTS_TABLE,
     CONTRACT_DISTRIBUTION_TABLE,
     CONTRACT_POOLS_TABLE,
     getRow,
     getTableRawRows,
-    getTableRows,
-    i128BoundsForAccount,
-    INDEX_BY_OWNER,
     isValidDelegate,
     queryElectionState,
     queryMemberByAccountName,
     queryVoteDataRow,
-    TABLE_INDEXES,
 } from "_app";
 
 import {
-    DistributionAccount,
     DistributionState,
     DistributionStateData,
     Distribution,
     Pool,
 } from "../interfaces";
-import {
-    fixtureDistributionAccounts,
-    fixtureNextDistribution,
-    fixturePool,
-} from "./fixtures";
+import { fixtureNextDistribution, fixturePool } from "./fixtures";
 
 const queryElectionStateHelper = async () =>
     await queryClient.fetchQuery(
@@ -44,10 +34,6 @@ export const getHeadDelegate = async (): Promise<string | undefined> => {
 export const getChiefDelegates = async (): Promise<string[] | undefined> => {
     const electionState = await queryElectionStateHelper();
     return electionState?.board;
-};
-
-const getMemberBudgetBalance = () => {
-    return {}; // TODO
 };
 
 const getMemberWrapper = async (account: string) => {
@@ -93,30 +79,6 @@ export const getMyDelegation = async (
     } while (currRound && isValidDelegate(nextMemberAccount) && !isHeadChief);
 
     return myDelegates;
-};
-
-export const getDistributionsForAccount = async (
-    account: string
-): Promise<DistributionAccount[]> => {
-    if (devUseFixtureData) {
-        return fixtureDistributionAccounts;
-    }
-
-    const { lower, upper } = i128BoundsForAccount(account);
-
-    const distributionRows = await getTableRows(
-        CONTRACT_DISTRIBUTION_ACCOUNTS_TABLE,
-        {
-            ...TABLE_INDEXES[CONTRACT_DISTRIBUTION_ACCOUNTS_TABLE][
-                INDEX_BY_OWNER
-            ],
-            lowerBound: lower,
-            upperBound: upper,
-            limit: 9999,
-        }
-    );
-
-    return distributionRows as DistributionAccount[];
 };
 
 export const getDistributionState = async (): Promise<
