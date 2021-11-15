@@ -19,10 +19,8 @@ import {
     VotingMemberChip,
 } from "elections";
 import { MemberData, MembersGrid } from "members";
-import {
-    ConsensometerBlocks,
-    RoundHeader,
-} from "elections/components/ongoing-election-components";
+import { RoundHeader } from "elections/components/ongoing-election-components";
+import { ConsensometerBlocks } from "elections/components/ongoing-election-components/ongoing-round/round-info/consensometer";
 
 export const ElectionStatsPage = () => {
     const {

@@ -1,7 +1,6 @@
 import React from "react";
 import dayjs from "dayjs";
 
-import { electionMeetingDurationMs as meetingDurationMs } from "config";
 import { Container, Heading, Text } from "_app/ui";
 import {
     ActiveStateConfigType,
@@ -41,7 +40,6 @@ export const RoundInfoPanel = ({
                             stage={stage}
                             roundIndex={roundIndex}
                             meetingStartTime={meetingStartTime}
-                            meetingDurationMs={meetingDurationMs}
                             electionConfig={electionConfig!}
                         />
                     </div>
