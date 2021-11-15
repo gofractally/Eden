@@ -1304,6 +1304,9 @@ TEST_CASE("contract-auth")
                  "Recovered session key PUB_K1_8VWTR1mogYHEd9HJxgG2Tj3GbPghrnJqMfWfdHbTE11BLxqvo3 "
                  "is either expired or not found",
                  sact<actions::delsession>("alice"_n, alice_session_2_pub_key));
+
+   t.write_dfuse_history("dfuse-contract-auth.json");
+   CompareFile{"contract-auth"}.write_events(t.chain).compare();
 }  // TEST_CASE("contract-auth")
 
 TEST_CASE("contract-auth-induct")
@@ -1374,6 +1377,9 @@ TEST_CASE("contract-auth-induct")
                  sact<actions::inductcancel>("alice"_n, 1234));
    t.execsession(pip_session_priv_key, "pip"_n, 4, nullptr,
                  sact<actions::inductcancel>("pip"_n, 1234));
+
+   t.write_dfuse_history("dfuse-contract-auth-induct.json");
+   CompareFile{"contract-auth-induct"}.write_events(t.chain).compare();
 }  // TEST_CASE("contract-auth-induct")
 
 TEST_CASE("contract-auth-elect")
@@ -1434,4 +1440,7 @@ TEST_CASE("contract-auth-elect")
    t.execsession(
        alice_session_priv_key, "alice"_n, 1, nullptr,
        sact<actions::electvideo>(0, "alice"_n, "Qmb7WmZiSDXss5HfuKfoSf6jxTDrHzr8AoAUDeDMLNDuws"));
+
+   t.write_dfuse_history("dfuse-contract-auth-elect.json");
+   CompareFile{"contract-auth-elect"}.write_events(t.chain).compare();
 }  // TEST_CASE("contract-auth-elect")

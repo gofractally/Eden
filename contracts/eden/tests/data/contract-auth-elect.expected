@@ -1,0 +1,485 @@
+[
+    "set_pool_event",
+    {
+        "pool": "master",
+        "monthly_distribution_pct": 5
+    }
+]
+[
+    "election_event_schedule",
+    {
+        "election_time": "2020-07-04T15:30:00.000",
+        "election_threshold": 1000
+    }
+]
+[
+    "session_new_event",
+    {
+        "eden_account": "alice",
+        "key": "PUB_K1_665ajq1JUMwWH3bHcRxxTqiZBZBc6CakwUfLkZJxRqp4vAtJaV",
+        "expiration": "2020-03-31T00:01:40.500",
+        "description": ""
+    }
+]
+[
+    "session_new_event",
+    {
+        "eden_account": "pip",
+        "key": "PUB_K1_8YQhKe3x1xTA1KHmkBPznWqa3UGQsaHTUMkJJtcds9giKNsHGv",
+        "expiration": "2020-03-31T00:01:40.500",
+        "description": ""
+    }
+]
+[
+    "session_new_event",
+    {
+        "eden_account": "egeon",
+        "key": "PUB_K1_8kBx4XYj3zZ3Z1Sb8vdq43ursVTebfcShKMDUymiA2cteLVLM1",
+        "expiration": "2020-03-31T00:01:40.500",
+        "description": ""
+    }
+]
+[
+    "election_event_begin",
+    {
+        "election_time": "2020-07-04T15:30:00.000"
+    }
+]
+[
+    "election_event_seeding",
+    {
+        "election_time": "2020-07-04T15:30:00.000",
+        "start_time": "2020-07-03T15:30:00.000",
+        "end_time": "2020-07-04T15:30:00.000",
+        "seed": "79BC69E1EF2D91BDFD54CF74E8B3784EEDC110F7A0BA571297FAD90DEC3B97C7"
+    }
+]
+[
+    "election_event_end_seeding",
+    {
+        "election_time": "2020-07-04T15:30:00.000"
+    }
+]
+[
+    "distribution_event_schedule",
+    {
+        "distribution_time": "2020-07-04T15:30:00.000"
+    }
+]
+[
+    "distribution_event_reserve",
+    {
+        "distribution_time": "2020-07-04T15:30:00.000",
+        "pool": "master",
+        "target_amount": "51.5000 EOS"
+    }
+]
+[
+    "distribution_event_schedule",
+    {
+        "distribution_time": "2020-08-03T15:30:00.000"
+    }
+]
+[
+    "election_event_config_summary",
+    {
+        "election_time": "2020-07-04T15:30:00.000",
+        "num_rounds": 3,
+        "num_participants": 103
+    }
+]
+[
+    "election_event_create_round",
+    {
+        "election_time": "2020-07-04T15:30:00.000",
+        "round": 0,
+        "requires_voting": true,
+        "num_participants": 103,
+        "num_groups": 25
+    }
+]
+[
+    "election_event_create_group",
+    {
+        "election_time": "2020-07-04T15:30:00.000",
+        "round": 0,
+        "voters": [
+            "edenmember2p",
+            "edenmember43",
+            "edenmember2l",
+            "edenmember1m",
+            "edenmember3q"
+        ]
+    }
+]
+[
+    "election_event_create_group",
+    {
+        "election_time": "2020-07-04T15:30:00.000",
+        "round": 0,
+        "voters": [
+            "edenmember44",
+            "edenmember3t",
+            "edenmember12",
+            "edenmember22",
+            "edenmember1n"
+        ]
+    }
+]
+[
+    "election_event_create_group",
+    {
+        "election_time": "2020-07-04T15:30:00.000",
+        "round": 0,
+        "voters": [
+            "edenmember21",
+            "edenmember3d",
+            "edenmember13",
+            "edenmember3w",
+            "edenmember2q"
+        ]
+    }
+]
+[
+    "election_event_create_group",
+    {
+        "election_time": "2020-07-04T15:30:00.000",
+        "round": 0,
+        "voters": [
+            "edenmember2n",
+            "edenmember3g",
+            "edenmember1o",
+            "edenmember2t"
+        ]
+    }
+]
+[
+    "election_event_create_group",
+    {
+        "election_time": "2020-07-04T15:30:00.000",
+        "round": 0,
+        "voters": [
+            "edenmember3p",
+            "edenmember1k",
+            "edenmember2b",
+            "edenmember3z"
+        ]
+    }
+]
+[
+    "election_event_create_group",
+    {
+        "election_time": "2020-07-04T15:30:00.000",
+        "round": 0,
+        "voters": [
+            "edenmember3a",
+            "edenmember1v",
+            "edenmember3s",
+            "edenmember15"
+        ]
+    }
+]
+[
+    "election_event_create_group",
+    {
+        "election_time": "2020-07-04T15:30:00.000",
+        "round": 0,
+        "voters": [
+            "edenmember1a",
+            "edenmember3j",
+            "edenmember1t",
+            "edenmember1z"
+        ]
+    }
+]
+[
+    "election_event_create_group",
+    {
+        "election_time": "2020-07-04T15:30:00.000",
+        "round": 0,
+        "voters": [
+            "edenmember3b",
+            "edenmember23",
+            "edenmember2m",
+            "edenmember2i"
+        ]
+    }
+]
+[
+    "election_event_create_group",
+    {
+        "election_time": "2020-07-04T15:30:00.000",
+        "round": 0,
+        "voters": [
+            "edenmember3x",
+            "edenmember3h",
+            "edenmember24",
+            "edenmember1q"
+        ]
+    }
+]
+[
+    "election_event_create_group",
+    {
+        "election_time": "2020-07-04T15:30:00.000",
+        "round": 0,
+        "voters": [
+            "edenmember1j",
+            "alice",
+            "edenmember1s",
+            "edenmember1b"
+        ]
+    }
+]
+[
+    "election_event_create_group",
+    {
+        "election_time": "2020-07-04T15:30:00.000",
+        "round": 0,
+        "voters": [
+            "edenmember1h",
+            "edenmember4b",
+            "edenmember41",
+            "edenmember3u"
+        ]
+    }
+]
+[
+    "election_event_create_group",
+    {
+        "election_time": "2020-07-04T15:30:00.000",
+        "round": 0,
+        "voters": [
+            "edenmember1x",
+            "edenmember3l",
+            "edenmember35",
+            "edenmember1f"
+        ]
+    }
+]
+[
+    "election_event_create_group",
+    {
+        "election_time": "2020-07-04T15:30:00.000",
+        "round": 0,
+        "voters": [
+            "egeon",
+            "edenmember2u",
+            "edenmember2s",
+            "edenmember25"
+        ]
+    }
+]
+[
+    "election_event_create_group",
+    {
+        "election_time": "2020-07-04T15:30:00.000",
+        "round": 0,
+        "voters": [
+            "edenmember2d",
+            "edenmember2k",
+            "edenmember3m",
+            "edenmember3v"
+        ]
+    }
+]
+[
+    "election_event_create_group",
+    {
+        "election_time": "2020-07-04T15:30:00.000",
+        "round": 0,
+        "voters": [
+            "edenmember3o",
+            "edenmember33",
+            "edenmember3n",
+            "edenmember45"
+        ]
+    }
+]
+[
+    "election_event_create_group",
+    {
+        "election_time": "2020-07-04T15:30:00.000",
+        "round": 0,
+        "voters": [
+            "edenmember4a",
+            "edenmember2v",
+            "edenmember2o",
+            "edenmember1y"
+        ]
+    }
+]
+[
+    "election_event_create_group",
+    {
+        "election_time": "2020-07-04T15:30:00.000",
+        "round": 0,
+        "voters": [
+            "edenmember2f",
+            "edenmember2e",
+            "edenmember1i",
+            "edenmember2y"
+        ]
+    }
+]
+[
+    "election_event_create_group",
+    {
+        "election_time": "2020-07-04T15:30:00.000",
+        "round": 0,
+        "voters": [
+            "edenmember1c",
+            "edenmember32",
+            "edenmember3e",
+            "edenmember3k"
+        ]
+    }
+]
+[
+    "election_event_create_group",
+    {
+        "election_time": "2020-07-04T15:30:00.000",
+        "round": 0,
+        "voters": [
+            "edenmember3y",
+            "edenmember2w",
+            "edenmember2r",
+            "edenmember2x"
+        ]
+    }
+]
+[
+    "election_event_create_group",
+    {
+        "election_time": "2020-07-04T15:30:00.000",
+        "round": 0,
+        "voters": [
+            "edenmember3c",
+            "edenmember34",
+            "edenmember1e",
+            "edenmember1g"
+        ]
+    }
+]
+[
+    "election_event_create_group",
+    {
+        "election_time": "2020-07-04T15:30:00.000",
+        "round": 0,
+        "voters": [
+            "edenmember2j",
+            "edenmember2h",
+            "edenmember2a",
+            "edenmember3f"
+        ]
+    }
+]
+[
+    "election_event_create_group",
+    {
+        "election_time": "2020-07-04T15:30:00.000",
+        "round": 0,
+        "voters": [
+            "edenmember1p",
+            "edenmember31",
+            "edenmember3i",
+            "edenmember1d"
+        ]
+    }
+]
+[
+    "election_event_create_group",
+    {
+        "election_time": "2020-07-04T15:30:00.000",
+        "round": 0,
+        "voters": [
+            "edenmember11",
+            "edenmember42",
+            "edenmember3r",
+            "edenmember1r"
+        ]
+    }
+]
+[
+    "election_event_create_group",
+    {
+        "election_time": "2020-07-04T15:30:00.000",
+        "round": 0,
+        "voters": [
+            "edenmember1l",
+            "edenmember14",
+            "edenmember1w",
+            "pip"
+        ]
+    }
+]
+[
+    "election_event_create_group",
+    {
+        "election_time": "2020-07-04T15:30:00.000",
+        "round": 0,
+        "voters": [
+            "edenmember2c",
+            "edenmember2z",
+            "edenmember1u",
+            "edenmember2g"
+        ]
+    }
+]
+[
+    "election_event_begin_round_voting",
+    {
+        "election_time": "2020-07-04T15:30:00.000",
+        "round": 0,
+        "voting_begin": "2020-07-04T15:40:00.000",
+        "voting_end": "2020-07-04T16:40:00.000"
+    }
+]
+[
+    "session_del_event",
+    {
+        "eden_account": "alice",
+        "key": "PUB_K1_665ajq1JUMwWH3bHcRxxTqiZBZBc6CakwUfLkZJxRqp4vAtJaV"
+    }
+]
+[
+    "session_del_event",
+    {
+        "eden_account": "egeon",
+        "key": "PUB_K1_8kBx4XYj3zZ3Z1Sb8vdq43ursVTebfcShKMDUymiA2cteLVLM1"
+    }
+]
+[
+    "session_del_event",
+    {
+        "eden_account": "pip",
+        "key": "PUB_K1_8YQhKe3x1xTA1KHmkBPznWqa3UGQsaHTUMkJJtcds9giKNsHGv"
+    }
+]
+[
+    "session_new_event",
+    {
+        "eden_account": "alice",
+        "key": "PUB_K1_665ajq1JUMwWH3bHcRxxTqiZBZBc6CakwUfLkZJxRqp4vAtJaV",
+        "expiration": "2020-10-02T15:40:00.000",
+        "description": ""
+    }
+]
+[
+    "session_new_event",
+    {
+        "eden_account": "pip",
+        "key": "PUB_K1_8YQhKe3x1xTA1KHmkBPznWqa3UGQsaHTUMkJJtcds9giKNsHGv",
+        "expiration": "2020-10-02T15:40:00.000",
+        "description": ""
+    }
+]
+[
+    "session_new_event",
+    {
+        "eden_account": "egeon",
+        "key": "PUB_K1_8kBx4XYj3zZ3Z1Sb8vdq43ursVTebfcShKMDUymiA2cteLVLM1",
+        "expiration": "2020-10-02T15:40:00.000",
+        "description": ""
+    }
+]

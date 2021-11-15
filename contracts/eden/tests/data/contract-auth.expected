@@ -1,0 +1,46 @@
+[
+    "set_pool_event",
+    {
+        "pool": "master",
+        "monthly_distribution_pct": 5
+    }
+]
+[
+    "election_event_schedule",
+    {
+        "election_time": "2020-07-04T15:30:00.000",
+        "election_threshold": 1000
+    }
+]
+[
+    "session_new_event",
+    {
+        "eden_account": "alice",
+        "key": "PUB_K1_665ajq1JUMwWH3bHcRxxTqiZBZBc6CakwUfLkZJxRqp4vAtJaV",
+        "expiration": "2020-03-31T00:00:00.500",
+        "description": "four score and seven"
+    }
+]
+[
+    "session_new_event",
+    {
+        "eden_account": "alice",
+        "key": "PUB_K1_8VWTR1mogYHEd9HJxgG2Tj3GbPghrnJqMfWfdHbTE11BLxqvo3",
+        "expiration": "2020-03-31T00:00:00.500",
+        "description": "another session"
+    }
+]
+[
+    "session_del_event",
+    {
+        "eden_account": "alice",
+        "key": "PUB_K1_665ajq1JUMwWH3bHcRxxTqiZBZBc6CakwUfLkZJxRqp4vAtJaV"
+    }
+]
+[
+    "session_del_event",
+    {
+        "eden_account": "alice",
+        "key": "PUB_K1_8VWTR1mogYHEd9HJxgG2Tj3GbPghrnJqMfWfdHbTE11BLxqvo3"
+    }
+]
