@@ -22,6 +22,7 @@ export const rpcEndpoint = {
     protocol: process.env.EOS_RPC_PROTOCOL || "https",
     host: process.env.EOS_RPC_HOST || "wax-test.eosdac.io",
     port: Number(process.env.EOS_RPC_PORT || "443"),
+    chainId: process.env.EOS_CHAIN_ID || "",
 };
 console.info(rpcEndpoint);
 
@@ -35,9 +36,9 @@ export const ipfsConfig = {
         "https://api.pinata.cloud/pinning/pinFileToIPFS",
     pinataJwt: process.env.IPFS_PINATA_JWT || "<pinata-jwt-here>",
 };
-console.info({ 
-    ...ipfsConfig, 
-    pinataJwt: `${ipfsConfig.pinataJwt.substr(0,8)}..${ipfsConfig.pinataJwt.substr(-8)}` 
+console.info({
+    ...ipfsConfig,
+    pinataJwt: `<secret>`,
 });
 
 export const validUploadActions: ValidUploadActions = {
@@ -56,6 +57,21 @@ export const validUploadActions: ValidUploadActions = {
 logger.info(
     "Supported EOS IPFS Upload Actions\n" +
         JSON.stringify(validUploadActions, undefined, 2)
+);
+
+export const sessionsConfig = {
+    enable: Boolean(process.env.SESSIONS_ENABLE),
+    sessionSignerPrivateKey: process.env.SESSIONS_SIGNER_PRIVATE_KEY || "",
+    // sessionsCreateABI: Boolean(process.env.SESSIONS_CREATE_ABI),
+    // sessionsNoopAction: ""
+};
+logger.info(
+    "Sessions Config\n" +
+        JSON.stringify(
+            { ...sessionsConfig, sessionSignerPrivateKey: "<secret>" },
+            undefined,
+            2
+        )
 );
 
 export enum SubchainReceivers {

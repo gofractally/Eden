@@ -9,3 +9,10 @@ export const ipfsUploadRequest = z.object({
 });
 
 export type IpfsUploadRequest = z.infer<typeof ipfsUploadRequest>;
+
+export const sessionSignRequest = z.object({
+    serializedData: z.array(z.number()),
+    signature: z.array(z.string()),
+});
+
+export type SessionSignRequest = z.infer<typeof sessionSignRequest>;
