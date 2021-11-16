@@ -32,7 +32,7 @@ namespace eden
 
    struct migration_event
    {
-      uint16_t index;
+      varuint32 index;
    };
    EOSIO_REFLECT(migration_event, index)
 
