@@ -47,13 +47,11 @@ struct CompareFile
          for (auto& ttrace : history->traces)
          {
             std::visit(
-                [&](auto& ttrace)
-                {
+                [&](auto& ttrace) {
                    for (auto& atrace : ttrace.action_traces)
                    {
                       std::visit(
-                          [&](auto& atrace)
-                          {
+                          [&](auto& atrace) {
                              if (atrace.receiver == "eosio.null"_n &&
                                  atrace.act.name == "eden.events"_n)
                              {
@@ -412,8 +410,7 @@ TEST_CASE("induction")
               "alice"_n, 4, eosio::sha256(hash_data.data(), hash_data.size() - 1)),
           "Outdated endorsement");
 
-   auto endorse_all = [&]
-   {
+   auto endorse_all = [&] {
       t.alice.act<actions::inductendors>("alice"_n, 4, induction_hash);
       t.pip.act<actions::inductendors>("pip"_n, 4, induction_hash);
       t.egeon.act<actions::inductendors>("egeon"_n, 4, induction_hash);
@@ -675,8 +672,7 @@ TEST_CASE("deposit and spend")
 
 TEST_CASE("election config")
 {
-   auto verify_cfg = [](const auto& config, uint16_t num_participants)
-   {
+   auto verify_cfg = [](const auto& config, uint16_t num_participants) {
       INFO("participants: " << num_participants)
       if (num_participants < 1)
       {
@@ -1132,11 +1128,10 @@ TEST_CASE("accounting")
 
 TEST_CASE("pre-genesis balance")
 {
-   eden_tester t{[&]
-                 {
-                    t.eosio_token.act<token::actions::transfer>("eosio.token"_n, "eden.gm"_n,
-                                                                s2a("3.1415 EOS"), "");
-                 }};
+   eden_tester t{[&] {
+      t.eosio_token.act<token::actions::transfer>("eosio.token"_n, "eden.gm"_n, s2a("3.1415 EOS"),
+                                                  "");
+   }};
    t.genesis();
    CHECK(get_token_balance("eden.gm"_n) == t.get_total_balance());
 }
@@ -1154,8 +1149,7 @@ TEST_CASE("account migration")
 {
    eden_tester t;
    t.genesis();
-   auto sum_accounts = [](eden::account_table_type& table)
-   {
+   auto sum_accounts = [](eden::account_table_type& table) {
       auto total = s2a("0.0000 EOS");
       for (auto iter = table.begin(), end = table.end(); iter != end; ++iter)
       {
