@@ -16,7 +16,7 @@ namespace eden
    {
       constexpr size_t index = std::variant_size_v<migration_variant> - 1;
       migration_sing.set(std::variant_alternative_t<index, migration_variant>(), contract);
-      push_event(migration_event{static_cast<varuint32>(index)}, contract);
+      push_event(migration_event{static_cast<eosio::varuint32>(index)}, contract);
    }
 
    uint32_t migrations::migrate_some(uint32_t max_steps)
@@ -42,7 +42,7 @@ namespace eden
              state);
       }
       migration_sing.set(state, contract);
-      push_event(migration_event{static_cast<varuint32>(state.index())}, contract);
+      push_event(migration_event{static_cast<eosio::varuint32>(state.index())}, contract);
       return max_steps;
    }
 }  // namespace eden

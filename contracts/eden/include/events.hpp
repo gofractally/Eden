@@ -5,6 +5,7 @@
 #include <eosio/name.hpp>
 #include <eosio/reflection.hpp>
 #include <eosio/time.hpp>
+#include <eosio/varint.hpp>
 #include <variant>
 #include <vector>
 
@@ -32,7 +33,7 @@ namespace eden
 
    struct migration_event
    {
-      varuint32 index;
+      eosio::varuint32 index;
    };
    EOSIO_REFLECT(migration_event, index)
 

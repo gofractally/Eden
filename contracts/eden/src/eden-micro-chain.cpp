@@ -12,6 +12,7 @@
 #include <eosio/ship_protocol.hpp>
 #include <eosio/to_bin.hpp>
 #include <events.hpp>
+#include <migrations.hpp>
 
 using namespace eosio::literals;
 
@@ -218,6 +219,12 @@ struct status
    uint16_t electionThreshold = 0;
    uint16_t numElectionParticipants = 0;
    uint16_t migrationIndex = 0;
+
+   template <typename T>
+   bool isMigrationCompleted() const
+   {
+      return migrationIndex >= boost::mp11::mp_find<eden::migration_variant, T>::value;
+   }
 };
 
 struct status_object : public chainbase::object<status_table, status_object>
@@ -1862,7 +1869,7 @@ void call(void (*f)(const action_context&, Args...),
 
 void remove_expired_inductions(const eosio::time_point& block_time, const status& status)
 {
-   if (status.migrationIndex < 5)
+   if (status.isMigrationCompleted<eden::fix_inductdonate_expiration_check>())
       return;  // skip if migration is not ready to collect expired records
 
    auto expiration_time = block_time.sec_since_epoch() - eden::induction_expiration_secs;
