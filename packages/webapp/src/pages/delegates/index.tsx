@@ -5,12 +5,11 @@ import {
     SideNavLayout,
     useCurrentElection,
     useElectionState,
-    useMemberDataFromEdenMembers,
     useMyDelegation,
 } from "_app";
 import { Container, Heading, LoadingContainer, Text } from "_app/ui";
 import { ElectionStatus } from "elections/interfaces";
-import { MemberGateContainer } from "members";
+import { MemberGateContainer, useMembersByAccountNames } from "members";
 import {
     ErrorLoadingDelegation,
     ElectionInProgress,
@@ -45,7 +44,9 @@ export const DelegatesPage = () => {
         data: myDelegationMemberData,
         isLoading: isLoadingMemberData,
         isError: isErrorMemberData,
-    } = useMemberDataFromEdenMembers(myDelegation);
+    } = useMembersByAccountNames(
+        myDelegation?.map((delegate) => delegate.account)
+    );
 
     const isLoading =
         isLoadingCurrentElection ||

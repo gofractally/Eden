@@ -12,7 +12,7 @@ import {
     ElectionParticipantChip,
     ElectionState,
 } from "elections";
-import { MembersGrid } from "members";
+import { MembersGrid, useMembersByAccountNames } from "members";
 import { EdenMember, MemberData } from "members/interfaces";
 
 import { ErrorLoadingDelegation } from "./statuses";
@@ -108,19 +108,13 @@ const ChiefDelegates = ({
         .map((chiefQR) => chiefQR.data)
         .filter((el) => Boolean(el));
 
-    const nftTemplateIds = chiefsAsMembers.map(
-        (member) => member!.nft_template_id
-    );
-
     const {
         data: memberData,
         isLoading: isLoadingMemberData,
         isError: isErrorMemberData,
-    } = useQuery({
-        ...queryMembers(1, allChiefAccountNames.length, nftTemplateIds),
-        staleTime: Infinity,
-        enabled: Boolean(chiefsAsMembers?.length),
-    });
+    } = useMembersByAccountNames(
+        chiefsAsMembers.map((chief) => chief!.account)
+    );
 
     const isLoading = isLoadingMemberStats || isLoadingMemberData;
     const isError = isErrorMemberStats || isErrorMemberData;
