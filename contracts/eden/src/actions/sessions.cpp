@@ -5,6 +5,14 @@
 
 namespace eden
 {
+   void set_expiration(session_container& sc)
+   {
+      auto expiration = eosio::block_timestamp::max();
+      for (auto& session : sc.sessions())
+         expiration = std::min(expiration, session.expiration);
+      sc.earliest_expiration() = expiration;
+   }
+
    void expire(eosio::name contract, session_container& sc)
    {
       auto now = eosio::current_block_time();
@@ -15,11 +23,6 @@ namespace eden
       auto new_end = std::remove_if(sessions.begin(), sessions.end(),
                                     [&](auto& session) { return session.expiration <= now; });
       sessions.erase(new_end, sessions.end());
-
-      auto expiration = eosio::block_timestamp::max();
-      for (auto& session : sessions)
-         expiration = std::min(expiration, session.expiration);
-      sc.earliest_expiration() = expiration;
    }
 
    uint32_t gc_sessions(eosio::name contract, uint32_t remaining)
@@ -30,7 +33,10 @@ namespace eden
       while (remaining && idx.begin() != idx.end() && idx.begin()->earliest_expiration() <= now)
       {
          auto& sc = *idx.begin();
-         table.modify(sc, contract, [&](auto& sc) { expire(contract, sc); });
+         table.modify(sc, contract, [&](auto& sc) {
+            expire(contract, sc);
+            set_expiration(sc);
+         });
          if (sc.sessions().empty())
             table.erase(sc);
          --remaining;
@@ -86,6 +92,7 @@ namespace eden
       else
       {
          table.modify(sc, get_self(), [&](auto& sc) {
+            expire(get_self(), sc);
             auto& sessions = sc.sessions();
             auto session = std::find_if(sessions.begin(), sessions.end(),
                                         [&](auto& session) { return session.key == key; });
@@ -97,7 +104,7 @@ namespace eden
             });
             if (sessions.size() > 4)
                sessions.erase(sessions.begin());
-            expire(get_self(), sc);  // also sets earliest_expiration
+            set_expiration(sc);
          });
       }
       push_event(session_new_event{eden_account, key, expiration, description}, get_self());
@@ -119,7 +126,8 @@ namespace eden
          eosio::check(session != sessions.end(), "Session key is either expired or not found");
          push_event(session_del_event{sc.eden_account(), session->key}, get_self());
          sessions.erase(session);
-         expire(get_self(), sc);  // also sets earliest_expiration
+         expire(get_self(), sc);
+         set_expiration(sc);
          empty = sessions.empty();
       });
       if (empty)
@@ -147,6 +155,7 @@ namespace eden
                                  " is either expired or not found");
       table.modify(sc, get_self(), [&](auto& sc) {
          expire(get_self(), sc);
+         set_expiration(sc);
          auto& sessions = sc.sessions();
          auto session = std::find_if(sessions.begin(), sessions.end(),
                                      [&](auto& session) { return session.key == recovered; });
@@ -157,7 +166,7 @@ namespace eden
          auto& sequences = session->sequences;
          if (sequences.begin() != sequences.end())
          {
-            if (sequence.value < *sequences.begin())
+            if (sequence.value < *sequences.begin() && sequences.size() < 20)
                eosio::check(false, "received duplicate sequence " + std::to_string(sequence.value));
             else if (sequence.value > sequences.end()[-1].value + 10)
                eosio::check(false,
