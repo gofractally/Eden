@@ -5,6 +5,7 @@
 #include <eosio/name.hpp>
 #include <eosio/reflection.hpp>
 #include <eosio/time.hpp>
+#include <eosio/varint.hpp>
 #include <variant>
 #include <vector>
 
@@ -29,6 +30,12 @@ namespace eden
    //       election_event_end_round
    //
    //    election_event_end
+
+   struct migration_event
+   {
+      eosio::varuint32 index;
+   };
+   EOSIO_REFLECT(migration_event, index)
 
    struct election_event_schedule
    {
@@ -225,7 +232,8 @@ namespace eden
                               distribution_event_return_excess,
                               distribution_event_fund,
                               distribution_event_end,
-                              distribution_event_return>;
+                              distribution_event_return,
+                              migration_event>;
 
    void push_event(const event& e, eosio::name self);
    void send_events(eosio::name self);

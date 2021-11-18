@@ -18,11 +18,17 @@ namespace eden
    };
    EOSIO_REFLECT(no_migration<0>);
    EOSIO_REFLECT(no_migration<1>);
+   EOSIO_REFLECT(no_migration<2>);
+
+   // No-op migration to notify history the fix for checking expired inductions on inductdonate
+   using fix_inductdonate_expiration_check = no_migration<2>;
+
    using migration_variant = std::variant<migrate_auction_v0,
                                           migrate_account_v0,
                                           no_migration<0>,
                                           migrate_member_v0,
-                                          no_migration<1>>;
+                                          no_migration<1>,
+                                          fix_inductdonate_expiration_check>;
 
    using migration_singleton = eosio::singleton<"migration"_n, migration_variant>;
 
