@@ -1,11 +1,7 @@
-import {
-    isValidDelegate,
-    useMemberDataFromEdenMembers,
-    useParticipantsInMyCompletedRound,
-} from "_app";
+import { isValidDelegate, useParticipantsInMyCompletedRound } from "_app";
 import { Container, Expander, Text } from "_app/ui";
 import { ElectionParticipantChip } from "elections";
-import { EdenMember, MembersGrid } from "members";
+import { EdenMember, MembersGrid, useMembersByAccountNames } from "members";
 
 import RoundHeader from "./round-header";
 import { VideoUploadButton } from "./video-upload-button";
@@ -18,8 +14,9 @@ export const CompletedRoundSegment = ({
     roundIndex,
 }: CompletedRoundSegmentProps) => {
     const { data } = useParticipantsInMyCompletedRound(roundIndex);
-    const { data: participantsMemberData } = useMemberDataFromEdenMembers(
-        data?.participants
+
+    const { data: participantsMemberData } = useMembersByAccountNames(
+        data?.participants.map((participant) => participant.account)
     );
 
     if (!participantsMemberData || !participantsMemberData.length) return null;
