@@ -18,7 +18,7 @@ import { useEncryptionPassword, usePasswordModal } from "encryption";
 
 import MeetingButtons from "./meeting-buttons";
 import MeetingLinkModal from "./meeting-link-modal";
-import { election as electionConstants } from "config";
+import { election as electionEnvVars } from "config";
 import { validateMeetingLink } from "_app/utils/meetings";
 
 export enum MeetingStep {
@@ -79,7 +79,7 @@ export const MeetingLink = ({
         meetingStep = MeetingStep.RetrieveMeetingLink;
     } else if (
         zoomLinkedAccount ||
-        electionConstants.freeformMeetingLinksEnabled
+        electionEnvVars.freeformMeetingLinksEnabled
     ) {
         meetingStep = MeetingStep.CreateMeetingLink;
     }
@@ -136,8 +136,7 @@ export const MeetingLink = ({
         await checkSubmissionIsAllowed();
 
         const topic = `Eden Election - Round #${roundIndex + 1}`;
-        const durationInMinutes =
-            electionConstants.meetingDurationMs / 1000 / 60;
+        const durationInMinutes = electionEnvVars.meetingDurationMs / 1000 / 60;
         const startTime = meetingStartTime.toISOString().split(".")[0] + "Z";
 
         const responseData = await generateZoomMeetingLink(
