@@ -5,13 +5,10 @@ import { usePopper } from "react-popper";
 import { IoMdLogIn } from "react-icons/io";
 
 import { MemberStatus } from "_app";
-import {
-    useCurrentMember,
-    useMemberDataFromEdenMembers,
-    useSignOut,
-} from "_app/hooks";
+import { useCurrentMember, useSignOut } from "_app/hooks";
 import { Button, ProfileImage, Text } from "_app/ui";
 import { ROUTES } from "_app/routes";
+import { useMemberByAccountName } from "members/hooks";
 
 import { useUALAccount } from "../eos";
 
@@ -23,20 +20,10 @@ export const NavProfile = ({ location }: Props) => {
     const [ualAccount, _, ualShowModal] = useUALAccount();
     const accountName = ualAccount?.accountName;
 
-    const {
-        data: member,
-        isLoading: isLoadingCurrentMember,
-        isError: isErrorCurrentMember,
-    } = useCurrentMember();
-    const {
-        data: memberData,
-        isLoading: isLoadingMemberData,
-        isError: isErrorMemberData,
-    } = useMemberDataFromEdenMembers(member ? [member] : []);
+    const { data: member } = useCurrentMember();
+    const { data: userProfile } = useMemberByAccountName(member?.account ?? "");
 
     const isActiveMember = member?.status === MemberStatus.ActiveMember;
-
-    const userProfile = memberData?.[0];
 
     if (!ualAccount) {
         return (
