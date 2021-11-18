@@ -30,7 +30,6 @@ export enum MeetingStep {
 interface RequestMeetingLinkProps {
     roundIndex: number;
     meetingStartTime: Dayjs;
-    meetingDurationMs: number;
     electionConfig: ActiveStateConfigType;
     stage: RoundStage;
 }
@@ -42,7 +41,6 @@ interface RequestMeetingLinkProps {
 export const MeetingLink = ({
     roundIndex,
     meetingStartTime,
-    meetingDurationMs,
     electionConfig,
     stage,
 }: RequestMeetingLinkProps) => {
@@ -138,7 +136,7 @@ export const MeetingLink = ({
         await checkSubmissionIsAllowed();
 
         const topic = `Eden Election - Round #${roundIndex + 1}`;
-        const durationInMinutes = meetingDurationMs / 1000 / 60;
+        const durationInMinutes = electionEnvVars.meetingDurationMs / 1000 / 60;
         const startTime = meetingStartTime.toISOString().split(".")[0] + "Z";
 
         const responseData = await generateZoomMeetingLink(

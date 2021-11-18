@@ -10,7 +10,7 @@ import {
 import { Container, Expander, Heading, Loader, Text } from "_app/ui";
 import { DelegateChip, ErrorLoadingElection } from "elections";
 import { MembersGrid } from "members";
-import { VideoUploadButton } from "../video-upload-button";
+import { VideoUploadButton } from "./video-upload-button";
 
 import RoundHeader from "./round-header";
 
