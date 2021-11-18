@@ -11,7 +11,8 @@ TEST_CASE("Setup Eden chain with full election")
    r.checkpoint("inductions");
    r.tester.run_election(true, 10000, true);
    r.checkpoint("full_election");
-   r.tester.eden_gm.act<actions::electsettime>(s2t("2021-11-18T04:12:00.000"));
+   r.tester.eden_gm.act<actions::electsettime>(
+       time_point_sec{static_cast<uint32_t>(time(nullptr))});
    r.tester.start_election(true, 10000);
 
    r.start_nodeos();
