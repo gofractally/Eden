@@ -42,6 +42,16 @@ export const useMembers = () => {
     return { ...result, data: formattedMembers };
 };
 
+export const useMembersByAccountNames = (
+    accountNames: string[] | undefined = []
+) => {
+    const { data: allMembers, ...memberQueryMetaData } = useMembers();
+    const members = allMembers.filter((member) =>
+        accountNames.includes(member.account)
+    );
+    return { data: members, ...memberQueryMetaData };
+};
+
 export const useMemberByAccountName = (account: string) => {
     const result = useBoxQuery<MembersQuery>(`{
         members(ge: "${account}", le: "${account}") {
