@@ -23,6 +23,9 @@ export const rpcEndpoint = {
     host: process.env.EOS_RPC_HOST || "wax-test.eosdac.io",
     port: Number(process.env.EOS_RPC_PORT || "443"),
     chainId: process.env.EOS_CHAIN_ID || "",
+    taposManagerInterval: Number(
+        process.env.TAPOS_MANAGER_INTERVAL_MINS || "30"
+    ),
 };
 console.info(rpcEndpoint);
 
@@ -62,8 +65,6 @@ logger.info(
 export const sessionsConfig = {
     enable: Boolean(process.env.SESSIONS_ENABLE),
     sessionSignerPrivateKey: process.env.SESSIONS_SIGNER_PRIVATE_KEY || "",
-    // sessionsCreateABI: Boolean(process.env.SESSIONS_CREATE_ABI),
-    // sessionsNoopAction: ""
 };
 logger.info(
     "Sessions Config\n" +

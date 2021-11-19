@@ -1,5 +1,6 @@
 import { reverseHex } from "../utility";
 import logger from "../logger";
+import { rpcEndpoint } from "../config";
 
 interface Tapos {
     ref_block_num: number;
@@ -10,8 +11,8 @@ interface Tapos {
  * Tapos Optimization: cache tapos so signature requests don't hit RPC
  */
 export class TaposManager {
-    rpc: any;
-    tapos: Tapos | undefined;
+    private rpc: any;
+    private tapos: Tapos | undefined;
 
     constructor(rpc: any) {
         this.rpc = rpc;
@@ -42,7 +43,10 @@ export class TaposManager {
                 ref_block_prefix: prefix,
             };
             logger.info(`tapos: ${JSON.stringify(this.tapos)}`);
-            setTimeout(() => this.generateTapos(), 30 * 60 * 1000);
+            setTimeout(
+                () => this.generateTapos(),
+                rpcEndpoint.taposManagerInterval * 60 * 1000
+            );
         } catch (e) {
             logger.error(`generateTapos: ${e.message}`);
             logger.info("retry in 10s");
