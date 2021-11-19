@@ -1,12 +1,17 @@
 import { useQuery as useReactQuery } from "react-query";
 import { useQuery as useBoxQuery } from "@edenos/eden-subchain-client/dist/ReactSubchain";
 
-import { formatQueriedMemberData, getNewMembers } from "members";
+import {
+    formatQueriedMemberData,
+    formatQueriedMemberDataAsMember,
+    getNewMembers,
+} from "members";
 import { MemberData, MembersQuery } from "members/interfaces";
+import { useUALAccount } from "_app";
 
 export const MEMBER_DATA_FRAGMENT = `
-    account
     createdAt
+    account
     profile {
         name
         img
@@ -15,6 +20,7 @@ export const MEMBER_DATA_FRAGMENT = `
         bio
     }
     inductionVideo
+    participating
 `;
 
 export const useMembers = () => {
@@ -106,4 +112,27 @@ export const useMembersWithAssets = () => {
     }
 
     return { members, isLoading, isError };
+};
+
+export const useMemberByAccountNameNew = (account: string) => {
+    const result = useBoxQuery<MembersQuery>(`{
+        members(ge: "${account}", le: "${account}") {
+            edges {
+                node {
+                    ${MEMBER_DATA_FRAGMENT}
+                }
+            }
+        }
+    }`);
+
+    if (!result.data) return { ...result, data: null };
+
+    const memberNode = result.data.members.edges[0]?.node;
+    const member = formatQueriedMemberDataAsMember(memberNode) ?? null;
+    return { ...result, data: member };
+};
+
+export const useCurrentMember = () => {
+    const [ualAccount] = useUALAccount();
+    return useMemberByAccountNameNew(ualAccount?.accountName);
 };
