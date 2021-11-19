@@ -2,13 +2,15 @@ import express, { Request, Response } from "express";
 import {
     handleErrors,
     BadRequestError,
+    InternalServerError,
     sessionSignRequest,
     SessionSignRequest,
 } from "@edenos/common";
+import { arrayToHex } from "eosjs/dist/eosjs-serialize";
 
 import logger from "../logger";
 import { eosJsonRpc, eosDefaultApi } from "../eos";
-import { sessionsConfig } from "../config";
+import { sessionsConfig, edenContractAccount } from "../config";
 import { TaposManager } from "../sessions";
 
 export const sessionHandler = express.Router();
@@ -18,6 +20,10 @@ taposManager.init();
 
 sessionHandler.post("/sign", async (req: Request, res: Response) => {
     try {
+        if (!sessionsConfig.enable) {
+            throw new InternalServerError(["box sessions is not enabled"]);
+        }
+
         const { body } = req;
         if (!body) {
             throw new BadRequestError(["missing session sign data"]);
@@ -37,39 +43,49 @@ sessionHandler.post("/sign", async (req: Request, res: Response) => {
 });
 
 const signSessionRequest = async (
-    requestData: SessionSignRequest,
+    sessionSignRequest: SessionSignRequest,
     res: Response
 ) => {
-    return res.json({ hey: "wip" });
+    const trx = prepareExecSessionTrx(sessionSignRequest);
+    const signedTrxResult = await signTrx(trx);
+    logger.info(
+        `signed [execsession] for account:${sessionSignRequest.edenAccount}
+        sequence:${sessionSignRequest.sequence}`
+    );
+    return res.json(signedTrxResult);
 };
 
-// // Make up an ABI if needed // TODO: is it needed since we have the execsession from the contract?
-// if (sessionsConfig.sessionsCreateABI) {
-//     const noopAbi = {
-//         version: "eosio::abi/1.1",
-//         types: [] as any[],
-//         structs: [
-//             {
-//                 name: sessionsConfig.sessionsNoopAction,
-//                 base: "",
-//                 fields: [] as any[],
-//             },
-//         ],
-//         actions: [
-//             {
-//                 name: sessionsConfig.sessionsNoopAction,
-//                 type: sessionsConfig.sessionsNoopAction,
-//                 ricardian_contract: "",
-//             },
-//         ],
-//         tables: [] as any[],
-//         ricardian_clauses: [] as any[],
-//         error_messages: [] as any[],
-//         abi_extensions: [] as any[],
-//         variants: [] as any[],
-//     };
-//     eosDefaultApi.cachedAbis.set(sessionsConfig.sessionsNoopContract, {
-//         rawAbi: eosDefaultApi.jsonToRawAbi(noopAbi),
-//         abi: noopAbi,
-//     });
-// }
+const prepareExecSessionTrx = (sessionSignRequest: SessionSignRequest) => {
+    const tapos = taposManager.getTapos();
+    const expiration = new Date(Date.now() + 2 * 60 * 1000)
+        .toISOString()
+        .slice(0, -1);
+    return {
+        ...tapos,
+        expiration,
+        actions: [
+            {
+                account: edenContractAccount,
+                name: "execsession",
+                authorization: [] as any[],
+                data: {
+                    // TODO: pending interface definition
+                    signature: sessionSignRequest.signature,
+                    eden_account: sessionSignRequest.edenAccount,
+                    sequence: sessionSignRequest.sequence,
+                    actions: sessionSignRequest.actions,
+                },
+            },
+        ],
+    };
+};
+
+const signTrx = async (trx: any) => {
+    const signedTrx = await eosDefaultApi.transact(trx, {
+        broadcast: false,
+    });
+    return {
+        signatures: (signedTrx as any).signatures,
+        packed_trx: arrayToHex((signedTrx as any).serializedTransaction),
+    };
+};

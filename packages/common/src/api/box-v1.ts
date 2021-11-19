@@ -11,8 +11,10 @@ export const ipfsUploadRequest = z.object({
 export type IpfsUploadRequest = z.infer<typeof ipfsUploadRequest>;
 
 export const sessionSignRequest = z.object({
-    serializedData: z.array(z.number()),
-    signature: z.array(z.string()),
+    signature: z.string(),
+    edenAccount: z.string(),
+    sequence: z.number(),
+    actions: z.array(z.any()),
 });
 
 export type SessionSignRequest = z.infer<typeof sessionSignRequest>;

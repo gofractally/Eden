@@ -11,11 +11,7 @@ interface Tapos {
  */
 export class TaposManager {
     rpc: any;
-    tapos: Tapos;
-    resolveHaveTapos: () => void;
-    haveTapos = new Promise<void>((resolve, reject) => {
-        this.resolveHaveTapos = resolve;
-    });
+    tapos: Tapos | undefined;
 
     constructor(rpc: any) {
         this.rpc = rpc;
@@ -23,6 +19,15 @@ export class TaposManager {
 
     init() {
         this.generateTapos();
+    }
+
+    getTapos(): Tapos {
+        if (!this.tapos) {
+            throw new Error(
+                "Tapos is not generated yet, please try again later"
+            );
+        }
+        return this.tapos;
     }
 
     async generateTapos() {
@@ -37,12 +42,11 @@ export class TaposManager {
                 ref_block_prefix: prefix,
             };
             logger.info(`tapos: ${JSON.stringify(this.tapos)}`);
-            this.resolveHaveTapos();
-            setTimeout(this.generateTapos, 30 * 60 * 1000);
+            setTimeout(() => this.generateTapos(), 30 * 60 * 1000);
         } catch (e) {
             logger.error(`generateTapos: ${e.message}`);
             logger.info("retry in 10s");
-            setTimeout(this.generateTapos, 10_000);
+            setTimeout(() => this.generateTapos(), 10_000);
         }
     }
 }
