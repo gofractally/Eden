@@ -10,7 +10,7 @@ import { arrayToHex } from "eosjs/dist/eosjs-serialize";
 
 import logger from "../logger";
 import { eosJsonRpc, eosDefaultApi } from "../eos";
-import { sessionsConfig, edenContractAccount } from "../config";
+import { edenContractAccount } from "../config";
 import { TaposManager } from "../sessions";
 
 export const sessionHandler = express.Router();
@@ -20,10 +20,6 @@ taposManager.init();
 
 sessionHandler.post("/sign", async (req: Request, res: Response) => {
     try {
-        if (!sessionsConfig.enable) {
-            throw new InternalServerError(["box sessions is not enabled"]);
-        }
-
         const { body } = req;
         if (!body) {
             throw new BadRequestError(["missing session sign data"]);
