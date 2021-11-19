@@ -192,10 +192,24 @@ namespace eden
                                election_time->to_time_point(),
           "Registration has closed");
 
+      uint8_t new_participation_status;
+      if (participating)
+      {
+         new_participation_status = elections.election_schedule_version();
+         eosio::check(member.election_participation_status() != new_participation_status,
+                      "Not currently opted out");
+      }
+      else
+      {
+         new_participation_status = not_in_election;
+         eosio::check(
+             member.election_participation_status() == elections.election_schedule_version(),
+             "Not currently opted in");
+      }
+
       member_tb.modify(member, eosio::same_payer, [&](auto& row) {
          row.value = std::visit([](auto& v) { return member_v1{v}; }, row.value);
-         row.election_participation_status() =
-             participating ? elections.election_schedule_version() : 0;
+         row.election_participation_status() = new_participation_status;
       });
    }
 

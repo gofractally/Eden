@@ -1220,9 +1220,9 @@ TEST_CASE("settablerows")
    t.eden_gm.act<actions::settablerows>(
        eosio::name(eden::default_scope),
        std::vector<eden::table_variant>{
-           eden::current_election_state_registration{s2t("2020-01-02T00:00:00.0000")}});
+           eden::current_election_state_registration_v1{s2t("2020-01-02T00:00:00.0000")}});
    eden::current_election_state_singleton state{"eden.gm"_n, eden::default_scope};
-   auto value = std::get<eden::current_election_state_registration>(state.get());
+   auto value = std::get<eden::current_election_state_registration_v1>(state.get());
    CHECK(value.start_time.to_time_point() == s2t("2020-01-02T00:00:00.0000"));
 }
 
