@@ -483,8 +483,6 @@ namespace eden
       {
          if (iter->status() == member_status::active_member)
          {
-            printf("%d, %d\n", iter->election_participation_status(),
-                   state.election_schedule_version);
             if (iter->election_participation_status() == state.election_schedule_version)
             {
                add_voter(state.rng, 0, state.next_member_idx, iter->account());
