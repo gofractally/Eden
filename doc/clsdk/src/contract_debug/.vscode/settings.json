@@ -1,0 +1,12 @@
+{
+    // Stop the buggy CMake vscode extension from clobbering settings
+    // in the build folder. The extension makes bad assumptions
+    // about CMAKE_BUILD_TYPE, cross compilers, and other settings and
+    // is very aggressive at reverting settings that were set at the
+    // command line (it wipes CMakeCache).
+    "cmake.buildDirectory": "${workspaceFolder}/vscode-cmake-extension-is-bugged",
+
+    // Don't let the buggy extension stop the debugger from functioning.
+    // Build from the command-line instead.
+    "cmake.buildBeforeRun": false
+}
