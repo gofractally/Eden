@@ -15,3 +15,4 @@
     - [Debugging with vscode](cltester/starting/vscode.md)
     - [Debugging with gdb](cltester/starting/gdb.md)
   - [Token Support](cltester/token/README.md)
+  - [as/act/trace](cltester/as/README.md)
