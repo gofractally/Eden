@@ -1,6 +1,6 @@
 # Debugging
 
-This contract is identical to the one in [Notifications](../contract_notify/index.html), except it extends `CMakeLists.txt` to build `notify-debug.wasm` and it has an additional config file (`launch.json`).
+This contract is identical to the one in [Notifications](../notify/index.html), except it extends `CMakeLists.txt` to build `notify-debug.wasm` and it has an additional config file (`launch.json`).
 
 ## `CMakeLists.txt`
 
