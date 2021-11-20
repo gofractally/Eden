@@ -26,7 +26,7 @@ The contract headers use `EOSIO_ACTIONS(...)` to define the action wrappers, e.g
 
 ## trace
 
-Like `act`, `trace<action wrapper>(action args)` creates, signs, and executes a single-action transaction. Unlike `act`, `trace` does not verify success. Instead, it returns the action's trace. We could display the trace:
+Like `act`, `trace<action wrapper>(action args)` creates, signs, and executes a single-action transaction. Unlike `act`, `trace` does not verify success. Instead, it returns the transaction's trace. We could display the trace:
 
 ```cpp
 auto result = chain.as("alice"_n).trace<example::actions::buydog>(
