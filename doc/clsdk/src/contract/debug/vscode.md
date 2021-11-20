@@ -10,7 +10,7 @@ You should have the following project tree:
       settings.json
    CMakeLists.txt
    notify.cpp
-   build/         (Created by build step above)
+   build/         (Created by build step)
       clsdk -> ....
       notify-debug.wasm
       notify.abi

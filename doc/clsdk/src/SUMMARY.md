@@ -10,3 +10,7 @@
   - [Debugging](contract/debug/README.md)
     - [With vscode](contract/debug/vscode.md)
     - [With gdb](contract/debug/gdb.md)
+- [cltester]()
+  - [Getting Started](cltester/starting/README.md)
+    - [Debugging with vscode](cltester/starting/vscode.md)
+    - [Debugging with gdb](cltester/starting/gdb.md)

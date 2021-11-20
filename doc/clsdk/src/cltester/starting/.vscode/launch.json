@@ -1,0 +1,45 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "(gdb) Run tests",
+            "type": "cppdbg",
+            "request": "launch",
+            "program": "${workspaceFolder}/build/clsdk/bin/cltester",
+            "args": [
+                "--subst",
+                "testable.wasm",
+                "testable-debug.wasm",
+                "-v",
+                "tests.wasm"
+            ],
+            "stopAtEntry": false,
+            "cwd": "${workspaceFolder}/build",
+            "environment": [],
+            "externalConsole": false,
+            "MIMode": "gdb",
+            "setupCommands": [
+                {
+                    "description": "Enable pretty-printing for gdb",
+                    "text": "-enable-pretty-printing",
+                    "ignoreFailures": true
+                },
+                {
+                    "description": "Ignore timer signal",
+                    "text": "handle SIG34 noprint",
+                    "ignoreFailures": false
+                },
+                {
+                    "description": "Map sources",
+                    "text": "set substitute-path clsdk-wasi-sdk: ${workspaceFolder}/build/wasi-sdk",
+                    "ignoreFailures": false
+                },
+                {
+                    "description": "Map sources",
+                    "text": "set substitute-path clsdk: ${workspaceFolder}/build/clsdk",
+                    "ignoreFailures": false
+                }
+            ]
+        }
+    ]
+}
