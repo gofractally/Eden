@@ -1,4 +1,4 @@
-# Token Support
+# cltester: Token Support
 
 Our test cases need to interact with the token contract in order to fully test our example. clsdk comes with a cltester-ready version of the token contract.
 

@@ -1,4 +1,4 @@
-# as/act/trace
+# cltester: as/act/trace
 
 The `test_chain` class supports this syntax for pushing single-action transactions:
 
@@ -26,7 +26,9 @@ The contract headers use `EOSIO_ACTIONS(...)` to define the action wrappers, e.g
 
 ## trace
 
-Like `act`, `trace<action wrapper>(action args)` creates, signs, and executes a single-action transaction. Unlike `act`, `trace` does not verify success. Instead, it returns the transaction's trace. We could display the trace:
+Like `act`, `trace<action wrapper>(action args)` creates, signs, and executes a single-action transaction. Unlike `act`, `trace` does not verify success. Instead, it returns the transaction's trace.
+
+We could display the trace:
 
 ```cpp
 auto result = chain.as("alice"_n).trace<example::actions::buydog>(
@@ -91,7 +93,9 @@ expect(chain.as("alice"_n).trace<example::actions::buydog>(
 
 ## with_code
 
-The action wrappers provide a default account name that the contract is normally installed on. e.g. the token wrappers assume `eosio.token`. `with_code` overrides this default. This example sets up a fake EOS token to try to fool our example code.
+The action wrappers provide a default account name that the contract is normally installed on. e.g. the token wrappers assume `eosio.token`. `with_code` overrides this default.
+
+This example sets up a fake EOS token to try to fool our example code.
 
 ```c++
 // The hacker.token account runs the token contract

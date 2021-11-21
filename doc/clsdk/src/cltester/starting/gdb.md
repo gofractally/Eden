@@ -1,4 +1,4 @@
-# Debugging using gdb command line
+# cltester: Debugging using gdb command line
 
 You should have the following project tree:
 
