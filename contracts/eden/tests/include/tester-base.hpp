@@ -318,20 +318,9 @@ struct eden_tester
              expected);
    }
 
-   void skip_to(std::string time)
-   {
-      uint64_t value;
-      eosio::check(eosio::string_to_utc_microseconds(value, time.data(), time.data() + time.size()),
-                   "bad time");
-      skip_to(eosio::time_point{eosio::microseconds(value)});
-   }
-   void skip_to(eosio::time_point tp)
-   {
-      chain.finish_block();
-      auto head_tp = chain.get_head_block_info().timestamp.to_time_point();
-      auto skip = (tp - head_tp).count() / 1000 - 500;
-      chain.start_block(skip);
-   }
+   void skip_to(std::string time) { chain.start_block(time); }
+
+   void skip_to(eosio::time_point tp) { chain.start_block(tp); }
 
    void setup_election(uint32_t batch_size = 10000)
    {

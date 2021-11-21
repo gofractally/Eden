@@ -320,6 +320,21 @@ void eosio::test_chain::start_block(int64_t skip_miliseconds)
    }
 }
 
+void eosio::test_chain::start_block(std::string_view time)
+{
+   uint64_t value;
+   check(string_to_utc_microseconds(value, time.data(), time.data() + time.size()), "bad time");
+   start_block(time_point{microseconds(value)});
+}
+
+void eosio::test_chain::start_block(time_point tp)
+{
+   finish_block();
+   auto head_tp = get_head_block_info().timestamp.to_time_point();
+   auto skip = (tp - head_tp).count() / 1000 - 500;
+   start_block(skip);
+}
+
 void eosio::test_chain::finish_block()
 {
    head_block_info.reset();

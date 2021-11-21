@@ -228,6 +228,10 @@ namespace eosio
        */
       void start_block(int64_t skip_miliseconds = 0);
 
+      void start_block(std::string_view time);
+
+      void start_block(time_point tp);
+
       /**
        * Finish the current pending block.  If no block is pending, creates an empty block.
        */
