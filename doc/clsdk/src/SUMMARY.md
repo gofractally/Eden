@@ -17,3 +17,4 @@
   - [Token Support](cltester/token/README.md)
   - [as/act/trace](cltester/as/README.md)
   - [Block Control](cltester/block/README.md)
+  - [Starting nodeos](cltester/nodeos/README.md)
