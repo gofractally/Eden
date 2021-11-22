@@ -1,9 +1,9 @@
 import React from "react";
 
 import { Heading, Text, useIsCommunityActive } from "_app";
-import { MemberData } from "members";
+import { Member } from "members";
 import {
-    convertPendingProfileToMemberData,
+    convertPendingProfileToMember,
     EndorsementsStatus,
     InductionExpiresIn,
     InductionStepGenesis,
@@ -17,7 +17,7 @@ import { Endorsement, Induction, InductionStatus } from "inductions/interfaces";
 
 interface ContainerProps {
     step: InductionStepInvitee | InductionStepGenesis;
-    memberPreview?: MemberData;
+    memberPreview?: Member;
     children: React.ReactNode;
 }
 
@@ -26,7 +26,7 @@ const Container = ({ step, memberPreview, children }: ContainerProps) => (
         <InductionStepsContainer step={step}>
             {children}
         </InductionStepsContainer>
-        {memberPreview && <MemberCardPreview memberData={memberPreview} />}
+        {memberPreview && <MemberCardPreview member={memberPreview} />}
     </>
 );
 
@@ -83,7 +83,7 @@ const PendingProfileStep = ({ induction }: { induction: Induction }) => {
 };
 
 const PendingVideoStep = ({ induction }: { induction: Induction }) => {
-    const memberData = convertPendingProfileToMemberData(
+    const member = convertPendingProfileToMember(
         induction.new_member_profile,
         induction.invitee,
         induction.video
@@ -91,7 +91,7 @@ const PendingVideoStep = ({ induction }: { induction: Induction }) => {
     return (
         <Container
             step={InductionStepInvitee.PendingVideoAndEndorsements}
-            memberPreview={memberData}
+            memberPreview={member}
         >
             <WaitingForVideo induction={induction} />
         </Container>
@@ -107,7 +107,7 @@ const PendingEndorsementStep = ({
     induction,
     endorsements,
 }: PendingCompletionProps) => {
-    const memberData = convertPendingProfileToMemberData(
+    const member = convertPendingProfileToMember(
         induction.new_member_profile,
         induction.invitee,
         induction.video
@@ -115,7 +115,7 @@ const PendingEndorsementStep = ({
     return (
         <Container
             step={InductionStepInvitee.PendingVideoAndEndorsements}
-            memberPreview={memberData}
+            memberPreview={member}
         >
             <Heading size={1} className="mb-2">
                 Endorsements
@@ -132,7 +132,7 @@ const PendingDonationStep = ({
     endorsements,
 }: PendingCompletionProps) => {
     const { data: isCommunityActive } = useIsCommunityActive();
-    const memberData = convertPendingProfileToMemberData(
+    const member = convertPendingProfileToMember(
         induction.new_member_profile,
         induction.invitee,
         induction.video
@@ -144,7 +144,7 @@ const PendingDonationStep = ({
                     ? InductionStepInvitee.Donate
                     : InductionStepGenesis.Donate
             }
-            memberPreview={memberData}
+            memberPreview={member}
         >
             <Heading size={1} className="mb-2">
                 Pending donation

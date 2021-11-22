@@ -4,11 +4,11 @@ import { Tab } from "@headlessui/react";
 import { Container, LoadingContainer, MessageContainer, Text } from "_app";
 import { MemberChip, MembersGrid } from "members";
 
-import { MemberData } from "../interfaces";
+import { Member } from "../interfaces";
 import { useMemberNFTCollection, useMemberNFTCollectors } from "nfts/hooks";
 
 interface Props {
-    member: MemberData;
+    member: Member;
 }
 
 export const MemberCollections = ({ member }: Props) => {
@@ -20,10 +20,16 @@ export const MemberCollections = ({ member }: Props) => {
             </Tab.List>
             <Tab.Panels>
                 <Tab.Panel>
-                    <Collection member={member} />
+                    <Collection
+                        accountName={member.accountName}
+                        name={member.profile.name}
+                    />
                 </Tab.Panel>
                 <Tab.Panel>
-                    <Collectors member={member} />
+                    <Collectors
+                        accountName={member.accountName}
+                        name={member.profile.name}
+                    />
                 </Tab.Panel>
             </Tab.Panels>
         </Tab.Group>
@@ -46,8 +52,16 @@ const StyledTab = ({ children }: { children: React.ReactNode }) => (
     </Tab>
 );
 
-const Collection = ({ member: { account, name } }: Props) => {
-    const { data: nfts, isLoading, isError } = useMemberNFTCollection(account);
+const Collection = ({
+    accountName,
+    name,
+}: {
+    accountName: string;
+    name: string;
+}) => {
+    const { data: nfts, isLoading, isError } = useMemberNFTCollection(
+        accountName
+    );
 
     if (isLoading) return <LoadingContainer />;
 
@@ -89,9 +103,15 @@ const Collection = ({ member: { account, name } }: Props) => {
     );
 };
 
-const Collectors = ({ member: { account, name } }: Props) => {
+const Collectors = ({
+    accountName,
+    name,
+}: {
+    accountName: string;
+    name: string;
+}) => {
     const { data: collectors, isLoading, isError } = useMemberNFTCollectors(
-        account
+        accountName
     );
 
     if (isLoading) return <LoadingContainer />;
