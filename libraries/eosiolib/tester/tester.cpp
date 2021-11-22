@@ -1,3 +1,4 @@
+#include <eosio/abi.hpp>
 #include <eosio/from_string.hpp>
 #include <eosio/tester.hpp>
 
@@ -8,7 +9,7 @@ namespace
    extern "C"
    {
       // clang-format off
-      [[clang::import_name("tester_create_chain")]]                uint32_t tester_create_chain(const char* snapshot, uint32_t snapshot_size);
+      [[clang::import_name("tester_create_chain2")]]               uint32_t tester_create_chain2(const char* snapshot, uint32_t snapshot_size, uint64_t state_size);
       [[clang::import_name("tester_destroy_chain")]]               void     tester_destroy_chain(uint32_t chain);
       [[clang::import_name("tester_exec_deferred")]]               bool     tester_exec_deferred(uint32_t chain_index, void* cb_alloc_data, cb_alloc_type cb_alloc);
       [[clang::import_name("tester_execute")]]                     int32_t  tester_execute(const char* command, uint32_t command_size);
@@ -259,8 +260,10 @@ const eosio::private_key eosio::test_chain::default_priv_key =
 // need to be kept in sync with whatever updates the native layer.
 static eosio::test_chain* current_chain = nullptr;
 
-eosio::test_chain::test_chain(const char* snapshot)
-    : id{::tester_create_chain(snapshot ? snapshot : "", snapshot ? strlen(snapshot) : 0)}
+eosio::test_chain::test_chain(const char* snapshot, uint64_t state_size)
+    : id{::tester_create_chain2(snapshot ? snapshot : "",
+                                snapshot ? strlen(snapshot) : 0,
+                                state_size)}
 {
    current_chain = this;
 }
@@ -559,6 +562,21 @@ eosio::transaction_trace eosio::test_chain::set_code(name ac,
                            "setcode"_n,
                            std::make_tuple(ac, uint8_t{0}, uint8_t{0}, read_whole_file(filename))}},
                    expected_except);
+}
+
+eosio::transaction_trace eosio::test_chain::set_abi(name ac,
+                                                    const char* filename,
+                                                    const char* expected_except)
+{
+   auto json = read_whole_file(filename);
+   json.push_back(0);
+   json_token_stream stream(json.data());
+   abi_def def{};
+   from_json(def, stream);
+   auto bin = convert_to_bin(def);
+   return transact(
+       {action{{{ac, "active"_n}}, "eosio"_n, "setabi"_n, std::make_tuple(ac, std::move(bin))}},
+       expected_except);
 }
 
 eosio::transaction_trace eosio::test_chain::create_token(name contract,

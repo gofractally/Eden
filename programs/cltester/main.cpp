@@ -262,7 +262,7 @@ struct test_chain
    std::unique_ptr<intrinsic_context> intr_ctx;
    std::set<test_chain_ref*> refs;
 
-   test_chain(::state& state, const char* snapshot) : state{state}
+   test_chain(::state& state, const char* snapshot, uint64_t state_size) : state{state}
    {
       eosio::chain::genesis_state genesis;
       genesis.initial_timestamp = fc::time_point::from_iso_string("2020-01-01T00:00:00.000");
@@ -271,6 +271,7 @@ struct test_chain
       cfg->state_dir = dir.path() / "state";
       cfg->contracts_console = true;
       cfg->wasm_runtime = eosio::chain::wasm_interface::vm_type::eos_vm_jit;
+      cfg->state_size = state_size;
 
       std::optional<std::ifstream> snapshot_file;
       std::shared_ptr<eosio::chain::istream_snapshot_reader> snapshot_reader;
@@ -1086,7 +1087,13 @@ struct callbacks
 
    uint32_t tester_create_chain(span<const char> snapshot)
    {
-      state.chains.push_back(std::make_unique<test_chain>(state, span_str(snapshot).c_str()));
+      return tester_create_chain2(snapshot, 1024 * 1024 * 1024);
+   }
+
+   uint32_t tester_create_chain2(span<const char> snapshot, uint64_t state_size)
+   {
+      state.chains.push_back(
+          std::make_unique<test_chain>(state, span_str(snapshot).c_str(), state_size));
       if (state.chains.size() == 1)
          state.selected_chain_index = 0;
       return state.chains.size() - 1;
@@ -1508,6 +1515,7 @@ void register_callbacks()
    rhf_t::add<&callbacks::tester_read_whole_file>("env", "tester_read_whole_file");
    rhf_t::add<&callbacks::tester_execute>("env", "tester_execute");
    rhf_t::add<&callbacks::tester_create_chain>("env", "tester_create_chain");
+   rhf_t::add<&callbacks::tester_create_chain2>("env", "tester_create_chain2");
    rhf_t::add<&callbacks::tester_destroy_chain>("env", "tester_destroy_chain");
    rhf_t::add<&callbacks::tester_shutdown_chain>("env", "tester_shutdown_chain");
    rhf_t::add<&callbacks::tester_get_chain_path>("env", "tester_get_chain_path");

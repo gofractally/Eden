@@ -186,7 +186,7 @@ namespace eosio
       static const public_key default_pub_key;
       static const private_key default_priv_key;
 
-      test_chain(const char* snapshot = nullptr);
+      test_chain(const char* snapshot = nullptr, uint64_t state_size = 1024 * 1024 * 1024);
       test_chain(const test_chain&) = delete;
       ~test_chain();
 
@@ -424,6 +424,10 @@ namespace eosio
       transaction_trace set_code(name ac,
                                  const char* filename,
                                  const char* expected_except = nullptr);
+
+      transaction_trace set_abi(name ac,
+                                const char* filename,
+                                const char* expected_except = nullptr);
 
       /**
        * Creates a new token.
