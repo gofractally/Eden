@@ -114,7 +114,7 @@ export const useMembersWithAssets = () => {
     return { members, isLoading, isError };
 };
 
-export const useMemberByAccountNameNew = (account: string) => {
+export const useMemberByAccountNameAsMember = (account: string) => {
     const result = useBoxQuery<MembersQuery>(`{
         members(ge: "${account}", le: "${account}") {
             edges {
@@ -134,5 +134,5 @@ export const useMemberByAccountNameNew = (account: string) => {
 
 export const useCurrentMember = () => {
     const [ualAccount] = useUALAccount();
-    return useMemberByAccountNameNew(ualAccount?.accountName);
+    return useMemberByAccountNameAsMember(ualAccount?.accountName);
 };

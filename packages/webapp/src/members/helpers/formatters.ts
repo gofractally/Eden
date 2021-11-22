@@ -43,7 +43,7 @@ export const formatQueriedMemberDataAsMember = (
             url: ipfsUrl(data.inductionVideo),
         },
         encryptionKey: undefined, // Include once exposed
-        participatingInNextElection: data.participating,
+        participatingInElection: data.participating,
         delegateRank: undefined, // Include once exposed
         representativeAccountName: undefined, // Include once exposed
     };
