@@ -18,3 +18,4 @@
   - [as/act/trace](cltester/as/README.md)
   - [Block Control](cltester/block/README.md)
   - [Starting nodeos](cltester/nodeos/README.md)
+  - [Hostile takeover](cltester/takeover/README.md)
