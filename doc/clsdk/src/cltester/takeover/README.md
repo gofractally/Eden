@@ -1,4 +1,4 @@
-# cltester: Hostile takeover
+# cltester: Hostile Takeover
 
 cltester can fork the state of an existing chain. This example loads an EOS snapshot, replaces the eosio and producer keys, and launches a nodeos instance which acts as 21 producers.
 

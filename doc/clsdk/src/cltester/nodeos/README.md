@@ -1,4 +1,4 @@
-# cltester: Starting nodeos
+# cltester: Starting Nodeos
 
 cltester uses chainlib from nodeos, but cltester isn't nodeos, so is missing some functionality. e.g. it can't connect to nodes using p2p, and it can't serve json rpc requests. It can, however, spawn nodeos on a chain which cltester created. This can help with system-wide testing, e.g. testing nodejs and web apps.
 
