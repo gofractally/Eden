@@ -33,7 +33,7 @@ export interface Member {
     // Member's participation status is updated once they lose a round (updated as soon as a new value is known),
     // ie. a member's opt-in participation status lifetime is only from the start of Round 1
     // until the end of the Round they lose (or end of the election)
-    participatingInNextElection: boolean;
+    participatingInElection: boolean;
     delegateRank?: number; // Include once exposed
     representativeAccountName?: string; // Include once exposed
 }
