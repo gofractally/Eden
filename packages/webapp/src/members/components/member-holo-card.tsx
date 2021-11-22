@@ -1,11 +1,11 @@
 import dayjs from "dayjs";
 import useDimensions from "react-cool-dimensions";
 
-import { Image, ipfsUrl } from "_app";
-import { MemberData } from "../interfaces";
+import { Image } from "_app";
+import { Member } from "../interfaces";
 
 interface Props {
-    member: MemberData;
+    member: Member;
     inducted?: boolean;
     className?: string;
 }
@@ -31,20 +31,16 @@ export const MemberHoloCard = ({
                     style={{ padding: width * 0.047 }}
                 >
                     <Image
-                        src={
-                            member.image.startsWith("blob:")
-                                ? member.image
-                                : ipfsUrl(member.image)
-                        }
+                        src={member.profile.image.url}
                         fallbackImage={"/images/avatars/fallback/avatar-6.svg"}
                         className="rounded-full object-cover bg-white"
-                        title={`Member image for ${member.name}.`}
+                        title={`Member image for ${member.profile.name}.`}
                         style={{
                             boxShadow: "0px 3px 6px rgba(0, 0, 0, 0.68)",
                             width: width / 4,
                             height: width / 4,
                         }}
-                        key={member.image}
+                        key={member.profile.image.url}
                     />
                     <div>
                         {inducted && (
@@ -59,13 +55,13 @@ export const MemberHoloCard = ({
                             className="font-medium leading-none"
                             style={{ fontSize: width * 0.058 }}
                         >
-                            {member.name}
+                            {member.profile.name}
                         </p>
                         <p
                             className="font-light sm:tracking-wide"
                             style={{ fontSize: width * 0.035 }}
                         >
-                            Eden: @{member.account}
+                            Eden: @{member.accountName}
                         </p>
                     </div>
                 </div>

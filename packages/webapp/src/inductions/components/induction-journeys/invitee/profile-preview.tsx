@@ -11,7 +11,7 @@ import {
     useUALAccount,
 } from "_app";
 import {
-    convertPendingProfileToMemberData,
+    convertPendingProfileToMember,
     MemberCardPreview,
     setInductionProfileTransaction,
 } from "inductions";
@@ -70,7 +70,7 @@ export const InductionProfilePreview = ({
 
             setDidSubmitProfile(true);
         } catch (error) {
-            onError(error, "Unable to set the profile");
+            onError(error as Error, "Unable to set the profile");
         }
         setIsLoading(false);
     };
@@ -81,7 +81,7 @@ export const InductionProfilePreview = ({
             const img = URL.createObjectURL(selectedPhoto);
             pendingProfile = { ...profileInfo!, img };
         }
-        return convertPendingProfileToMemberData(
+        return convertPendingProfileToMember(
             pendingProfile!,
             induction.invitee
         );
@@ -89,7 +89,7 @@ export const InductionProfilePreview = ({
 
     return (
         <>
-            <MemberCardPreview cardTitle="" memberData={memberCardData} />
+            <MemberCardPreview cardTitle="" member={memberCardData} />
             <Card title="Review your profile">
                 <form
                     onSubmit={submitInductionProfileTransaction}
