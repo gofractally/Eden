@@ -29,7 +29,7 @@ namespace eosio
                                                                       bool is_priv);
 
          [[clang::import_name("set_blockchain_parameters_packed")]] void
-         set_blockchain_parameters_packed(char* data, uint32_t datalen);
+         set_blockchain_parameters_packed(const char* data, uint32_t datalen);
 
          [[clang::import_name("get_blockchain_parameters_packed")]] uint32_t
          get_blockchain_parameters_packed(char* data, uint32_t datalen);
@@ -59,11 +59,13 @@ namespace eosio
     */
    struct blockchain_parameters
    {
+      constexpr static int percent_1 = 100;  // 1 percent
+
       /**
        * The maxiumum net usage in instructions for a block
        * @brief the maxiumum net usage in instructions for a block
        */
-      uint64_t max_block_net_usage;
+      uint64_t max_block_net_usage = 1024 * 1024;
 
       /**
        * The target percent (1% == 100, 100%= 10,000) of maximum net usage; exceeding this triggers
@@ -71,7 +73,7 @@ namespace eosio
        * @brief The target percent (1% == 100, 100%= 10,000) of maximum net usage; exceeding this
        * triggers congestion handling
        */
-      uint32_t target_block_net_usage_pct;
+      uint32_t target_block_net_usage_pct = 10 * percent_1;
 
       /**
        * The maximum objectively measured net usage that the chain will allow regardless of account
@@ -79,12 +81,12 @@ namespace eosio
        * @brief The maximum objectively measured net usage that the chain will allow regardless of
        * account limits
        */
-      uint32_t max_transaction_net_usage;
+      uint32_t max_transaction_net_usage = max_block_net_usage / 2;
 
       /**
        * The base amount of net usage billed for a transaction to cover incidentals
        */
-      uint32_t base_per_transaction_net_usage;
+      uint32_t base_per_transaction_net_usage = 12;
 
       /**
        * The amount of net usage leeway available whilst executing a transaction (still checks
@@ -92,25 +94,25 @@ namespace eosio
        * @brief The amount of net usage leeway available whilst executing a transaction  (still
        * checks against new limits without leeway at the end of the transaction)
        */
-      uint32_t net_usage_leeway;
+      uint32_t net_usage_leeway = 500;
 
       /**
        * The numerator for the discount on net usage of context-free data
        * @brief The numerator for the discount on net usage of context-free data
        */
-      uint32_t context_free_discount_net_usage_num;
+      uint32_t context_free_discount_net_usage_num = 20;
 
       /**
        * The denominator for the discount on net usage of context-free data
        * @brief The denominator for the discount on net usage of context-free data
        */
-      uint32_t context_free_discount_net_usage_den;
+      uint32_t context_free_discount_net_usage_den = 100;
 
       /**
        * The maxiumum billable cpu usage (in microseconds) for a block
        * @brief The maxiumum billable cpu usage (in microseconds) for a block
        */
-      uint32_t max_block_cpu_usage;
+      uint32_t max_block_cpu_usage = 200'000;
 
       /**
        * The target percent (1% == 100, 100%= 10,000) of maximum cpu usage; exceeding this triggers
@@ -118,7 +120,7 @@ namespace eosio
        * @brief The target percent (1% == 100, 100%= 10,000) of maximum cpu usage; exceeding this
        * triggers congestion handling
        */
-      uint32_t target_block_cpu_usage_pct;
+      uint32_t target_block_cpu_usage_pct = 10 * percent_1;
 
       /**
        * The maximum billable cpu usage (in microseconds) that the chain will allow regardless of
@@ -126,19 +128,19 @@ namespace eosio
        * @brief The maximum billable cpu usage (in microseconds) that the chain will allow
        * regardless of account limits
        */
-      uint32_t max_transaction_cpu_usage;
+      uint32_t max_transaction_cpu_usage = 3 * max_block_cpu_usage / 4;
 
       /**
        * The minimum billable cpu usage (in microseconds) that the chain requires
        * @brief The minimum billable cpu usage (in microseconds) that the chain requires
        */
-      uint32_t min_transaction_cpu_usage;
+      uint32_t min_transaction_cpu_usage = 100;
 
       /**
        * Maximum lifetime of a transacton
        * @brief Maximum lifetime of a transacton
        */
-      uint32_t max_transaction_lifetime;
+      uint32_t max_transaction_lifetime = 60 * 60;
 
       /**
        * The number of seconds after the time a deferred transaction can first execute until it
@@ -146,7 +148,7 @@ namespace eosio
        * @brief the number of seconds after the time a deferred transaction can first execute until
        * it expires
        */
-      uint32_t deferred_trx_expiration_window;
+      uint32_t deferred_trx_expiration_window = 10 * 60;
 
       /**
        * The maximum number of seconds that can be imposed as a delay requirement by authorization
@@ -154,25 +156,25 @@ namespace eosio
        * @brief The maximum number of seconds that can be imposed as a delay requirement by
        * authorization checks
        */
-      uint32_t max_transaction_delay;
+      uint32_t max_transaction_delay = 45 * 24 * 3600;
 
       /**
        * Maximum size of inline action
        * @brief Maximum size of inline action
        */
-      uint32_t max_inline_action_size;
+      uint32_t max_inline_action_size = 512 * 1024;
 
       /**
        * Maximum depth of inline action
        * @brief Maximum depth of inline action
        */
-      uint16_t max_inline_action_depth;
+      uint16_t max_inline_action_depth = 4;
 
       /**
        * Maximum authority depth
        * @brief Maximum authority depth
        */
-      uint16_t max_authority_depth;
+      uint16_t max_authority_depth = 6;
 
       EOSLIB_SERIALIZE(
           blockchain_parameters,

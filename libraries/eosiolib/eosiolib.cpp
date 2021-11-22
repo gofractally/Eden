@@ -11,7 +11,7 @@ namespace eosio
    {
       [[clang::import_name("current_time")]] uint64_t current_time();
       [[clang::import_name("set_blockchain_parameters_packed")]] void
-      set_blockchain_parameters_packed(char*, uint32_t);
+      set_blockchain_parameters_packed(const char*, uint32_t);
       [[clang::import_name("get_blockchain_parameters_packed")]] uint32_t
       get_blockchain_parameters_packed(char*, uint32_t);
       [[clang::import_name("set_proposed_producers")]] int64_t set_proposed_producers(
