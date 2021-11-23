@@ -4,7 +4,7 @@ cltester comes with contracts for modifying consensus parameters and for activat
 
 ## Setting Consensus Parameters
 
-The `set_parameters` contract sets consensus parameters. The contract's header file includes a helper function (`setparams`) which loads the contract into `eosio`, calls it, then clears the eosio contract.
+The `set_parameters` contract sets consensus parameters. The contract's header file includes a helper function (`setparams`) which loads the contract into the `eosio` account, calls it, then clears the eosio contract.
 
 ```c++
 #include <set_parameters/set_parameters.hpp>
@@ -45,4 +45,35 @@ struct blockchain_parameters
    uint16_t max_inline_action_depth = 4;
    uint16_t max_authority_depth = 6;
 };
+```
+
+## Activating Protocol Features
+
+The `activate_feature` contract activates protocol features. The contract's header file includes a helper function (`activate`) which loads the contract into the `eosio` account, calls it, then clears the eosio contract.
+
+```c++
+#include <activate_feature/activate_feature.hpp>
+
+TEST_CASE("setparams")
+{
+   test_chain chain;
+
+   // Activate all 2.0 features
+   activate_feature::activate(chain, {
+      eosio::feature::only_link_to_existing_permission,
+      eosio::feature::forward_setcode,
+      eosio::feature::wtmsig_block_signatures,
+      eosio::feature::replace_deferred,
+      eosio::feature::no_duplicate_deferred_id,
+      eosio::feature::ram_restrictions,
+      eosio::feature::webauthn_key,
+      eosio::feature::disallow_empty_producer_schedule,
+      eosio::feature::only_bill_first_authorizer,
+      eosio::feature::restrict_action_to_self,
+      eosio::feature::fix_linkauth_restriction,
+      eosio::feature::get_sender,
+   });
+
+   // Use the chain...
+}
 ```
