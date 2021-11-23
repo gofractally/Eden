@@ -1,30 +1,28 @@
 import React, { CSSProperties } from "react";
 import { FaSpinner } from "react-icons/fa";
 
-import { ipfsUrl } from "_app";
-
 import { Image } from "./image";
 
 interface ProfileImageProps {
-    imageCid?: string;
+    imageUrl?: string;
     badge?: React.ReactNode;
     onClick?: (e: React.MouseEvent) => void;
     size?: number;
 }
 
 export const ProfileImage = ({
-    imageCid,
+    imageUrl,
     badge,
     onClick,
     size = 56,
 }: ProfileImageProps) => {
     const imageClass = "rounded-full object-cover shadow";
     const imageSize = { height: size, width: size };
-    if (imageCid) {
+    if (imageUrl) {
         return (
             <div className="relative group" onClick={onClick}>
                 <Image
-                    src={ipfsUrl(imageCid)}
+                    src={imageUrl}
                     fallbackImage="/images/avatars/fallback/avatar-6.svg"
                     loaderComponent={<ImageLoader style={imageSize} />}
                     className={imageClass}

@@ -2,11 +2,11 @@ import { useQuery as useReactQuery } from "react-query";
 import { useQuery as useBoxQuery } from "@edenos/eden-subchain-client/dist/ReactSubchain";
 
 import {
-    formatQueriedMemberData,
-    formatQueriedMemberDataAsMember,
+    formatMembersQueryNodeAsMemberNFT,
+    formatMembersQueryNodeAsMember,
     getNewMembers,
 } from "members";
-import { MemberData, MembersQuery } from "members/interfaces";
+import { MemberNFT, MembersQuery } from "members/interfaces";
 import { useUALAccount } from "_app";
 
 export const MEMBER_DATA_FRAGMENT = `
@@ -34,14 +34,15 @@ export const useMembers = () => {
         }
     }`);
 
-    let formattedMembers: MemberData[] = [];
+    let formattedMembers: MemberNFT[] = [];
 
     if (!result.data) return { ...result, data: formattedMembers };
 
     const memberEdges = result.data.members.edges;
     if (memberEdges) {
         formattedMembers = memberEdges.map(
-            (member) => formatQueriedMemberData(member.node) as MemberData
+            (member) =>
+                formatMembersQueryNodeAsMemberNFT(member.node) as MemberNFT
         );
     }
 
@@ -72,11 +73,11 @@ export const useMemberByAccountName = (account: string) => {
     if (!result.data) return { ...result, data: null };
 
     const memberNode = result.data.members.edges[0]?.node;
-    const member = formatQueriedMemberData(memberNode) ?? null;
+    const member = formatMembersQueryNodeAsMemberNFT(memberNode) ?? null;
     return { ...result, data: member };
 };
 
-const sortMembersByDateDESC = (a: MemberData, b: MemberData) =>
+const sortMembersByDateDESC = (a: MemberNFT, b: MemberNFT) =>
     b.createdAt - a.createdAt;
 
 export const queryNewMembers = (page: number, pageSize: number) => ({
@@ -96,10 +97,10 @@ export const useMembersWithAssets = () => {
     const isError =
         newMembers.isError || allMembers.isError || !allMembers.data;
 
-    let members: MemberData[] = [];
+    let members: MemberNFT[] = [];
 
     if (allMembers.data.length) {
-        const mergeAuctionData = (member: MemberData) => {
+        const mergeAuctionData = (member: MemberNFT) => {
             const newMemberRecord = newMembers.data?.find(
                 (newMember) => newMember.account === member.account
             );
@@ -128,7 +129,7 @@ export const useMemberByAccountNameAsMember = (account: string) => {
     if (!result.data) return { ...result, data: null };
 
     const memberNode = result.data.members.edges[0]?.node;
-    const member = formatQueriedMemberDataAsMember(memberNode) ?? null;
+    const member = formatMembersQueryNodeAsMember(memberNode) ?? null;
     return { ...result, data: member };
 };
 

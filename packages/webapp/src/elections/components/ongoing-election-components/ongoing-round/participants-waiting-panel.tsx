@@ -1,9 +1,10 @@
 import React from "react";
-import { MemberData } from "members/interfaces";
+
+import { MemberNFT } from "members/interfaces";
 import { ElectionParticipantChip } from "elections";
 
 interface ParticipantsWaitingPanelProps {
-    members?: MemberData[];
+    members?: MemberNFT[];
     roundIndex: number;
 }
 

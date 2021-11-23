@@ -1,13 +1,14 @@
 import { Flipper, Flipped } from "react-flip-toolkit";
+
 import { VotingMemberChip } from "elections";
 import { VoteData } from "elections/interfaces";
-import { MemberData } from "members/interfaces";
+import { MemberNFT } from "members/interfaces";
 
 interface VotingRoundParticipantsProps {
-    members?: MemberData[];
+    members?: MemberNFT[];
     voteData: VoteData[];
-    selectedMember: MemberData | null;
-    onSelectMember: (member: MemberData) => void;
+    selectedMember: MemberNFT | null;
+    onSelectMember: (member: MemberNFT) => void;
     userVotingFor?: string;
 }
 
@@ -18,7 +19,7 @@ const VotingRoundParticipants = ({
     onSelectMember,
     userVotingFor,
 }: VotingRoundParticipantsProps) => {
-    const getVoteCountForMember = (member: MemberData) => {
+    const getVoteCountForMember = (member: MemberNFT) => {
         return voteData.filter((vd) => vd.candidate === member.account).length;
     };
 
@@ -26,7 +27,7 @@ const VotingRoundParticipants = ({
         (a, b) => getVoteCountForMember(b) - getVoteCountForMember(a)
     );
 
-    const selectMember = (member: MemberData) => {
+    const selectMember = (member: MemberNFT) => {
         if (member.account === selectedMember?.account) return;
         onSelectMember(member);
     };

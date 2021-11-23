@@ -9,7 +9,7 @@ import {
 } from "_app/hooks/queries";
 import { Container, Expander, Heading, Loader, Text } from "_app/ui";
 import { DelegateChip, ErrorLoadingElection } from "elections";
-import { MembersGrid } from "members";
+import { MemberNFT, MembersGrid } from "members";
 import { VideoUploadButton } from "./video-upload-button";
 
 import RoundHeader from "./round-header";
@@ -97,7 +97,7 @@ export const ChiefsRoundSegment = ({
                 </Text>
             </Container>
             <MembersGrid members={members}>
-                {(member) => (
+                {(member: MemberNFT) => (
                     <DelegateChip
                         key={`${member.account}-chief-delegate`}
                         member={member}

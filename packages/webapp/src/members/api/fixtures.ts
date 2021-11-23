@@ -1,4 +1,4 @@
-import { EdenMember, MemberData, MemberStats } from "members";
+import { EdenMember, MemberNFT, MemberStats } from "members";
 import { ElectionParticipationStatus, MemberStatus } from "_app/api/interfaces";
 
 export const fixtureEdenMembers: EdenMember[] = [
@@ -149,7 +149,7 @@ export const fixtureEdenMembers: EdenMember[] = [
     },
 ];
 
-export const fixtureMemberData: MemberData[] = [
+export const fixtureMemberData: MemberNFT[] = [
     {
         templateId: 147800,
         name: "Alice",
@@ -484,5 +484,5 @@ export const fixtureEdenMembersInGroup = (
 
 export const getFixtureEdenMember = (memberAccount: string): EdenMember =>
     fixtureEdenMembers.find((member) => member.account === memberAccount)!;
-export const getFixtureMemberData = (memberAccount: string): MemberData =>
+export const getFixtureMemberData = (memberAccount: string): MemberNFT =>
     fixtureMemberData.find((member) => member.account === memberAccount)!;
