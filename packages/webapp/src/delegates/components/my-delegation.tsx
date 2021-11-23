@@ -1,11 +1,6 @@
 import React from "react";
-import { useQuery } from "react-query";
 
-import {
-    useMemberStats,
-    useMemberListByAccountNames,
-    queryMembers,
-} from "_app";
+import { useMemberStats, useMemberListByAccountNames } from "_app";
 import { LoadingContainer } from "_app/ui";
 import {
     DelegateChip,
@@ -13,7 +8,7 @@ import {
     ElectionState,
 } from "elections";
 import { MembersGrid, useMembersByAccountNames } from "members";
-import { EdenMember, MemberData } from "members/interfaces";
+import { EdenMember, MemberNFT } from "members/interfaces";
 
 import { ErrorLoadingDelegation } from "./statuses";
 import { LevelHeading } from "./level-heading";
@@ -21,7 +16,7 @@ import { MyDelegationArrow } from "./arrow-container";
 
 interface Props {
     electionState?: ElectionState;
-    members: MemberData[];
+    members: MemberNFT[];
     myDelegation: EdenMember[];
 }
 
@@ -146,7 +141,7 @@ const ChiefDelegates = ({
                     Chief Delegates
                 </LevelHeading>
                 <MembersGrid members={memberData}>
-                    {(chiefDelegate) => {
+                    {(chiefDelegate: MemberNFT) => {
                         if (!chiefDelegate) return null;
                         return (
                             <DelegateChip

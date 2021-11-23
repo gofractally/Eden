@@ -4,7 +4,7 @@ import {
     ElectionStatus,
     VoteData,
 } from "elections/interfaces";
-import { MemberData } from "members";
+import { MemberNFT } from "members";
 import {
     getFixtureEdenMember,
     getFixtureMemberData,
@@ -163,7 +163,7 @@ export const fixtureCompletedRounds = [
         // delegate: undefined,
     },
 ];
-export const fixtureOngoingRound = (votingMemberData: MemberData[]) => ({
+export const fixtureOngoingRound = (votingMemberData: MemberNFT[]) => ({
     // participants: [],
     // participantsMemberData: [],
     // participants: membersInOngoingRound,

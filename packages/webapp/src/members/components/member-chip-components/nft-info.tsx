@@ -3,9 +3,9 @@ import React from "react";
 import { atomicAssets } from "config";
 import { assetToLocaleString, openInNewTab, useCountdown } from "_app";
 import { NFT } from "_app/ui/icons";
-import { AssetData, MemberAuctionData, MemberData } from "members";
+import { AssetData, MemberAuctionData, MemberNFT } from "members";
 
-export const NFTInfo = ({ member }: { member: MemberData }) => {
+export const NFTInfo = ({ member }: { member: MemberNFT }) => {
     if (member.auctionData) {
         return <AuctionBadge auctionData={member.auctionData} />;
     }

@@ -1,13 +1,13 @@
 import { ipfsUrl } from "_app";
-import { Member, MemberData, MembersQueryNode } from "members/interfaces";
+import { Member, MemberNFT, MembersQueryNode } from "members/interfaces";
 
 /********************************************
  * MICROCHAIN GRAPHQL QUERY RESULT FORMATTERS
  *******************************************/
 
-export const formatQueriedMemberData = (
+export const formatMembersQueryNodeAsMemberNFT = (
     data: MembersQueryNode
-): MemberData | undefined => {
+): MemberNFT | undefined => {
     if (!data) return;
     return {
         createdAt: data.createdAt ? new Date(data.createdAt).getTime() : 0,
@@ -21,7 +21,7 @@ export const formatQueriedMemberData = (
     };
 };
 
-export const formatQueriedMemberDataAsMember = (
+export const formatMembersQueryNodeAsMember = (
     data: MembersQueryNode
 ): Member | undefined => {
     if (!data) return;

@@ -38,7 +38,8 @@ export interface Member {
     representativeAccountName?: string; // Include once exposed
 }
 
-export interface MemberData {
+// TODO: Move to NFT interfaces file.
+export interface MemberNFT {
     createdAt: number;
     account: string;
     name: string;

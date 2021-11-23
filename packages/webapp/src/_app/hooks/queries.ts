@@ -6,7 +6,7 @@ import {
     getMembers,
     getTreasuryStats,
     getMembersStats,
-    MemberData,
+    MemberNFT,
     MemberStats,
     useMembersByAccountNames,
 } from "members";
@@ -150,7 +150,7 @@ export const queryCommunityGlobals = {
 };
 
 export const queryOngoingElectionData = (
-    votingMemberData?: MemberData[],
+    votingMemberData?: MemberNFT[],
     currentElection?: CurrentElection,
     myDelegation?: EdenMember[],
     currentMember?: EdenMember
@@ -430,7 +430,7 @@ export const useMemberDataFromVoteData = (voteData?: VoteData[]) => {
         isLoading: memberDataRes.isLoading || isLoading,
         isError: memberDataRes.isError || isFetchError,
         isSuccess: areQueriesComplete,
-    } as UseQueryResult<MemberData[], Error>;
+    } as UseQueryResult<MemberNFT[], Error>;
 };
 
 export const useEncryptedData = (scope: EncryptionScope, id: string) =>

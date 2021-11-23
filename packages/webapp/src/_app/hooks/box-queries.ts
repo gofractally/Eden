@@ -6,8 +6,8 @@ import dayjs from "dayjs";
 
 import { assetFromString } from "_app";
 import {
-    formatQueriedMemberData,
-    MemberData,
+    formatMembersQueryNodeAsMemberNFT,
+    MemberNFT,
     MEMBER_DATA_FRAGMENT,
 } from "members";
 
@@ -41,8 +41,8 @@ export interface RoundBasicQueryData {
 }
 
 export interface RoundForUserVotingQueryData extends RoundBasicQueryData {
-    candidate?: MemberData;
-    winner?: MemberData;
+    candidate?: MemberNFT;
+    winner?: MemberNFT;
     video: string;
 }
 
@@ -116,8 +116,12 @@ export const useCurrentMemberElectionVotingData = (
                     votingFinished: voteNode.group.round.votingFinished,
                     resultsAvailable: voteNode.group.round.resultsAvailable,
                     numGroups: voteNode.group.round.numGroups,
-                    candidate: formatQueriedMemberData(voteNode.candidate),
-                    winner: formatQueriedMemberData(voteNode.group.winner),
+                    candidate: formatMembersQueryNodeAsMemberNFT(
+                        voteNode.candidate
+                    ),
+                    winner: formatMembersQueryNodeAsMemberNFT(
+                        voteNode.group.winner
+                    ),
                     video: voteNode.video,
                 })) || [];
         }
@@ -127,13 +131,13 @@ export const useCurrentMemberElectionVotingData = (
 };
 
 export interface VoteQueryData {
-    voter: MemberData;
-    candidate?: MemberData;
+    voter: MemberNFT;
+    candidate?: MemberNFT;
     video: string;
 }
 
 export interface RoundGroupQueryData {
-    winner?: MemberData;
+    winner?: MemberNFT;
     votes: VoteQueryData[];
 }
 
@@ -217,15 +221,15 @@ const mapQueriedRounds = (queriedRoundsEdges: any) =>
 
 const mapQueriedRoundsGroups = (queriedRoundsGroupsEdges: any) =>
     queriedRoundsGroupsEdges?.map(({ node: groupNode }: any) => ({
-        winner: formatQueriedMemberData(groupNode.winner),
+        winner: formatMembersQueryNodeAsMemberNFT(groupNode.winner),
         votes: mapQueriedGroupVotes(groupNode.votes),
     })) || [];
 
 const mapQueriedGroupVotes = (votes: any) => {
     return (
         votes?.map((vote: any) => ({
-            voter: formatQueriedMemberData(vote.voter),
-            candidate: formatQueriedMemberData(vote.candidate),
+            voter: formatMembersQueryNodeAsMemberNFT(vote.voter),
+            candidate: formatMembersQueryNodeAsMemberNFT(vote.candidate),
             video: vote.video,
         })) || []
     );

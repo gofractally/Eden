@@ -7,9 +7,9 @@ import {
 } from "react-virtualized";
 
 import { LoadingContainer, MessageContainer } from "_app/ui";
-import { MemberChip, MemberData, useMembersWithAssets } from "members";
+import { MemberChip, MemberNFT, useMembersWithAssets } from "members";
 
-const findMember = (member: MemberData, query: string) =>
+const findMember = (member: MemberNFT, query: string) =>
     member.account.includes(query.toLowerCase()) ||
     member.name.toLowerCase().includes(query.toLowerCase());
 

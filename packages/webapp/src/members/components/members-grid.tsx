@@ -1,13 +1,13 @@
 import React from "react";
-import { MemberData } from "../interfaces";
+import { Member, MemberNFT } from "../interfaces";
 
 interface Props {
-    members?: MemberData[];
+    members?: Member[] | MemberNFT[];
     dataTestId?: string;
     children(
-        value: MemberData,
+        value: Member | MemberNFT,
         index: number,
-        array: MemberData[]
+        array: Member[] | MemberNFT[]
     ): React.ReactNode;
     maxCols?: 1 | 2 | 3;
 }

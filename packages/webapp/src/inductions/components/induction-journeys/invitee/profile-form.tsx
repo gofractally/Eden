@@ -8,6 +8,7 @@ import {
     HelpLink,
     handleFileChange,
     Image,
+    ipfsUrl,
 } from "_app";
 import { edenContractAccount, validUploadActions } from "config";
 import { EdenNftSocialHandles } from "nfts";
@@ -235,8 +236,8 @@ const ProfileImage = ({ image }: { image?: File | string }) => {
         );
 
     let imageUrl: string;
-    if (typeof image === "string") {
-        imageUrl = `https://ipfs.io/ipfs/${image}`;
+    if (typeof image == "string") {
+        imageUrl = ipfsUrl(image);
     } else {
         imageUrl = URL.createObjectURL(image);
     }

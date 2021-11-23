@@ -2,18 +2,22 @@ import { useQuery as useReactQuery } from "react-query";
 import { useQuery as useBoxQuery } from "@edenos/eden-subchain-client/dist/ReactSubchain";
 
 import { atomicAssets, edenContractAccount } from "config";
-import { formatQueriedMemberData, MEMBER_DATA_FRAGMENT } from "members";
-import { getCollection, memberDataDefaults } from "members/api";
-import { MemberData, MembersQueryNode } from "members/interfaces";
+import {
+    formatMembersQueryNodeAsMemberNFT,
+    MEMBER_DATA_FRAGMENT,
+} from "members";
+import { getCollection, memberNFTDefaults } from "members/api";
+import { MemberNFT, MembersQueryNode } from "members/interfaces";
 import { NFTCollectorsQuery } from "nfts/interfaces";
 
+// NOTE: Eden member NFTs may be deprecated soon.
 export const queryMemberNFTCollection = (account: string) => ({
     queryKey: ["query_member_nft_collection", account],
     queryFn: () => getCollection(account),
 });
 
 export const useMemberNFTCollection = (account: string) => {
-    return useReactQuery<MemberData[]>({
+    return useReactQuery<MemberNFT[]>({
         ...queryMemberNFTCollection(account),
     });
 };
@@ -37,7 +41,7 @@ export const useMemberNFTCollectors = (account: string) => {
         }
     }`);
 
-    let collectors: MemberData[] = [];
+    let collectors: MemberNFT[] = [];
 
     if (!result.data) return { ...result, data: collectors };
 
@@ -57,7 +61,7 @@ const isAuction = (account: string) =>
 
 const formatCollectorAsMemberData = (owner: MembersQueryNode) => {
     if (owner.profile) {
-        return formatQueriedMemberData(owner) as MemberData;
+        return formatMembersQueryNodeAsMemberNFT(owner) as MemberNFT;
     }
-    return { ...memberDataDefaults, name: owner.account };
+    return { ...memberNFTDefaults, name: owner.account };
 };
