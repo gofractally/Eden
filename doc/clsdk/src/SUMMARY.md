@@ -15,6 +15,7 @@
     - [Debugging with vscode](cltester/starting/vscode.md)
     - [Debugging with gdb](cltester/starting/gdb.md)
   - [Token Support](cltester/token/README.md)
+  - [Reading Tables](cltester/tables/README.md)
   - [as/act/trace](cltester/as/README.md)
   - [Chain Configuration](cltester/config/README.md)
   - [Block Control](cltester/block/README.md)
