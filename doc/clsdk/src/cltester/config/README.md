@@ -54,7 +54,7 @@ The `activate_feature` contract activates protocol features. The contract's head
 ```c++
 #include <activate_feature/activate_feature.hpp>
 
-TEST_CASE("setparams")
+TEST_CASE("activate")
 {
    test_chain chain;
 
