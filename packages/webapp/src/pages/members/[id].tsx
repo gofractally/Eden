@@ -12,13 +12,13 @@ import {
     MemberCard,
     MemberCollections,
     MemberHoloCard,
-    useMemberByAccountName,
+    useMemberByAccountNameAsMember,
 } from "members";
 import { FundsAvailableCTA } from "members/components";
 
 export const MemberPage = () => {
     const router = useRouter();
-    const { data: member, isLoading, isError } = useMemberByAccountName(
+    const { data: member, isLoading, isError } = useMemberByAccountNameAsMember(
         router.query.id as string
     );
 
@@ -42,8 +42,8 @@ export const MemberPage = () => {
     }
 
     return (
-        <MemberPageContainer pageTitle={`${member.name}'s Profile`}>
-            <FundsAvailableCTA account={member.account} />
+        <MemberPageContainer pageTitle={`${member.profile.name}'s Profile`}>
+            <FundsAvailableCTA account={member.accountName} />
             <Container className="flex justify-center">
                 <MemberHoloCard member={member} className="max-w-xl" />
             </Container>
