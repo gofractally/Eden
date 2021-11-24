@@ -1,4 +1,5 @@
-import { EdenMember, MemberNFT } from "members";
+import { EdenMember } from "members/interfaces";
+import { MemberNFT } from "nfts/interfaces";
 
 const NUM_PARTICIPANTS_IN_SORTITION_ROUND = 1;
 const MAX_PARTICIPANTS_IN_SORTITION_ROUND = 13;

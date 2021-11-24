@@ -1,5 +1,6 @@
-import { EdenMember, MemberNFT, MemberStats } from "members";
 import { ElectionParticipationStatus, MemberStatus } from "_app/api/interfaces";
+import { EdenMember, MemberStats } from "members";
+import { MemberNFT } from "nfts/interfaces";
 
 export const fixtureEdenMembers: EdenMember[] = [
     {

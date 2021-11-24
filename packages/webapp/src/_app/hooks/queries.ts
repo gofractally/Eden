@@ -6,7 +6,6 @@ import {
     getMembers,
     getTreasuryStats,
     getMembersStats,
-    MemberNFT,
     MemberStats,
     useMembersByAccountNamesAsMemberNFTs,
 } from "members";
@@ -41,6 +40,7 @@ import {
     ElectionCompletedRound,
     VoteData,
 } from "elections/interfaces";
+import { MemberNFT } from "nfts/interfaces";
 import { EncryptionScope, getEncryptedData } from "encryption/api";
 import { TableQueryOptions } from "_app/eos/interfaces";
 

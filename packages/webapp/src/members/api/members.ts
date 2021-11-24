@@ -3,12 +3,12 @@ import { getAccountCollection, getAuctions, getTemplates } from "nfts/api";
 import {
     AssetData,
     AuctionableTemplateData,
-    EdenNftSocialHandles,
+    MemberNFT,
     TemplateData,
 } from "nfts/interfaces";
 
-import { Member, MemberNFT } from "../interfaces";
 import { fixtureMemberData } from "./fixtures";
+import { Member, MemberSocialHandles } from "../interfaces";
 
 export const getMembers = async (
     page: number,
@@ -120,7 +120,7 @@ const convertAtomicAssetToMemberWithSalesData = (
     return member;
 };
 
-const parseSocial = (socialHandlesJsonString: string): EdenNftSocialHandles => {
+const parseSocial = (socialHandlesJsonString: string): MemberSocialHandles => {
     try {
         return JSON.parse(socialHandlesJsonString);
     } catch (e) {

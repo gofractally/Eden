@@ -3,9 +3,10 @@ import { Tab } from "@headlessui/react";
 
 import { Container, LoadingContainer, MessageContainer, Text } from "_app";
 import { MemberChip, MembersGrid } from "members";
-
-import { Member, MemberNFT } from "../interfaces";
 import { useMemberNFTCollection, useMemberNFTCollectors } from "nfts/hooks";
+import { MemberNFT } from "nfts/interfaces";
+
+import { Member } from "../interfaces";
 
 interface Props {
     member: Member;

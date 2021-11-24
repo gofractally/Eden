@@ -7,8 +7,8 @@ import {
     MEMBER_DATA_FRAGMENT,
 } from "members";
 import { getCollection, memberNFTDefaults } from "members/api";
-import { MemberNFT, MembersQueryNode } from "members/interfaces";
-import { NFTCollectorsQuery } from "nfts/interfaces";
+import { MembersQueryNode } from "members/interfaces";
+import { MemberNFT, NFTCollectorsQuery } from "nfts/interfaces";
 
 // NOTE: Eden member NFTs may be deprecated soon.
 export const queryMemberNFTCollection = (account: string) => ({

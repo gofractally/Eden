@@ -5,9 +5,10 @@ import dayjs from "dayjs";
 import { blockExplorerAccountBaseUrl } from "config";
 import { ROUTES } from "_app/routes";
 import { GenericMemberChip, ipfsUrl, openInNewTab } from "_app";
+import { MemberNFT } from "nfts/interfaces";
 
 import { MemberChipTelegramLink, NFTInfo } from "./member-chip-components";
-import { Member, MemberNFT } from "../interfaces";
+import { Member } from "../interfaces";
 
 const isNFT = (member: Member | MemberNFT): member is MemberNFT =>
     (member as MemberNFT).name !== undefined;

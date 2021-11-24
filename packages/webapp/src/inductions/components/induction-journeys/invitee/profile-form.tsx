@@ -1,18 +1,10 @@
 import { FormEvent, useState } from "react";
 
-import {
-    useFormFields,
-    Form,
-    Heading,
-    Button,
-    HelpLink,
-    handleFileChange,
-    Image,
-    ipfsUrl,
-} from "_app";
 import { edenContractAccount, validUploadActions } from "config";
-import { EdenNftSocialHandles } from "nfts";
+import { useFormFields, handleFileChange, ipfsUrl } from "_app";
+import { Form, Heading, Button, HelpLink, Image } from "_app/ui";
 import { NewMemberProfile } from "inductions";
+import { MemberSocialHandles } from "members/interfaces";
 
 interface Props {
     newMemberProfile: NewMemberProfile;
@@ -49,7 +41,7 @@ export const InductionProfileForm = ({
 
         const socialHandles = { ...socialFields };
         Object.keys(socialHandles).forEach((keyString) => {
-            const key = keyString as keyof EdenNftSocialHandles;
+            const key = keyString as keyof MemberSocialHandles;
             if (!socialHandles[key]) delete socialHandles[key];
         });
 
@@ -252,9 +244,7 @@ const ProfileImage = ({ image }: { image?: File | string }) => {
     );
 };
 
-const convertNewMemberProfileSocial = (
-    social: string
-): EdenNftSocialHandles => {
+const convertNewMemberProfileSocial = (social: string): MemberSocialHandles => {
     const socialHandles = JSON.parse(social || "{}");
     return {
         eosCommunity: socialHandles.eosCommunity || "",
