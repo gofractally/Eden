@@ -84,7 +84,7 @@ namespace eden
                       eosio::block_timestamp expiration,
                       const std::string& description);
 
-      void delsession(const eosio::excluded_arg<session_info>& current_session,
+      void delsession(const eosio::not_in_abi<session_info>& current_session,
                       eosio::name eden_account,
                       const eosio::public_key& key);
 
@@ -114,32 +114,32 @@ namespace eden
 
       void clearall();
 
-      void inductinit(const eosio::excluded_arg<session_info>& current_session,
+      void inductinit(const eosio::not_in_abi<session_info>& current_session,
                       uint64_t id,
                       eosio::name inviter,
                       eosio::name invitee,
                       std::vector<eosio::name> witnesses);
 
-      void inductprofil(const eosio::excluded_arg<session_info>& current_session,
+      void inductprofil(const eosio::not_in_abi<session_info>& current_session,
                         uint64_t id,
                         new_member_profile new_member_profile);
 
-      void inductvideo(const eosio::excluded_arg<session_info>& current_session,
+      void inductvideo(const eosio::not_in_abi<session_info>& current_session,
                        eosio::name account,
                        uint64_t id,
                        std::string video);
 
-      void inductendors(const eosio::excluded_arg<session_info>& current_session,
+      void inductendors(const eosio::not_in_abi<session_info>& current_session,
                         eosio::name account,
                         uint64_t id,
                         eosio::checksum256 induction_data_hash);
 
       void inductdonate(eosio::name payer, uint64_t id, const eosio::asset& quantity);
 
-      void inductcancel(const eosio::excluded_arg<session_info>& current_session,
+      void inductcancel(const eosio::not_in_abi<session_info>& current_session,
                         eosio::name account,
                         uint64_t id);
-      void inductmeetin(const eosio::excluded_arg<session_info>& current_session,
+      void inductmeetin(const eosio::not_in_abi<session_info>& current_session,
                         eosio::name account,
                         uint64_t id,
                         const std::vector<encrypted_key>& keys,
@@ -158,22 +158,22 @@ namespace eden
                        const std::string& election_time,
                        uint32_t round_duration_sec);
 
-      void electopt(const eosio::excluded_arg<session_info>& current_session,
+      void electopt(const eosio::not_in_abi<session_info>& current_session,
                     eosio::name member,
                     bool participating);
 
       void electseed(const eosio::bytes& btc_header);
-      void electmeeting(const eosio::excluded_arg<session_info>& current_session,
+      void electmeeting(const eosio::not_in_abi<session_info>& current_session,
                         eosio::name account,
                         uint8_t round,
                         const std::vector<encrypted_key>& keys,
                         const eosio::bytes& data,
                         const std::optional<eosio::bytes>& old_data);
-      void electvote(const eosio::excluded_arg<session_info>& current_session,
+      void electvote(const eosio::not_in_abi<session_info>& current_session,
                      uint8_t round,
                      eosio::name voter,
                      eosio::name candidate);
-      void electvideo(const eosio::excluded_arg<session_info>& current_session,
+      void electvideo(const eosio::not_in_abi<session_info>& current_session,
                       uint8_t round,
                       eosio::name voter,
                       const std::string& video);

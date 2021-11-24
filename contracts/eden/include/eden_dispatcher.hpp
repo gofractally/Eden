@@ -6,11 +6,11 @@
 namespace eden
 {
    template <typename T, typename R, typename... Args>
-   void execute_session_action(
-       eosio::name contract,
-       R (T::*func)(const eosio::excluded_arg<session_info>& current_session, Args...),
-       const eosio::excluded_arg<session_info>& current_session,
-       eosio::datastream<const char*>& ds)
+   void execute_session_action(eosio::name contract,
+                               R (T::*func)(const eosio::not_in_abi<session_info>& current_session,
+                                            Args...),
+                               const eosio::not_in_abi<session_info>& current_session,
+                               eosio::datastream<const char*>& ds)
    {
       std::tuple<std::remove_cvref_t<Args>...> t;
       ds >> t;
@@ -78,7 +78,7 @@ namespace eden
    {                                                                                            \
       inline bool session_dispatch(eosio::name contract,                                        \
                                    uint32_t index,                                              \
-                                   const eosio::excluded_arg<session_info>& current_session,    \
+                                   const eosio::not_in_abi<session_info>& current_session,      \
                                    eosio::datastream<const char*>& ds)                          \
       {                                                                                         \
          switch (index)                                                                         \

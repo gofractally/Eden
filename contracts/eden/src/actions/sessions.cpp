@@ -110,7 +110,7 @@ namespace eden
       push_event(session_new_event{eden_account, key, expiration, description}, get_self());
    }  // eden::newsession
 
-   void eden::delsession(const eosio::excluded_arg<session_info>& current_session,
+   void eden::delsession(const eosio::not_in_abi<session_info>& current_session,
                          eosio::name eden_account,
                          const eosio::public_key& key)
    {
@@ -182,7 +182,7 @@ namespace eden
             sequences.erase(sequences.begin());
       });
 
-      eosio::excluded_arg<session_info> current_session;
+      eosio::not_in_abi<session_info> current_session;
       current_session.value.authorized_eden_account = eden_account;
 
       eosio::varuint32 num_actions;

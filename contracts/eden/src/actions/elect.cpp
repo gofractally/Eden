@@ -26,7 +26,7 @@ namespace eden
       globals.set_election_round_duration(round_duration);
    }
 
-   void eden::electopt(const eosio::excluded_arg<session_info>& current_session,
+   void eden::electopt(const eosio::not_in_abi<session_info>& current_session,
                        eosio::name voter,
                        bool participating)
    {
@@ -53,7 +53,7 @@ namespace eden
       elections.seed(btc_header);
    }
 
-   void eden::electmeeting(const eosio::excluded_arg<session_info>& current_session,
+   void eden::electmeeting(const eosio::not_in_abi<session_info>& current_session,
                            eosio::name account,
                            uint8_t round,
                            const std::vector<encrypted_key>& keys,
@@ -69,7 +69,7 @@ namespace eden
       encrypt.set(group_id, keys, data, old_data);
    }
 
-   void eden::electvote(const eosio::excluded_arg<session_info>& current_session,
+   void eden::electvote(const eosio::not_in_abi<session_info>& current_session,
                         uint8_t round,
                         eosio::name voter,
                         eosio::name candidate)
@@ -79,7 +79,7 @@ namespace eden
       elections.vote(round, voter, candidate);
    }
 
-   void eden::electvideo(const eosio::excluded_arg<session_info>& current_session,
+   void eden::electvideo(const eosio::not_in_abi<session_info>& current_session,
                          uint8_t round,
                          eosio::name voter,
                          const std::string& video)

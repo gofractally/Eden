@@ -10,7 +10,7 @@
 
 namespace eden
 {
-   void eden::inductinit(const eosio::excluded_arg<session_info>& current_session,
+   void eden::inductinit(const eosio::not_in_abi<session_info>& current_session,
                          uint64_t id,
                          eosio::name inviter,
                          eosio::name invitee,
@@ -34,7 +34,7 @@ namespace eden
       inductions{get_self()}.initialize_induction(id, inviter, invitee, witnesses);
    }
 
-   void eden::inductmeetin(const eosio::excluded_arg<session_info>& current_session,
+   void eden::inductmeetin(const eosio::not_in_abi<session_info>& current_session,
                            eosio::name account,
                            uint64_t id,
                            const std::vector<encrypted_key>& keys,
@@ -54,7 +54,7 @@ namespace eden
       encrypt.set(id, keys, data, old_data);
    }
 
-   void eden::inductprofil(const eosio::excluded_arg<session_info>& current_session,
+   void eden::inductprofil(const eosio::not_in_abi<session_info>& current_session,
                            uint64_t id,
                            new_member_profile new_member_profile)
    {
@@ -73,7 +73,7 @@ namespace eden
       }
    }
 
-   void eden::inductvideo(const eosio::excluded_arg<session_info>& current_session,
+   void eden::inductvideo(const eosio::not_in_abi<session_info>& current_session,
                           eosio::name account,
                           uint64_t id,
                           std::string video)
@@ -90,7 +90,7 @@ namespace eden
       inductions.update_video(induction, video);
    }
 
-   void eden::inductendors(const eosio::excluded_arg<session_info>& current_session,
+   void eden::inductendors(const eosio::not_in_abi<session_info>& current_session,
                            eosio::name account,
                            uint64_t id,
                            eosio::checksum256 induction_data_hash)
@@ -190,7 +190,7 @@ namespace eden
       }
    }
 
-   void eden::inductcancel(const eosio::excluded_arg<session_info>& current_session,
+   void eden::inductcancel(const eosio::not_in_abi<session_info>& current_session,
                            eosio::name account,
                            uint64_t id)
    {
