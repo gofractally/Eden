@@ -8,7 +8,7 @@ import {
     getMembersStats,
     MemberNFT,
     MemberStats,
-    useMembersByAccountNames,
+    useMembersByAccountNamesAsMemberNFTs,
 } from "members";
 import { getCommunityGlobals, getTokenBalanceForAccount } from "_app/api";
 import {
@@ -423,7 +423,7 @@ export const useMemberDataFromVoteData = (voteData?: VoteData[]) => {
         .map((res) => res.data as EdenMember)
         .map((member) => member.account);
 
-    const memberDataRes = useMembersByAccountNames(accountNames);
+    const memberDataRes = useMembersByAccountNamesAsMemberNFTs(accountNames);
 
     return {
         ...memberDataRes,

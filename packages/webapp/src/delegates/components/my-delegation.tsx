@@ -7,7 +7,7 @@ import {
     ElectionParticipantChip,
     ElectionState,
 } from "elections";
-import { MembersGrid, useMembersByAccountNames } from "members";
+import { MembersGrid, useMembersByAccountNamesAsMemberNFTs } from "members";
 import { EdenMember, MemberNFT } from "members/interfaces";
 
 import { ErrorLoadingDelegation } from "./statuses";
@@ -107,7 +107,7 @@ const ChiefDelegates = ({
         data: memberData,
         isLoading: isLoadingMemberData,
         isError: isErrorMemberData,
-    } = useMembersByAccountNames(
+    } = useMembersByAccountNamesAsMemberNFTs(
         chiefsAsMembers.map((chief) => chief!.account)
     );
 
@@ -126,11 +126,11 @@ const ChiefDelegates = ({
     const headChiefAsEdenMember = chiefsAsMembers.find(
         (d) => d?.account === electionState.lead_representative
     );
-    const headChiefAsMemberData = memberData.find(
+    const headChiefAsMemberNFT = memberData.find(
         (d) => d?.account === electionState.lead_representative
     );
 
-    if (!headChiefAsEdenMember || !headChiefAsMemberData) {
+    if (!headChiefAsEdenMember || !headChiefAsMemberNFT) {
         return <ErrorLoadingDelegation />;
     }
 
@@ -157,7 +157,7 @@ const ChiefDelegates = ({
             <div className="mb-16">
                 <LevelHeading>Head Chief</LevelHeading>
                 <DelegateChip
-                    member={headChiefAsMemberData}
+                    member={headChiefAsMemberNFT}
                     level={headChiefAsEdenMember.election_rank + 1}
                     delegateTitle=""
                 />
