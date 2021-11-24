@@ -369,6 +369,7 @@ struct member
    std::string inductionVideo;
    bool participating = false;
    eosio::block_timestamp createdAt;
+   std::optional<eosio::public_key> encryptionKey;
 };
 
 struct member_object : public chainbase::object<member_table, member_object>
@@ -755,6 +756,13 @@ struct Member
    bool participating() const { return member && member->participating; }
    eosio::block_timestamp createdAt() const { return member->createdAt; }
 
+   std::optional<std::string> encryptionKey() const
+   {
+      return member && member->encryptionKey
+                 ? std::optional{eosio::public_key_to_string(member->encryptionKey.value())}
+                 : std::nullopt;
+   }
+
    NftConnection nfts(std::optional<eosio::block_timestamp> gt,
                       std::optional<eosio::block_timestamp> ge,
                       std::optional<eosio::block_timestamp> lt,
@@ -800,6 +808,7 @@ EOSIO_REFLECT2(
     inductionVideo,
     participating,
     createdAt,
+    encryptionKey,
     method(nfts, "gt", "ge", "lt", "le", "first", "last", "before", "after"),
     method(collectedNfts, "gt", "ge", "lt", "le", "first", "last", "before", "after"),
     method(elections, "gt", "ge", "lt", "le", "first", "last", "before", "after"),
@@ -1651,6 +1660,11 @@ void electvideo(uint8_t round, eosio::name voter, const std::string& video)
       db.votes.modify(*vote, [&](auto& vote) { vote.video = video; });
 }
 
+void setencpubkey(eosio::name member, eosio::public_key key)
+{
+   modify<by_pk>(db.members, member, [&](auto& obj) { obj.member.encryptionKey = key; });
+}
+
 void logmint(const action_context& context,
              uint64_t asset_id,
              eosio::name authorized_minter,
@@ -2043,6 +2057,8 @@ bool dispatch(eosio::name action_name, const action_context& context, eosio::inp
       call(electmeeting, context, s);
    else if (action_name == "electvideo"_n)
       call(electvideo, context, s);
+   else if (action_name == "setencpubkey"_n)
+      call(setencpubkey, context, s);
    else
       return false;
    return true;
