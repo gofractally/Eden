@@ -2,21 +2,16 @@ import express, { Request, Response } from "express";
 import {
     handleErrors,
     BadRequestError,
-    InternalServerError,
     sessionSignRequest,
     SessionSignRequest,
 } from "@edenos/common";
 import { arrayToHex } from "eosjs/dist/eosjs-serialize";
 
 import logger from "../logger";
-import { eosJsonRpc, eosDefaultApi } from "../eos";
-import { edenContractAccount } from "../config";
-import { TaposManager } from "../sessions";
+import { eosDefaultApi, taposManager } from "../eos";
+import { edenContractAccount, serverPaysConfig } from "../config";
 
 export const sessionHandler = express.Router();
-
-const taposManager = new TaposManager(eosJsonRpc);
-taposManager.init();
 
 sessionHandler.post("/sign", async (req: Request, res: Response) => {
     try {
@@ -60,6 +55,17 @@ const prepareExecSessionTrx = (sessionSignRequest: SessionSignRequest) => {
         ...tapos,
         expiration,
         actions: [
+            {
+                account: serverPaysConfig.serverPaysNoopContract,
+                name: serverPaysConfig.serverPaysNoopAction,
+                authorization: [
+                    {
+                        actor: serverPaysConfig.serverPaysAccount,
+                        permission: serverPaysConfig.serverPaysPermission,
+                    },
+                ],
+                data: {},
+            },
             {
                 account: edenContractAccount,
                 name: "execsession",

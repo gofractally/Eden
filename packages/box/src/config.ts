@@ -62,18 +62,25 @@ logger.info(
         JSON.stringify(validUploadActions, undefined, 2)
 );
 
-export const sessionsConfig = {
-    enable: Boolean(process.env.SESSIONS_ENABLE),
-    sessionSignerPrivateKey: process.env.SESSIONS_SIGNER_PRIVATE_KEY || "",
+export const serverPaysConfig = {
+    serverPaysPrivateKey: process.env.SERVER_PAYS_PRIVATE_KEY || "<secret-pk>",
+    serverPaysAccount: process.env.SERVER_PAYS_ACCOUNT || "srvrpaysdemo",
+    serverPaysPermission: process.env.SERVER_PAYS_PERMISSION || "freebie",
+    serverPaysNoopContract:
+        process.env.SERVER_PAYS_NOOP_CONTRACT || "srvrpaysdemo",
+    serverPaysNoopAction: process.env.SERVER_PAYS_NOOP_ACTION || "noop",
+    serverPaysCreateABI: process.env.SERVER_PAYS_CREATE_ABI === "true",
 };
 logger.info(
     "Sessions Config\n" +
         JSON.stringify(
-            { ...sessionsConfig, sessionSignerPrivateKey: "<secret>" },
+            { ...serverPaysConfig, serverPaysPrivateKey: "<secret>" },
             undefined,
             2
         )
 );
+
+export const enableEdenSessions = process.env.SESSIONS_ENABLE === "true";
 
 export enum SubchainReceivers {
     UNKNOWN,

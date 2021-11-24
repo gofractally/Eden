@@ -3,7 +3,8 @@ import * as eosjsApi from "eosjs/dist/eosjs-api";
 import { JsSignatureProvider } from "eosjs/dist/eosjs-jssig";
 import { AuthorityProviderArgs } from "eosjs/dist/eosjs-api-interfaces";
 
-import { rpcEndpoint, sessionsConfig } from "./config";
+import { rpcEndpoint, serverPaysConfig } from "./config";
+import { initializeServerPaysNoopAbi, TaposManager } from "./serverpay";
 
 const rpcEndpointUrl = `${rpcEndpoint.protocol}://${rpcEndpoint.host}:${rpcEndpoint.port}`;
 export const eosJsonRpc = new eosjsJsonRpc.JsonRpc(rpcEndpointUrl, {
@@ -11,7 +12,7 @@ export const eosJsonRpc = new eosjsJsonRpc.JsonRpc(rpcEndpointUrl, {
 });
 
 const signatureProvider = new JsSignatureProvider([
-    sessionsConfig.sessionSignerPrivateKey,
+    serverPaysConfig.serverPaysPrivateKey,
 ]);
 
 const authorityProvider = {
@@ -27,3 +28,8 @@ export const eosDefaultApi = new eosjsApi.Api({
     authorityProvider,
     chainId: rpcEndpoint.chainId,
 });
+
+initializeServerPaysNoopAbi(eosDefaultApi);
+
+export const taposManager = new TaposManager(eosJsonRpc);
+taposManager.init();
