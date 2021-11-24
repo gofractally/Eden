@@ -7,7 +7,8 @@ import {
 } from "react-virtualized";
 
 import { LoadingContainer, MessageContainer } from "_app/ui";
-import { Member, MemberChip, MemberNFT, useMembersWithAssets } from "members";
+import { Member, MemberChip, useMembersWithAssets } from "members";
+import { MemberNFT } from "nfts/interfaces";
 
 const findMember = (
     memberData: { member: Member; nft?: MemberNFT },

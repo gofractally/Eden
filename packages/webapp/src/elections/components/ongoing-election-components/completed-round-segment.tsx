@@ -3,10 +3,10 @@ import { Container, Expander, Text } from "_app/ui";
 import { ElectionParticipantChip } from "elections";
 import {
     EdenMember,
-    MemberNFT,
     MembersGrid,
     useMembersByAccountNamesAsMemberNFTs,
 } from "members";
+import { MemberNFT } from "nfts/interfaces";
 
 import RoundHeader from "./round-header";
 import { VideoUploadButton } from "./video-upload-button";

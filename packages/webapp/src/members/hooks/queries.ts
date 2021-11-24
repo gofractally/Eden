@@ -1,13 +1,14 @@
 import { useQuery as useReactQuery } from "react-query";
 import { useQuery as useBoxQuery } from "@edenos/eden-subchain-client/dist/ReactSubchain";
 
+import { useUALAccount } from "_app";
 import {
     formatMembersQueryNodeAsMember,
     getNewMembers,
     formatMemberAsMemberNFT,
 } from "members";
-import { Member, MemberNFT, MembersQuery } from "members/interfaces";
-import { useUALAccount } from "_app";
+import { Member, MembersQuery } from "members/interfaces";
+import { MemberNFT } from "nfts/interfaces";
 
 export const MEMBER_DATA_FRAGMENT = `
     createdAt

@@ -18,7 +18,8 @@ import {
     VoteData,
     VotingMemberChip,
 } from "elections";
-import { MemberNFT, MembersGrid } from "members";
+import { MembersGrid } from "members";
+import { MemberNFT } from "nfts/interfaces";
 import { RoundHeader } from "elections/components/ongoing-election-components";
 import { ConsensometerBlocks } from "elections/components/ongoing-election-components/ongoing-round/round-info/consensometer";
 

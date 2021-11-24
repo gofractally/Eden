@@ -28,7 +28,8 @@ import {
     setElectionRoundVideo,
 } from "elections";
 import { RoundHeader } from "elections/components/ongoing-election-components";
-import { MemberNFT, MemberGateContainer } from "members";
+import { MemberGateContainer } from "members";
+import { MemberNFT } from "nfts/interfaces";
 
 export const RoundVideoUploadPage = () => {
     const {

@@ -4,7 +4,7 @@ import {
     ElectionStatus,
     VoteData,
 } from "elections/interfaces";
-import { MemberNFT } from "members";
+import { MemberNFT } from "nfts/interfaces";
 import {
     getFixtureEdenMember,
     getFixtureMemberData,

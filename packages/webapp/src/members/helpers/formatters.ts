@@ -1,5 +1,6 @@
 import { ipfsUrl } from "_app";
-import { Member, MemberNFT, MembersQueryNode } from "members/interfaces";
+import { Member, MembersQueryNode } from "members/interfaces";
+import { MemberNFT } from "nfts/interfaces";
 
 /********************************************
  * MICROCHAIN GRAPHQL QUERY RESULT FORMATTERS

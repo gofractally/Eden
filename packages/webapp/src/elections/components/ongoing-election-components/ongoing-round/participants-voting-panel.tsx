@@ -8,8 +8,8 @@ import {
     useCurrentMember,
 } from "_app/hooks/queries";
 import { Button, Container } from "_app/ui";
-import { MemberNFT } from "members/interfaces";
 import { ActiveStateConfigType, VoteData } from "elections/interfaces";
+import { MemberNFT } from "nfts/interfaces";
 
 import { setVote } from "../../../transactions";
 import { VideoUploadButton } from "../video-upload-button";

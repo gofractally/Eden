@@ -9,10 +9,11 @@ import {
 } from "_app/hooks/queries";
 import { Container, Expander, Heading, Loader, Text } from "_app/ui";
 import { DelegateChip, ErrorLoadingElection } from "elections";
-import { MemberNFT, MembersGrid } from "members";
-import { VideoUploadButton } from "./video-upload-button";
+import { MembersGrid } from "members";
+import { MemberNFT } from "nfts/interfaces";
 
 import RoundHeader from "./round-header";
+import { VideoUploadButton } from "./video-upload-button";
 
 interface RoundSegmentProps {
     roundEndTime: Dayjs;

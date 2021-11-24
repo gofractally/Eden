@@ -1,5 +1,8 @@
 import React from "react";
-import { Member, MemberNFT } from "../interfaces";
+
+import { MemberNFT } from "nfts/interfaces";
+
+import { Member } from "../interfaces";
 
 interface Props {
     members?: Member[] | MemberNFT[];

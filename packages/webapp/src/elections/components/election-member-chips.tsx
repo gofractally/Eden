@@ -9,9 +9,9 @@ import {
 } from "_app";
 import { ROUTES } from "_app/routes";
 import { GenericMemberChip, OpensInNewTabIcon } from "_app/ui";
-import { MemberNFT } from "members/interfaces";
 import { getValidSocialLink } from "members/helpers/social-links";
 import { MemberChipTelegramLink } from "members/components/member-chip-components";
+import { MemberNFT } from "nfts/interfaces";
 
 interface VotingMemberChipProps {
     member: MemberNFT;

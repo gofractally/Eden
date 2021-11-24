@@ -5,7 +5,8 @@ import { dehydrate } from "react-query/hydration";
 
 import { FluidLayout, queryMembersStats, queryMembers } from "_app";
 import { Container, Heading } from "_app/ui";
-import { MemberNFT, MembersGrid } from "members";
+import { MembersGrid } from "members";
+import { MemberNFT } from "nfts/interfaces";
 import { VotingMemberChip, DelegateChip } from "elections";
 
 const MEMBERS_PAGE_SIZE = 18;

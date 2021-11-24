@@ -2,7 +2,7 @@ import { Flipper, Flipped } from "react-flip-toolkit";
 
 import { VotingMemberChip } from "elections";
 import { VoteData } from "elections/interfaces";
-import { MemberNFT } from "members/interfaces";
+import { MemberNFT } from "nfts/interfaces";
 
 interface VotingRoundParticipantsProps {
     members?: MemberNFT[];

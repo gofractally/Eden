@@ -8,7 +8,8 @@ import {
     ElectionState,
 } from "elections";
 import { MembersGrid, useMembersByAccountNamesAsMemberNFTs } from "members";
-import { EdenMember, MemberNFT } from "members/interfaces";
+import { EdenMember } from "members/interfaces";
+import { MemberNFT } from "nfts/interfaces";
 
 import { ErrorLoadingDelegation } from "./statuses";
 import { LevelHeading } from "./level-heading";

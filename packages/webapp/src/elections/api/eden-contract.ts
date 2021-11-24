@@ -22,7 +22,8 @@ import {
     queryParticipantsInCompletedRound,
     TABLE_INDEXES,
 } from "_app";
-import { EdenMember, MemberNFT, VoteDataQueryOptionsByField } from "members";
+import { EdenMember, VoteDataQueryOptionsByField } from "members";
+import { MemberNFT } from "nfts/interfaces";
 import {
     ActiveStateConfigType,
     CONFIG_SORTITION_ROUND_DEFAULTS,

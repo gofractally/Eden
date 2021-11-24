@@ -7,9 +7,9 @@ import dayjs from "dayjs";
 import { assetFromString } from "_app";
 import {
     formatMembersQueryNodeAsMemberNFT,
-    MemberNFT,
     MEMBER_DATA_FRAGMENT,
 } from "members";
+import { MemberNFT } from "nfts/interfaces";
 
 export interface ElectionStatusQuery {
     status: {

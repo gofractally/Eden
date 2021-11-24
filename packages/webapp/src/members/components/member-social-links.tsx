@@ -5,12 +5,12 @@ import { IoChatbubblesOutline } from "react-icons/io5";
 import { explorerAccountUrl, SocialButton } from "_app";
 import { EosCommunityIcon } from "_app/ui/icons";
 
+import { MemberSocialHandles } from "../interfaces";
 import { getValidSocialLink } from "../helpers/social-links";
-import { EdenNftSocialHandles } from "nfts";
 
 interface Props {
     accountName: string;
-    socialHandles: EdenNftSocialHandles;
+    socialHandles: MemberSocialHandles;
 }
 
 export const MemberSocialLinks = ({ accountName, socialHandles }: Props) => {
