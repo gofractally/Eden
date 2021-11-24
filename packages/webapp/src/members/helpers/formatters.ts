@@ -48,3 +48,15 @@ export const formatMembersQueryNodeAsMember = (
         representativeAccountName: undefined, // Include once exposed
     };
 };
+
+// TODO: Remove after we transition everything we can to Member from MemberNFT
+export const formatMemberAsMemberNFT = (member: Member): MemberNFT => ({
+    createdAt: member.createdAt,
+    account: member.accountName,
+    name: member.profile.name,
+    image: member.profile.image.cid,
+    attributions: member.profile.image.attributions,
+    bio: member.profile.bio,
+    socialHandles: member.profile.socialHandles,
+    inductionVideo: member.inductionVideo.cid,
+});

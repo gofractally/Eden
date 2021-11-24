@@ -5,7 +5,7 @@ import {
     EdenMember,
     MemberNFT,
     MembersGrid,
-    useMembersByAccountNames,
+    useMembersByAccountNamesAsMemberNFTs,
 } from "members";
 
 import RoundHeader from "./round-header";
@@ -20,7 +20,9 @@ export const CompletedRoundSegment = ({
 }: CompletedRoundSegmentProps) => {
     const { data } = useParticipantsInMyCompletedRound(roundIndex);
 
-    const { data: participantsMemberData } = useMembersByAccountNames(
+    const {
+        data: participantsMemberData,
+    } = useMembersByAccountNamesAsMemberNFTs(
         data?.participants.map((participant) => participant.account)
     );
 
