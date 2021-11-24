@@ -166,7 +166,7 @@ namespace eden
          auto& sequences = session->sequences;
          if (sequences.begin() != sequences.end())
          {
-            if (sequence.value < *sequences.begin() && sequences.size() < 20)
+            if (sequence.value < *sequences.begin() && sequences.size() >= 20)
                eosio::check(false, "received duplicate sequence " + std::to_string(sequence.value));
             else if (sequence.value > sequences.end()[-1].value + 10)
                eosio::check(false,
