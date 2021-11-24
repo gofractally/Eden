@@ -1,4 +1,10 @@
 [
+    "migration_event",
+    {
+        "index": 5
+    }
+]
+[
     "set_pool_event",
     {
         "pool": "master",

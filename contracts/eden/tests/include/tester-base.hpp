@@ -411,7 +411,7 @@ struct eden_tester
       }
    }
 
-   void run_election(bool auto_donate = true, uint32_t batch_size = 10000, bool add_video = false)
+   void start_election(bool auto_donate = true, uint32_t batch_size = 10000)
    {
       if (auto_donate)
       {
@@ -422,6 +422,11 @@ struct eden_tester
       skip_to(next_election_time().to_time_point());
 
       setup_election(batch_size);
+   }
+
+   void run_election(bool auto_donate = true, uint32_t batch_size = 10000, bool add_video = false)
+   {
+      start_election(auto_donate, batch_size);
 
       uint8_t round = 0;
 

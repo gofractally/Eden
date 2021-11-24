@@ -8,6 +8,7 @@ import {
     getMembersStats,
     MemberData,
     MemberStats,
+    useMembersByAccountNames,
 } from "members";
 import { getCommunityGlobals, getTokenBalanceForAccount } from "_app/api";
 import {
@@ -409,25 +410,6 @@ export const useVoteData = (
         ...queryOptions,
     });
 
-export const useMemberDataFromEdenMembers = (
-    members?: EdenMember[],
-    queryOptions: any = {}
-) => {
-    const nftTemplateIds = members?.map((em) => em.nft_template_id);
-
-    let enabled = Boolean(nftTemplateIds?.length);
-    if ("enabled" in queryOptions) {
-        enabled = enabled && queryOptions.enabled;
-    }
-
-    return useQuery<MemberData[], Error>({
-        ...queryMembers(1, nftTemplateIds?.length, nftTemplateIds),
-        staleTime: Infinity,
-        ...queryOptions,
-        enabled,
-    });
-};
-
 export const useMemberDataFromVoteData = (voteData?: VoteData[]) => {
     const responses = useMemberListByAccountNames(
         voteData?.map((participant) => participant.member) ?? []
@@ -436,19 +418,18 @@ export const useMemberDataFromVoteData = (voteData?: VoteData[]) => {
     const areQueriesComplete = responses.every((res) => res.isSuccess);
     const isLoading = responses.some((res) => res.isLoading);
 
-    const edenMembers = responses
-        .filter((res) => Boolean(res?.data?.nft_template_id))
-        .map((res) => res.data as EdenMember);
+    const accountNames = responses
+        .filter((res) => Boolean(res?.data?.account))
+        .map((res) => res.data as EdenMember)
+        .map((member) => member.account);
 
-    const memberDataRes = useMemberDataFromEdenMembers(edenMembers, {
-        enabled: !isFetchError && areQueriesComplete,
-    });
+    const memberDataRes = useMembersByAccountNames(accountNames);
 
     return {
         ...memberDataRes,
         isLoading: memberDataRes.isLoading || isLoading,
         isError: memberDataRes.isError || isFetchError,
-        isSuccess: memberDataRes.isSuccess || areQueriesComplete,
+        isSuccess: areQueriesComplete,
     } as UseQueryResult<MemberData[], Error>;
 };
 

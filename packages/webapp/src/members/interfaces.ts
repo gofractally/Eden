@@ -6,6 +6,38 @@ export type VoteDataQueryOptionsByField = {
     fieldValue: string;
 };
 
+interface ProfileImage {
+    cid: string;
+    url: string;
+    attributions: string;
+}
+
+interface InductionVideo {
+    cid: string;
+    url: string;
+}
+
+interface MemberProfile {
+    name: string;
+    image: ProfileImage;
+    bio: string;
+    socialHandles: EdenNftSocialHandles;
+}
+
+export interface Member {
+    createdAt: number;
+    accountName: string;
+    profile: MemberProfile;
+    inductionVideo: InductionVideo;
+    encryptionKey?: string; // Include once exposed (as optional)
+    // Member's participation status is updated once they lose a round (updated as soon as a new value is known),
+    // ie. a member's opt-in participation status lifetime is only from the start of Round 1
+    // until the end of the Round they lose (or end of the election)
+    participatingInElection: boolean;
+    delegateRank?: number; // Include once exposed
+    representativeAccountName?: string; // Include once exposed
+}
+
 export interface MemberData {
     createdAt: number;
     account: string;
@@ -80,4 +112,5 @@ export interface MembersQueryNode {
         bio: string;
     };
     inductionVideo: string;
+    participating: boolean;
 }

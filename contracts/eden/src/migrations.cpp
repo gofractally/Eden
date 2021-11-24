@@ -1,3 +1,4 @@
+#include <events.hpp>
 #include <migrations.hpp>
 
 namespace eden
@@ -13,9 +14,9 @@ namespace eden
 
    void migrations::init()
    {
-      migration_sing.set(std::variant_alternative_t<std::variant_size_v<migration_variant> - 1,
-                                                    migration_variant>(),
-                         contract);
+      constexpr size_t index = std::variant_size_v<migration_variant> - 1;
+      migration_sing.set(std::variant_alternative_t<index, migration_variant>(), contract);
+      push_event(migration_event{static_cast<eosio::varuint32>(index)}, contract);
    }
 
    uint32_t migrations::migrate_some(uint32_t max_steps)
@@ -28,6 +29,8 @@ namespace eden
                 max_steps = current_state.migrate_some(contract, max_steps);
                 if (max_steps)
                 {
+                   push_event(migration_event{static_cast<eosio::varuint32>(state.index())},
+                              contract);
                    constexpr std::size_t next_index =
                        boost::mp11::mp_find<migration_variant,
                                             std::decay_t<decltype(current_state)>>::value +

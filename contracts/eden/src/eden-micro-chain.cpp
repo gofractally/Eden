@@ -12,6 +12,7 @@
 #include <eosio/ship_protocol.hpp>
 #include <eosio/to_bin.hpp>
 #include <events.hpp>
+#include <migrations.hpp>
 
 using namespace eosio::literals;
 
@@ -235,6 +236,13 @@ struct status
    eosio::block_timestamp nextElection;
    uint16_t electionThreshold = 0;
    uint16_t numElectionParticipants = 0;
+   uint16_t migrationIndex = 0;
+
+   template <typename T>
+   bool isMigrationCompleted() const
+   {
+      return migrationIndex >= boost::mp11::mp_find<eden::migration_variant, T>::value;
+   }
 };
 
 struct status_object : public chainbase::object<status_table, status_object>
@@ -1714,6 +1722,12 @@ void logtransfer(const action_context& context,
    }
 }
 
+void handle_event(const eden::migration_event& event)
+{
+   db.status.modify(get_status(),
+                    [&](auto& status) { status.status.migrationIndex = event.index; });
+}
+
 void handle_event(const eden::election_event_schedule& event)
 {
    db.status.modify(get_status(), [&](auto& status) {
@@ -1936,19 +1950,12 @@ void call(void (*f)(const action_context&, Args...),
    std::apply([&](auto&&... args) { f(context, std::move(args)...); }, t);
 }
 
-void remove_expired_inductions(const subchain::eosio_block& block)
+void remove_expired_inductions(const eosio::time_point& block_time, const status& status)
 {
-   auto& idx = db.status.get<by_id>();
-   if (idx.size() < 1)
-      return;  // skip if genesis is not complete
+   if (status.isMigrationCompleted<eden::fix_inductdonate_expiration_check>())
+      return;  // skip if migration is not ready to collect expired records
 
-   const auto& status = get_status();
-   if (!status.status.active)
-      return;  // skip if not active
-
-   auto expiration_time =
-       eosio::block_timestamp(block.timestamp).to_time_point().sec_since_epoch() -
-       eden::induction_expiration_secs;
+   auto expiration_time = block_time.sec_since_epoch() - eden::induction_expiration_secs;
 
    auto& index = db.inductions.get<by_createdAt>();
    auto it = index.begin();
@@ -1961,6 +1968,19 @@ void remove_expired_inductions(const subchain::eosio_block& block)
       db.inductions.remove(*it);
       it = next;
    }
+}
+
+void clean_data(const subchain::eosio_block& block)
+{
+   auto& idx = db.status.get<by_id>();
+   if (idx.size() < 1)
+      return;  // skip if genesis is not complete
+
+   const auto& status = get_status();
+   if (!status.status.active)
+      return;  // skip if contract is not active
+
+   remove_expired_inductions(block.timestamp, status.status);
 }
 
 bool dispatch(eosio::name action_name, const action_context& context, eosio::input_stream& s);
@@ -2076,7 +2096,7 @@ void filter_block(const subchain::eosio_block& block)
       }  // for(action)
 
       // garbage collection housekeeping
-      // remove_expired_inductions(block);
+      clean_data(block);
 
       eosio::check(!block_state.in_withdraw && !block_state.in_manual_transfer,
                    "missing transfer notification");

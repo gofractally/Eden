@@ -7,7 +7,7 @@ import {
     TemplateData,
 } from "nfts/interfaces";
 
-import { MemberData } from "../interfaces";
+import { Member, MemberData } from "../interfaces";
 import { fixtureMemberData } from "./fixtures";
 
 export const getMembers = async (
@@ -48,7 +48,7 @@ export const getCollection = async (account: string): Promise<MemberData[]> => {
     return members.sort((a, b) => a.createdAt - b.createdAt);
 };
 
-export const memberDataDefaults = {
+export const memberDataDefaults: MemberData = {
     templateId: 0,
     name: "",
     image: "",
@@ -59,6 +59,27 @@ export const memberDataDefaults = {
     attributions: "",
     createdAt: 0,
 };
+
+export const memberDefaults: Member = {
+    createdAt: 0,
+    accountName: "",
+    profile: {
+        name: "",
+        image: {
+            cid: "",
+            url: "",
+            attributions: "",
+        },
+        bio: "",
+        socialHandles: {},
+    },
+    inductionVideo: {
+        cid: "",
+        url: "",
+    },
+    participatingInElection: false,
+};
+
 const convertAtomicTemplateToMember = (data: TemplateData): MemberData => ({
     ...memberDataDefaults,
     templateId: parseInt(data.template_id),
