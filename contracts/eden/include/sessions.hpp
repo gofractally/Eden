@@ -46,6 +46,45 @@ namespace eden
    void clearall_sessions(eosio::name contract);
    void remove_sessions(eosio::name contract, eosio::name eden_account);
 
+   // Case 1: eosio account. run() does a require_auth(eosio_account).
+   // * contract:          ""
+   // * contract_account:  ""
+   // * eosio_account:     the account
+   //
+   // Case 2: contract-defined account. run() does a require_auth(eosio_account), verifies
+   //         that eosio_account is associated with contract_account, verifies the recovered
+   //         public key is registered for the account, and checks the sequence number. run()
+   //         may delegate everything except the require_auth to another contract.
+   // * contract:          the contract defining the account space
+   // * contract_account:  the account
+   // * eosio_account:     eosio account associated with contract_account.
+   //
+   // The Eden contract only supports Case 2 and requires contract == the Eden contract.
+   struct account_auth
+   {
+      eosio::name contract;
+      eosio::name contract_account;
+      eosio::name eosio_account;
+   };
+   EOSIO_REFLECT(account_auth, contract, contract_account, eosio_account)
+
+   // * signature:   covers sha256(contract, account, sequence, verbs)
+   // * contract:    the contract defining the account space, or "" if an eosio account
+   // * account:     the contract account or eosio account
+   // * sequence:    replay prevention
+   //
+   // The Eden contract requires contract == the Eden contract.
+   struct signature_auth
+   {
+      eosio::signature signature;
+      eosio::name contract;
+      eosio::name account;
+      eosio::varuint32 sequence;
+   };
+   EOSIO_REFLECT(signature_auth, signature, contract, account, sequence)
+
+   using run_auth = std::variant<account_auth, signature_auth>;
+
    struct session_info
    {
       eosio::name authorized_eden_account;

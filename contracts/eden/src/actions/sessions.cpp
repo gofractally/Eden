@@ -134,68 +134,92 @@ namespace eden
          table.erase(sc);
    }  // eden::delsession
 
-   void eden::execsession(const eosio::signature& signature,
-                          eosio::ignore<eosio::name>,
-                          eosio::ignore<eosio::varuint32>,
-                          eosio::ignore<std::vector<action>>)
+   void eden::run(eosio::ignore<run_auth> auth, eosio::ignore<std::vector<verb>> verbs)
    {
       auto& ds = get_datastream();
-      auto digest = eosio::sha256(ds.pos(), ds.remaining());
-      auto recovered = eosio::recover_key(digest, signature);
-
       eosio::name eden_account;
-      eosio::varuint32 sequence;
-      ds >> eden_account;
-      ds >> sequence;
+      eosio::varuint32 auth_type;
+      ds >> auth_type;
+      if (auth_type.value == 0)
+      {
+         static_assert(std::is_same_v<account_auth, std::variant_alternative_t<0, run_auth>>);
+         account_auth a;
+         ds >> a;
+         eosio::check(a.contract == get_self(), "unsupported contract for auth");
+         eosio::check(a.contract_account == a.eosio_account,
+                      "account recovery not yet implemented");
+         eosio::require_auth(a.eosio_account);
+         eden_account = a.contract_account;
+      }
+      else if (auth_type.value == 1)
+      {
+         static_assert(std::is_same_v<signature_auth, std::variant_alternative_t<1, run_auth>>);
+         eosio::signature signature;
+         eosio::name contract;
+         eosio::varuint32 sequence;
+         ds >> signature;
+         auto digest = eosio::sha256(ds.pos(), ds.remaining());
+         auto recovered = eosio::recover_key(digest, signature);
+         ds >> contract;
+         ds >> eden_account;
+         ds >> sequence;
+         eosio::check(contract == get_self(), "unsupported contract for auth");
 
-      sessions_table_type table(get_self(), default_scope);
-      auto sc = table.find(eden_account.value);
-      if (sc == table.end())
-         eosio::check(false, "Recovered session key " + public_key_to_string(recovered) +
-                                 " is either expired or not found");
-      table.modify(sc, get_self(), [&](auto& sc) {
-         expire(get_self(), sc);
-         set_expiration(sc);
-         auto& sessions = sc.sessions();
-         auto session = std::find_if(sessions.begin(), sessions.end(),
-                                     [&](auto& session) { return session.key == recovered; });
-         if (session == sessions.end())
+         sessions_table_type table(get_self(), default_scope);
+         auto sc = table.find(eden_account.value);
+         if (sc == table.end())
             eosio::check(false, "Recovered session key " + public_key_to_string(recovered) +
                                     " is either expired or not found");
+         table.modify(sc, get_self(), [&](auto& sc) {
+            expire(get_self(), sc);
+            set_expiration(sc);
+            auto& sessions = sc.sessions();
+            auto session = std::find_if(sessions.begin(), sessions.end(),
+                                        [&](auto& session) { return session.key == recovered; });
+            if (session == sessions.end())
+               eosio::check(false, "Recovered session key " + public_key_to_string(recovered) +
+                                       " is either expired or not found");
 
-         auto& sequences = session->sequences;
-         if (sequences.begin() != sequences.end())
-         {
-            if (sequence.value < *sequences.begin() && sequences.size() >= 20)
-               eosio::check(false, "received duplicate sequence " + std::to_string(sequence.value));
-            else if (sequence.value > sequences.end()[-1].value + 10)
+            auto& sequences = session->sequences;
+            if (sequences.begin() != sequences.end())
+            {
+               if (sequence.value < *sequences.begin() && sequences.size() >= 20)
+                  eosio::check(false,
+                               "received duplicate sequence " + std::to_string(sequence.value));
+               else if (sequence.value > sequences.end()[-1].value + 10)
+                  eosio::check(false,
+                               "sequence " + std::to_string(sequence.value) + " skips too many");
+            }
+            else if (sequence.value > 10)
                eosio::check(false,
                             "sequence " + std::to_string(sequence.value) + " skips too many");
-         }
-         else if (sequence.value > 10)
-            eosio::check(false, "sequence " + std::to_string(sequence.value) + " skips too many");
-         auto it = std::lower_bound(sequences.begin(), sequences.end(), sequence);
-         if (it != sequences.end() && *it == sequence)
-            eosio::check(false, "received duplicate sequence " + std::to_string(sequence.value));
-         sequences.insert(it, sequence);
-         if (sequences.size() > 20)
-            sequences.erase(sequences.begin());
-      });
+            auto it = std::lower_bound(sequences.begin(), sequences.end(), sequence);
+            if (it != sequences.end() && *it == sequence)
+               eosio::check(false, "received duplicate sequence " + std::to_string(sequence.value));
+            sequences.insert(it, sequence);
+            if (sequences.size() > 20)
+               sequences.erase(sequences.begin());
+         });
+      }
+      else
+      {
+         eosio::check(false, "unsupported auth type");
+      }
 
       eosio::not_in_abi<session_info> current_session;
       current_session.value.authorized_eden_account = eden_account;
 
-      eosio::varuint32 num_actions;
-      ds >> num_actions;
-      eosio::check(num_actions.value > 0, "actions is empty");
-      for (uint32_t i = 0; i < num_actions.value; ++i)
+      eosio::varuint32 num_verbs;
+      ds >> num_verbs;
+      eosio::check(num_verbs.value > 0, "verbs is empty");
+      for (uint32_t i = 0; i < num_verbs.value; ++i)
       {
          eosio::varuint32 index;
          ds >> index;
          eosio::check(actions::session_dispatch(get_self(), index.value, current_session, ds),
-                      "unsupported action index");
+                      "unsupported verb index");
       }
 
-      eosio::check(!ds.remaining(), "detected extra action data");
-   }  // eden::execsession
+      eosio::check(!ds.remaining(), "detected extra verb data");
+   }  // eden::run
 }  // namespace eden

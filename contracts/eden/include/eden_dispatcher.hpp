@@ -19,15 +19,15 @@ namespace eden
    }
 }  // namespace eden
 
-#define EOSIO_MATCH_ACTIONeden_session_action EOSIO_MATCH_YES
-#define EOSIO_EXTRACT_ACTION_NAMEeden_session_action(name, index, ...) name
-#define EOSIO_EXTRACT_ACTION_ARGSeden_session_action(name, index, ...) __VA_ARGS__
+#define EOSIO_MATCH_ACTIONeden_verb EOSIO_MATCH_YES
+#define EOSIO_EXTRACT_ACTION_NAMEeden_verb(name, index, ...) name
+#define EOSIO_EXTRACT_ACTION_ARGSeden_verb(name, index, ...) __VA_ARGS__
 
 #define EDEN_MATCH_SESSION_ACTION(x) EOSIO_MATCH(EDEN_MATCH_SESSION_ACTION, x)
-#define EDEN_MATCH_SESSION_ACTIONeden_session_action EOSIO_MATCH_YES
+#define EDEN_MATCH_SESSION_ACTIONeden_verb EOSIO_MATCH_YES
 
 #define EDEN_EXTRACT_SESSION_ACTION_INDEX(x) BOOST_PP_CAT(EDEN_EXTRACT_SESSION_ACTION_INDEX, x)
-#define EDEN_EXTRACT_SESSION_ACTION_INDEXeden_session_action(name, index, ...) index
+#define EDEN_EXTRACT_SESSION_ACTION_INDEXeden_verb(name, index, ...) index
 
 #define EDEN_DISPATCH_SESSION_ACTION_INTERNAL_1(r, type, member)                         \
    case EDEN_EXTRACT_SESSION_ACTION_INDEX(member):                                       \
@@ -88,7 +88,7 @@ namespace eden
          return false;                                                                          \
       }                                                                                         \
       template <typename F>                                                                     \
-      void for_each_session_action(F f)                                                         \
+      void for_each_verb(F f)                                                                   \
       {                                                                                         \
          EDEN_GET_SESSION_ACTION(CONTRACT_CLASS, BOOST_PP_VARIADIC_TO_SEQ(__VA_ARGS__))         \
       }                                                                                         \

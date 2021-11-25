@@ -541,32 +541,34 @@ struct eden_tester
    }
 
    template <typename... Ts>
-   void execsession(const private_key& key,
-                    eosio::name eden_account,
-                    eosio::varuint32 sequence,
-                    const char* expected,
-                    const Ts&... actions)
+   void run(const private_key& key,
+            eosio::name eden_account,
+            eosio::varuint32 sequence,
+            const char* expected,
+            const Ts&... verbs)
    {
       std::vector<char> data;
       vector_stream s{data};
+      to_bin("eden.gm"_n, s);
       to_bin(eden_account, s);
       to_bin(sequence, s);
-      to_bin(eosio::varuint32(sizeof...(actions)), s);
-      for (const auto& a : {actions...})
+      to_bin(eosio::varuint32(sizeof...(verbs)), s);
+      for (const auto& a : {verbs...})
          data.insert(data.end(), a.begin(), a.end());
 
       auto digest = eosio::sha256(data.data(), data.size());
       auto signature = eosio::sign(key, digest);
       auto sig_bin = eosio::convert_to_bin(signature);
-      data.insert(data.begin(), sig_bin.begin(), sig_bin.end());
+      data.insert(data.begin(), 1);  // signature_auth
+      data.insert(data.begin() + 1, sig_bin.begin(), sig_bin.end());
 
       eosio::action act;
       act.account = "eden.gm"_n;
-      act.name = "execsession"_n;
+      act.name = "run"_n;
       act.authorization.push_back({"payer"_n, "active"_n});
       act.data = std::move(data);
 
-      // printf("created execsession with data: %s\n",
+      // printf("created run with data: %s\n",
       //        eosio::hex(act.data.begin(), act.data.end()).c_str());
 
       expect(chain.push_transaction(chain.make_transaction({act})), expected);

@@ -1979,32 +1979,32 @@ void clean_data(const subchain::eosio_block& block)
 
 bool dispatch(eosio::name action_name, const action_context& context, eosio::input_stream& s);
 
-void execsession(const action_context& context, eosio::input_stream& s)
+void run(const action_context& context, eosio::input_stream& s)
 {
    eosio::signature signature;
    eosio::name eden_account;
    eosio::varuint32 sequence;
-   eosio::varuint32 num_actions;
+   eosio::varuint32 num_verbs;
    from_bin(signature, s);
    from_bin(eden_account, s);
    from_bin(sequence, s);
-   from_bin(num_actions, s);
-   for (uint32_t i = 0; i < num_actions.value; ++i)
+   from_bin(num_verbs, s);
+   for (uint32_t i = 0; i < num_verbs.value; ++i)
    {
       auto index = eosio::varuint32_from_bin(s);
       auto name = eden::actions::get_name_for_session_action(index);
       if (!dispatch(name, context, s))
          // fatal because this throws off the rest of the stream
-         eosio::check(false, "execsession: action not found: " + std::to_string(index) + " " +
-                                 name.to_string());
+         eosio::check(false,
+                      "run: verb not found: " + std::to_string(index) + " " + name.to_string());
    }
-   eosio::check(!s.remaining(), "unpack error (extra data) within execsession");
+   eosio::check(!s.remaining(), "unpack error (extra data) within run");
 }
 
 bool dispatch(eosio::name action_name, const action_context& context, eosio::input_stream& s)
 {
-   if (action_name == "execsession"_n)
-      execsession(context, s);
+   if (action_name == "run"_n)
+      run(context, s);
    else if (action_name == "clearall"_n)
       call(clearall, context, s);
    else if (action_name == "delsession"_n)
