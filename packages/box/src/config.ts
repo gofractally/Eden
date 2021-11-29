@@ -22,6 +22,10 @@ export const rpcEndpoint = {
     protocol: process.env.EOS_RPC_PROTOCOL || "https",
     host: process.env.EOS_RPC_HOST || "wax-test.eosdac.io",
     port: Number(process.env.EOS_RPC_PORT || "443"),
+    chainId: process.env.EOS_CHAIN_ID || "",
+    taposManagerInterval: Number(
+        process.env.TAPOS_MANAGER_INTERVAL_MINS || "30"
+    ),
 };
 console.info(rpcEndpoint);
 
@@ -35,9 +39,9 @@ export const ipfsConfig = {
         "https://api.pinata.cloud/pinning/pinFileToIPFS",
     pinataJwt: process.env.IPFS_PINATA_JWT || "<pinata-jwt-here>",
 };
-console.info({ 
-    ...ipfsConfig, 
-    pinataJwt: `${ipfsConfig.pinataJwt.substr(0,8)}..${ipfsConfig.pinataJwt.substr(-8)}` 
+console.info({
+    ...ipfsConfig,
+    pinataJwt: `<secret>`,
 });
 
 export const validUploadActions: ValidUploadActions = {
@@ -57,6 +61,26 @@ logger.info(
     "Supported EOS IPFS Upload Actions\n" +
         JSON.stringify(validUploadActions, undefined, 2)
 );
+
+export const serverPaysConfig = {
+    serverPaysPrivateKey: process.env.SERVER_PAYS_PRIVATE_KEY || "<secret-pk>",
+    serverPaysAccount: process.env.SERVER_PAYS_ACCOUNT || "srvrpaysdemo",
+    serverPaysPermission: process.env.SERVER_PAYS_PERMISSION || "freebie",
+    serverPaysNoopContract:
+        process.env.SERVER_PAYS_NOOP_CONTRACT || "srvrpaysdemo",
+    serverPaysNoopAction: process.env.SERVER_PAYS_NOOP_ACTION || "noop",
+    serverPaysCreateABI: process.env.SERVER_PAYS_CREATE_ABI === "true",
+};
+logger.info(
+    "Sessions Config\n" +
+        JSON.stringify(
+            { ...serverPaysConfig, serverPaysPrivateKey: "<secret>" },
+            undefined,
+            2
+        )
+);
+
+export const enableEdenSessions = process.env.SESSIONS_ENABLE === "true";
 
 export enum SubchainReceivers {
     UNKNOWN,
