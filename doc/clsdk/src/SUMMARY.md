@@ -21,3 +21,5 @@
   - [Block Control](cltester/block/README.md)
   - [Starting Nodeos](cltester/nodeos/README.md)
   - [Hostile Takeover](cltester/takeover/README.md)
+- [GraphQL](graphql/README.md)
+  - [Getting Started](graphql/starting/README.md)
