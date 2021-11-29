@@ -1,11 +1,11 @@
 #pragma once
 
-#include <clchain/graphql.hpp>
+#include <btb/graphql.hpp>
 #include <eosio/from_bin.hpp>
 #include <eosio/reflection2.hpp>
 #include <eosio/to_bin.hpp>
 
-namespace clchain
+namespace btb
 {
    struct PageInfo
    {
@@ -158,4 +158,4 @@ namespace clchain
       }
       return result;
    }
-}  // namespace clchain
+}  // namespace btb

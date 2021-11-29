@@ -1,8 +1,8 @@
-#include <clchain/crypto.hpp>
+#include <btb/crypto.hpp>
 
 #include <openssl/sha.h>
 
-namespace clchain
+namespace btb
 {
    eosio::checksum256 sha256(const char* data, uint32_t length)
    {
@@ -10,4 +10,4 @@ namespace clchain
       SHA256((const unsigned char*)data, length, result.data());
       return result;
    }
-}  // namespace clchain
+}  // namespace btb

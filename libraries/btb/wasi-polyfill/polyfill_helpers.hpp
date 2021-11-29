@@ -4,7 +4,7 @@
 
 namespace polyfill
 {
-   [[noreturn, clang::import_module("clchain"), clang::import_name("abort_message")]] void
+   [[noreturn, clang::import_module("btb"), clang::import_name("abort_message")]] void
    abort_message(const char*, uint32_t);
 
    template <int size>
