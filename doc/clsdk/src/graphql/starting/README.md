@@ -25,6 +25,17 @@ The files:
 {{#include example-graphql.cpp}}
 ```
 
+## const
+
+```cpp
+std::optional<example::animal> animal(eosio::name name) const
+{
+   // ...
+}
+```
+
+Since btb's GraphQL system doesn't support mutation, query methods must be marked `const` as above. It ignores non-const methods.
+
 ## Starting the Example
 
 This builds the example and starts nodeos:
