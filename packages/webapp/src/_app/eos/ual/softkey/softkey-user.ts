@@ -99,7 +99,7 @@ export class SoftkeyUser extends User {
                 "updated the encryption key to the same as the password successfully!"
             );
         } catch (e) {
-            console.error("fail to set encryption key", e);
+            console.error("fail to auto-set encryption key (no harm done)", e);
         }
     }
 

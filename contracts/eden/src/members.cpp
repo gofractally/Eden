@@ -61,6 +61,7 @@ namespace eden
 
    void members::set_key(eosio::name member, const eosio::public_key& key)
    {
+      check_active_member(member);
       member_tb.modify(get_member(member), contract, [&](auto& row) {
          auto next = std::visit([](auto& m) { return member_v1{m}; }, row.value);
          next.encryption_key = key;
