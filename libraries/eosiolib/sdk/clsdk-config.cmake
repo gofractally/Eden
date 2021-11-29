@@ -122,6 +122,11 @@ function(add_libs suffix)
         -DCATCH_CONFIG_DISABLE_EXCEPTIONS
     )
     target_link_options(cltestlib${suffix} INTERFACE -Wl,--export-table)
+
+    add_library(btb${suffix} INTERFACE)
+    target_include_directories(btb${suffix} INTERFACE ${clsdk_DIR}/btb/include)
+    target_link_libraries(btb${suffix} INTERFACE eosio-core${suffix})
+
 endfunction(add_libs)
 
 add_libs("")
