@@ -559,7 +559,7 @@ struct eden_tester
       auto digest = eosio::sha256(data.data(), data.size());
       auto signature = eosio::sign(key, digest);
       auto sig_bin = eosio::convert_to_bin(signature);
-      data.insert(data.begin(), 1);  // signature_auth
+      data.insert(data.begin(), (uint8_t)eden::run_auth_type::signature_auth);
       data.insert(data.begin() + 1, sig_bin.begin(), sig_bin.end());
 
       eosio::action act;

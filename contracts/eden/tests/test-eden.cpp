@@ -1324,20 +1324,21 @@ TEST_CASE("contract-auth-induct")
                 t.chain.get_head_block_info().timestamp.to_time_point() + eosio::days(90), "",
                 "member bertie not found");
 
-   t.run(pip_session_priv_key, "pip"_n, 1, "need session key of alice but have session key of pip",
+   t.run(pip_session_priv_key, "pip"_n, 1,
+         "need authorization of alice but have authorization of pip",
          sact<actions::inductinit>(1234, "alice"_n, "bertie"_n, std::vector{"pip"_n, "egeon"_n}));
    t.run(alice_session_priv_key, "alice"_n, 1, nullptr,
          sact<actions::inductinit>(1234, "alice"_n, "bertie"_n, std::vector{"pip"_n, "egeon"_n}));
    t.newsession("bertie"_n, "bertie"_n, bertie_session_pub_key,
                 t.chain.get_head_block_info().timestamp.to_time_point() + eosio::days(90), "");
    t.run(alice_session_priv_key, "alice"_n, 2,
-         "need session key of bertie but have session key of alice",
+         "need authorization of bertie but have authorization of alice",
          sact<actions::inductprofil>(1234, bertie_profile));
    t.run(bertie_session_priv_key, "bertie"_n, 1, "Video can only be set by inviter or a witness",
          sact<actions::inductprofil>(1234, bertie_profile),
          sact<actions::inductvideo>("bertie"_n, 1234, "vid"s));
    t.run(bertie_session_priv_key, "bertie"_n, 1,
-         "need session key of pip but have session key of bertie",
+         "need authorization of pip but have authorization of bertie",
          sact<actions::inductprofil>(1234, bertie_profile),
          sact<actions::inductvideo>("pip"_n, 1234, "vid"s));
    t.run(bertie_session_priv_key, "bertie"_n, 1,
@@ -1345,13 +1346,14 @@ TEST_CASE("contract-auth-induct")
          sact<actions::inductprofil>(1234, bertie_profile),
          sact<actions::inductendors>("bertie"_n, 1234, t.hash_induction("vid"s, bertie_profile)));
    t.run(bertie_session_priv_key, "bertie"_n, 1,
-         "need session key of pip but have session key of bertie",
+         "need authorization of pip but have authorization of bertie",
          sact<actions::inductprofil>(1234, bertie_profile),
          sact<actions::inductendors>("pip"_n, 1234, t.hash_induction("vid"s, bertie_profile)));
    t.run(bertie_session_priv_key, "bertie"_n, 1, nullptr,
          sact<actions::inductprofil>(1234, bertie_profile));
 
-   t.run(pip_session_priv_key, "pip"_n, 2, "need session key of alice but have session key of pip",
+   t.run(pip_session_priv_key, "pip"_n, 2,
+         "need authorization of alice but have authorization of pip",
          sact<actions::inductmeetin>("alice"_n, 1234, std::vector<eden::encrypted_key>(4),
                                      eosio::bytes{}, std::nullopt));
    t.run(pip_session_priv_key, "pip"_n, 2, nullptr,
@@ -1364,7 +1366,8 @@ TEST_CASE("contract-auth-induct")
    t.run(alice_session_priv_key, "alice"_n, 3, nullptr,
          sact<actions::inductendors>("alice"_n, 1234, t.hash_induction("vid"s, bertie_profile)));
 
-   t.run(pip_session_priv_key, "pip"_n, 4, "need session key of alice but have session key of pip",
+   t.run(pip_session_priv_key, "pip"_n, 4,
+         "need authorization of alice but have authorization of pip",
          sact<actions::inductcancel>("alice"_n, 1234));
    t.run(pip_session_priv_key, "pip"_n, 4, nullptr, sact<actions::inductcancel>("pip"_n, 1234));
 
@@ -1389,7 +1392,8 @@ TEST_CASE("contract-auth-elect")
    };
 
    create_sessions();
-   t.run(pip_session_priv_key, "pip"_n, 1, "need session key of alice but have session key of pip",
+   t.run(pip_session_priv_key, "pip"_n, 1,
+         "need authorization of alice but have authorization of pip",
          sact<actions::electopt>("alice"_n, true));
    t.run(alice_session_priv_key, "alice"_n, 1, nullptr, sact<actions::electopt>("alice"_n, true));
    t.chain.finish_block();
@@ -1408,19 +1412,22 @@ TEST_CASE("contract-auth-elect")
          sact<actions::electmeeting>("pip"_n, 0, std::vector<eden::encrypted_key>(0),
                                      eosio::bytes{}, std::nullopt));
    create_sessions();
-   t.run(pip_session_priv_key, "pip"_n, 2, "need session key of alice but have session key of pip",
+   t.run(pip_session_priv_key, "pip"_n, 2,
+         "need authorization of alice but have authorization of pip",
          sact<actions::electmeeting>("alice"_n, 0, std::vector<eden::encrypted_key>(0),
                                      eosio::bytes{}, std::nullopt));
    t.run(pip_session_priv_key, "pip"_n, 2, nullptr,
          sact<actions::electmeeting>("pip"_n, 0, std::vector<eden::encrypted_key>(0),
                                      eosio::bytes{}, std::nullopt));
 
-   t.run(pip_session_priv_key, "pip"_n, 3, "need session key of alice but have session key of pip",
+   t.run(pip_session_priv_key, "pip"_n, 3,
+         "need authorization of alice but have authorization of pip",
          sact<actions::electvote>(0, "alice"_n, "pip"_n));
    t.run(alice_session_priv_key, "alice"_n, 0, "alice and pip are not in the same group",
          sact<actions::electvote>(0, "alice"_n, "pip"_n));
 
-   t.run(pip_session_priv_key, "pip"_n, 3, "need session key of alice but have session key of pip",
+   t.run(pip_session_priv_key, "pip"_n, 3,
+         "need authorization of alice but have authorization of pip",
          sact<actions::electvideo>(0, "alice"_n, "Qmb7WmZiSDXss5HfuKfoSf6jxTDrHzr8AoAUDeDMLNDuws"));
    t.run(alice_session_priv_key, "alice"_n, 1, nullptr,
          sact<actions::electvideo>(0, "alice"_n, "Qmb7WmZiSDXss5HfuKfoSf6jxTDrHzr8AoAUDeDMLNDuws"));

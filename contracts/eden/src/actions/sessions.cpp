@@ -140,9 +140,11 @@ namespace eden
       eosio::name eden_account;
       eosio::varuint32 auth_type;
       ds >> auth_type;
-      if (auth_type.value == 0)
+      if (auth_type.value == (int)run_auth_type::no_auth)
       {
-         static_assert(std::is_same_v<account_auth, std::variant_alternative_t<0, run_auth>>);
+      }
+      else if (auth_type.value == (int)run_auth_type::account_auth)
+      {
          account_auth a;
          ds >> a;
          eosio::check(a.contract == get_self(), "unsupported contract for auth");
@@ -151,9 +153,8 @@ namespace eden
          eosio::require_auth(a.eosio_account);
          eden_account = a.contract_account;
       }
-      else if (auth_type.value == 1)
+      else if (auth_type.value == (int)run_auth_type::signature_auth)
       {
-         static_assert(std::is_same_v<signature_auth, std::variant_alternative_t<1, run_auth>>);
          eosio::signature signature;
          eosio::name contract;
          eosio::varuint32 sequence;

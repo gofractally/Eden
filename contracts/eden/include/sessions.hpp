@@ -46,6 +46,12 @@ namespace eden
    void clearall_sessions(eosio::name contract);
    void remove_sessions(eosio::name contract, eosio::name eden_account);
 
+   // No authorization provided
+   struct no_auth
+   {
+   };
+   EOSIO_REFLECT(no_auth)
+
    // Case 1: eosio account. run() does a require_auth(eosio_account).
    // * contract:          ""
    // * contract_account:  ""
@@ -83,19 +89,27 @@ namespace eden
    };
    EOSIO_REFLECT(signature_auth, signature, contract, account, sequence)
 
-   using run_auth = std::variant<account_auth, signature_auth>;
+   using run_auth = std::variant<no_auth, account_auth, signature_auth>;
+
+   enum class run_auth_type
+   {
+      no_auth,
+      account_auth,
+      signature_auth
+   };
 
    struct session_info
    {
-      eosio::name authorized_eden_account;
+      std::optional<eosio::name> authorized_eden_account;
+
       void require_auth(eosio::name eden_account) const
       {
-         if (!authorized_eden_account.value)
+         if (!authorized_eden_account)
             eosio::require_auth(eden_account);
-         else if (eden_account != authorized_eden_account)
-            eosio::check(false, "need session key of " + eden_account.to_string() +
-                                    " but have session key of " +
-                                    authorized_eden_account.to_string());
+         else if (eden_account != *authorized_eden_account)
+            eosio::check(false, "need authorization of " + eden_account.to_string() +
+                                    " but have authorization of " +
+                                    authorized_eden_account->to_string());
       }
    };
 }  // namespace eden
