@@ -1981,13 +1981,9 @@ bool dispatch(eosio::name action_name, const action_context& context, eosio::inp
 
 void run(const action_context& context, eosio::input_stream& s)
 {
-   eosio::signature signature;
-   eosio::name eden_account;
-   eosio::varuint32 sequence;
+   eden::run_auth auth;
    eosio::varuint32 num_verbs;
-   from_bin(signature, s);
-   from_bin(eden_account, s);
-   from_bin(sequence, s);
+   from_bin(auth, s);
    from_bin(num_verbs, s);
    for (uint32_t i = 0; i < num_verbs.value; ++i)
    {
