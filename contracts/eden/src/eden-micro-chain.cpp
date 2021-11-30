@@ -178,6 +178,7 @@ enum tables
    distribution_table,
    distribution_fund_table,
    nft_table,
+   temp_account_table,
 };
 
 struct Induction;
@@ -326,6 +327,22 @@ using balance_history_index = mic<balance_history_object,
                                   ordered_by_pk<balance_history_object>>;
 
 using InductionEndorser = std::pair<eosio::name, bool>;
+
+// Temporary table to hold account data while it's still not an Eden Member account
+struct temp_account_object : public chainbase::object<temp_account_table, temp_account_object>
+{
+   CHAINBASE_DEFAULT_CONSTRUCTOR(temp_account_object)
+
+   id_type id;
+   eosio::name account;
+   std::optional<eosio::public_key> encryptionKey;
+
+   eosio::name by_pk() const { return account; }
+};
+
+using temp_account_index = mic<temp_account_object,
+                               ordered_by_id<temp_account_object>,
+                               ordered_by_pk<temp_account_object>>;
 
 struct induction
 {
@@ -556,6 +573,7 @@ struct database
    chainbase::generic_index<status_index> status;
    chainbase::generic_index<balance_index> balances;
    chainbase::generic_index<balance_history_index> balance_history;
+   chainbase::generic_index<temp_account_index> temp_accounts;
    chainbase::generic_index<induction_index> inductions;
    chainbase::generic_index<member_index> members;
    chainbase::generic_index<session_index> sessions;
@@ -572,6 +590,7 @@ struct database
       db.add_index(status);
       db.add_index(balances);
       db.add_index(balance_history);
+      db.add_index(temp_accounts);
       db.add_index(inductions);
       db.add_index(members);
       db.add_index(sessions);
@@ -1553,6 +1572,14 @@ void inductdonate(const action_context& context,
 {
    auto& induction = get<by_pk>(db.inductions, id);
 
+   auto temp_account_ptr = get_ptr<by_pk>(db.temp_accounts, induction.induction.invitee);
+   std::optional<eosio::public_key> temp_encryption_key;
+   if (temp_account_ptr)
+   {
+      temp_encryption_key = temp_account_ptr->encryptionKey;
+      db.temp_accounts.remove(*temp_account_ptr);
+   }
+
    auto& member = db.members.emplace([&](auto& obj) {
       obj.member.account = induction.induction.invitee;
       obj.member.inviter = induction.induction.inviter.first;
@@ -1566,6 +1593,7 @@ void inductdonate(const action_context& context,
 
       obj.member.profile = induction.induction.profile;
       obj.member.inductionVideo = induction.induction.video;
+      obj.member.encryptionKey = temp_encryption_key;
       obj.member.createdAt = eosio::block_timestamp(context.block.timestamp);
       if (obj.member.inductionVideo.empty())
          obj.member.inductionVideo = get_status().status.genesisVideo;
@@ -1662,7 +1690,18 @@ void electvideo(uint8_t round, eosio::name voter, const std::string& video)
 
 void setencpubkey(eosio::name member, eosio::public_key key)
 {
-   modify<by_pk>(db.members, member, [&](auto& obj) { obj.member.encryptionKey = key; });
+   auto member_ptr = get_ptr<by_pk>(db.members, member);
+   if (member_ptr)
+   {
+      modify<by_pk>(db.members, member, [&](auto& obj) { obj.member.encryptionKey = key; });
+   }
+   else
+   {
+      add_or_modify<by_pk>(db.temp_accounts, member, [&](bool is_new, auto& row) {
+         row.account = member;
+         row.encryptionKey = key;
+      });
+   }
 }
 
 void logmint(const action_context& context,
