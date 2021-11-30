@@ -23,3 +23,4 @@
   - [Hostile Takeover](cltester/takeover/README.md)
 - [GraphQL](graphql/README.md)
   - [Getting Started](graphql/starting/README.md)
+  - [GraphiQL UI](graphql/graphiql/README.md)
