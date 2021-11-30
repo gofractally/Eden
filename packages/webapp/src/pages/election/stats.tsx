@@ -1,4 +1,5 @@
 import React from "react";
+
 import {
     RoundBasicQueryData,
     RoundGroupQueryData,
@@ -8,7 +9,6 @@ import {
     useCurrentGlobalElectionData,
 } from "_app";
 import { Container, Heading, Loader, Expander, Text } from "_app/ui";
-
 import {
     Avatars,
     DelegateChip,
@@ -18,7 +18,8 @@ import {
     VoteData,
     VotingMemberChip,
 } from "elections";
-import { MemberData, MembersGrid } from "members";
+import { MembersGrid } from "members";
+import { MemberNFT } from "nfts/interfaces";
 import { RoundHeader } from "elections/components/ongoing-election-components";
 import { ConsensometerBlocks } from "elections/components/ongoing-election-components/ongoing-round/round-info/consensometer";
 
@@ -183,7 +184,7 @@ const GroupSegment = ({
     // TODO: revisit this, unfortunately the MembersGrid only accepts MemberData,
     // even though we don't need it to display the required summarized member
     // chip data
-    const members: MemberData[] = group.votes.map((vote) => vote.voter);
+    const members: MemberNFT[] = group.votes.map((vote) => vote.voter);
 
     const membersStats = group.votes.reduce((membersVotingMap, vote) => {
         membersVotingMap[vote.voter.account] = {
@@ -224,7 +225,7 @@ const GroupSegment = ({
 };
 
 interface GroupProps {
-    members: MemberData[];
+    members: MemberNFT[];
     isFinished: boolean;
     groupMembersStats: GroupMembersStats;
     header?: React.ReactNode;
@@ -234,7 +235,7 @@ const RegularGroup = ({ members, groupMembersStats, header }: GroupProps) => {
     return (
         <Expander header={header} type="inactive">
             <MembersGrid members={members} maxCols={2}>
-                {(member) => {
+                {(member: MemberNFT) => {
                     return (
                         <VotingMemberChip
                             key={`voting-member-${member.account}`}
@@ -266,7 +267,7 @@ const ChiefDelegateGroup = ({
 }: GroupProps) => {
     return (
         <MembersGrid members={members}>
-            {(member) => {
+            {(member: MemberNFT) => {
                 const delegateTitle =
                     isFinished && groupMembersStats[member.account].isDelegate
                         ? "Head Chief"

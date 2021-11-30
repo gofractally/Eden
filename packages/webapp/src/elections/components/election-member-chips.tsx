@@ -9,12 +9,12 @@ import {
 } from "_app";
 import { ROUTES } from "_app/routes";
 import { GenericMemberChip, OpensInNewTabIcon } from "_app/ui";
-import { MemberData } from "members/interfaces";
 import { getValidSocialLink } from "members/helpers/social-links";
 import { MemberChipTelegramLink } from "members/components/member-chip-components";
+import { MemberNFT } from "nfts/interfaces";
 
 interface VotingMemberChipProps {
-    member: MemberData;
+    member: MemberNFT;
     onSelect?: () => void;
     isSelected?: boolean;
     hasCurrentMembersVote?: boolean;
@@ -47,7 +47,7 @@ export const VotingMemberChip = ({
 
     return (
         <GenericMemberChip
-            member={member}
+            imageUrl={ipfsUrl(member.image)}
             isDelegate={isDelegate}
             contentComponent={
                 <div
@@ -137,7 +137,7 @@ const getDelegateLevelDescription = (
 };
 
 interface DelegateChipProps {
-    member?: MemberData;
+    member?: MemberNFT;
     level?: number;
     delegateTitle?: string;
     electionVideoCid?: string;
@@ -160,7 +160,7 @@ export const DelegateChip = ({
 );
 
 interface ElectionParticipantChipProps {
-    member?: MemberData;
+    member?: MemberNFT;
     delegateLevel?: string;
     isDelegate?: boolean;
     electionVideoCid?: string;
@@ -196,7 +196,7 @@ export const ElectionParticipantChip = ({
 
     return (
         <GenericMemberChip
-            member={member}
+            imageUrl={ipfsUrl(member.image)}
             isDelegate={isDelegate || Boolean(delegateLevel)} // TODO: This will be inferred from member
             contentComponent={
                 <div className="flex-1 flex flex-col justify-center">

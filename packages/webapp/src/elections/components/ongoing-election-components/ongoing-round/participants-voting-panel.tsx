@@ -8,15 +8,15 @@ import {
     useCurrentMember,
 } from "_app/hooks/queries";
 import { Button, Container } from "_app/ui";
-import { MemberData } from "members/interfaces";
 import { ActiveStateConfigType, VoteData } from "elections/interfaces";
+import { MemberNFT } from "nfts/interfaces";
 
 import { setVote } from "../../../transactions";
 import { VideoUploadButton } from "../video-upload-button";
 import VotingRoundParticipants from "./voting-round-participants";
 
 interface ParticipantsVotingPanelProps {
-    members?: MemberData[];
+    members?: MemberNFT[];
     voteData: VoteData[];
     roundIndex: number;
     electionConfig?: ActiveStateConfigType;
@@ -28,7 +28,7 @@ export const ParticipantsVotingPanel = ({
     roundIndex,
     electionConfig,
 }: ParticipantsVotingPanelProps) => {
-    const [selectedMember, setSelected] = useState<MemberData | null>(null);
+    const [selectedMember, setSelected] = useState<MemberNFT | null>(null);
     const [isSubmittingVote, setIsSubmittingVote] = useState<boolean>(false);
 
     const queryClient = useQueryClient();
@@ -106,9 +106,9 @@ export const ParticipantsVotingPanel = ({
 export default ParticipantsVotingPanel;
 
 interface VoteButtonProps {
-    selectedMember: MemberData | null;
+    selectedMember: MemberNFT | null;
     isSubmittingVote: boolean;
-    userVotingFor?: MemberData;
+    userVotingFor?: MemberNFT;
     onSubmitVote: () => Promise<void>;
 }
 

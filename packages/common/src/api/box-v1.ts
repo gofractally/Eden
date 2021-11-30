@@ -9,3 +9,12 @@ export const ipfsUploadRequest = z.object({
 });
 
 export type IpfsUploadRequest = z.infer<typeof ipfsUploadRequest>;
+
+export const sessionSignRequest = z.object({
+    signature: z.string(),
+    edenAccount: z.string(),
+    sequence: z.number(),
+    actions: z.array(z.any()),
+});
+
+export type SessionSignRequest = z.infer<typeof sessionSignRequest>;

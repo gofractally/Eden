@@ -7,18 +7,22 @@ import {
 } from "react-virtualized";
 
 import { LoadingContainer, MessageContainer } from "_app/ui";
-import { MemberChip, MemberData, useMembersWithAssets } from "members";
+import { Member, MemberChip, useMembersWithAssets } from "members";
+import { MemberNFT } from "nfts/interfaces";
 
-const findMember = (member: MemberData, query: string) =>
-    member.account.includes(query.toLowerCase()) ||
-    member.name.toLowerCase().includes(query.toLowerCase());
+const findMember = (
+    memberData: { member: Member; nft?: MemberNFT },
+    query: string
+) =>
+    memberData.member.accountName.includes(query.toLowerCase()) ||
+    memberData.member.profile.name.toLowerCase().includes(query.toLowerCase());
 
 interface Props {
     searchValue: string;
 }
 
 export const MembersList = ({ searchValue }: Props) => {
-    const { members: allMembers, isLoading, isError } = useMembersWithAssets();
+    const { data, isLoading, isError } = useMembersWithAssets();
 
     if (isLoading) {
         return <LoadingContainer />;
@@ -33,7 +37,7 @@ export const MembersList = ({ searchValue }: Props) => {
         );
     }
 
-    if (!allMembers.length) {
+    if (!data.length) {
         return (
             <MessageContainer
                 title="No members found"
@@ -42,8 +46,8 @@ export const MembersList = ({ searchValue }: Props) => {
         );
     }
 
-    const members = allMembers.filter((member) =>
-        findMember(member, searchValue)
+    const members = data.filter((memberData) =>
+        findMember(memberData, searchValue)
     );
 
     return (
@@ -62,13 +66,16 @@ export const MembersList = ({ searchValue }: Props) => {
                     onScroll={onChildScroll}
                     rowCount={members.length}
                     rowHeight={77}
-                    rowRenderer={({ index, style }: ListRowProps) => (
-                        <MemberChip
-                            member={members[index]}
-                            key={members[index].account}
-                            style={style}
-                        />
-                    )}
+                    rowRenderer={({ index, style }: ListRowProps) => {
+                        const { nft, member } = members[index];
+                        return (
+                            <MemberChip
+                                member={nft ?? member}
+                                key={nft?.account ?? member.accountName}
+                                style={style}
+                            />
+                        );
+                    }}
                     noRowsRenderer={() => (
                         <MessageContainer
                             title="No search results"

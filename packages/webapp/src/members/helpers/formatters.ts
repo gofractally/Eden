@@ -1,13 +1,14 @@
 import { ipfsUrl } from "_app";
-import { Member, MemberData, MembersQueryNode } from "members/interfaces";
+import { Member, MembersQueryNode } from "members/interfaces";
+import { MemberNFT } from "nfts/interfaces";
 
 /********************************************
  * MICROCHAIN GRAPHQL QUERY RESULT FORMATTERS
  *******************************************/
 
-export const formatQueriedMemberData = (
+export const formatMembersQueryNodeAsMemberNFT = (
     data: MembersQueryNode
-): MemberData | undefined => {
+): MemberNFT | undefined => {
     if (!data) return;
     return {
         createdAt: data.createdAt ? new Date(data.createdAt).getTime() : 0,
@@ -21,7 +22,7 @@ export const formatQueriedMemberData = (
     };
 };
 
-export const formatQueriedMemberDataAsMember = (
+export const formatMembersQueryNodeAsMember = (
     data: MembersQueryNode
 ): Member | undefined => {
     if (!data) return;
@@ -48,3 +49,15 @@ export const formatQueriedMemberDataAsMember = (
         representativeAccountName: undefined, // Include once exposed
     };
 };
+
+// TODO: Remove after we transition everything we can to Member from MemberNFT
+export const formatMemberAsMemberNFT = (member: Member): MemberNFT => ({
+    createdAt: member.createdAt,
+    account: member.accountName,
+    name: member.profile.name,
+    image: member.profile.image.cid,
+    attributions: member.profile.image.attributions,
+    bio: member.profile.bio,
+    socialHandles: member.profile.socialHandles,
+    inductionVideo: member.inductionVideo.cid,
+});
