@@ -14,10 +14,10 @@ void setup_token(test_chain& t)
    t.set_code("eosio.token"_n, CLSDK_CONTRACTS_DIR "token.wasm");
 
    // Create and issue tokens.
-   t.as("eosio.token"_n).act<token::actions::create>("eosio"_n, s2a("1000000.0000 EOS"));
-   t.as("eosio.token"_n).act<token::actions::create>("eosio"_n, s2a("1000000.0000 OTHER"));
-   t.as("eosio"_n).act<token::actions::issue>("eosio"_n, s2a("1000000.0000 EOS"), "");
-   t.as("eosio"_n).act<token::actions::issue>("eosio"_n, s2a("1000000.0000 OTHER"), "");
+   t.as("eosio.token"_n).act<token::actions::create>("eosio"_n, s2a("10000000.0000 EOS"));
+   t.as("eosio.token"_n).act<token::actions::create>("eosio"_n, s2a("10000000.0000 OTHER"));
+   t.as("eosio"_n).act<token::actions::issue>("eosio"_n, s2a("10000000.0000 EOS"), "");
+   t.as("eosio"_n).act<token::actions::issue>("eosio"_n, s2a("10000000.0000 OTHER"), "");
 }
 
 // Create and fund user accounts
@@ -26,8 +26,8 @@ void fund_users(test_chain& t)
    for (auto user : {"alice"_n, "bob"_n, "jane"_n, "joe"_n})
    {
       t.create_account(user);
-      t.as("eosio"_n).act<token::actions::transfer>("eosio"_n, user, s2a("10000.0000 EOS"), "");
-      t.as("eosio"_n).act<token::actions::transfer>("eosio"_n, user, s2a("10000.0000 OTHER"), "");
+      t.as("eosio"_n).act<token::actions::transfer>("eosio"_n, user, s2a("1000000.0000 EOS"), "");
+      t.as("eosio"_n).act<token::actions::transfer>("eosio"_n, user, s2a("1000000.0000 OTHER"), "");
    }
 }
 
@@ -61,6 +61,23 @@ TEST_CASE("start nodeos")
                                                      "");
    chain.as("alice"_n).act<example::actions::buydog>("alice"_n, "fido"_n, s2a("100.0000 EOS"));
    chain.as("alice"_n).act<example::actions::buydog>("alice"_n, "barf"_n, s2a("110.0000 EOS"));
+
+   // Jane buys more
+   chain.as("jane"_n).act<token::actions::transfer>("jane"_n, "example"_n, s2a("1000000.0000 EOS"),
+                                                    "");
+   for (auto name : {
+            "dog111"_n, "dog112"_n, "dog113"_n, "dog114"_n, "dog121"_n, "dog122"_n, "dog123"_n,
+            "dog124"_n, "dog131"_n, "dog132"_n, "dog133"_n, "dog134"_n, "dog141"_n, "dog142"_n,
+            "dog143"_n, "dog144"_n, "dog211"_n, "dog212"_n, "dog213"_n, "dog214"_n, "dog221"_n,
+            "dog222"_n, "dog223"_n, "dog224"_n, "dog231"_n, "dog232"_n, "dog233"_n, "dog234"_n,
+            "dog241"_n, "dog242"_n, "dog243"_n, "dog244"_n, "dog311"_n, "dog312"_n, "dog313"_n,
+            "dog314"_n, "dog321"_n, "dog322"_n, "dog323"_n, "dog324"_n, "dog331"_n, "dog332"_n,
+            "dog333"_n, "dog334"_n, "dog341"_n, "dog342"_n, "dog343"_n, "dog344"_n, "dog411"_n,
+            "dog412"_n, "dog413"_n, "dog414"_n, "dog421"_n, "dog422"_n, "dog423"_n, "dog424"_n,
+            "dog431"_n, "dog432"_n, "dog433"_n, "dog434"_n, "dog441"_n, "dog442"_n, "dog443"_n,
+            "dog444"_n,
+        })
+      chain.as("jane"_n).act<example::actions::buydog>("jane"_n, name, s2a("100.0000 EOS"));
 
    // Make the above irreversible. This causes the transactions to
    // go into the block log.

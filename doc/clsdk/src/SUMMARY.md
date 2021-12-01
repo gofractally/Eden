@@ -26,3 +26,4 @@
   - [GraphiQL UI](graphql/graphiql/README.md)
   - [Proxy Objects](graphql/proxy/README.md)
   - [Linking Objects](graphql/linking/README.md)
+  - [Pagination](graphql/pagination/README.md)
