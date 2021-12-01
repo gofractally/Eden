@@ -108,10 +108,10 @@ function Page() {
     log("Fetching schema...");
     try {
         await fetchSchema();
+        render(<Page></Page>, document.body);
     } catch (e) {
         console.log(e);
         log(e.message);
         log("See console for additional details");
     }
-    render(<Page></Page>, document.body);
 })();

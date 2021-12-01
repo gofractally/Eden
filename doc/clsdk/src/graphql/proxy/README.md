@@ -14,17 +14,22 @@ This is a modification of `example-graphql.cpp` from [Getting Started](../starti
 // GraphQL proxy for example::animal
 struct Animal
 {
-   const example::animal* obj;
+   // The proxy holds a copy of the original database object instead
+   // of holding a pointer or reference. This is necessary because
+   // the database object gets destroyed when the table object goes
+   // out of scope from within Query::animal(). A potential workaround
+   // is to make the table object a member of the contract object.
+   example::animal obj;
 
    // These methods have no arguments, so act like fields in GraphQL
-   auto name() const { return obj->name; }
-   auto type() const { return obj->type; }
-   auto owner() const { return obj->owner; }
-   auto purchasePrice() const { return obj->purchase_price; }
+   auto name() const { return obj.name; }
+   auto type() const { return obj.type; }
+   auto owner() const { return obj.owner; }
+   auto purchasePrice() const { return obj.purchase_price; }
 
    // This method has an argument, so needs method(...) in the
    // EOSIO_REFLECT2 definition below.
-   auto isA(eosio::name type) const { return type == obj->type; }
+   auto isA(eosio::name type) const { return type == obj.type; }
 };
 EOSIO_REFLECT2(Animal, name, type, owner, purchasePrice, method(isA, "type"))
 
@@ -38,7 +43,7 @@ struct Query
       example::animal_table table{contract, contract.value};
       auto it = table.find(name.value);
       if (it != table.end())
-         return Animal{&*it};
+         return Animal{*it};
       else
          return std::nullopt;
    }
