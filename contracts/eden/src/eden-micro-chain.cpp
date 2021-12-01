@@ -385,7 +385,6 @@ struct member
    std::string inductionVideo;
    bool participating = false;
    eosio::block_timestamp createdAt;
-   std::optional<eosio::public_key> encryptionKey;
 };
 
 struct member_object : public chainbase::object<member_table, member_object>
@@ -775,14 +774,6 @@ constexpr const char EncryptionKeyConnection_name[] = "EncryptionKeyConnection";
 constexpr const char EncryptionKeyEdge_name[] = "EncryptionKeyEdge";
 using EncryptionKeyConnection = clchain::Connection<
     clchain::ConnectionConfig<EncryptionKey, EncryptionKeyConnection_name, EncryptionKeyEdge_name>>;
-
-// std::optional<eosio::public_key> get_encryption_key(eosio::name account)
-// {
-//    if (auto* obj = get_ptr<by_pk>(db.encryption_keys, account))
-//       return obj->encryptionKey;
-//    else
-//       return std::nullopt;
-// }
 
 EncryptionKey get_encryption_key(eosio::name account)
 {
