@@ -5,6 +5,7 @@ import { PublicKey, PrivateKey } from "eosjs/dist/eosjs-jssig";
 import { get as idbGet, set as idbSet } from "idb-keyval";
 
 import { edenContractAccount } from "config";
+import { eosDefaultApi } from "_app";
 
 const DEFAULT_EXPIRATION_SECONDS = 24 * 60 * 60 * 1000; // 30 days
 const DEFAULT_SESSION_DESCRIPTION = "eden login";
@@ -77,10 +78,6 @@ export const newSessionTransaction = async (
     };
 };
 
-interface ExecuteSessionAction {
-    actionName: string;
-    data: any;
-}
 export const executeSessionTransaction = async (
     authorizerAccount: string,
     actions: any[]
@@ -90,14 +87,6 @@ export const executeSessionTransaction = async (
 
     console.info(authorizerAccount, actions);
 
-    // do something
-    // const buffer = new SerialBuffer();
-    // buffer.pushString(induction.video);
-    // await serializeType(
-    //     edenContractAccount,
-    //     "new_member_profile",
-    //     buffer,
-    //     induction.new_member_profile
-    // );
-    // const inductionDataHash = hash256EosjsSerialBuffer(buffer);
+    const serializedActionsData = await eosDefaultApi.serializeActions(actions);
+    console.info("serialized actions data >>>", serializedActionsData);
 };

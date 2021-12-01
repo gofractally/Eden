@@ -47,14 +47,15 @@ export const Sessions = () => {
 
     const onExecSessionExample = async () => {
         try {
-            const inductionTrx = initializeInductionTransaction(
-                ualAccount.accountName,
-                "ahab",
-                ["pip", "egeon"]
-            );
+            const {
+                transaction: inductionTrx,
+            } = initializeInductionTransaction(ualAccount.accountName, "ahab", [
+                "pip",
+                "egeon",
+            ]);
 
             // extract the actions from the transaction
-            const { actions } = inductionTrx.transaction;
+            const { actions } = inductionTrx;
 
             // sign actions with session key
             const execsessionTrx = await executeSessionTransaction(
