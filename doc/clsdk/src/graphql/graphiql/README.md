@@ -17,6 +17,8 @@ The files:
 * Run `yarn && yarn build && yarn start`
 * Open [http://localhost:3000/](http://localhost:3000/)
 
+This interface allows you to create queries using code completion then execute them.
+
 ## index.tsx
 
 `index.tsx`:

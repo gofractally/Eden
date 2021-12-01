@@ -88,7 +88,7 @@ const defaultQuery = `# GraphiQL is talking to a contract running in nodeos.
 }`;
 
 // Query UI
-export default function Page() {
+function Page() {
     return (
         <main style={{ height: "100%" }}>
             <GraphiQL

@@ -24,3 +24,4 @@
 - [GraphQL](graphql/README.md)
   - [Getting Started](graphql/starting/README.md)
   - [GraphiQL UI](graphql/graphiql/README.md)
+  - [Proxy Objects](graphql/proxy/README.md)
