@@ -2,7 +2,7 @@
 
 ## Contract and Test Modifications
 
-This example is based on the [cltester Token Example](../../cltester/token/index.html), but has these changes:
+This example is based on the [cltester Token Example](../../../cltester/token/index.html), but has these changes:
 
 * The contract has two new actions: `graphql` and `graphqlschema`, which are shown below
 * `CMakeLists.txt` adds the `btb` and `btb-debug` libraries as dependencies to `example.wasm` and `example-debug.wasm`
