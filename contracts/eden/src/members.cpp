@@ -1,5 +1,6 @@
 #include <elections.hpp>
 #include <members.hpp>
+#include <sessions.hpp>
 
 namespace eden
 {
@@ -102,6 +103,7 @@ namespace eden
             break;
       }
       member_stats.set(stats, contract);
+      remove_sessions(contract, iter->account());
       return member_tb.erase(iter);
    }
 
@@ -117,6 +119,7 @@ namespace eden
       const auto& member = member_tb.get(account.value);
       if (member.status() == member_status::pending_membership)
       {
+         remove_sessions(contract, account);
          member_tb.erase(member);
          auto stats = this->stats();
          eosio::check(stats.pending_members != 0, "Integer overflow");

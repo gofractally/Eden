@@ -919,7 +919,6 @@ namespace eden
 
    void elections::vote(uint8_t round, eosio::name voter, eosio::name candidate)
    {
-      eosio::require_auth(voter);
       const auto& state = check_active();
       eosio::check(state.round == round, "Round " + std::to_string(static_cast<int>(round)) +
                                              " is not running (in round " +

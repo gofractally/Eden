@@ -54,6 +54,28 @@ namespace eosio
       }
    };  // namespace internal_use_do_not_use
 
+   template <typename T>
+   struct not_in_abi
+   {
+      T value;
+   };
+   template <typename T, typename F>
+   constexpr void eosio_for_each_field(not_in_abi<T>*, F f)
+   {
+   }
+
+   template <typename T>
+   constexpr bool is_not_in_abi(T*)
+   {
+      return false;
+   }
+
+   template <typename T>
+   constexpr bool is_not_in_abi(not_in_abi<T>*)
+   {
+      return true;
+   }
+
    /**
     *  @defgroup action Action
     *  @ingroup contracts
@@ -388,6 +410,16 @@ namespace eosio
       }
       template <typename R, typename Act, typename... Args>
       auto get_args(R (Act::*p)(Args...) const)
+      {
+         return std::tuple<std::decay_t<typename unwrap<Args>::type>...>{};
+      }
+      template <typename R, typename Act, typename T, typename... Args>
+      auto get_args(R (Act::*p)(const not_in_abi<T>&, Args...))
+      {
+         return std::tuple<std::decay_t<typename unwrap<Args>::type>...>{};
+      }
+      template <typename R, typename Act, typename T, typename... Args>
+      auto get_args(R (Act::*p)(const not_in_abi<T>&, Args...) const)
       {
          return std::tuple<std::decay_t<typename unwrap<Args>::type>...>{};
       }
