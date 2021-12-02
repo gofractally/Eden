@@ -2335,8 +2335,8 @@ using MemberConnection =
 
 constexpr const char SessionConnection_name[] = "SessionConnection";
 constexpr const char SessionEdge_name[] = "SessionEdge";
-using SessionConnection = clchain::Connection<
-    clchain::ConnectionConfig<Session, SessionConnection_name, SessionEdge_name>>;
+using SessionConnection =
+    btb::Connection<btb::ConnectionConfig<Session, SessionConnection_name, SessionEdge_name>>;
 
 constexpr const char ElectionConnection_name[] = "ElectionConnection";
 constexpr const char ElectionEdge_name[] = "ElectionEdge";
@@ -2440,7 +2440,7 @@ struct Query
                               std::optional<std::string> before,
                               std::optional<std::string> after) const
    {
-      return clchain::make_connection<SessionConnection, SessionKey>(
+      return btb::make_connection<SessionConnection, SessionKey>(
           gt ? std::optional{SessionKey{*gt, public_key_max_r1}}  //
              : std::nullopt,                                      //
           ge ? std::optional{SessionKey{*ge, public_key_min_k1}}  //
