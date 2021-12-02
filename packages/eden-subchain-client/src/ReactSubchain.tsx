@@ -60,8 +60,9 @@ export interface QueryResult<T> {
 export function useQuery<T = any>(query: string): QueryResult<T> {
     const client = useContext(EdenChainContext);
     const [cachedQuery, setCachedQuery] = useState<string | null>();
+
     // non-signalling state
-    const [state] = useState({
+    const [state, setState] = useState({
         mounted: true,
         cachedClient: null as SubchainClient | null,
         subscribed: null as SubchainClient | null,
@@ -70,23 +71,45 @@ export function useQuery<T = any>(query: string): QueryResult<T> {
             isError: false,
         } as QueryResult<T>,
     });
+
     useEffect(() => {
         return () => {
+            console.info("unmounting query state >>>");
             state.mounted = false;
+            // setState({ ...state, mounted: false });
         };
     }, []);
+
     useEffect(() => {
         if (client && state.subscribed !== client) {
+            console.info(
+                "update effect state subscribed >>>",
+                state.subscribed,
+                client
+            );
+
             state.subscribed = client;
+            // setState({ ...state, subscribed: client });
             client.notifications.push((c) => {
                 if (state.mounted && c === state.subscribed) {
+                    console.info("cleaning out state subscribed >>>");
                     setCachedQuery(null);
                     state.subscribed = null;
+                    // setState({ ...state, subscribed: null });
                 }
             });
         }
     });
+
     if (state.cachedClient !== client || query !== cachedQuery) {
+        if (state.cachedClient !== client) {
+            console.info("setting client >>>", client, state.cachedClient);
+        }
+
+        if (query !== cachedQuery) {
+            console.info("setting cached query >>>", query, cachedQuery);
+        }
+
         state.cachedClient = client;
         setCachedQuery(query);
         if (client?.subchain) {

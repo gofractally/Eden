@@ -19,6 +19,8 @@ export const NavProfile = ({ location }: Props) => {
     const [_ualAccount, _, ualShowModal] = useUALAccount();
     const { data: member } = useCurrentMember();
 
+    console.info("rerendering navprofile", member);
+
     if (!member?.accountName) {
         return (
             <div className="flex justify-end xs:justify-center md:justify-end xl:justify-start mb-0 xs:mb-8 my-0">
