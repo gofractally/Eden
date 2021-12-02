@@ -1,5 +1,4 @@
-import { EdenNftSocialHandles } from "nfts/interfaces";
-import { Asset, ElectionParticipationStatus, MemberStatus } from "_app";
+import { ElectionParticipationStatus, MemberStatus } from "_app";
 
 export type VoteDataQueryOptionsByField = {
     fieldName?: string;
@@ -21,7 +20,16 @@ interface MemberProfile {
     name: string;
     image: ProfileImage;
     bio: string;
-    socialHandles: EdenNftSocialHandles;
+    socialHandles: MemberSocialHandles;
+}
+
+export interface MemberSocialHandles {
+    eosCommunity?: string;
+    twitter?: string;
+    linkedin?: string;
+    telegram?: string;
+    facebook?: string;
+    blog?: string;
 }
 
 export interface Member {
@@ -36,32 +44,6 @@ export interface Member {
     participatingInElection: boolean;
     delegateRank?: number; // Include once exposed
     representativeAccountName?: string; // Include once exposed
-}
-
-export interface MemberData {
-    createdAt: number;
-    account: string;
-    name: string;
-    image: string;
-    attributions: string;
-    bio: string;
-    socialHandles: EdenNftSocialHandles;
-    inductionVideo: string;
-    templateId?: number;
-    auctionData?: MemberAuctionData;
-    assetData?: AssetData;
-    saleId?: string;
-}
-
-export interface AssetData {
-    assetId: string;
-    templateMint: number;
-}
-
-export interface MemberAuctionData {
-    auctionId: string;
-    price: Asset;
-    bidEndTime?: number;
 }
 
 export interface EdenMember {

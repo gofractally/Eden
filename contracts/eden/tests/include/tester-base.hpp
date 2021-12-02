@@ -202,6 +202,7 @@ struct eden_tester
    test_chain chain;
    user_context eosio_token = chain.as("eosio.token"_n);
    user_context eden_gm = chain.as("eden.gm"_n);
+   user_context payer = chain.as("payer"_n);
    user_context alice = chain.as("alice"_n);
    user_context pip = chain.as("pip"_n);
    user_context egeon = chain.as("egeon"_n);
@@ -215,6 +216,7 @@ struct eden_tester
       chain.create_code_account("eden.gm"_n);
       f();
       eden_setup(chain);
+      chain.create_account("payer"_n);
       for (auto account : {"alice"_n, "pip"_n, "egeon"_n, "bertie"_n, "ahab"_n})
       {
          chain.create_account(account);
@@ -255,6 +257,12 @@ struct eden_tester
          chain.as("eosio.token"_n)
              .act<token::actions::transfer>("eosio.token"_n, account, s2a("1000.0000 EOS"), "memo");
       }
+   }
+
+   auto hash_induction(const std::string& video, const eden::new_member_profile& profile)
+   {
+      auto hash_data = eosio::convert_to_bin(std::tuple(video, profile));
+      return eosio::sha256(hash_data.data(), hash_data.size());
    }
 
    void finish_induction(uint64_t induction_id,
@@ -501,6 +509,60 @@ struct eden_tester
       return result;
    };
 
+   void newsession(eosio::name authorizer,
+                   eosio::name eden_account,
+                   const eosio::public_key& key,
+                   eosio::block_timestamp expiration,
+                   const std::string& description,
+                   const char* expected = nullptr)
+   {
+      expect(chain.as(authorizer)
+                 .trace<actions::newsession>(eden_account, key, expiration, description),
+             expected);
+   }
+
+   void delsession(eosio::name authorizer,
+                   eosio::name eden_account,
+                   const eosio::public_key& key,
+                   const char* expected = nullptr)
+   {
+      expect(chain.as(authorizer).trace<actions::delsession>(eden_account, key), expected);
+   }
+
+   template <typename... Ts>
+   void run(const private_key& key,
+            eosio::name eden_account,
+            eosio::varuint32 sequence,
+            const char* expected,
+            const Ts&... verbs)
+   {
+      std::vector<char> data;
+      vector_stream s{data};
+      to_bin("eden.gm"_n, s);
+      to_bin(eden_account, s);
+      to_bin(sequence, s);
+      to_bin(eosio::varuint32(sizeof...(verbs)), s);
+      for (const auto& a : {verbs...})
+         data.insert(data.end(), a.begin(), a.end());
+
+      auto digest = eosio::sha256(data.data(), data.size());
+      auto signature = eosio::sign(key, digest);
+      auto sig_bin = eosio::convert_to_bin(signature);
+      data.insert(data.begin(), (uint8_t)eden::run_auth_type::signature_auth);
+      data.insert(data.begin() + 1, sig_bin.begin(), sig_bin.end());
+
+      eosio::action act;
+      act.account = "eden.gm"_n;
+      act.name = "run"_n;
+      act.authorization.push_back({"payer"_n, "active"_n});
+      act.data = std::move(data);
+
+      // printf("created run with data: %s\n",
+      //        eosio::hex(act.data.begin(), act.data.end()).c_str());
+
+      expect(chain.push_transaction(chain.make_transaction({act})), expected);
+   }
+
    void write_dfuse_history(const char* filename)
    {
       chain.start_block();
@@ -508,3 +570,16 @@ struct eden_tester
       dfuse_subchain::write_history(filename, chain);
    }
 };
+
+// session action
+template <typename ActionWrapper, typename... Ts>
+std::vector<char> sact(Ts&&... args)
+{
+   auto index = actions::get_index_for_session_action(ActionWrapper::action_name);
+   eosio::check(index.has_value(), "action index not found");
+   auto data = eosio::convert_to_bin(eosio::varuint32(*index));
+   auto act = ActionWrapper{""_n}.to_action(std::forward<Ts>(args)...);
+   data.insert(data.end(), act.data.begin(), act.data.end());
+   // eosio::print("sact: ", eosio::hex(data.begin(), data.end()), "\n");
+   return data;
+}

@@ -12,13 +12,13 @@ import {
     MemberCard,
     MemberCollections,
     MemberHoloCard,
-    useMemberByAccountNameAsMember,
+    useMemberByAccountName,
 } from "members";
 import { FundsAvailableCTA } from "members/components";
 
 export const MemberPage = () => {
     const router = useRouter();
-    const { data: member, isLoading, isError } = useMemberByAccountNameAsMember(
+    const { data: member, isLoading, isError } = useMemberByAccountName(
         router.query.id as string
     );
 

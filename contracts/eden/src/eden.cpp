@@ -3,6 +3,7 @@
 #include <bylaws.hpp>
 #include <distributions.hpp>
 #include <eden.hpp>
+#include <eden_abi_generator.hpp>
 #include <elections.hpp>
 #include <encrypt.hpp>
 #include <events.hpp>
@@ -48,7 +49,10 @@ EOSIO_ABIGEN(
             "FLOAT_VEC",
             "DOUBLE_VEC",
             "STRING_VEC"),
+    variant("run_auth", eden::run_auth),
+    variant("verb", eden::verb),
     actions(eden::actions),
+    eden_verbs(eden::actions, "verb", "unsupported_verb"),
     table("account"_n, eden::account_variant),
     table("auction"_n, eden::auction_variant),
     table("bylaws"_n, eden::bylaws_variant),
@@ -64,6 +68,7 @@ EOSIO_ABIGEN(
     table("memberstats"_n, eden::member_stats_variant),
     table("migration"_n, eden::migration_variant),
     table("pools"_n, eden::pool_variant),
+    table("sessions"_n, eden::session_container_variant),
     table("votes"_n, eden::vote),
     ricardian_clause("peacetreaty", eden::peacetreaty_clause),
     ricardian_clause("bylaws", eden::bylaws_clause))

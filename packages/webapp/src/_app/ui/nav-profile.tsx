@@ -64,7 +64,7 @@ export const NavProfile = ({ location }: Props) => {
                 <div className={CONTAINER_CLASS}>
                     <div className="cursor-pointer">
                         <ProfileImage
-                            imageCid={member?.profile?.image.cid}
+                            imageUrl={member?.profile?.image.url}
                             size={40}
                         />
                     </div>

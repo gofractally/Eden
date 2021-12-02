@@ -9,13 +9,16 @@ import {
 } from "_app";
 import { Container, Heading, LoadingContainer, Text } from "_app/ui";
 import { ElectionStatus } from "elections/interfaces";
-import { MemberGateContainer, useMembersByAccountNames } from "members";
+import {
+    MemberGateContainer,
+    useMembersByAccountNamesAsMemberNFTs,
+} from "members";
 import {
     ErrorLoadingDelegation,
     ElectionInProgress,
     NoDelegationToDisplay,
 } from "delegates/components/statuses";
-import MyDelegation from "delegates/components/my-delegation"; // avoid circular depenency
+import MyDelegation from "delegates/components/my-delegation"; // avoid circular dependency
 
 export const DelegatesPage = () => {
     const {
@@ -44,7 +47,7 @@ export const DelegatesPage = () => {
         data: myDelegationMemberData,
         isLoading: isLoadingMemberData,
         isError: isErrorMemberData,
-    } = useMembersByAccountNames(
+    } = useMembersByAccountNamesAsMemberNFTs(
         myDelegation?.map((delegate) => delegate.account)
     );
 
