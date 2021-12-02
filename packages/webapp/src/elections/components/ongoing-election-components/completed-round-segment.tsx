@@ -1,7 +1,12 @@
 import { isValidDelegate, useParticipantsInMyCompletedRound } from "_app";
 import { Container, Expander, Text } from "_app/ui";
 import { ElectionParticipantChip } from "elections";
-import { EdenMember, MembersGrid, useMembersByAccountNames } from "members";
+import {
+    EdenMember,
+    MembersGrid,
+    useMembersByAccountNamesAsMemberNFTs,
+} from "members";
+import { MemberNFT } from "nfts/interfaces";
 
 import RoundHeader from "./round-header";
 import { VideoUploadButton } from "./video-upload-button";
@@ -15,7 +20,9 @@ export const CompletedRoundSegment = ({
 }: CompletedRoundSegmentProps) => {
     const { data } = useParticipantsInMyCompletedRound(roundIndex);
 
-    const { data: participantsMemberData } = useMembersByAccountNames(
+    const {
+        data: participantsMemberData,
+    } = useMembersByAccountNamesAsMemberNFTs(
         data?.participants.map((participant) => participant.account)
     );
 
@@ -31,7 +38,7 @@ export const CompletedRoundSegment = ({
             type="inactive"
         >
             <MembersGrid members={participantsMemberData}>
-                {(member) => {
+                {(member: MemberNFT) => {
                     if (member.account === commonDelegate?.account) {
                         return (
                             <ElectionParticipantChip

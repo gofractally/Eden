@@ -3,12 +3,12 @@ import { getAccountCollection, getAuctions, getTemplates } from "nfts/api";
 import {
     AssetData,
     AuctionableTemplateData,
-    EdenNftSocialHandles,
+    MemberNFT,
     TemplateData,
 } from "nfts/interfaces";
 
-import { Member, MemberData } from "../interfaces";
 import { fixtureMemberData } from "./fixtures";
+import { Member, MemberSocialHandles } from "../interfaces";
 
 export const getMembers = async (
     page: number,
@@ -16,7 +16,7 @@ export const getMembers = async (
     ids: string[] = [],
     sortField = "created",
     order = "asc"
-): Promise<MemberData[]> => {
+): Promise<MemberNFT[]> => {
     if (devUseFixtureData) {
         let data = fixtureMemberData;
         if (ids.length) {
@@ -33,14 +33,14 @@ export const getMembers = async (
 export const getNewMembers = async (
     page?: number,
     limit?: number
-): Promise<MemberData[]> => {
+): Promise<MemberNFT[]> => {
     const data = await getAuctions(edenContractAccount, undefined, page, limit);
     return data.map(convertAtomicAssetToMemberWithSalesData);
 };
 
-export const getCollection = async (account: string): Promise<MemberData[]> => {
+export const getCollection = async (account: string): Promise<MemberNFT[]> => {
     const assets = await getAccountCollection(account);
-    const members: MemberData[] = assets.map(convertAtomicAssetToMember);
+    const members: MemberNFT[] = assets.map(convertAtomicAssetToMember);
     const assetsOnAuction = await getAuctions(account);
     assetsOnAuction
         .map(convertAtomicAssetToMemberWithSalesData)
@@ -48,7 +48,7 @@ export const getCollection = async (account: string): Promise<MemberData[]> => {
     return members.sort((a, b) => a.createdAt - b.createdAt);
 };
 
-export const memberDataDefaults: MemberData = {
+export const memberNFTDefaults: MemberNFT = {
     templateId: 0,
     name: "",
     image: "",
@@ -80,8 +80,8 @@ export const memberDefaults: Member = {
     participatingInElection: false,
 };
 
-const convertAtomicTemplateToMember = (data: TemplateData): MemberData => ({
-    ...memberDataDefaults,
+const convertAtomicTemplateToMember = (data: TemplateData): MemberNFT => ({
+    ...memberNFTDefaults,
     templateId: parseInt(data.template_id),
     createdAt: parseInt(data.created_at_time),
     name: data.immutable_data.name,
@@ -93,7 +93,7 @@ const convertAtomicTemplateToMember = (data: TemplateData): MemberData => ({
     socialHandles: parseSocial(data.immutable_data.social || "{}"),
 });
 
-const convertAtomicAssetToMember = (data: AssetData): MemberData => ({
+const convertAtomicAssetToMember = (data: AssetData): MemberNFT => ({
     ...convertAtomicTemplateToMember(data.template),
     assetData: {
         assetId: data.asset_id,
@@ -104,7 +104,7 @@ const convertAtomicAssetToMember = (data: AssetData): MemberData => ({
 
 const convertAtomicAssetToMemberWithSalesData = (
     data: AuctionableTemplateData
-): MemberData => {
+): MemberNFT => {
     const member = convertAtomicTemplateToMember(data);
     member.assetData = {
         assetId: data.assetId,
@@ -120,7 +120,7 @@ const convertAtomicAssetToMemberWithSalesData = (
     return member;
 };
 
-const parseSocial = (socialHandlesJsonString: string): EdenNftSocialHandles => {
+const parseSocial = (socialHandlesJsonString: string): MemberSocialHandles => {
     try {
         return JSON.parse(socialHandlesJsonString);
     } catch (e) {

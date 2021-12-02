@@ -4,6 +4,7 @@
 #include <charconv>
 #include <eosio/asset.hpp>
 #include <eosio/bytes.hpp>
+#include <eosio/crypto.hpp>
 #include <eosio/fixed_bytes.hpp>
 #include <eosio/for_each_field.hpp>
 #include <eosio/from_string.hpp>
@@ -34,6 +35,7 @@ namespace eosio
    inline constexpr bool use_json_string_for_gql(symbol_code*) { return true; }
    inline constexpr bool use_json_string_for_gql(symbol*) { return true; }
    inline constexpr bool use_json_string_for_gql(asset*) { return true; }
+   inline constexpr bool use_json_string_for_gql(public_key*) { return true; }
 
    template <typename T, std::size_t Size>
    constexpr bool use_json_string_for_gql(fixed_bytes<Size, T>*)

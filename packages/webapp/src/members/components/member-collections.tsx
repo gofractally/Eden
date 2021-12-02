@@ -3,9 +3,10 @@ import { Tab } from "@headlessui/react";
 
 import { Container, LoadingContainer, MessageContainer, Text } from "_app";
 import { MemberChip, MembersGrid } from "members";
+import { useMemberNFTCollection, useMemberNFTCollectors } from "nfts/hooks";
+import { MemberNFT } from "nfts/interfaces";
 
 import { Member } from "../interfaces";
-import { useMemberNFTCollection, useMemberNFTCollectors } from "nfts/hooks";
 
 interface Props {
     member: Member;
@@ -92,7 +93,7 @@ const Collection = ({
                 </Text>
             </Container>
             <MembersGrid members={nfts}>
-                {(member) => (
+                {(member: MemberNFT) => (
                     <MemberChip
                         key={`member-collection-${member.account}`}
                         member={member}
@@ -143,7 +144,7 @@ const Collectors = ({
                 </Text>
             </Container>
             <MembersGrid members={collectors}>
-                {(member) => (
+                {(member: MemberNFT) => (
                     <MemberChip
                         key={`member-collector-${member.account}`}
                         member={member}

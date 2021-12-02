@@ -1,8 +1,7 @@
 import { DelegateBadge, ProfileImage } from "_app/ui";
-import { MemberData } from "members/interfaces";
 
 interface Props {
-    member: MemberData;
+    imageUrl: string;
     isDelegate?: boolean;
     actionComponent?: React.ReactNode;
     contentComponent: React.ReactNode;
@@ -12,7 +11,7 @@ interface Props {
 }
 
 export const GenericMemberChip = ({
-    member,
+    imageUrl,
     isDelegate, // TODO: depend on info in member for this
     onClickChip,
     onClickProfileImage,
@@ -33,7 +32,7 @@ export const GenericMemberChip = ({
             >
                 <div className="flex space-x-2.5">
                     <ProfileImage
-                        imageCid={member.image}
+                        imageUrl={imageUrl}
                         badge={isDelegate && <DelegateBadge size={11} />}
                         onClick={onClickProfileImage || onClickChip}
                     />

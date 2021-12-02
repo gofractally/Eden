@@ -6,9 +6,8 @@ import {
     getMembers,
     getTreasuryStats,
     getMembersStats,
-    MemberData,
     MemberStats,
-    useMembersByAccountNames,
+    useMembersByAccountNamesAsMemberNFTs,
 } from "members";
 import { getCommunityGlobals, getTokenBalanceForAccount } from "_app/api";
 import {
@@ -41,6 +40,7 @@ import {
     ElectionCompletedRound,
     VoteData,
 } from "elections/interfaces";
+import { MemberNFT } from "nfts/interfaces";
 import { EncryptionScope, getEncryptedData } from "encryption/api";
 import { TableQueryOptions } from "_app/eos/interfaces";
 
@@ -150,7 +150,7 @@ export const queryCommunityGlobals = {
 };
 
 export const queryOngoingElectionData = (
-    votingMemberData?: MemberData[],
+    votingMemberData?: MemberNFT[],
     currentElection?: CurrentElection,
     myDelegation?: EdenMember[],
     currentMember?: EdenMember
@@ -423,14 +423,14 @@ export const useMemberDataFromVoteData = (voteData?: VoteData[]) => {
         .map((res) => res.data as EdenMember)
         .map((member) => member.account);
 
-    const memberDataRes = useMembersByAccountNames(accountNames);
+    const memberDataRes = useMembersByAccountNamesAsMemberNFTs(accountNames);
 
     return {
         ...memberDataRes,
         isLoading: memberDataRes.isLoading || isLoading,
         isError: memberDataRes.isError || isFetchError,
         isSuccess: areQueriesComplete,
-    } as UseQueryResult<MemberData[], Error>;
+    } as UseQueryResult<MemberNFT[], Error>;
 };
 
 export const useEncryptedData = (scope: EncryptionScope, id: string) =>

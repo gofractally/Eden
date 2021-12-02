@@ -20,10 +20,10 @@ import {
     queryMemberByAccountName,
     queryMembers,
     queryParticipantsInCompletedRound,
-    queryVoteDataRow,
     TABLE_INDEXES,
 } from "_app";
-import { EdenMember, MemberData, VoteDataQueryOptionsByField } from "members";
+import { EdenMember, VoteDataQueryOptionsByField } from "members";
+import { MemberNFT } from "nfts/interfaces";
 import {
     ActiveStateConfigType,
     CONFIG_SORTITION_ROUND_DEFAULTS,
@@ -317,11 +317,9 @@ const getMemberDataFromEdenMemberList = async (memberList: EdenMember[]) => {
         nftTemplateIds
     );
 
-    return await queryClient.fetchQuery<MemberData[], Error>(
-        queryKey,
-        queryFn,
-        { staleTime: Infinity }
-    );
+    return await queryClient.fetchQuery<MemberNFT[], Error>(queryKey, queryFn, {
+        staleTime: Infinity,
+    });
 };
 const getParticipantsOfCompletedRounds = async (myDelegation: EdenMember[]) => {
     const pCompletedRounds = myDelegation.map(
@@ -369,7 +367,7 @@ const getParticipantsOfCompletedRounds = async (myDelegation: EdenMember[]) => {
  * @param {string} author - The author of the book.
  */
 export const getOngoingElectionData = async (
-    votingMemberData: MemberData[] = [],
+    votingMemberData: MemberNFT[] = [],
     currentElection?: CurrentElection,
     myDelegation: EdenMember[] = [],
     loggedInMember?: EdenMember
