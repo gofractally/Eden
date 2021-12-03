@@ -22,6 +22,7 @@
   - [Starting Nodeos](cltester/nodeos/README.md)
   - [Hostile Takeover](cltester/takeover/README.md)
 - [Proposed Standards]()
+  - [Contract Pays](std/cpay/README.md)
   - [Auth Part 1](std/auth1/README.md)
     - [Details]()
     - [Using clsdk]()

@@ -16,11 +16,11 @@ It is already possible to define new account systems using non-privileged contra
 - There is no existing tooling for building contracts which support contract-based authentication.
 - There is no existing standard that history services can rely on to interpret activity.
 
-Contract-pays may be coming; it only needs a system contract change, which is [proposed here](https://github.com/eoscommunity/eosio.contracts/pull/1), plus standards created for it. This leaves the issue of standards for contract-auth, which this chapter starts to address, and tooling, which clsdk addresses.
+Contract-pays may be coming; see [this proposal](../cpay/index.html). This leaves the issue of standards for contract-auth, which this chapter starts to address, and tooling, which clsdk addresses.
 
 ## run, run_auth, and verb
 
-`run` is a proposed standard action that acts as an entry point for executing `verbs` using an extensible authorization system (`run_auth`). It has the following ABI:
+`run` is a proposed standard action that acts as an entry point for executing `verbs` using an extensible authentication system (`run_auth`). It has the following ABI:
 
 ```
 {
@@ -77,7 +77,7 @@ Contract-pays may be coming; it only needs a system contract change, which is [p
 
 clsdk provides a dispatcher which implements the `run` protocol, provides an ABI generator which produces the `verb` variant, and provides definitions of `run_auth` and its related types. clsdk's dispatcher executes all verbs within the context of the original `run` action. It avoids using inline actions since these complicate authentication and increase overhead.
 
-## Future proposals
+## Future Proposals
 
 Additional proposals should cover:
 
@@ -86,3 +86,11 @@ Additional proposals should cover:
 - A new notification system, since require_recipient does not play well with `run`
 
 None of these proposals would require hard forks.
+
+## Not Covered
+
+There is a topic which is application-specific: the creation and management of accounts. Hopefully we'll see several groups experiment with various approaches. Some potential ideas to explore:
+
+- Pay-to-key: these accounts could come and go as funds enter and exit them
+- Real-person accounts, including key recovery using human-to-human verification
+- Accounts with time-locked withdrawals
