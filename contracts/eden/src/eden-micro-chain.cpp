@@ -178,6 +178,7 @@ enum tables
    distribution_table,
    distribution_fund_table,
    nft_table,
+   encryption_key_table,
 };
 
 struct Induction;
@@ -323,6 +324,21 @@ using balance_history_index = mic<balance_history_object,
                                   ordered_by_pk<balance_history_object>>;
 
 using InductionEndorser = std::pair<eosio::name, bool>;
+
+struct encryption_key_object : public chainbase::object<encryption_key_table, encryption_key_object>
+{
+   CHAINBASE_DEFAULT_CONSTRUCTOR(encryption_key_object)
+
+   id_type id;
+   eosio::name account;
+   eosio::public_key encryptionKey;
+
+   eosio::name by_pk() const { return account; }
+};
+
+using encryption_key_index = mic<encryption_key_object,
+                                 ordered_by_id<encryption_key_object>,
+                                 ordered_by_pk<encryption_key_object>>;
 
 struct induction
 {
@@ -552,6 +568,7 @@ struct database
    chainbase::generic_index<status_index> status;
    chainbase::generic_index<balance_index> balances;
    chainbase::generic_index<balance_history_index> balance_history;
+   chainbase::generic_index<encryption_key_index> encryption_keys;
    chainbase::generic_index<induction_index> inductions;
    chainbase::generic_index<member_index> members;
    chainbase::generic_index<session_index> sessions;
@@ -568,6 +585,7 @@ struct database
       db.add_index(status);
       db.add_index(balances);
       db.add_index(balance_history);
+      db.add_index(encryption_keys);
       db.add_index(inductions);
       db.add_index(members);
       db.add_index(sessions);
@@ -734,6 +752,32 @@ BalanceHistoryConnection Balance::history(std::optional<eosio::block_timestamp> 
        [](auto& balance_history, auto key) { return balance_history.upper_bound(key); });
 }
 
+struct EncryptionKey
+{
+   eosio::name _account;
+   const encryption_key_object* obj;
+
+   Member account() const;
+   std::optional<std::string> encryptionKey() const
+   {
+      return obj ? std::optional{eosio::public_key_to_string(obj->encryptionKey)} : std::nullopt;
+   }
+};
+EOSIO_REFLECT2(EncryptionKey, account, encryptionKey)
+
+constexpr const char EncryptionKeyConnection_name[] = "EncryptionKeyConnection";
+constexpr const char EncryptionKeyEdge_name[] = "EncryptionKeyEdge";
+using EncryptionKeyConnection = clchain::Connection<
+    clchain::ConnectionConfig<EncryptionKey, EncryptionKeyConnection_name, EncryptionKeyEdge_name>>;
+
+EncryptionKey get_encryption_key(eosio::name account)
+{
+   if (auto* obj = get_ptr<by_pk>(db.encryption_keys, account))
+      return EncryptionKey{account, obj};
+   else
+      return EncryptionKey{account, nullptr};
+}
+
 struct Member
 {
    eosio::name account;
@@ -749,6 +793,11 @@ struct Member
    const std::string* inductionVideo() const { return member ? &member->inductionVideo : nullptr; }
    bool participating() const { return member && member->participating; }
    eosio::block_timestamp createdAt() const { return member->createdAt; }
+
+   std::optional<std::string> encryptionKey() const
+   {
+      return get_encryption_key(account).encryptionKey();
+   }
 
    NftConnection nfts(std::optional<eosio::block_timestamp> gt,
                       std::optional<eosio::block_timestamp> ge,
@@ -795,6 +844,7 @@ EOSIO_REFLECT2(
     inductionVideo,
     participating,
     createdAt,
+    encryptionKey,
     method(nfts, "gt", "ge", "lt", "le", "first", "last", "before", "after"),
     method(collectedNfts, "gt", "ge", "lt", "le", "first", "last", "before", "after"),
     method(elections, "gt", "ge", "lt", "le", "first", "last", "before", "after"),
@@ -824,6 +874,11 @@ std::vector<Member> get_members(const std::vector<eosio::name>& v)
 }
 
 Member Balance::account() const
+{
+   return *get_member(_account, true);
+}
+
+Member EncryptionKey::account() const
 {
    return *get_member(_account, true);
 }
@@ -1298,6 +1353,7 @@ void clearall()
    clear_table(db.distributions);
    clear_table(db.distribution_funds);
    clear_table(db.nfts);
+   clear_table(db.encryption_keys);
 }
 
 void delsession(eosio::name eden_account, const eosio::public_key& key)
@@ -1644,6 +1700,14 @@ void electvideo(uint8_t round, eosio::name voter, const std::string& video)
    auto* vote = get_ptr<by_pk>(db.votes, std::tuple{voter, election.time, round});
    if (vote)
       db.votes.modify(*vote, [&](auto& vote) { vote.video = video; });
+}
+
+void setencpubkey(eosio::name member, eosio::public_key key)
+{
+   add_or_modify<by_pk>(db.encryption_keys, member, [&](bool is_new, auto& row) {
+      row.account = member;
+      row.encryptionKey = key;
+   });
 }
 
 void logmint(const action_context& context,
@@ -2038,6 +2102,8 @@ bool dispatch(eosio::name action_name, const action_context& context, eosio::inp
       call(electmeeting, context, s);
    else if (action_name == "electvideo"_n)
       call(electvideo, context, s);
+   else if (action_name == "setencpubkey"_n)
+      call(setencpubkey, context, s);
    else
       return false;
    return true;
@@ -2383,6 +2449,26 @@ struct Query
    Balance masterPool() const { return get_balance(master_pool); }
    Balance distributionFund() const { return get_balance(distribution_fund); }
 
+   EncryptionKeyConnection encryptionKeys(std::optional<eosio::name> gt,
+                                          std::optional<eosio::name> ge,
+                                          std::optional<eosio::name> lt,
+                                          std::optional<eosio::name> le,
+                                          std::optional<uint32_t> first,
+                                          std::optional<uint32_t> last,
+                                          std::optional<std::string> before,
+                                          std::optional<std::string> after) const
+   {
+      return clchain::make_connection<EncryptionKeyConnection, eosio::name>(
+          gt, ge, lt, le, first, last, before, after,  //
+          db.encryption_keys.get<by_pk>(),             //
+          [](auto& obj) { return obj.account; },       //
+          [](auto& obj) {
+             return EncryptionKey{obj.account, &obj};
+          },
+          [](auto& encryption_keys, auto key) { return encryption_keys.lower_bound(key); },
+          [](auto& encryption_keys, auto key) { return encryption_keys.upper_bound(key); });
+   }
+
    MemberConnection members(std::optional<eosio::name> gt,
                             std::optional<eosio::name> ge,
                             std::optional<eosio::name> lt,
@@ -2548,6 +2634,7 @@ EOSIO_REFLECT2(
     masterPool,
     distributionFund,
     method(balances, "gt", "ge", "lt", "le", "first", "last", "before", "after"),
+    method(encryptionKeys, "gt", "ge", "lt", "le", "first", "last", "before", "after"),
     method(members, "gt", "ge", "lt", "le", "first", "last", "before", "after"),
     method(membersByCreatedAt, "gt", "ge", "lt", "le", "first", "last", "before", "after"),
     method(sessions, "gt", "ge", "lt", "le", "first", "last", "before", "after"),
