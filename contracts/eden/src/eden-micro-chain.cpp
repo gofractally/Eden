@@ -767,8 +767,8 @@ EOSIO_REFLECT2(EncryptionKey, account, encryptionKey)
 
 constexpr const char EncryptionKeyConnection_name[] = "EncryptionKeyConnection";
 constexpr const char EncryptionKeyEdge_name[] = "EncryptionKeyEdge";
-using EncryptionKeyConnection = clchain::Connection<
-    clchain::ConnectionConfig<EncryptionKey, EncryptionKeyConnection_name, EncryptionKeyEdge_name>>;
+using EncryptionKeyConnection = btb::Connection<
+    btb::ConnectionConfig<EncryptionKey, EncryptionKeyConnection_name, EncryptionKeyEdge_name>>;
 
 EncryptionKey get_encryption_key(eosio::name account)
 {
@@ -2458,7 +2458,7 @@ struct Query
                                           std::optional<std::string> before,
                                           std::optional<std::string> after) const
    {
-      return clchain::make_connection<EncryptionKeyConnection, eosio::name>(
+      return btb::make_connection<EncryptionKeyConnection, eosio::name>(
           gt, ge, lt, le, first, last, before, after,  //
           db.encryption_keys.get<by_pk>(),             //
           [](auto& obj) { return obj.account; },       //
