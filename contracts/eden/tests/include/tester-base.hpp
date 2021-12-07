@@ -575,7 +575,7 @@ struct eden_tester
 template <typename ActionWrapper, typename... Ts>
 std::vector<char> sact(Ts&&... args)
 {
-   auto index = actions::get_index_for_session_action(ActionWrapper::action_name);
+   auto index = actions::verb_name_to_index(ActionWrapper::action_name);
    eosio::check(index.has_value(), "action index not found");
    auto data = eosio::convert_to_bin(eosio::varuint32(*index));
    auto act = ActionWrapper{""_n}.to_action(std::forward<Ts>(args)...);

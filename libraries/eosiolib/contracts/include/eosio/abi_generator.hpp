@@ -269,6 +269,25 @@ namespace eosio
        });                                                                               \
    , 1
 
+#define EOSIO_ABIGEN_ITEMverbs(ns)                                           \
+   ([&] {                                                                    \
+      gen.def.structs.push_back(eosio::struct_def{"unsupported_verb"});      \
+      eosio::variant_def vdef{"verb"};                                       \
+      ns::for_each_verb([&](uint32_t index, const char* name, const auto&) { \
+         if (index >= vdef.types.size())                                     \
+            vdef.types.resize(index + 1, "unsupported_verb");                \
+         vdef.types[index] = name;                                           \
+      });                                                                    \
+      auto& variants = gen.def.variants.value;                               \
+      auto it = std::find_if(variants.begin(), variants.end(),               \
+                             [&](auto& d) { return d.name == "verb"; });     \
+      if (it != variants.end())                                              \
+         *it = std::move(vdef);                                              \
+      else                                                                   \
+         variants.push_back(std::move(vdef));                                \
+   })();                                                                     \
+   , 1
+
 #define EOSIO_ABIGEN_ITEMtable(name, type) \
    gen.add_table<type>(name);              \
    , 1

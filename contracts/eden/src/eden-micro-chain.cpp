@@ -2047,7 +2047,7 @@ void run(const action_context& context, eosio::input_stream& s)
    for (uint32_t i = 0; i < num_verbs.value; ++i)
    {
       auto index = eosio::varuint32_from_bin(s);
-      auto name = eden::actions::get_name_for_session_action(index);
+      auto name = eden::actions::verb_index_to_name(index);
       if (!dispatch(name, context, s))
          // fatal because this throws off the rest of the stream
          eosio::check(false,

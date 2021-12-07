@@ -88,6 +88,18 @@ namespace eosio
       using args = detail::deduced<Action>;
    };
 
+   template <typename T, typename R, typename Session, typename... Args>
+   void execute_verb(eosio::name contract,
+                     R (T::*func)(const Session& current_session, Args...),
+                     const auto& current_session,
+                     eosio::datastream<const char*>& ds)
+   {
+      std::tuple<std::remove_cvref_t<Args>...> t;
+      ds >> t;
+      T inst(contract, contract, ds);
+      std::apply([&](auto&... args) { (inst.*func)(current_session, std::move(args)...); }, t);
+   }
+
 #define EOSIO_EMPTY(...)
 #define EOSIO_COMMA_STRINGIZE(arg) , BOOST_PP_STRINGIZE(arg)
 #define EOSIO_DEFAULT_IF_EMPTY(x, def) BOOST_PP_IIF(BOOST_PP_CHECK_EMPTY(x), def, x)
@@ -98,25 +110,32 @@ namespace eosio
 #define EOSIO_MATCH_YES ~, 1,
 #define EOSIO_MATCH(base, x) EOSIO_MATCH_CHECK(BOOST_PP_CAT(base, x))
 
-#define EOSIO_MATCH_ACTION(x) EOSIO_MATCH(EOSIO_MATCH_ACTION, x)
-#define EOSIO_MATCH_ACTIONaction EOSIO_MATCH_YES
-#define EOSIO_EXTRACT_ACTION_NAME(x) \
-   BOOST_PP_IIF(EOSIO_MATCH_ACTION(x), BOOST_PP_CAT(EOSIO_EXTRACT_ACTION_NAME, x), x)
-#define EOSIO_EXTRACT_ACTION_NAMEaction(name, ...) name
+#define EOSIO_MATCH_ACTION_VERB(x) EOSIO_MATCH(EOSIO_MATCH_ACTION_VERB, x)
+#define EOSIO_MATCH_ACTION_VERBaction EOSIO_MATCH_YES
+#define EOSIO_MATCH_ACTION_VERBverb EOSIO_MATCH_YES
+#define EOSIO_MATCH_ACTION_VERBaction_verb EOSIO_MATCH_YES
+#define EOSIO_EXTRACT_ACTION_VERB_NAME(x) \
+   BOOST_PP_IIF(EOSIO_MATCH_ACTION_VERB(x), BOOST_PP_CAT(EOSIO_EXTRACT_ACTION_VERB_NAME, x), x)
+#define EOSIO_EXTRACT_ACTION_VERB_NAMEaction(name, ...) name
+#define EOSIO_EXTRACT_ACTION_VERB_NAMEverb(name, index, ...) name
+#define EOSIO_EXTRACT_ACTION_VERB_NAMEaction_verb(name, index, ...) name
 
-#define EOSIO_HAS_ACTION_ARGS(action)          \
-   BOOST_PP_BITAND(EOSIO_MATCH_ACTION(action), \
-                   BOOST_PP_COMPL(BOOST_PP_CHECK_EMPTY(EOSIO_EXTRACT_ACTION_ARGS(action))))
-#define EOSIO_EXTRACT_ACTION_ARGS(x) BOOST_PP_CAT(EOSIO_EXTRACT_ACTION_ARGS, x)
-#define EOSIO_EXTRACT_ACTION_ARGSaction(name, ...) __VA_ARGS__
+#define EOSIO_HAS_ACTION_VERB_ARGS(action)          \
+   BOOST_PP_BITAND(EOSIO_MATCH_ACTION_VERB(action), \
+                   BOOST_PP_COMPL(BOOST_PP_CHECK_EMPTY(EOSIO_EXTRACT_ACTION_VERB_ARGS(action))))
+#define EOSIO_EXTRACT_ACTION_VERB_ARGS(x) BOOST_PP_CAT(EOSIO_EXTRACT_ACTION_VERB_ARGS, x)
+#define EOSIO_EXTRACT_ACTION_VERB_ARGSaction(name, ...) __VA_ARGS__
+#define EOSIO_EXTRACT_ACTION_VERB_ARGSverb(name, index, ...) __VA_ARGS__
+#define EOSIO_EXTRACT_ACTION_VERB_ARGSaction_verb(name, index, ...) __VA_ARGS__
 
 #define EOSIO_ACTION_ARG_NAME_STRINGS_1(r, _, i, arg) \
    BOOST_PP_IIF(EOSIO_MATCH_RICARDIAN(arg), EOSIO_EMPTY, EOSIO_COMMA_STRINGIZE)(arg)
 #define EOSIO_ACTION_ARG_NAME_STRINGS_2(action)                \
    BOOST_PP_SEQ_FOR_EACH_I(EOSIO_ACTION_ARG_NAME_STRINGS_1, _, \
-                           BOOST_PP_VARIADIC_TO_SEQ(EOSIO_EXTRACT_ACTION_ARGS(action)))
-#define EOSIO_ACTION_ARG_NAME_STRINGS(action) \
-   BOOST_PP_IIF(EOSIO_HAS_ACTION_ARGS(action), EOSIO_ACTION_ARG_NAME_STRINGS_2, EOSIO_EMPTY)(action)
+                           BOOST_PP_VARIADIC_TO_SEQ(EOSIO_EXTRACT_ACTION_VERB_ARGS(action)))
+#define EOSIO_ACTION_ARG_NAME_STRINGS(action)                                                     \
+   BOOST_PP_IIF(EOSIO_HAS_ACTION_VERB_ARGS(action), EOSIO_ACTION_ARG_NAME_STRINGS_2, EOSIO_EMPTY) \
+   (action)
 
 #define EOSIO_MATCH_RICARDIAN(action_arg) EOSIO_MATCH(EOSIO_MATCH_RICARDIAN, action_arg)
 #define EOSIO_MATCH_RICARDIANricardian_contract EOSIO_MATCH_YES
@@ -127,9 +146,9 @@ namespace eosio
    BOOST_PP_IIF(EOSIO_MATCH_RICARDIAN(arg), EOSIO_EXTRACT_RICARDIAN, EOSIO_EMPTY)(arg)
 #define EOSIO_GET_RICARDIAN_2(action)                \
    BOOST_PP_SEQ_FOR_EACH_I(EOSIO_GET_RICARDIAN_3, _, \
-                           BOOST_PP_VARIADIC_TO_SEQ(EOSIO_EXTRACT_ACTION_ARGS(action)))
+                           BOOST_PP_VARIADIC_TO_SEQ(EOSIO_EXTRACT_ACTION_VERB_ARGS(action)))
 #define EOSIO_GET_RICARDIAN_1(action) \
-   BOOST_PP_IIF(EOSIO_HAS_ACTION_ARGS(action), EOSIO_GET_RICARDIAN_2, EOSIO_EMPTY)(action)
+   BOOST_PP_IIF(EOSIO_HAS_ACTION_VERB_ARGS(action), EOSIO_GET_RICARDIAN_2, EOSIO_EMPTY)(action)
 #define EOSIO_GET_RICARDIAN(action) EOSIO_DEFAULT_IF_EMPTY(EOSIO_GET_RICARDIAN_1(action), "")
 
 #define EOSIO_MATCH_NOTIFY(x) EOSIO_MATCH(EOSIO_MATCH_NOTIFY, x)
@@ -139,13 +158,19 @@ namespace eosio
 #define EOSIO_EXTRACT_NOTIFY_ACTION(x) BOOST_PP_CAT(EOSIO_EXTRACT_NOTIFY_ACTION, x)
 #define EOSIO_EXTRACT_NOTIFY_ACTIONnotify(code, action) action
 
-#define EOSIO_DISPATCH_ACTION_INTERNAL_1(r, type, member)                         \
-   case eosio::hash_name(BOOST_PP_STRINGIZE(EOSIO_EXTRACT_ACTION_NAME(member))):  \
-      executed = eosio::execute_action(eosio::name(receiver), eosio::name(code),  \
-                                       &type::EOSIO_EXTRACT_ACTION_NAME(member)); \
+// Things which shouldn't be handled by EOSIO_DISPATCH_ACTION
+#define EOSIO_MATCH_NOT_DISPATCH_ACTION(x) EOSIO_MATCH(EOSIO_MATCH_NOT_DISPATCH_ACTION, x)
+#define EOSIO_MATCH_NOT_DISPATCH_ACTIONnotify EOSIO_MATCH_YES
+#define EOSIO_MATCH_NOT_DISPATCH_ACTIONverb EOSIO_MATCH_YES
+
+#define EOSIO_DISPATCH_ACTION_INTERNAL_1(r, type, member)                              \
+   case eosio::hash_name(BOOST_PP_STRINGIZE(EOSIO_EXTRACT_ACTION_VERB_NAME(member))):  \
+      executed = eosio::execute_action(eosio::name(receiver), eosio::name(code),       \
+                                       &type::EOSIO_EXTRACT_ACTION_VERB_NAME(member)); \
       break;
-#define EOSIO_DISPATCH_ACTION_INTERNAL(r, type, member)                                    \
-   BOOST_PP_IIF(EOSIO_MATCH_NOTIFY(member), EOSIO_EMPTY, EOSIO_DISPATCH_ACTION_INTERNAL_1) \
+#define EOSIO_DISPATCH_ACTION_INTERNAL(r, type, member)               \
+   BOOST_PP_IIF(EOSIO_MATCH_NOT_DISPATCH_ACTION(member), EOSIO_EMPTY, \
+                EOSIO_DISPATCH_ACTION_INTERNAL_1)                     \
    (r, type, member)
 #define EOSIO_DISPATCH_ACTION(type, MEMBERS) \
    BOOST_PP_SEQ_FOR_EACH(EOSIO_DISPATCH_ACTION_INTERNAL, type, MEMBERS)
@@ -166,22 +191,67 @@ namespace eosio
 #define EOSIO_DISPATCH_NOTIFY(type, MEMBERS) \
    BOOST_PP_SEQ_FOR_EACH(EOSIO_DISPATCH_NOTIFY_INTERNAL, type, MEMBERS)
 
-#define EOSIO_ACTION_WRAPPER_DECL_1(r, data, action)                             \
-   using EOSIO_EXTRACT_ACTION_NAME(action) = eosio::action_wrapper<BOOST_PP_CAT( \
-       BOOST_PP_STRINGIZE(EOSIO_EXTRACT_ACTION_NAME(action)), _h),               \
-       &contract_class::EOSIO_EXTRACT_ACTION_NAME(action), contract_account>;
+#define EOSIO_ACTION_WRAPPER_DECL_1(r, data, action)                                 \
+   using EOSIO_EXTRACT_ACTION_VERB_NAME(action) = eosio::action_wrapper<             \
+       BOOST_PP_CAT(BOOST_PP_STRINGIZE(EOSIO_EXTRACT_ACTION_VERB_NAME(action)), _h), \
+       &contract_class::EOSIO_EXTRACT_ACTION_VERB_NAME(action), contract_account>;
 #define EOSIO_ACTION_WRAPPER_DECL_0(r, data, action)
 #define EOSIO_ACTION_WRAPPER_DECL(r, data, action)                                      \
    BOOST_PP_CAT(EOSIO_ACTION_WRAPPER_DECL_, BOOST_PP_COMPL(EOSIO_MATCH_NOTIFY(action))) \
    (r, data, action)
 
-#define EOSIO_REFLECT_ACTION_1(r, data, action)                                          \
-   f(BOOST_PP_CAT(                                                                       \
-       BOOST_PP_STRINGIZE(EOSIO_EXTRACT_ACTION_NAME(action)), _h),                       \
-       eosio::action_type_wrapper<&contract_class::EOSIO_EXTRACT_ACTION_NAME(action)>{}, \
-       EOSIO_GET_RICARDIAN(action) EOSIO_ACTION_ARG_NAME_STRINGS(action));
+#define EOSIO_REFLECT_ACTION_1(r, data, action)                                             \
+   f(BOOST_PP_CAT(BOOST_PP_STRINGIZE(EOSIO_EXTRACT_ACTION_VERB_NAME(action)), _h),          \
+     eosio::action_type_wrapper<&contract_class::EOSIO_EXTRACT_ACTION_VERB_NAME(action)>{}, \
+     EOSIO_GET_RICARDIAN(action) EOSIO_ACTION_ARG_NAME_STRINGS(action));
 #define EOSIO_REFLECT_ACTION(r, data, action) \
    BOOST_PP_IIF(EOSIO_MATCH_NOTIFY(action), EOSIO_EMPTY, EOSIO_REFLECT_ACTION_1)(r, data, action)
+
+#define EOSIO_MATCH_VERB(x) EOSIO_MATCH(EOSIO_MATCH_VERB, x)
+#define EOSIO_MATCH_VERBverb EOSIO_MATCH_YES
+#define EOSIO_MATCH_VERBaction_verb EOSIO_MATCH_YES
+
+#define EOSIO_EXTRACT_VERB_INDEX(x) BOOST_PP_CAT(EOSIO_EXTRACT_VERB_INDEX, x)
+#define EOSIO_EXTRACT_VERB_INDEXverb(name, index, ...) index
+#define EOSIO_EXTRACT_VERB_INDEXaction_verb(name, index, ...) index
+
+#define EOSIO_DISPATCH_VERB_INTERNAL_1(r, type, member)                              \
+   case EOSIO_EXTRACT_VERB_INDEX(member):                                            \
+      ::eosio::execute_verb(contract, &type::EOSIO_EXTRACT_ACTION_VERB_NAME(member), \
+                            current_session, ds);                                    \
+      return true;
+#define EOSIO_DISPATCH_VERB_INTERNAL(r, type, member)                                  \
+   BOOST_PP_IIF(EOSIO_MATCH_VERB(member), EOSIO_DISPATCH_VERB_INTERNAL_1, EOSIO_EMPTY) \
+   (r, type, member)
+#define EOSIO_DISPATCH_VERB(type, MEMBERS) \
+   BOOST_PP_SEQ_FOR_EACH(EOSIO_DISPATCH_VERB_INTERNAL, type, MEMBERS)
+
+#define EOSIO_FOR_EACH_VERB_INTERNAL_1(r, type, member)                                            \
+   f(EOSIO_EXTRACT_VERB_INDEX(member), BOOST_PP_STRINGIZE(EOSIO_EXTRACT_ACTION_VERB_NAME(member)), \
+     &type::EOSIO_EXTRACT_ACTION_VERB_NAME(member));
+#define EOSIO_FOR_EACH_VERB_INTERNAL(r, type, member)                                  \
+   BOOST_PP_IIF(EOSIO_MATCH_VERB(member), EOSIO_FOR_EACH_VERB_INTERNAL_1, EOSIO_EMPTY) \
+   (r, type, member)
+#define EOSIO_FOR_EACH_VERB(type, MEMBERS) \
+   BOOST_PP_SEQ_FOR_EACH(EOSIO_FOR_EACH_VERB_INTERNAL, type, MEMBERS)
+
+#define EOSIO_VERB_INDEX_TO_NAME_INTERNAL_1(r, type, member) \
+   case EOSIO_EXTRACT_VERB_INDEX(member):                    \
+      return BOOST_PP_CAT(BOOST_PP_STRINGIZE(EOSIO_EXTRACT_ACTION_VERB_NAME(member)), _n);
+#define EOSIO_VERB_INDEX_TO_NAME_INTERNAL(r, type, member)                                  \
+   BOOST_PP_IIF(EOSIO_MATCH_VERB(member), EOSIO_VERB_INDEX_TO_NAME_INTERNAL_1, EOSIO_EMPTY) \
+   (r, type, member)
+#define EOSIO_VERB_INDEX_TO_NAME(type, MEMBERS) \
+   BOOST_PP_SEQ_FOR_EACH(EOSIO_VERB_INDEX_TO_NAME_INTERNAL, type, MEMBERS)
+
+#define EOSIO_VERB_NAME_TO_INDEX_INTERNAL_1(r, type, member)                                 \
+   if (name == BOOST_PP_CAT(BOOST_PP_STRINGIZE(EOSIO_EXTRACT_ACTION_VERB_NAME(member)), _n)) \
+      return EOSIO_EXTRACT_VERB_INDEX(member);
+#define EOSIO_VERB_NAME_TO_INDEX_INTERNAL(r, type, member)                                  \
+   BOOST_PP_IIF(EOSIO_MATCH_VERB(member), EOSIO_VERB_NAME_TO_INDEX_INTERNAL_1, EOSIO_EMPTY) \
+   (r, type, member)
+#define EOSIO_VERB_NAME_TO_INDEX(type, MEMBERS) \
+   BOOST_PP_SEQ_FOR_EACH(EOSIO_VERB_NAME_TO_INDEX_INTERNAL, type, MEMBERS)
 
 #define EOSIO_ACTIONS(CONTRACT_CLASS, CONTRACT_ACCOUNT, ...)                                     \
    namespace actions                                                                             \
@@ -214,6 +284,39 @@ namespace eosio
             }                                                                                    \
             EOSIO_DISPATCH_NOTIFY(CONTRACT_CLASS, BOOST_PP_VARIADIC_TO_SEQ(__VA_ARGS__))         \
          }                                                                                       \
+      }                                                                                          \
+                                                                                                 \
+      inline bool dispatch_verb(eosio::name contract,                                            \
+                                uint32_t index,                                                  \
+                                const auto& current_session,                                     \
+                                eosio::datastream<const char*>& ds)                              \
+      {                                                                                          \
+         switch (index)                                                                          \
+         {                                                                                       \
+            EOSIO_DISPATCH_VERB(CONTRACT_CLASS, BOOST_PP_VARIADIC_TO_SEQ(__VA_ARGS__))           \
+         }                                                                                       \
+         return false;                                                                           \
+      }                                                                                          \
+                                                                                                 \
+      template <typename F>                                                                      \
+      void for_each_verb(F f)                                                                    \
+      {                                                                                          \
+         EOSIO_FOR_EACH_VERB(CONTRACT_CLASS, BOOST_PP_VARIADIC_TO_SEQ(__VA_ARGS__))              \
+      }                                                                                          \
+                                                                                                 \
+      inline eosio::name verb_index_to_name(uint32_t index)                                      \
+      {                                                                                          \
+         switch (index)                                                                          \
+         {                                                                                       \
+            EOSIO_VERB_INDEX_TO_NAME(CONTRACT_CLASS, BOOST_PP_VARIADIC_TO_SEQ(__VA_ARGS__))      \
+         }                                                                                       \
+         return {};                                                                              \
+      }                                                                                          \
+                                                                                                 \
+      inline std::optional<uint32_t> verb_name_to_index(eosio::name name)                        \
+      {                                                                                          \
+         EOSIO_VERB_NAME_TO_INDEX(CONTRACT_CLASS, BOOST_PP_VARIADIC_TO_SEQ(__VA_ARGS__))         \
+         return {};                                                                              \
       }                                                                                          \
    }
 

@@ -217,7 +217,7 @@ namespace eden
       {
          eosio::varuint32 index;
          ds >> index;
-         eosio::check(actions::session_dispatch(get_self(), index.value, current_session, ds),
+         eosio::check(actions::dispatch_verb(get_self(), index.value, current_session, ds),
                       "unsupported verb index");
       }
 
