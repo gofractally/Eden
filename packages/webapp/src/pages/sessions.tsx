@@ -6,7 +6,7 @@ import {
     useUALAccount,
 } from "_app";
 import {
-    executeSessionTransaction,
+    runSessionTransaction,
     generateSessionKey,
     newSessionTransaction,
     sessionKeysStorage,
@@ -45,7 +45,7 @@ export const Sessions = () => {
         }
     };
 
-    const onExecSessionExample = async () => {
+    const onRunSessionExample = async () => {
         try {
             const {
                 transaction: inductionTrx,
@@ -58,7 +58,7 @@ export const Sessions = () => {
             const { actions } = inductionTrx;
 
             // sign actions with session key
-            const execsessionTrx = await executeSessionTransaction(
+            const execsessionTrx = await runSessionTransaction(
                 ualAccount.accountName,
                 actions
             );
@@ -79,7 +79,7 @@ export const Sessions = () => {
                 <Button onClick={onCreateSessionExample}>
                     Create Session Key
                 </Button>
-                <Button onClick={onExecSessionExample}>
+                <Button onClick={onRunSessionExample}>
                     Induct Ahab with Pip and Egeon
                 </Button>
             </div>

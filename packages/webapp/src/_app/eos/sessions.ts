@@ -1,11 +1,13 @@
 import dayjs from "dayjs";
-import { generateKeyPair } from "eosjs/dist/eosjs-key-conversions";
+import { generateKeyPair, sha256 } from "eosjs/dist/eosjs-key-conversions";
 import { KeyType } from "eosjs/dist/eosjs-numeric";
 import { PublicKey, PrivateKey } from "eosjs/dist/eosjs-jssig";
 import { get as idbGet, set as idbSet } from "idb-keyval";
 
 import { edenContractAccount } from "config";
 import { eosDefaultApi } from "_app";
+import { arrayToHex, SerialBuffer } from "eosjs/dist/eosjs-serialize";
+import { sha512 } from "hash.js";
 
 const DEFAULT_EXPIRATION_SECONDS = 24 * 60 * 60 * 1000; // 30 days
 const DEFAULT_SESSION_DESCRIPTION = "eden login";
@@ -78,7 +80,7 @@ export const newSessionTransaction = async (
     };
 };
 
-export const executeSessionTransaction = async (
+export const runSessionTransaction = async (
     authorizerAccount: string,
     actions: any[]
 ) => {
@@ -87,6 +89,52 @@ export const executeSessionTransaction = async (
 
     console.info(authorizerAccount, actions);
 
-    const serializedActionsData = await eosDefaultApi.serializeActions(actions);
-    console.info("serialized actions data >>>", serializedActionsData);
+    const sequence = 1; // TODO: get sequence dynamically
+
+    const verbs = await makeSignatureAuthSha(
+        edenContractAccount,
+        authorizerAccount,
+        sequence,
+        actions
+    );
+
+    console.info("signature auth sha >>>", verbs);
+
+    // const serializedActionsVerbs = serialize
+    // console.info("serialized actions data >>>", serializedActionsData);
+};
+
+export const makeSignatureAuthSha = async (
+    contract: string,
+    account: string,
+    sequence: number,
+    actions: any[]
+) => {
+    // const verbs = await eosDefaultApi.serializeActions();
+    const verbs = actions.map((action) => [action.name, action.data]);
+    console.info("v >>>", verbs);
+
+    const contractAbi = await eosDefaultApi.getContract(contract);
+    console.info(">>> ctypes", contractAbi.types);
+
+    const verbType = contractAbi.types.get("verb");
+    if (!verbType) {
+        throw new Error("abi has no verb definition");
+    }
+
+    const buffer = new SerialBuffer({
+        textEncoder: eosDefaultApi.textEncoder,
+        textDecoder: eosDefaultApi.textDecoder,
+    });
+    buffer.pushName(contract);
+    buffer.pushName(account);
+    buffer.pushVaruint32(sequence);
+    buffer.pushVaruint32(verbs.length);
+    verbs.forEach((verb) => verbType.serialize(buffer, verb));
+
+    const bufferBytes = buffer.asUint8Array();
+    const sha = sha256(Buffer.from(bufferBytes));
+    console.info("serialized verbs bytes >>>", bufferBytes, sha);
+
+    return sha;
 };
