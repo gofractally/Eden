@@ -14,7 +14,7 @@ export const sessionSignRequest = z.object({
     signature: z.string(),
     edenAccount: z.string(),
     sequence: z.number(),
-    actions: z.array(z.any()),
+    verbs: z.array(z.any()),
 });
 
 export type SessionSignRequest = z.infer<typeof sessionSignRequest>;

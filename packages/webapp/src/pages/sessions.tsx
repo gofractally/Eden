@@ -1,12 +1,15 @@
+import { hexToUint8Array } from "eosjs/dist/eosjs-serialize";
+
 import {
     Button,
     onError,
     SideNavLayout,
     useCurrentMember,
     useUALAccount,
+    eosJsonRpc,
 } from "_app";
 import {
-    runSessionTransaction,
+    signSessionTransaction,
     generateSessionKey,
     newSessionTransaction,
     sessionKeysStorage,
@@ -30,11 +33,10 @@ export const Sessions = () => {
             );
             console.info("generated newsession transaction", transaction);
 
-            // TODO: uncomment when contract-auth is merged
-            // const signedTrx = await ualAccount.signTransaction(transaction, {
-            //     broadcast: true,
-            // });
-            // console.info("newsession signedTrx", signedTrx);
+            const signedTrx = await ualAccount.signTransaction(transaction, {
+                broadcast: true,
+            });
+            console.info("newsession signedTrx", signedTrx);
 
             await sessionKeysStorage.saveKey(newSessionKey);
 
@@ -58,14 +60,19 @@ export const Sessions = () => {
             const { actions } = inductionTrx;
 
             // sign actions with session key
-            const execsessionTrx = await runSessionTransaction(
+            const signedSessionTrx = await signSessionTransaction(
                 ualAccount.accountName,
                 actions
             );
-            console.info("generated execsession trx", execsessionTrx);
+            console.info("generated signedSessionTrx trx", signedSessionTrx);
 
-            // TODO step-1: send trx to box when sparkplug0025/box-session is merged
-            // TODO step-2: broadcast returned signed trx from server
+            const broadcastedRunTrx = await eosJsonRpc.send_transaction({
+                signatures: signedSessionTrx.signatures,
+                serializedTransaction: hexToUint8Array(
+                    signedSessionTrx.packed_trx
+                ),
+            });
+            console.info("broadcasted run trx >>>", broadcastedRunTrx);
         } catch (e) {
             console.error(e);
             onError(e as Error);

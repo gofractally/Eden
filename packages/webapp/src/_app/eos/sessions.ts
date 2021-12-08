@@ -1,15 +1,15 @@
 import dayjs from "dayjs";
 import { generateKeyPair, sha256 } from "eosjs/dist/eosjs-key-conversions";
 import { KeyType } from "eosjs/dist/eosjs-numeric";
-import { PublicKey, PrivateKey } from "eosjs/dist/eosjs-jssig";
+import { PrivateKey } from "eosjs/dist/eosjs-jssig";
+import { SerialBuffer } from "eosjs/dist/eosjs-serialize";
 import { get as idbGet, set as idbSet } from "idb-keyval";
+import { SessionSignRequest } from "@edenos/common";
 
-import { edenContractAccount } from "config";
+import { edenContractAccount, box } from "config";
 import { eosDefaultApi } from "_app";
-import { arrayToHex, SerialBuffer } from "eosjs/dist/eosjs-serialize";
-import { sha512 } from "hash.js";
 
-const DEFAULT_EXPIRATION_SECONDS = 24 * 60 * 60 * 1000; // 30 days
+const DEFAULT_EXPIRATION_SECONDS = 30 * 24 * 60 * 60; // 30 days
 const DEFAULT_SESSION_DESCRIPTION = "eden login";
 
 interface SessionKeyData {
@@ -80,48 +80,70 @@ export const newSessionTransaction = async (
     };
 };
 
-export const runSessionTransaction = async (
+export const signSessionTransaction = async (
     authorizerAccount: string,
     actions: any[]
 ) => {
     const sessionKey = await sessionKeysStorage.getKey();
-    console.info("preparing session execution with sessionKey", sessionKey);
-
-    console.info(authorizerAccount, actions);
+    if (!sessionKey) {
+        throw new Error("Session key is not present");
+    }
 
     const sequence = 1; // TODO: get sequence dynamically
+    const verbs = convertActionsToVerbs(actions);
 
-    const verbs = await makeSignatureAuthSha(
+    const signatureAuthSha = await makeSignatureAuthSha(
         edenContractAccount,
         authorizerAccount,
         sequence,
-        actions
+        verbs
     );
 
-    console.info("signature auth sha >>>", verbs);
+    const signature = await signSha(sessionKey, signatureAuthSha);
 
-    // const serializedActionsVerbs = serialize
-    // console.info("serialized actions data >>>", serializedActionsData);
+    const data: SessionSignRequest = {
+        signature: signature.toString(),
+        edenAccount: authorizerAccount,
+        sequence,
+        verbs,
+    };
+    const response = await fetch(`${box.address}/v1/sessions/sign`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data),
+    });
+    return response.json();
 };
 
-export const makeSignatureAuthSha = async (
+const makeSignatureAuthSha = async (
     contract: string,
     account: string,
     sequence: number,
-    actions: any[]
+    verbs: any[]
 ) => {
-    // const verbs = await eosDefaultApi.serializeActions();
-    const verbs = actions.map((action) => [action.name, action.data]);
-    console.info("v >>>", verbs);
+    const signatureAuthBytes = await serializeSignatureAuth(
+        contract,
+        account,
+        sequence,
+        verbs
+    );
+    return sha256(Buffer.from(signatureAuthBytes));
+};
 
+const convertActionsToVerbs = (actions: any[]) =>
+    actions.map((action) => [action.name, action.data]);
+
+const serializeSignatureAuth = async (
+    contract: string,
+    account: string,
+    sequence: number,
+    verbs: any[]
+): Promise<Uint8Array> => {
     const contractAbi = await eosDefaultApi.getContract(contract);
-    console.info(">>> ctypes", contractAbi.types);
-
     const verbType = contractAbi.types.get("verb");
     if (!verbType) {
         throw new Error("abi has no verb definition");
     }
-
     const buffer = new SerialBuffer({
         textEncoder: eosDefaultApi.textEncoder,
         textDecoder: eosDefaultApi.textDecoder,
@@ -132,9 +154,10 @@ export const makeSignatureAuthSha = async (
     buffer.pushVaruint32(verbs.length);
     verbs.forEach((verb) => verbType.serialize(buffer, verb));
 
-    const bufferBytes = buffer.asUint8Array();
-    const sha = sha256(Buffer.from(bufferBytes));
-    console.info("serialized verbs bytes >>>", bufferBytes, sha);
+    return buffer.asUint8Array();
+};
 
-    return sha;
+const signSha = (sessionKey: SessionKeyData, sha: number[]) => {
+    const privateKey = PrivateKey.fromString(sessionKey.privateKey);
+    return privateKey.sign(sha, false);
 };
