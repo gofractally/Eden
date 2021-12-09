@@ -6,6 +6,7 @@
     "scripts": {
         "dev": "ts-node-dev -r tsconfig-paths/register src/index.ts",
         "start": "NODE_ENV=production node dist/src",
+        "start-test": "node dist/src",
         "build": "yarn run clean && yarn run compile",
         "clean": "rimraf -rf ./dist",
         "compile": "tsc -p tsconfig.build.json",
@@ -16,6 +17,7 @@
     "dependencies": {
         "@dfuse/client": "^0.3.20",
         "@edenos/common": "^0.1.0",
+        "@edenos/eden-subchain-client": "^0.1.2",
         "axios": "^0.21.1",
         "body-parser": "^1.19.0",
         "cids": "^1.1.6",

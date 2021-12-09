@@ -1,5 +1,3 @@
-import { array } from "zod";
-
 export interface BlockInfo {
     num: number;
     id: string;

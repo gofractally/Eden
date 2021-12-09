@@ -42,20 +42,6 @@ namespace eden
       }
    }
 
-   void eden::transfer(eosio::name to, const eosio::asset& quantity, const std::string& memo)
-   {
-      require_auth(get_self());
-      accounts internal{get_self(), "owned"_n};
-      setup_distribution(get_self(), internal);
-      internal.sub_balance("master"_n, quantity);
-      accounts{get_self(), "outgoing"_n}.add_balance(to, quantity, false);
-      eosio::action{{get_self(), "active"_n},
-                    token_contract,
-                    "transfer"_n,
-                    std::tuple(get_self(), to, quantity, memo)}
-          .send();
-   }
-
    void eden::withdraw(eosio::name owner, const eosio::asset& quantity)
    {
       require_auth(owner);

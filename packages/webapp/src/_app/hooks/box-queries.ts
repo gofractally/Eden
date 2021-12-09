@@ -1,7 +1,15 @@
-import { Query, useQuery } from "@edenos/common/dist/subchain";
+import {
+    QueryResult,
+    useQuery,
+} from "@edenos/eden-subchain-client/dist/ReactSubchain";
 import dayjs from "dayjs";
-import { MemberAccountData } from "members";
+
 import { assetFromString } from "_app";
+import {
+    formatQueriedMemberData,
+    MemberData,
+    MEMBER_DATA_FRAGMENT,
+} from "members";
 
 export interface ElectionStatusQuery {
     status: {
@@ -33,8 +41,8 @@ export interface RoundBasicQueryData {
 }
 
 export interface RoundForUserVotingQueryData extends RoundBasicQueryData {
-    candidate?: MemberAccountData;
-    winner?: MemberAccountData;
+    candidate?: MemberData;
+    winner?: MemberData;
     video: string;
 }
 
@@ -43,9 +51,10 @@ export interface CurrentMemberElectionVotingDataQuery {
     votes: RoundForUserVotingQueryData[];
 }
 
+// TODO: Pass type arguments to useQuery within this file
 export const useCurrentMemberElectionVotingData = (
     account?: string
-): Query<CurrentMemberElectionVotingDataQuery> => {
+): QueryResult<CurrentMemberElectionVotingDataQuery> => {
     const query = useQuery<any>(
         account
             ? `
@@ -72,21 +81,11 @@ export const useCurrentMemberElectionVotingData = (
                             numGroups
                           }
                           winner {
-                            account
-                            profile {
-                              name
-                              img
-                              social
-                            }
+                            ${MEMBER_DATA_FRAGMENT}
                           }
                         }
                         candidate {
-                          account
-                          profile {
-                            name
-                            img
-                            social
-                          }
+                          ${MEMBER_DATA_FRAGMENT}
                         }
                         video
                       }
@@ -117,12 +116,8 @@ export const useCurrentMemberElectionVotingData = (
                     votingFinished: voteNode.group.round.votingFinished,
                     resultsAvailable: voteNode.group.round.resultsAvailable,
                     numGroups: voteNode.group.round.numGroups,
-                    candidate: formatQueriedMemberAccountData(
-                        voteNode.candidate
-                    ),
-                    winner: formatQueriedMemberAccountData(
-                        voteNode.group.winner
-                    ),
+                    candidate: formatQueriedMemberData(voteNode.candidate),
+                    winner: formatQueriedMemberData(voteNode.group.winner),
                     video: voteNode.video,
                 })) || [];
         }
@@ -132,13 +127,13 @@ export const useCurrentMemberElectionVotingData = (
 };
 
 export interface VoteQueryData {
-    voter: MemberAccountData;
-    candidate?: MemberAccountData;
+    voter: MemberData;
+    candidate?: MemberData;
     video: string;
 }
 
 export interface RoundGroupQueryData {
-    winner?: MemberAccountData;
+    winner?: MemberData;
     votes: VoteQueryData[];
 }
 
@@ -171,29 +166,14 @@ const currentElectionGlobalDataQuery = `
                 edges {
                   node {
                     winner {
-                      account
-                      profile {
-                        name
-                        img
-                        social
-                      }
+                      ${MEMBER_DATA_FRAGMENT}
                     }
                     votes {
                       voter {
-                        account
-                        profile {
-                          name
-                          img
-                          social
-                        }
+                        ${MEMBER_DATA_FRAGMENT}
                       }
                       candidate {
-                        account
-                        profile {
-                          name
-                          img
-                          social
-                        }
+                        ${MEMBER_DATA_FRAGMENT}
                       }
                       video
                     }
@@ -209,7 +189,7 @@ const currentElectionGlobalDataQuery = `
 }
 `;
 
-export const useCurrentGlobalElectionData = (): Query<ElectionGlobalQueryData> => {
+export const useCurrentGlobalElectionData = (): QueryResult<ElectionGlobalQueryData> => {
     const query = useQuery<any>(currentElectionGlobalDataQuery);
 
     if (query.data) {
@@ -237,31 +217,19 @@ const mapQueriedRounds = (queriedRoundsEdges: any) =>
 
 const mapQueriedRoundsGroups = (queriedRoundsGroupsEdges: any) =>
     queriedRoundsGroupsEdges?.map(({ node: groupNode }: any) => ({
-        winner: formatQueriedMemberAccountData(groupNode.winner),
+        winner: formatQueriedMemberData(groupNode.winner),
         votes: mapQueriedGroupVotes(groupNode.votes),
     })) || [];
 
 const mapQueriedGroupVotes = (votes: any) => {
     return (
         votes?.map((vote: any) => ({
-            voter: formatQueriedMemberAccountData(vote.voter),
-            candidate: formatQueriedMemberAccountData(vote.candidate),
+            voter: formatQueriedMemberData(vote.voter),
+            candidate: formatQueriedMemberData(vote.candidate),
             video: vote.video,
         })) || []
     );
 };
-
-const formatQueriedMemberAccountData = (
-    memberAccountData: any
-): MemberAccountData | undefined =>
-    memberAccountData
-        ? {
-              account: memberAccountData.account,
-              name: memberAccountData.profile.name,
-              image: memberAccountData.profile.img,
-              socialHandles: JSON.parse(memberAccountData.profile.social),
-          }
-        : undefined;
 
 export interface ScheduledDistributionTargetAmountQuery {
     distributions: {

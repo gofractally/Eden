@@ -29,7 +29,7 @@ import {
     setElectionRoundVideo,
 } from "elections";
 import { RoundHeader } from "elections/components/ongoing-election-components";
-import { MemberAccountData, MemberGateContainer } from "members";
+import { MemberData, MemberGateContainer } from "members";
 
 export const RoundVideoUploadPage = () => {
     const {
@@ -50,7 +50,7 @@ export const RoundVideoUploadPage = () => {
     if (isError || !currentElection) return <ErrorLoadingElection />;
 
     const uploadLimitTime = electionState
-        ? dayjs(electionState.last_election_time + "Z").add(48, "hour")
+        ? dayjs(electionState.last_election_time + "Z").add(2, "weeks")
         : dayjs().add(1, "day");
 
     const isUploadExpired =
@@ -254,7 +254,7 @@ const LoaderSection = () => (
 interface HeaderProps {
     isOngoing: boolean;
     roundIndex: number;
-    winner?: MemberAccountData;
+    winner?: MemberData;
     roundStartTime?: dayjs.Dayjs;
     roundEndTime?: dayjs.Dayjs;
 }

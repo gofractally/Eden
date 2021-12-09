@@ -64,7 +64,6 @@ export class EdenSubchain {
                     this.imports
                 );
             } else {
-                console.log("instantiateStreaming missing; using fallback");
                 const module = await WebAssembly.compile(
                     await (await Promise.resolve(response)).arrayBuffer()
                 );
@@ -183,6 +182,21 @@ export class EdenSubchain {
                     block.length,
                     eosioIrreversible
                 );
+            });
+        });
+    }
+
+    getShipBlocksRequest(blockNum: number) {
+        return this.protect(() => {
+            if (!this.exports.getShipBlocksRequest(blockNum)) return null;
+            return this.resultAsUint8Array();
+        });
+    }
+
+    pushShipMessage(message: Uint8Array): boolean {
+        return this.protect(() => {
+            return this.withData(message, (addr) => {
+                return this.exports.pushShipMessage(addr, message.length);
             });
         });
     }

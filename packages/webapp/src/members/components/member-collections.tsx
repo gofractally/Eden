@@ -1,93 +1,135 @@
-import React, { useEffect, useState } from "react";
+import React from "react";
+import { Tab } from "@headlessui/react";
 
-import { Button, Container, Heading, LoadingCard } from "_app";
+import { Container, LoadingContainer, MessageContainer, Text } from "_app";
 import { MemberChip, MembersGrid } from "members";
 
-import { getCollection, getCollectedBy, memberDataDefaults } from "../api";
 import { MemberData } from "../interfaces";
+import { useMemberNFTCollection, useMemberNFTCollectors } from "nfts/hooks";
 
 interface Props {
     member: MemberData;
 }
 
 export const MemberCollections = ({ member }: Props) => {
-    const [tab, setTab] = useState<"collection" | "collectedBy">("collection");
-    const [isLoading, setLoading] = useState(false);
-    const [members, setMembers] = useState<MemberData[] | undefined>(undefined);
-
-    useEffect(() => {
-        const loadMember = async () => {
-            if (tab === "collection") {
-                const members = await getCollection(member.account);
-                setMembers(members);
-            } else {
-                const { members, unknownOwners } = await getCollectedBy(
-                    member.templateId
-                );
-                setMembers([
-                    ...members,
-                    ...unknownOwners.map(externalOwnersCards),
-                ]);
-            }
-            setLoading(false);
-        };
-        setLoading(true);
-        loadMember();
-    }, [member, tab]);
-
     return (
-        <div className="divide-y">
-            <Container className="pt-8 space-y-2">
-                <Heading size={1}>NFTs</Heading>
-                <div className="space-x-3">
-                    <Button
-                        onClick={() => setTab("collection")}
-                        size="sm"
-                        type={tab === "collection" ? "primary" : "neutral"}
-                        disabled={tab === "collection"}
-                    >
-                        NFT Collection
-                    </Button>
-                    <Button
-                        onClick={() => setTab("collectedBy")}
-                        size="sm"
-                        type={tab === "collectedBy" ? "primary" : "neutral"}
-                        disabled={tab === "collectedBy"}
-                    >
-                        NFT Collectors
-                    </Button>
-                </div>
-                {tab === "collection" ? (
-                    <p>
-                        <span className="font-medium">{member.name}</span>{" "}
-                        collects NFTs for the following Eden members:
-                    </p>
-                ) : (
-                    <p>
-                        The following Eden members or accounts collect one or
-                        more of{" "}
-                        <span className="font-medium">{member.name}'s</span>{" "}
-                        NFTs.
-                    </p>
-                )}
-            </Container>
-            {isLoading ? (
-                <LoadingCard />
-            ) : (
-                <MembersGrid members={members || []}>
-                    {(member) => (
-                        <MemberChip
-                            key={`member-collection-${member.account}`}
-                            member={member}
-                        />
-                    )}
-                </MembersGrid>
-            )}
-        </div>
+        <Tab.Group>
+            <Tab.List className="flex">
+                <StyledTab>NFT Collection</StyledTab>
+                <StyledTab>NFT Collectors</StyledTab>
+            </Tab.List>
+            <Tab.Panels>
+                <Tab.Panel>
+                    <Collection member={member} />
+                </Tab.Panel>
+                <Tab.Panel>
+                    <Collectors member={member} />
+                </Tab.Panel>
+            </Tab.Panels>
+        </Tab.Group>
     );
 };
 
-const externalOwnersCards = (owner: string): MemberData => ({
-    ...memberDataDefaults,
-    name: owner,
-});
+export default MemberCollections;
+
+const tabClassName = ({ selected }: { selected: boolean }) => {
+    const baseClass =
+        "flex-1 lg:flex-none h-14 lg:px-12 border-b-2 focus:outline-none hover:bg-gray-100";
+    if (!selected)
+        return `${baseClass} text-gray-500 border-white hover:border-gray-100`;
+    return `${baseClass} border-blue-500 text-gray-700`;
+};
+
+const StyledTab = ({ children }: { children: React.ReactNode }) => (
+    <Tab className={tabClassName}>
+        <p className="text-sm font-semibold">{children}</p>
+    </Tab>
+);
+
+const Collection = ({ member: { account, name } }: Props) => {
+    const { data: nfts, isLoading, isError } = useMemberNFTCollection(account);
+
+    if (isLoading) return <LoadingContainer />;
+
+    if (isError) {
+        return (
+            <MessageContainer
+                title="Error loading collection information"
+                message="Please reload the page to try again."
+            />
+        );
+    }
+
+    if (!nfts?.length) {
+        return (
+            <MessageContainer
+                title="No NFTs found"
+                message="This user is not collecting any Eden member NFTs."
+            />
+        );
+    }
+
+    return (
+        <>
+            <Container>
+                <Text>
+                    <span className="font-medium">{name}</span> collects NFTs
+                    for the following Eden members:
+                </Text>
+            </Container>
+            <MembersGrid members={nfts}>
+                {(member) => (
+                    <MemberChip
+                        key={`member-collection-${member.account}`}
+                        member={member}
+                    />
+                )}
+            </MembersGrid>
+        </>
+    );
+};
+
+const Collectors = ({ member: { account, name } }: Props) => {
+    const { data: collectors, isLoading, isError } = useMemberNFTCollectors(
+        account
+    );
+
+    if (isLoading) return <LoadingContainer />;
+
+    if (isError) {
+        return (
+            <MessageContainer
+                title="Error loading collector information"
+                message="Please reload the page to try again."
+            />
+        );
+    }
+
+    if (!collectors.length) {
+        return (
+            <MessageContainer
+                title="No collectors found"
+                message="No one is collecting this member's NFTs."
+            />
+        );
+    }
+
+    return (
+        <>
+            <Container>
+                <Text>
+                    The following Eden members or accounts collect one or more
+                    of <span className="font-medium">{name}'s</span> NFTs.
+                </Text>
+            </Container>
+            <MembersGrid members={collectors}>
+                {(member) => (
+                    <MemberChip
+                        key={`member-collector-${member.account}`}
+                        member={member}
+                    />
+                )}
+            </MembersGrid>
+        </>
+    );
+};

@@ -3,11 +3,13 @@ import { BiLeftArrowAlt, BiRightArrowAlt } from "react-icons/bi";
 import { Text } from "./text";
 
 interface Props {
-    paginate: (increment: number) => void;
     hasNext: boolean;
     hasPrevious: boolean;
+    paginate?: (increment: number) => void;
     pageNumber?: number;
     totalPages?: number;
+    goToNextPage?: () => void;
+    goToPrevPage?: () => void;
 }
 
 const PAGE_BUTTON_BASE_CLASS =
@@ -16,9 +18,11 @@ const PAGE_BUTTON_BASE_CLASS =
 export const PaginationNav = ({
     hasPrevious,
     hasNext,
-    paginate,
+    paginate, // TODO: Remove paginate once all paginated queries use paginated box queries
     pageNumber,
     totalPages,
+    goToNextPage,
+    goToPrevPage,
 }: Props) => (
     <div className="flex items-center justify-center space-x-3">
         {Boolean(totalPages && pageNumber) && (
@@ -28,12 +32,18 @@ export const PaginationNav = ({
         )}
         {hasPrevious && (
             <div className={`${PAGE_BUTTON_BASE_CLASS} pl-px`}>
-                <BiLeftArrowAlt size={22} onClick={() => paginate(-1)} />
+                <BiLeftArrowAlt
+                    size={22}
+                    onClick={goToPrevPage ?? (() => paginate?.(-1))}
+                />
             </div>
         )}
         {hasNext && (
             <div className={PAGE_BUTTON_BASE_CLASS}>
-                <BiRightArrowAlt size={22} onClick={() => paginate(1)} />
+                <BiRightArrowAlt
+                    size={22}
+                    onClick={goToNextPage ?? (() => paginate?.(1))}
+                />
             </div>
         )}
     </div>

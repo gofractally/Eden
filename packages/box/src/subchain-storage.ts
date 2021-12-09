@@ -1,4 +1,4 @@
-import { EdenSubchain } from "@edenos/common/dist/subchain";
+import { EdenSubchain } from "@edenos/eden-subchain-client/dist/EdenSubchain";
 import * as config from "./config";
 import * as fs from "fs";
 import logger from "./logger";
@@ -114,6 +114,23 @@ export class Storage {
                 irreversible
             );
             this.stateWasm!.pushJsonBlock(jsonBlock, irreversible);
+            this.stateWasm!.trimBlocks();
+            return result;
+        });
+        this.changed();
+        return result;
+    }
+
+    getShipBlocksRequest(blockNum: number): Uint8Array {
+        return this.protect(() =>
+            this.blocksWasm!.getShipBlocksRequest(blockNum)
+        )!;
+    }
+
+    pushShipMessage(shipMessage: Uint8Array) {
+        const result = this.protect(() => {
+            const result = this.blocksWasm!.pushShipMessage(shipMessage);
+            this.stateWasm!.pushShipMessage(shipMessage);
             this.stateWasm!.trimBlocks();
             return result;
         });

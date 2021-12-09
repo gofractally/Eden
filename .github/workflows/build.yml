@@ -73,7 +73,9 @@ jobs:
             - name: show_cache
               if: steps.filter.outputs.src == 'true'
               id: show_cache
-              run: echo "${{ runner.os }}-ccache_whole-${{ steps.ccache_cache_timestamp.outputs.timestamp }}"
+              run: |
+                  echo "${{ runner.os }}-ccache_whole-${{ steps.ccache_cache_timestamp.outputs.timestamp }}"
+                  echo "${{ runner.os }}-product_cache-${{ steps.ccache_cache_timestamp.outputs.timestamp }}"
 
             - name: ccache cache files
               if: steps.filter.outputs.src == 'true'
@@ -83,6 +85,14 @@ jobs:
                   key: ${{ runner.os }}-ccache_whole-${{ steps.ccache_cache_timestamp.outputs.timestamp }}
                   restore-keys: |
                       ${{ runner.os }}-ccache_whole-
+
+            - name: product cache files
+              uses: actions/cache@v1.1.0
+              with:
+                  path: product_cache
+                  key: ${{ runner.os }}-product_cache-${{ steps.ccache_cache_timestamp.outputs.timestamp }}
+                  restore-keys: |
+                      ${{ runner.os }}-product_cache-
 
             - name: 🛠 Build
               if: steps.filter.outputs.src == 'true'
@@ -104,6 +114,22 @@ jobs:
                   make -j$(nproc)
 
                   tar czf clsdk-ubuntu-20-04.tar.gz clsdk
+                  rm -rf ../product_cache
+                  mkdir -p ../product_cache
+                  cp clsdk-ubuntu-20-04.tar.gz ../product_cache
+                  cp atomicassets.abi ../product_cache
+                  cp atomicassets.wasm ../product_cache
+                  cp atomicmarket.abi ../product_cache
+                  cp atomicmarket.wasm ../product_cache
+                  cp bios.wasm ../product_cache
+                  cp boot.wasm ../product_cache
+                  cp eden-micro-chain.wasm ../product_cache
+                  cp eden.abi ../product_cache
+                  cp eden.wasm ../product_cache
+                  cp run-full-election.wasm ../product_cache
+                  cp run-genesis.wasm ../product_cache
+                  cp token.abi ../product_cache
+                  cp token.wasm ../product_cache
 
                   echo =====
                   ls -la ${GITHUB_WORKSPACE}
@@ -124,22 +150,38 @@ jobs:
                       ccache.log
 
             - name: 📃 Upload clsdk
-              if: steps.filter.outputs.src == 'true'
               uses: actions/upload-artifact@v2
               with:
                   name: clsdk
                   path: |
-                      build/clsdk-ubuntu-20-04.tar.gz
+                      product_cache/clsdk-ubuntu-20-04.tar.gz
 
             - name: 📃 Upload Eden Smart Contract
-              if: steps.filter.outputs.src == 'true'
               uses: actions/upload-artifact@v2
               with:
                   name: Eden Smart Contract
                   path: |
-                      build/eden.abi
-                      build/eden.wasm
-                      build/eden-micro-chain.wasm
+                      product_cache/eden.abi
+                      product_cache/eden.wasm
+                      product_cache/eden-micro-chain.wasm
+
+            - name: 📃 Upload Ephemeral Eden Chains Runners
+              uses: actions/upload-artifact@v2
+              with:
+                  name: Ephemeral Eden Chains Runners
+                  path: |
+                      product_cache/atomicassets.abi
+                      product_cache/atomicassets.wasm
+                      product_cache/atomicmarket.abi
+                      product_cache/atomicmarket.wasm
+                      product_cache/bios.wasm
+                      product_cache/boot.wasm
+                      product_cache/eden.abi
+                      product_cache/eden.wasm
+                      product_cache/token.abi
+                      product_cache/token.wasm
+                      product_cache/run-genesis.wasm
+                      product_cache/run-full-election.wasm
 
     build-micro-chain:
         name: Build Micro Chain
@@ -210,57 +252,6 @@ jobs:
                   name: Eden Microchain
                   path: |
                       build/eden-micro-chain.wasm
-
-    box-e2e:
-        needs: build-micro-chain
-        name: Eden Box E2E Tests
-        runs-on: ubuntu-latest
-
-        steps:
-            - name: ✅ Checkout code
-              uses: actions/checkout@v2
-
-            - uses: dorny/paths-filter@v2
-              id: filter
-              with:
-                  filters: |
-                      src:
-                        - ".github/workflows/build.yml"
-
-                        - ".eslintignore"
-                        - ".eslintrc.js"
-                        - ".prettierrc.json"
-                        - "lerna.json"
-                        - "package.json"
-                        - "packages/common/**"
-                        - "tsconfig.build.json"
-                        - "tsconfig.json"
-                        - "yarn.lock"
-
-                        - "docker/eden-box.Dockerfile"
-                        - "packages/box/**"
-
-            - name: Download Eden Microchain
-              if: steps.filter.outputs.src == 'true'
-              uses: actions/download-artifact@v2
-              with:
-                  name: Eden Microchain
-                  path: build
-
-            - name: 🛠 Build and Start Box
-              if: steps.filter.outputs.src == 'true'
-              run: |
-                  export SUBCHAIN_DFUSE_PREVENT_CONNECT=1
-                  yarn
-                  yarn build --stream
-                  cd packages/box
-                  yarn start &
-
-            - name: 🧪 Run E2E
-              if: steps.filter.outputs.src == 'true'
-              # TODO: add real E2E tests... for now it's just a shameless curl ping
-              run: |
-                  curl localhost:3032
 
     box-build:
         needs: build-micro-chain
@@ -336,9 +327,9 @@ jobs:
                   tags: ${{ steps.prep.outputs.tags }}
                   context: .
 
-    webapp-e2e:
-        needs: build-micro-chain
-        name: WebApp E2E Tests
+    e2e:
+        needs: [build-cpp, build-micro-chain]
+        name: E2E Tests
         environment: e2e_tests
         runs-on: ubuntu-latest
 
@@ -363,8 +354,8 @@ jobs:
                         - "tsconfig.json"
                         - "yarn.lock"
 
-                        - "docker/eden-webapp.Dockerfile"
-                        - "packages/webapp/**"
+                        - "packages/**"
+                        - "contracts/**"
 
             - name: Download Eden Microchain
               if: steps.filter.outputs.src == 'true'
@@ -373,20 +364,45 @@ jobs:
                   name: Eden Microchain
                   path: build
 
+            - name: Download Ephemeral Chain Runners
+              if: steps.filter.outputs.src == 'true'
+              uses: actions/download-artifact@v2
+              with:
+                  name: Ephemeral Eden Chains Runners
+                  path: build
+
+            - name: Download clsdk
+              if: steps.filter.outputs.src == 'true'
+              uses: actions/download-artifact@v2
+              with:
+                  name: clsdk
+                  path: build
+
+            - name: Start Genesis Ephemeral Chain
+              if: steps.filter.outputs.src == 'true'
+              run: |
+                  cp ./scripts/eden_chain_runner.sh ./build
+                  cd build
+                  tar -xvf clsdk-ubuntu-20-04.tar.gz clsdk/bin
+                  ls -la
+                  sh -x ./eden_chain_runner.sh run-genesis.wasm
+
             - name: 🛠 Build and Start WebApp
               if: steps.filter.outputs.src == 'true'
               run: |
-                  export SUBCHAIN_DFUSE_PREVENT_CONNECT=1
+                  export DFUSE_PREVENT_CONNECT=1
+                  export NODE_ENV=test
+                  env
                   yarn
                   yarn build --stream --ignore @edenos/example-history-app
-                  yarn start --stream --ignore @edenos/example-history-app &
+                  yarn start-test --stream --ignore @edenos/example-history-app &
+              env:
+                  IPFS_PINATA_JWT: ${{ secrets.IPFS_PINATA_JWT }}
 
             - name: 🧪 Run E2E
               if: steps.filter.outputs.src == 'true'
               run: |
                   yarn test --stream
-              env:
-                  cypress_test_users_pk: ${{ secrets.CYPRESS_TEST_USERS_PK }}
 
             - name: 🎥 Upload Cypress Results
               if: always() && steps.filter.outputs.src == 'true'

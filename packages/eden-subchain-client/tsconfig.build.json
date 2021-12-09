@@ -1,0 +1,12 @@
+{
+    "extends": "../../tsconfig.build.json",
+    "compilerOptions": {
+        "resolveJsonModule": true,
+        "strict": true,
+        "outDir": "./dist",
+        "jsx": "react"
+    },
+    "include": [
+        "src/**/*"
+    ]
+}

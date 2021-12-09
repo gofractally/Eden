@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef, RefObject } from "react";
 
 // From: https://overreacted.io/making-setinterval-declarative-with-react-hooks
 export const useInterval = (callback: () => void, delay: number | null) => {
@@ -50,16 +50,18 @@ interface Countdown {
     startTime?: Date;
     endTime: Date;
     onEnd?: () => void;
+    interval?: number;
 }
 
 export const useCountdown = ({
     startTime = new Date(),
     endTime,
     onEnd,
+    interval = 500,
 }: Countdown) => {
     const [percentDecimal, setPercent] = useState<number>(0);
 
-    const intervalDelay = percentDecimal > 1 ? null : 500;
+    const intervalDelay = percentDecimal > 1 ? null : interval;
     useInterval(() => {
         const elapsedTimeMs = now().getTime() - startTime.getTime();
         const durationMs = endTime.getTime() - startTime.getTime();
@@ -69,7 +71,8 @@ export const useCountdown = ({
     }, intervalDelay);
 
     const msRemaining = Math.max(endTime.getTime() - now().getTime(), 0);
-    const hrRemaining = Math.floor(msRemaining / 1000 / 60 / 60);
+    const daysRemaining = Math.floor(msRemaining / 1000 / 60 / 60 / 24);
+    const hrRemaining = Math.floor(msRemaining / 1000 / 60 / 60) % 24;
     const minRemaining = Math.floor(msRemaining / 1000 / 60) % 60;
     const secRemaining = Math.floor(msRemaining / 1000) % 60;
 
@@ -78,10 +81,14 @@ export const useCountdown = ({
         secRemaining,
         minRemaining,
         hrRemaining,
+        daysRemaining,
         percentDecimal,
         hmmss: `${Boolean(hrRemaining) ? hrRemaining + ":" : ""}${padTime(
             minRemaining
         )}:${padTime(secRemaining)}`,
+        "d-h-m": `${Boolean(daysRemaining) ? daysRemaining + "d" : ""} ${
+            Boolean(hrRemaining) ? hrRemaining + "h" : ""
+        } ${Boolean(minRemaining) ? minRemaining + "m" : ""}`.trim(),
     };
 };
 
@@ -92,4 +99,46 @@ export const usePrevious = <T>(value: T): T => {
         ref.current = value;
     }, [value]);
     return ref.current;
+};
+
+// Define general type for useWindowSize hook, which includes width and height
+interface Size {
+    width: number | undefined;
+    height: number | undefined;
+}
+
+// https://usehooks.com/useWindowSize/
+export const useWindowSize = (): Size => {
+    // Initialize state with undefined width/height so server and client renders match
+    // Learn more here: https://joshwcomeau.com/react/the-perils-of-rehydration/
+    const [windowSize, setWindowSize] = useState<Size>({
+        width: undefined,
+        height: undefined,
+    });
+    useEffect(() => {
+        // Handler to call on window resize
+        const handleResize = () => {
+            // Set window width/height to state
+            setWindowSize({
+                width: window.innerWidth,
+                height: window.innerHeight,
+            });
+        };
+        // Add event listener
+        window.addEventListener("resize", handleResize);
+        // Call handler right away so state gets updated with initial window size
+        handleResize();
+        // Remove event listener on cleanup
+        return () => window.removeEventListener("resize", handleResize);
+    }, []); // Empty array ensures that effect is only run on mount
+    return windowSize;
+};
+
+export const useFocus = <T extends HTMLElement>(): [
+    RefObject<T>,
+    ((options?: FocusOptions | undefined) => void) | (() => void)
+] => {
+    const htmlElRef = useRef<T>(null);
+    const setFocus = () => htmlElRef?.current?.focus() ?? {};
+    return [htmlElRef, setFocus];
 };

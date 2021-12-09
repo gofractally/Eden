@@ -3,10 +3,8 @@ import { useQueries, useQuery, UseQueryResult } from "react-query";
 import {
     EdenMember,
     getEdenMember,
-    getMember,
     getMembers,
     getTreasuryStats,
-    getNewMembers,
     getMembersStats,
     MemberData,
     MemberStats,
@@ -41,7 +39,6 @@ import {
     CurrentElection,
     Election,
     ElectionCompletedRound,
-    ElectionState,
     VoteData,
 } from "elections/interfaces";
 import { EncryptionScope, getEncryptedData } from "encryption/api";
@@ -188,19 +185,9 @@ export const queryMembers = (
     };
 };
 
-export const queryNewMembers = (page: number, pageSize: number) => ({
-    queryKey: ["query_new_members", page, pageSize],
-    queryFn: () => getNewMembers(page, pageSize),
-});
-
 export const queryMemberByAccountName = (accountName: string) => ({
     queryKey: ["query_member", accountName],
     queryFn: () => getEdenMember(accountName),
-});
-
-export const queryMemberData = (account: string) => ({
-    queryKey: ["query_member_data", account],
-    queryFn: () => getMember(account),
 });
 
 export const queryDistributionState = () => ({

@@ -1,5 +1,5 @@
 # Install dependencies only when needed
-FROM node:alpine AS deps
+FROM node:lts-alpine AS deps
 
 RUN apk add --no-cache libc6-compat
 WORKDIR /app
@@ -8,15 +8,17 @@ ENV PATH /app/node_modules/.bin:$PATH
 
 COPY package.json yarn.lock ./
 COPY ./packages/common/package.json ./packages/common/
+COPY ./packages/eden-subchain-client/package.json ./packages/eden-subchain-client/
 COPY ./packages/webapp/package.json ./packages/webapp/
 
 RUN yarn install --frozen-lockfile
 
 # Rebuild the source code only when needed
-FROM node:alpine AS builder
+FROM node:lts-alpine AS builder
 WORKDIR /app
 
 COPY ./packages/common ./packages/common
+COPY ./packages/eden-subchain-client ./packages/eden-subchain-client
 COPY ./packages/webapp ./packages/webapp
 COPY .eslintignore .eslintrc.js .prettierrc.json lerna.json package.json tsconfig.build.json tsconfig.json yarn.lock ./
 
@@ -27,7 +29,7 @@ COPY --from=deps /app/packages/webapp/node_modules ./packages/webapp/node_module
 RUN yarn build --stream
 
 # Production image, copy all the files and run next
-FROM node:alpine AS runner
+FROM node:lts-alpine AS runner
 WORKDIR /app
 
 ENV NODE_ENV production

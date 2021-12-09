@@ -3,9 +3,10 @@ import * as fs from "fs";
 import nodeFetch from "node-fetch";
 import WebSocketClient from "ws";
 import { performance } from "perf_hooks";
-import { dfuseConfig, subchainConfig } from "./config";
-import { Storage } from "./subchain-storage";
-import logger from "./logger";
+
+import { dfuseConfig, subchainConfig } from "../config";
+import { Storage } from "../subchain-storage";
+import logger from "../logger";
 
 const query = `
 subscription ($query: String!, $cursor: String, $limit: Int64, $low: Int64,
@@ -70,18 +71,18 @@ interface JsonTrx {
     };
 }
 
-async function webSocketFactory(
+const webSocketFactory = async (
     url: string,
     protocols: string[] = []
-): Promise<WebSocketClient> {
+): Promise<WebSocketClient> => {
     const webSocket = new WebSocketClient(url, protocols, {
         handshakeTimeout: 30 * 1000, // 30s
         maxPayload: 10 * 1024 * 1024,
     });
     return webSocket;
-}
+};
 
-export default class DfuseReceiver {
+export class DfuseReceiver {
     storage: Storage;
     stream: Stream | null = null;
     jsonTransactions: JsonTrx[] = [];
