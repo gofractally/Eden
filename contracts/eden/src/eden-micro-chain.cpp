@@ -2040,7 +2040,7 @@ bool dispatch(eosio::name action_name, const action_context& context, eosio::inp
 
 void run(const action_context& context, eosio::input_stream& s)
 {
-   eden::run_auth auth;
+   eosio::run_auth auth;
    eosio::varuint32 num_verbs;
    from_bin(auth, s);
    from_bin(num_verbs, s);

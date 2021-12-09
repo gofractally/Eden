@@ -48,7 +48,7 @@ EOSIO_ABIGEN(
             "FLOAT_VEC",
             "DOUBLE_VEC",
             "STRING_VEC"),
-    variant("run_auth", eden::run_auth),
+    variant("run_auth", eosio::run_auth),
     variant("verb", eden::verb),
     actions(eden::actions),
     verbs(eden::actions),

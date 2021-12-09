@@ -87,7 +87,7 @@ namespace eden
                       eosio::name eden_account,
                       const eosio::public_key& key);
 
-      void run(eosio::ignore<run_auth> auth, eosio::ignore<std::vector<verb>> verbs);
+      void run(eosio::ignore<eosio::run_auth> auth, eosio::ignore<std::vector<verb>> verbs);
 
       void withdraw(eosio::name owner, const eosio::asset& quantity);
 
