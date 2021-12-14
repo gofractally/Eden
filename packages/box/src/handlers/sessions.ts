@@ -24,7 +24,6 @@ sessionHandler.post("/sign", async (req: Request, res: Response) => {
         if (parsedRequest.success !== true) {
             throw new BadRequestError(parsedRequest.error.flatten());
         }
-        console.info("parsed req >>>", parsedRequest);
 
         const requestData: SessionSignRequest = parsedRequest.data;
         return await signSessionRequest(requestData, res);
