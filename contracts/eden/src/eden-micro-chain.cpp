@@ -8,6 +8,7 @@
 #include <clchain/subchain.hpp>
 #include <eden.hpp>
 #include <eosio/abi.hpp>
+#include <eosio/crypto.hpp>
 #include <eosio/from_bin.hpp>
 #include <eosio/ship_protocol.hpp>
 #include <eosio/to_bin.hpp>
@@ -397,6 +398,7 @@ struct session_object : public chainbase::object<session_table, session_object>
    eosio::public_key key;
    eosio::block_timestamp expiration;
    std::string description;
+   std::optional<eosio::varuint32> last_sequence;
 
    SessionKey by_pk() const { return {eden_account, key}; }
 };
@@ -1904,6 +1906,7 @@ void handle_event(const eden::session_new_event& event)
       session.key = event.key;
       session.expiration = event.expiration;
       session.description = event.description;
+      session.last_sequence = std::nullopt;
    });
 }
 
@@ -1981,9 +1984,37 @@ bool dispatch(eosio::name action_name, const action_context& context, eosio::inp
 
 void run(const action_context& context, eosio::input_stream& s)
 {
-   eden::run_auth auth;
+   eosio::varuint32 auth_type;
+   from_bin(auth_type, s);
+
+   eosio::public_key session_key;
+
+   if (auth_type.value == (int)eden::run_auth_type::no_auth)
+   {
+   }
+   else if (auth_type.value == (int)eden::run_auth_type::account_auth)
+   {
+      eden::account_auth a;
+      from_bin(a, s);
+   }
+   else if (auth_type.value == (int)eden::run_auth_type::signature_auth)
+   {
+      eosio::signature signature;
+      eosio::name contract;
+      eosio::name eden_account;
+      eosio::varuint32 sequence;
+      from_bin(signature, s);
+      auto digest = eosio::sha256(s.get_pos(), s.remaining());
+      session_key = eosio::recover_key(digest, signature);
+      from_bin(contract, s);
+      from_bin(eden_account, s);
+      from_bin(sequence, s);
+
+      auto key = SessionKey{eden_account, session_key};
+      modify<by_pk>(db.sessions, key, [&](auto& row) { row.last_sequence = sequence; });
+   }
+
    eosio::varuint32 num_verbs;
-   from_bin(auth, s);
    from_bin(num_verbs, s);
    for (uint32_t i = 0; i < num_verbs.value; ++i)
    {
