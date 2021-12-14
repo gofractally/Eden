@@ -743,7 +743,7 @@ TEST_CASE("election")
    t.electdonate_all();
    {
       eden::current_election_state_singleton state("eden.gm"_n, eden::default_scope);
-      auto current = std::get<eden::current_election_state_registration>(state.get());
+      auto current = std::get<eden::current_election_state_registration_v1>(state.get());
       CHECK(eosio::convert_to_json(current.start_time) == "\"2020-07-04T15:30:00.000\"");
    }
    t.skip_to("2020-07-03T15:29:59.500");
@@ -761,6 +761,18 @@ TEST_CASE("election")
    CHECK(result.lead_representative == "egeon"_n);
    std::sort(result.board.begin(), result.board.end());
    CHECK(result.board == std::vector{"alice"_n, "egeon"_n, "pip"_n});
+}
+
+TEST_CASE("election reschedule")
+{
+   eden_tester t;
+   t.genesis();
+   t.electdonate_all();
+   t.eden_gm.act<actions::electsettime>(s2t("2020-03-02T15:30:01.000"));
+   t.skip_to(t.next_election_time().to_time_point() - eosio::days(1));
+   t.electseed(t.next_election_time().to_time_point() - eosio::days(1));
+   t.skip_to(t.next_election_time().to_time_point());
+   expect(t.alice.trace<actions::electprocess>(100), "No voters");
 }
 
 TEST_CASE("mid-election induction")
@@ -976,9 +988,9 @@ TEST_CASE("budget distribution minimum period")
    t.genesis();
    t.set_balance(s2a("36.0000 EOS"));
    t.run_election();
-   t.electdonate_all();
    t.set_balance(s2a("100000.0000 EOS"));
    t.eden_gm.act<actions::electsettime>(s2t("2020-09-02T15:30:01.000"));
+   t.electdonate_all();
    t.run_election();
    std::map<eosio::block_timestamp, eosio::asset> expected{
        {s2t("2020-07-04T15:30:00.000"), s2a("1.8000 EOS")},
@@ -994,7 +1006,6 @@ TEST_CASE("budget distribution exact")
    t.genesis();
    t.set_balance(s2a("36.0000 EOS"));
    t.run_election();
-   t.electdonate_all();
    t.set_balance(s2a("1000.0000 EOS"));
    t.eden_gm.act<actions::electsettime>(s2t("2020-09-02T15:30:00.000"));
    t.run_election();
@@ -1011,7 +1022,6 @@ TEST_CASE("budget distribution underflow")
    t.genesis();
    t.set_balance(s2a("36.0000 EOS"));
    t.run_election();
-   t.electdonate_all();
    t.set_balance(s2a("1000.0000 EOS"));
    t.eden_gm.act<actions::electsettime>(s2t("2020-09-02T15:30:01.000"));
    t.run_election();
@@ -1235,9 +1245,9 @@ TEST_CASE("settablerows")
    t.eden_gm.act<actions::settablerows>(
        eosio::name(eden::default_scope),
        std::vector<eden::table_variant>{
-           eden::current_election_state_registration{s2t("2020-01-02T00:00:00.0000")}});
+           eden::current_election_state_registration_v1{s2t("2020-01-02T00:00:00.0000")}});
    eden::current_election_state_singleton state{"eden.gm"_n, eden::default_scope};
-   auto value = std::get<eden::current_election_state_registration>(state.get());
+   auto value = std::get<eden::current_election_state_registration_v1>(state.get());
    CHECK(value.start_time.to_time_point() == s2t("2020-01-02T00:00:00.0000"));
 }
 

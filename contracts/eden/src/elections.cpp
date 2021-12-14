@@ -201,13 +201,13 @@ namespace eden
       const auto* old_value = state_sing.get_or_null();
       if (old_value && *old_value == new_value)
          return;
-      if (auto n = std::get_if<current_election_state_registration>(&new_value))
+      if (auto n = std::get_if<current_election_state_registration_v1>(&new_value))
       {
          push_event(election_event_schedule{.election_time = n->start_time,
                                             .election_threshold = n->election_threshold},
                     contract);
       }
-      else if (auto n = std::get_if<current_election_state_seeding>(&new_value))
+      else if (auto n = std::get_if<current_election_state_seeding_v1>(&new_value))
       {
          push_event(election_event_seeding{.election_time = n->seed.end_time,
                                            .start_time = n->seed.start_time,
@@ -280,30 +280,58 @@ namespace eden
          return {};
       }
       auto state = state_sing.get();
-      if (auto* r = std::get_if<current_election_state_registration>(&state))
+      if (auto* r = get_if_derived<current_election_state_registration_v0>(&state))
       {
          return r->start_time;
       }
-      else if (auto* s = std::get_if<current_election_state_seeding>(&state))
+      else if (auto* s = get_if_derived<current_election_state_seeding_v0>(&state))
       {
          return s->seed.end_time.to_time_point();
       }
       return {};
    }
 
+   std::uint8_t elections::election_schedule_version()
+   {
+      if (!state_sing.exists())
+      {
+         return 1;
+      }
+      auto state = state_sing.get();
+      if (auto* r = get_if_derived<current_election_state_registration_v0>(&state))
+      {
+         return r->election_schedule_version;
+      }
+      else if (auto* s = get_if_derived<current_election_state_seeding_v0>(&state))
+      {
+         return s->election_schedule_version;
+      }
+      else if (auto* i = get_if_derived<current_election_state_init_voters_v0>(&state))
+      {
+         return i->election_schedule_version;
+      }
+      return 1;
+   }
+
    void elections::set_next_election_time(eosio::time_point election_time)
    {
       auto lock_time = eosio::current_time_point() + eosio::days(30);
       eosio::check(election_time >= lock_time, "New election time is too close");
+      uint8_t sequence = 1;
       if (state_sing.exists())
       {
          auto state = state_sing.get();
-         eosio::check(
-             std::holds_alternative<current_election_state_registration>(state) &&
-                 std::get<current_election_state_registration>(state).start_time >= lock_time,
-             "Election cannot be rescheduled");
+         bool okay = false;
+         if (auto r = get_if_derived<current_election_state_registration_v0>(&state))
+         {
+            sequence = r->election_schedule_version + 1;
+            eosio::check(sequence != 0, "Integer overflow: election rescheduled too many times");
+            okay = r->start_time >= lock_time;
+         }
+         eosio::check(okay, "Election cannot be rescheduled");
       }
-      set_state_sing(current_election_state_registration{election_time, max_active_members + 1});
+      set_state_sing(
+          current_election_state_registration_v1{election_time, max_active_members + 1, sequence});
    }
 
    void elections::set_time(uint8_t day, const std::string& time)
@@ -338,7 +366,7 @@ namespace eden
                          : 0;
       uint16_t new_threshold = active_members + (active_members + 9) / 10;
       new_threshold = std::clamp(new_threshold, min_election_threshold, max_active_members);
-      set_state_sing(current_election_state_registration{
+      set_state_sing(current_election_state_registration_v1{
           get_election_time(state.election_start_time, origin_time + eosio::days(180)),
           new_threshold});
    }
@@ -363,14 +391,16 @@ namespace eden
          // Ignore events that would trigger an election unless they move
          // the next election closer.
          auto current_state = state_sing.get();
-         if (auto* current = std::get_if<current_election_state_registration>(&current_state))
+         if (auto* current = get_if_derived<current_election_state_registration_v0>(&current_state))
          {
             auto new_start_time = eosio::block_timestamp{
                 get_election_time(state.election_start_time, now + eosio::days(30))};
             if (new_start_time < current->start_time)
             {
-               set_state_sing(
-                   current_election_state_registration{new_start_time, max_active_members + 1});
+               uint8_t sequence = current->election_schedule_version + 1;
+               eosio::check(sequence != 0, "Integer overflow: election rescheduled too many times");
+               set_state_sing(current_election_state_registration_v1{
+                   new_start_time, max_active_members + 1, sequence});
             }
          }
       }
@@ -380,7 +410,7 @@ namespace eden
    {
       eosio::check(btc_header.data.size() == 80, "Wrong size for BTC block header");
       auto state = state_sing.get();
-      if (auto* registration = std::get_if<current_election_state_registration>(&state))
+      if (auto* registration = get_if_derived<current_election_state_registration_v0>(&state))
       {
          auto now = eosio::current_block_time();
          eosio::block_timestamp seeding_start =
@@ -391,10 +421,11 @@ namespace eden
                  .election_time = registration->start_time,
              },
              contract);
-         state = current_election_state_seeding{
-             {.start_time = seeding_start, .end_time = registration->start_time.to_time_point()}};
+         state = current_election_state_seeding_v1{
+             {{.start_time = seeding_start, .end_time = registration->start_time.to_time_point()},
+              registration->election_schedule_version}};
       }
-      if (auto* seeding = std::get_if<current_election_state_seeding>(&state))
+      if (auto* seeding = get_if_derived<current_election_state_seeding_v0>(&state))
       {
          eosio::input_stream stream{btc_header.data};
          seeding->seed.update(stream);
@@ -413,13 +444,15 @@ namespace eden
 
    void elections::start_election()
    {
-      eosio::check(std::holds_alternative<current_election_state_seeding>(state_sing.get()),
-                   "Election seed not set");
-      auto old_state = std::get<current_election_state_seeding>(state_sing.get());
+      auto old_state_variant = state_sing.get();
+      auto old_state_ptr = get_if_derived<current_election_state_seeding_v0>(&old_state_variant);
+      eosio::check(old_state_ptr != nullptr, "Election seed not set");
+      auto& old_state = *old_state_ptr;
       auto election_start_time = old_state.seed.end_time.to_time_point();
       eosio::check(eosio::current_block_time() >= old_state.seed.end_time,
                    "Seeding window is still open");
-      set_state_sing(current_election_state_init_voters{0, election_rng{old_state.seed.current}});
+      set_state_sing(current_election_state_init_voters_v1{
+          0, election_rng{old_state.seed.current}, {}, 0, old_state.election_schedule_version});
       push_event(election_event_end_seeding{.election_time = election_start_time}, contract);
 
       // Must happen after the election is started
@@ -439,7 +472,7 @@ namespace eden
       bylaws.new_board();
    }
 
-   uint32_t elections::randomize_voters(current_election_state_init_voters& state,
+   uint32_t elections::randomize_voters(current_election_state_init_voters_v0& state,
                                         uint32_t max_steps)
    {
       members members(contract);
@@ -450,18 +483,13 @@ namespace eden
       {
          if (iter->status() == member_status::active_member)
          {
-            switch (iter->election_participation_status())
+            if (iter->election_participation_status() == state.election_schedule_version)
             {
-               case in_election:
-               {
-                  add_voter(state.rng, 0, state.next_member_idx, iter->account());
-                  break;
-               }
-               case not_in_election:
-               {
-                  members.set_rank(iter->account(), 0, eosio::name(-1));
-                  break;
-               }
+               add_voter(state.rng, 0, state.next_member_idx, iter->account());
+            }
+            else
+            {
+               members.set_rank(iter->account(), 0, eosio::name(-1));
             }
          }
          state.last_processed = iter->account();
@@ -495,7 +523,7 @@ namespace eden
    uint32_t elections::prepare_election(uint32_t max_steps)
    {
       auto state_variant = state_sing.get();
-      if (auto* state = std::get_if<current_election_state_seeding>(&state_variant))
+      if (auto* state = get_if_derived<current_election_state_seeding_v0>(&state_variant))
       {
          if (max_steps == 0)
          {
@@ -505,7 +533,7 @@ namespace eden
          state_variant = state_sing.get();
          --max_steps;
       }
-      if (auto* state = std::get_if<current_election_state_init_voters>(&state_variant))
+      if (auto* state = get_if_derived<current_election_state_init_voters_v0>(&state_variant))
       {
          // This needs to happen before any members have their ranks adjusted
          max_steps = distribute_monthly(contract, max_steps);
@@ -965,15 +993,27 @@ namespace eden
       return false;
    }
 
+   static bool is_election_running(current_election_state_singleton& state_sing)
+   {
+      if (!state_sing.exists())
+      {
+         return false;
+      }
+      auto state = state_sing.get();
+      if (std::holds_alternative<current_election_state_pending_date>(state_sing.get()))
+      {
+         return false;
+      }
+      if (auto* r = get_if_derived<current_election_state_registration_v0>(&state))
+      {
+         return eosio::current_block_time() >= r->start_time;
+      }
+      return true;
+   }
+
    void elections::on_resign(eosio::name member)
    {
-      eosio::check(
-          !state_sing.exists() ||
-              std::holds_alternative<current_election_state_pending_date>(state_sing.get()) ||
-              (std::holds_alternative<current_election_state_registration>(state_sing.get()) &&
-               std::get<current_election_state_registration>(state_sing.get()).start_time >
-                   eosio::current_block_time()),
-          "Cannot resign during an election");
+      eosio::check(!is_election_running(state_sing), "Cannot resign during an election");
       if (remove_from_board(member))
       {
          trigger_election();
@@ -986,8 +1026,7 @@ namespace eden
       if (iter == vote_tb.end())
       {
          auto current_state = state_sing.get();
-         bool valid_state =
-             !std::holds_alternative<current_election_state_init_voters>(current_state);
+         bool valid_state = !get_if_derived<current_election_state_init_voters_v0>(&current_state);
          election_state_singleton state{contract, default_scope};
          auto end_time =
              std::get<election_state_v0>(state.get()).last_election_time.to_time_point() +

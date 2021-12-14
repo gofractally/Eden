@@ -158,7 +158,7 @@ namespace eden
       if (elect_state.exists())
       {
          auto state = elect_state.get();
-         if (auto* reg = std::get_if<current_election_state_registration>(&state);
+         if (auto* reg = get_if_derived<current_election_state_registration_v0>(&state);
              reg && members.stats().active_members >= reg->election_threshold)
          {
             elections elections{get_self()};
