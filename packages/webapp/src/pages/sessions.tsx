@@ -1,15 +1,12 @@
-import { hexToUint8Array } from "eosjs/dist/eosjs-serialize";
-
 import {
     Button,
     onError,
     SideNavLayout,
     useCurrentMember,
     useUALAccount,
-    eosJsonRpc,
 } from "_app";
 import {
-    signSessionTransaction,
+    signAndBroadcastSessionTransaction,
     generateSessionKey,
     newSessionTransaction,
     sessionKeysStorage,
@@ -60,19 +57,10 @@ export const Sessions = () => {
             const { actions } = inductionTrx;
 
             // sign actions with session key
-            const signedSessionTrx = await signSessionTransaction(
+            await signAndBroadcastSessionTransaction(
                 ualAccount.accountName,
                 actions
             );
-            console.info("generated signedSessionTrx trx", signedSessionTrx);
-
-            const broadcastedRunTrx = await eosJsonRpc.send_transaction({
-                signatures: signedSessionTrx.signatures,
-                serializedTransaction: hexToUint8Array(
-                    signedSessionTrx.packed_trx
-                ),
-            });
-            console.info("broadcasted run trx >>>", broadcastedRunTrx);
         } catch (e) {
             console.error(e);
             onError(e as Error);
