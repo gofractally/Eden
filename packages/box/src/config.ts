@@ -64,10 +64,9 @@ logger.info(
 
 export const serverPaysConfig = {
     serverPaysPrivateKey: process.env.SERVER_PAYS_PRIVATE_KEY || "<secret-pk>",
-    serverPaysAccount: process.env.SERVER_PAYS_ACCOUNT || "srvrpaysdemo",
-    serverPaysPermission: process.env.SERVER_PAYS_PERMISSION || "freebie",
-    serverPaysNoopContract:
-        process.env.SERVER_PAYS_NOOP_CONTRACT || "srvrpaysdemo",
+    serverPaysAccount: process.env.SERVER_PAYS_ACCOUNT || "payer",
+    serverPaysPermission: process.env.SERVER_PAYS_PERMISSION || "active",
+    serverPaysNoopContract: process.env.SERVER_PAYS_NOOP_CONTRACT || "payer",
     serverPaysNoopAction: process.env.SERVER_PAYS_NOOP_ACTION || "noop",
     serverPaysCreateABI: process.env.SERVER_PAYS_CREATE_ABI === "true",
 };
