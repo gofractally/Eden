@@ -2,12 +2,12 @@ import dayjs from "dayjs";
 import { generateKeyPair, sha256 } from "eosjs/dist/eosjs-key-conversions";
 import { KeyType } from "eosjs/dist/eosjs-numeric";
 import { PrivateKey } from "eosjs/dist/eosjs-jssig";
-import { SerialBuffer } from "eosjs/dist/eosjs-serialize";
+import { hexToUint8Array, SerialBuffer } from "eosjs/dist/eosjs-serialize";
 import { get as idbGet, set as idbSet } from "idb-keyval";
 import { SessionSignRequest } from "@edenos/common";
 
 import { edenContractAccount, box } from "config";
-import { eosDefaultApi } from "_app";
+import { eosDefaultApi, eosJsonRpc } from "_app";
 
 const DEFAULT_EXPIRATION_SECONDS = 30 * 24 * 60 * 60; // 30 days
 const DEFAULT_SESSION_DESCRIPTION = "eden login";
@@ -16,6 +16,7 @@ interface SessionKeyData {
     publicKey: string;
     privateKey: string;
     expiration: Date;
+    lastSequence: number;
 }
 
 class SessionKeysStorage {
@@ -28,6 +29,20 @@ class SessionKeysStorage {
 
     async saveKey(keyData: SessionKeyData) {
         return idbSet(this.storageKey, keyData);
+    }
+
+    async advanceSequence() {
+        const data = await this.getKey();
+        if (!data) {
+            throw new Error(
+                "Unable to advance sequence on missing session key"
+            );
+        }
+
+        data.lastSequence += 1;
+        await this.saveKey(data);
+
+        return data.lastSequence;
     }
 }
 export const sessionKeysStorage = new SessionKeysStorage();
@@ -45,6 +60,7 @@ export const generateSessionKey = async (
     return {
         publicKey: publicKey.toString(),
         privateKey: privateKey.toString(),
+        lastSequence: 0,
         expiration,
     };
 };
@@ -80,6 +96,27 @@ export const newSessionTransaction = async (
     };
 };
 
+export const signAndBroadcastSessionTransaction = async (
+    authorizerAccount: string,
+    actions: any[]
+) => {
+    const signedSessionTrx = await signSessionTransaction(
+        authorizerAccount,
+        actions
+    );
+    console.info("generated signedSessionTrx trx", signedSessionTrx);
+
+    const broadcastedRunTrx = await eosJsonRpc.send_transaction({
+        signatures: signedSessionTrx.signatures,
+        serializedTransaction: hexToUint8Array(signedSessionTrx.packed_trx),
+    });
+    console.info("broadcasted run trx >>>", broadcastedRunTrx);
+
+    await sessionKeysStorage.advanceSequence();
+
+    return broadcastedRunTrx;
+};
+
 export const signSessionTransaction = async (
     authorizerAccount: string,
     actions: any[]
@@ -89,7 +126,7 @@ export const signSessionTransaction = async (
         throw new Error("Session key is not present");
     }
 
-    const sequence = 1; // TODO: get sequence dynamically
+    const sequence = sessionKey.lastSequence + 1;
     const verbs = convertActionsToVerbs(actions);
 
     const signatureAuthSha = await makeSignatureAuthSha(
