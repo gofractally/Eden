@@ -6,13 +6,17 @@ import {
     publicKeyToString,
     signatureToString,
 } from "eosjs/dist/eosjs-numeric";
+import * as ser from "eosjs/dist/eosjs-serialize";
 import { PrivateKey } from "eosjs/dist/eosjs-jssig";
 import { hexToUint8Array, SerialBuffer } from "eosjs/dist/eosjs-serialize";
 import { get as idbGet, set as idbSet } from "idb-keyval";
 import { SessionSignRequest } from "@edenos/common";
+import { ec as elliptic } from "elliptic";
 
 import { edenContractAccount, box } from "config";
 import { eosDefaultApi, eosJsonRpc } from "_app";
+
+const EC = new elliptic("p256") as any;
 
 const DEFAULT_EXPIRATION_SECONDS = 30 * 24 * 60 * 60; // 30 days
 const DEFAULT_SESSION_DESCRIPTION = "eden login";
@@ -237,14 +241,63 @@ const signData = async (
             data
         );
         const signatureBytes = new Uint8Array(signature);
+
+        const eosPubKey = await subtleToEosPublicKey(
+            sessionKey.subtleKey.publicKey!
+        );
+        const pubKey = EC.keyFromPublic(
+            eosPubKey.data.subarray(0, 33)
+        ).getPublic();
+        const hash = new Uint8Array(
+            await crypto.subtle.digest("SHA-256", data.slice())
+        );
+
+        console.info(eosPubKey, pubKey, hash, signatureBytes);
+
+        const fixup = (x: Uint8Array): Uint8Array => {
+            const a = Array.from(x);
+            while (a.length < 32) {
+                a.unshift(0);
+            }
+            while (a.length > 32) {
+                if (a.shift() !== 0) {
+                    throw new Error("Signature has an r or s that is too big");
+                }
+            }
+            return new Uint8Array(a);
+        };
+
+        const der = new ser.SerialBuffer({ array: signatureBytes });
+        if (der.get() !== 0x30) {
+            throw new Error("Signature missing DER prefix");
+        }
+        if (der.get() !== der.array.length - 2) {
+            throw new Error("Signature has bad length");
+        }
+        if (der.get() !== 0x02) {
+            throw new Error("Signature has bad r marker");
+        }
+        const r = fixup(der.getUint8Array(der.get()));
+        if (der.get() !== 0x02) {
+            throw new Error("Signature has bad s marker");
+        }
+        const s = fixup(der.getUint8Array(der.get()));
+
+        const recid = EC.getKeyRecoveryParam(hash, signatureBytes, pubKey);
+        const recidByte = 27 + 4 + recid;
+
         // const r = new Uint8Array(signature.slice(0, 32));
         // const s = new Uint8Array(signature.slice(32, 64));
         const sigDataWithRecovery = {
             type: KeyType.r1,
-            data: new Uint8Array([32].concat(Array.from(signatureBytes))),
+            data: new Uint8Array(
+                [recidByte].concat(Array.from(signatureBytes))
+            ),
         };
         console.info(
             "signature from subtle",
+            recid,
+            recidByte,
             signatureBytes,
             signature,
             sigDataWithRecovery,
