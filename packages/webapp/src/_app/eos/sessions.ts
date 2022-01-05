@@ -277,9 +277,9 @@ const signData = async (
         );
 
         const sessionPubKeyString = publicKeyToString(eosPubKey);
-        let x = signatureToString(sigDataWithRecovery);
-        let y = Signature.fromString(x);
-        let recoveredKey = y.recover(data, true).toString();
+        let signatureStr = signatureToString(sigDataWithRecovery);
+        let signatureEcObj = Signature.fromString(signatureStr);
+        let recoveredKey = signatureEcObj.recover(data, true).toString();
 
         console.info(
             "recoveredKey >>>",
@@ -288,14 +288,14 @@ const signData = async (
         );
 
         if (recoveredKey.toString() === sessionPubKeyString) {
-            return x;
+            return signatureStr;
         }
 
         recId += 1;
         sigDataWithRecovery.data[0] = recId;
-        x = signatureToString(sigDataWithRecovery);
-        y = Signature.fromString(x);
-        recoveredKey = y.recover(data, true).toString();
+        signatureStr = signatureToString(sigDataWithRecovery);
+        signatureEcObj = Signature.fromString(signatureStr);
+        recoveredKey = signatureEcObj.recover(data, true).toString();
 
         console.info(
             "recoveredKey 2 >>>",
@@ -303,7 +303,7 @@ const signData = async (
             sessionPubKeyString
         );
 
-        return x;
+        return signatureStr;
     }
     return signature.toString();
 };
