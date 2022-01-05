@@ -91,7 +91,7 @@ export const queryNewMembers = (page: number, pageSize: number) => ({
 });
 
 export const useMembersWithAssets = () => {
-    const NEW_MEMBERS_PAGE_SIZE = 10000;
+    const NEW_MEMBERS_PAGE_SIZE = 100;
     const newMembers = useReactQuery({
         ...queryNewMembers(1, NEW_MEMBERS_PAGE_SIZE),
     });
