@@ -24,7 +24,7 @@ namespace eosio
 
     *  @ingroup public_key
     */
-   using ecc_public_key = std::array<char, 33>;
+   using ecc_public_key = std::array<uint8_t, 33>;
 
    /**
     *  EOSIO WebAuthN public key
@@ -77,7 +77,7 @@ namespace eosio
     */
    using public_key = std::variant<ecc_public_key, ecc_public_key, webauthn_public_key>;
 
-   using ecc_private_key = std::array<char, 32>;
+   using ecc_private_key = std::array<uint8_t, 32>;
    using private_key = std::variant<ecc_private_key, ecc_private_key>;
 
    /**
@@ -87,7 +87,7 @@ namespace eosio
 
     *  @ingroup signature
     */
-   using ecc_signature = std::array<char, 65>;
+   using ecc_signature = std::array<uint8_t, 65>;
 
    struct webauthn_signature
    {
@@ -156,7 +156,7 @@ namespace eosio
       obj = signature_from_string(stream.get_string());
    }
 
-   std::string to_base58(const char* d, size_t s);
-   std::vector<char> from_base58(const std::string_view& s);
+   std::string to_base58(const uint8_t* d, size_t s);
+   std::vector<uint8_t> from_base58(const std::string_view& s);
 
 }  // namespace eosio

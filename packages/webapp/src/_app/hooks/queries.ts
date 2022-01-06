@@ -6,8 +6,8 @@ import {
     getMembers,
     getTreasuryStats,
     getMembersStats,
-    MemberData,
     MemberStats,
+    useMembersByAccountNamesAsMemberNFTs,
 } from "members";
 import { getCommunityGlobals, getTokenBalanceForAccount } from "_app/api";
 import {
@@ -40,6 +40,7 @@ import {
     ElectionCompletedRound,
     VoteData,
 } from "elections/interfaces";
+import { MemberNFT } from "nfts/interfaces";
 import { EncryptionScope, getEncryptedData } from "encryption/api";
 import { TableQueryOptions } from "_app/eos/interfaces";
 
@@ -149,7 +150,7 @@ export const queryCommunityGlobals = {
 };
 
 export const queryOngoingElectionData = (
-    votingMemberData?: MemberData[],
+    votingMemberData?: MemberNFT[],
     currentElection?: CurrentElection,
     myDelegation?: EdenMember[],
     currentMember?: EdenMember
@@ -409,25 +410,6 @@ export const useVoteData = (
         ...queryOptions,
     });
 
-export const useMemberDataFromEdenMembers = (
-    members?: EdenMember[],
-    queryOptions: any = {}
-) => {
-    const nftTemplateIds = members?.map((em) => em.nft_template_id);
-
-    let enabled = Boolean(nftTemplateIds?.length);
-    if ("enabled" in queryOptions) {
-        enabled = enabled && queryOptions.enabled;
-    }
-
-    return useQuery<MemberData[], Error>({
-        ...queryMembers(1, nftTemplateIds?.length, nftTemplateIds),
-        staleTime: Infinity,
-        ...queryOptions,
-        enabled,
-    });
-};
-
 export const useMemberDataFromVoteData = (voteData?: VoteData[]) => {
     const responses = useMemberListByAccountNames(
         voteData?.map((participant) => participant.member) ?? []
@@ -436,20 +418,19 @@ export const useMemberDataFromVoteData = (voteData?: VoteData[]) => {
     const areQueriesComplete = responses.every((res) => res.isSuccess);
     const isLoading = responses.some((res) => res.isLoading);
 
-    const edenMembers = responses
-        .filter((res) => Boolean(res?.data?.nft_template_id))
-        .map((res) => res.data as EdenMember);
+    const accountNames = responses
+        .filter((res) => Boolean(res?.data?.account))
+        .map((res) => res.data as EdenMember)
+        .map((member) => member.account);
 
-    const memberDataRes = useMemberDataFromEdenMembers(edenMembers, {
-        enabled: !isFetchError && areQueriesComplete,
-    });
+    const memberDataRes = useMembersByAccountNamesAsMemberNFTs(accountNames);
 
     return {
         ...memberDataRes,
         isLoading: memberDataRes.isLoading || isLoading,
         isError: memberDataRes.isError || isFetchError,
-        isSuccess: memberDataRes.isSuccess || areQueriesComplete,
-    } as UseQueryResult<MemberData[], Error>;
+        isSuccess: areQueriesComplete,
+    } as UseQueryResult<MemberNFT[], Error>;
 };
 
 export const useEncryptedData = (scope: EncryptionScope, id: string) =>

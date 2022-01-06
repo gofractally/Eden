@@ -22,14 +22,14 @@ import {
     VideoSubmissionFormAndPreview,
     VideoSubmissionPhase,
 } from "_app/ui";
-
 import {
     ElectionStatus,
     ErrorLoadingElection,
     setElectionRoundVideo,
 } from "elections";
 import { RoundHeader } from "elections/components/ongoing-election-components";
-import { MemberData, MemberGateContainer } from "members";
+import { MemberGateContainer } from "members";
+import { MemberNFT } from "nfts/interfaces";
 
 export const RoundVideoUploadPage = () => {
     const {
@@ -254,7 +254,7 @@ const LoaderSection = () => (
 interface HeaderProps {
     isOngoing: boolean;
     roundIndex: number;
-    winner?: MemberData;
+    winner?: MemberNFT;
     roundStartTime?: dayjs.Dayjs;
     roundEndTime?: dayjs.Dayjs;
 }

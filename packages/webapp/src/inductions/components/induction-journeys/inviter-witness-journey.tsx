@@ -2,9 +2,9 @@ import React, { Dispatch, SetStateAction, useState } from "react";
 
 import { Heading, Link, Text, useIsCommunityActive, useUALAccount } from "_app";
 
-import { MemberData } from "members";
+import { Member } from "members";
 import {
-    convertPendingProfileToMemberData,
+    convertPendingProfileToMember,
     EndorsementsStatus,
     InductionExpiresIn,
     InductionStepGenesis,
@@ -87,7 +87,7 @@ export default InviterWitnessJourney;
 
 interface ContainerProps {
     step: InductionStepInviter | InductionStepGenesis;
-    memberPreview?: MemberData;
+    memberPreview?: Member;
     children: React.ReactNode;
 }
 
@@ -96,7 +96,7 @@ const Container = ({ step, memberPreview, children }: ContainerProps) => (
         <InductionStepsContainer step={step}>
             {children}
         </InductionStepsContainer>
-        {memberPreview && <MemberCardPreview memberData={memberPreview} />}
+        {memberPreview && <MemberCardPreview member={memberPreview} />}
     </>
 );
 
@@ -125,7 +125,7 @@ const RecommendReview = ({
 );
 
 const SubmittedVideoStep = ({ induction }: { induction: Induction }) => {
-    const memberData = convertPendingProfileToMemberData(
+    const member = convertPendingProfileToMember(
         induction.new_member_profile,
         induction.invitee,
         induction.video
@@ -133,7 +133,7 @@ const SubmittedVideoStep = ({ induction }: { induction: Induction }) => {
     return (
         <Container
             step={InductionStepInviter.VideoAndEndorse}
-            memberPreview={memberData}
+            memberPreview={member}
         >
             <InductionVideoSubmitConfirmation />
         </Container>
@@ -151,7 +151,7 @@ const VideoStep = ({
     isRevisitingVideo,
     setSubmittedVideo,
 }: VideoStepProps) => {
-    const memberData = convertPendingProfileToMemberData(
+    const member = convertPendingProfileToMember(
         induction.new_member_profile,
         induction.invitee,
         induction.video
@@ -159,7 +159,7 @@ const VideoStep = ({
     return (
         <Container
             step={InductionStepInviter.VideoAndEndorse}
-            memberPreview={memberData}
+            memberPreview={member}
         >
             <InductionVideoFormContainer
                 induction={induction}
@@ -197,7 +197,7 @@ const PendingEndorsementStep = ({
     setIsRevisitingVideo,
 }: PendingCompletionProps) => {
     const [ualAccount] = useUALAccount();
-    const memberData = convertPendingProfileToMemberData(
+    const member = convertPendingProfileToMember(
         induction.new_member_profile,
         induction.invitee,
         induction.video
@@ -209,7 +209,7 @@ const PendingEndorsementStep = ({
     return (
         <Container
             step={InductionStepInviter.VideoAndEndorse}
-            memberPreview={memberData}
+            memberPreview={member}
         >
             <Heading size={1} className="mb-2">
                 Endorsements
@@ -241,7 +241,7 @@ const PendingDonationStep = ({
     setIsRevisitingVideo,
 }: PendingCompletionProps) => {
     const { data: isCommunityActive } = useIsCommunityActive();
-    const memberData = convertPendingProfileToMemberData(
+    const member = convertPendingProfileToMember(
         induction.new_member_profile,
         induction.invitee,
         induction.video
@@ -253,7 +253,7 @@ const PendingDonationStep = ({
                     ? InductionStepInviter.PendingDonation
                     : InductionStepGenesis.Donate
             }
-            memberPreview={memberData}
+            memberPreview={member}
         >
             <Heading size={1} className="mb-2">
                 Pending donation

@@ -1,24 +1,38 @@
 import { Asset } from "_app";
-import { MembersQueryNode } from "members/interfaces";
+import { MembersQueryNode, MemberSocialHandles } from "members/interfaces";
 
-export interface EdenNftData {
-    name: string;
-    img: string;
+/******************************
+ * NFT UI INTERFACES
+ *****************************/
+export interface MemberNFT {
+    createdAt: number;
     account: string;
-    bio: string;
-    video: string;
+    name: string;
+    image: string;
     attributions: string;
-    social?: string;
+    bio: string;
+    socialHandles: MemberSocialHandles;
+    inductionVideo: string;
+    templateId?: number;
+    auctionData?: MemberNFTAuctionData;
+    assetData?: MemberNFTAssetData;
+    saleId?: string;
 }
 
-export interface EdenNftSocialHandles {
-    eosCommunity?: string;
-    twitter?: string;
-    linkedin?: string;
-    telegram?: string;
-    facebook?: string;
-    blog?: string;
+export interface MemberNFTAuctionData {
+    auctionId: string;
+    price: Asset;
+    bidEndTime?: number;
 }
+
+export interface MemberNFTAssetData {
+    assetId: string;
+    templateMint: number;
+}
+
+/******************************
+ * NFT API INTERFACES
+ *****************************/
 
 export interface TemplateData {
     template_id: string;
@@ -40,6 +54,16 @@ export interface AuctionableTemplateData extends TemplateData {
     endTime: number;
     assetId: string;
     templateMint: number;
+}
+
+interface EdenNftData {
+    name: string;
+    img: string;
+    account: string;
+    bio: string;
+    video: string;
+    attributions: string;
+    social?: string;
 }
 
 /******************************

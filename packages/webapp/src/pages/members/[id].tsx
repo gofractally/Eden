@@ -42,8 +42,8 @@ export const MemberPage = () => {
     }
 
     return (
-        <MemberPageContainer pageTitle={`${member.name}'s Profile`}>
-            <FundsAvailableCTA account={member.account} />
+        <MemberPageContainer pageTitle={`${member.profile.name}'s Profile`}>
+            <FundsAvailableCTA account={member.accountName} />
             <Container className="flex justify-center">
                 <MemberHoloCard member={member} className="max-w-xl" />
             </Container>

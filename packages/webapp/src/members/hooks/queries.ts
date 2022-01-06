@@ -1,12 +1,18 @@
 import { useQuery as useReactQuery } from "react-query";
 import { useQuery as useBoxQuery } from "@edenos/eden-subchain-client/dist/ReactSubchain";
 
-import { formatQueriedMemberData, getNewMembers } from "members";
-import { MemberData, MembersQuery } from "members/interfaces";
+import { useUALAccount } from "_app";
+import {
+    formatMembersQueryNodeAsMember,
+    getNewMembers,
+    formatMemberAsMemberNFT,
+} from "members";
+import { Member, MembersQuery } from "members/interfaces";
+import { MemberNFT } from "nfts/interfaces";
 
 export const MEMBER_DATA_FRAGMENT = `
-    account
     createdAt
+    account
     profile {
         name
         img
@@ -15,6 +21,7 @@ export const MEMBER_DATA_FRAGMENT = `
         bio
     }
     inductionVideo
+    participating
 `;
 
 export const useMembers = () => {
@@ -28,14 +35,14 @@ export const useMembers = () => {
         }
     }`);
 
-    let formattedMembers: MemberData[] = [];
+    let formattedMembers: Member[] = [];
 
     if (!result.data) return { ...result, data: formattedMembers };
 
     const memberEdges = result.data.members.edges;
     if (memberEdges) {
         formattedMembers = memberEdges.map(
-            (member) => formatQueriedMemberData(member.node) as MemberData
+            (member) => formatMembersQueryNodeAsMember(member.node) as Member
         );
     }
 
@@ -56,11 +63,26 @@ export const useMemberByAccountName = (account: string) => {
     if (!result.data) return { ...result, data: null };
 
     const memberNode = result.data.members.edges[0]?.node;
-    const member = formatQueriedMemberData(memberNode) ?? null;
+    const member = formatMembersQueryNodeAsMember(memberNode) ?? null;
     return { ...result, data: member };
 };
 
-const sortMembersByDateDESC = (a: MemberData, b: MemberData) =>
+export const useCurrentMember = () => {
+    const [ualAccount] = useUALAccount();
+    return useMemberByAccountName(ualAccount?.accountName);
+};
+
+export const useMembersByAccountNames = (
+    accountNames: string[] | undefined = []
+) => {
+    const { data: allMembers, ...memberQueryMetaData } = useMembers();
+    const members = allMembers.filter((member) =>
+        accountNames.includes(member.accountName)
+    );
+    return { data: members, ...memberQueryMetaData };
+};
+
+const sortMembersByDateDESC = (a: Member, b: Member) =>
     b.createdAt - a.createdAt;
 
 export const queryNewMembers = (page: number, pageSize: number) => ({
@@ -69,7 +91,7 @@ export const queryNewMembers = (page: number, pageSize: number) => ({
 });
 
 export const useMembersWithAssets = () => {
-    const NEW_MEMBERS_PAGE_SIZE = 10000;
+    const NEW_MEMBERS_PAGE_SIZE = 100;
     const newMembers = useReactQuery({
         ...queryNewMembers(1, NEW_MEMBERS_PAGE_SIZE),
     });
@@ -80,20 +102,36 @@ export const useMembersWithAssets = () => {
     const isError =
         newMembers.isError || allMembers.isError || !allMembers.data;
 
-    let members: MemberData[] = [];
-
-    if (allMembers.data.length) {
-        const mergeAuctionData = (member: MemberData) => {
-            const newMemberRecord = newMembers.data?.find(
-                (newMember) => newMember.account === member.account
-            );
-            return newMemberRecord ?? member;
-        };
-
-        members = allMembers.data
-            .sort(sortMembersByDateDESC)
-            .map(mergeAuctionData);
+    if (!allMembers.data.length) {
+        return { data: [], isLoading, isError };
     }
 
-    return { members, isLoading, isError };
+    const mergeAuctionData = (member: Member) => {
+        const memberNFT = newMembers.data?.find(
+            (newMember) => newMember.account === member.accountName
+        );
+        if (!memberNFT) return { member };
+        return {
+            member,
+            nft: memberNFT,
+        };
+    };
+
+    const data: { member: Member; nft?: MemberNFT }[] = allMembers.data
+        .sort(sortMembersByDateDESC)
+        .map(mergeAuctionData);
+
+    return { data, isLoading, isError };
+};
+
+/********************************************************************************
+ * TODO: Refactor the following away once reliant components use Member interface
+ ********************************************************************************/
+
+export const useMembersByAccountNamesAsMemberNFTs = (
+    accountNames: string[] | undefined = []
+) => {
+    const query = useMembersByAccountNames(accountNames);
+    const memberNFTs = query.data.map(formatMemberAsMemberNFT);
+    return { ...query, data: memberNFTs };
 };

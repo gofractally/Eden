@@ -1,7 +1,7 @@
 import dayjs from "dayjs";
 
-import { eosBlockTimestampISO } from "_app";
-import { MemberData, memberDataDefaults } from "members";
+import { eosBlockTimestampISO, ipfsUrl } from "_app";
+import { Member, memberDefaults } from "members";
 import {
     Endorsement,
     Induction,
@@ -12,19 +12,27 @@ import {
 
 const INDUCTION_EXPIRATION_DAYS = 7;
 
-export const convertPendingProfileToMemberData = (
+export const convertPendingProfileToMember = (
     profile: NewMemberProfile,
     inviteeChainAccountName: string,
     inductionVideo?: string
-): MemberData => ({
-    ...memberDataDefaults,
-    name: profile.name,
-    image: profile.img,
-    account: inviteeChainAccountName,
-    bio: profile.bio,
-    socialHandles: JSON.parse(profile.social || "{}"),
-    inductionVideo: inductionVideo || "",
-    attributions: profile.attributions || "",
+): Member => ({
+    ...memberDefaults,
+    accountName: inviteeChainAccountName,
+    profile: {
+        name: profile.name,
+        image: {
+            cid: profile.img,
+            url: ipfsUrl(profile.img),
+            attributions: profile.attributions || "",
+        },
+        bio: profile.bio,
+        socialHandles: JSON.parse(profile.social || "{}"),
+    },
+    inductionVideo: {
+        cid: inductionVideo || "",
+        url: inductionVideo ? ipfsUrl(inductionVideo) : "",
+    },
 });
 
 export const getInductionStatus = (

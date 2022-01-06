@@ -1,5 +1,6 @@
 #include <elections.hpp>
 #include <members.hpp>
+#include <sessions.hpp>
 
 namespace eden
 {
@@ -102,6 +103,7 @@ namespace eden
             break;
       }
       member_stats.set(stats, contract);
+      remove_sessions(contract, iter->account());
       return member_tb.erase(iter);
    }
 
@@ -117,6 +119,7 @@ namespace eden
       const auto& member = member_tb.get(account.value);
       if (member.status() == member_status::pending_membership)
       {
+         remove_sessions(contract, account);
          member_tb.erase(member);
          auto stats = this->stats();
          eosio::check(stats.pending_members != 0, "Integer overflow");
@@ -150,7 +153,7 @@ namespace eden
                                 .name = name,
                                 .status = member_status::active_member,
                                 .nft_template_id = row.nft_template_id(),
-                                .election_participation_status = not_in_election}};
+                                .election_participation_status = 0}};
       });
    }
 
@@ -160,7 +163,7 @@ namespace eden
          row.value = std::visit([](auto& v) { return member_v1{v}; }, row.value);
          row.election_rank() = rank;
          row.representative() = representative;
-         row.election_participation_status() = not_in_election;
+         row.election_participation_status() = 0;
       });
       auto stats = this->stats();
       if (representative != eosio::name(-1))
@@ -192,9 +195,24 @@ namespace eden
                                election_time->to_time_point(),
           "Registration has closed");
 
+      uint8_t new_participation_status;
+      if (participating)
+      {
+         new_participation_status = elections.election_schedule_version();
+         eosio::check(member.election_participation_status() != new_participation_status,
+                      "Not currently opted out");
+      }
+      else
+      {
+         new_participation_status = not_in_election;
+         eosio::check(
+             member.election_participation_status() == elections.election_schedule_version(),
+             "Not currently opted in");
+      }
+
       member_tb.modify(member, eosio::same_payer, [&](auto& row) {
          row.value = std::visit([](auto& v) { return member_v1{v}; }, row.value);
-         row.election_participation_status() = participating ? in_election : not_in_election;
+         row.election_participation_status() = new_participation_status;
       });
    }
 

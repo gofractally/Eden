@@ -38,7 +38,7 @@ export const getAuctions = async (
     seller?: string,
     templateIds?: string[],
     page = 1,
-    limit = 9999
+    limit = 100 // max 100 enforced by AA Auctions API
 ): Promise<AuctionableTemplateData[]> => {
     let url = `${atomicAssets.apiMarketUrl}/auctions?state=1&collection_name=${atomicAssets.collection}&schema_name=${atomicAssets.schema}&page=${page}&limit=${limit}&order=desc&sort=created${FETCH_AFTER_TIMESTAMP}`;
 

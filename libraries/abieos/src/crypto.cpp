@@ -243,14 +243,14 @@ signature eosio::signature_from_string(std::string_view s)
 
 namespace eosio
 {
-   std::string to_base58(const char* d, size_t s)
+   std::string to_base58(const uint8_t* d, size_t s)
    {
-      return binary_to_base58(std::string_view(d, s));
+      return binary_to_base58(std::string_view((const char*)d, s));
    }
 
-   std::vector<char> from_base58(const std::string_view& s)
+   std::vector<uint8_t> from_base58(const std::string_view& s)
    {
-      std::vector<char> ret;
+      std::vector<uint8_t> ret;
       base58_to_binary(ret, s);
       return ret;
    }

@@ -6,6 +6,7 @@ import { dehydrate } from "react-query/hydration";
 import { FluidLayout, queryMembersStats, queryMembers } from "_app";
 import { Container, Heading } from "_app/ui";
 import { MembersGrid } from "members";
+import { MemberNFT } from "nfts/interfaces";
 import { VotingMemberChip, DelegateChip } from "elections";
 
 const MEMBERS_PAGE_SIZE = 18;
@@ -48,7 +49,7 @@ export const MembersPage = (props: Props) => {
             </Container>
             <MembersGrid members={members.data}>
                 {/* TODO: Hard-coded values here should come from fixtures. */}
-                {(member) => (
+                {(member: MemberNFT) => (
                     <VotingMemberChip
                         key={`voting-chips-${member.account}`}
                         member={member}
@@ -70,7 +71,7 @@ export const MembersPage = (props: Props) => {
                 {members.error && "Fail to load members"}
             </Container>
             <MembersGrid members={members.data?.slice(1, 2)}>
-                {(member) => (
+                {(member: MemberNFT) => (
                     <DelegateChip
                         key={`delegate-chip-${member.account}`}
                         member={member}

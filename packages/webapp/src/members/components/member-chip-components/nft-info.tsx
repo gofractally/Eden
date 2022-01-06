@@ -3,9 +3,9 @@ import React from "react";
 import { atomicAssets } from "config";
 import { assetToLocaleString, openInNewTab, useCountdown } from "_app";
 import { NFT } from "_app/ui/icons";
-import { AssetData, MemberAuctionData, MemberData } from "members";
+import { MemberNFTAssetData, MemberNFTAuctionData, MemberNFT } from "nfts";
 
-export const NFTInfo = ({ member }: { member: MemberData }) => {
+export const NFTInfo = ({ member }: { member: MemberNFT }) => {
     if (member.auctionData) {
         return <AuctionBadge auctionData={member.auctionData} />;
     }
@@ -23,7 +23,11 @@ export const NFTInfo = ({ member }: { member: MemberData }) => {
 
 export default NFTInfo;
 
-const AuctionBadge = ({ auctionData }: { auctionData: MemberAuctionData }) => {
+const AuctionBadge = ({
+    auctionData,
+}: {
+    auctionData: MemberNFTAuctionData;
+}) => {
     const countdown = useCountdown({
         endTime: new Date(auctionData.bidEndTime as number),
         interval: 30000,
@@ -52,7 +56,7 @@ const SaleBadge = ({
     assetData,
     saleId,
 }: {
-    assetData: AssetData;
+    assetData: MemberNFTAssetData;
     saleId: string;
 }) => (
     <div
@@ -68,7 +72,7 @@ const SaleBadge = ({
     </div>
 );
 
-const AssetBadge = ({ assetData }: { assetData: AssetData }) => (
+const AssetBadge = ({ assetData }: { assetData: MemberNFTAssetData }) => (
     <NFTBadge
         onClick={(e) => {
             e.stopPropagation();

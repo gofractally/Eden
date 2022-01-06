@@ -4,6 +4,31 @@
 
 bool write_expected = false;
 
+const eosio::private_key alice_session_priv_key =
+    private_key_from_string("5KdMjZ6vrbQWromznw5v7WLt4q92abv8sKgRKzagpj8SHacnozX");
+const eosio::public_key alice_session_pub_key =
+    public_key_from_string("EOS665ajq1JUMwWH3bHcRxxTqiZBZBc6CakwUfLkZJxRqp4vyzqsQ");
+
+const eosio::private_key alice_session_2_priv_key =
+    private_key_from_string("5KKnoRi3WfLL82sS4WdP8YXmezVR24Y8jxy5JXzwC2SouqoHgu2");
+const eosio::public_key alice_session_2_pub_key =
+    public_key_from_string("EOS8VWTR1mogYHEd9HJxgG2Tj3GbPghrnJqMfWfdHbTE11BJmyLRR");
+
+const eosio::private_key pip_session_priv_key =
+    private_key_from_string("5KZLNGfDrqPM1yVL5zPXMhbAHBSi6ZtU2seqeUdEfudPgv9n93h");
+const eosio::public_key pip_session_pub_key =
+    public_key_from_string("EOS8YQhKe3x1xTA1KHmkBPznWqa3UGQsaHTUMkJJtcds9giK4Erft");
+
+const eosio::private_key egeon_session_priv_key =
+    private_key_from_string("5Jk9RLHvhSgN8h7VjRGdY91GpeoXs5qP7JnizReg4DXBqtbGM8y");
+const eosio::public_key egeon_session_pub_key =
+    public_key_from_string("EOS8kBx4XYj3zZ3Z1Sb8vdq43ursVTebfcShKMDUymiA2ctcznX71");
+
+const eosio::private_key bertie_session_priv_key =
+    private_key_from_string("5Jr4bSzJWhtr3bxY83xRDhUTgir9Mhn6YwVt4Y9SRgu1GopZ5vA");
+const eosio::public_key bertie_session_pub_key =
+    public_key_from_string("EOS5iALbhfqEZvqkUifUGbfMQSFnd1ui8ZsXVHT23XWh1HLyyPrJE");
+
 int main(int argc, char* argv[])
 {
    Catch::Session session;
@@ -718,7 +743,7 @@ TEST_CASE("election")
    t.electdonate_all();
    {
       eden::current_election_state_singleton state("eden.gm"_n, eden::default_scope);
-      auto current = std::get<eden::current_election_state_registration>(state.get());
+      auto current = std::get<eden::current_election_state_registration_v1>(state.get());
       CHECK(eosio::convert_to_json(current.start_time) == "\"2020-07-04T15:30:00.000\"");
    }
    t.skip_to("2020-07-03T15:29:59.500");
@@ -736,6 +761,18 @@ TEST_CASE("election")
    CHECK(result.lead_representative == "egeon"_n);
    std::sort(result.board.begin(), result.board.end());
    CHECK(result.board == std::vector{"alice"_n, "egeon"_n, "pip"_n});
+}
+
+TEST_CASE("election reschedule")
+{
+   eden_tester t;
+   t.genesis();
+   t.electdonate_all();
+   t.eden_gm.act<actions::electsettime>(s2t("2020-03-02T15:30:01.000"));
+   t.skip_to(t.next_election_time().to_time_point() - eosio::days(1));
+   t.electseed(t.next_election_time().to_time_point() - eosio::days(1));
+   t.skip_to(t.next_election_time().to_time_point());
+   expect(t.alice.trace<actions::electprocess>(100), "No voters");
 }
 
 TEST_CASE("mid-election induction")
@@ -951,9 +988,9 @@ TEST_CASE("budget distribution minimum period")
    t.genesis();
    t.set_balance(s2a("36.0000 EOS"));
    t.run_election();
-   t.electdonate_all();
    t.set_balance(s2a("100000.0000 EOS"));
    t.eden_gm.act<actions::electsettime>(s2t("2020-09-02T15:30:01.000"));
+   t.electdonate_all();
    t.run_election();
    std::map<eosio::block_timestamp, eosio::asset> expected{
        {s2t("2020-07-04T15:30:00.000"), s2a("1.8000 EOS")},
@@ -969,7 +1006,6 @@ TEST_CASE("budget distribution exact")
    t.genesis();
    t.set_balance(s2a("36.0000 EOS"));
    t.run_election();
-   t.electdonate_all();
    t.set_balance(s2a("1000.0000 EOS"));
    t.eden_gm.act<actions::electsettime>(s2t("2020-09-02T15:30:00.000"));
    t.run_election();
@@ -986,7 +1022,6 @@ TEST_CASE("budget distribution underflow")
    t.genesis();
    t.set_balance(s2a("36.0000 EOS"));
    t.run_election();
-   t.electdonate_all();
    t.set_balance(s2a("1000.0000 EOS"));
    t.eden_gm.act<actions::electsettime>(s2t("2020-09-02T15:30:01.000"));
    t.run_election();
@@ -1210,9 +1245,9 @@ TEST_CASE("settablerows")
    t.eden_gm.act<actions::settablerows>(
        eosio::name(eden::default_scope),
        std::vector<eden::table_variant>{
-           eden::current_election_state_registration{s2t("2020-01-02T00:00:00.0000")}});
+           eden::current_election_state_registration_v1{s2t("2020-01-02T00:00:00.0000")}});
    eden::current_election_state_singleton state{"eden.gm"_n, eden::default_scope};
-   auto value = std::get<eden::current_election_state_registration>(state.get());
+   auto value = std::get<eden::current_election_state_registration_v1>(state.get());
    CHECK(value.start_time.to_time_point() == s2t("2020-01-02T00:00:00.0000"));
 }
 
@@ -1230,3 +1265,183 @@ TEST_CASE("election-events")
    t.write_dfuse_history("dfuse-test-election.json");
    CompareFile{"test-election"}.write_events(t.chain).compare();
 }
+
+TEST_CASE("contract-auth")
+{
+   eden_tester t;
+   t.genesis();
+
+   t.newsession("pip"_n, "alice"_n, alice_session_pub_key,
+                t.chain.get_head_block_info().timestamp.to_time_point() + eosio::days(90),
+                "no, pip, no", "missing authority of alice");
+   t.newsession("alice"_n, "alice"_n, alice_session_pub_key,
+                t.chain.get_head_block_info().timestamp.to_time_point(), "my first session",
+                "session is expired");
+   t.newsession("alice"_n, "alice"_n, alice_session_pub_key,
+                t.chain.get_head_block_info().timestamp.to_time_point() + eosio::days(91),
+                "my first session", "expiration is too far in the future");
+   t.newsession("alice"_n, "alice"_n, alice_session_pub_key,
+                t.chain.get_head_block_info().timestamp.to_time_point() + eosio::days(90),
+                "four score and twenty", "description is too long");
+
+   t.newsession("alice"_n, "alice"_n, alice_session_pub_key,
+                t.chain.get_head_block_info().timestamp.to_time_point() + eosio::days(90),
+                "four score and seven");
+   t.newsession("alice"_n, "alice"_n, alice_session_2_pub_key,
+                t.chain.get_head_block_info().timestamp.to_time_point() + eosio::days(90),
+                "another session");
+   t.newsession("alice"_n, "alice"_n, alice_session_2_pub_key,
+                t.chain.get_head_block_info().timestamp.to_time_point() + eosio::days(60),
+                "another session", "session key already exists");
+
+   t.delsession("pip"_n, "alice"_n, alice_session_pub_key, "missing authority of alice");
+   t.delsession("alice"_n, "alice"_n, alice_session_pub_key);
+   t.chain.start_block();
+   t.delsession("alice"_n, "alice"_n, alice_session_pub_key,
+                "Session key is either expired or not found");
+
+   t.run(alice_session_priv_key, "alice"_n, 1,
+         "Recovered session key PUB_K1_665ajq1JUMwWH3bHcRxxTqiZBZBc6CakwUfLkZJxRqp4vAtJaV "
+         "is either expired or not found",
+         sact<actions::delsession>("alice"_n, pip_session_pub_key));
+   t.run(alice_session_2_priv_key, "alice"_n, 1, "Session key is either expired or not found",
+         sact<actions::delsession>("alice"_n, alice_session_pub_key));
+   t.run(alice_session_2_priv_key, "alice"_n, 1, nullptr,
+         sact<actions::delsession>("alice"_n, alice_session_2_pub_key));
+   t.chain.start_block();
+   t.run(alice_session_2_priv_key, "alice"_n, 1,
+         "Recovered session key PUB_K1_8VWTR1mogYHEd9HJxgG2Tj3GbPghrnJqMfWfdHbTE11BLxqvo3 "
+         "is either expired or not found",
+         sact<actions::delsession>("alice"_n, alice_session_2_pub_key));
+
+   t.write_dfuse_history("dfuse-contract-auth.json");
+   CompareFile{"contract-auth"}.write_events(t.chain).compare();
+}  // TEST_CASE("contract-auth")
+
+TEST_CASE("contract-auth-induct")
+{
+   eden_tester t;
+   t.genesis();
+
+   t.newsession("alice"_n, "alice"_n, alice_session_pub_key,
+                t.chain.get_head_block_info().timestamp.to_time_point() + eosio::days(90), "");
+   t.newsession("pip"_n, "pip"_n, pip_session_pub_key,
+                t.chain.get_head_block_info().timestamp.to_time_point() + eosio::days(90), "");
+   t.newsession("egeon"_n, "egeon"_n, egeon_session_pub_key,
+                t.chain.get_head_block_info().timestamp.to_time_point() + eosio::days(90), "");
+
+   t.newsession("bertie"_n, "bertie"_n, bertie_session_pub_key,
+                t.chain.get_head_block_info().timestamp.to_time_point() + eosio::days(90), "",
+                "member bertie not found");
+
+   t.run(pip_session_priv_key, "pip"_n, 1,
+         "need authorization of alice but have authorization of pip",
+         sact<actions::inductinit>(1234, "alice"_n, "bertie"_n, std::vector{"pip"_n, "egeon"_n}));
+   t.run(alice_session_priv_key, "alice"_n, 1, nullptr,
+         sact<actions::inductinit>(1234, "alice"_n, "bertie"_n, std::vector{"pip"_n, "egeon"_n}));
+   t.newsession("bertie"_n, "bertie"_n, bertie_session_pub_key,
+                t.chain.get_head_block_info().timestamp.to_time_point() + eosio::days(90), "");
+   t.run(alice_session_priv_key, "alice"_n, 2,
+         "need authorization of bertie but have authorization of alice",
+         sact<actions::inductprofil>(1234, bertie_profile));
+   t.run(bertie_session_priv_key, "bertie"_n, 1, "Video can only be set by inviter or a witness",
+         sact<actions::inductprofil>(1234, bertie_profile),
+         sact<actions::inductvideo>("bertie"_n, 1234, "vid"s));
+   t.run(bertie_session_priv_key, "bertie"_n, 1,
+         "need authorization of pip but have authorization of bertie",
+         sact<actions::inductprofil>(1234, bertie_profile),
+         sact<actions::inductvideo>("pip"_n, 1234, "vid"s));
+   t.run(bertie_session_priv_key, "bertie"_n, 1,
+         "Induction can only be endorsed by inviter or a witness",
+         sact<actions::inductprofil>(1234, bertie_profile),
+         sact<actions::inductendors>("bertie"_n, 1234, t.hash_induction("vid"s, bertie_profile)));
+   t.run(bertie_session_priv_key, "bertie"_n, 1,
+         "need authorization of pip but have authorization of bertie",
+         sact<actions::inductprofil>(1234, bertie_profile),
+         sact<actions::inductendors>("pip"_n, 1234, t.hash_induction("vid"s, bertie_profile)));
+   t.run(bertie_session_priv_key, "bertie"_n, 1, nullptr,
+         sact<actions::inductprofil>(1234, bertie_profile));
+
+   t.run(pip_session_priv_key, "pip"_n, 2,
+         "need authorization of alice but have authorization of pip",
+         sact<actions::inductmeetin>("alice"_n, 1234, std::vector<eden::encrypted_key>(4),
+                                     eosio::bytes{}, std::nullopt));
+   t.run(pip_session_priv_key, "pip"_n, 2, nullptr,
+         sact<actions::inductmeetin>("pip"_n, 1234, std::vector<eden::encrypted_key>(0),
+                                     eosio::bytes{}, std::nullopt));
+
+   t.run(pip_session_priv_key, "pip"_n, 3, nullptr,
+         sact<actions::inductvideo>("pip"_n, 1234, "vid"s),
+         sact<actions::inductendors>("pip"_n, 1234, t.hash_induction("vid"s, bertie_profile)));
+   t.run(alice_session_priv_key, "alice"_n, 3, nullptr,
+         sact<actions::inductendors>("alice"_n, 1234, t.hash_induction("vid"s, bertie_profile)));
+
+   t.run(pip_session_priv_key, "pip"_n, 4,
+         "need authorization of alice but have authorization of pip",
+         sact<actions::inductcancel>("alice"_n, 1234));
+   t.run(pip_session_priv_key, "pip"_n, 4, nullptr, sact<actions::inductcancel>("pip"_n, 1234));
+
+   t.write_dfuse_history("dfuse-contract-auth-induct.json");
+   CompareFile{"contract-auth-induct"}.write_events(t.chain).compare();
+}  // TEST_CASE("contract-auth-induct")
+
+TEST_CASE("contract-auth-elect")
+{
+   eden_tester t;
+   t.genesis();
+   t.induct_n(100);
+
+   auto create_sessions = [&] {
+      t.alice.trace<actions::gc>(1000);
+      t.newsession("alice"_n, "alice"_n, alice_session_pub_key,
+                   t.chain.get_head_block_info().timestamp.to_time_point() + eosio::days(90), "");
+      t.newsession("pip"_n, "pip"_n, pip_session_pub_key,
+                   t.chain.get_head_block_info().timestamp.to_time_point() + eosio::days(90), "");
+      t.newsession("egeon"_n, "egeon"_n, egeon_session_pub_key,
+                   t.chain.get_head_block_info().timestamp.to_time_point() + eosio::days(90), "");
+   };
+
+   create_sessions();
+   t.run(pip_session_priv_key, "pip"_n, 1,
+         "need authorization of alice but have authorization of pip",
+         sact<actions::electopt>("alice"_n, true));
+   t.run(alice_session_priv_key, "alice"_n, 1, nullptr, sact<actions::electopt>("alice"_n, true));
+   t.chain.finish_block();
+   t.run(alice_session_priv_key, "alice"_n, 2, "Not currently opted out",
+         sact<actions::electopt>("alice"_n, true));
+
+   t.electdonate_all();
+   t.skip_to(t.next_election_time().to_time_point() - eosio::days(1));
+   t.electseed(t.next_election_time().to_time_point() - eosio::days(1));
+   t.skip_to(t.next_election_time().to_time_point() + eosio::minutes(10));
+   t.setup_election();
+
+   t.run(pip_session_priv_key, "pip"_n, 2,
+         "Recovered session key PUB_K1_8YQhKe3x1xTA1KHmkBPznWqa3UGQsaHTUMkJJtcds9giKNsHGv "
+         "is either expired or not found",
+         sact<actions::electmeeting>("pip"_n, 0, std::vector<eden::encrypted_key>(0),
+                                     eosio::bytes{}, std::nullopt));
+   create_sessions();
+   t.run(pip_session_priv_key, "pip"_n, 2,
+         "need authorization of alice but have authorization of pip",
+         sact<actions::electmeeting>("alice"_n, 0, std::vector<eden::encrypted_key>(0),
+                                     eosio::bytes{}, std::nullopt));
+   t.run(pip_session_priv_key, "pip"_n, 2, nullptr,
+         sact<actions::electmeeting>("pip"_n, 0, std::vector<eden::encrypted_key>(0),
+                                     eosio::bytes{}, std::nullopt));
+
+   t.run(pip_session_priv_key, "pip"_n, 3,
+         "need authorization of alice but have authorization of pip",
+         sact<actions::electvote>(0, "alice"_n, "pip"_n));
+   t.run(alice_session_priv_key, "alice"_n, 0, "alice and pip are not in the same group",
+         sact<actions::electvote>(0, "alice"_n, "pip"_n));
+
+   t.run(pip_session_priv_key, "pip"_n, 3,
+         "need authorization of alice but have authorization of pip",
+         sact<actions::electvideo>(0, "alice"_n, "Qmb7WmZiSDXss5HfuKfoSf6jxTDrHzr8AoAUDeDMLNDuws"));
+   t.run(alice_session_priv_key, "alice"_n, 1, nullptr,
+         sact<actions::electvideo>(0, "alice"_n, "Qmb7WmZiSDXss5HfuKfoSf6jxTDrHzr8AoAUDeDMLNDuws"));
+
+   t.write_dfuse_history("dfuse-contract-auth-elect.json");
+   CompareFile{"contract-auth-elect"}.write_events(t.chain).compare();
+}  // TEST_CASE("contract-auth-elect")
