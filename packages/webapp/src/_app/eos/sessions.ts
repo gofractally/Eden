@@ -12,6 +12,7 @@ import { hexToUint8Array, SerialBuffer } from "eosjs/dist/eosjs-serialize";
 import { get as idbGet, set as idbSet } from "idb-keyval";
 import { SessionSignRequest } from "@edenos/common";
 import { ec as elliptic } from "elliptic";
+import BN from "bn.js";
 
 import { edenContractAccount, box } from "config";
 import { eosDefaultApi, eosJsonRpc } from "_app";
@@ -246,64 +247,86 @@ const signData = async (
             sessionKey.subtleKey.publicKey!
         );
 
-        // const pubKey = EC.keyFromPublic(
-        //     eosPubKey.data.subarray(0, 33)
-        // ).getPublic();
-        // const hash = new Uint8Array(
-        //     await crypto.subtle.digest("SHA-256", data)
-        // );
+        const pubKey = EC.keyFromPublic(
+            eosPubKey.data.subarray(0, 33)
+        ).getPublic();
+        const hash = new Uint8Array(
+            await crypto.subtle.digest("SHA-256", data)
+        );
 
         // const ecSignature = {
         //     r: signatureBytes.slice(0, 32),
         //     s: signatureBytes.slice(32, 64),
         // };
-        // console.info(ecSignature, eosPubKey, pubKey, hash, signatureBytes);
-        // const recid = EC.getKeyRecoveryParam(hash, ecSignature, pubKey);
-        // const recidByte = 27 + 4 + recid;  <<<--- still presenting failures
 
-        let recId = 31;
+        const r = signatureBytes.slice(0, 32);
+        const s = signatureBytes.slice(32, 64);
+
+        const flippedS: BN = EC.n.sub(new BN(s));
+        const flippedSBytes = new Uint8Array(flippedS.toArray());
+
+        console.info(
+            "s vs flipped s >>> ",
+            s,
+            flippedSBytes,
+            flippedS.toString()
+        );
+
+        const ecSignature = {
+            r,
+            s: flippedSBytes,
+        };
+
+        console.info(ecSignature, eosPubKey, pubKey, hash, signatureBytes);
+        const recid = EC.getKeyRecoveryParam(hash, ecSignature, pubKey);
+        const recidByte = 27 + 4 + recid; // <<<--- still presenting failures
+
+        // let recId = 31;
 
         const sigDataWithRecovery = {
             type: KeyType.r1,
-            data: new Uint8Array([recId].concat(Array.from(signatureBytes))),
+            data: new Uint8Array(
+                [recidByte].concat(Array.from(r), Array.from(flippedSBytes))
+            ),
         };
         console.info(
             "signature from subtle",
-            recId,
+            recidByte,
             signatureBytes,
             signature,
             sigDataWithRecovery,
             signatureToString(sigDataWithRecovery)
         );
+        return signatureToString(sigDataWithRecovery);
 
-        const sessionPubKeyString = publicKeyToString(eosPubKey);
-        let signatureStr = signatureToString(sigDataWithRecovery);
-        let signatureEcObj = Signature.fromString(signatureStr);
-        let recoveredKey = signatureEcObj.recover(data, true).toString();
+        // const sessionPubKeyString = publicKeyToString(eosPubKey);
+        // let signatureStr = signatureToString(sigDataWithRecovery);
+        // let signatureEcObj = Signature.fromString(signatureStr);
+        // let recoveredKey = signatureEcObj.recover(data, true).toString();
 
-        console.info(
-            "recoveredKey >>>",
-            recoveredKey.toString(),
-            sessionPubKeyString
-        );
+        // console.info(
+        //     "recoveredKey >>>",
+        //     recoveredKey.toString(),
+        //     sessionPubKeyString
+        // );
 
-        if (recoveredKey.toString() === sessionPubKeyString) {
-            return signatureStr;
-        }
+        // if (recoveredKey.toString() === sessionPubKeyString) {
+        //     return signatureStr;
+        // }
 
-        recId += 1;
-        sigDataWithRecovery.data[0] = recId;
-        signatureStr = signatureToString(sigDataWithRecovery);
-        signatureEcObj = Signature.fromString(signatureStr);
-        recoveredKey = signatureEcObj.recover(data, true).toString();
+        // recId += 1;
+        // sigDataWithRecovery.data[0] = recId;
+        // signatureStr = signatureToString(sigDataWithRecovery);
+        // signatureEcObj = Signature.fromString(signatureStr);
+        // recoveredKey = signatureEcObj.recover(data, true).toString();
 
-        console.info(
-            "recoveredKey 2 >>>",
-            recoveredKey.toString(),
-            sessionPubKeyString
-        );
+        // console.info(
+        //     "recoveredKey 2 >>>",
+        //     recoveredKey.toString(),
+        //     sessionPubKeyString
+        // );
 
-        return signatureStr;
+        // return signatureStr;
     }
     return signature.toString();
 };
