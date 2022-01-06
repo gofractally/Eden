@@ -228,13 +228,7 @@ const signData = async (
     sessionKey: SessionKeyData,
     data: Uint8Array
 ): Promise<string> => {
-    const privateKey = PrivateKey.fromString(sessionKey.privateKey);
-    const signature = privateKey.sign(data, true);
-    console.info("eos signature >>>", signature, signature.toString());
-
     if (sessionKey.subtleKey?.privateKey) {
-        console.info("i will sign with subtle >>>", sessionKey.subtleKey);
-
         const privateKey = sessionKey.subtleKey.privateKey;
         const signature = await crypto.subtle.sign(
             { name: "ECDSA", hash: "SHA-256" },
@@ -254,81 +248,28 @@ const signData = async (
             await crypto.subtle.digest("SHA-256", data)
         );
 
-        // const ecSignature = {
-        //     r: signatureBytes.slice(0, 32),
-        //     s: signatureBytes.slice(32, 64),
-        // };
-
         const r = signatureBytes.slice(0, 32);
-        const s = signatureBytes.slice(32, 64);
+        let s = signatureBytes.slice(32, 64);
+        const sBN = new BN(s);
 
-        const flippedS: BN = EC.n.sub(new BN(s));
-        const flippedSBytes = new Uint8Array(flippedS.toArray());
+        // flip s-value if bigger than half of curve n
+        if (sBN.gt(EC.n.divn(2))) {
+            const flippedS: BN = EC.n.sub(sBN);
+            const flippedSBytes = new Uint8Array(flippedS.toArray());
+            s = flippedSBytes;
+        }
 
-        console.info(
-            "s vs flipped s >>> ",
-            s,
-            flippedSBytes,
-            flippedS.toString()
-        );
-
-        const ecSignature = {
-            r,
-            s: flippedSBytes,
-        };
-
-        console.info(ecSignature, eosPubKey, pubKey, hash, signatureBytes);
-        const recid = EC.getKeyRecoveryParam(hash, ecSignature, pubKey);
-        const recidByte = 27 + 4 + recid; // <<<--- still presenting failures
-
-        // let recId = 31;
-
+        const recId = 31 + EC.getKeyRecoveryParam(hash, { r, s }, pubKey);
         const sigDataWithRecovery = {
             type: KeyType.r1,
-            data: new Uint8Array(
-                [recidByte].concat(Array.from(r), Array.from(flippedSBytes))
-            ),
+            data: new Uint8Array([recId].concat(Array.from(r), Array.from(s))),
         };
-        console.info(
-            "signature from subtle",
-            recidByte,
-            signatureBytes,
-            signature,
-            sigDataWithRecovery,
-            signatureToString(sigDataWithRecovery)
-        );
         return signatureToString(sigDataWithRecovery);
-
-        // const sessionPubKeyString = publicKeyToString(eosPubKey);
-        // let signatureStr = signatureToString(sigDataWithRecovery);
-        // let signatureEcObj = Signature.fromString(signatureStr);
-        // let recoveredKey = signatureEcObj.recover(data, true).toString();
-
-        // console.info(
-        //     "recoveredKey >>>",
-        //     recoveredKey.toString(),
-        //     sessionPubKeyString
-        // );
-
-        // if (recoveredKey.toString() === sessionPubKeyString) {
-        //     return signatureStr;
-        // }
-
-        // recId += 1;
-        // sigDataWithRecovery.data[0] = recId;
-        // signatureStr = signatureToString(sigDataWithRecovery);
-        // signatureEcObj = Signature.fromString(signatureStr);
-        // recoveredKey = signatureEcObj.recover(data, true).toString();
-
-        // console.info(
-        //     "recoveredKey 2 >>>",
-        //     recoveredKey.toString(),
-        //     sessionPubKeyString
-        // );
-
-        // return signatureStr;
+    } else {
+        const privateKey = PrivateKey.fromString(sessionKey.privateKey);
+        const signature = privateKey.sign(data, true);
+        return signature.toString();
     }
-    return signature.toString();
 };
 
 const subtleToEosPublicKey = async (
