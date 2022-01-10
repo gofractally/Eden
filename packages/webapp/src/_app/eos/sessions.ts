@@ -1,13 +1,10 @@
 import dayjs from "dayjs";
-import { generateKeyPair } from "eosjs/dist/eosjs-key-conversions";
 import {
     Key,
     KeyType,
     publicKeyToString,
     signatureToString,
 } from "eosjs/dist/eosjs-numeric";
-import { PrivateKey } from "eosjs/dist/eosjs-jssig";
-import { Signature } from "eosjs/dist/Signature";
 import { hexToUint8Array, SerialBuffer } from "eosjs/dist/eosjs-serialize";
 import { get as idbGet, set as idbSet } from "idb-keyval";
 import { SessionSignRequest } from "@edenos/common";
@@ -23,11 +20,9 @@ const DEFAULT_EXPIRATION_SECONDS = 30 * 24 * 60 * 60; // 30 days
 const DEFAULT_SESSION_DESCRIPTION = "eden login";
 
 interface SessionKeyData {
-    publicKey: string;
-    privateKey: string;
+    subtleKey: CryptoKeyPair;
     expiration: Date;
     lastSequence: number;
-    subtleKey?: CryptoKeyPair;
 }
 
 class SessionKeysStorage {
@@ -61,25 +56,9 @@ export const sessionKeysStorage = new SessionKeysStorage();
 export const generateSessionKey = async (
     expirationSeconds = DEFAULT_EXPIRATION_SECONDS
 ) => {
-    // TODO: to be replaced with SubtleCrypto Apis
-    const { publicKey, privateKey } = generateKeyPair(KeyType.r1, {
-        secureEnv: true,
-    });
-
-    const subtleKey = await crypto.subtle.generateKey(
-        {
-            name: "ECDSA",
-            namedCurve: "P-256",
-        },
-        false, // not extractable
-        ["sign", "verify"]
-    );
-
+    const subtleKey = await generateSubtleCryptoKeyPair();
     const expiration = dayjs().add(expirationSeconds, "seconds").toDate();
-
     return {
-        publicKey: publicKey.toString(),
-        privateKey: privateKey.toString(),
         subtleKey,
         lastSequence: 0,
         expiration,
@@ -91,14 +70,9 @@ export const newSessionTransaction = async (
     sessionKeyData: SessionKeyData,
     description = DEFAULT_SESSION_DESCRIPTION
 ) => {
-    let key = sessionKeyData.publicKey;
-
-    if (sessionKeyData.subtleKey?.publicKey) {
-        const subtlePubKey = sessionKeyData.subtleKey.publicKey;
-        const eosKey = await subtleToEosPublicKey(subtlePubKey);
-        console.info("subtle eos pubkey >>>", eosKey);
-        key = publicKeyToString(eosKey);
-    }
+    const subtlePubKey = sessionKeyData.subtleKey.publicKey!;
+    const eosKey = await subtleToEosPublicKey(subtlePubKey);
+    const key = publicKeyToString(eosKey);
 
     const expiration =
         sessionKeyData.expiration.toISOString().slice(0, -4) + "000";
@@ -181,6 +155,17 @@ export const signSessionTransaction = async (
     return response.json();
 };
 
+// Generates a Subtle Crypto EC P-256 R1 key
+const generateSubtleCryptoKeyPair = () =>
+    crypto.subtle.generateKey(
+        {
+            name: "ECDSA",
+            namedCurve: "P-256",
+        },
+        false, // not extractable
+        ["sign", "verify"]
+    );
+
 const makeSignatureAuthSha = async (
     contract: string,
     account: string,
@@ -194,7 +179,6 @@ const makeSignatureAuthSha = async (
         verbs
     );
     return signatureAuthBytes;
-    // return sha256(Buffer.from(signatureAuthBytes));
 };
 
 const convertActionsToVerbs = (actions: any[]) =>
@@ -228,48 +212,38 @@ const signData = async (
     sessionKey: SessionKeyData,
     data: Uint8Array
 ): Promise<string> => {
-    if (sessionKey.subtleKey?.privateKey) {
-        const privateKey = sessionKey.subtleKey.privateKey;
-        const signature = await crypto.subtle.sign(
-            { name: "ECDSA", hash: "SHA-256" },
-            privateKey,
-            data
-        );
-        const signatureBytes = new Uint8Array(signature);
+    const privateKey = sessionKey.subtleKey.privateKey!;
+    const signature = await crypto.subtle.sign(
+        { name: "ECDSA", hash: "SHA-256" },
+        privateKey,
+        data
+    );
+    const signatureBytes = new Uint8Array(signature);
 
-        const eosPubKey = await subtleToEosPublicKey(
-            sessionKey.subtleKey.publicKey!
-        );
+    const eosPubKey = await subtleToEosPublicKey(
+        sessionKey.subtleKey.publicKey!
+    );
 
-        const pubKey = EC.keyFromPublic(
-            eosPubKey.data.subarray(0, 33)
-        ).getPublic();
-        const hash = new Uint8Array(
-            await crypto.subtle.digest("SHA-256", data)
-        );
+    const pubKey = EC.keyFromPublic(eosPubKey.data.subarray(0, 33)).getPublic();
+    const hash = new Uint8Array(await crypto.subtle.digest("SHA-256", data));
 
-        const r = signatureBytes.slice(0, 32);
-        let s = signatureBytes.slice(32, 64);
-        const sBN = new BN(s);
+    const r = signatureBytes.slice(0, 32);
+    let s = signatureBytes.slice(32, 64);
+    const sBN = new BN(s);
 
-        // flip s-value if bigger than half of curve n
-        if (sBN.gt(EC.n.divn(2))) {
-            const flippedS: BN = EC.n.sub(sBN);
-            const flippedSBytes = new Uint8Array(flippedS.toArray());
-            s = flippedSBytes;
-        }
-
-        const recId = 31 + EC.getKeyRecoveryParam(hash, { r, s }, pubKey);
-        const sigDataWithRecovery = {
-            type: KeyType.r1,
-            data: new Uint8Array([recId].concat(Array.from(r), Array.from(s))),
-        };
-        return signatureToString(sigDataWithRecovery);
-    } else {
-        const privateKey = PrivateKey.fromString(sessionKey.privateKey);
-        const signature = privateKey.sign(data, true);
-        return signature.toString();
+    // flip s-value if bigger than half of curve n
+    if (sBN.gt(EC.n.divn(2))) {
+        const flippedS: BN = EC.n.sub(sBN);
+        const flippedSBytes = new Uint8Array(flippedS.toArray());
+        s = flippedSBytes;
     }
+
+    const recId = 31 + EC.getKeyRecoveryParam(hash, { r, s }, pubKey);
+    const sigDataWithRecovery = {
+        type: KeyType.r1,
+        data: new Uint8Array([recId].concat(Array.from(r), Array.from(s))),
+    };
+    return signatureToString(sigDataWithRecovery);
 };
 
 const subtleToEosPublicKey = async (
@@ -278,61 +252,7 @@ const subtleToEosPublicKey = async (
     const rawKey = await crypto.subtle.exportKey("raw", subtlePublicKey);
     const x = new Uint8Array(rawKey.slice(1, 33));
     const y = new Uint8Array(rawKey.slice(33, 65));
-    console.info("raw data pubkey >>>", rawKey, x, y);
     const data = new Uint8Array([y[31] & 1 ? 3 : 2].concat(Array.from(x)));
     const key = { type: KeyType.r1, data };
-    console.info("subtle to eoskey >>>", key);
     return key;
 };
-
-function toDER(pr: number[], ps: number[]) {
-    let r = [...pr];
-    let s = [...ps];
-
-    // Pad values
-    if (r[0] & 0x80) r = [0].concat(r);
-    // Pad values
-    if (s[0] & 0x80) s = [0].concat(s);
-
-    r = rmPadding(r);
-    s = rmPadding(s);
-
-    while (!s[0] && !(s[1] & 0x80)) {
-        s = s.slice(1);
-    }
-    var arr = [0x02];
-    constructLength(arr, r.length);
-    arr = arr.concat(r);
-    arr.push(0x02);
-    constructLength(arr, s.length);
-    var backHalf = arr.concat(s);
-    var res = [0x30];
-    constructLength(res, backHalf.length);
-    res = res.concat(backHalf);
-    return res;
-}
-
-function rmPadding(buf: number[]) {
-    var i = 0;
-    var len = buf.length - 1;
-    while (!buf[i] && !(buf[i + 1] & 0x80) && i < len) {
-        i++;
-    }
-    if (i === 0) {
-        return buf;
-    }
-    return buf.slice(i);
-}
-
-function constructLength(arr: number[], len: number) {
-    if (len < 0x80) {
-        arr.push(len);
-        return;
-    }
-    var octets = 1 + ((Math.log(len) / Math.LN2) >>> 3);
-    arr.push(octets | 0x80);
-    while (--octets) {
-        arr.push((len >>> (octets << 3)) & 0xff);
-    }
-    arr.push(len);
-}
