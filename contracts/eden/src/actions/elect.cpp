@@ -34,16 +34,6 @@ namespace eden
 
       members members{get_self()};
       const auto& member = members.get_member(voter);
-      if (participating)
-      {
-         eosio::check(member.election_participation_status() == not_in_election,
-                      "Not currently opted out");
-      }
-      else
-      {
-         eosio::check(member.election_participation_status() == in_election,
-                      "Not currently opted in");
-      }
       members.election_opt(member, participating);
    }
 

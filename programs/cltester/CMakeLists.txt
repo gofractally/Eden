@@ -1,5 +1,5 @@
 add_executable(cltester main.cpp)
-target_link_libraries(cltester abieos state_history rodeos_lib debug_eos_vm chain)
+target_link_libraries(cltester abieos rodeos_lib debug_eos_vm chain)
 set_target_properties(cltester PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${ROOT_BINARY_DIR})
 add_custom_command(TARGET cltester POST_BUILD
     COMMAND mkdir -p ${ROOT_BINARY_DIR}/clsdk/bin

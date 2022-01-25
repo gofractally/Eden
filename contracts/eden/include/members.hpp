@@ -17,12 +17,7 @@ namespace eden
       active_member = 1
    };
 
-   using election_participation_status_type = uint8_t;
-   enum election_participation_status : election_participation_status_type
-   {
-      not_in_election,
-      in_election
-   };
+   inline constexpr std::uint8_t not_in_election = 0;
 
    struct migrate_member_v0
    {
@@ -38,7 +33,7 @@ namespace eden
       member_status_type status;
       uint64_t nft_template_id;
       // Only reflected in v1
-      election_participation_status_type election_participation_status = not_in_election;
+      uint8_t election_participation_status = 0;
       uint8_t election_rank = 0;
       eosio::name representative{uint64_t(-1)};
       std::optional<eosio::public_key> encryption_key;

@@ -14,7 +14,7 @@ namespace b1::rodeos
 
       void ashlti3(legacy_ptr<__int128> ret, uint64_t low, uint64_t high, uint32_t shift)
       {
-         fc::uint128_t i(high, low);
+         fc::uint128 i(high, low);
          i <<= shift;
          *ret = (unsigned __int128)i;
       }
@@ -33,14 +33,14 @@ namespace b1::rodeos
 
       void lshlti3(legacy_ptr<__int128> ret, uint64_t low, uint64_t high, uint32_t shift)
       {
-         fc::uint128_t i(high, low);
+         fc::uint128 i(high, low);
          i <<= shift;
          *ret = (unsigned __int128)i;
       }
 
       void lshrti3(legacy_ptr<__int128> ret, uint64_t low, uint64_t high, uint32_t shift)
       {
-         fc::uint128_t i(high, low);
+         fc::uint128 i(high, low);
          i >>= shift;
          *ret = (unsigned __int128)i;
       }
@@ -241,14 +241,14 @@ namespace b1::rodeos
 
       double floattidf(uint64_t l, uint64_t h)
       {
-         fc::uint128_t v(h, l);
+         fc::uint128 v(h, l);
          unsigned __int128 val = (unsigned __int128)v;
          return ___floattidf(*(__int128*)&val);
       }
 
       double floatuntidf(uint64_t l, uint64_t h)
       {
-         fc::uint128_t v(h, l);
+         fc::uint128 v(h, l);
          return ___floatuntidf((unsigned __int128)v);
       }
 

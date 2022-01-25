@@ -365,7 +365,7 @@ jobs:
                   name: Eden Microchain
                   path: build
 
-            - name: Download Ephemeral Chain Runners
+            - name: Download Ephemeral Eden Chain Runners
               if: steps.filter.outputs.src == 'true'
               uses: actions/download-artifact@v2
               with:

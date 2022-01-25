@@ -94,6 +94,7 @@ namespace eosio
                  return_value);
 
    auto conversion_kind(chain_types::action_trace_v0, action_trace) -> strict_conversion;
+   auto conversion_kind(chain_types::action_trace_v1, action_trace) -> strict_conversion;
 
    struct transaction_trace
    {
