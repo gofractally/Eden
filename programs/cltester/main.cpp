@@ -1087,7 +1087,7 @@ struct callbacks
 
    uint32_t tester_create_chain(span<const char> snapshot)
    {
-      return tester_create_chain2(snapshot, 1024 * 1024 * 1024);
+      return tester_create_chain2(snapshot, eosio::chain::config::default_state_size);
    }
 
    uint32_t tester_create_chain2(span<const char> snapshot, uint64_t state_size)
