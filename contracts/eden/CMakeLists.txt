@@ -33,6 +33,7 @@ add_executable(eden
    src/encrypt.cpp
 )
 target_include_directories(eden PUBLIC include ../token/include PRIVATE ../../external/atomicassets-contract/include)
+target_compile_options(eden PUBLIC -flto)
 target_link_libraries(eden eosio-contract)
 set_target_properties(eden PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${ROOT_BINARY_DIR})
 

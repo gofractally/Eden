@@ -20,7 +20,7 @@ sessionHandler.post("/sign", async (req: Request, res: Response) => {
             throw new BadRequestError(["missing session sign data"]);
         }
 
-        const parsedRequest = sessionSignRequest.safeParse(JSON.parse(body));
+        const parsedRequest = sessionSignRequest.safeParse(body);
         if (parsedRequest.success !== true) {
             throw new BadRequestError(parsedRequest.error.flatten());
         }
@@ -51,6 +51,14 @@ const prepareExecSessionTrx = (sessionSignRequest: SessionSignRequest) => {
     const expiration = new Date(Date.now() + 2 * 60 * 1000)
         .toISOString()
         .slice(0, -1);
+
+    const signatureAuth = {
+        signature: sessionSignRequest.signature,
+        contract: edenContractAccount,
+        account: sessionSignRequest.edenAccount,
+        sequence: sessionSignRequest.sequence,
+    };
+
     return {
         ...tapos,
         expiration,
@@ -68,14 +76,11 @@ const prepareExecSessionTrx = (sessionSignRequest: SessionSignRequest) => {
             },
             {
                 account: edenContractAccount,
-                name: "execsession",
+                name: "run",
                 authorization: [] as any[],
                 data: {
-                    // TODO: pending interface definition
-                    signature: sessionSignRequest.signature,
-                    eden_account: sessionSignRequest.edenAccount,
-                    sequence: sessionSignRequest.sequence,
-                    actions: sessionSignRequest.actions,
+                    auth: ["signature_auth", signatureAuth],
+                    verbs: sessionSignRequest.verbs,
                 },
             },
         ],

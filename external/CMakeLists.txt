@@ -60,6 +60,7 @@ if(IS_NATIVE)
             ${CMAKE_BINARY_DIR}/eos/libRuntime.a
             ${CMAKE_BINARY_DIR}/eos/libsecp256k1${FC_SUFFIX}.a
             ${CMAKE_BINARY_DIR}/eos/libsoftfloat.a
+            ${CMAKE_BINARY_DIR}/eos/libstate_history.a
             ${CMAKE_BINARY_DIR}/eos/libWASM.a
             ${CMAKE_BINARY_DIR}/eos/libWAST.a
     )
@@ -81,6 +82,7 @@ if(IS_NATIVE)
         ${ROOT_SOURCE_DIR}/external/eos/libraries/eos-vm/include
         ${ROOT_SOURCE_DIR}/external/eos/libraries/fc/include
         ${ROOT_SOURCE_DIR}/external/eos/libraries/softfloat/source/include
+        ${ROOT_SOURCE_DIR}/external/eos/libraries/state_history/include
         ${ROOT_SOURCE_DIR}/external/eos/libraries/wasm-jit/Include
     )
     target_link_libraries(chain INTERFACE
@@ -96,6 +98,7 @@ if(IS_NATIVE)
         -lchainbase
         -lfc${FC_SUFFIX}
         -lsecp256k1${FC_SUFFIX}
+        -lstate_history
         -lappbase
         Boost::date_time Boost::filesystem Boost::chrono Boost::iostreams Threads::Threads
         ${OPENSSL_LIBRARIES}

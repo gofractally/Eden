@@ -1792,6 +1792,10 @@ void handle_event(const eden::election_event_schedule& event)
       status.status.nextElection = event.election_time;
       status.status.electionThreshold = event.election_threshold;
    });
+   for (auto& member : db.members)
+   {
+      db.members.modify(member, [&](auto& member) { member.member.participating = false; });
+   }
 }
 
 void handle_event(const eden::election_event_begin& event)

@@ -276,7 +276,7 @@ export const getCurrentElection = async () => {
     if (devUseFixtureData) return fixtureCurrentElection;
 
     const rawRows = await getTableRawRows<any>(CONTRACT_CURRENT_ELECTION_TABLE);
-    const electionState = rawRows[0][0];
+    const electionState = convertElectionState(rawRows[0][0]);
 
     const rows = rawRows.map((row) => row[1]);
 
@@ -285,6 +285,22 @@ export const getCurrentElection = async () => {
     }
 
     return { electionState, ...rows[0] };
+};
+
+const convertElectionState = (variantName: string) => {
+    switch (variantName) {
+        case "current_election_state_registration_v0":
+        case "current_election_state_registration_v1":
+            return "current_election_state_registration";
+        case "current_election_state_seeding_v0":
+        case "current_election_state_seeding_v1":
+            return "current_election_state_seeding";
+        case "current_election_state_init_voters_v0":
+        case "current_election_state_init_voters_v1":
+            return "current_election_state_init_voters";
+        default:
+            return variantName;
+    }
 };
 
 export const getElectionState = async () => {

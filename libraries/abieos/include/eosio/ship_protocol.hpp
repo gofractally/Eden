@@ -4,6 +4,7 @@
 #include "crypto.hpp"
 #include "fixed_bytes.hpp"
 #include "float.hpp"
+#include "might_not_exist.hpp"
 #include "name.hpp"
 #include "stream.hpp"
 #include "time.hpp"
@@ -116,6 +117,7 @@ namespace eosio
          uint32_t trace_end_block = {};
          uint32_t chain_state_begin_block = {};
          uint32_t chain_state_end_block = {};
+         eosio::might_not_exist<eosio::checksum256> chain_id = {};
       };
 
       EOSIO_REFLECT(get_status_result_v0,
@@ -124,7 +126,8 @@ namespace eosio
                     trace_begin_block,
                     trace_end_block,
                     chain_state_begin_block,
-                    chain_state_end_block)
+                    chain_state_end_block,
+                    chain_id)
 
       struct get_blocks_request_v0
       {
@@ -282,7 +285,37 @@ namespace eosio
                     except,
                     error_code)
 
-      using action_trace = std::variant<action_trace_v0>;
+      struct action_trace_v1
+      {
+         eosio::varuint32 action_ordinal = {};
+         eosio::varuint32 creator_action_ordinal = {};
+         std::optional<action_receipt> receipt = {};
+         eosio::name receiver = {};
+         action act = {};
+         bool context_free = {};
+         int64_t elapsed = {};
+         std::string console = {};
+         std::vector<account_delta> account_ram_deltas = {};
+         std::optional<std::string> except = {};
+         std::optional<uint64_t> error_code = {};
+         eosio::input_stream return_value = {};
+      };
+
+      EOSIO_REFLECT(action_trace_v1,
+                    action_ordinal,
+                    creator_action_ordinal,
+                    receipt,
+                    receiver,
+                    act,
+                    context_free,
+                    elapsed,
+                    console,
+                    account_ram_deltas,
+                    except,
+                    error_code,
+                    return_value)
+
+      using action_trace = std::variant<action_trace_v0, action_trace_v1>;
 
       struct partial_transaction_v0
       {
@@ -707,7 +740,79 @@ namespace eosio
                     max_inline_action_depth,
                     max_authority_depth)
 
-      using chain_config = std::variant<chain_config_v0>;
+      struct chain_config_v1
+      {
+         uint64_t max_block_net_usage = {};
+         uint32_t target_block_net_usage_pct = {};
+         uint32_t max_transaction_net_usage = {};
+         uint32_t base_per_transaction_net_usage = {};
+         uint32_t net_usage_leeway = {};
+         uint32_t context_free_discount_net_usage_num = {};
+         uint32_t context_free_discount_net_usage_den = {};
+         uint32_t max_block_cpu_usage = {};
+         uint32_t target_block_cpu_usage_pct = {};
+         uint32_t max_transaction_cpu_usage = {};
+         uint32_t min_transaction_cpu_usage = {};
+         uint32_t max_transaction_lifetime = {};
+         uint32_t deferred_trx_expiration_window = {};
+         uint32_t max_transaction_delay = {};
+         uint32_t max_inline_action_size = {};
+         uint16_t max_inline_action_depth = {};
+         uint16_t max_authority_depth = {};
+         uint32_t max_action_return_value_size = {};
+      };
+
+      EOSIO_REFLECT(chain_config_v1,
+                    max_block_net_usage,
+                    target_block_net_usage_pct,
+                    max_transaction_net_usage,
+                    base_per_transaction_net_usage,
+                    net_usage_leeway,
+                    context_free_discount_net_usage_num,
+                    context_free_discount_net_usage_den,
+                    max_block_cpu_usage,
+                    target_block_cpu_usage_pct,
+                    max_transaction_cpu_usage,
+                    min_transaction_cpu_usage,
+                    max_transaction_lifetime,
+                    deferred_trx_expiration_window,
+                    max_transaction_delay,
+                    max_inline_action_size,
+                    max_inline_action_depth,
+                    max_authority_depth,
+                    max_action_return_value_size)
+
+      using chain_config = std::variant<chain_config_v0, chain_config_v1>;
+
+      struct wasm_config_v0
+      {
+         uint32_t max_mutable_global_bytes = {};
+         uint32_t max_table_elements = {};
+         uint32_t max_section_elements = {};
+         uint32_t max_linear_memory_init = {};
+         uint32_t max_func_local_bytes = {};
+         uint32_t max_nested_structures = {};
+         uint32_t max_symbol_bytes = {};
+         uint32_t max_module_bytes = {};
+         uint32_t max_code_bytes = {};
+         uint32_t max_pages = {};
+         uint32_t max_call_depth = {};
+      };
+
+      EOSIO_REFLECT(wasm_config_v0,
+                    max_mutable_global_bytes,
+                    max_table_elements,
+                    max_section_elements,
+                    max_linear_memory_init,
+                    max_func_local_bytes,
+                    max_nested_structures,
+                    max_symbol_bytes,
+                    max_module_bytes,
+                    max_code_bytes,
+                    max_pages,
+                    max_call_depth)
+
+      using wasm_config = std::variant<wasm_config_v0>;
 
       struct global_property_v0
       {
@@ -727,13 +832,15 @@ namespace eosio
          producer_authority_schedule proposed_schedule = {};
          chain_config configuration = {};
          eosio::checksum256 chain_id = {};
+         eosio::might_not_exist<wasm_config> wasm_configuration = {};
       };
 
       EOSIO_REFLECT(global_property_v1,
                     proposed_schedule_block_num,
                     proposed_schedule,
                     configuration,
-                    chain_id)
+                    chain_id,
+                    wasm_configuration)
 
       using global_property = std::variant<global_property_v0, global_property_v1>;
 
