@@ -58,8 +58,8 @@ TEST_CASE("activate")
 {
    test_chain chain;
 
-   // Activate all 2.0 features
    activate_feature::activate(chain, {
+      // Activate all features available in 2.0
       eosio::feature::only_link_to_existing_permission,
       eosio::feature::forward_setcode,
       eosio::feature::wtmsig_block_signatures,
@@ -72,6 +72,12 @@ TEST_CASE("activate")
       eosio::feature::restrict_action_to_self,
       eosio::feature::fix_linkauth_restriction,
       eosio::feature::get_sender,
+
+      // Features added in 3.0
+      eosio::feature::blockchain_parameters,
+      eosio::feature::action_return_value,
+      eosio::feature::get_code_hash,
+      eosio::feature::configurable_wasm_limits2,
    });
 
    // Use the chain...
