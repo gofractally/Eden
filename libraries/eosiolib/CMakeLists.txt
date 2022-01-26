@@ -102,6 +102,7 @@ function(add_libs suffix)
         tester/wasi_polyfill/__wasi_path_open.cpp
         tester/wasi_polyfill/__wasi_proc_exit.cpp
     )
+    target_compile_options(cltestlib${suffix} PUBLIC -DCOMPILING_TESTS)
     target_link_libraries(cltestlib${suffix} PUBLIC 
         boost eosio-core${suffix}
         -lc++

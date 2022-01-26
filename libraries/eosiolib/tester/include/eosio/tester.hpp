@@ -187,7 +187,7 @@ namespace eosio
       static const public_key default_pub_key;
       static const private_key default_priv_key;
 
-      test_chain(const char* snapshot = nullptr);
+      test_chain(const char* snapshot = nullptr, uint64_t state_size = 1024 * 1024 * 1024);
       test_chain(const test_chain&) = delete;
       ~test_chain();
 
@@ -228,6 +228,10 @@ namespace eosio
        * truncated to a multiple of 500 ms.
        */
       void start_block(int64_t skip_miliseconds = 0);
+
+      void start_block(std::string_view time);
+
+      void start_block(time_point tp);
 
       /**
        * Finish the current pending block.  If no block is pending, creates an empty block.
@@ -421,6 +425,10 @@ namespace eosio
       transaction_trace set_code(name ac,
                                  const char* filename,
                                  const char* expected_except = nullptr);
+
+      transaction_trace set_abi(name ac,
+                                const char* filename,
+                                const char* expected_except = nullptr);
 
       /**
        * Creates a new token.

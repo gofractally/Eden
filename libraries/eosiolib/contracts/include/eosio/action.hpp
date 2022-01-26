@@ -5,6 +5,7 @@
 #pragma once
 #include <cstdlib>
 
+#include <eosio/authority.hpp>
 #include <eosio/datastream.hpp>
 #include <eosio/ignore.hpp>
 #include <eosio/name.hpp>
@@ -195,64 +196,6 @@ namespace eosio
     * @return the length of the current action's data field
     */
    inline uint32_t action_data_size() { return internal_use_do_not_use::action_data_size(); }
-   /**
-    * Packed representation of a permission level (Authorization)
-    *
-    * @ingroup action
-    */
-   struct permission_level
-   {
-      /**
-       * Construct a new permission level object with actor name and permission name
-       *
-       * @param a - Name of the account who owns this authorization
-       * @param p - Name of the permission
-       */
-      permission_level(name a, name p) : actor(a), permission(p) {}
-
-      /**
-       * Default Constructor
-       *
-       */
-      permission_level() {}
-
-      /**
-       * Name of the account who owns this permission
-       */
-      name actor;
-      /**
-       * Name of the permission
-       */
-      name permission;
-
-      /**
-       * Check equality of two permissions
-       *
-       * @param a - first permission to compare
-       * @param b - second permission to compare
-       * @return true if equal
-       * @return false if unequal
-       */
-      friend constexpr bool operator==(const permission_level& a, const permission_level& b)
-      {
-         return std::tie(a.actor, a.permission) == std::tie(b.actor, b.permission);
-      }
-
-      /**
-       * Lexicographically compares two permissions
-       *
-       * @param a - first permission to compare
-       * @param b - second permission to compare
-       * @return true if a < b
-       * @return false if a >= b
-       */
-      friend constexpr bool operator<(const permission_level& a, const permission_level& b)
-      {
-         return std::tie(a.actor, a.permission) < std::tie(b.actor, b.permission);
-      }
-
-      EOSLIB_SERIALIZE(permission_level, (actor)(permission))
-   };
 
    /**
     *  Require the specified authorization for this action. If this action doesn't contain the
