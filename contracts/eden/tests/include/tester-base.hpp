@@ -51,7 +51,7 @@ void chain_setup(test_chain& t)
    t.set_code("eosio"_n, "boot.wasm");
    t.as("eosio"_n).act<boot::actions::boot>();
    t.start_block();  // preactivate feature activates protocol features at the start of a block
-   t.set_code("eosio"_n, "bios.wasm");
+   t.set_code("eosio"_n, "clsdk/contracts/bios.wasm");
 }
 
 void token_setup(test_chain& t)

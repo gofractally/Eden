@@ -199,19 +199,25 @@ namespace eosio
        * @brief Maximum authority depth
        */
       uint16_t max_authority_depth = 6;
-
-      EOSLIB_SERIALIZE(
-          blockchain_parameters,
-          (max_block_net_usage)(target_block_net_usage_pct)(max_transaction_net_usage)(
-              base_per_transaction_net_usage)(net_usage_leeway)(
-              context_free_discount_net_usage_num)(context_free_discount_net_usage_den)
-
-              (max_block_cpu_usage)(target_block_cpu_usage_pct)(max_transaction_cpu_usage)(
-                  min_transaction_cpu_usage)
-
-                  (max_transaction_lifetime)(deferred_trx_expiration_window)(max_transaction_delay)(
-                      max_inline_action_size)(max_inline_action_depth)(max_authority_depth))
    };
+   EOSIO_REFLECT(blockchain_parameters,
+                 max_block_net_usage,
+                 target_block_net_usage_pct,
+                 max_transaction_net_usage,
+                 base_per_transaction_net_usage,
+                 net_usage_leeway,
+                 context_free_discount_net_usage_num,
+                 context_free_discount_net_usage_den,
+                 max_block_cpu_usage,
+                 target_block_cpu_usage_pct,
+                 max_transaction_cpu_usage,
+                 min_transaction_cpu_usage,
+                 max_transaction_lifetime,
+                 deferred_trx_expiration_window,
+                 max_transaction_delay,
+                 max_inline_action_size,
+                 max_inline_action_depth,
+                 max_authority_depth)
 
    /**
     *  Set the blockchain parameters
