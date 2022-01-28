@@ -234,11 +234,11 @@ namespace eosio
    {
       varuint32 struct_version = {};
       uint64_t code_sequence = {};
-      checksum256 code_hash = {};
+      checksum256 hash = {};
       uint8_t vm_type = {};
       uint8_t vm_version = {};
    };
-   EOSIO_REFLECT(code_hash, struct_version, code_sequence, code_hash, vm_type, vm_version)
+   EOSIO_REFLECT(code_hash, struct_version, code_sequence, hash, vm_type, vm_version)
 
    /**
     *  Get the code hash for an account, if any
@@ -257,7 +257,7 @@ namespace eosio
    /**
     *  Determine if an account has code
     */
-   inline bool has_code(name account) { return get_code_hash(account).code_hash != checksum256{}; }
+   inline bool has_code(name account) { return get_code_hash(account).hash != checksum256{}; }
 
    /**
     *  This is the packed representation of an action along with
