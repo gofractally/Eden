@@ -1,6 +1,6 @@
 #pragma once
 
-#include <clchain/graphql_connection.hpp>
+#include <btb/graphql_connection.hpp>
 #include <eosio/bytes.hpp>
 #include <eosio/fixed_bytes.hpp>
 #include <eosio/name.hpp>
@@ -186,9 +186,9 @@ namespace subchain
    constexpr inline const char BlockConnection_name[] = "BlockConnection";
    constexpr inline const char BlockEdge_name[] = "BlockEdge";
    using BlockConnection =
-       clchain::Connection<clchain::ConnectionConfig<std::reference_wrapper<const block_with_id>,
-                                                     BlockConnection_name,
-                                                     BlockEdge_name>>;
+       btb::Connection<btb::ConnectionConfig<std::reference_wrapper<const block_with_id>,
+                                             BlockConnection_name,
+                                             BlockEdge_name>>;
 
    struct BlockLog
    {
@@ -203,7 +203,7 @@ namespace subchain
                              std::optional<std::string> before,
                              std::optional<std::string> after) const
       {
-         return clchain::make_connection<BlockConnection, uint32_t>(
+         return btb::make_connection<BlockConnection, uint32_t>(
              gt, ge, lt, le, first, last, before, after,     //
              log.blocks,                                     //
              [](auto& block) { return block->num; },         //

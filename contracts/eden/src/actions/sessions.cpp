@@ -134,70 +134,61 @@ namespace eden
          table.erase(sc);
    }  // eden::delsession
 
-   void eden::run(eosio::ignore<run_auth> auth, eosio::ignore<std::vector<verb>> verbs)
+   void eden::run(eosio::ignore<eosio::run_auth> auth, eosio::ignore<std::vector<verb>> verbs)
    {
       auto& ds = get_datastream();
       eosio::name eden_account;
-      eosio::varuint32 auth_type;
-      ds >> auth_type;
-      if (auth_type.value == (int)run_auth_type::no_auth)
+      auto a = eosio::recover_auth(ds);
+      if (a.type == eosio::run_auth_type::no_auth)
       {
       }
-      else if (auth_type.value == (int)run_auth_type::account_auth)
+      else if (a.type == eosio::run_auth_type::account_auth)
       {
-         account_auth a;
-         ds >> a;
          eosio::check(a.contract == get_self(), "unsupported contract for auth");
          eosio::check(a.contract_account == a.eosio_account,
                       "account recovery not yet implemented");
-         eosio::require_auth(a.eosio_account);
          eden_account = a.contract_account;
       }
-      else if (auth_type.value == (int)run_auth_type::signature_auth)
+      else if (a.type == eosio::run_auth_type::signature_auth)
       {
-         eosio::signature signature;
-         eosio::name contract;
-         eosio::varuint32 sequence;
-         ds >> signature;
-         auto digest = eosio::sha256(ds.pos(), ds.remaining());
-         auto recovered = eosio::recover_key(digest, signature);
-         ds >> contract;
-         ds >> eden_account;
-         ds >> sequence;
-         eosio::check(contract == get_self(), "unsupported contract for auth");
+         eosio::check(a.contract == get_self(), "unsupported contract for auth");
+         eden_account = a.contract_account;
 
          sessions_table_type table(get_self(), default_scope);
          auto sc = table.find(eden_account.value);
          if (sc == table.end())
-            eosio::check(false, "Recovered session key " + public_key_to_string(recovered) +
+            eosio::check(false, "Recovered session key " + public_key_to_string(a.recovered_key) +
                                     " is either expired or not found");
          table.modify(sc, get_self(), [&](auto& sc) {
             expire(get_self(), sc);
             set_expiration(sc);
             auto& sessions = sc.sessions();
-            auto session = std::find_if(sessions.begin(), sessions.end(),
-                                        [&](auto& session) { return session.key == recovered; });
+            auto session = std::find_if(sessions.begin(), sessions.end(), [&](auto& session) {
+               return session.key == a.recovered_key;
+            });
             if (session == sessions.end())
-               eosio::check(false, "Recovered session key " + public_key_to_string(recovered) +
+               eosio::check(false, "Recovered session key " +
+                                       public_key_to_string(a.recovered_key) +
                                        " is either expired or not found");
 
             auto& sequences = session->sequences;
             if (sequences.begin() != sequences.end())
             {
-               if (sequence.value < *sequences.begin() && sequences.size() >= 20)
+               if (a.sequence.value < *sequences.begin() && sequences.size() >= 20)
                   eosio::check(false,
-                               "received duplicate sequence " + std::to_string(sequence.value));
-               else if (sequence.value > sequences.end()[-1].value + 10)
+                               "received duplicate sequence " + std::to_string(a.sequence.value));
+               else if (a.sequence.value > sequences.end()[-1].value + 10)
                   eosio::check(false,
-                               "sequence " + std::to_string(sequence.value) + " skips too many");
+                               "sequence " + std::to_string(a.sequence.value) + " skips too many");
             }
-            else if (sequence.value > 10)
+            else if (a.sequence.value > 10)
                eosio::check(false,
-                            "sequence " + std::to_string(sequence.value) + " skips too many");
-            auto it = std::lower_bound(sequences.begin(), sequences.end(), sequence);
-            if (it != sequences.end() && *it == sequence)
-               eosio::check(false, "received duplicate sequence " + std::to_string(sequence.value));
-            sequences.insert(it, sequence);
+                            "sequence " + std::to_string(a.sequence.value) + " skips too many");
+            auto it = std::lower_bound(sequences.begin(), sequences.end(), a.sequence);
+            if (it != sequences.end() && *it == a.sequence)
+               eosio::check(false,
+                            "received duplicate sequence " + std::to_string(a.sequence.value));
+            sequences.insert(it, a.sequence);
             if (sequences.size() > 20)
                sequences.erase(sequences.begin());
          });
@@ -217,7 +208,7 @@ namespace eden
       {
          eosio::varuint32 index;
          ds >> index;
-         eosio::check(actions::session_dispatch(get_self(), index.value, current_session, ds),
+         eosio::check(actions::dispatch_verb(get_self(), index.value, current_session, ds),
                       "unsupported verb index");
       }
 

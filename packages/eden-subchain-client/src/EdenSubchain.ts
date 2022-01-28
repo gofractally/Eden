@@ -34,7 +34,7 @@ export class EdenSubchain {
     }
 
     imports = {
-        clchain: {
+        btb: {
             abort_message: (pos: number, len: number) => {
                 throw new Error("abort: " + this.decodeStr(pos, len));
             },

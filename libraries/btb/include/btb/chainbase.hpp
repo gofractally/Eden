@@ -1,6 +1,6 @@
 #pragma once
 
-#include <chainbase/undo_index.hpp>
+#include <btb/chainbase_undo_index.hpp>
 
 #include <boost/core/demangle.hpp>
 #include <boost/multi_index_container.hpp>

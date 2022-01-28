@@ -2,7 +2,6 @@
 
 #include <constants.hpp>
 #include <eden-atomicassets.hpp>
-#include <eden_dispatcher.hpp>
 #include <encrypt.hpp>
 #include <eosio/asset.hpp>
 #include <eosio/bytes.hpp>
@@ -88,7 +87,7 @@ namespace eden
                       eosio::name eden_account,
                       const eosio::public_key& key);
 
-      void run(eosio::ignore<run_auth> auth, eosio::ignore<std::vector<verb>> verbs);
+      void run(eosio::ignore<eosio::run_auth> auth, eosio::ignore<std::vector<verb>> verbs);
 
       void withdraw(eosio::name owner, const eosio::asset& quantity);
 
@@ -225,11 +224,11 @@ namespace eden
                           eosio::ignore<std::vector<eosio::asset>>);
    };
 
-   EDEN_ACTIONS(
+   EOSIO_ACTIONS(
        eden,
        "eden.gm"_n,
        action(newsession, eden_account, key, expiration, description),
-       eden_verb(delsession, 0, eden_account, key),
+       action_verb(delsession, 0, eden_account, key),
        action(run, auth, verbs),
        action(withdraw, owner, quantity, ricardian_contract(withdraw_ricardian)),
        action(donate, owner, quantity),
@@ -251,41 +250,41 @@ namespace eden
        action(addtogenesis, account, expiration),
        action(gensetexpire, id, new_expiration),
        action(clearall, ricardian_contract(clearall_ricardian)),
-       eden_verb(inductinit,
-                 10,
-                 id,
-                 inviter,
-                 invitee,
-                 witnesses,
-                 ricardian_contract(inductinit_ricardian)),
-       eden_verb(inductmeetin, 1, account, id, keys, data, old_data),
-       eden_verb(inductprofil,
-                 2,
-                 id,
-                 new_member_profile,
-                 ricardian_contract(inductprofil_ricardian)),
-       eden_verb(inductvideo, 3, account, id, video, ricardian_contract(inductvideo_ricardian)),
-       eden_verb(inductendors,
-                 4,
-                 account,
-                 id,
-                 induction_data_hash,
-                 ricardian_contract(inductendors_ricardian)),
+       action_verb(inductinit,
+                   10,
+                   id,
+                   inviter,
+                   invitee,
+                   witnesses,
+                   ricardian_contract(inductinit_ricardian)),
+       action_verb(inductmeetin, 1, account, id, keys, data, old_data),
+       action_verb(inductprofil,
+                   2,
+                   id,
+                   new_member_profile,
+                   ricardian_contract(inductprofil_ricardian)),
+       action_verb(inductvideo, 3, account, id, video, ricardian_contract(inductvideo_ricardian)),
+       action_verb(inductendors,
+                   4,
+                   account,
+                   id,
+                   induction_data_hash,
+                   ricardian_contract(inductendors_ricardian)),
        action(setencpubkey, account, key),
        action(electsettime, election_time),
        action(electconfig, day, time, round_duration),
-       eden_verb(electopt, 5, member, participating),
+       action_verb(electopt, 5, member, participating),
        action(electseed, btc_header),
-       eden_verb(electmeeting, 6, account, round, keys, data, old_data),
-       eden_verb(electvote, 7, round, voter, candidate),
-       eden_verb(electvideo, 8, round, voter, video),
+       action_verb(electmeeting, 6, account, round, keys, data, old_data),
+       action_verb(electvote, 7, round, voter, candidate),
+       action_verb(electvideo, 8, round, voter, video),
        action(electprocess, max_steps),
        action(bylawspropose, proposer, bylaws),
        action(bylawsapprove, approver, bylaws_hash),
        action(bylawsratify, approver, bylaws_hash),
        action(distribute, max_steps),
        action(inductdonate, payer, id, quantity, ricardian_contract(inductdonate_ricardian)),
-       eden_verb(inductcancel, 9, account, id, ricardian_contract(inductcancel_ricardian)),
+       action_verb(inductcancel, 9, account, id, ricardian_contract(inductcancel_ricardian)),
        action(inducted, inductee, ricardian_contract(inducted_ricardian)),
        action(resign, account),
        action(gc, limit, ricardian_contract(gc_ricardian)),

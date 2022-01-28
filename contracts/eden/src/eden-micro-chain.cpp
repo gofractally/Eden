@@ -2,10 +2,10 @@
 #include <boost/multi_index/key.hpp>
 #include <boost/multi_index/ordered_index.hpp>
 #include <boost/multi_index_container.hpp>
-#include <chainbase/chainbase.hpp>
-#include <clchain/crypto.hpp>
-#include <clchain/graphql_connection.hpp>
-#include <clchain/subchain.hpp>
+#include <btb/chainbase.hpp>
+#include <btb/crypto.hpp>
+#include <btb/graphql_connection.hpp>
+#include <btb/subchain.hpp>
 #include <eden.hpp>
 #include <eosio/abi.hpp>
 #include <eosio/from_bin.hpp>
@@ -184,37 +184,34 @@ enum tables
 struct Induction;
 constexpr const char InductionConnection_name[] = "InductionConnection";
 constexpr const char InductionEdge_name[] = "InductionEdge";
-using InductionConnection = clchain::Connection<
-    clchain::ConnectionConfig<Induction, InductionConnection_name, InductionEdge_name>>;
+using InductionConnection =
+    btb::Connection<btb::ConnectionConfig<Induction, InductionConnection_name, InductionEdge_name>>;
 
 struct MemberElection;
 constexpr const char MemberElectionConnection_name[] = "MemberElectionConnection";
 constexpr const char MemberElectionEdge_name[] = "MemberElectionEdge";
-using MemberElectionConnection =
-    clchain::Connection<clchain::ConnectionConfig<MemberElection,
-                                                  MemberElectionConnection_name,
-                                                  MemberElectionEdge_name>>;
+using MemberElectionConnection = btb::Connection<
+    btb::ConnectionConfig<MemberElection, MemberElectionConnection_name, MemberElectionEdge_name>>;
 
 struct Vote;
 using vote_key = std::tuple<eosio::name, eosio::block_timestamp, uint8_t>;
 constexpr const char VoteConnection_name[] = "VoteConnection";
 constexpr const char VoteEdge_name[] = "VoteEdge";
 using VoteConnection =
-    clchain::Connection<clchain::ConnectionConfig<Vote, VoteConnection_name, VoteEdge_name>>;
+    btb::Connection<btb::ConnectionConfig<Vote, VoteConnection_name, VoteEdge_name>>;
 
 struct DistributionFund;
 constexpr const char DistributionFundConnection_name[] = "DistributionFundConnection";
 constexpr const char DistributionFundEdge_name[] = "DistributionFundEdge";
 using DistributionFundConnection =
-    clchain::Connection<clchain::ConnectionConfig<DistributionFund,
-                                                  DistributionFundConnection_name,
-                                                  DistributionFundEdge_name>>;
+    btb::Connection<btb::ConnectionConfig<DistributionFund,
+                                          DistributionFundConnection_name,
+                                          DistributionFundEdge_name>>;
 
 struct Nft;
 constexpr const char NftConnection_name[] = "NftConnection";
 constexpr const char NftEdge_name[] = "NftEdge";
-using NftConnection =
-    clchain::Connection<clchain::ConnectionConfig<Nft, NftConnection_name, NftEdge_name>>;
+using NftConnection = btb::Connection<btb::ConnectionConfig<Nft, NftConnection_name, NftEdge_name>>;
 
 struct status
 {
@@ -675,10 +672,8 @@ std::vector<Member> get_members(const std::vector<eosio::name>& v);
 struct BalanceHistory;
 constexpr const char BalanceHistoryConnection_name[] = "BalanceHistoryConnection";
 constexpr const char BalanceHistoryEdge_name[] = "BalanceHistoryEdge";
-using BalanceHistoryConnection =
-    clchain::Connection<clchain::ConnectionConfig<BalanceHistory,
-                                                  BalanceHistoryConnection_name,
-                                                  BalanceHistoryEdge_name>>;
+using BalanceHistoryConnection = btb::Connection<
+    btb::ConnectionConfig<BalanceHistory, BalanceHistoryConnection_name, BalanceHistoryEdge_name>>;
 
 struct Balance
 {
@@ -706,8 +701,8 @@ EOSIO_REFLECT2(Balance,
 
 constexpr const char BalanceConnection_name[] = "BalanceConnection";
 constexpr const char BalanceEdge_name[] = "BalanceEdge";
-using BalanceConnection = clchain::Connection<
-    clchain::ConnectionConfig<Balance, BalanceConnection_name, BalanceEdge_name>>;
+using BalanceConnection =
+    btb::Connection<btb::ConnectionConfig<Balance, BalanceConnection_name, BalanceEdge_name>>;
 
 Balance get_balance(eosio::name account)
 {
@@ -739,7 +734,7 @@ BalanceHistoryConnection Balance::history(std::optional<eosio::block_timestamp> 
                                           std::optional<std::string> before,
                                           std::optional<std::string> after) const
 {
-   return clchain::make_connection<BalanceHistoryConnection, balance_history_key>(
+   return btb::make_connection<BalanceHistoryConnection, balance_history_key>(
        gt ? std::optional{balance_history_key{_account, *gt, ~uint64_t(0)}}              //
           : std::nullopt,                                                                //
        ge ? std::optional{balance_history_key{_account, *ge, 0}}                         //
@@ -772,8 +767,8 @@ EOSIO_REFLECT2(EncryptionKey, account, encryptionKey)
 
 constexpr const char EncryptionKeyConnection_name[] = "EncryptionKeyConnection";
 constexpr const char EncryptionKeyEdge_name[] = "EncryptionKeyEdge";
-using EncryptionKeyConnection = clchain::Connection<
-    clchain::ConnectionConfig<EncryptionKey, EncryptionKeyConnection_name, EncryptionKeyEdge_name>>;
+using EncryptionKeyConnection = btb::Connection<
+    btb::ConnectionConfig<EncryptionKey, EncryptionKeyConnection_name, EncryptionKeyEdge_name>>;
 
 EncryptionKey get_encryption_key(eosio::name account)
 {
@@ -967,14 +962,14 @@ EOSIO_REFLECT2(Status,
 struct ElectionRound;
 constexpr const char ElectionRoundConnection_name[] = "ElectionRoundConnection";
 constexpr const char ElectionRoundEdge_name[] = "ElectionRoundEdge";
-using ElectionRoundConnection = clchain::Connection<
-    clchain::ConnectionConfig<ElectionRound, ElectionRoundConnection_name, ElectionRoundEdge_name>>;
+using ElectionRoundConnection = btb::Connection<
+    btb::ConnectionConfig<ElectionRound, ElectionRoundConnection_name, ElectionRoundEdge_name>>;
 
 struct ElectionGroup;
 constexpr const char ElectionGroupConnection_name[] = "ElectionGroupConnection";
 constexpr const char ElectionGroupEdge_name[] = "ElectionGroupEdge";
-using ElectionGroupConnection = clchain::Connection<
-    clchain::ConnectionConfig<ElectionGroup, ElectionGroupConnection_name, ElectionGroupEdge_name>>;
+using ElectionGroupConnection = btb::Connection<
+    btb::ConnectionConfig<ElectionGroup, ElectionGroupConnection_name, ElectionGroupEdge_name>>;
 
 struct Election
 {
@@ -1037,7 +1032,7 @@ MemberElectionConnection Member::elections(std::optional<eosio::block_timestamp>
                                            std::optional<std::string> before,
                                            std::optional<std::string> after) const
 {
-   return clchain::make_connection<MemberElectionConnection, eosio::block_timestamp>(
+   return btb::make_connection<MemberElectionConnection, eosio::block_timestamp>(
        gt, ge, lt, le, first, last, before, after,  //
        db.elections.get<by_pk>(),                   //
        [](auto& obj) { return obj.time; },          //
@@ -1092,7 +1087,7 @@ ElectionRoundConnection Election::rounds(std::optional<uint8_t> gt,
                                          std::optional<std::string> before,
                                          std::optional<std::string> after) const
 {
-   return clchain::make_connection<ElectionRoundConnection, ElectionRoundKey>(
+   return btb::make_connection<ElectionRoundConnection, ElectionRoundKey>(
        gt ? std::optional{ElectionRoundKey{obj->time, *gt}}           //
           : std::nullopt,                                             //
        ge ? std::optional{ElectionRoundKey{obj->time, *ge}}           //
@@ -1128,7 +1123,7 @@ ElectionGroupConnection ElectionRound::groups(std::optional<uint32_t> first,
                                               std::optional<std::string> before,
                                               std::optional<std::string> after) const
 {
-   return clchain::make_connection<ElectionGroupConnection, ElectionGroupByRoundKey>(
+   return btb::make_connection<ElectionGroupConnection, ElectionGroupByRoundKey>(
        std::nullopt,                                                                          // gt
        std::optional{ElectionGroupByRoundKey{obj->election_time, obj->round, 0}},             // ge
        std::nullopt,                                                                          // lt
@@ -1176,7 +1171,7 @@ VoteConnection MemberElection::votes(std::optional<uint32_t> first,
                                      std::optional<std::string> before,
                                      std::optional<std::string> after) const
 {
-   return clchain::make_connection<VoteConnection, vote_key>(
+   return btb::make_connection<VoteConnection, vote_key>(
        std::nullopt,                                    // gt
        vote_key{account, election->time, 0},            // ge
        std::nullopt,                                    // lt
@@ -1221,7 +1216,7 @@ DistributionFundConnection Member::distributionFunds(std::optional<eosio::block_
                                                      std::optional<std::string> before,
                                                      std::optional<std::string> after) const
 {
-   return clchain::make_connection<DistributionFundConnection, distribution_fund_key>(
+   return btb::make_connection<DistributionFundConnection, distribution_fund_key>(
        gt ? std::optional{distribution_fund_key{account, *gt, ~uint8_t(0)}}               //
           : std::nullopt,                                                                 //
        ge ? std::optional{distribution_fund_key{account, *ge, 0}}                         //
@@ -1273,7 +1268,7 @@ NftConnection Member::nfts(std::optional<eosio::block_timestamp> gt,
                            std::optional<std::string> before,
                            std::optional<std::string> after) const
 {
-   return clchain::make_connection<NftConnection, nft_account_key>(
+   return btb::make_connection<NftConnection, nft_account_key>(
        gt ? std::optional{nft_account_key{account, *gt, ~uint64_t(0)}}              //
           : std::nullopt,                                                           //
        ge ? std::optional{nft_account_key{account, *ge, 0}}                         //
@@ -1300,7 +1295,7 @@ NftConnection Member::collectedNfts(std::optional<eosio::block_timestamp> gt,
                                     std::optional<std::string> before,
                                     std::optional<std::string> after) const
 {
-   return clchain::make_connection<NftConnection, nft_account_key>(
+   return btb::make_connection<NftConnection, nft_account_key>(
        gt ? std::optional{nft_account_key{account, *gt, ~uint64_t(0)}}              //
           : std::nullopt,                                                           //
        ge ? std::optional{nft_account_key{account, *ge, 0}}                         //
@@ -2049,14 +2044,14 @@ bool dispatch(eosio::name action_name, const action_context& context, eosio::inp
 
 void run(const action_context& context, eosio::input_stream& s)
 {
-   eden::run_auth auth;
+   eosio::run_auth auth;
    eosio::varuint32 num_verbs;
    from_bin(auth, s);
    from_bin(num_verbs, s);
    for (uint32_t i = 0; i < num_verbs.value; ++i)
    {
       auto index = eosio::varuint32_from_bin(s);
-      auto name = eden::actions::get_name_for_session_action(index);
+      auto name = eden::actions::verb_index_to_name(index);
       if (!dispatch(name, context, s))
          // fatal because this throws off the rest of the stream
          eosio::check(false,
@@ -2265,7 +2260,7 @@ bool add_block(subchain::block&& eden_block, uint32_t eosio_irreversible)
    auto bin = eosio::convert_to_bin(eden_block);
    subchain::block_with_id bi;
    static_cast<subchain::block&>(bi) = std::move(eden_block);
-   bi.id = clchain::sha256(bin.data(), bin.size());
+   bi.id = btb::sha256(bin.data(), bin.size());
    auto bin_with_id = eosio::convert_to_bin(bi.id);
    bin_with_id.insert(bin_with_id.end(), bin.begin(), bin.end());
    result = std::move(bin_with_id);
@@ -2411,22 +2406,22 @@ bool add_block(eosio::ship_protocol::block_position block,
 constexpr const char MemberConnection_name[] = "MemberConnection";
 constexpr const char MemberEdge_name[] = "MemberEdge";
 using MemberConnection =
-    clchain::Connection<clchain::ConnectionConfig<Member, MemberConnection_name, MemberEdge_name>>;
+    btb::Connection<btb::ConnectionConfig<Member, MemberConnection_name, MemberEdge_name>>;
 
 constexpr const char SessionConnection_name[] = "SessionConnection";
 constexpr const char SessionEdge_name[] = "SessionEdge";
-using SessionConnection = clchain::Connection<
-    clchain::ConnectionConfig<Session, SessionConnection_name, SessionEdge_name>>;
+using SessionConnection =
+    btb::Connection<btb::ConnectionConfig<Session, SessionConnection_name, SessionEdge_name>>;
 
 constexpr const char ElectionConnection_name[] = "ElectionConnection";
 constexpr const char ElectionEdge_name[] = "ElectionEdge";
-using ElectionConnection = clchain::Connection<
-    clchain::ConnectionConfig<Election, ElectionConnection_name, ElectionEdge_name>>;
+using ElectionConnection =
+    btb::Connection<btb::ConnectionConfig<Election, ElectionConnection_name, ElectionEdge_name>>;
 
 constexpr const char DistributionConnection_name[] = "DistributionConnection";
 constexpr const char DistributionEdge_name[] = "DistributionEdge";
-using DistributionConnection = clchain::Connection<
-    clchain::ConnectionConfig<Distribution, DistributionConnection_name, DistributionEdge_name>>;
+using DistributionConnection = btb::Connection<
+    btb::ConnectionConfig<Distribution, DistributionConnection_name, DistributionEdge_name>>;
 
 struct Query
 {
@@ -2449,7 +2444,7 @@ struct Query
                               std::optional<std::string> before,
                               std::optional<std::string> after) const
    {
-      return clchain::make_connection<BalanceConnection, eosio::name>(
+      return btb::make_connection<BalanceConnection, eosio::name>(
           gt, ge, lt, le, first, last, before, after,  //
           db.balances.get<by_pk>(),                    //
           [](auto& obj) { return obj.account; },       //
@@ -2472,7 +2467,7 @@ struct Query
                                           std::optional<std::string> before,
                                           std::optional<std::string> after) const
    {
-      return clchain::make_connection<EncryptionKeyConnection, eosio::name>(
+      return btb::make_connection<EncryptionKeyConnection, eosio::name>(
           gt, ge, lt, le, first, last, before, after,  //
           db.encryption_keys.get<by_pk>(),             //
           [](auto& obj) { return obj.account; },       //
@@ -2492,7 +2487,7 @@ struct Query
                             std::optional<std::string> before,
                             std::optional<std::string> after) const
    {
-      return clchain::make_connection<MemberConnection, eosio::name>(
+      return btb::make_connection<MemberConnection, eosio::name>(
           gt, ge, lt, le, first, last, before, after,    //
           db.members.get<by_pk>(),                       //
           [](auto& obj) { return obj.member.account; },  //
@@ -2512,7 +2507,7 @@ struct Query
                                        std::optional<std::string> before,
                                        std::optional<std::string> after) const
    {
-      return clchain::make_connection<MemberConnection, MemberCreatedAtKey>(
+      return btb::make_connection<MemberConnection, MemberCreatedAtKey>(
           gt ? std::optional{MemberCreatedAtKey{*gt, account_max}}  //
              : std::nullopt,                                        //
           ge ? std::optional{MemberCreatedAtKey{*ge, account_min}}  //
@@ -2540,7 +2535,7 @@ struct Query
                               std::optional<std::string> before,
                               std::optional<std::string> after) const
    {
-      return clchain::make_connection<SessionConnection, SessionKey>(
+      return btb::make_connection<SessionConnection, SessionKey>(
           gt ? std::optional{SessionKey{*gt, public_key_max_r1}}  //
              : std::nullopt,                                      //
           ge ? std::optional{SessionKey{*ge, public_key_min_k1}}  //
@@ -2566,7 +2561,7 @@ struct Query
                                   std::optional<std::string> before,
                                   std::optional<std::string> after) const
    {
-      return clchain::make_connection<InductionConnection, uint64_t>(
+      return btb::make_connection<InductionConnection, uint64_t>(
           gt, ge, lt, le, first, last, before, after,  //
           db.inductions.get<by_pk>(),                  //
           [](auto& obj) { return obj.induction.id; },  //
@@ -2586,7 +2581,7 @@ struct Query
                                              std::optional<std::string> before,
                                              std::optional<std::string> after) const
    {
-      return clchain::make_connection<InductionConnection, InductionCreatedAtKey>(
+      return btb::make_connection<InductionConnection, InductionCreatedAtKey>(
           gt ? std::optional{InductionCreatedAtKey{*gt, ~uint64_t(0)}}  //
              : std::nullopt,                                            //
           ge ? std::optional{InductionCreatedAtKey{*ge, 0}}             //
@@ -2614,7 +2609,7 @@ struct Query
                                 std::optional<std::string> before,
                                 std::optional<std::string> after) const
    {
-      return clchain::make_connection<ElectionConnection, eosio::block_timestamp>(
+      return btb::make_connection<ElectionConnection, eosio::block_timestamp>(
           gt, ge, lt, le, first, last, before, after,  //
           db.elections.get<by_pk>(),                   //
           [](auto& obj) { return obj.time; },          //
@@ -2632,7 +2627,7 @@ struct Query
                                         std::optional<std::string> before,
                                         std::optional<std::string> after) const
    {
-      return clchain::make_connection<DistributionConnection, eosio::block_timestamp>(
+      return btb::make_connection<DistributionConnection, eosio::block_timestamp>(
           gt, ge, lt, le, first, last, before, after,  //
           db.distributions.get<by_pk>(),               //
           [](auto& obj) { return obj.time; },          //
@@ -2657,7 +2652,7 @@ EOSIO_REFLECT2(
     method(elections, "gt", "ge", "lt", "le", "first", "last", "before", "after"),
     method(distributions, "gt", "ge", "lt", "le", "first", "last", "before", "after"))
 
-auto schema = clchain::get_gql_schema<Query>();
+auto schema = btb::get_gql_schema<Query>();
 [[clang::export_name("getSchemaSize")]] uint32_t getSchemaSize()
 {
    return schema.size();
@@ -2673,5 +2668,5 @@ auto schema = clchain::get_gql_schema<Query>();
                                            uint32_t variables_size)
 {
    Query root{block_log};
-   result = clchain::gql_query(root, {query, size}, {variables, variables_size});
+   result = btb::gql_query(root, {query, size}, {variables, variables_size});
 }

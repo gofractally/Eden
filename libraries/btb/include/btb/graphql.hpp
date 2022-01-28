@@ -15,7 +15,7 @@
 #include <set>
 #include <typeindex>
 
-namespace clchain
+namespace btb
 {
    struct gql_stream;
 }
@@ -50,17 +50,15 @@ namespace eosio
    }
 
    template <typename T, typename OS, typename E>
-   auto gql_query(const T& value,
-                  clchain::gql_stream& input_stream,
-                  OS& output_stream,
-                  const E& error) -> std::enable_if_t<use_json_string_for_gql((T*)nullptr), bool>
+   auto gql_query(const T& value, btb::gql_stream& input_stream, OS& output_stream, const E& error)
+       -> std::enable_if_t<use_json_string_for_gql((T*)nullptr), bool>
    {
       to_json(value, output_stream);
       return true;
    }
 }  // namespace eosio
 
-namespace clchain
+namespace btb
 {
    template <typename T>
    struct has_get_gql_name
@@ -826,15 +824,15 @@ namespace clchain
           eosio::time_point_include_z_stream<eosio::pretty_stream<eosio::string_stream>>>(value,
                                                                                           query);
    }
-}  // namespace clchain
+}  // namespace btb
 
 namespace eosio
 {
    template <typename T, typename E>
-   auto gql_parse_arg(T& arg, clchain::gql_stream& input_stream, const E& error)
+   auto gql_parse_arg(T& arg, btb::gql_stream& input_stream, const E& error)
        -> std::enable_if_t<use_json_string_for_gql((T*)nullptr), bool>
    {
-      if (input_stream.current_type == clchain::gql_stream::string)
+      if (input_stream.current_type == btb::gql_stream::string)
       {
          // TODO: prevent abort
          arg = eosio::convert_from_string<T>(input_stream.current_value);

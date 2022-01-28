@@ -2,7 +2,7 @@
 
 #include <accounts.hpp>
 #include <boot/boot.hpp>
-#include <clchain/subchain_tester_dfuse.hpp>
+#include <btb/subchain_tester_dfuse.hpp>
 #include <distributions.hpp>
 #include <eden-atomicassets.hpp>
 #include <eden-atomicmarket.hpp>
@@ -548,7 +548,7 @@ struct eden_tester
       auto digest = eosio::sha256(data.data(), data.size());
       auto signature = eosio::sign(key, digest);
       auto sig_bin = eosio::convert_to_bin(signature);
-      data.insert(data.begin(), (uint8_t)eden::run_auth_type::signature_auth);
+      data.insert(data.begin(), (uint8_t)eosio::run_auth_type::signature_auth);
       data.insert(data.begin() + 1, sig_bin.begin(), sig_bin.end());
 
       eosio::action act;
@@ -575,7 +575,7 @@ struct eden_tester
 template <typename ActionWrapper, typename... Ts>
 std::vector<char> sact(Ts&&... args)
 {
-   auto index = actions::get_index_for_session_action(ActionWrapper::action_name);
+   auto index = actions::verb_name_to_index(ActionWrapper::action_name);
    eosio::check(index.has_value(), "action index not found");
    auto data = eosio::convert_to_bin(eosio::varuint32(*index));
    auto act = ActionWrapper{""_n}.to_action(std::forward<Ts>(args)...);

@@ -51,7 +51,7 @@ function(add_test_eden test_file suffix)
         ../token/include
         ../boot/include
         ../../external/atomicassets-contract/include
-        ../../libraries/clchain/include
+        ../../libraries/btb/include
         ./tests/include
     )
     target_link_libraries(${test_file}${suffix} catch2 cltestlib${suffix})
@@ -72,7 +72,7 @@ function(add_eden_microchain suffix)
     add_executable(eden-micro-chain${suffix}
         src/eden-micro-chain.cpp
     )
-    target_link_libraries(eden-micro-chain${suffix} clchain${suffix} eosio-contracts-wasi-polyfill${suffix})
+    target_link_libraries(eden-micro-chain${suffix} btb${suffix} eosio-contracts-wasi-polyfill${suffix})
     target_include_directories(eden-micro-chain${suffix} PRIVATE
         include
         ../../libraries/eosiolib/contracts/include
