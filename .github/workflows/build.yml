@@ -41,7 +41,7 @@ jobs:
     build-cpp:
         name: Build C++
         runs-on: ubuntu-latest
-        container: ghcr.io/eoscommunity/eden-builder:sub-chain
+        container: ghcr.io/gofractally/eden-builder:sub-chain
 
         steps:
             - name: ✅ Checkout code
@@ -186,7 +186,7 @@ jobs:
     build-micro-chain:
         name: Build Micro Chain
         runs-on: ubuntu-latest
-        container: ghcr.io/eoscommunity/eden-builder:sub-chain
+        container: ghcr.io/gofractally/eden-builder:sub-chain
 
         steps:
             - name: ✅ Checkout code
