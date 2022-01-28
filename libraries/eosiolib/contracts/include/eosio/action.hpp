@@ -42,6 +42,11 @@ namespace eosio
 
          [[clang::import_name("is_account")]] bool is_account(uint64_t name);
 
+         [[clang::import_name("get_code_hash")]] uint32_t get_code_hash(uint64_t account,
+                                                                        uint32_t struct_version,
+                                                                        char* result,
+                                                                        uint32_t result_size);
+
          [[clang::import_name("send_inline")]] void send_inline(char* serialized_action,
                                                                 size_t size);
 
@@ -224,6 +229,35 @@ namespace eosio
     *  @param n - name of the account to check
     */
    inline bool is_account(name n) { return internal_use_do_not_use::is_account(n.value); }
+
+   struct code_hash
+   {
+      varuint32 struct_version = {};
+      uint64_t code_sequence = {};
+      checksum256 hash = {};
+      uint8_t vm_type = {};
+      uint8_t vm_version = {};
+   };
+   EOSIO_REFLECT(code_hash, struct_version, code_sequence, hash, vm_type, vm_version)
+
+   /**
+    *  Get the code hash for an account, if any
+    */
+   inline code_hash get_code_hash(name account)
+   {
+      std::vector<char> data(internal_use_do_not_use::get_code_hash(account.value, 0, nullptr, 0));
+      input_stream stream(data.data(),
+                          data.data() + internal_use_do_not_use::get_code_hash(
+                                            account.value, 0, data.data(), data.size()));
+      code_hash result;
+      from_bin(result, stream);
+      return result;
+   }
+
+   /**
+    *  Determine if an account has code
+    */
+   inline bool has_code(name account) { return get_code_hash(account).hash != checksum256{}; }
 
    /**
     *  This is the packed representation of an action along with
