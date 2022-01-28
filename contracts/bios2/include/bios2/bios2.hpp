@@ -10,7 +10,7 @@
 #include <eosio/tester.hpp>
 #endif
 
-namespace bios
+namespace bios2
 {
    struct abi_hash
    {
@@ -92,6 +92,13 @@ namespace bios
                       int64_t cpu_weight);
 
       /**
+       * Propose a new list of active producers.
+       *
+       * @param schedule - New list of active producers to set
+       */
+      void setprods(const std::vector<eosio::producer_authority>& schedule);
+
+      /**
        * Set the blockchain parameters.
        */
       void setparams(const eosio::blockchain_parameters& params);
@@ -131,6 +138,7 @@ namespace bios
                  action(setabi, account, abi),
                  action(setpriv, account, is_priv),
                  action(setalimits, account, ram_bytes, net_weight, cpu_weight),
+                 action(setprods, schedule),
                  action(setparams, params),
                  action(reqauth, from),
                  action(activate, feature_digest),
@@ -146,4 +154,4 @@ namespace bios
    }
 #endif
 
-}  // namespace bios
+}  // namespace bios2

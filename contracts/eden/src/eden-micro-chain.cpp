@@ -2165,52 +2165,57 @@ std::vector<subchain::transaction> ship_to_eden_transactions(
 
    for (const auto& transaction_trace : traces)
    {
-      if (auto* trx_trace =
-              std::get_if<eosio::ship_protocol::transaction_trace_v0>(&transaction_trace))
-      {
-         subchain::transaction transaction{
-             .id = trx_trace->id,
-         };
+      std::visit(
+          [&](const auto& trx_trace) {
+             subchain::transaction transaction{
+                 .id = trx_trace.id,
+             };
 
-         for (const auto& action_trace : trx_trace->action_traces)
-         {
-            if (auto* act_trace = std::get_if<eosio::ship_protocol::action_trace_v0>(&action_trace))
-            {
-               std::optional<subchain::creator_action> creatorAction;
-               if (act_trace->creator_action_ordinal.value > 0)
-               {
-                  const auto& creator_action_trace =
-                      std::get<eosio::ship_protocol::action_trace_v0>(
-                          trx_trace->action_traces[act_trace->creator_action_ordinal.value - 1]);
-                  const auto& receipt = std::get<eosio::ship_protocol::action_receipt_v0>(
-                      *creator_action_trace.receipt);
-                  creatorAction = subchain::creator_action{
-                      .seq = receipt.global_sequence,
-                      .receiver = creator_action_trace.receiver,
-                  };
-               }
+             for (const auto& action_trace : trx_trace.action_traces)
+             {
+                std::visit(
+                    [&](const auto& act_trace) {
+                       std::optional<subchain::creator_action> creatorAction;
+                       if (act_trace.creator_action_ordinal.value > 0)
+                       {
+                          std::visit(
+                              [&](const auto& creator_action_trace) {
+                                 std::visit(
+                                     [&](const auto& receipt) {
+                                        creatorAction = subchain::creator_action{
+                                            .seq = receipt.global_sequence,
+                                            .receiver = creator_action_trace.receiver,
+                                        };
+                                     },
+                                     *creator_action_trace.receipt);
+                              },
+                              trx_trace.action_traces[act_trace.creator_action_ordinal.value - 1]);
+                       }
 
-               std::vector<char> data(act_trace->act.data.pos, act_trace->act.data.end);
-               eosio::bytes hexData{data};
+                       std::vector<char> data(act_trace.act.data.pos, act_trace.act.data.end);
+                       eosio::bytes hexData{data};
 
-               const auto& receipt =
-                   std::get<eosio::ship_protocol::action_receipt_v0>(*act_trace->receipt);
+                       std::visit(
+                           [&](const auto& receipt) {
+                              subchain::action action{
+                                  .seq = receipt.global_sequence,
+                                  .firstReceiver = act_trace.act.account,
+                                  .receiver = act_trace.receiver,
+                                  .name = act_trace.act.name,
+                                  .creatorAction = creatorAction,
+                                  .hexData = std::move(hexData),
+                              };
 
-               subchain::action action{
-                   .seq = receipt.global_sequence,
-                   .firstReceiver = act_trace->act.account,
-                   .receiver = act_trace->receiver,
-                   .name = act_trace->act.name,
-                   .creatorAction = creatorAction,
-                   .hexData = std::move(hexData),
-               };
+                              transaction.actions.push_back(std::move(action));
+                           },
+                           *act_trace.receipt);
+                    },
+                    action_trace);
+             }
 
-               transaction.actions.push_back(std::move(action));
-            }
-         }
-
-         transactions.push_back(std::move(transaction));
-      }
+             transactions.push_back(std::move(transaction));
+          },
+          transaction_trace);
    }
 
    return transactions;

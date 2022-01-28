@@ -1,7 +1,7 @@
-#include <bios/bios.hpp>
+#include <bios2/bios2.hpp>
 #include <eosio/abi_generator.hpp>
 
-namespace bios
+namespace bios2
 {
    void bios_contract::setabi(eosio::name account, const eosio::bytes& abi)
    {
@@ -37,6 +37,12 @@ namespace bios
       set_resource_limits(account, ram_bytes, net_weight, cpu_weight);
    }
 
+   void bios_contract::setprods(const std::vector<eosio::producer_authority>& schedule)
+   {
+      require_auth(get_self());
+      set_proposed_producers(schedule);
+   }
+
    void bios_contract::setparams(const eosio::blockchain_parameters& params)
    {
       require_auth(get_self());
@@ -56,7 +62,7 @@ namespace bios
       eosio::check(eosio::is_feature_activated(feature_digest),
                    "protocol feature is not activated");
    }
-}  // namespace bios
+}  // namespace bios2
 
-EOSIO_ACTION_DISPATCHER(bios::actions)
-EOSIO_ABIGEN(actions(bios::actions), table("abihash"_n, bios::abi_hash))
+EOSIO_ACTION_DISPATCHER(bios2::actions)
+EOSIO_ABIGEN(actions(bios2::actions), table("abihash"_n, bios2::abi_hash))

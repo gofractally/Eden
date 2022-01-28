@@ -10,7 +10,7 @@
 #include <eosio/tester.hpp>
 #endif
 
-namespace bios
+namespace bios3
 {
    struct abi_hash
    {
@@ -22,6 +22,49 @@ namespace bios
    EOSIO_REFLECT(abi_hash, owner, hash)
 
    typedef eosio::multi_index<"abihash"_n, abi_hash> abi_hash_table;
+
+   struct blockchain_parameters_v1
+   {
+      constexpr static int percent_1 = 100;  // 1 percent
+
+      uint64_t max_block_net_usage = 1024 * 1024;
+      uint32_t target_block_net_usage_pct = 10 * percent_1;
+      uint32_t max_transaction_net_usage = max_block_net_usage / 2;
+      uint32_t base_per_transaction_net_usage = 12;
+      uint32_t net_usage_leeway = 500;
+      uint32_t context_free_discount_net_usage_num = 20;
+      uint32_t context_free_discount_net_usage_den = 100;
+      uint32_t max_block_cpu_usage = 200'000;
+      uint32_t target_block_cpu_usage_pct = 10 * percent_1;
+      uint32_t max_transaction_cpu_usage = 3 * max_block_cpu_usage / 4;
+      uint32_t min_transaction_cpu_usage = 100;
+      uint32_t max_transaction_lifetime = 60 * 60;
+      uint32_t deferred_trx_expiration_window = 10 * 60;
+      uint32_t max_transaction_delay = 45 * 24 * 3600;
+      uint32_t max_inline_action_size = 512 * 1024;
+      uint16_t max_inline_action_depth = 4;
+      uint16_t max_authority_depth = 6;
+      uint32_t max_action_return_value_size = 256;
+   };
+   EOSIO_REFLECT(blockchain_parameters_v1,
+                 max_block_net_usage,
+                 target_block_net_usage_pct,
+                 max_transaction_net_usage,
+                 base_per_transaction_net_usage,
+                 net_usage_leeway,
+                 context_free_discount_net_usage_num,
+                 context_free_discount_net_usage_den,
+                 max_block_cpu_usage,
+                 target_block_cpu_usage_pct,
+                 max_transaction_cpu_usage,
+                 min_transaction_cpu_usage,
+                 max_transaction_lifetime,
+                 deferred_trx_expiration_window,
+                 max_transaction_delay,
+                 max_inline_action_size,
+                 max_inline_action_depth,
+                 max_authority_depth,
+                 max_action_return_value_size)
 
    class bios_contract : public eosio::contract
    {
@@ -92,9 +135,23 @@ namespace bios
                       int64_t cpu_weight);
 
       /**
+       * Propose a new list of active producers.
+       *
+       * @param schedule - New list of active producers to set
+       */
+      void setprods(const std::vector<eosio::producer_authority>& schedule);
+
+      /**
        * Set the blockchain parameters.
        */
-      void setparams(const eosio::blockchain_parameters& params);
+      void setparams(const blockchain_parameters_v1& params);
+
+      /**
+       * Sets the webassembly limits.  Valid parameters are "low",
+       * "default" (equivalent to low), and "high".  A value of "high"
+       * allows larger contracts to be deployed.
+       */
+      void wasmcfg(eosio::name settings);
 
       /**
        * Check if the account eosio::name `from` passed in as param has authorization to access
@@ -131,7 +188,9 @@ namespace bios
                  action(setabi, account, abi),
                  action(setpriv, account, is_priv),
                  action(setalimits, account, ram_bytes, net_weight, cpu_weight),
+                 action(setprods, schedule),
                  action(setparams, params),
+                 action(wasmcfg, settings),
                  action(reqauth, from),
                  action(activate, feature_digest),
                  action(reqactivated, feature_digest))
@@ -146,4 +205,4 @@ namespace bios
    }
 #endif
 
-}  // namespace bios
+}  // namespace bios3

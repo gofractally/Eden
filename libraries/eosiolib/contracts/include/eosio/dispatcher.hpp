@@ -86,6 +86,7 @@ namespace eosio
    struct action_type_wrapper
    {
       using args = detail::deduced<Action>;
+      using return_type = typename member_fn<decltype(Action)>::return_type;
    };
 
    template <typename T, typename R, typename Session, typename... Args>

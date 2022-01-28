@@ -17,7 +17,7 @@
   - [Token Support](cltester/token/README.md)
   - [Reading Tables](cltester/tables/README.md)
   - [as/act/trace](cltester/as/README.md)
-  - [Chain Configuration](cltester/config/README.md)
+  - [BIOS and Chain Configuration](cltester/bios/README.md)
   - [Block Control](cltester/block/README.md)
   - [Starting Nodeos](cltester/nodeos/README.md)
   - [Hostile Takeover](cltester/takeover/README.md)
