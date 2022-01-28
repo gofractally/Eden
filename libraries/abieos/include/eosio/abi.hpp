@@ -141,6 +141,13 @@ namespace eosio
    };
    EOSIO_REFLECT(variant_def, name, types);
 
+   struct action_result_def
+   {
+      eosio::name name{};
+      std::string result_type{};
+   };
+   EOSIO_REFLECT(action_result_def, name, result_type);
+
    struct abi_def
    {
       std::string version{};
@@ -152,6 +159,7 @@ namespace eosio
       std::vector<error_message> error_messages{};
       abi_extensions_type abi_extensions{};
       might_not_exist<std::vector<variant_def>> variants{};
+      might_not_exist<std::vector<action_result_def>> action_results{};
    };
    EOSIO_REFLECT(abi_def,
                  version,
@@ -162,7 +170,8 @@ namespace eosio
                  ricardian_clauses,
                  error_messages,
                  abi_extensions,
-                 variants);
+                 variants,
+                 action_results);
 
    struct abi_type;
 

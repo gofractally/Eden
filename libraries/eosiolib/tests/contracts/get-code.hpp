@@ -24,11 +24,14 @@ namespace get_code
       {
          eosio::print(eosio::format_json(eosio::get_code_hash(account)));
       }
+
+      auto get(eosio::name account) { return eosio::get_code_hash(account); }
    };
 
    EOSIO_ACTIONS(contract,
                  "getcode"_n,
                  action(shouldhave, account),
                  action(shouldnot, account),
-                 action(print, account))
+                 action(print, account),
+                 action(get))
 }  // namespace get_code
