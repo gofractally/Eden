@@ -492,9 +492,9 @@ chain_types::action convert(const eosio::chain::action& obj)
    return result;
 }
 
-chain_types::action_trace_v0 convert(const eosio::chain::action_trace& obj)
+chain_types::action_trace_v1 convert(const eosio::chain::action_trace& obj)
 {
-   chain_types::action_trace_v0 result;
+   chain_types::action_trace_v1 result;
    result.action_ordinal.value = obj.action_ordinal.value;
    result.creator_action_ordinal.value = obj.creator_action_ordinal.value;
    if (obj.receipt)
@@ -510,6 +510,7 @@ chain_types::action_trace_v0 convert(const eosio::chain::action_trace& obj)
       result.except = obj.except->to_string();
    if (obj.error_code)
       result.error_code = *obj.error_code;
+   result.return_value = obj.return_value;
    return result;
 }
 
