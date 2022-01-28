@@ -51,7 +51,7 @@ TEST_CASE("get_code")
    std::cout << "\naction returned: " << eosio::format_json(result) << "\n";
    CHECK(result.struct_version.value == 0);
    CHECK(result.code_sequence == 1);
-   CHECK(result.code_hash != eosio::checksum256{});
+   CHECK(result.hash != eosio::checksum256{});
    CHECK(result.vm_type == 0);
    CHECK(result.vm_version == 0);
 
