@@ -257,7 +257,7 @@ struct test_chain
    std::optional<scoped_connection> applied_transaction_connection;
    std::optional<scoped_connection> accepted_block_connection;
    eosio::state_history::trace_converter trace_converter;
-   fc::optional<block_position> prev_block;
+   std::optional<block_position> prev_block;
    std::map<uint32_t, std::vector<char>> history;
    std::unique_ptr<intrinsic_context> intr_ctx;
    std::set<test_chain_ref*> refs;
