@@ -16,7 +16,6 @@
 
 #undef N
 
-#include <b1/rodeos/embedded_rodeos.hpp>
 #include <eosio/chain_types.hpp>
 #include <eosio/fixed_bytes.hpp>
 #include <eosio/ship_protocol.hpp>
@@ -154,7 +153,6 @@ struct assert_exception : std::exception
 
 struct file;
 struct test_chain;
-struct test_rodeos;
 
 struct state
 {
@@ -166,7 +164,6 @@ struct state
    debug_contract::substitution_cache<debug_contract_backend> cache;
    std::vector<file> files;
    std::vector<std::unique_ptr<test_chain>> chains;
-   std::vector<std::unique_ptr<test_rodeos>> rodeoses;
    std::optional<uint32_t> selected_chain_index;
 };
 
@@ -429,26 +426,6 @@ test_chain_ref& test_chain_ref::operator=(const test_chain_ref& src)
    chain = src.chain;
    return *this;
 }
-
-struct test_rodeos
-{
-   fc::temp_directory dir;
-   b1::embedded_rodeos::context context;
-   std::optional<b1::embedded_rodeos::partition> partition;
-   std::optional<b1::embedded_rodeos::snapshot> write_snapshot;
-   std::list<b1::embedded_rodeos::filter> filters;
-   std::optional<b1::embedded_rodeos::query_handler> query_handler;
-   test_chain_ref chain;
-   uint32_t next_block = 0;
-   std::vector<std::vector<char>> pushed_data;
-
-   test_rodeos()
-   {
-      context.open_db(dir.path().string().c_str(), true);
-      partition.emplace(context, "", 0);
-      write_snapshot.emplace(partition->obj, true);
-   }
-};
 
 eosio::checksum256 convert(const eosio::chain::checksum_type& obj)
 {
@@ -824,11 +801,6 @@ struct callbacks
    void set_data(uint32_t cb_alloc_data, uint32_t cb_alloc, const T& data)
    {
       memcpy(alloc(cb_alloc_data, cb_alloc, data.size()), data.data(), data.size());
-   }
-
-   void set_data(uint32_t cb_alloc_data, uint32_t cb_alloc, const b1::embedded_rodeos::result& data)
-   {
-      memcpy(alloc(cb_alloc_data, cb_alloc, data.size), data.data, data.size);
    }
 
    void tester_abort()
@@ -1241,142 +1213,6 @@ struct callbacks
       return state.chains[*state.selected_chain_index]->get_apply_context();
    }
 
-   test_rodeos& assert_rodeos(uint32_t rodeos)
-   {
-      if (rodeos >= state.rodeoses.size() || !state.rodeoses[rodeos])
-         throw std::runtime_error("rodeos does not exist or was destroyed");
-      return *state.rodeoses[rodeos];
-   }
-
-   uint32_t tester_create_rodeos()
-   {
-      state.rodeoses.push_back(std::make_unique<test_rodeos>());
-      return state.rodeoses.size() - 1;
-   }
-
-   void tester_destroy_rodeos(uint32_t rodeos)
-   {
-      assert_rodeos(rodeos);
-      state.rodeoses[rodeos].reset();
-      while (!state.rodeoses.empty() && !state.rodeoses.back())
-      {
-         state.rodeoses.pop_back();
-      }
-   }
-
-   void tester_rodeos_add_filter(uint32_t rodeos, uint64_t name, span<const char> wasm_filename)
-   {
-      auto& r = assert_rodeos(rodeos);
-      r.filters.emplace_back(name, span_str(wasm_filename).c_str());
-   }
-
-   void tester_rodeos_enable_queries(uint32_t rodeos,
-                                     uint32_t max_console_size,
-                                     uint32_t wasm_cache_size,
-                                     uint64_t max_exec_time_ms,
-                                     span<const char> contract_dir)
-   {
-      auto& r = assert_rodeos(rodeos);
-      r.query_handler.emplace(*r.partition, max_console_size, wasm_cache_size, max_exec_time_ms,
-                              span_str(contract_dir).c_str());
-   }
-
-   void tester_connect_rodeos(uint32_t rodeos, uint32_t chain)
-   {
-      auto& r = assert_rodeos(rodeos);
-      auto& c = assert_chain(chain);
-      if (r.chain.chain)
-         throw std::runtime_error("rodeos is already connected");
-      r.chain = test_chain_ref{c};
-   }
-
-   bool tester_rodeos_sync_block(uint32_t rodeos)
-   {
-      auto& r = assert_rodeos(rodeos);
-      if (!r.chain.chain)
-         throw std::runtime_error("rodeos is not connected to a chain");
-      auto it = r.chain.chain->history.lower_bound(r.next_block);
-      if (it == r.chain.chain->history.end())
-         return false;
-      r.write_snapshot->start_block(it->second.data(), it->second.size());
-      r.write_snapshot->write_block_info(it->second.data(), it->second.size());
-      r.write_snapshot->write_deltas(it->second.data(), it->second.size(), [] { return false; });
-      for (auto& filter : r.filters)
-      {
-         try
-         {
-            filter.run(*r.write_snapshot, it->second.data(), it->second.size(),
-                       [&](const char* data, uint64_t size) {
-                          r.pushed_data.emplace_back(data, data + size);
-                          return true;
-                       });
-         }
-         catch (std::exception& e)
-         {
-            throw std::runtime_error("filter failed: " + std::string{e.what()});
-         }
-      }
-      r.write_snapshot->end_block(it->second.data(), it->second.size(), true);
-      r.next_block = it->first + 1;
-      return true;
-   }
-
-   void tester_rodeos_push_transaction(uint32_t rodeos,
-                                       span<const char> packed_args,
-                                       uint32_t cb_alloc_data,
-                                       uint32_t cb_alloc)
-   {
-      auto& r = assert_rodeos(rodeos);
-      if (!r.chain.chain)
-         throw std::runtime_error("rodeos is not connected to a chain");
-      if (!r.query_handler)
-         throw std::runtime_error(
-             "call tester_rodeos_enable_queries before tester_rodeos_push_transaction");
-      auto& chain = *r.chain.chain;
-      chain.start_if_needed();
-
-      auto args = unpack<push_trx_args>(packed_args);
-      auto transaction = unpack<eosio::chain::transaction>(args.transaction);
-      signed_transaction signed_trx{std::move(transaction), std::move(args.signatures),
-                                    std::move(args.context_free_data)};
-      for (auto& key : args.keys)
-         signed_trx.sign(key, chain.control->get_chain_id());
-      eosio::chain::packed_transaction ptrx{
-          std::move(signed_trx), eosio::chain::packed_transaction::compression_type::none};
-      auto data = fc::raw::pack(ptrx);
-      auto start_time = std::chrono::steady_clock::now();
-      auto result = r.query_handler->query_transaction(*r.write_snapshot, data.data(), data.size());
-      auto us = std::chrono::duration_cast<std::chrono::microseconds>(
-          std::chrono::steady_clock::now() - start_time);
-      ilog("rodeos transaction took ${u} us", ("u", us.count()));
-      auto tt = eosio::convert_from_bin<eosio::ship_protocol::transaction_trace>(
-          {result.data, result.data + result.size});
-      auto& tt0 = std::get<eosio::ship_protocol::transaction_trace_v0>(tt);
-      for (auto& at : tt0.action_traces)
-      {
-         auto& at1 = std::get<eosio::ship_protocol::action_trace_v0>(at);
-         if (!at1.console.empty())
-            ilog("rodeos query console: <<<\n${c}>>>", ("c", at1.console));
-      }
-      set_data(cb_alloc_data, cb_alloc, result);
-   }
-
-   uint32_t tester_rodeos_get_num_pushed_data(uint32_t rodeos)
-   {
-      auto& r = assert_rodeos(rodeos);
-      return r.pushed_data.size();
-   }
-
-   uint32_t tester_rodeos_get_pushed_data(uint32_t rodeos, uint32_t index, span<char> dest)
-   {
-      auto& r = assert_rodeos(rodeos);
-      if (index >= r.pushed_data.size())
-         throw std::runtime_error("tester_rodeos_get_pushed_data: index is out of range");
-      memcpy(dest.data(), r.pushed_data[index].data(),
-             std::min(dest.size(), r.pushed_data[index].size()));
-      return r.pushed_data[index].size();
-   }
-
    // clang-format off
    int32_t db_get_i64(int32_t iterator, span<char> buffer)                                {return selected().db_get_i64(iterator, buffer.data(), buffer.size());}
    int32_t db_next_i64(int32_t iterator, wasm_ptr<uint64_t> primary)                      {return selected().db_next_i64(iterator, *primary);}
@@ -1529,17 +1365,6 @@ void register_callbacks()
    rhf_t::add<&callbacks::tester_exec_deferred>("env", "tester_exec_deferred");
    rhf_t::add<&callbacks::tester_get_history>("env", "tester_get_history");
    rhf_t::add<&callbacks::tester_select_chain_for_db>("env", "tester_select_chain_for_db");
-
-   rhf_t::add<&callbacks::tester_create_rodeos>("env", "tester_create_rodeos");
-   rhf_t::add<&callbacks::tester_destroy_rodeos>("env", "tester_destroy_rodeos");
-   rhf_t::add<&callbacks::tester_rodeos_add_filter>("env", "tester_rodeos_add_filter");
-   rhf_t::add<&callbacks::tester_rodeos_enable_queries>("env", "tester_rodeos_enable_queries");
-   rhf_t::add<&callbacks::tester_connect_rodeos>("env", "tester_connect_rodeos");
-   rhf_t::add<&callbacks::tester_rodeos_sync_block>("env", "tester_rodeos_sync_block");
-   rhf_t::add<&callbacks::tester_rodeos_push_transaction>("env", "tester_rodeos_push_transaction");
-   rhf_t::add<&callbacks::tester_rodeos_get_num_pushed_data>("env",
-                                                             "tester_rodeos_get_num_pushed_data");
-   rhf_t::add<&callbacks::tester_rodeos_get_pushed_data>("env", "tester_rodeos_get_pushed_data");
 
    rhf_t::add<&callbacks::db_get_i64>("env", "db_get_i64");
    rhf_t::add<&callbacks::db_next_i64>("env", "db_next_i64");
