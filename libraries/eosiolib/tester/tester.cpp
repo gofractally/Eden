@@ -1,6 +1,7 @@
 #include <eosio/abi.hpp>
 #include <eosio/from_string.hpp>
 #include <eosio/tester.hpp>
+#include <eosio/authority.hpp>
 
 namespace
 {
@@ -90,39 +91,6 @@ eosio::asset eosio::string_to_asset(const char* s)
 {
    return eosio::convert_from_string<asset>(s);
 }
-
-namespace
-{
-   // TODO: move
-   struct tester_permission_level_weight
-   {
-      eosio::permission_level permission = {};
-      uint16_t weight = {};
-   };
-
-   EOSIO_REFLECT(tester_permission_level_weight, permission, weight);
-
-   // TODO: move
-   struct tester_wait_weight
-   {
-      uint32_t wait_sec = {};
-      uint16_t weight = {};
-   };
-
-   EOSIO_REFLECT(tester_wait_weight, wait_sec, weight);
-
-   // TODO: move
-   struct tester_authority
-   {
-      uint32_t threshold = {};
-      std::vector<eosio::key_weight> keys = {};
-      std::vector<tester_permission_level_weight> accounts = {};
-      std::vector<tester_wait_weight> waits = {};
-   };
-
-   EOSIO_REFLECT(tester_authority, threshold, keys, accounts, waits);
-
-}  // namespace
 
 /**
  * Validates the status of a transaction.  If expected_except is nullptr, then the
@@ -442,7 +410,7 @@ eosio::transaction_trace eosio::test_chain::create_account(name ac,
                                                            const public_key& pub_key,
                                                            const char* expected_except)
 {
-   tester_authority simple_auth{
+   authority simple_auth{
        .threshold = 1,
        .keys = {{pub_key, 1}},
    };
@@ -463,11 +431,11 @@ eosio::transaction_trace eosio::test_chain::create_code_account(name account,
                                                                 bool is_priv,
                                                                 const char* expected_except)
 {
-   tester_authority simple_auth{
+   authority simple_auth{
        .threshold = 1,
        .keys = {{pub_key, 1}},
    };
-   tester_authority code_auth{
+   authority code_auth{
        .threshold = 1,
        .keys = {{pub_key, 1}},
        .accounts = {{{account, "eosio.code"_n}, 1}},
