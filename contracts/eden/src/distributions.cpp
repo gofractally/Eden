@@ -449,6 +449,31 @@ namespace eden
       }
    }
 
+   void distributions::on_rename(eosio::name old_account, eosio::name new_account)
+   {
+      {
+         distribution_table_type distribution_tb{contract, default_scope};
+         auto iter = distribution_tb.begin();
+         eosio::check(iter == distribution_tb.end() ||
+                          !std::holds_alternative<current_distribution>(iter->value),
+                      "Cannot rename member while a distribution is in progress");
+      }
+
+      accounts owned_accounts{contract, "owned"_n};
+      setup_distribution(contract, owned_accounts);
+      auto member_idx = distribution_account_tb.get_index<"byowner"_n>();
+      for (auto iter = member_idx.lower_bound(uint128_t(old_account.value) << 64),
+                end = member_idx.end();
+           iter != end && iter->owner() == old_account;)
+      {
+         owned_accounts.add_balance("master"_n, iter->balance(), false);
+         auto next = iter;
+         ++next;
+         member_idx.modify(iter, contract, [&](auto& acct) { acct.owner() = new_account; });
+         iter = next;
+      }
+   }
+
    void distributions::clear_all()
    {
       clear_table(distribution_account_tb);

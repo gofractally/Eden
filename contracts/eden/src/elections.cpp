@@ -1020,6 +1020,30 @@ namespace eden
       }
    }
 
+   void elections::on_rename(eosio::name old_account, eosio::name new_account)
+   {
+      eosio::check(!is_election_running(state_sing), "Cannot rename account during an election");
+
+      // Update the board
+      election_state_singleton global_state{contract, default_scope};
+      if (!global_state.exists())
+      {
+         return;
+      }
+      auto value = std::get<election_state_v0>(global_state.get());
+      auto pos = std::find(value.board.begin(), value.board.end(), old_account);
+      if (pos != value.board.end())
+      {
+         *pos = new_account;
+         global_state.set(value, contract);
+         set_board_permission(value.board);
+      }
+      if (old_account == value.lead_representative)
+      {
+         value.lead_representative = new_account;
+      }
+   }
+
    boost::logic::tribool elections::can_upload_video(uint8_t round, eosio::name voter)
    {
       auto iter = vote_tb.find(voter.value);

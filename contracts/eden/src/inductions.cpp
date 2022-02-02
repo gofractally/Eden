@@ -435,6 +435,35 @@ namespace eden
       return pos != invitee_idx.end() && pos->invitee() == invitee;
    }
 
+   void inductions::on_rename(eosio::name old_account, eosio::name new_account)
+   {
+      eosio::check(!has_induction(old_account), "Cannot rename: gc required");
+      // change all endorsements
+      auto endorser_idx = endorsement_tb.get_index<"byendorser"_n>();
+      for (auto iter = endorser_idx.lower_bound(uint128_t{old_account.value} << 64),
+                end = endorser_idx.end();
+           iter != end && iter->endorser() == old_account;)
+      {
+         auto next = iter;
+         ++next;
+         endorser_idx.modify(iter, contract,
+                             [&](auto& endorsement) { endorsement.endorser() = new_account; });
+         iter = next;
+      }
+      // change all inductions with old_account as inviter
+      auto inviter_idx = induction_tb.get_index<"byinviter"_n>();
+      for (auto iter = inviter_idx.lower_bound(combine_names(old_account, ""_n)),
+                end = inviter_idx.end();
+           iter != end && iter->inviter() == old_account;)
+      {
+         auto next = iter;
+         ++next;
+         inviter_idx.modify(iter, contract,
+                            [&](auto& invitation) { invitation.inviter() = new_account; });
+         iter = next;
+      }
+   }
+
    void inductions::clear_all()
    {
       clear_table(induction_tb);

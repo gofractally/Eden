@@ -211,6 +211,8 @@ namespace eden
       // Should only be used during genesis
       void endorse_all(const induction& induction);
 
+      void on_rename(eosio::name old_account, eosio::name new_account);
+
       // this method is used only for administrative purposes,
       // it should never be used outside genesis or test environments
       void clear_all();

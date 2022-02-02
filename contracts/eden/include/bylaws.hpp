@@ -60,6 +60,7 @@ namespace eden
       // - Approvals on the pending bylaws are cleared
       void new_board();
       void on_resign(eosio::name member);
+      void on_rename(eosio::name member, eosio::name new_account);
 
       void clear_all();
    };

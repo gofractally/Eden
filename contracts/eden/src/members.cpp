@@ -128,6 +128,35 @@ namespace eden
       }
    }
 
+   void members::rename(eosio::name account, eosio::name new_account)
+   {
+      auto iter = member_tb.find(account.value);
+      std::uint8_t rank = iter->election_rank();
+      eosio::check(iter != member_tb.end(), "Unknown member");
+      remove_sessions(contract, account);
+      // Update the members table entry
+      member_tb.emplace(contract, [&](auto& new_member) {
+         new_member = *iter;
+         new_member.account() = new_account;
+      });
+      member_tb.erase(iter);
+      // update delegate records
+      auto delegate_idx = member_tb.get_index<"byrep"_n>();
+      for (uint8_t i = 0; i <= rank; ++i)
+      {
+         for (auto iter = delegate_idx.lower_bound((uint128_t{i} << 64) | account.value),
+                   end = delegate_idx.end();
+              iter != end && iter->representative() == account;)
+         {
+            auto next = iter;
+            ++next;
+            delegate_idx.modify(iter, contract,
+                                [&](auto& member) { member.representative() = new_account; });
+            iter = next;
+         }
+      }
+   }
+
    void members::set_nft(eosio::name account, int32_t nft_template_id)
    {
       check_pending_member(account);

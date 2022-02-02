@@ -482,6 +482,21 @@ TEST_CASE("board resignation")
    t.pip.act<actions::resign>("pip"_n);
 }
 
+TEST_CASE("renaming")
+{
+   eden_tester t;
+   t.genesis();
+   t.run_election();
+   t.chain.transact(
+       {eosio::action{{"eden.gm"_n, "active"_n},
+                      "eosio"_n,
+                      "linkauth"_n,
+                      std::tuple("eden.gm"_n, "eden.gm"_n, "rename"_n, "board.major"_n)}});
+   t.alice.act<actions::distribute>(100);
+   test_chain::user_context{t.chain, {{"eden.gm"_n, "board.major"_n}, {"ahab"_n, "active"_n}}}
+       .act<actions::rename>("alice"_n, "ahab"_n);
+}
+
 TEST_CASE("auction")
 {
    eden_tester t;

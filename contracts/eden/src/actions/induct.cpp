@@ -237,4 +237,23 @@ namespace eden
       bylaws.on_resign(account);
    }
 
+   void eden::rename(eosio::name account, eosio::name new_account)
+   {
+      eosio::require_auth(new_account);
+      eosio::require_auth(eosio::permission_level{get_self(), "board.major"_n});
+      members members{get_self()};
+      members.check_active_member(account);
+      distributions dist{get_self()};
+      dist.on_rename(account, new_account);
+      elections elections{get_self()};
+      elections.on_rename(account, new_account);
+      inductions inductions{get_self()};
+      inductions.on_rename(account, new_account);
+      members.rename(account, new_account);
+      bylaws bylaws{get_self()};
+      bylaws.on_rename(account, new_account);
+      migrations migrations{get_self()};
+      migrations.on_rename(account, new_account);
+   }
+
 }  // namespace eden
