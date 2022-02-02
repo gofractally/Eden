@@ -1,7 +1,7 @@
 #include <eosio/abi.hpp>
+#include <eosio/authority.hpp>
 #include <eosio/from_string.hpp>
 #include <eosio/tester.hpp>
-#include <eosio/authority.hpp>
 
 namespace
 {
@@ -475,7 +475,7 @@ eosio::transaction_trace eosio::test_chain::create_code_account(name ac,
 }
 
 eosio::transaction_trace eosio::test_chain::set_code(name ac,
-                                                     const char* filename,
+                                                     std::string_view filename,
                                                      const char* expected_except)
 {
    return transact({action{{{ac, "active"_n}},
@@ -486,7 +486,7 @@ eosio::transaction_trace eosio::test_chain::set_code(name ac,
 }
 
 eosio::transaction_trace eosio::test_chain::set_abi(name ac,
-                                                    const char* filename,
+                                                    std::string_view filename,
                                                     const char* expected_except)
 {
    auto json = read_whole_file(filename);

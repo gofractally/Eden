@@ -19,5 +19,6 @@
   - [as/act/trace](cltester/as/README.md)
   - [BIOS and Chain Configuration](cltester/bios/README.md)
   - [Block Control](cltester/block/README.md)
+  - [System Contract](cltester/system/README.md)
   - [Starting Nodeos](cltester/nodeos/README.md)
   - [Hostile Takeover](cltester/takeover/README.md)

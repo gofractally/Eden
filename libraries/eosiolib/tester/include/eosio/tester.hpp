@@ -414,11 +414,11 @@ namespace eosio
        * Validates the transaction status as with @ref eosio::expect.
        */
       transaction_trace set_code(name ac,
-                                 const char* filename,
+                                 std::string_view filename,
                                  const char* expected_except = nullptr);
 
       transaction_trace set_abi(name ac,
-                                const char* filename,
+                                std::string_view filename,
                                 const char* expected_except = nullptr);
 
       /**
