@@ -241,6 +241,8 @@ namespace eden
    {
       eosio::require_auth(new_account);
       eosio::require_auth(eosio::permission_level{get_self(), "board.major"_n});
+      accounts accounts{get_self()};
+      accounts.on_rename(account, new_account);
       members members{get_self()};
       members.check_active_member(account);
       distributions dist{get_self()};

@@ -736,6 +736,15 @@ namespace eden
           .send();
    }
 
+   void elections::link_board_permission()
+   {
+      eosio::action{{contract, "active"_n},
+                    "eosio"_n,
+                    "linkauth"_n,
+                    std::tuple(contract, contract, "rename"_n, "board.major"_n)}
+          .send();
+   }
+
    void elections::finish_election(std::vector<eosio::name>&& board, eosio::name winner)
    {
       election_state_singleton results(contract, default_scope);

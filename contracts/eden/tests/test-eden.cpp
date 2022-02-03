@@ -486,15 +486,26 @@ TEST_CASE("renaming")
 {
    eden_tester t;
    t.genesis();
+   auto distribution_time = t.next_election_time();
    t.run_election();
-   t.chain.transact(
-       {eosio::action{{"eden.gm"_n, "active"_n},
-                      "eosio"_n,
-                      "linkauth"_n,
-                      std::tuple("eden.gm"_n, "eden.gm"_n, "rename"_n, "board.major"_n)}});
    t.alice.act<actions::distribute>(100);
+   t.alice.act<actions::fundtransfer>("alice"_n, distribution_time, 1, "alice"_n, s2a("0.0001 EOS"),
+                                      "");
    test_chain::user_context{t.chain, {{"eden.gm"_n, "board.major"_n}, {"ahab"_n, "active"_n}}}
        .act<actions::rename>("alice"_n, "ahab"_n);
+
+   expect(t.alice.trace<actions::withdraw>("alice"_n, s2a("0.0001 EOS")), "insufficient balance");
+   t.ahab.act<actions::withdraw>("ahab"_n, s2a("0.0001 EOS"));
+
+   t.chain.start_block();
+   expect(t.alice.trace<actions::fundtransfer>("alice"_n, distribution_time, 1, "alice"_n,
+                                               s2a("0.0001 EOS"), ""),
+          "member alice not found");
+   t.ahab.act<actions::fundtransfer>("ahab"_n, distribution_time, 1, "ahab"_n, s2a("0.0001 EOS"),
+                                     "");
+
+   CHECK(get_eden_membership("pip"_n).representative() == "ahab"_n);
+   CHECK(get_eden_membership("ahab"_n).representative() == "ahab"_n);
 }
 
 TEST_CASE("auction")
@@ -1191,6 +1202,10 @@ TEST_CASE("clearall")
    eden_tester t;
    t.genesis();
    t.eden_gm.act<actions::clearall>();
+   t.chain.transact({{{"eden.gm"_n, "active"_n},
+                      "eosio"_n,
+                      "unlinkauth"_n,
+                      std::tuple("eden.gm"_n, "eden.gm"_n, "rename"_n)}});
    t.chain.start_block();
    t.genesis();
 }

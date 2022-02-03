@@ -131,6 +131,8 @@ namespace eden
 
       elections elections{get_self()};
       elections.set_time(election_day, election_time);
+      elections.set_board_permission({});
+      elections.link_board_permission();
 
       auto inviter = get_self();
       auto total_endorsements = initial_members.size() - 1;
