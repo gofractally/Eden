@@ -228,9 +228,9 @@ namespace eden
    EDEN_ACTIONS(
        eden,
        "eden.gm"_n,
-       action(newsession, eden_account, key, expiration, description),
-       eden_verb(delsession, 0, eden_account, key),
-       action(run, auth, verbs),
+       // action(newsession, eden_account, key, expiration, description),
+       // eden_verb(delsession, 0, eden_account, key),
+       // action(run, auth, verbs),
        action(withdraw, owner, quantity, ricardian_contract(withdraw_ricardian)),
        action(donate, owner, quantity),
        action(fundtransfer, from, distribution_time, rank, to, amount, memo),

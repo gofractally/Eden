@@ -509,6 +509,7 @@ struct eden_tester
       return result;
    };
 
+   /*
    void newsession(eosio::name authorizer,
                    eosio::name eden_account,
                    const eosio::public_key& key,
@@ -562,6 +563,7 @@ struct eden_tester
 
       expect(chain.push_transaction(chain.make_transaction({act})), expected);
    }
+   */
 
    void write_dfuse_history(const char* filename)
    {
