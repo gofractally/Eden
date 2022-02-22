@@ -450,18 +450,10 @@ namespace eden
                              [&](auto& endorsement) { endorsement.endorser() = new_account; });
          iter = next;
       }
-      // change all inductions with old_account as inviter
       auto inviter_idx = induction_tb.get_index<"byinviter"_n>();
-      for (auto iter = inviter_idx.lower_bound(combine_names(old_account, ""_n)),
-                end = inviter_idx.end();
-           iter != end && iter->inviter() == old_account;)
-      {
-         auto next = iter;
-         ++next;
-         inviter_idx.modify(iter, contract,
-                            [&](auto& invitation) { invitation.inviter() = new_account; });
-         iter = next;
-      }
+      auto iter = inviter_idx.lower_bound(combine_names(old_account, ""_n));
+      eosio::check(iter == inviter_idx.end() || iter->inviter() != old_account,
+                   "Cannot rename an account that is the inviter of a pending invitation");
    }
 
    void inductions::clear_all()
