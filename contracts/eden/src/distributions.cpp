@@ -466,7 +466,6 @@ namespace eden
                 end = member_idx.end();
            iter != end && iter->owner() == old_account;)
       {
-         owned_accounts.add_balance("master"_n, iter->balance(), false);
          auto next = iter;
          ++next;
          member_idx.modify(iter, contract, [&](auto& acct) { acct.owner() = new_account; });
