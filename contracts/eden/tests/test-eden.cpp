@@ -1296,6 +1296,7 @@ TEST_CASE("election-events")
    CompareFile{"test-election"}.write_events(t.chain).compare();
 }
 
+/*
 TEST_CASE("contract-auth")
 {
    eden_tester t;
@@ -1475,3 +1476,4 @@ TEST_CASE("contract-auth-elect")
    t.write_dfuse_history("dfuse-contract-auth-elect.json");
    CompareFile{"contract-auth-elect"}.write_events(t.chain).compare();
 }  // TEST_CASE("contract-auth-elect")
+*/
