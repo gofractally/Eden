@@ -44,7 +44,7 @@ namespace eden
 #define EDEN_GET_SESSION_ACTION_INTERNAL_1(r, type, member) \
    f(EDEN_EXTRACT_SESSION_ACTION_INDEX(member),             \
      BOOST_PP_STRINGIZE(EOSIO_EXTRACT_ACTION_NAME(member)), \
-     &type::EOSIO_EXTRACT_ACTION_NAME(member));
+                        &type::EOSIO_EXTRACT_ACTION_NAME(member));
 #define EDEN_GET_SESSION_ACTION_INTERNAL(r, type, member)                              \
    BOOST_PP_IIF(EDEN_MATCH_SESSION_ACTION(member), EDEN_GET_SESSION_ACTION_INTERNAL_1, \
                 EOSIO_EMPTY)                                                           \

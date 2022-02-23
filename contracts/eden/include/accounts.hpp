@@ -75,6 +75,7 @@ namespace eden
       std::optional<account> get_account(eosio::name owner);
       void add_balance(eosio::name owner, const eosio::asset& quantity, bool enforce_minimum);
       void sub_balance(eosio::name owner, const eosio::asset& quantity);
+      void on_rename(eosio::name old_account, eosio::name new_account);
 
       // this method is used only for administrative purposes,
       // it should never be used outside genesis or test environments
