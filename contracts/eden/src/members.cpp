@@ -131,8 +131,8 @@ namespace eden
    void members::rename(eosio::name account, eosio::name new_account)
    {
       auto iter = member_tb.find(account.value);
-      std::uint8_t rank = iter->election_rank();
       eosio::check(iter != member_tb.end(), "Unknown member");
+      std::uint8_t rank = iter->election_rank();
       remove_sessions(contract, account);
       // Update the members table entry
       member_tb.emplace(contract, [&](auto& new_member) {

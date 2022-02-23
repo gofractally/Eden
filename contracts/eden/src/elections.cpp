@@ -1050,6 +1050,7 @@ namespace eden
       if (old_account == value.lead_representative)
       {
          value.lead_representative = new_account;
+         global_state.set(value, contract);
       }
    }
 
