@@ -128,6 +128,7 @@ jobs:
                   cp eden.wasm ../product_cache
                   cp run-elections.wasm ../product_cache
                   cp run-genesis.wasm ../product_cache
+                  cp run-full-election.wasm ../product_cache
                   cp token.abi ../product_cache
                   cp token.wasm ../product_cache
 
@@ -182,6 +183,7 @@ jobs:
                       product_cache/token.wasm
                       product_cache/run-genesis.wasm
                       product_cache/run-elections.wasm
+                      product_cache/run-full-election.wasm
 
     build-micro-chain:
         name: Build Micro Chain
