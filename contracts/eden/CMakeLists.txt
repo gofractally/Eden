@@ -65,6 +65,7 @@ eden_tester_test(test-eden)
 # Chain Runners
 add_test_eden("run-genesis" "")
 add_test_eden("run-elections" "")
+add_test_eden("run-full-election" "")
 
 file(CREATE_LINK ${CMAKE_CURRENT_SOURCE_DIR}/tests/data ${ROOT_BINARY_DIR}/eden-test-data SYMBOLIC)
 
