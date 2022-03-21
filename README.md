@@ -64,7 +64,7 @@ npm i -g yarn
 
 ### Running Eden with Ephemeral Chains Locally
 
-Ephemeral chains are instances of the EOS blockchain spawned by `nodeos` locally, with manipulated data from our chain runners, eg: [Basic Genesis Runner](contracts/eden/tests/run-genesis.cpp) or [Full Election Runner](contracts/eden/tests/run-full-election.cpp). By running a ephemeral chain you are in full control of the blockchain, giving you more flexibility to test the Eden contracts.
+Ephemeral chains are instances of the EOS blockchain spawned by `nodeos` locally, with manipulated data from our chain runners, eg: [Basic Genesis Runner](contracts/eden/tests/run-genesis.cpp), [Elections Runner](contracts/eden/tests/run-elections.cpp) (which finishes with an open, running election), and [Completed Elections Runner](contracts/eden/tests/run-complete-elections.cpp). By running a ephemeral chain you are in full control of the blockchain, giving you more flexibility to test the Eden contracts.
 
 #### Get the executables
 
@@ -121,4 +121,4 @@ open http://localhost:3000
 
 Running the above commands again will just setup a brand new chain! Just watch out to kill nodeos and unlock your keos wallet if built locally or remove your docker container. Also don't forget to restart the `yarn` environment because the blocks state needs to be refreshed.
 
-In the above instructions we ran a simple genesis case with 3 inducted members, but you can also try `run-full-election.wasm` to see a community with more than 100 members with chief delegates already elected.
+In the above instructions we ran a simple genesis case with 3 inducted members, but you can also try `run-complete-elections.wasm` to see a community with more than 100 members with chief delegates already elected.
