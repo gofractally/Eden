@@ -16,10 +16,10 @@ interface Props {
 }
 
 export const NavProfile = ({ location }: Props) => {
-    const [_ualAccount, _, ualShowModal] = useUALAccount();
+    const [ualAccount, _, ualShowModal] = useUALAccount();
     const { data: member } = useCurrentMember();
 
-    if (!member?.accountName) {
+    if (!ualAccount) {
         return (
             <div className="flex justify-end xs:justify-center md:justify-end xl:justify-start mb-0 xs:mb-8 my-0">
                 <Button
@@ -72,7 +72,9 @@ export const NavProfile = ({ location }: Props) => {
                         <Text size="sm" className="font-semibold">
                             {member?.profile?.name ?? "Not a member"}
                         </Text>
-                        <Text size="sm">@{member?.accountName}</Text>
+                        <Text size="sm">
+                            @{member?.accountName ?? ualAccount?.accountName}
+                        </Text>
                     </div>
                 </div>
             </PopoverWrapper>
@@ -84,7 +86,7 @@ export default NavProfile;
 
 interface PopoverProps extends Props {
     children: React.ReactNode;
-    member?: Member;
+    member?: Member | null;
 }
 
 const PopoverWrapper = ({ children, member, location }: PopoverProps) => {

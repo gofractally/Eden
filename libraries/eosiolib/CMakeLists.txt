@@ -1,3 +1,5 @@
+enable_testing()
+
 function(add_libs suffix)
     add_library(simple-malloc${suffix})
     target_link_libraries(simple-malloc${suffix} PUBLIC wasm-base${suffix})
@@ -102,6 +104,7 @@ function(add_libs suffix)
         tester/wasi_polyfill/__wasi_path_open.cpp
         tester/wasi_polyfill/__wasi_proc_exit.cpp
     )
+    target_compile_options(cltestlib${suffix} PUBLIC -DCOMPILING_TESTS)
     target_link_libraries(cltestlib${suffix} PUBLIC 
         boost eosio-core${suffix}
         -lc++
@@ -144,3 +147,5 @@ configure_file(tester/tester.cpp ${ROOT_BINARY_DIR}/clsdk/eosiolib/tester/tester
 configure_file(sdk/clsdk-cmake-args ${ROOT_BINARY_DIR}/clsdk/bin/clsdk-cmake-args COPYONLY)
 configure_file(sdk/toolchain.cmake ${ROOT_BINARY_DIR}/clsdk/toolchain.cmake COPYONLY)
 configure_file(sdk/clsdk-config.cmake ${ROOT_BINARY_DIR}/clsdk/clsdk-config.cmake COPYONLY)
+
+add_subdirectory(tests)

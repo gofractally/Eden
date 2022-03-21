@@ -270,7 +270,6 @@ namespace eden
       uint32_t randomize_voters(current_election_state_init_voters_v0& state, uint32_t max_steps);
       std::vector<eosio::name> extract_board();
       void finish_election(std::vector<eosio::name>&& board, eosio::name winner);
-      void set_board_permission(const std::vector<eosio::name>& board);
       bool remove_from_board(eosio::name member);
 
      public:
@@ -281,6 +280,8 @@ namespace eden
             globals(contract)
       {
       }
+      void set_board_permission(const std::vector<eosio::name>& board);
+      void link_board_permission();
       std::optional<eosio::block_timestamp> get_next_election_time();
       std::uint8_t election_schedule_version();
       void set_time(uint8_t day, const std::string& time);
@@ -292,6 +293,7 @@ namespace eden
       uint32_t prepare_election(uint32_t max_steps);
       uint32_t finish_round(uint32_t max_steps);
       void on_resign(eosio::name member);
+      void on_rename(eosio::name old_account, eosio::name new_account);
       // \pre voter and candidate are members of the same group
       void vote(uint8_t round, eosio::name voter, eosio::name candidate);
       boost::logic::tribool can_upload_video(uint8_t round, eosio::name voter);

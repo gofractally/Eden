@@ -51,7 +51,7 @@ void chain_setup(test_chain& t)
    t.set_code("eosio"_n, "boot.wasm");
    t.as("eosio"_n).act<boot::actions::boot>();
    t.start_block();  // preactivate feature activates protocol features at the start of a block
-   t.set_code("eosio"_n, "bios.wasm");
+   t.set_code("eosio"_n, "clsdk/contracts/bios.wasm");
 }
 
 void token_setup(test_chain& t)
@@ -326,20 +326,9 @@ struct eden_tester
              expected);
    }
 
-   void skip_to(std::string time)
-   {
-      uint64_t value;
-      eosio::check(eosio::string_to_utc_microseconds(value, time.data(), time.data() + time.size()),
-                   "bad time");
-      skip_to(eosio::time_point{eosio::microseconds(value)});
-   }
-   void skip_to(eosio::time_point tp)
-   {
-      chain.finish_block();
-      auto head_tp = chain.get_head_block_info().timestamp.to_time_point();
-      auto skip = (tp - head_tp).count() / 1000 - 500;
-      chain.start_block(skip);
-   }
+   void skip_to(std::string time) { chain.start_block(time); }
+
+   void skip_to(eosio::time_point tp) { chain.start_block(tp); }
 
    void setup_election(uint32_t batch_size = 10000)
    {
@@ -520,6 +509,7 @@ struct eden_tester
       return result;
    };
 
+   /*
    void newsession(eosio::name authorizer,
                    eosio::name eden_account,
                    const eosio::public_key& key,
@@ -573,6 +563,7 @@ struct eden_tester
 
       expect(chain.push_transaction(chain.make_transaction({act})), expected);
    }
+   */
 
    void write_dfuse_history(const char* filename)
    {

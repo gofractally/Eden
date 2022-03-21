@@ -128,7 +128,7 @@ export const InductionProfileForm = ({
                 Social handles and links
             </Heading>
             <Form.LabeledSet
-                label="EOSCommunity.org username"
+                label="forums.eoscommunity.org username"
                 htmlFor="eosCommunity"
                 className="col-span-6 md:col-span-3 lg:col-span-6 xl:col-span-3"
             >

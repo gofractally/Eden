@@ -147,6 +147,8 @@ namespace eden
 
       void resign(eosio::name member);
 
+      void rename(eosio::name member, eosio::name newaccount);
+
       void setencpubkey(eosio::name member, const eosio::public_key& key);
 
       void electsettime(eosio::time_point_sec election_time);
@@ -228,9 +230,9 @@ namespace eden
    EDEN_ACTIONS(
        eden,
        "eden.gm"_n,
-       action(newsession, eden_account, key, expiration, description),
-       eden_verb(delsession, 0, eden_account, key),
-       action(run, auth, verbs),
+       // action(newsession, eden_account, key, expiration, description),
+       // eden_verb(delsession, 0, eden_account, key),
+       // action(run, auth, verbs),
        action(withdraw, owner, quantity, ricardian_contract(withdraw_ricardian)),
        action(donate, owner, quantity),
        action(fundtransfer, from, distribution_time, rank, to, amount, memo),
@@ -288,6 +290,7 @@ namespace eden
        eden_verb(inductcancel, 9, account, id, ricardian_contract(inductcancel_ricardian)),
        action(inducted, inductee, ricardian_contract(inducted_ricardian)),
        action(resign, account),
+       action(rename, old_account, new_account),
        action(gc, limit, ricardian_contract(gc_ricardian)),
        action(migrate, limit),
        action(unmigrate),

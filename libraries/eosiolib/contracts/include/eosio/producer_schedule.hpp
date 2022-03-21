@@ -1,4 +1,5 @@
 #pragma once
+#include <eosio/authority.hpp>
 #include <eosio/crypto.hpp>
 #include <eosio/name.hpp>
 #include <eosio/serialize.hpp>
@@ -77,31 +78,6 @@ namespace eosio
     *  @ingroup types
     *  @brief Maps producer with its a flexible authority structure, used for producer schedule
     */
-
-   /**
-    * pairs a public key with an integer weight
-    *
-    * @ingroup producer_authority
-    */
-   struct key_weight
-   {
-      /**
-       * public key used in a weighted threshold multi-sig authority
-       *
-       * @brief public key used in a weighted threshold multi-sig authority
-       */
-      public_key key;
-
-      /**
-       * weight associated with a signature from the private key associated with the accompanying
-       * public key
-       *
-       * @brief weight of the public key
-       */
-      uint16_t weight;
-
-      EOSLIB_SERIALIZE(key_weight, (key)(weight))
-   };
 
    /**
     * block signing authority version 0

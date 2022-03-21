@@ -11,7 +11,7 @@ import {
 enum RankLabel {
     NumberedLevel = "N",
     Chief = "Chief",
-    HeadChief = "Head-chief",
+    HeadChief = "Head Chief",
 }
 
 export const TreasuryDelegateLevelsInfo = () => {
@@ -68,6 +68,7 @@ export const TreasuryDelegateLevelsInfo = () => {
                 label={label}
                 level={index + 1}
                 amount={rankAmount}
+                key={`rank-level-${label}`}
             />
         );
     };
@@ -90,7 +91,7 @@ const RankLevelDistribution = ({
     amount,
     level,
 }: RankLevelDistributionProps) => {
-    const labelText = label === RankLabel.NumberedLevel ? `${level}` : label;
+    const labelText = label === RankLabel.NumberedLevel ? `Level ${level}` : label;
 
     return (
         <div className="flex justify-between">

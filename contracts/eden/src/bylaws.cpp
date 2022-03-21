@@ -123,5 +123,20 @@ namespace eden
       }
    }
 
+   void bylaws::on_rename(eosio::name old_account, eosio::name new_account)
+   {
+      for (auto key : {proposed, pending})
+      {
+         auto pos = bylaws_tb.find(key.value);
+         if (pos != bylaws_tb.end())
+         {
+            bylaws_tb.modify(pos, contract, [&](auto& row) {
+               std::replace(row.approvals().begin(), row.approvals().end(), old_account,
+                            new_account);
+            });
+         }
+      }
+   }
+
    void bylaws::clear_all() { clear_table(bylaws_tb); }
 }  // namespace eden

@@ -11,7 +11,7 @@ namespace eosio
 {
    struct abi_generator
    {
-      eosio::abi_def def{"eosio::abi/1.1"};
+      eosio::abi_def def{"eosio::abi/1.3"};
       std::map<std::type_index, std::string> type_to_name;
       std::map<std::string, std::type_index> name_to_type;
 
@@ -179,6 +179,11 @@ namespace eosio
          struct_def d{struct_name};
          add_action_args<0>(d, (typename decltype(wrapper)::args*)nullptr, arg_names...);
          def.structs.push_back(std::move(d));
+         if constexpr (!std::is_same_v<void, typename decltype(wrapper)::return_type>)
+         {
+            def.action_results.value.push_back(
+                {name, get_type<typename decltype(wrapper)::return_type>()});
+         }
       }
 
       template <uint32_t i, typename T, typename... Ts, typename N, typename... Ns>

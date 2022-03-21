@@ -736,6 +736,15 @@ namespace eden
           .send();
    }
 
+   void elections::link_board_permission()
+   {
+      eosio::action{{contract, "active"_n},
+                    "eosio"_n,
+                    "linkauth"_n,
+                    std::tuple(contract, contract, "rename"_n, "board.major"_n)}
+          .send();
+   }
+
    void elections::finish_election(std::vector<eosio::name>&& board, eosio::name winner)
    {
       election_state_singleton results(contract, default_scope);
@@ -1017,6 +1026,31 @@ namespace eden
       if (remove_from_board(member))
       {
          trigger_election();
+      }
+   }
+
+   void elections::on_rename(eosio::name old_account, eosio::name new_account)
+   {
+      eosio::check(!is_election_running(state_sing), "Cannot rename account during an election");
+
+      // Update the board
+      election_state_singleton global_state{contract, default_scope};
+      if (!global_state.exists())
+      {
+         return;
+      }
+      auto value = std::get<election_state_v0>(global_state.get());
+      auto pos = std::find(value.board.begin(), value.board.end(), old_account);
+      if (pos != value.board.end())
+      {
+         *pos = new_account;
+         global_state.set(value, contract);
+         set_board_permission(value.board);
+      }
+      if (old_account == value.lead_representative)
+      {
+         value.lead_representative = new_account;
+         global_state.set(value, contract);
       }
    }
 

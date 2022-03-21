@@ -1662,6 +1662,94 @@ void resign(eosio::name account)
    remove_if_exists<by_pk>(db.members, account);
 }
 
+void rename(eosio::name old_account, eosio::name new_account)
+{
+   auto update = [&](auto& acc) {
+      if (acc == old_account)
+         acc = new_account;
+   };
+   auto update_vec = [&](auto& vec) {
+      std::replace(vec.begin(), vec.end(), old_account, new_account);
+   };
+
+   db.status.modify(get_status(), [&](auto& status) { update_vec(status.status.initialMembers); });
+
+   if (auto* obj = get_ptr<by_pk>(db.balances, old_account))
+      db.balances.modify(*obj, [&](auto& obj) { obj.account = new_account; });
+
+   for (auto& obj : db.balance_history)
+      db.balance_history.modify(obj, [&](auto& obj) {
+         update(obj.account);
+         update(obj.other_account);
+      });
+
+   if (auto* obj = get_ptr<by_pk>(db.encryption_keys, old_account))
+      db.encryption_keys.modify(*obj, [&](auto& obj) { obj.account = new_account; });
+
+   for (auto& obj : db.inductions)
+      db.inductions.modify(obj, [&](auto& obj) {
+         update(obj.induction.inviter.first);
+         for (auto& w : obj.induction.witnesses)
+            update(w.first);
+      });
+
+   for (auto& obj : db.members)
+      db.members.modify(obj, [&](auto& obj) {
+         update(obj.member.account);
+         update(obj.member.inviter);
+         update_vec(obj.member.inductionWitnesses);
+      });
+
+   for (auto& obj : db.election_groups)
+      db.election_groups.modify(obj, [&](auto& obj) {
+         // first_member is kept as is since it's only used by events
+         // which have already occurred, and it isn't exposed to the UI
+         update(obj.winner);
+      });
+
+   for (auto& obj : db.votes)
+      db.votes.modify(obj, [&](auto& obj) {
+         update(obj.voter);
+         update(obj.candidate);
+      });
+
+   {
+      auto& idx = db.distribution_funds.get<by_pk>();
+      for (auto it = idx.lower_bound(distribution_fund_key{old_account, {}, 0});
+           it != idx.end() && it->owner == old_account;)
+      {
+         auto next = it;
+         ++next;
+         db.distribution_funds.modify(*it, [&](auto& obj) { obj.owner = new_account; });
+         it = next;
+      }
+   }
+
+   {
+      auto& idx = db.nfts.get<by_member>();
+      for (auto it = idx.lower_bound(nft_account_key{old_account, {}, 0});
+           it != idx.end() && it->member == old_account;)
+      {
+         auto next = it;
+         ++next;
+         db.nfts.modify(*it, [&](auto& obj) { obj.member = new_account; });
+         it = next;
+      }
+   }
+
+   {
+      auto& idx = db.nfts.get<by_owner>();
+      for (auto it = idx.lower_bound(nft_account_key{old_account, {}, 0});
+           it != idx.end() && it->owner == old_account;)
+      {
+         auto next = it;
+         ++next;
+         db.nfts.modify(*it, [&](auto& obj) { obj.owner = new_account; });
+         it = next;
+      }
+   }
+}  // rename
+
 void clear_participating()
 {
    auto& idx = db.members.template get<by_pk>();
@@ -2103,6 +2191,8 @@ bool dispatch(eosio::name action_name, const action_context& context, eosio::inp
       call(inductendors, context, s);
    else if (action_name == "resign"_n)
       call(resign, context, s);
+   else if (action_name == "rename"_n)
+      call(rename, context, s);
    else if (action_name == "electopt"_n)
       call(electopt, context, s);
    else if (action_name == "electvote"_n)
@@ -2170,52 +2260,57 @@ std::vector<subchain::transaction> ship_to_eden_transactions(
 
    for (const auto& transaction_trace : traces)
    {
-      if (auto* trx_trace =
-              std::get_if<eosio::ship_protocol::transaction_trace_v0>(&transaction_trace))
-      {
-         subchain::transaction transaction{
-             .id = trx_trace->id,
-         };
+      std::visit(
+          [&](const auto& trx_trace) {
+             subchain::transaction transaction{
+                 .id = trx_trace.id,
+             };
 
-         for (const auto& action_trace : trx_trace->action_traces)
-         {
-            if (auto* act_trace = std::get_if<eosio::ship_protocol::action_trace_v0>(&action_trace))
-            {
-               std::optional<subchain::creator_action> creatorAction;
-               if (act_trace->creator_action_ordinal.value > 0)
-               {
-                  const auto& creator_action_trace =
-                      std::get<eosio::ship_protocol::action_trace_v0>(
-                          trx_trace->action_traces[act_trace->creator_action_ordinal.value - 1]);
-                  const auto& receipt = std::get<eosio::ship_protocol::action_receipt_v0>(
-                      *creator_action_trace.receipt);
-                  creatorAction = subchain::creator_action{
-                      .seq = receipt.global_sequence,
-                      .receiver = creator_action_trace.receiver,
-                  };
-               }
+             for (const auto& action_trace : trx_trace.action_traces)
+             {
+                std::visit(
+                    [&](const auto& act_trace) {
+                       std::optional<subchain::creator_action> creatorAction;
+                       if (act_trace.creator_action_ordinal.value > 0)
+                       {
+                          std::visit(
+                              [&](const auto& creator_action_trace) {
+                                 std::visit(
+                                     [&](const auto& receipt) {
+                                        creatorAction = subchain::creator_action{
+                                            .seq = receipt.global_sequence,
+                                            .receiver = creator_action_trace.receiver,
+                                        };
+                                     },
+                                     *creator_action_trace.receipt);
+                              },
+                              trx_trace.action_traces[act_trace.creator_action_ordinal.value - 1]);
+                       }
 
-               std::vector<char> data(act_trace->act.data.pos, act_trace->act.data.end);
-               eosio::bytes hexData{data};
+                       std::vector<char> data(act_trace.act.data.pos, act_trace.act.data.end);
+                       eosio::bytes hexData{data};
 
-               const auto& receipt =
-                   std::get<eosio::ship_protocol::action_receipt_v0>(*act_trace->receipt);
+                       std::visit(
+                           [&](const auto& receipt) {
+                              subchain::action action{
+                                  .seq = receipt.global_sequence,
+                                  .firstReceiver = act_trace.act.account,
+                                  .receiver = act_trace.receiver,
+                                  .name = act_trace.act.name,
+                                  .creatorAction = creatorAction,
+                                  .hexData = std::move(hexData),
+                              };
 
-               subchain::action action{
-                   .seq = receipt.global_sequence,
-                   .firstReceiver = act_trace->act.account,
-                   .receiver = act_trace->receiver,
-                   .name = act_trace->act.name,
-                   .creatorAction = creatorAction,
-                   .hexData = std::move(hexData),
-               };
+                              transaction.actions.push_back(std::move(action));
+                           },
+                           *act_trace.receipt);
+                    },
+                    action_trace);
+             }
 
-               transaction.actions.push_back(std::move(action));
-            }
-         }
-
-         transactions.push_back(std::move(transaction));
-      }
+             transactions.push_back(std::move(transaction));
+          },
+          transaction_trace);
    }
 
    return transactions;

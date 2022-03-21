@@ -5,6 +5,7 @@
 #pragma once
 #include <cstdlib>
 
+#include <eosio/authority.hpp>
 #include <eosio/datastream.hpp>
 #include <eosio/ignore.hpp>
 #include <eosio/name.hpp>
@@ -40,6 +41,11 @@ namespace eosio
                                                                     uint64_t permission);
 
          [[clang::import_name("is_account")]] bool is_account(uint64_t name);
+
+         [[clang::import_name("get_code_hash")]] uint32_t get_code_hash(uint64_t account,
+                                                                        uint32_t struct_version,
+                                                                        char* result,
+                                                                        uint32_t result_size);
 
          [[clang::import_name("send_inline")]] void send_inline(char* serialized_action,
                                                                 size_t size);
@@ -195,64 +201,6 @@ namespace eosio
     * @return the length of the current action's data field
     */
    inline uint32_t action_data_size() { return internal_use_do_not_use::action_data_size(); }
-   /**
-    * Packed representation of a permission level (Authorization)
-    *
-    * @ingroup action
-    */
-   struct permission_level
-   {
-      /**
-       * Construct a new permission level object with actor name and permission name
-       *
-       * @param a - Name of the account who owns this authorization
-       * @param p - Name of the permission
-       */
-      permission_level(name a, name p) : actor(a), permission(p) {}
-
-      /**
-       * Default Constructor
-       *
-       */
-      permission_level() {}
-
-      /**
-       * Name of the account who owns this permission
-       */
-      name actor;
-      /**
-       * Name of the permission
-       */
-      name permission;
-
-      /**
-       * Check equality of two permissions
-       *
-       * @param a - first permission to compare
-       * @param b - second permission to compare
-       * @return true if equal
-       * @return false if unequal
-       */
-      friend constexpr bool operator==(const permission_level& a, const permission_level& b)
-      {
-         return std::tie(a.actor, a.permission) == std::tie(b.actor, b.permission);
-      }
-
-      /**
-       * Lexicographically compares two permissions
-       *
-       * @param a - first permission to compare
-       * @param b - second permission to compare
-       * @return true if a < b
-       * @return false if a >= b
-       */
-      friend constexpr bool operator<(const permission_level& a, const permission_level& b)
-      {
-         return std::tie(a.actor, a.permission) < std::tie(b.actor, b.permission);
-      }
-
-      EOSLIB_SERIALIZE(permission_level, (actor)(permission))
-   };
 
    /**
     *  Require the specified authorization for this action. If this action doesn't contain the
@@ -281,6 +229,35 @@ namespace eosio
     *  @param n - name of the account to check
     */
    inline bool is_account(name n) { return internal_use_do_not_use::is_account(n.value); }
+
+   struct code_hash
+   {
+      varuint32 struct_version = {};
+      uint64_t code_sequence = {};
+      checksum256 hash = {};
+      uint8_t vm_type = {};
+      uint8_t vm_version = {};
+   };
+   EOSIO_REFLECT(code_hash, struct_version, code_sequence, hash, vm_type, vm_version)
+
+   /**
+    *  Get the code hash for an account, if any
+    */
+   inline code_hash get_code_hash(name account)
+   {
+      std::vector<char> data(internal_use_do_not_use::get_code_hash(account.value, 0, nullptr, 0));
+      input_stream stream(data.data(),
+                          data.data() + internal_use_do_not_use::get_code_hash(
+                                            account.value, 0, data.data(), data.size()));
+      code_hash result;
+      from_bin(result, stream);
+      return result;
+   }
+
+   /**
+    *  Determine if an account has code
+    */
+   inline bool has_code(name account) { return get_code_hash(account).hash != checksum256{}; }
 
    /**
     *  This is the packed representation of an action along with

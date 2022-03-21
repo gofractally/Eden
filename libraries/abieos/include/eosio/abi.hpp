@@ -10,6 +10,7 @@
 #include "crypto.hpp"
 #include "fixed_bytes.hpp"
 #include "float.hpp"
+#include "might_not_exist.hpp"
 #include "name.hpp"
 #include "time.hpp"
 #include "types.hpp"
@@ -59,37 +60,6 @@ namespace eosio
    }
 
    struct abi_serializer;
-
-   template <typename T>
-   struct might_not_exist
-   {
-      T value{};
-   };
-
-   template <typename T, typename S>
-   void from_bin(might_not_exist<T>& obj, S& stream)
-   {
-      if (stream.remaining())
-         return from_bin(obj.value, stream);
-   }
-
-   template <typename T, typename S>
-   void to_bin(const might_not_exist<T>& obj, S& stream)
-   {
-      return to_bin(obj.value, stream);
-   }
-
-   template <typename T, typename S>
-   void from_json(might_not_exist<T>& obj, S& stream)
-   {
-      return from_json(obj.value, stream);
-   }
-
-   template <typename T, typename S>
-   void to_json(const might_not_exist<T>& val, S& stream)
-   {
-      return to_json(val.value, stream);
-   }
 
    [[nodiscard]] inline bool check_abi_version(const std::string& s, std::string& error)
    {
@@ -171,6 +141,13 @@ namespace eosio
    };
    EOSIO_REFLECT(variant_def, name, types);
 
+   struct action_result_def
+   {
+      eosio::name name{};
+      std::string result_type{};
+   };
+   EOSIO_REFLECT(action_result_def, name, result_type);
+
    struct abi_def
    {
       std::string version{};
@@ -182,6 +159,7 @@ namespace eosio
       std::vector<error_message> error_messages{};
       abi_extensions_type abi_extensions{};
       might_not_exist<std::vector<variant_def>> variants{};
+      might_not_exist<std::vector<action_result_def>> action_results{};
    };
    EOSIO_REFLECT(abi_def,
                  version,
@@ -192,7 +170,8 @@ namespace eosio
                  ricardian_clauses,
                  error_messages,
                  abi_extensions,
-                 variants);
+                 variants,
+                 action_results);
 
    struct abi_type;
 

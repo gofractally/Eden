@@ -51,6 +51,9 @@ function(add_libs suffix)
     add_library(eosio-contract-base${suffix} INTERFACE)
     target_link_libraries(eosio-contract-base${suffix} INTERFACE eosio-core${suffix})
     target_include_directories(eosio-contract-base${suffix} INTERFACE
+        ${clsdk_DIR}/contracts/bios/include
+        ${clsdk_DIR}/contracts/bios2/include
+        ${clsdk_DIR}/contracts/bios3/include
         ${clsdk_DIR}/contracts/token/include
         ${clsdk_DIR}/eosiolib/contracts/include
     )
@@ -65,7 +68,7 @@ function(add_libs suffix)
 
     # Contract with simple malloc/free
     add_library(eosio-contract-simple-malloc${suffix} INTERFACE)
-    target_link_libraries(eosio-contract-simple-malloc${suffix} INTERFACE 
+    target_link_libraries(eosio-contract-simple-malloc${suffix} INTERFACE
         -L${CMAKE_CURRENT_BINARY_DIR}
         eosio-contract-base${suffix}
         -lc++
@@ -78,7 +81,7 @@ function(add_libs suffix)
 
     # Contract with full malloc/free
     add_library(eosio-contract-full-malloc${suffix} INTERFACE)
-    target_link_libraries(eosio-contract-full-malloc${suffix} INTERFACE 
+    target_link_libraries(eosio-contract-full-malloc${suffix} INTERFACE
         eosio-contract-base${suffix}
         -lc++
         -lc++abi
@@ -90,6 +93,9 @@ function(add_libs suffix)
     add_library(eosio-contract-abigen${suffix} INTERFACE)
     target_compile_options(eosio-contract-abigen${suffix} INTERFACE -DCOMPILING_ABIGEN)
     target_include_directories(eosio-contract-abigen${suffix} INTERFACE
+        ${clsdk_DIR}/contracts/bios/include
+        ${clsdk_DIR}/contracts/bios2/include
+        ${clsdk_DIR}/contracts/bios3/include
         ${clsdk_DIR}/contracts/token/include
         ${clsdk_DIR}/eosiolib/contracts/include
     )
@@ -105,12 +111,16 @@ function(add_libs suffix)
     )
     target_include_directories(cltestlib${suffix} INTERFACE
         ${clsdk_DIR}/catch2/include
+        ${clsdk_DIR}/contracts/bios/include
+        ${clsdk_DIR}/contracts/bios2/include
+        ${clsdk_DIR}/contracts/bios3/include
         ${clsdk_DIR}/contracts/token/include
         ${clsdk_DIR}/eosiolib/contracts/include
         ${clsdk_DIR}/eosiolib/tester/include
     )
     target_compile_options(cltestlib${suffix} INTERFACE
         -DCLSDK_CONTRACTS_DIR=\"${clsdk_DIR}/contracts/\"
+        -DCOMPILING_TESTS
         -DCATCH_CONFIG_NO_POSIX_SIGNALS
         -DCATCH_CONFIG_DISABLE_EXCEPTIONS
     )
