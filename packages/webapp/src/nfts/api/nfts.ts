@@ -25,7 +25,7 @@ export const getTemplates = async (
 export const getAccountCollection = async (
     account: string,
     page = 1,
-    limit = 9999,
+    limit = 100,
     sortField = "transferred",
     order = "asc"
 ): Promise<AssetData[]> => {
