@@ -2,7 +2,7 @@
 
 TEST_CASE("Setup Eden chain with full, completed election")
 {
-   nodeos_runner r("chain-run-full-election");
+   nodeos_runner r("chain-run-complete-elections");
 
    r.tester.genesis();
    r.tester.run_election(true, 10000, true);
