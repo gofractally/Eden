@@ -68,6 +68,7 @@ export const TreasuryDelegateLevelsInfo = () => {
                 label={label}
                 level={index + 1}
                 amount={rankAmount}
+                key={`rank-level-${label}`}
             />
         );
     };
