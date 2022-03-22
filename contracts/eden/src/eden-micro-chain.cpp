@@ -2130,7 +2130,7 @@ void clean_data(const subchain::eosio_block& block)
    if (!status.status.active)
       return;  // skip if contract is not active
 
-   remove_expired_inductions(block.timestamp, status.status);
+   // remove_expired_inductions(block.timestamp, status.status);
 }
 
 bool dispatch(eosio::name action_name, const action_context& context, eosio::input_stream& s);
