@@ -1,3 +1,5 @@
+import toast from "react-hot-toast";
+
 import {
     Button,
     onError,
@@ -37,6 +39,8 @@ export const Sessions = () => {
 
             await sessionKeysStorage.saveKey(newSessionKey);
 
+            toast.success("Session created successfully");
+
             return { newSessionKey };
         } catch (e) {
             console.error(e);
@@ -61,6 +65,8 @@ export const Sessions = () => {
                 ualAccount.accountName,
                 actions
             );
+
+            toast.success("Induction sample submitted successfully!");
         } catch (e) {
             console.error(e);
             onError(e as Error);
