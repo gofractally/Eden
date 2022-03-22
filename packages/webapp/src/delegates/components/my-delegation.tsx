@@ -1,19 +1,15 @@
 import React from "react";
-import { useQuery } from "react-query";
 
-import {
-    useMemberStats,
-    useMemberListByAccountNames,
-    queryMembers,
-} from "_app";
+import { useMemberStats, useMemberListByAccountNames } from "_app";
 import { LoadingContainer } from "_app/ui";
 import {
     DelegateChip,
     ElectionParticipantChip,
     ElectionState,
 } from "elections";
-import { MembersGrid } from "members";
-import { EdenMember, MemberData } from "members/interfaces";
+import { MembersGrid, useMembersByAccountNamesAsMemberNFTs } from "members";
+import { EdenMember } from "members/interfaces";
+import { MemberNFT } from "nfts/interfaces";
 
 import { ErrorLoadingDelegation } from "./statuses";
 import { LevelHeading } from "./level-heading";
@@ -21,7 +17,7 @@ import { MyDelegationArrow } from "./arrow-container";
 
 interface Props {
     electionState?: ElectionState;
-    members: MemberData[];
+    members: MemberNFT[];
     myDelegation: EdenMember[];
 }
 
@@ -108,19 +104,13 @@ const ChiefDelegates = ({
         .map((chiefQR) => chiefQR.data)
         .filter((el) => Boolean(el));
 
-    const nftTemplateIds = chiefsAsMembers.map(
-        (member) => member!.nft_template_id
-    );
-
     const {
         data: memberData,
         isLoading: isLoadingMemberData,
         isError: isErrorMemberData,
-    } = useQuery({
-        ...queryMembers(1, allChiefAccountNames.length, nftTemplateIds),
-        staleTime: Infinity,
-        enabled: Boolean(chiefsAsMembers?.length),
-    });
+    } = useMembersByAccountNamesAsMemberNFTs(
+        chiefsAsMembers.map((chief) => chief!.account)
+    );
 
     const isLoading = isLoadingMemberStats || isLoadingMemberData;
     const isError = isErrorMemberStats || isErrorMemberData;
@@ -137,11 +127,11 @@ const ChiefDelegates = ({
     const headChiefAsEdenMember = chiefsAsMembers.find(
         (d) => d?.account === electionState.lead_representative
     );
-    const headChiefAsMemberData = memberData.find(
+    const headChiefAsMemberNFT = memberData.find(
         (d) => d?.account === electionState.lead_representative
     );
 
-    if (!headChiefAsEdenMember || !headChiefAsMemberData) {
+    if (!headChiefAsEdenMember || !headChiefAsMemberNFT) {
         return <ErrorLoadingDelegation />;
     }
 
@@ -152,7 +142,7 @@ const ChiefDelegates = ({
                     Chief Delegates
                 </LevelHeading>
                 <MembersGrid members={memberData}>
-                    {(chiefDelegate) => {
+                    {(chiefDelegate: MemberNFT) => {
                         if (!chiefDelegate) return null;
                         return (
                             <DelegateChip
@@ -168,7 +158,7 @@ const ChiefDelegates = ({
             <div className="mb-16">
                 <LevelHeading>Head Chief</LevelHeading>
                 <DelegateChip
-                    member={headChiefAsMemberData}
+                    member={headChiefAsMemberNFT}
                     level={headChiefAsEdenMember.election_rank + 1}
                     delegateTitle=""
                 />

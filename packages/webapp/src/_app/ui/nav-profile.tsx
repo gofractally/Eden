@@ -4,14 +4,10 @@ import { Popover } from "@headlessui/react";
 import { usePopper } from "react-popper";
 import { IoMdLogIn } from "react-icons/io";
 
-import { MemberStatus } from "_app";
-import {
-    useCurrentMember,
-    useMemberDataFromEdenMembers,
-    useSignOut,
-} from "_app/hooks";
-import { Button, ProfileImage, Text } from "_app/ui";
 import { ROUTES } from "_app/routes";
+import { useSignOut } from "_app/hooks";
+import { Button, ProfileImage, Text } from "_app/ui";
+import { Member, useCurrentMember } from "members";
 
 import { useUALAccount } from "../eos";
 
@@ -21,22 +17,7 @@ interface Props {
 
 export const NavProfile = ({ location }: Props) => {
     const [ualAccount, _, ualShowModal] = useUALAccount();
-    const accountName = ualAccount?.accountName;
-
-    const {
-        data: member,
-        isLoading: isLoadingCurrentMember,
-        isError: isErrorCurrentMember,
-    } = useCurrentMember();
-    const {
-        data: memberData,
-        isLoading: isLoadingMemberData,
-        isError: isErrorMemberData,
-    } = useMemberDataFromEdenMembers(member ? [member] : []);
-
-    const isActiveMember = member?.status === MemberStatus.ActiveMember;
-
-    const userProfile = memberData?.[0];
+    const { data: member } = useCurrentMember();
 
     if (!ualAccount) {
         return (
@@ -79,16 +60,21 @@ export const NavProfile = ({ location }: Props) => {
     // TODO: Handle loaders and error state, non-member state
     return (
         <div className={WRAPPER_CLASS}>
-            <PopoverWrapper location={location} isActiveMember={isActiveMember}>
+            <PopoverWrapper location={location} member={member}>
                 <div className={CONTAINER_CLASS}>
                     <div className="cursor-pointer">
-                        <ProfileImage imageCid={userProfile?.image} size={40} />
+                        <ProfileImage
+                            imageUrl={member?.profile?.image.url}
+                            size={40}
+                        />
                     </div>
                     <div className="hidden xl:block text-left">
                         <Text size="sm" className="font-semibold">
-                            {member?.name ?? "Not a member"}
+                            {member?.profile?.name ?? "Not a member"}
                         </Text>
-                        <Text size="sm">@{member?.account ?? accountName}</Text>
+                        <Text size="sm">
+                            @{member?.accountName ?? ualAccount?.accountName}
+                        </Text>
                     </div>
                 </div>
             </PopoverWrapper>
@@ -98,11 +84,12 @@ export const NavProfile = ({ location }: Props) => {
 
 export default NavProfile;
 
-const PopoverWrapper = ({
-    children,
-    location,
-    isActiveMember,
-}: { children: React.ReactNode; isActiveMember: boolean } & Props) => {
+interface PopoverProps extends Props {
+    children: React.ReactNode;
+    member?: Member | null;
+}
+
+const PopoverWrapper = ({ children, member, location }: PopoverProps) => {
     const [
         referenceElement,
         setReferenceElement,
@@ -116,9 +103,9 @@ const PopoverWrapper = ({
         { placement: location === "mobile-nav" ? "bottom-end" : "top-start" }
     );
 
-    const [ualAccount] = useUALAccount();
-    const accountName = ualAccount?.accountName;
     const signOut = useSignOut();
+
+    const isActiveMember = Boolean(member?.profile);
 
     return (
         <Popover
@@ -142,7 +129,9 @@ const PopoverWrapper = ({
                     }}
                 >
                     {isActiveMember && (
-                        <Link href={`${ROUTES.MEMBERS.href}/${accountName}`}>
+                        <Link
+                            href={`${ROUTES.MEMBERS.href}/${member?.accountName}`}
+                        >
                             <a className="block p-6 w-full hover:bg-gray-100 text-left">
                                 <Text>My profile</Text>
                             </a>

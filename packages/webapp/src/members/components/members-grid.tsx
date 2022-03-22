@@ -1,13 +1,16 @@
 import React from "react";
-import { MemberData } from "../interfaces";
+
+import { MemberNFT } from "nfts/interfaces";
+
+import { Member } from "../interfaces";
 
 interface Props {
-    members?: MemberData[];
+    members?: Member[] | MemberNFT[];
     dataTestId?: string;
     children(
-        value: MemberData,
+        value: Member | MemberNFT,
         index: number,
-        array: MemberData[]
+        array: Member[] | MemberNFT[]
     ): React.ReactNode;
     maxCols?: 1 | 2 | 3;
 }

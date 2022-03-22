@@ -20,10 +20,10 @@ import {
     queryMemberByAccountName,
     queryMembers,
     queryParticipantsInCompletedRound,
-    queryVoteDataRow,
     TABLE_INDEXES,
 } from "_app";
-import { EdenMember, MemberData, VoteDataQueryOptionsByField } from "members";
+import { EdenMember, VoteDataQueryOptionsByField } from "members";
+import { MemberNFT } from "nfts/interfaces";
 import {
     ActiveStateConfigType,
     CONFIG_SORTITION_ROUND_DEFAULTS,
@@ -276,7 +276,7 @@ export const getCurrentElection = async () => {
     if (devUseFixtureData) return fixtureCurrentElection;
 
     const rawRows = await getTableRawRows<any>(CONTRACT_CURRENT_ELECTION_TABLE);
-    const electionState = rawRows[0][0];
+    const electionState = convertElectionState(rawRows[0][0]);
 
     const rows = rawRows.map((row) => row[1]);
 
@@ -285,6 +285,22 @@ export const getCurrentElection = async () => {
     }
 
     return { electionState, ...rows[0] };
+};
+
+const convertElectionState = (variantName: string) => {
+    switch (variantName) {
+        case "current_election_state_registration_v0":
+        case "current_election_state_registration_v1":
+            return "current_election_state_registration";
+        case "current_election_state_seeding_v0":
+        case "current_election_state_seeding_v1":
+            return "current_election_state_seeding";
+        case "current_election_state_init_voters_v0":
+        case "current_election_state_init_voters_v1":
+            return "current_election_state_init_voters";
+        default:
+            return variantName;
+    }
 };
 
 export const getElectionState = async () => {
@@ -317,11 +333,9 @@ const getMemberDataFromEdenMemberList = async (memberList: EdenMember[]) => {
         nftTemplateIds
     );
 
-    return await queryClient.fetchQuery<MemberData[], Error>(
-        queryKey,
-        queryFn,
-        { staleTime: Infinity }
-    );
+    return await queryClient.fetchQuery<MemberNFT[], Error>(queryKey, queryFn, {
+        staleTime: Infinity,
+    });
 };
 const getParticipantsOfCompletedRounds = async (myDelegation: EdenMember[]) => {
     const pCompletedRounds = myDelegation.map(
@@ -369,7 +383,7 @@ const getParticipantsOfCompletedRounds = async (myDelegation: EdenMember[]) => {
  * @param {string} author - The author of the book.
  */
 export const getOngoingElectionData = async (
-    votingMemberData: MemberData[] = [],
+    votingMemberData: MemberNFT[] = [],
     currentElection?: CurrentElection,
     myDelegation: EdenMember[] = [],
     loggedInMember?: EdenMember

@@ -14,7 +14,7 @@ import {
     MemberHoloCard,
     useMemberByAccountName,
 } from "members";
-import { DelegateFundsAvailable } from "delegates/components";
+import { FundsAvailableCTA } from "members/components";
 
 export const MemberPage = () => {
     const router = useRouter();
@@ -42,8 +42,8 @@ export const MemberPage = () => {
     }
 
     return (
-        <MemberPageContainer pageTitle={`${member.name}'s Profile`}>
-            <DelegateFundsAvailable account={member.account} />
+        <MemberPageContainer pageTitle={`${member.profile.name}'s Profile`}>
+            <FundsAvailableCTA account={member.accountName} />
             <Container className="flex justify-center">
                 <MemberHoloCard member={member} className="max-w-xl" />
             </Container>

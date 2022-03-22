@@ -1,37 +1,43 @@
 import React from "react";
 import { FaVideo } from "react-icons/fa";
 
-import { SocialButton, ipfsUrl, Container } from "_app";
+import { SocialButton, Container } from "_app";
 
-import { MemberData } from "../interfaces";
+import { Member } from "../interfaces";
 import { MemberBio } from "./member-bio";
 import { MemberSocialLinks } from "./member-social-links";
 import { TokenBalance } from "./token-balance";
 
 interface Props {
-    member: MemberData;
+    member: Member;
     showBalance?: boolean;
 }
 
 export const MemberCard = ({ member, showBalance }: Props) => {
     return (
-        <div data-testid={`member-card-${member.account}`} className="divide-y">
+        <div
+            data-testid={`member-card-${member.accountName}`}
+            className="divide-y"
+        >
             <Container>
-                {showBalance && <TokenBalance account={member.account} />}
+                {showBalance && <TokenBalance account={member.accountName} />}
             </Container>
             <Container>
-                <MemberBio bio={member.bio} />
+                <MemberBio bio={member.profile.bio} />
                 {member.inductionVideo && (
                     <SocialButton
                         handle="Induction Ceremony"
                         icon={FaVideo}
-                        href={ipfsUrl(member.inductionVideo)}
+                        href={member.inductionVideo.url}
                         className="mt-4"
                     />
                 )}
             </Container>
             <Container>
-                <MemberSocialLinks member={member} />
+                <MemberSocialLinks
+                    accountName={member.accountName}
+                    socialHandles={member.profile.socialHandles}
+                />
             </Container>
         </div>
     );

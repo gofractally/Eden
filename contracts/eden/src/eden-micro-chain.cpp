@@ -12,6 +12,7 @@
 #include <eosio/ship_protocol.hpp>
 #include <eosio/to_bin.hpp>
 #include <events.hpp>
+#include <migrations.hpp>
 
 using namespace eosio::literals;
 
@@ -31,6 +32,17 @@ const eosio::name account_min = eosio::name{0};
 const eosio::name account_max = eosio::name{~uint64_t(0)};
 const eosio::block_timestamp block_timestamp_min = eosio::block_timestamp{0};
 const eosio::block_timestamp block_timestamp_max = eosio::block_timestamp{~uint32_t(0)};
+
+const eosio::ecc_public_key ecc_public_key_min = {};
+
+const eosio::ecc_public_key ecc_public_key_max = {
+    0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
+    0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
+    0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
+};
+
+const eosio::public_key public_key_min_k1{std::in_place_index_t<0>{}, ecc_public_key_min};
+const eosio::public_key public_key_max_r1{std::in_place_index_t<1>{}, ecc_public_key_max};
 
 // TODO: switch to uint64_t (js BigInt) after we upgrade to nodejs >= 15
 extern "C" void __wasm_call_ctors();
@@ -158,6 +170,7 @@ enum tables
    balance_history_table,
    induction_table,
    member_table,
+   session_table,
    election_table,
    election_round_table,
    election_group_table,
@@ -165,6 +178,7 @@ enum tables
    distribution_table,
    distribution_fund_table,
    nft_table,
+   encryption_key_table,
 };
 
 struct Induction;
@@ -217,6 +231,13 @@ struct status
    eosio::block_timestamp nextElection;
    uint16_t electionThreshold = 0;
    uint16_t numElectionParticipants = 0;
+   uint16_t migrationIndex = 0;
+
+   template <typename T>
+   bool isMigrationCompleted() const
+   {
+      return migrationIndex >= boost::mp11::mp_find<eden::migration_variant, T>::value;
+   }
 };
 
 struct status_object : public chainbase::object<status_table, status_object>
@@ -307,6 +328,21 @@ using balance_history_index = mic<balance_history_object,
 
 using InductionEndorser = std::pair<eosio::name, bool>;
 
+struct encryption_key_object : public chainbase::object<encryption_key_table, encryption_key_object>
+{
+   CHAINBASE_DEFAULT_CONSTRUCTOR(encryption_key_object)
+
+   id_type id;
+   eosio::name account;
+   eosio::public_key encryptionKey;
+
+   eosio::name by_pk() const { return account; }
+};
+
+using encryption_key_index = mic<encryption_key_object,
+                                 ordered_by_id<encryption_key_object>,
+                                 ordered_by_pk<encryption_key_object>>;
+
 struct induction
 {
    uint64_t id = 0;
@@ -365,6 +401,23 @@ using member_index = mic<member_object,
                          ordered_by_id<member_object>,
                          ordered_by_pk<member_object>,
                          ordered_by_createdAt<member_object>>;
+
+using SessionKey = std::tuple<eosio::name, eosio::public_key>;
+
+struct session_object : public chainbase::object<session_table, session_object>
+{
+   CHAINBASE_DEFAULT_CONSTRUCTOR(session_object)
+
+   id_type id;
+   eosio::name eden_account;
+   eosio::public_key key;
+   eosio::block_timestamp expiration;
+   std::string description;
+
+   SessionKey by_pk() const { return {eden_account, key}; }
+};
+using session_index =
+    mic<session_object, ordered_by_id<session_object>, ordered_by_pk<session_object>>;
 
 struct election_object : public chainbase::object<election_table, election_object>
 {
@@ -518,8 +571,10 @@ struct database
    chainbase::generic_index<status_index> status;
    chainbase::generic_index<balance_index> balances;
    chainbase::generic_index<balance_history_index> balance_history;
+   chainbase::generic_index<encryption_key_index> encryption_keys;
    chainbase::generic_index<induction_index> inductions;
    chainbase::generic_index<member_index> members;
+   chainbase::generic_index<session_index> sessions;
    chainbase::generic_index<election_index> elections;
    chainbase::generic_index<election_round_index> election_rounds;
    chainbase::generic_index<election_group_index> election_groups;
@@ -533,8 +588,10 @@ struct database
       db.add_index(status);
       db.add_index(balances);
       db.add_index(balance_history);
+      db.add_index(encryption_keys);
       db.add_index(inductions);
       db.add_index(members);
+      db.add_index(sessions);
       db.add_index(elections);
       db.add_index(election_rounds);
       db.add_index(election_groups);
@@ -700,6 +757,32 @@ BalanceHistoryConnection Balance::history(std::optional<eosio::block_timestamp> 
        [](auto& balance_history, auto key) { return balance_history.upper_bound(key); });
 }
 
+struct EncryptionKey
+{
+   eosio::name _account;
+   const encryption_key_object* obj;
+
+   Member account() const;
+   std::optional<std::string> encryptionKey() const
+   {
+      return obj ? std::optional{eosio::public_key_to_string(obj->encryptionKey)} : std::nullopt;
+   }
+};
+EOSIO_REFLECT2(EncryptionKey, account, encryptionKey)
+
+constexpr const char EncryptionKeyConnection_name[] = "EncryptionKeyConnection";
+constexpr const char EncryptionKeyEdge_name[] = "EncryptionKeyEdge";
+using EncryptionKeyConnection = clchain::Connection<
+    clchain::ConnectionConfig<EncryptionKey, EncryptionKeyConnection_name, EncryptionKeyEdge_name>>;
+
+EncryptionKey get_encryption_key(eosio::name account)
+{
+   if (auto* obj = get_ptr<by_pk>(db.encryption_keys, account))
+      return EncryptionKey{account, obj};
+   else
+      return EncryptionKey{account, nullptr};
+}
+
 struct Member
 {
    eosio::name account;
@@ -715,6 +798,11 @@ struct Member
    const std::string* inductionVideo() const { return member ? &member->inductionVideo : nullptr; }
    bool participating() const { return member && member->participating; }
    eosio::block_timestamp createdAt() const { return member->createdAt; }
+
+   std::optional<std::string> encryptionKey() const
+   {
+      return get_encryption_key(account).encryptionKey();
+   }
 
    NftConnection nfts(std::optional<eosio::block_timestamp> gt,
                       std::optional<eosio::block_timestamp> ge,
@@ -761,6 +849,7 @@ EOSIO_REFLECT2(
     inductionVideo,
     participating,
     createdAt,
+    encryptionKey,
     method(nfts, "gt", "ge", "lt", "le", "first", "last", "before", "after"),
     method(collectedNfts, "gt", "ge", "lt", "le", "first", "last", "before", "after"),
     method(elections, "gt", "ge", "lt", "le", "first", "last", "before", "after"),
@@ -793,6 +882,22 @@ Member Balance::account() const
 {
    return *get_member(_account, true);
 }
+
+Member EncryptionKey::account() const
+{
+   return *get_member(_account, true);
+}
+
+struct Session
+{
+   const session_object* session;
+
+   auto member() const { return get_member(session->eden_account); }
+   const auto& key() const { return session->key; }
+   const auto& expiration() const { return session->expiration; }
+   const auto& description() const { return session->description; }
+};
+EOSIO_REFLECT2(Session, member, key, expiration, description)
 
 struct InductionEndorsingMemberStatus
 {
@@ -1245,6 +1350,7 @@ void clearall()
    clear_table(db.balance_history);
    clear_table(db.inductions);
    clear_table(db.members);
+   clear_table(db.sessions);
    clear_table(db.elections);
    clear_table(db.election_rounds);
    clear_table(db.election_groups);
@@ -1252,6 +1358,12 @@ void clearall()
    clear_table(db.distributions);
    clear_table(db.distribution_funds);
    clear_table(db.nfts);
+   clear_table(db.encryption_keys);
+}
+
+void delsession(eosio::name eden_account, const eosio::public_key& key)
+{
+   // ignored; events handle session creation and deletion
 }
 
 eosio::asset add_balance(eosio::name account, const eosio::asset& delta)
@@ -1454,6 +1566,14 @@ void inductprofil(uint64_t id, eden::new_member_profile profile)
    });
 }
 
+void inductmeetin(eosio::name account,
+                  uint64_t id,
+                  const std::vector<eden::encrypted_key>& keys,
+                  const eosio::bytes& data,
+                  const std::optional<eosio::bytes>& old_data)
+{
+}
+
 void inductvideo(eosio::name account, uint64_t id, std::string video)
 {
    modify<by_pk>(db.inductions, id, [&](auto& obj) {
@@ -1542,6 +1662,94 @@ void resign(eosio::name account)
    remove_if_exists<by_pk>(db.members, account);
 }
 
+void rename(eosio::name old_account, eosio::name new_account)
+{
+   auto update = [&](auto& acc) {
+      if (acc == old_account)
+         acc = new_account;
+   };
+   auto update_vec = [&](auto& vec) {
+      std::replace(vec.begin(), vec.end(), old_account, new_account);
+   };
+
+   db.status.modify(get_status(), [&](auto& status) { update_vec(status.status.initialMembers); });
+
+   if (auto* obj = get_ptr<by_pk>(db.balances, old_account))
+      db.balances.modify(*obj, [&](auto& obj) { obj.account = new_account; });
+
+   for (auto& obj : db.balance_history)
+      db.balance_history.modify(obj, [&](auto& obj) {
+         update(obj.account);
+         update(obj.other_account);
+      });
+
+   if (auto* obj = get_ptr<by_pk>(db.encryption_keys, old_account))
+      db.encryption_keys.modify(*obj, [&](auto& obj) { obj.account = new_account; });
+
+   for (auto& obj : db.inductions)
+      db.inductions.modify(obj, [&](auto& obj) {
+         update(obj.induction.inviter.first);
+         for (auto& w : obj.induction.witnesses)
+            update(w.first);
+      });
+
+   for (auto& obj : db.members)
+      db.members.modify(obj, [&](auto& obj) {
+         update(obj.member.account);
+         update(obj.member.inviter);
+         update_vec(obj.member.inductionWitnesses);
+      });
+
+   for (auto& obj : db.election_groups)
+      db.election_groups.modify(obj, [&](auto& obj) {
+         // first_member is kept as is since it's only used by events
+         // which have already occurred, and it isn't exposed to the UI
+         update(obj.winner);
+      });
+
+   for (auto& obj : db.votes)
+      db.votes.modify(obj, [&](auto& obj) {
+         update(obj.voter);
+         update(obj.candidate);
+      });
+
+   {
+      auto& idx = db.distribution_funds.get<by_pk>();
+      for (auto it = idx.lower_bound(distribution_fund_key{old_account, {}, 0});
+           it != idx.end() && it->owner == old_account;)
+      {
+         auto next = it;
+         ++next;
+         db.distribution_funds.modify(*it, [&](auto& obj) { obj.owner = new_account; });
+         it = next;
+      }
+   }
+
+   {
+      auto& idx = db.nfts.get<by_member>();
+      for (auto it = idx.lower_bound(nft_account_key{old_account, {}, 0});
+           it != idx.end() && it->member == old_account;)
+      {
+         auto next = it;
+         ++next;
+         db.nfts.modify(*it, [&](auto& obj) { obj.member = new_account; });
+         it = next;
+      }
+   }
+
+   {
+      auto& idx = db.nfts.get<by_owner>();
+      for (auto it = idx.lower_bound(nft_account_key{old_account, {}, 0});
+           it != idx.end() && it->owner == old_account;)
+      {
+         auto next = it;
+         ++next;
+         db.nfts.modify(*it, [&](auto& obj) { obj.owner = new_account; });
+         it = next;
+      }
+   }
+}  // rename
+
 void clear_participating()
 {
    auto& idx = db.members.template get<by_pk>();
@@ -1568,6 +1776,14 @@ void electvote(uint8_t round, eosio::name voter, eosio::name candidate)
    db.votes.modify(vote, [&](auto& vote) { vote.candidate = candidate; });
 }
 
+void electmeeting(eosio::name account,
+                  uint8_t round,
+                  const std::vector<eden::encrypted_key>& keys,
+                  const eosio::bytes& data,
+                  const std::optional<eosio::bytes>& old_data)
+{
+}
+
 void electvideo(uint8_t round, eosio::name voter, const std::string& video)
 {
    auto& election_idx = db.elections.get<by_pk>();
@@ -1577,6 +1793,14 @@ void electvideo(uint8_t round, eosio::name voter, const std::string& video)
    auto* vote = get_ptr<by_pk>(db.votes, std::tuple{voter, election.time, round});
    if (vote)
       db.votes.modify(*vote, [&](auto& vote) { vote.video = video; });
+}
+
+void setencpubkey(eosio::name member, eosio::public_key key)
+{
+   add_or_modify<by_pk>(db.encryption_keys, member, [&](bool is_new, auto& row) {
+      row.account = member;
+      row.encryptionKey = key;
+   });
 }
 
 void logmint(const action_context& context,
@@ -1644,12 +1868,22 @@ void logtransfer(const action_context& context,
    }
 }
 
+void handle_event(const eden::migration_event& event)
+{
+   db.status.modify(get_status(),
+                    [&](auto& status) { status.status.migrationIndex = event.index; });
+}
+
 void handle_event(const eden::election_event_schedule& event)
 {
    db.status.modify(get_status(), [&](auto& status) {
       status.status.nextElection = event.election_time;
       status.status.electionThreshold = event.election_threshold;
    });
+   for (auto& member : db.members)
+   {
+      db.members.modify(member, [&](auto& member) { member.member.participating = false; });
+   }
 }
 
 void handle_event(const eden::election_event_begin& event)
@@ -1819,6 +2053,21 @@ void handle_event(const eden::distribution_event_fund& event)
    });
 }
 
+void handle_event(const eden::session_new_event& event)
+{
+   db.sessions.emplace([&](auto& session) {
+      session.eden_account = event.eden_account;
+      session.key = event.key;
+      session.expiration = event.expiration;
+      session.description = event.description;
+   });
+}
+
+void handle_event(const eden::session_del_event& event)
+{
+   remove_if_exists<by_pk>(db.sessions, SessionKey{event.eden_account, event.key});
+}
+
 void handle_event(const auto& event) {}
 
 void handle_event(const action_context& context, const auto& event)
@@ -1832,10 +2081,9 @@ void handle_event(const action_context& context, const eden::event& event)
 }
 
 template <typename... Args>
-void call(void (*f)(Args...), const action_context& context, const std::vector<char>& data)
+void call(void (*f)(Args...), const action_context& context, eosio::input_stream& s)
 {
    std::tuple<eosio::remove_cvref_t<Args>...> t;
-   eosio::input_stream s(data);
    // TODO: prevent abort, indicate what failed
    eosio::from_bin(t, s);
    std::apply([f](auto&&... args) { f(std::move(args)...); }, t);
@@ -1844,28 +2092,20 @@ void call(void (*f)(Args...), const action_context& context, const std::vector<c
 template <typename... Args>
 void call(void (*f)(const action_context&, Args...),
           const action_context& context,
-          const std::vector<char>& data)
+          eosio::input_stream& s)
 {
    std::tuple<eosio::remove_cvref_t<Args>...> t;
-   eosio::input_stream s(data);
    // TODO: prevent abort, indicate what failed
    eosio::from_bin(t, s);
    std::apply([&](auto&&... args) { f(context, std::move(args)...); }, t);
 }
 
-void remove_expired_inductions(const subchain::eosio_block& block)
+void remove_expired_inductions(const eosio::time_point& block_time, const status& status)
 {
-   auto& idx = db.status.get<by_id>();
-   if (idx.size() < 1)
-      return;  // skip if genesis is not complete
+   if (status.isMigrationCompleted<eden::fix_inductdonate_expiration_check>())
+      return;  // skip if migration is not ready to collect expired records
 
-   const auto& status = get_status();
-   if (!status.status.active)
-      return;  // skip if not active
-
-   auto expiration_time =
-       eosio::block_timestamp(block.timestamp).to_time_point().sec_since_epoch() -
-       eden::induction_expiration_secs;
+   auto expiration_time = block_time.sec_since_epoch() - eden::induction_expiration_secs;
 
    auto& index = db.inductions.get<by_createdAt>();
    auto it = index.begin();
@@ -1880,6 +2120,94 @@ void remove_expired_inductions(const subchain::eosio_block& block)
    }
 }
 
+void clean_data(const subchain::eosio_block& block)
+{
+   auto& idx = db.status.get<by_id>();
+   if (idx.size() < 1)
+      return;  // skip if genesis is not complete
+
+   const auto& status = get_status();
+   if (!status.status.active)
+      return;  // skip if contract is not active
+
+   remove_expired_inductions(block.timestamp, status.status);
+}
+
+bool dispatch(eosio::name action_name, const action_context& context, eosio::input_stream& s);
+
+void run(const action_context& context, eosio::input_stream& s)
+{
+   eden::run_auth auth;
+   eosio::varuint32 num_verbs;
+   from_bin(auth, s);
+   from_bin(num_verbs, s);
+   for (uint32_t i = 0; i < num_verbs.value; ++i)
+   {
+      auto index = eosio::varuint32_from_bin(s);
+      auto name = eden::actions::get_name_for_session_action(index);
+      if (!dispatch(name, context, s))
+         // fatal because this throws off the rest of the stream
+         eosio::check(false,
+                      "run: verb not found: " + std::to_string(index) + " " + name.to_string());
+   }
+   eosio::check(!s.remaining(), "unpack error (extra data) within run");
+}
+
+bool dispatch(eosio::name action_name, const action_context& context, eosio::input_stream& s)
+{
+   if (action_name == "run"_n)
+      run(context, s);
+   else if (action_name == "clearall"_n)
+      call(clearall, context, s);
+   else if (action_name == "delsession"_n)
+      call(delsession, context, s);
+   else if (action_name == "withdraw"_n)
+      call(withdraw, context, s);
+   else if (action_name == "donate"_n)
+      call(donate, context, s);
+   else if (action_name == "transfer"_n)
+      call(transfer, context, s);
+   else if (action_name == "fundtransfer"_n)
+      call(fundtransfer, context, s);
+   else if (action_name == "usertransfer"_n)
+      call(usertransfer, context, s);
+   else if (action_name == "genesis"_n)
+      call(genesis, context, s);
+   else if (action_name == "addtogenesis"_n)
+      call(addtogenesis, context, s);
+   else if (action_name == "inductinit"_n)
+      call(inductinit, context, s);
+   else if (action_name == "inductprofil"_n)
+      call(inductprofil, context, s);
+   else if (action_name == "inductmeetin"_n)
+      call(inductmeetin, context, s);
+   else if (action_name == "inductvideo"_n)
+      call(inductvideo, context, s);
+   else if (action_name == "inductcancel"_n)
+      call(inductcancel, context, s);
+   else if (action_name == "inductdonate"_n)
+      call(inductdonate, context, s);
+   else if (action_name == "inductendors"_n)
+      call(inductendors, context, s);
+   else if (action_name == "resign"_n)
+      call(resign, context, s);
+   else if (action_name == "rename"_n)
+      call(rename, context, s);
+   else if (action_name == "electopt"_n)
+      call(electopt, context, s);
+   else if (action_name == "electvote"_n)
+      call(electvote, context, s);
+   else if (action_name == "electmeeting"_n)
+      call(electmeeting, context, s);
+   else if (action_name == "electvideo"_n)
+      call(electvideo, context, s);
+   else if (action_name == "setencpubkey"_n)
+      call(setencpubkey, context, s);
+   else
+      return false;
+   return true;
+}
+
 void filter_block(const subchain::eosio_block& block)
 {
    block_state block_state{};
@@ -1890,46 +2218,15 @@ void filter_block(const subchain::eosio_block& block)
          action_context context{block, block_state, trx, action};
          if (action.firstReceiver == eden_account)
          {
-            if (action.name == "clearall"_n)
-               call(clearall, context, action.hexData.data);
-            else if (action.name == "withdraw"_n)
-               call(withdraw, context, action.hexData.data);
-            else if (action.name == "donate"_n)
-               call(donate, context, action.hexData.data);
-            else if (action.name == "transfer"_n)
-               call(transfer, context, action.hexData.data);
-            else if (action.name == "fundtransfer"_n)
-               call(fundtransfer, context, action.hexData.data);
-            else if (action.name == "usertransfer"_n)
-               call(usertransfer, context, action.hexData.data);
-            else if (action.name == "genesis"_n)
-               call(genesis, context, action.hexData.data);
-            else if (action.name == "addtogenesis"_n)
-               call(addtogenesis, context, action.hexData.data);
-            else if (action.name == "inductinit"_n)
-               call(inductinit, context, action.hexData.data);
-            else if (action.name == "inductprofil"_n)
-               call(inductprofil, context, action.hexData.data);
-            else if (action.name == "inductvideo"_n)
-               call(inductvideo, context, action.hexData.data);
-            else if (action.name == "inductcancel"_n)
-               call(inductcancel, context, action.hexData.data);
-            else if (action.name == "inductdonate"_n)
-               call(inductdonate, context, action.hexData.data);
-            else if (action.name == "inductendors"_n)
-               call(inductendors, context, action.hexData.data);
-            else if (action.name == "resign"_n)
-               call(resign, context, action.hexData.data);
-            else if (action.name == "electopt"_n)
-               call(electopt, context, action.hexData.data);
-            else if (action.name == "electvote"_n)
-               call(electvote, context, action.hexData.data);
-            else if (action.name == "electvideo"_n)
-               call(electvideo, context, action.hexData.data);
+            eosio::input_stream s(action.hexData.data);
+            dispatch(action.name, context, s);
          }
          else if (action.firstReceiver == token_account && action.receiver == eden_account &&
                   action.name == "transfer"_n)
-            call(notify_transfer, context, action.hexData.data);
+         {
+            eosio::input_stream s(action.hexData.data);
+            call(notify_transfer, context, s);
+         }
          else if (action.firstReceiver == "eosio.null"_n && action.name == "eden.events"_n &&
                   action.creatorAction && action.creatorAction->receiver == eden_account)
          {
@@ -1940,15 +2237,16 @@ void filter_block(const subchain::eosio_block& block)
          }
          else if (action.firstReceiver == atomic_account && action.receiver == eden_account)
          {
+            eosio::input_stream s(action.hexData.data);
             if (action.name == "logmint"_n)
-               call(logmint, context, action.hexData.data);
+               call(logmint, context, s);
             else if (action.name == "logtransfer"_n)
-               call(logtransfer, context, action.hexData.data);
+               call(logtransfer, context, s);
          }
       }  // for(action)
 
       // garbage collection housekeeping
-      remove_expired_inductions(block);
+      clean_data(block);
 
       eosio::check(!block_state.in_withdraw && !block_state.in_manual_transfer,
                    "missing transfer notification");
@@ -1962,52 +2260,57 @@ std::vector<subchain::transaction> ship_to_eden_transactions(
 
    for (const auto& transaction_trace : traces)
    {
-      if (auto* trx_trace =
-              std::get_if<eosio::ship_protocol::transaction_trace_v0>(&transaction_trace))
-      {
-         subchain::transaction transaction{
-             .id = trx_trace->id,
-         };
+      std::visit(
+          [&](const auto& trx_trace) {
+             subchain::transaction transaction{
+                 .id = trx_trace.id,
+             };
 
-         for (const auto& action_trace : trx_trace->action_traces)
-         {
-            if (auto* act_trace = std::get_if<eosio::ship_protocol::action_trace_v0>(&action_trace))
-            {
-               std::optional<subchain::creator_action> creatorAction;
-               if (act_trace->creator_action_ordinal.value > 0)
-               {
-                  const auto& creator_action_trace =
-                      std::get<eosio::ship_protocol::action_trace_v0>(
-                          trx_trace->action_traces[act_trace->creator_action_ordinal.value - 1]);
-                  const auto& receipt = std::get<eosio::ship_protocol::action_receipt_v0>(
-                      *creator_action_trace.receipt);
-                  creatorAction = subchain::creator_action{
-                      .seq = receipt.global_sequence,
-                      .receiver = creator_action_trace.receiver,
-                  };
-               }
+             for (const auto& action_trace : trx_trace.action_traces)
+             {
+                std::visit(
+                    [&](const auto& act_trace) {
+                       std::optional<subchain::creator_action> creatorAction;
+                       if (act_trace.creator_action_ordinal.value > 0)
+                       {
+                          std::visit(
+                              [&](const auto& creator_action_trace) {
+                                 std::visit(
+                                     [&](const auto& receipt) {
+                                        creatorAction = subchain::creator_action{
+                                            .seq = receipt.global_sequence,
+                                            .receiver = creator_action_trace.receiver,
+                                        };
+                                     },
+                                     *creator_action_trace.receipt);
+                              },
+                              trx_trace.action_traces[act_trace.creator_action_ordinal.value - 1]);
+                       }
 
-               std::vector<char> data(act_trace->act.data.pos, act_trace->act.data.end);
-               eosio::bytes hexData{data};
+                       std::vector<char> data(act_trace.act.data.pos, act_trace.act.data.end);
+                       eosio::bytes hexData{data};
 
-               const auto& receipt =
-                   std::get<eosio::ship_protocol::action_receipt_v0>(*act_trace->receipt);
+                       std::visit(
+                           [&](const auto& receipt) {
+                              subchain::action action{
+                                  .seq = receipt.global_sequence,
+                                  .firstReceiver = act_trace.act.account,
+                                  .receiver = act_trace.receiver,
+                                  .name = act_trace.act.name,
+                                  .creatorAction = creatorAction,
+                                  .hexData = std::move(hexData),
+                              };
 
-               subchain::action action{
-                   .seq = receipt.global_sequence,
-                   .firstReceiver = act_trace->act.account,
-                   .receiver = act_trace->receiver,
-                   .name = act_trace->act.name,
-                   .creatorAction = creatorAction,
-                   .hexData = std::move(hexData),
-               };
+                              transaction.actions.push_back(std::move(action));
+                           },
+                           *act_trace.receipt);
+                    },
+                    action_trace);
+             }
 
-               transaction.actions.push_back(std::move(action));
-            }
-         }
-
-         transactions.push_back(std::move(transaction));
-      }
+             transactions.push_back(std::move(transaction));
+          },
+          transaction_trace);
    }
 
    return transactions;
@@ -2200,6 +2503,11 @@ constexpr const char MemberEdge_name[] = "MemberEdge";
 using MemberConnection =
     clchain::Connection<clchain::ConnectionConfig<Member, MemberConnection_name, MemberEdge_name>>;
 
+constexpr const char SessionConnection_name[] = "SessionConnection";
+constexpr const char SessionEdge_name[] = "SessionEdge";
+using SessionConnection = clchain::Connection<
+    clchain::ConnectionConfig<Session, SessionConnection_name, SessionEdge_name>>;
+
 constexpr const char ElectionConnection_name[] = "ElectionConnection";
 constexpr const char ElectionEdge_name[] = "ElectionEdge";
 using ElectionConnection = clchain::Connection<
@@ -2244,6 +2552,26 @@ struct Query
 
    Balance masterPool() const { return get_balance(master_pool); }
    Balance distributionFund() const { return get_balance(distribution_fund); }
+
+   EncryptionKeyConnection encryptionKeys(std::optional<eosio::name> gt,
+                                          std::optional<eosio::name> ge,
+                                          std::optional<eosio::name> lt,
+                                          std::optional<eosio::name> le,
+                                          std::optional<uint32_t> first,
+                                          std::optional<uint32_t> last,
+                                          std::optional<std::string> before,
+                                          std::optional<std::string> after) const
+   {
+      return clchain::make_connection<EncryptionKeyConnection, eosio::name>(
+          gt, ge, lt, le, first, last, before, after,  //
+          db.encryption_keys.get<by_pk>(),             //
+          [](auto& obj) { return obj.account; },       //
+          [](auto& obj) {
+             return EncryptionKey{obj.account, &obj};
+          },
+          [](auto& encryption_keys, auto key) { return encryption_keys.lower_bound(key); },
+          [](auto& encryption_keys, auto key) { return encryption_keys.upper_bound(key); });
+   }
 
    MemberConnection members(std::optional<eosio::name> gt,
                             std::optional<eosio::name> ge,
@@ -2291,6 +2619,32 @@ struct Query
           },
           [](auto& members, auto key) { return members.lower_bound(key); },
           [](auto& members, auto key) { return members.upper_bound(key); });
+   }
+
+   SessionConnection sessions(std::optional<eosio::name> gt,
+                              std::optional<eosio::name> ge,
+                              std::optional<eosio::name> lt,
+                              std::optional<eosio::name> le,
+                              std::optional<uint32_t> first,
+                              std::optional<uint32_t> last,
+                              std::optional<std::string> before,
+                              std::optional<std::string> after) const
+   {
+      return clchain::make_connection<SessionConnection, SessionKey>(
+          gt ? std::optional{SessionKey{*gt, public_key_max_r1}}  //
+             : std::nullopt,                                      //
+          ge ? std::optional{SessionKey{*ge, public_key_min_k1}}  //
+             : std::nullopt,                                      //
+          lt ? std::optional{SessionKey{*lt, public_key_min_k1}}  //
+             : std::nullopt,                                      //
+          le ? std::optional{SessionKey{*le, public_key_max_r1}}  //
+             : std::nullopt,                                      //
+          first, last, before, after,                             //
+          db.sessions.get<by_pk>(),                               //
+          [](auto& obj) { return obj.by_pk(); },                  //
+          [](auto& obj) { return Session{&obj}; },
+          [](auto& sessions, auto key) { return sessions.lower_bound(key); },
+          [](auto& sessions, auto key) { return sessions.upper_bound(key); });
    }
 
    InductionConnection inductions(std::optional<uint64_t> gt,
@@ -2384,8 +2738,10 @@ EOSIO_REFLECT2(
     masterPool,
     distributionFund,
     method(balances, "gt", "ge", "lt", "le", "first", "last", "before", "after"),
+    method(encryptionKeys, "gt", "ge", "lt", "le", "first", "last", "before", "after"),
     method(members, "gt", "ge", "lt", "le", "first", "last", "before", "after"),
     method(membersByCreatedAt, "gt", "ge", "lt", "le", "first", "last", "before", "after"),
+    method(sessions, "gt", "ge", "lt", "le", "first", "last", "before", "after"),
     method(inductions, "gt", "ge", "lt", "le", "first", "last", "before", "after"),
     method(inductionsByCreatedAt, "gt", "ge", "lt", "le", "first", "last", "before", "after"),
     method(elections, "gt", "ge", "lt", "le", "first", "last", "before", "after"),

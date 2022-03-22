@@ -2,11 +2,13 @@
 
 #include <constants.hpp>
 #include <eden-atomicassets.hpp>
+#include <eden_dispatcher.hpp>
 #include <encrypt.hpp>
 #include <eosio/asset.hpp>
 #include <eosio/bytes.hpp>
 #include <eosio/eosio.hpp>
 #include <inductions.hpp>
+#include <sessions.hpp>
 #include <string>
 #include <vector>
 
@@ -39,6 +41,9 @@ namespace eden
    extern const char* inducted_ricardian;
    extern const char* peacetreaty_clause;
    extern const char* bylaws_clause;
+
+   // Placeholder; the ABI generator redefines this
+   using verb = std::variant<int>;
 
 #ifdef ENABLE_SET_TABLE_ROWS
    using table_variant = boost::mp11::mp_append<account_variant,
@@ -74,6 +79,17 @@ namespace eden
                            const eosio::asset& quantity,
                            std::string memo);
 
+      void newsession(eosio::name eden_account,
+                      const eosio::public_key& key,
+                      eosio::block_timestamp expiration,
+                      const std::string& description);
+
+      void delsession(const eosio::not_in_abi<session_info>& current_session,
+                      eosio::name eden_account,
+                      const eosio::public_key& key);
+
+      void run(eosio::ignore<run_auth> auth, eosio::ignore<std::vector<verb>> verbs);
+
       void withdraw(eosio::name owner, const eosio::asset& quantity);
 
       void donate(eosio::name payer, const eosio::asset& quantity);
@@ -95,21 +111,33 @@ namespace eden
 
       void clearall();
 
-      void inductinit(uint64_t id,
+      void inductinit(const eosio::not_in_abi<session_info>& current_session,
+                      uint64_t id,
                       eosio::name inviter,
                       eosio::name invitee,
                       std::vector<eosio::name> witnesses);
 
-      void inductprofil(uint64_t id, new_member_profile new_member_profile);
+      void inductprofil(const eosio::not_in_abi<session_info>& current_session,
+                        uint64_t id,
+                        new_member_profile new_member_profile);
 
-      void inductvideo(eosio::name account, uint64_t id, std::string video);
+      void inductvideo(const eosio::not_in_abi<session_info>& current_session,
+                       eosio::name account,
+                       uint64_t id,
+                       std::string video);
 
-      void inductendors(eosio::name account, uint64_t id, eosio::checksum256 induction_data_hash);
+      void inductendors(const eosio::not_in_abi<session_info>& current_session,
+                        eosio::name account,
+                        uint64_t id,
+                        eosio::checksum256 induction_data_hash);
 
       void inductdonate(eosio::name payer, uint64_t id, const eosio::asset& quantity);
 
-      void inductcancel(eosio::name account, uint64_t id);
-      void inductmeetin(eosio::name account,
+      void inductcancel(const eosio::not_in_abi<session_info>& current_session,
+                        eosio::name account,
+                        uint64_t id);
+      void inductmeetin(const eosio::not_in_abi<session_info>& current_session,
+                        eosio::name account,
                         uint64_t id,
                         const std::vector<encrypted_key>& keys,
                         const eosio::bytes& data,
@@ -119,6 +147,8 @@ namespace eden
 
       void resign(eosio::name member);
 
+      void rename(eosio::name member, eosio::name newaccount);
+
       void setencpubkey(eosio::name member, const eosio::public_key& key);
 
       void electsettime(eosio::time_point_sec election_time);
@@ -127,16 +157,25 @@ namespace eden
                        const std::string& election_time,
                        uint32_t round_duration_sec);
 
-      void electopt(eosio::name member, bool participating);
+      void electopt(const eosio::not_in_abi<session_info>& current_session,
+                    eosio::name member,
+                    bool participating);
 
       void electseed(const eosio::bytes& btc_header);
-      void electmeeting(eosio::name account,
+      void electmeeting(const eosio::not_in_abi<session_info>& current_session,
+                        eosio::name account,
                         uint8_t round,
                         const std::vector<encrypted_key>& keys,
                         const eosio::bytes& data,
                         const std::optional<eosio::bytes>& old_data);
-      void electvote(uint8_t round, eosio::name voter, eosio::name candidate);
-      void electvideo(uint8_t round, eosio::name voter, const std::string& video);
+      void electvote(const eosio::not_in_abi<session_info>& current_session,
+                     uint8_t round,
+                     eosio::name voter,
+                     eosio::name candidate);
+      void electvideo(const eosio::not_in_abi<session_info>& current_session,
+                      uint8_t round,
+                      eosio::name voter,
+                      const std::string& video);
       void electprocess(uint32_t max_steps);
 
       void distribute(uint32_t max_steps);
@@ -188,9 +227,12 @@ namespace eden
                           eosio::ignore<std::vector<eosio::asset>>);
    };
 
-   EOSIO_ACTIONS(
+   EDEN_ACTIONS(
        eden,
        "eden.gm"_n,
+       // action(newsession, eden_account, key, expiration, description),
+       // eden_verb(delsession, 0, eden_account, key),
+       // action(run, auth, verbs),
        action(withdraw, owner, quantity, ricardian_contract(withdraw_ricardian)),
        action(donate, owner, quantity),
        action(fundtransfer, from, distribution_time, rank, to, amount, memo),
@@ -211,37 +253,44 @@ namespace eden
        action(addtogenesis, account, expiration),
        action(gensetexpire, id, new_expiration),
        action(clearall, ricardian_contract(clearall_ricardian)),
-       action(inductinit,
-              id,
-              inviter,
-              invitee,
-              witnesses,
-              ricardian_contract(inductinit_ricardian)),
-       action(inductmeetin, account, id, keys, data, old_data),
-       action(inductprofil, id, new_member_profile, ricardian_contract(inductprofil_ricardian)),
-       action(inductvideo, account, id, video, ricardian_contract(inductvideo_ricardian)),
-       action(inductendors,
-              account,
-              id,
-              induction_data_hash,
-              ricardian_contract(inductendors_ricardian)),
+       eden_verb(inductinit,
+                 10,
+                 id,
+                 inviter,
+                 invitee,
+                 witnesses,
+                 ricardian_contract(inductinit_ricardian)),
+       eden_verb(inductmeetin, 1, account, id, keys, data, old_data),
+       eden_verb(inductprofil,
+                 2,
+                 id,
+                 new_member_profile,
+                 ricardian_contract(inductprofil_ricardian)),
+       eden_verb(inductvideo, 3, account, id, video, ricardian_contract(inductvideo_ricardian)),
+       eden_verb(inductendors,
+                 4,
+                 account,
+                 id,
+                 induction_data_hash,
+                 ricardian_contract(inductendors_ricardian)),
        action(setencpubkey, account, key),
        action(electsettime, election_time),
        action(electconfig, day, time, round_duration),
-       action(electopt, member, participating),
+       eden_verb(electopt, 5, member, participating),
        action(electseed, btc_header),
-       action(electmeeting, account, round, keys, data, old_data),
-       action(electvote, round, voter, candidate),
-       action(electvideo, round, voter, video),
+       eden_verb(electmeeting, 6, account, round, keys, data, old_data),
+       eden_verb(electvote, 7, round, voter, candidate),
+       eden_verb(electvideo, 8, round, voter, video),
        action(electprocess, max_steps),
        action(bylawspropose, proposer, bylaws),
        action(bylawsapprove, approver, bylaws_hash),
        action(bylawsratify, approver, bylaws_hash),
        action(distribute, max_steps),
        action(inductdonate, payer, id, quantity, ricardian_contract(inductdonate_ricardian)),
-       action(inductcancel, account, id, ricardian_contract(inductcancel_ricardian)),
+       eden_verb(inductcancel, 9, account, id, ricardian_contract(inductcancel_ricardian)),
        action(inducted, inductee, ricardian_contract(inducted_ricardian)),
        action(resign, account),
+       action(rename, old_account, new_account),
        action(gc, limit, ricardian_contract(gc_ricardian)),
        action(migrate, limit),
        action(unmigrate),

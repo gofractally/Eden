@@ -10,12 +10,13 @@
 
 namespace eden
 {
-   void eden::inductinit(uint64_t id,
+   void eden::inductinit(const eosio::not_in_abi<session_info>& current_session,
+                         uint64_t id,
                          eosio::name inviter,
                          eosio::name invitee,
                          std::vector<eosio::name> witnesses)
    {
-      require_auth(inviter);
+      current_session.value.require_auth(inviter);
 
       globals{get_self()}.check_active();
 
@@ -33,13 +34,14 @@ namespace eden
       inductions{get_self()}.initialize_induction(id, inviter, invitee, witnesses);
    }
 
-   void eden::inductmeetin(eosio::name account,
+   void eden::inductmeetin(const eosio::not_in_abi<session_info>& current_session,
+                           eosio::name account,
                            uint64_t id,
                            const std::vector<encrypted_key>& keys,
                            const eosio::bytes& data,
                            const std::optional<eosio::bytes>& old_data)
    {
-      require_auth(account);
+      current_session.value.require_auth(account);
       globals{get_self()}.check_active();
 
       members members{get_self()};
@@ -52,11 +54,13 @@ namespace eden
       encrypt.set(id, keys, data, old_data);
    }
 
-   void eden::inductprofil(uint64_t id, new_member_profile new_member_profile)
+   void eden::inductprofil(const eosio::not_in_abi<session_info>& current_session,
+                           uint64_t id,
+                           new_member_profile new_member_profile)
    {
       inductions inductions{get_self()};
       const auto& induction = inductions.get_induction(id);
-      require_auth(induction.invitee());
+      current_session.value.require_auth(induction.invitee());
 
       members{get_self()}.check_pending_member(induction.invitee());
 
@@ -69,9 +73,12 @@ namespace eden
       }
    }
 
-   void eden::inductvideo(eosio::name account, uint64_t id, std::string video)
+   void eden::inductvideo(const eosio::not_in_abi<session_info>& current_session,
+                          eosio::name account,
+                          uint64_t id,
+                          std::string video)
    {
-      require_auth(account);
+      current_session.value.require_auth(account);
       inductions inductions{get_self()};
       const auto& induction = inductions.get_induction(id);
 
@@ -83,9 +90,12 @@ namespace eden
       inductions.update_video(induction, video);
    }
 
-   void eden::inductendors(eosio::name account, uint64_t id, eosio::checksum256 induction_data_hash)
+   void eden::inductendors(const eosio::not_in_abi<session_info>& current_session,
+                           eosio::name account,
+                           uint64_t id,
+                           eosio::checksum256 induction_data_hash)
    {
-      require_auth(account);
+      current_session.value.require_auth(account);
       inductions inductions{get_self()};
       const auto& induction = inductions.get_induction(id);
 
@@ -108,6 +118,7 @@ namespace eden
       accounts user_accounts{get_self()};
 
       const auto& induction = inductions.get_induction(id);
+      inductions.check_valid_induction(induction);
       eosio::check(payer == induction.invitee(), "only inductee may donate using this action");
       eosio::check(quantity == globals.get().minimum_donation, "incorrect donation");
       user_accounts.sub_balance(payer, quantity);
@@ -166,6 +177,7 @@ namespace eden
          auctions auctions{get_self()};
          remaining = auctions.finish_auctions(remaining);
       }
+      remaining = gc_sessions(get_self(), remaining);
       eosio::check(remaining != limit, "Nothing to do.");
       if (!removed_members.empty())
       {
@@ -178,9 +190,11 @@ namespace eden
       }
    }
 
-   void eden::inductcancel(eosio::name account, uint64_t id)
+   void eden::inductcancel(const eosio::not_in_abi<session_info>& current_session,
+                           eosio::name account,
+                           uint64_t id)
    {
-      eosio::require_auth(account);
+      current_session.value.require_auth(account);
 
       inductions inductions{get_self()};
       bool is_genesis = globals{get_self()}.get().stage == contract_stage::genesis;
@@ -221,6 +235,27 @@ namespace eden
       members.remove(account);
       bylaws bylaws{get_self()};
       bylaws.on_resign(account);
+   }
+
+   void eden::rename(eosio::name account, eosio::name new_account)
+   {
+      eosio::require_auth(new_account);
+      eosio::require_auth(eosio::permission_level{get_self(), "board.major"_n});
+      accounts accounts{get_self()};
+      accounts.on_rename(account, new_account);
+      members members{get_self()};
+      members.check_active_member(account);
+      distributions dist{get_self()};
+      dist.on_rename(account, new_account);
+      elections elections{get_self()};
+      elections.on_rename(account, new_account);
+      inductions inductions{get_self()};
+      inductions.on_rename(account, new_account);
+      members.rename(account, new_account);
+      bylaws bylaws{get_self()};
+      bylaws.on_rename(account, new_account);
+      migrations migrations{get_self()};
+      migrations.on_rename(account, new_account);
    }
 
 }  // namespace eden

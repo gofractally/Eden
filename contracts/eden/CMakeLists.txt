@@ -17,6 +17,7 @@ add_executable(eden
    src/actions/migrate.cpp
    src/actions/encrypt.cpp
    src/actions/tables.cpp
+   src/actions/sessions.cpp
    src/eden.cpp
    src/events.cpp
    src/accounts.cpp
@@ -32,6 +33,7 @@ add_executable(eden
    src/encrypt.cpp
 )
 target_include_directories(eden PUBLIC include ../token/include PRIVATE ../../external/atomicassets-contract/include)
+target_compile_options(eden PUBLIC -flto)
 target_link_libraries(eden eosio-contract)
 set_target_properties(eden PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${ROOT_BINARY_DIR})
 
@@ -62,7 +64,8 @@ eden_tester_test(test-eden)
 
 # Chain Runners
 add_test_eden("run-genesis" "")
-add_test_eden("run-full-election" "")
+add_test_eden("run-elections" "")
+add_test_eden("run-complete-elections" "")
 
 file(CREATE_LINK ${CMAKE_CURRENT_SOURCE_DIR}/tests/data ${ROOT_BINARY_DIR}/eden-test-data SYMBOLIC)
 

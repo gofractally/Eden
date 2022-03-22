@@ -1,5 +1,6 @@
 #include <elections.hpp>
 #include <members.hpp>
+#include <sessions.hpp>
 
 namespace eden
 {
@@ -102,6 +103,7 @@ namespace eden
             break;
       }
       member_stats.set(stats, contract);
+      remove_sessions(contract, iter->account());
       return member_tb.erase(iter);
    }
 
@@ -117,11 +119,41 @@ namespace eden
       const auto& member = member_tb.get(account.value);
       if (member.status() == member_status::pending_membership)
       {
+         remove_sessions(contract, account);
          member_tb.erase(member);
          auto stats = this->stats();
          eosio::check(stats.pending_members != 0, "Integer overflow");
          --stats.pending_members;
          member_stats.set(stats, contract);
+      }
+   }
+
+   void members::rename(eosio::name account, eosio::name new_account)
+   {
+      auto iter = member_tb.find(account.value);
+      eosio::check(iter != member_tb.end(), "Unknown member");
+      std::uint8_t rank = iter->election_rank();
+      remove_sessions(contract, account);
+      // Update the members table entry
+      member_tb.emplace(contract, [&](auto& new_member) {
+         new_member = *iter;
+         new_member.account() = new_account;
+      });
+      member_tb.erase(iter);
+      // update delegate records
+      auto delegate_idx = member_tb.get_index<"byrep"_n>();
+      for (uint8_t i = 0; i <= rank; ++i)
+      {
+         for (auto iter = delegate_idx.lower_bound((uint128_t{i} << 64) | account.value),
+                   end = delegate_idx.end();
+              iter != end && iter->representative() == account;)
+         {
+            auto next = iter;
+            ++next;
+            delegate_idx.modify(iter, contract,
+                                [&](auto& member) { member.representative() = new_account; });
+            iter = next;
+         }
       }
    }
 

@@ -1,35 +1,49 @@
-import { EdenNftSocialHandles } from "nfts/interfaces";
-import { Asset, ElectionParticipationStatus, MemberStatus } from "_app";
+import { ElectionParticipationStatus, MemberStatus } from "_app";
 
 export type VoteDataQueryOptionsByField = {
     fieldName?: string;
     fieldValue: string;
 };
 
-export interface MemberData {
-    createdAt: number;
-    account: string;
-    name: string;
-    image: string;
+interface ProfileImage {
+    cid: string;
+    url: string;
     attributions: string;
+}
+
+interface InductionVideo {
+    cid: string;
+    url: string;
+}
+
+interface MemberProfile {
+    name: string;
+    image: ProfileImage;
     bio: string;
-    socialHandles: EdenNftSocialHandles;
-    inductionVideo: string;
-    templateId?: number;
-    auctionData?: MemberAuctionData;
-    assetData?: AssetData;
-    saleId?: string;
+    socialHandles: MemberSocialHandles;
 }
 
-export interface AssetData {
-    assetId: string;
-    templateMint: number;
+export interface MemberSocialHandles {
+    eosCommunity?: string;
+    twitter?: string;
+    linkedin?: string;
+    telegram?: string;
+    facebook?: string;
+    blog?: string;
 }
 
-export interface MemberAuctionData {
-    auctionId: string;
-    price: Asset;
-    bidEndTime?: number;
+export interface Member {
+    createdAt: number;
+    accountName: string;
+    profile: MemberProfile;
+    inductionVideo: InductionVideo;
+    encryptionKey?: string; // Include once exposed (as optional)
+    // Member's participation status is updated once they lose a round (updated as soon as a new value is known),
+    // ie. a member's opt-in participation status lifetime is only from the start of Round 1
+    // until the end of the Round they lose (or end of the election)
+    participatingInElection: boolean;
+    delegateRank?: number; // Include once exposed
+    representativeAccountName?: string; // Include once exposed
 }
 
 export interface EdenMember {
@@ -80,4 +94,5 @@ export interface MembersQueryNode {
         bio: string;
     };
     inductionVideo: string;
+    participating: boolean;
 }

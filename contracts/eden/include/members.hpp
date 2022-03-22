@@ -124,6 +124,7 @@ namespace eden
       member_table_type::const_iterator erase(member_table_type::const_iterator iter);
       void remove(eosio::name account);
       void remove_if_pending(eosio::name account);
+      void rename(eosio::name old_account, eosio::name new_account);
       bool is_new_member(eosio::name account) const;
       void check_active_member(eosio::name account);
       void check_pending_member(eosio::name account);

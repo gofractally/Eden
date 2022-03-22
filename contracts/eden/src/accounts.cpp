@@ -115,6 +115,19 @@ namespace eden
          account_tb.modify(record, contract, [&](auto& r) { r.balance() -= quantity; });
    }
 
+   void accounts::on_rename(eosio::name old_account, eosio::name new_account)
+   {
+      auto record = account_tb.find(old_account.value);
+      if (record != account_tb.end())
+      {
+         account_tb.emplace(contract, [&](auto& new_record) {
+            new_record = *record;
+            new_record.owner() = new_account;
+         });
+         account_tb.erase(record);
+      }
+   }
+
    void accounts::clear_all() { clear_table(account_tb); }
 
    void add_to_pool(eosio::name contract, eosio::name pool, eosio::asset amount)

@@ -1,5 +1,7 @@
+#include <eosio/abi.hpp>
 #include <eosio/from_string.hpp>
 #include <eosio/tester.hpp>
+#include <eosio/authority.hpp>
 
 namespace
 {
@@ -8,7 +10,7 @@ namespace
    extern "C"
    {
       // clang-format off
-      [[clang::import_name("tester_create_chain")]]                uint32_t tester_create_chain(const char* snapshot, uint32_t snapshot_size);
+      [[clang::import_name("tester_create_chain2")]]               uint32_t tester_create_chain2(const char* snapshot, uint32_t snapshot_size, uint64_t state_size);
       [[clang::import_name("tester_destroy_chain")]]               void     tester_destroy_chain(uint32_t chain);
       [[clang::import_name("tester_exec_deferred")]]               bool     tester_exec_deferred(uint32_t chain_index, void* cb_alloc_data, cb_alloc_type cb_alloc);
       [[clang::import_name("tester_execute")]]                     int32_t  tester_execute(const char* command, uint32_t command_size);
@@ -23,17 +25,7 @@ namespace
       [[clang::import_name("tester_shutdown_chain")]]              void     tester_shutdown_chain(uint32_t chain);
       [[clang::import_name("tester_sign")]]                        uint32_t tester_sign(const void* key, uint32_t keylen, const void* digest, void* sig, uint32_t siglen);
       [[clang::import_name("tester_start_block")]]                 void     tester_start_block(uint32_t chain_index, int64_t skip_miliseconds);
-
-      [[clang::import_name("tester_connect_rodeos")]]              void     tester_connect_rodeos(uint32_t rodeos, uint32_t chain);
-      [[clang::import_name("tester_create_rodeos")]]               uint32_t tester_create_rodeos();
-      [[clang::import_name("tester_destroy_rodeos")]]              void     tester_destroy_rodeos(uint32_t rodeos);
       [[clang::import_name("tester_get_history")]]                 uint32_t tester_get_history(uint32_t chain_index, uint32_t block_num, char* dest, uint32_t dest_size);
-      [[clang::import_name("tester_rodeos_add_filter")]]           void     tester_rodeos_add_filter(uint32_t rodeos, uint64_t name, const char* wasm_filename, uint32_t wasm_filename_size);
-      [[clang::import_name("tester_rodeos_enable_queries")]]       void     tester_rodeos_enable_queries(uint32_t rodeos, uint32_t max_console_size, uint32_t wasm_cache_size, uint64_t max_exec_time_ms, const char* contract_dir, uint32_t contract_dir_size);
-      [[clang::import_name("tester_rodeos_get_num_pushed_data")]]  uint32_t tester_rodeos_get_num_pushed_data(uint32_t rodeos);
-      [[clang::import_name("tester_rodeos_get_pushed_data")]]      uint32_t tester_rodeos_get_pushed_data(uint32_t rodeos, uint32_t index, char* dest, uint32_t dest_size);
-      [[clang::import_name("tester_rodeos_push_transaction")]]     void     tester_rodeos_push_transaction(uint32_t rodeos, const char* packed_args, uint32_t packed_args_size, void* cb_alloc_data, cb_alloc_type cb_alloc);
-      [[clang::import_name("tester_rodeos_sync_block")]]           bool     tester_rodeos_sync_block(uint32_t rodeos);
       // clang-format on
    }
 
@@ -77,18 +69,6 @@ namespace
                                      return (*reinterpret_cast<Alloc_fn*>(cb_alloc_data))(size);
                                   });
    }
-
-   template <typename Alloc_fn>
-   inline void rodeos_push_transaction(uint32_t rodeos,
-                                       const char* args_begin,
-                                       uint32_t args_size,
-                                       Alloc_fn alloc_fn)
-   {
-      tester_rodeos_push_transaction(rodeos, args_begin, args_size, &alloc_fn,
-                                     [](void* cb_alloc_data, size_t size) -> void* {
-                                        return (*reinterpret_cast<Alloc_fn*>(cb_alloc_data))(size);
-                                     });
-   }
 }  // namespace
 
 std::vector<char> eosio::read_whole_file(std::string_view filename)
@@ -111,39 +91,6 @@ eosio::asset eosio::string_to_asset(const char* s)
 {
    return eosio::convert_from_string<asset>(s);
 }
-
-namespace
-{
-   // TODO: move
-   struct tester_permission_level_weight
-   {
-      eosio::permission_level permission = {};
-      uint16_t weight = {};
-   };
-
-   EOSIO_REFLECT(tester_permission_level_weight, permission, weight);
-
-   // TODO: move
-   struct tester_wait_weight
-   {
-      uint32_t wait_sec = {};
-      uint16_t weight = {};
-   };
-
-   EOSIO_REFLECT(tester_wait_weight, wait_sec, weight);
-
-   // TODO: move
-   struct tester_authority
-   {
-      uint32_t threshold = {};
-      std::vector<eosio::key_weight> keys = {};
-      std::vector<tester_permission_level_weight> accounts = {};
-      std::vector<tester_wait_weight> waits = {};
-   };
-
-   EOSIO_REFLECT(tester_authority, threshold, keys, accounts, waits);
-
-}  // namespace
 
 /**
  * Validates the status of a transaction.  If expected_except is nullptr, then the
@@ -172,31 +119,6 @@ void eosio::expect(const transaction_trace& tt, const char* expected_except)
       if (tt.except)
          eosio::print("transaction has exception: ", *tt.except, "\n");
       eosio::check(false, "transaction failed with status " + to_string(tt.status));
-   }
-}
-
-void eosio::expect_rodeos(const transaction_trace& tt, const char* expected_except)
-{
-   if (expected_except)
-   {
-      if (tt.status == transaction_status::executed)
-         eosio::check(false, "rodeos transaction succeeded, but was expected to fail with: " +
-                                 std::string(expected_except));
-      if (!tt.except)
-         eosio::check(false, "rodeos transaction has no failure message. expected: " +
-                                 std::string(expected_except));
-      if (tt.except->find(expected_except) == std::string::npos)
-         eosio::check(false, "rodeos transaction failed with <<<" + *tt.except +
-                                 ">>>, but was expected to fail with: <<<" + expected_except +
-                                 ">>>");
-   }
-   else
-   {
-      if (tt.status == transaction_status::executed)
-         return;
-      if (tt.except)
-         eosio::print("rodeos transaction has exception: ", *tt.except, "\n");
-      eosio::check(false, "rodeos transaction failed with status " + to_string(tt.status));
    }
 }
 
@@ -259,8 +181,10 @@ const eosio::private_key eosio::test_chain::default_priv_key =
 // need to be kept in sync with whatever updates the native layer.
 static eosio::test_chain* current_chain = nullptr;
 
-eosio::test_chain::test_chain(const char* snapshot)
-    : id{::tester_create_chain(snapshot ? snapshot : "", snapshot ? strlen(snapshot) : 0)}
+eosio::test_chain::test_chain(const char* snapshot, uint64_t state_size)
+    : id{::tester_create_chain2(snapshot ? snapshot : "",
+                                snapshot ? strlen(snapshot) : 0,
+                                state_size)}
 {
    current_chain = this;
 }
@@ -318,6 +242,21 @@ void eosio::test_chain::start_block(int64_t skip_miliseconds)
    {
       ::tester_start_block(id, skip_miliseconds);
    }
+}
+
+void eosio::test_chain::start_block(std::string_view time)
+{
+   uint64_t value;
+   check(string_to_utc_microseconds(value, time.data(), time.data() + time.size()), "bad time");
+   start_block(time_point{microseconds(value)});
+}
+
+void eosio::test_chain::start_block(time_point tp)
+{
+   finish_block();
+   auto head_tp = get_head_block_info().timestamp.to_time_point();
+   auto skip = (tp - head_tp).count() / 1000 - 500;
+   start_block(skip);
 }
 
 void eosio::test_chain::finish_block()
@@ -471,7 +410,7 @@ eosio::transaction_trace eosio::test_chain::create_account(name ac,
                                                            const public_key& pub_key,
                                                            const char* expected_except)
 {
-   tester_authority simple_auth{
+   authority simple_auth{
        .threshold = 1,
        .keys = {{pub_key, 1}},
    };
@@ -492,11 +431,11 @@ eosio::transaction_trace eosio::test_chain::create_code_account(name account,
                                                                 bool is_priv,
                                                                 const char* expected_except)
 {
-   tester_authority simple_auth{
+   authority simple_auth{
        .threshold = 1,
        .keys = {{pub_key, 1}},
    };
-   tester_authority code_auth{
+   authority code_auth{
        .threshold = 1,
        .keys = {{pub_key, 1}},
        .accounts = {{{account, "eosio.code"_n}, 1}},
@@ -544,6 +483,21 @@ eosio::transaction_trace eosio::test_chain::set_code(name ac,
                            "setcode"_n,
                            std::make_tuple(ac, uint8_t{0}, uint8_t{0}, read_whole_file(filename))}},
                    expected_except);
+}
+
+eosio::transaction_trace eosio::test_chain::set_abi(name ac,
+                                                    const char* filename,
+                                                    const char* expected_except)
+{
+   auto json = read_whole_file(filename);
+   json.push_back(0);
+   json_token_stream stream(json.data());
+   abi_def def{};
+   from_json(def, stream);
+   auto bin = convert_to_bin(def);
+   return transact(
+       {action{{{ac, "active"_n}}, "eosio"_n, "setabi"_n, std::make_tuple(ac, std::move(bin))}},
+       expected_except);
 }
 
 eosio::transaction_trace eosio::test_chain::create_token(name contract,
@@ -601,103 +555,6 @@ eosio::transaction_trace eosio::test_chain::issue_and_transfer(const name& contr
                   std::make_tuple(issuer, to, amount, memo)},
        },
        expected_except);
-}
-
-eosio::test_rodeos::test_rodeos() : id{tester_create_rodeos()} {}
-
-eosio::test_rodeos::~test_rodeos()
-{
-   tester_destroy_rodeos(id);
-}
-
-void eosio::test_rodeos::connect(test_chain& chain)
-{
-   connected = &chain;
-   tester_connect_rodeos(id, chain.id);
-}
-
-void eosio::test_rodeos::add_filter(eosio::name name, const char* wasm_filename)
-{
-   tester_rodeos_add_filter(id, name.value, wasm_filename, strlen(wasm_filename));
-}
-
-void eosio::test_rodeos::enable_queries(uint32_t max_console_size,
-                                        uint32_t wasm_cache_size,
-                                        uint64_t max_exec_time_ms,
-                                        const char* contract_dir)
-{
-   tester_rodeos_enable_queries(id, max_console_size, wasm_cache_size, max_exec_time_ms,
-                                contract_dir ? contract_dir : "",
-                                contract_dir ? strlen(contract_dir) : 0);
-}
-
-bool eosio::test_rodeos::sync_block()
-{
-   return tester_rodeos_sync_block(id);
-}
-
-uint32_t eosio::test_rodeos::sync_blocks()
-{
-   uint32_t n = 0;
-   while (sync_block())
-      ++n;
-   return n;
-}
-
-[[nodiscard]] eosio::transaction_trace eosio::test_rodeos::push_transaction(
-    const transaction& trx,
-    const std::vector<private_key>& keys,
-    const std::vector<std::vector<char>>& context_free_data,
-    const std::vector<signature>& signatures)
-{
-   std::vector<char> packed_trx = pack(trx);
-   std::vector<char> args;
-   (void)convert_to_bin(packed_trx, args);
-   (void)convert_to_bin(context_free_data, args);
-   (void)convert_to_bin(signatures, args);
-   (void)convert_to_bin(keys, args);
-   std::vector<char> bin;
-   rodeos_push_transaction(id, args.data(), args.size(), [&](size_t size) {
-      bin.resize(size);
-      return bin.data();
-   });
-   return convert_from_bin<transaction_trace>(bin);
-}
-
-eosio::transaction_trace eosio::test_rodeos::transact(std::vector<action>&& actions,
-                                                      const std::vector<private_key>& keys,
-                                                      const char* expected_except)
-{
-   auto trace = push_transaction(connected->make_transaction(std::move(actions)), keys);
-   expect_rodeos(trace, expected_except);
-   return trace;
-}
-
-eosio::transaction_trace eosio::test_rodeos::transact(std::vector<action>&& actions,
-                                                      const char* expected_except)
-{
-   return transact(std::move(actions), {}, expected_except);
-}
-
-uint32_t eosio::test_rodeos::get_num_pushed_data()
-{
-   return tester_rodeos_get_num_pushed_data(id);
-}
-
-std::vector<char> eosio::test_rodeos::get_pushed_data(uint32_t index)
-{
-   size_t len = tester_rodeos_get_pushed_data(id, index, nullptr, 0);
-   std::vector<char> result(len);
-   tester_rodeos_get_pushed_data(id, index, result.data(), len);
-   return result;
-}
-
-std::string eosio::test_rodeos::get_pushed_data_str(uint32_t index)
-{
-   size_t len = tester_rodeos_get_pushed_data(id, index, nullptr, 0);
-   std::string result(len, 0);
-   tester_rodeos_get_pushed_data(id, index, result.data(), len);
-   return result;
 }
 
 std::ostream& eosio::ship_protocol::operator<<(std::ostream& os,

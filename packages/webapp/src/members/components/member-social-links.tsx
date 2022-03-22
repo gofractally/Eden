@@ -5,40 +5,41 @@ import { IoChatbubblesOutline } from "react-icons/io5";
 import { explorerAccountUrl, SocialButton } from "_app";
 import { EosCommunityIcon } from "_app/ui/icons";
 
-import { MemberData } from "../interfaces";
+import { MemberSocialHandles } from "../interfaces";
 import { getValidSocialLink } from "../helpers/social-links";
 
 interface Props {
-    member: MemberData;
+    accountName: string;
+    socialHandles: MemberSocialHandles;
 }
 
-export const MemberSocialLinks = ({ member }: Props) => {
-    const linkedinHandle = getValidSocialLink(member.socialHandles.linkedin);
-    const facebookHandle = getValidSocialLink(member.socialHandles.facebook);
-    const twitterHandle = getValidSocialLink(member.socialHandles.twitter);
-    const telegramHandle = getValidSocialLink(member.socialHandles.telegram);
+export const MemberSocialLinks = ({ accountName, socialHandles }: Props) => {
+    const linkedinHandle = getValidSocialLink(socialHandles.linkedin);
+    const facebookHandle = getValidSocialLink(socialHandles.facebook);
+    const twitterHandle = getValidSocialLink(socialHandles.twitter);
+    const telegramHandle = getValidSocialLink(socialHandles.telegram);
     return (
         <div
             className="grid gap-y-2 sm:justify-between text-sm"
             style={{ gridTemplateColumns: "repeat(auto-fill, 12.5rem)" }}
         >
             <SocialButton
-                handle={member.account}
+                handle={accountName}
                 icon={EosCommunityIcon}
-                href={explorerAccountUrl(member.account)}
+                href={explorerAccountUrl(accountName)}
             />
-            {member.socialHandles.eosCommunity && (
+            {socialHandles.eosCommunity && (
                 <SocialButton
-                    handle={member.socialHandles.eosCommunity}
+                    handle={socialHandles.eosCommunity}
                     icon={IoChatbubblesOutline}
-                    href={`https://forums.eoscommunity.org/u/${member.socialHandles.eosCommunity}`}
+                    href={`https://forums.eoscommunity.org/u/${socialHandles.eosCommunity}`}
                 />
             )}
-            {member.socialHandles.blog && (
+            {socialHandles.blog && (
                 <SocialButton
                     handle="Website"
                     icon={HiOutlineLink}
-                    href={urlify(member.socialHandles.blog)}
+                    href={urlify(socialHandles.blog)}
                 />
             )}
             {twitterHandle && (

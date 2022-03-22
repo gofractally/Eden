@@ -1,0 +1,61 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "(gdb) Launch nodeos",
+            "type": "cppdbg",
+            "request": "launch",
+            "program": "${workspaceFolder}/build/clsdk/bin/nodeos",
+            "args": [
+                "-d",
+                "data",
+                "--config-dir",
+                "config",
+                "--plugin",
+                "eosio::chain_api_plugin",
+                "--plugin",
+                "eosio::producer_api_plugin",
+                "--plugin",
+                "eosio::debug_plugin",
+                "--subst",
+                "clsdk/contracts/token.wasm:clsdk/contracts/token-debug.wasm",
+                "--subst",
+                "notify.wasm:notify-debug.wasm",
+                "-e",
+                "-p",
+                "eosio"
+            ],
+            "stopAtEntry": false,
+            "cwd": "${workspaceFolder}/build",
+            "environment": [],
+            "externalConsole": false,
+            // Q: Why don't we use "sourceFileMap" here?
+            // A: It appears to work at first, but then things fall apart when
+            //    you set breakpoints in some of the mapped files.
+            //    "set substitute-path" (below) works better.
+            "MIMode": "gdb",
+            "setupCommands": [
+                {
+                    "description": "Enable pretty-printing for gdb",
+                    "text": "-enable-pretty-printing",
+                    "ignoreFailures": true
+                },
+                {
+                    "description": "Ignore timer signal",
+                    "text": "handle SIG34 noprint",
+                    "ignoreFailures": false
+                },
+                {
+                    "description": "Map sources",
+                    "text": "set substitute-path clsdk-wasi-sdk: ${workspaceFolder}/build/wasi-sdk",
+                    "ignoreFailures": false
+                },
+                {
+                    "description": "Map sources",
+                    "text": "set substitute-path clsdk: ${workspaceFolder}/build/clsdk",
+                    "ignoreFailures": false
+                }
+            ]
+        }
+    ]
+}

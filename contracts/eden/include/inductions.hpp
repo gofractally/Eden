@@ -144,7 +144,6 @@ namespace eden
 
       void check_new_induction(eosio::name invitee, eosio::name inviter) const;
       bool is_valid_induction(const induction& induction) const;
-      void check_valid_induction(const induction& induction) const;
       void validate_profile(const new_member_profile& new_member_profile) const;
       void validate_video(const std::string& video) const;
       void check_valid_endorsers(eosio::name inviter,
@@ -165,6 +164,7 @@ namespace eden
       const induction& get_induction(uint64_t id) const;
       const induction& get_endorsed_induction(eosio::name invitee) const;
       bool has_induction(eosio::name invitee) const;
+      void check_valid_induction(const induction& induction) const;
 
       void initialize_induction(uint64_t id,
                                 eosio::name inviter,
@@ -210,6 +210,8 @@ namespace eden
 
       // Should only be used during genesis
       void endorse_all(const induction& induction);
+
+      void on_rename(eosio::name old_account, eosio::name new_account);
 
       // this method is used only for administrative purposes,
       // it should never be used outside genesis or test environments

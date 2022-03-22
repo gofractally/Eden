@@ -1,17 +1,10 @@
 import { FormEvent, useState } from "react";
 
-import {
-    useFormFields,
-    Form,
-    Heading,
-    Button,
-    HelpLink,
-    handleFileChange,
-    Image,
-} from "_app";
 import { edenContractAccount, validUploadActions } from "config";
-import { EdenNftSocialHandles } from "nfts";
+import { useFormFields, handleFileChange, ipfsUrl } from "_app";
+import { Form, Heading, Button, HelpLink, Image } from "_app/ui";
 import { NewMemberProfile } from "inductions";
+import { MemberSocialHandles } from "members/interfaces";
 
 interface Props {
     newMemberProfile: NewMemberProfile;
@@ -48,7 +41,7 @@ export const InductionProfileForm = ({
 
         const socialHandles = { ...socialFields };
         Object.keys(socialHandles).forEach((keyString) => {
-            const key = keyString as keyof EdenNftSocialHandles;
+            const key = keyString as keyof MemberSocialHandles;
             if (!socialHandles[key]) delete socialHandles[key];
         });
 
@@ -135,7 +128,7 @@ export const InductionProfileForm = ({
                 Social handles and links
             </Heading>
             <Form.LabeledSet
-                label="EOSCommunity.org username"
+                label="forums.eoscommunity.org username"
                 htmlFor="eosCommunity"
                 className="col-span-6 md:col-span-3 lg:col-span-6 xl:col-span-3"
             >
@@ -235,8 +228,8 @@ const ProfileImage = ({ image }: { image?: File | string }) => {
         );
 
     let imageUrl: string;
-    if (typeof image === "string") {
-        imageUrl = `https://ipfs.io/ipfs/${image}`;
+    if (typeof image == "string") {
+        imageUrl = ipfsUrl(image);
     } else {
         imageUrl = URL.createObjectURL(image);
     }
@@ -251,9 +244,7 @@ const ProfileImage = ({ image }: { image?: File | string }) => {
     );
 };
 
-const convertNewMemberProfileSocial = (
-    social: string
-): EdenNftSocialHandles => {
+const convertNewMemberProfileSocial = (social: string): MemberSocialHandles => {
     const socialHandles = JSON.parse(social || "{}");
     return {
         eosCommunity: socialHandles.eosCommunity || "",

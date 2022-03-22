@@ -10,9 +10,10 @@ import {
 import { Container, Expander, Heading, Loader, Text } from "_app/ui";
 import { DelegateChip, ErrorLoadingElection } from "elections";
 import { MembersGrid } from "members";
-import { VideoUploadButton } from "../video-upload-button";
+import { MemberNFT } from "nfts/interfaces";
 
 import RoundHeader from "./round-header";
+import { VideoUploadButton } from "./video-upload-button";
 
 interface RoundSegmentProps {
     roundEndTime: Dayjs;
@@ -97,7 +98,7 @@ export const ChiefsRoundSegment = ({
                 </Text>
             </Container>
             <MembersGrid members={members}>
-                {(member) => (
+                {(member: MemberNFT) => (
                     <DelegateChip
                         key={`${member.account}-chief-delegate`}
                         member={member}

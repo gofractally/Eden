@@ -22,9 +22,10 @@ import EncryptionPasswordModals from "encryption/components/encryption-password-
 import { UalSoftkeyLoginModal } from "_app/eos/ual/softkey";
 
 import "tailwindcss/tailwind.css";
+import "react-virtualized/styles.css";
 import "_app/styles/nprogress.tailwind.css";
 import "_app/styles/add-to-calendar.chq.css";
-import "react-virtualized/styles.css";
+import "_app/styles/inputs.css";
 
 Router.events.on("routeChangeStart", (url) => {
     console.log(`Loading: ${url}`);

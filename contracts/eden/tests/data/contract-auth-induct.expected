@@ -1,0 +1,63 @@
+[
+    "migration_event",
+    {
+        "index": 5
+    }
+]
+[
+    "set_pool_event",
+    {
+        "pool": "master",
+        "monthly_distribution_pct": 5
+    }
+]
+[
+    "election_event_schedule",
+    {
+        "election_time": "2020-07-04T15:30:00.000",
+        "election_threshold": 1000
+    }
+]
+[
+    "session_new_event",
+    {
+        "eden_account": "alice",
+        "key": "PUB_K1_665ajq1JUMwWH3bHcRxxTqiZBZBc6CakwUfLkZJxRqp4vAtJaV",
+        "expiration": "2020-03-31T00:00:00.500",
+        "description": ""
+    }
+]
+[
+    "session_new_event",
+    {
+        "eden_account": "pip",
+        "key": "PUB_K1_8YQhKe3x1xTA1KHmkBPznWqa3UGQsaHTUMkJJtcds9giKNsHGv",
+        "expiration": "2020-03-31T00:00:00.500",
+        "description": ""
+    }
+]
+[
+    "session_new_event",
+    {
+        "eden_account": "egeon",
+        "key": "PUB_K1_8kBx4XYj3zZ3Z1Sb8vdq43ursVTebfcShKMDUymiA2cteLVLM1",
+        "expiration": "2020-03-31T00:00:00.500",
+        "description": ""
+    }
+]
+[
+    "session_new_event",
+    {
+        "eden_account": "bertie",
+        "key": "PUB_K1_5iALbhfqEZvqkUifUGbfMQSFnd1ui8ZsXVHT23XWh1HM4B1jNS",
+        "expiration": "2020-03-31T00:00:00.500",
+        "description": ""
+    }
+]
+[
+    "session_del_event",
+    {
+        "eden_account": "bertie",
+        "key": "PUB_K1_5iALbhfqEZvqkUifUGbfMQSFnd1ui8ZsXVHT23XWh1HM4B1jNS"
+    }
+]

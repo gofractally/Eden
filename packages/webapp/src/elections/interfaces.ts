@@ -1,4 +1,5 @@
-import { EdenMember, MemberData } from "members";
+import { EdenMember } from "members/interfaces";
+import { MemberNFT } from "nfts/interfaces";
 
 const NUM_PARTICIPANTS_IN_SORTITION_ROUND = 1;
 const MAX_PARTICIPANTS_IN_SORTITION_ROUND = 13;
@@ -105,7 +106,7 @@ export enum RoundStage {
 
 export interface ElectionCompletedRound {
     participants: EdenMember[]; // .length will be number of participants and empty if no round happened
-    participantsMemberData?: MemberData[];
+    participantsMemberData?: MemberNFT[];
     didReachConsensus?: boolean;
     delegate?: EdenMember;
 }
@@ -120,6 +121,6 @@ export interface Election {
     ongoingRound: {
         roundIndex?: number;
         participants: EdenMember[];
-        participantsMemberData: MemberData[];
+        participantsMemberData: MemberNFT[];
     };
 }
