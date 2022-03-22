@@ -41,7 +41,7 @@ This is fine for getting started, but it does hae some limitations. For example,
 
 To use this option:
 
--   `NEXT_PUBLIC_BOX_UPLOAD_IPFS` should be set to `false`
+-   `NEXT_PUBLIC_BOX_UPLOAD_IPFS` should be set to `false`.
 -   `IPFS_PINATA_JWT` should be set to an API JWT provided by Pinata. Set up a new API key in pinata.cloud with permissions to the Pinning Services API's `addPinObject`, `getPinObject` and `listPinObject`.
 
 #### Eden Box + pinata.cloud
