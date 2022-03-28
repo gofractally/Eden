@@ -23,7 +23,9 @@ export const convertPendingProfileToMember = (
         name: profile.name,
         image: {
             cid: profile.img,
-            url: ipfsUrl(profile.img),
+            url: profile.img.startsWith("blob:")
+                ? profile.img
+                : ipfsUrl(profile.img),
             attributions: profile.attributions || "",
         },
         bio: profile.bio,
