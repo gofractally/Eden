@@ -24,7 +24,7 @@ export const MemberCard = ({ member, showBalance }: Props) => {
             </Container>
             <Container>
                 <MemberBio bio={member.profile.bio} />
-                {member.inductionVideo && (
+                {member.inductionVideo.url && (
                     <SocialButton
                         handle="Induction Ceremony"
                         icon={FaVideo}
