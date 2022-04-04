@@ -41,7 +41,7 @@ export const VideoUploadButton = ({ buttonType }: Props) => {
                 <div className="space-y-3">
                     <Text>
                         The election video upload service will open in a new
-                        browser tab. It is available during the 48 hours after
+                        browser tab. It is available during the 2 weeks after
                         the beginning of the election. Any election videos must
                         be uploaded during this period.
                     </Text>

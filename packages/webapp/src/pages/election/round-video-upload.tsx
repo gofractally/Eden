@@ -79,7 +79,7 @@ export const RoundVideoUploadPage = () => {
                                 is complete.
                             </Text>
                             <Text>
-                                Be patient, and remember you have 48 hours from
+                                Be patient, and remember you have 2 weeks from
                                 the beginning of the election to complete your
                                 election video uploads.
                             </Text>
