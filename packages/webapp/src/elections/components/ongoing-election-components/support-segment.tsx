@@ -22,23 +22,30 @@ export const SupportSegment = () => {
                 </div>
             }
         >
-            {!isActiveMember && (
-                <Container>
-                    <Text>
-                        Sign in with your Eden member account to access the
-                        community room.
-                    </Text>
-                </Container>
-            )}
-            <Container className="flex justify-between sm:justify-start items-center space-x-4">
-                <ElectionCommunityRoomButton />
-                <Button
-                    type="link"
-                    href={ROUTES.ELECTION_STATS.href}
-                    target="_blank"
-                >
-                    Live results <OpensInNewTabIcon />
-                </Button>
+            <Container>
+                <div className="flex justify-between sm:justify-start items-center space-x-4">
+                    <ElectionCommunityRoomButton />
+                    <Button
+                        type="link"
+                        href={ROUTES.ELECTION_STATS.href}
+                        target="_blank"
+                    >
+                        Live results <OpensInNewTabIcon />
+                    </Button>
+                </div>
+                <Text className="mt-3" type="note">
+                    <span className="font-semibold text-gray-600">Note:</span>{" "}
+                    The{" "}
+                    <span className="font-semibold">Join community room</span>{" "}
+                    button will take you directly to a{" "}
+                    <span className="italic">Telegram message</span> in the
+                    private Eden Members Telegram group.{" "}
+                    <span className="underline">
+                        That Telegram message contains the Zoom link.
+                    </span>{" "}
+                    You must be a member of the Eden Members Telegram group to
+                    retrieve this Zoom link.
+                </Text>
             </Container>
         </Expander>
     );
