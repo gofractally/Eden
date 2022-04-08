@@ -62,6 +62,10 @@ tar xf node-v14.16.0-linux-x64.tar.xz
 npm i -g yarn
 ```
 
+### Helper Scripts
+
+See the [scripts](scripts) directory.
+
 ### Running Eden with Ephemeral Chains Locally
 
 Ephemeral chains are instances of the EOS blockchain spawned by `nodeos` locally, with manipulated data from our chain runners, eg: [Basic Genesis Runner](contracts/eden/tests/run-genesis.cpp), [Elections Runner](contracts/eden/tests/run-elections.cpp) (which finishes with an open, running election), and [Completed Elections Runner](contracts/eden/tests/run-complete-elections.cpp). By running a ephemeral chain you are in full control of the blockchain, giving you more flexibility to test the Eden contracts.
