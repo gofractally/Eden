@@ -10,14 +10,19 @@ export const formatMembersQueryNodeAsMemberNFT = (
     data: MembersQueryNode
 ): MemberNFT | undefined => {
     if (!data) return;
+
+    if (!data.profile) {
+        console.info(`${data.account} has since resigned`);
+    }
+
     return {
         createdAt: data.createdAt ? new Date(data.createdAt).getTime() : 0,
         account: data.account,
-        name: data.profile.name,
-        image: data.profile.img,
-        attributions: data.profile.attributions,
-        bio: data.profile.bio,
-        socialHandles: JSON.parse(data.profile.social),
+        name: data.profile?.name ?? data.account,
+        image: data.profile?.img,
+        attributions: data.profile?.attributions,
+        bio: data.profile?.bio,
+        socialHandles: data.profile ? JSON.parse(data.profile.social) : {},
         inductionVideo: data.inductionVideo,
     };
 };
