@@ -463,6 +463,16 @@ TEST_CASE("induction")
    CHECK(get_table_size<eden::encrypted_data_table_type>("induction"_n) == 0);
 }
 
+TEST_CASE("induction with minimun donation fee")
+{
+   eden_tester t;
+   t.genesis();
+   t.set_minimum_donation_fee(s2a("3.0000 EOS"));
+   
+   CHECK(get_globals().minimum_donation == s2a("3.0000 EOS"));
+   t.induct_n(4, true);
+}
+
 TEST_CASE("resignation")
 {
    eden_tester t;

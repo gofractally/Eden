@@ -259,6 +259,11 @@ struct eden_tester
       }
    }
 
+   void set_minimum_donation_fee(eosio::asset amount)
+   {
+      eden_gm.act<actions::setmindonfee>(amount);
+   }
+
    auto hash_induction(const std::string& video, const eden::new_member_profile& profile)
    {
       auto hash_data = eosio::convert_to_bin(std::tuple(video, profile));
@@ -268,7 +273,8 @@ struct eden_tester
    void finish_induction(uint64_t induction_id,
                          eosio::name inviter,
                          eosio::name invitee,
-                         const std::vector<eosio::name>& witnesses)
+                         const std::vector<eosio::name>& witnesses,
+                         bool with_minimum_donation = false)
    {
       chain.as(invitee).act<token::actions::transfer>(invitee, "eden.gm"_n, s2a("10.0000 EOS"),
                                                       "memo");
@@ -289,24 +295,24 @@ struct eden_tester
       {
          chain.as(witness).act<actions::inductendors>(witness, induction_id, induction_hash);
       }
-      chain.as(invitee).act<actions::inductdonate>(invitee, induction_id, s2a("10.0000 EOS"));
+      chain.as(invitee).act<actions::inductdonate>(invitee, induction_id, s2a(!with_minimum_donation ? "10.0000 EOS" : "3.0000 EOS"));
       CHECK(get_eden_membership(invitee).status() == eden::member_status::active_member);
    };
 
-   void induct(eosio::name account)
+   void induct(eosio::name account, bool with_minimum_donation = false)
    {
       alice.act<actions::inductinit>(42, "alice"_n, account, std::vector{"pip"_n, "egeon"_n});
-      finish_induction(42, "alice"_n, account, {"pip"_n, "egeon"_n});
+      finish_induction(42, "alice"_n, account, {"pip"_n, "egeon"_n}, with_minimum_donation);
    }
 
-   void induct_n(std::size_t count)
+   void induct_n(std::size_t count, bool with_minimum_donation = false)
    {
       auto members = make_names(count);
       create_accounts(members);
       for (auto a : members)
       {
          chain.start_block();
-         induct(a);
+         induct(a, with_minimum_donation);
       }
    }
 

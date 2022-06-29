@@ -161,4 +161,16 @@ namespace eden
                                     initial_market_fee, collection_attributes);
    }
 
+   void eden::setmindonfee(eosio::asset new_minimum_donation)
+   {
+      require_auth(get_self());
+
+      globals globals{get_self()};
+
+      eosio::check(globals.get().minimum_donation.symbol == new_minimum_donation.symbol,
+                   "community symbol does not match minimum donation");
+
+      globals.set_minimum_donation_fee(new_minimum_donation);
+   }
+
 }  // namespace eden
