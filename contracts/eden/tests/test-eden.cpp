@@ -780,13 +780,13 @@ TEST_CASE("election")
    {
       eden::current_election_state_singleton state("eden.gm"_n, eden::default_scope);
       auto current = std::get<eden::current_election_state_registration_v1>(state.get());
-      CHECK(eosio::convert_to_json(current.start_time) == "\"2020-07-04T15:30:00.000\"");
+      CHECK(eosio::convert_to_json(current.start_time) == "\"2020-04-04T15:30:00.000\"");
    }
-   t.skip_to("2020-07-03T15:29:59.500");
-   t.electseed(eosio::time_point_sec(0x5f009260u), "Cannot start seeding yet");
+   t.skip_to("2020-04-03T15:29:59.500");
+   t.electseed(eosio::time_point_sec(0x5e883068u), "Cannot start seeding yet");
    t.chain.start_block();
-   t.electseed(eosio::time_point_sec(0x5f009260u));
-   t.skip_to("2020-07-04T15:29:59.500");
+   t.electseed(eosio::time_point_sec(0x5e883068u));
+   t.skip_to("2020-04-04T15:29:59.500");
    expect(t.alice.trace<actions::electprocess>(1), "Seeding window is still open");
    t.chain.start_block();
    t.setup_election();
@@ -794,7 +794,7 @@ TEST_CASE("election")
    eden::election_state_singleton results("eden.gm"_n, eden::default_scope);
    auto result = std::get<eden::election_state_v0>(results.get());
    // This is likely to change as it depends on the exact random number algorithm and seed
-   CHECK(result.lead_representative == "egeon"_n);
+   CHECK(result.lead_representative == "pip"_n);
    std::sort(result.board.begin(), result.board.end());
    CHECK(result.board == std::vector{"alice"_n, "egeon"_n, "pip"_n});
 }
@@ -834,29 +834,29 @@ TEST_CASE("mid-election induction")
    t.electdonate_all();
    SECTION("pre-registration")
    {
-      t.skip_to("2020-06-04T15:29:59.500");
+      t.skip_to("2020-03-04T15:29:59.500");
       has_bertie = true;
       t.induct("bertie"_n);
    }
    SECTION("registration")
    {
-      t.skip_to("2020-06-04T15:30:00.000");
+      t.skip_to("2020-03-04T15:30:00.000");
       has_bertie = true;
       t.induct("bertie"_n);
    }
-   t.skip_to("2020-07-03T15:30:00.000");
+   t.skip_to("2020-04-03T15:30:00.000");
    SECTION("pre-seed")
    {
       has_bertie = true;
       t.induct("bertie"_n);
    }
-   t.electseed(s2t("2020-07-03T15:30:00.000"));
+   t.electseed(s2t("2020-04-03T15:30:00.000"));
    SECTION("post-seed")
    {
       has_bertie = true;
       t.induct("bertie"_n);
    }
-   t.skip_to("2020-07-04T15:30:00.000");
+   t.skip_to("2020-04-04T15:30:00.000");
    for (int i = 0;; ++i)
    {
       DYNAMIC_SECTION("electprocess" << i)
@@ -969,28 +969,28 @@ TEST_CASE("budget distribution")
    t.alice.act<actions::distribute>(250);
    CHECK(t.get_total_budget() == s2a("1.8000 EOS"));
    // Skip forward to the next distribution
-   t.skip_to("2020-08-03T15:29:59.500");
+   t.skip_to("2020-05-04T15:29:59.500");
    expect(t.alice.trace<actions::distribute>(250), "Nothing to do");
    t.chain.start_block();
    t.alice.act<actions::distribute>(250);
    CHECK(t.get_total_budget() == s2a("3.5100 EOS"));
    // Skip into the next election
-   t.skip_to("2021-01-02T15:30:00.000");
+   t.skip_to("2020-07-04T15:30:00.000");
    t.alice.act<actions::distribute>(1);
    t.alice.act<actions::distribute>(5000);
-   CHECK(t.get_total_budget() == s2a("10.9435 EOS"));
+   CHECK(t.get_total_budget() == s2a("6.7266 EOS"));
 
-   expect(t.alice.trace<actions::fundtransfer>("alice"_n, s2t("2020-07-04T15:30:00.000"), 1,
+   expect(t.alice.trace<actions::fundtransfer>("alice"_n, s2t("2020-05-04T15:30:00.000"), 1,
                                                "egeon"_n, s2a("1.8001 EOS"), "memo"),
           "insufficient balance");
-   expect(t.alice.trace<actions::fundtransfer>("alice"_n, s2t("2020-07-04T15:30:00.000"), 1,
+   expect(t.alice.trace<actions::fundtransfer>("alice"_n, s2t("2020-05-04T15:30:00.000"), 1,
                                                "egeon"_n, s2a("-1.0000 EOS"), "memo"),
           "amount must be positive");
-   expect(t.alice.trace<actions::fundtransfer>("alice"_n, s2t("2020-07-04T15:30:00.000"), 1,
+   expect(t.alice.trace<actions::fundtransfer>("alice"_n, s2t("2020-05-04T15:30:00.000"), 1,
                                                "ahab"_n, s2a("1.0000 EOS"), "memo"),
           "member ahab not found");
 
-   t.alice.act<actions::fundtransfer>("alice"_n, s2t("2020-07-04T15:30:00.000"), 1, "egeon"_n,
+   t.alice.act<actions::fundtransfer>("alice"_n, s2t("2020-05-04T15:30:00.000"), 1, "egeon"_n,
                                       s2a("1.8000 EOS"), "memo");
    CHECK(get_eden_account("egeon"_n)->balance() == s2a("1.8000 EOS"));
 
@@ -1016,21 +1016,21 @@ TEST_CASE("budget distribution triggered by donation")
    t.run_election();
    t.distribute(1);
    CHECK(t.get_total_budget() == s2a("5.0000 EOS"));
-   t.skip_to("2020-08-03T15:29:59.500");
+   t.skip_to("2020-05-03T15:29:59.500");
    t.set_balance(s2a("100.0000 EOS"));
    t.chain.start_block();
    CHECK(t.get_total_budget() == s2a("5.0000 EOS"));
    t.eosio_token.act<token::actions::transfer>("eosio.token"_n, "eden.gm"_n, s2a("5.0000 EOS"),
                                                "memo");
-   CHECK(t.get_total_budget() == s2a("10.0000 EOS"));
-   t.skip_to("2020-09-02T15:30:00.0000");
+   CHECK(t.get_total_budget() == s2a("5.0000 EOS"));
+   t.skip_to("2020-06-02T15:30:00.0000");
    t.eosio_token.act<token::actions::transfer>("eosio.token"_n, "eden.gm"_n, s2a("5.0000 EOS"),
                                                "memo");
-   CHECK(t.get_total_budget() == s2a("15.0000 EOS"));
-   t.skip_to("2020-10-02T15:30:00.0000");
+   CHECK(t.get_total_budget() == s2a("10.2500 EOS"));
+   t.skip_to("2020-07-02T15:30:00.0000");
    t.eosio_token.act<token::actions::transfer>("eosio.token"_n, "eden.gm"_n, s2a("5.0000 EOS"),
                                                "memo");
-   CHECK(t.get_total_budget() == s2a("20.0000 EOS"));
+   CHECK(t.get_total_budget() == s2a("15.4875 EOS"));
 }
 
 TEST_CASE("budget distribution minimum period")
@@ -1040,14 +1040,14 @@ TEST_CASE("budget distribution minimum period")
    t.set_balance(s2a("36.0000 EOS"));
    t.run_election();
    t.set_balance(s2a("100000.0000 EOS"));
-   t.eden_gm.act<actions::electsettime>(s2t("2020-09-02T15:30:01.000"));
+   t.eden_gm.act<actions::electsettime>(s2t("2020-06-03T15:30:01.000"));
    t.electdonate_all();
    t.run_election();
    std::map<eosio::block_timestamp, eosio::asset> expected{
-       {s2t("2020-07-04T15:30:00.000"), s2a("1.8000 EOS")},
-       {s2t("2020-08-03T15:30:00.000"), s2a("5000.0000 EOS")},
-       {s2t("2020-09-02T15:30:00.000"), s2a("0.0018 EOS")},
-       {s2t("2020-09-02T15:30:01.000"), s2a("4749.9999 EOS")}};
+       {s2t("2020-04-04T15:30:00.000"), s2a("1.8000 EOS")},
+       {s2t("2020-05-04T15:30:00.000"), s2a("5000.0000 EOS")},
+       {s2t("2020-06-03T15:30:00.000"), s2a("0.0018 EOS")},
+       {s2t("2020-06-03T15:30:01.000"), s2a("4749.9999 EOS")}};
    CHECK(t.get_budgets_by_period() == expected);
 }
 
@@ -1058,12 +1058,12 @@ TEST_CASE("budget distribution exact")
    t.set_balance(s2a("36.0000 EOS"));
    t.run_election();
    t.set_balance(s2a("1000.0000 EOS"));
-   t.eden_gm.act<actions::electsettime>(s2t("2020-09-02T15:30:00.000"));
+   t.eden_gm.act<actions::electsettime>(s2t("2020-06-03T15:30:00.000"));
    t.run_election();
    std::map<eosio::block_timestamp, eosio::asset> expected{
-       {s2t("2020-07-04T15:30:00.000"), s2a("1.8000 EOS")},
-       {s2t("2020-08-03T15:30:00.000"), s2a("50.0000 EOS")},
-       {s2t("2020-09-02T15:30:00.000"), s2a("47.5000 EOS")}};
+       {s2t("2020-04-04T15:30:00.000"), s2a("1.8000 EOS")},
+       {s2t("2020-05-04T15:30:00.000"), s2a("50.0000 EOS")},
+       {s2t("2020-06-03T15:30:00.000"), s2a("47.5000 EOS")}};
    CHECK(t.get_budgets_by_period() == expected);
 }
 
@@ -1074,12 +1074,12 @@ TEST_CASE("budget distribution underflow")
    t.set_balance(s2a("36.0000 EOS"));
    t.run_election();
    t.set_balance(s2a("1000.0000 EOS"));
-   t.eden_gm.act<actions::electsettime>(s2t("2020-09-02T15:30:01.000"));
+   t.eden_gm.act<actions::electsettime>(s2t("2020-06-03T15:30:01.000"));
    t.run_election();
    std::map<eosio::block_timestamp, eosio::asset> expected{
-       {s2t("2020-07-04T15:30:00.000"), s2a("1.8000 EOS")},
-       {s2t("2020-08-03T15:30:00.000"), s2a("50.0000 EOS")},
-       {s2t("2020-09-02T15:30:01.000"), s2a("47.5000 EOS")}};
+       {s2t("2020-04-04T15:30:00.000"), s2a("1.8000 EOS")},
+       {s2t("2020-05-04T15:30:00.000"), s2a("50.0000 EOS")},
+       {s2t("2020-06-03T15:30:01.000"), s2a("47.5000 EOS")}};
    CHECK(t.get_budgets_by_period() == expected);
 }
 
@@ -1142,22 +1142,23 @@ TEST_CASE("multi budget adjustment on resignation")
    t.set_balance(s2a("1236.0000 EOS"));
    t.run_election();
    t.set_balance(s2a("10000.0000 EOS"));
-   t.skip_to("2020-09-02T15:30:00.000");
+   t.skip_to("2020-06-03T15:30:00.000");
    auto lead_representative =
        std::get<eden::election_state_v0>(
            eden::election_state_singleton{"eden.gm"_n, eden::default_scope}.get())
            .lead_representative;
    t.chain.as(lead_representative).act<actions::resign>(lead_representative);
    std::map<eosio::block_timestamp, eosio::asset> expected{
-       {s2t("2020-07-04T15:30:00.000"), s2a("36.2560 EOS")},
-       {s2t("2020-08-03T15:30:00.000"), s2a("293.3316 EOS")},
-       {s2t("2020-09-02T15:30:00.000"), s2a("278.6656 EOS")}};
+       {s2t("2020-04-04T15:30:00.000"), s2a("36.2560 EOS")},
+       {s2t("2020-05-04T15:30:00.000"), s2a("293.3316 EOS")},
+       {s2t("2020-06-03T15:30:00.000"), s2a("278.6656 EOS")}};
    CHECK(t.get_budgets_by_period() == expected);
-   t.skip_to("2020-10-02T15:30:00.000");
+   t.skip_to("2020-07-03T15:30:00.000");
    t.distribute();
-   expected.insert({s2t("2020-10-02T15:30:00.000"), s2a("10.5028 EOS")});
+   expected.insert({s2t("2020-07-03T15:30:00.000"), s2a("10.5028 EOS")});
    CHECK(t.get_budgets_by_period() == expected);
 }
+
 
 TEST_CASE("bylaws")
 {
@@ -1315,7 +1316,7 @@ TEST_CASE("election-events")
    t.run_election(true, 10000, true);
    t.induct_n(100);
    t.run_election(true, 10000, true);
-   t.skip_to("2021-02-01T15:30:00.000");
+   t.skip_to("2020-08-03T15:30:00.000");
    t.alice.act<actions::distribute>(250);
    test_chain::user_context{t.chain, {{"eden.gm"_n, "board.major"_n}, {"ahab"_n, "active"_n}}}
        .act<actions::rename>("alice"_n, "ahab"_n);
