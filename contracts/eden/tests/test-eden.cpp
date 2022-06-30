@@ -811,6 +811,21 @@ TEST_CASE("election reschedule")
    expect(t.alice.trace<actions::electprocess>(100), "No voters");
 }
 
+TEST_CASE("election rescheduled for July 2022")
+{
+   eden_tester t;
+   t.genesis();
+   t.electdonate_all();
+   t.skip_to("2022-06-29T23:59:59.500");
+   expect(t.eden_gm.trace<actions::electsettime>(s2t("2022-07-09T13:00:00.000")), "New election time is too close");
+   t.skip_to("2022-06-30T00:00:00.000");
+   t.eden_gm.trace<actions::electsettime>(s2t("2022-07-09T13:00:00.000"));
+   t.skip_to("2022-07-02T23:59:59.500");
+   t.eden_gm.trace<actions::electsettime>(s2t("2022-07-09T13:00:00.000"));
+   t.skip_to("2022-07-03T00:00:00.000");
+   expect(t.eden_gm.trace<actions::electsettime>(s2t("2022-07-09T13:00:00.000")), "New election time is too close");
+}
+
 TEST_CASE("mid-election induction")
 {
    eden_tester t;
