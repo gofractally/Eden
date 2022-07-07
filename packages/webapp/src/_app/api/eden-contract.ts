@@ -44,8 +44,8 @@ export const isValidDelegate = (memberRep?: string) =>
 export const isNonParticipantInOngoingElection = (member: EdenMember) =>
     member.representative ===
         MEMBER_REPRESENTATIVE_IF_NOT_PARTICIPATED_IN_RECENT_ELECTION &&
-    member.election_participation_status ===
-        ElectionParticipationStatus.NotInElection;
+    member.election_participation_status !==
+        ElectionParticipationStatus.InElection;
 
 export const getCommunityGlobals = async () => {
     const rows = await getTableRows(CONTRACT_GLOBAL_TABLE, {
