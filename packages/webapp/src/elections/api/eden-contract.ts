@@ -253,8 +253,8 @@ export const getParticipantsInCompletedRound = async (
         // all members we're interested in will be no longer participating in the election,
         // except (potentially) for the delegate that got voted up.
         (p) =>
-            p.election_participation_status ===
-            ElectionParticipationStatus.NotInElection // So this could read status === participationCompleted
+            p.election_participation_status !==
+            ElectionParticipationStatus.InElection // So this could read status === participationCompleted
     );
 
     const delegateAccountName = participants?.[0]?.representative;
