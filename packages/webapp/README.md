@@ -65,3 +65,11 @@ A pinata.cloud API JWT will still be needed, but that's set in the Box environme
 If you want to enable uploads greater than 100 MB, use the Eden Box option. And we recommend a paid account with [pinata.cloud](https://pinata.cloud).
 
 If the future, we will explore ways to remove our dependency on pinata.cloud too.
+
+## Deployment
+
+Deployment happen as part of the github CI/CD.
+The `main` branch deploys to `dev` env https://eden-dev.vercel.app/.
+The `production` branch deploys to the production environment.
+
+
