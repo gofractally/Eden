@@ -1,0 +1,23 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: webapp
+  name: webapp
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: webapp
+  template:
+    metadata:
+      labels:
+        app: webapp
+    spec:
+      containers:
+      - image: ghcr.io/gofractally/eden-webapp:3017f7771a16864211f0f05b89ceb86fec03d21b
+        imagePullPolicy: "Always"
+        name: eosrate-webapp
+        ports:
+        - containerPort: 3000
+      restartPolicy: Always
