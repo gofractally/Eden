@@ -26,6 +26,6 @@ spec:
     services:
     - kind: Service
       name: webapp
-      port: 443
+      port: 3000
   tls:
-    secretName: tls-secret
+    certResolver: myresolver
