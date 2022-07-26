@@ -17,7 +17,7 @@ spec:
       containers:
       - image: ghcr.io/gofractally/eden-webapp:3017f7771a16864211f0f05b89ceb86fec03d21b
         imagePullPolicy: "Always"
-        name: eosrate-webapp
+        name: eden-webapp
         ports:
         - containerPort: 3000
       restartPolicy: Always
