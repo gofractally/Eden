@@ -1,0 +1,23 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: box
+  name: box
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: box
+  template:
+    metadata:
+      labels:
+        app: box
+    spec:
+      containers:
+      - image: ghcr.io/gofractally/eden-box:1e748dd07025325db11a1112da9cc22ec0a4d709
+        imagePullPolicy: "Always"
+        name: eden-box
+        ports:
+        - containerPort: 3032
+      restartPolicy: Always
