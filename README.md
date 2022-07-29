@@ -64,7 +64,9 @@ npm i -g yarn
 
 ### Helper Scripts
 
-See the [scripts](scripts) directory.
+*Don't* see the [scripts](scripts) directory. These scripts fell behind. Only use the build method described here.
+
+*Don't* rely on the docker files in this repo, except for use within GH workflows. Instead, manually follow the instructions here inside a persistent interactive docker container.
 
 ### Running Eden with Ephemeral Chains Locally
 
