@@ -315,7 +315,12 @@ namespace eden
 
    void elections::set_next_election_time(eosio::time_point election_time)
    {
-      auto lock_time = eosio::current_time_point() + eosio::days(30);
+      // TODO: The following block of code related to the July 2022 election should be removed in the next code update as it is only for a special scenario that occurs only once
+      eosio::time_point_sec now = eosio::current_time_point();
+      eosio::time_point_sec from_time = eosio::time_point_sec(1656547200);
+      eosio::time_point_sec to_time = eosio::time_point_sec(1657324800);
+      bool is_july_2022_election = from_time <= now && now < to_time;
+      auto lock_time = eosio::current_time_point() + eosio::days(!is_july_2022_election ? 30 : 1);
       eosio::check(election_time >= lock_time, "New election time is too close");
       uint8_t sequence = 1;
       if (state_sing.exists())
@@ -367,7 +372,7 @@ namespace eden
       uint16_t new_threshold = active_members + (active_members + 9) / 10;
       new_threshold = std::clamp(new_threshold, min_election_threshold, max_active_members);
       set_state_sing(current_election_state_registration_v1{
-          get_election_time(state.election_start_time, origin_time + eosio::days(180)),
+          get_election_time(state.election_start_time, origin_time + eosio::days(90)),
           new_threshold});
    }
 

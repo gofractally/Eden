@@ -106,6 +106,8 @@ namespace eden
                    uint8_t election_day,
                    const std::string& election_time);
 
+       void setmindonfee(eosio::asset new_minimum_donation);
+
       void addtogenesis(eosio::name new_genesis_member, eosio::time_point expiration);
       void gensetexpire(uint64_t induction_id, eosio::time_point new_expiration);
 
@@ -250,6 +252,7 @@ namespace eden
               election_day,
               election_time,
               ricardian_contract(genesis_ricardian)),
+       action(setmindonfee, new_minimum_donation),
        action(addtogenesis, account, expiration),
        action(gensetexpire, id, new_expiration),
        action(clearall, ricardian_contract(clearall_ricardian)),
