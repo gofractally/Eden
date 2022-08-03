@@ -1,0 +1,175 @@
+name: Build
+
+on:
+    push:
+        branches:
+            - dev
+    pull_request:
+        # types: [assigned, opened, synchronize, reopened, labeled]
+        paths:
+            - ".github/workflows/build.yml"
+
+            # C++
+            - "CMakeLists.txt"
+            - "contracts/**"
+            - "external/CMakeLists.txt"
+            - "libraries/**"
+            - "native/**"
+            - "programs/**"
+            - "wasm/**"
+
+            # box, webapp
+            - ".eslintignore"
+            - ".eslintrc.js"
+            - ".prettierrc.json"
+            - "lerna.json"
+            - "package.json"
+            - "packages/common/**"
+            - "tsconfig.build.json"
+            - "tsconfig.json"
+            - "yarn.lock"
+
+            # box
+            - "docker/eden-box.Dockerfile"
+            - "packages/box/**"
+
+            # webapp
+            - "docker/eden-webapp.Dockerfile"
+            - "packages/webapp/**"
+jobs:
+    build-micro-chain:
+        name: Build Micro Chain
+        runs-on: ubuntu-latest
+        container: ghcr.io/edenia/eden-builder-tes:latest
+
+        steps:
+            - name: ✅ Checkout code
+              uses: actions/checkout@v2
+
+            - name: Prepare ccache timestamp
+              id: ccache_cache_timestamp
+              shell: cmake -P {0}
+              run: |
+                  string(TIMESTAMP current_date "%Y-%m-%d-%H-%M-%S" UTC)
+                  message("::set-output name=timestamp::${current_date}")
+
+            - name: show_cache
+              id: show_cache
+              run: echo "${{ runner.os }}-ccache_microchain-${{ steps.ccache_cache_timestamp.outputs.timestamp }}"
+
+            - name: ccache cache files
+              uses: actions/cache@v1.1.0
+              with:
+                  path: .ccache
+                  key: ${{ runner.os }}-ccache_microchain-${{ steps.ccache_cache_timestamp.outputs.timestamp }}
+                  restore-keys: |
+                      ${{ runner.os }}-ccache_microchain-
+
+            - name: 🛠 Build
+              run: |
+                  set -e
+                  export CCACHE_DIR=${GITHUB_WORKSPACE}/.ccache
+                  export CCACHE_CONFIGPATH=${GITHUB_WORKSPACE}/.github/ccache.conf
+                  echo =====
+                  pwd
+                  echo ${GITHUB_WORKSPACE}
+                  echo =====
+                  ccache -s
+                  echo =====
+
+                  git submodule update --init external/atomicassets-contract
+                  git submodule update --init external/Catch2
+                  git submodule update --init external/fmt
+                  git submodule update --init external/rapidjson
+                  mkdir build
+                  cd build
+                  cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_CXX_COMPILER_LAUNCHER=ccache -DCMAKE_C_COMPILER_LAUNCHER=ccache -DSKIP_TS=Yes -DEDEN_ATOMIC_ASSETS_ACCOUNT=atomicassets -DEDEN_ATOMIC_MARKET_ACCOUNT=atomicmarket -DEDEN_SCHEMA_NAME=members -DBUILD_NATIVE=OFF ..
+                  make -j$(nproc) wasm-configure
+                  bash -c "cd wasm && make -j$(nproc) eden-micro-chain"
+
+                  echo =====
+                  ls -la ${GITHUB_WORKSPACE}
+                  echo =====
+                  ccache -s
+                  echo =====
+
+            - name: 📃 Upload ccache.log
+              uses: actions/upload-artifact@v2
+              with:
+                  name: microchain_ccache_log
+                  path: |
+                      ccache.log
+
+            - name: 📃 Upload Eden Microchain
+              uses: actions/upload-artifact@v2
+              with:
+                  name: Eden Microchain
+                  path: |
+                      build/eden-micro-chain.wasm
+
+    webapp-build:
+        needs: build-micro-chain
+        name: Build Eden Community WebApp
+        runs-on: ubuntu-latest
+
+        steps:
+            - name: ✅ Checkout code
+              uses: actions/checkout@v2
+
+            - uses: dorny/paths-filter@v2
+              id: filter
+              with:
+                  filters: |
+                      src:
+                        - ".github/workflows/build.yml"
+
+                        - ".eslintignore"
+                        - ".eslintrc.js"
+                        - ".prettierrc.json"
+                        - "lerna.json"
+                        - "package.json"
+                        - "packages/common/**"
+                        - "tsconfig.build.json"
+                        - "tsconfig.json"
+                        - "yarn.lock"
+
+                        - "docker/eden-webapp.Dockerfile"
+                        - "packages/webapp/**"
+
+            - name: Image Preparation
+              if: steps.filter.outputs.src == 'true'
+              id: prep
+              run: |
+                  REGISTRY="ghcr.io"
+                  IMAGE="${REGISTRY}/${{ github.repository_owner }}/eden-webapp"
+                  TAGS="${IMAGE}:${{ github.sha }}"
+                  if [[ $GITHUB_REF == ref/head/master ]]; then
+                    TAGS="${TAGS},${IMAGE}:latest"
+                  fi
+                  echo ::set-output name=tags::${TAGS,,}
+
+            - name: Showtag
+              if: steps.filter.outputs.src == 'true'
+              id: showtag
+              run: echo ${{ steps.prep.outputs.tags }}
+
+            - name: Docker Buildx setup
+              if: steps.filter.outputs.src == 'true'
+              uses: docker/setup-buildx-action@v1
+
+            - name: Login in to registry
+              if: steps.filter.outputs.src == 'true'
+              uses: docker/login-action@v1
+              with:
+                  registry: ghcr.io
+                  username: ${{ github.repository_owner }}
+                  password: ${{ secrets.GITHUB_TOKEN }}
+
+            - name: 🛠 Build & Publish Image
+              if: steps.filter.outputs.src == 'true'
+              uses: docker/build-push-action@v2
+              with:
+                  push: true
+                  file: docker/eden-webapp.Dockerfile
+                  tags: ${{ steps.prep.outputs.tags }}
+                  context: .

@@ -4,8 +4,7 @@ on:
     workflow_dispatch:
     push:
         branches:
-            - main
-            - "test/*"
+            - dev
         paths:
             - "docker/eden-builder.Dockerfile"
     pull_request:
@@ -26,7 +25,7 @@ jobs:
               id: prep
               run: |
                   REGISTRY="ghcr.io"
-                  IMAGE="${REGISTRY}/${{ github.repository_owner }}/eden-builder"
+                  IMAGE="${REGISTRY}/${{ github.repository_owner }}/eden-builder-test"
                   TAGS="${IMAGE}:${{ github.sha }}"
                   if [[ $GITHUB_REF == ref/head/main ]]; then
                     TAGS="${TAGS},${IMAGE}:latest"
