@@ -1,0 +1,41 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  labels:
+    app: box
+  name: box
+spec:
+  serviceName: box
+  replicas: 1
+  selector:
+    matchLabels:
+      app: box
+  template:
+    metadata:
+      labels:
+        app: box
+    spec:
+      securityContext:
+        runAsUser: 1001
+        fsGroup: 1001
+      containers:
+      - image: ghcr.io/edenia/eden-box:latest
+        imagePullPolicy: "Always"
+        name: eden-box
+        envFrom:
+        ports:
+        - containerPort: 3032
+        volumeMounts:
+        - mountPath: /data
+          name: box
+          subPath: data
+      restartPolicy: Always
+  volumeClaimTemplates:
+    - metadata:
+        name: box
+      spec:
+        accessModes: ["ReadWriteOnce"]
+        storageClassName: eden-storage
+        resources:
+          requests:
+            storage: 20Gi

@@ -15,7 +15,7 @@ spec:
         app: webapp
     spec:
       containers:
-      - image: ghcr.io/gofractally/eden-webapp:3017f7771a16864211f0f05b89ceb86fec03d21b
+      - image: ghcr.io/edenia/eden-webapp:latest
         imagePullPolicy: "Always"
         name: eden-webapp
         ports:
