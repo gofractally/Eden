@@ -3,12 +3,12 @@
 
 namespace eden
 {
-   void eden::setdistptc(uint8_t ptc)
+   void eden::setdistpct(uint8_t pct)
    {
       require_auth(get_self());
-      eosio::check(ptc >= 1 && ptc <= 15, "Proposed distribution is out of the valid range");
+      eosio::check(pct >= 1 && pct <= 15, "Proposed distribution is out of the valid range");
 
-      set_distribution_pct(get_self(), ptc);
+      set_distribution_pct(get_self(), pct);
    }
 
 }  // namespace eden

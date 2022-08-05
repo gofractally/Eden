@@ -19,7 +19,7 @@ namespace eden
       pool_tb.emplace(contract, [](auto& row) { row.value = pool_v0{"master"_n, 5}; });
    }
 
-   void set_distribution_pct(eosio::name contract, uint8_t ptc)
+   void set_distribution_pct(eosio::name contract, uint8_t pct)
    {
       pool_table_type pool_tb{contract, default_scope};
       auto pool_iter = pool_tb.find("master"_n.value);
@@ -29,10 +29,10 @@ namespace eden
       push_event(
           set_pool_event{
               .pool = "master"_n,
-              .monthly_distribution_pct = ptc,
+              .monthly_distribution_pct = pct,
           },
           contract);
-      pool_tb.modify(pool_iter, contract, [&](auto& row) { row.value = pool_v0{"master"_n, ptc}; });
+      pool_tb.modify(pool_iter, contract, [&](auto& row) { row.value = pool_v0{"master"_n, pct}; });
    }
 
    static current_distribution make_distribution(eosio::name contract,

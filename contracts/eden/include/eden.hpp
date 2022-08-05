@@ -182,7 +182,7 @@ namespace eden
 
       void distribute(uint32_t max_steps);
 
-      void setdistptc(uint8_t ptc);
+      void setdistpct(uint8_t pct);
 
       void fundtransfer(eosio::name from,
                         eosio::block_timestamp distribution_time,
@@ -291,7 +291,7 @@ namespace eden
        action(bylawsapprove, approver, bylaws_hash),
        action(bylawsratify, approver, bylaws_hash),
        action(distribute, max_steps),
-       action(setdistptc, ptc),
+       action(setdistpct, pct),
        action(inductdonate, payer, id, quantity, ricardian_contract(inductdonate_ricardian)),
        eden_verb(inductcancel, 9, account, id, ricardian_contract(inductcancel_ricardian)),
        action(inducted, inductee, ricardian_contract(inducted_ricardian)),

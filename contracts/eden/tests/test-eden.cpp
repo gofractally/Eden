@@ -1203,7 +1203,7 @@ TEST_CASE("HCD is non-paid when rank is 2 or more")
    CHECK(t.get_rank_budget().rank_distribution == expected);
 }
 
-TEST_CASE("increase pool ptc")
+TEST_CASE("increase pool pct")
 {
    eden_tester t;
    t.genesis();
@@ -1217,7 +1217,7 @@ TEST_CASE("increase pool ptc")
    // before monthly distribution pct is 5, then the amount for 
    // 2020-05-04T15:30:00.000 is 1.7100 EOS but with the 10 increase (15 in total),
    // now it is 5.1300 EOS
-   t.eden_gm.act<actions::setdistptc>(15);
+   t.eden_gm.act<actions::setdistpct>(15);
    CHECK(t.get_pool_ptc("master"_n) == 15);
 
    expected.insert({s2t("2020-05-04T15:30:00.000"), s2a("5.1300 EOS")});
