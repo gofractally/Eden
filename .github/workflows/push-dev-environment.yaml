@@ -518,6 +518,7 @@ jobs:
                   make \
                       build-env-files-box
                   env:
+                      ENVIRONMENT: dev
                       DEV_SERVER_HOST =${{ secrets.DEV_SERVER_HOST }}
                       DEV_SERVER_PORT = ${{ secrets.DEV_SERVER_PORT }}
                       DEV_EOS_CHAIN_ID = ${{ secrets.DEV_EOS_CHAIN_ID }}
