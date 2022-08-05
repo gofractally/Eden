@@ -239,7 +239,7 @@ jobs:
               with:
                   filters: |
                       src:
-                        - ".github/workflows/build.yml"
+                        - ".github/workflows/push-dev-environment.yml"
 
                         - ".eslintignore"
                         - ".eslintrc.js"
@@ -468,7 +468,7 @@ jobs:
               with:
                   filters: |
                       src:
-                        - ".github/workflows/build.yml"
+                        - ".github/workflows/push-dev-environment.yml"
 
                         - ".eslintignore"
                         - ".eslintrc.js"
