@@ -5,10 +5,10 @@ WEBAPP_BUILD_DIR := ./build-env-webapp
 BOX_BUILD_DIR := ./build-env-box
 
 build-env-files-webapp: ##@devops Generate proper dev files webapp based on the templates
-build-env-files-webapp: ./env_templates
+build-env-files-webapp: ./env-templates
 	@echo "Build dev webapp files..."
 	@rm -Rf $(WEBAPP_BUILD_DIR) && mkdir -p $(WEBAPP_BUILD_DIR)
-	@cp ./env-templates/.env-webapp_$(ENVIRONMENT) $(WEBAPP_BUILD_DIR)/.env-webapp-$(ENVIRONMENT)
+	@cp ./env-templates/.env-webapp-$(ENVIRONMENT) $(WEBAPP_BUILD_DIR)/.env-webapp-$(ENVIRONMENT)
 	@envsubst <$(WEBAPP_BUILD_DIR)/.env-webapp-$(ENVIRONMENT) >./packages/webapp/.env
 	
 build-env-files-box: ##@devops Generate proper dev files box based on the templates
