@@ -1106,7 +1106,7 @@ TEST_CASE("budget adjustment on resignation")
    t.set_balance(s2a("1000.0000 EOS"));
    t.skip_to("2020-05-04T15:30:00.000");
    // egeon is satoshi, and receives the whole budget
-   t.egeon.trace<actions::resign>("egeon"_n);
+   t.egeon.act<actions::resign>("egeon"_n);
    std::map<eosio::block_timestamp, eosio::asset> expected{};
    CHECK(t.get_budgets_by_period() == expected);
    t.skip_to("2020-06-05T15:30:00.000");
