@@ -503,6 +503,26 @@ struct eden_tester
       return get_total_balance(distributions);
    };
 
+   template <typename T>
+   eden::current_distribution get_rank_balance(const T& table)
+   {
+      eden::current_distribution result;
+      for (auto item : table)
+      {
+         if (auto* current = std::get_if<eden::current_distribution>(&item.value))
+         {
+            return *current;
+         }
+      }
+      return result;
+   }
+
+   eden::current_distribution get_rank_budget()
+   {
+      eden::distribution_table_type distributions{"eden.gm"_n, eden::default_scope};
+      return get_rank_balance(distributions);
+   };
+
    auto get_budgets_by_period() const
    {
       std::map<eosio::block_timestamp, eosio::asset> result;
@@ -513,6 +533,19 @@ struct eden_tester
          iter->second += t.balance();
       }
       return result;
+   };
+
+   uint8_t get_pool_ptc(eosio::name pool) const
+   {
+      eden::pool_table_type pool_tb("eden.gm"_n, eden::default_scope);
+      auto pool_iter = pool_tb.find(pool.value);
+      
+      if(pool_iter != pool_tb.end())
+      {
+         return pool_iter->monthly_distribution_pct();
+      }
+
+      return 0;
    };
 
    /*

@@ -1660,9 +1660,9 @@
     {
         "distribution_time": "2020-07-04T15:30:00.000",
         "rank_distribution": [
-            "0.6177 EOS",
-            "3.0889 EOS",
-            "15.4467 EOS"
+            "0.9266 EOS",
+            "4.6333 EOS",
+            "0.0022 EOS"
         ]
     }
 ]
@@ -1742,9 +1742,9 @@
     {
         "distribution_time": "2020-08-03T15:30:00.000",
         "rank_distribution": [
-            "0.5868 EOS",
-            "2.9344 EOS",
-            "14.6750 EOS"
+            "0.8803 EOS",
+            "4.4017 EOS",
+            "0.0010 EOS"
         ]
     }
 ]
@@ -1760,7 +1760,7 @@
         "owner": "alice",
         "distribution_time": "2020-07-04T15:30:00.000",
         "rank": 1,
-        "balance": "0.6177 EOS"
+        "balance": "0.9266 EOS"
     }
 ]
 [
@@ -1769,7 +1769,7 @@
         "owner": "alice",
         "distribution_time": "2020-07-04T15:30:00.000",
         "rank": 2,
-        "balance": "3.0889 EOS"
+        "balance": "4.6333 EOS"
     }
 ]
 [
@@ -1778,7 +1778,7 @@
         "owner": "edenmember11",
         "distribution_time": "2020-07-04T15:30:00.000",
         "rank": 1,
-        "balance": "0.6177 EOS"
+        "balance": "0.9266 EOS"
     }
 ]
 [
@@ -1787,7 +1787,7 @@
         "owner": "edenmember11",
         "distribution_time": "2020-07-04T15:30:00.000",
         "rank": 2,
-        "balance": "3.0889 EOS"
+        "balance": "4.6333 EOS"
     }
 ]
 [
@@ -1796,7 +1796,7 @@
         "owner": "edenmember11",
         "distribution_time": "2020-07-04T15:30:00.000",
         "rank": 3,
-        "balance": "15.4467 EOS"
+        "balance": "0.0022 EOS"
     }
 ]
 [
@@ -1805,7 +1805,7 @@
         "owner": "edenmember12",
         "distribution_time": "2020-07-04T15:30:00.000",
         "rank": 1,
-        "balance": "0.6177 EOS"
+        "balance": "0.9266 EOS"
     }
 ]
 [
@@ -1814,7 +1814,7 @@
         "owner": "edenmember12",
         "distribution_time": "2020-07-04T15:30:00.000",
         "rank": 2,
-        "balance": "3.0889 EOS"
+        "balance": "4.6333 EOS"
     }
 ]
 [
@@ -1823,7 +1823,7 @@
         "owner": "edenmember13",
         "distribution_time": "2020-07-04T15:30:00.000",
         "rank": 1,
-        "balance": "0.6177 EOS"
+        "balance": "0.9266 EOS"
     }
 ]
 [
@@ -1832,7 +1832,7 @@
         "owner": "edenmember14",
         "distribution_time": "2020-07-04T15:30:00.000",
         "rank": 1,
-        "balance": "0.6177 EOS"
+        "balance": "0.9266 EOS"
     }
 ]
 [
@@ -1841,7 +1841,7 @@
         "owner": "edenmember14",
         "distribution_time": "2020-07-04T15:30:00.000",
         "rank": 2,
-        "balance": "3.0889 EOS"
+        "balance": "4.6333 EOS"
     }
 ]
 [
@@ -1850,7 +1850,7 @@
         "owner": "edenmember15",
         "distribution_time": "2020-07-04T15:30:00.000",
         "rank": 1,
-        "balance": "0.6177 EOS"
+        "balance": "0.9266 EOS"
     }
 ]
 [
@@ -1859,7 +1859,7 @@
         "owner": "edenmember1a",
         "distribution_time": "2020-07-04T15:30:00.000",
         "rank": 1,
-        "balance": "0.6177 EOS"
+        "balance": "0.9266 EOS"
     }
 ]
 [
@@ -1868,7 +1868,7 @@
         "owner": "edenmember1c",
         "distribution_time": "2020-07-04T15:30:00.000",
         "rank": 1,
-        "balance": "0.6177 EOS"
+        "balance": "0.9266 EOS"
     }
 ]
 [
@@ -1877,7 +1877,7 @@
         "owner": "edenmember1c",
         "distribution_time": "2020-07-04T15:30:00.000",
         "rank": 2,
-        "balance": "3.0889 EOS"
+        "balance": "4.6333 EOS"
     }
 ]
 [
@@ -1886,7 +1886,7 @@
         "owner": "edenmember1d",
         "distribution_time": "2020-07-04T15:30:00.000",
         "rank": 1,
-        "balance": "0.6177 EOS"
+        "balance": "0.9266 EOS"
     }
 ]
 [
@@ -1895,7 +1895,7 @@
         "owner": "edenmember1e",
         "distribution_time": "2020-07-04T15:30:00.000",
         "rank": 1,
-        "balance": "0.6177 EOS"
+        "balance": "0.9266 EOS"
     }
 ]
 [
@@ -1904,7 +1904,7 @@
         "owner": "edenmember1f",
         "distribution_time": "2020-07-04T15:30:00.000",
         "rank": 1,
-        "balance": "0.6177 EOS"
+        "balance": "0.9266 EOS"
     }
 ]
 [
@@ -1913,7 +1913,7 @@
         "owner": "edenmember1h",
         "distribution_time": "2020-07-04T15:30:00.000",
         "rank": 1,
-        "balance": "0.6177 EOS"
+        "balance": "0.9266 EOS"
     }
 ]
 [
@@ -1922,7 +1922,7 @@
         "owner": "edenmember1i",
         "distribution_time": "2020-07-04T15:30:00.000",
         "rank": 1,
-        "balance": "0.6177 EOS"
+        "balance": "0.9266 EOS"
     }
 ]
 [
@@ -1931,7 +1931,7 @@
         "owner": "edenmember1k",
         "distribution_time": "2020-07-04T15:30:00.000",
         "rank": 1,
-        "balance": "0.6177 EOS"
+        "balance": "0.9266 EOS"
     }
 ]
 [
@@ -1940,7 +1940,7 @@
         "owner": "edenmember1m",
         "distribution_time": "2020-07-04T15:30:00.000",
         "rank": 1,
-        "balance": "0.6177 EOS"
+        "balance": "0.9266 EOS"
     }
 ]
 [
@@ -1949,7 +1949,7 @@
         "owner": "edenmember1o",
         "distribution_time": "2020-07-04T15:30:00.000",
         "rank": 1,
-        "balance": "0.6177 EOS"
+        "balance": "0.9266 EOS"
     }
 ]
 [
@@ -1958,7 +1958,7 @@
         "owner": "edenmember1q",
         "distribution_time": "2020-07-04T15:30:00.000",
         "rank": 1,
-        "balance": "0.6177 EOS"
+        "balance": "0.9266 EOS"
     }
 ]
 [
@@ -1967,7 +1967,7 @@
         "owner": "edenmember1u",
         "distribution_time": "2020-07-04T15:30:00.000",
         "rank": 1,
-        "balance": "0.6177 EOS"
+        "balance": "0.9266 EOS"
     }
 ]
 [
@@ -1976,7 +1976,7 @@
         "owner": "edenmember1y",
         "distribution_time": "2020-07-04T15:30:00.000",
         "rank": 1,
-        "balance": "0.6177 EOS"
+        "balance": "0.9266 EOS"
     }
 ]
 [
@@ -1985,7 +1985,7 @@
         "owner": "edenmember23",
         "distribution_time": "2020-07-04T15:30:00.000",
         "rank": 1,
-        "balance": "0.6177 EOS"
+        "balance": "0.9266 EOS"
     }
 ]
 [
@@ -1994,7 +1994,7 @@
         "owner": "edenmember25",
         "distribution_time": "2020-07-04T15:30:00.000",
         "rank": 1,
-        "balance": "0.6177 EOS"
+        "balance": "0.9266 EOS"
     }
 ]
 [
@@ -2003,7 +2003,7 @@
         "owner": "edenmember2a",
         "distribution_time": "2020-07-04T15:30:00.000",
         "rank": 1,
-        "balance": "0.6177 EOS"
+        "balance": "0.9266 EOS"
     }
 ]
 [
@@ -2012,7 +2012,7 @@
         "owner": "edenmember2d",
         "distribution_time": "2020-07-04T15:30:00.000",
         "rank": 1,
-        "balance": "0.6177 EOS"
+        "balance": "0.9266 EOS"
     }
 ]
 [
@@ -2021,7 +2021,7 @@
         "owner": "edenmember2r",
         "distribution_time": "2020-07-04T15:30:00.000",
         "rank": 1,
-        "balance": "0.6177 EOS"
+        "balance": "0.9266 EOS"
     }
 ]
 [
@@ -2030,7 +2030,7 @@
         "owner": "edenmember33",
         "distribution_time": "2020-07-04T15:30:00.000",
         "rank": 1,
-        "balance": "0.6177 EOS"
+        "balance": "0.9266 EOS"
     }
 ]
 [
@@ -2045,7 +2045,7 @@
         "owner": "alice",
         "distribution_time": "2020-08-03T15:30:00.000",
         "rank": 1,
-        "balance": "0.5868 EOS"
+        "balance": "0.8803 EOS"
     }
 ]
 [
@@ -2054,7 +2054,7 @@
         "owner": "alice",
         "distribution_time": "2020-08-03T15:30:00.000",
         "rank": 2,
-        "balance": "2.9344 EOS"
+        "balance": "4.4017 EOS"
     }
 ]
 [
@@ -2063,7 +2063,7 @@
         "owner": "edenmember11",
         "distribution_time": "2020-08-03T15:30:00.000",
         "rank": 1,
-        "balance": "0.5868 EOS"
+        "balance": "0.8803 EOS"
     }
 ]
 [
@@ -2072,7 +2072,7 @@
         "owner": "edenmember11",
         "distribution_time": "2020-08-03T15:30:00.000",
         "rank": 2,
-        "balance": "2.9344 EOS"
+        "balance": "4.4017 EOS"
     }
 ]
 [
@@ -2081,7 +2081,7 @@
         "owner": "edenmember11",
         "distribution_time": "2020-08-03T15:30:00.000",
         "rank": 3,
-        "balance": "14.6750 EOS"
+        "balance": "0.0010 EOS"
     }
 ]
 [
@@ -2090,7 +2090,7 @@
         "owner": "edenmember12",
         "distribution_time": "2020-08-03T15:30:00.000",
         "rank": 1,
-        "balance": "0.5868 EOS"
+        "balance": "0.8803 EOS"
     }
 ]
 [
@@ -2099,7 +2099,7 @@
         "owner": "edenmember12",
         "distribution_time": "2020-08-03T15:30:00.000",
         "rank": 2,
-        "balance": "2.9344 EOS"
+        "balance": "4.4017 EOS"
     }
 ]
 [
@@ -2108,7 +2108,7 @@
         "owner": "edenmember13",
         "distribution_time": "2020-08-03T15:30:00.000",
         "rank": 1,
-        "balance": "0.5868 EOS"
+        "balance": "0.8803 EOS"
     }
 ]
 [
@@ -2117,7 +2117,7 @@
         "owner": "edenmember14",
         "distribution_time": "2020-08-03T15:30:00.000",
         "rank": 1,
-        "balance": "0.5868 EOS"
+        "balance": "0.8803 EOS"
     }
 ]
 [
@@ -2126,7 +2126,7 @@
         "owner": "edenmember14",
         "distribution_time": "2020-08-03T15:30:00.000",
         "rank": 2,
-        "balance": "2.9344 EOS"
+        "balance": "4.4017 EOS"
     }
 ]
 [
@@ -2135,7 +2135,7 @@
         "owner": "edenmember15",
         "distribution_time": "2020-08-03T15:30:00.000",
         "rank": 1,
-        "balance": "0.5868 EOS"
+        "balance": "0.8803 EOS"
     }
 ]
 [
@@ -2144,7 +2144,7 @@
         "owner": "edenmember1a",
         "distribution_time": "2020-08-03T15:30:00.000",
         "rank": 1,
-        "balance": "0.5868 EOS"
+        "balance": "0.8803 EOS"
     }
 ]
 [
@@ -2153,7 +2153,7 @@
         "owner": "edenmember1c",
         "distribution_time": "2020-08-03T15:30:00.000",
         "rank": 1,
-        "balance": "0.5868 EOS"
+        "balance": "0.8803 EOS"
     }
 ]
 [
@@ -2162,7 +2162,7 @@
         "owner": "edenmember1c",
         "distribution_time": "2020-08-03T15:30:00.000",
         "rank": 2,
-        "balance": "2.9344 EOS"
+        "balance": "4.4017 EOS"
     }
 ]
 [
@@ -2171,7 +2171,7 @@
         "owner": "edenmember1d",
         "distribution_time": "2020-08-03T15:30:00.000",
         "rank": 1,
-        "balance": "0.5868 EOS"
+        "balance": "0.8803 EOS"
     }
 ]
 [
@@ -2180,7 +2180,7 @@
         "owner": "edenmember1e",
         "distribution_time": "2020-08-03T15:30:00.000",
         "rank": 1,
-        "balance": "0.5868 EOS"
+        "balance": "0.8803 EOS"
     }
 ]
 [
@@ -2189,7 +2189,7 @@
         "owner": "edenmember1f",
         "distribution_time": "2020-08-03T15:30:00.000",
         "rank": 1,
-        "balance": "0.5868 EOS"
+        "balance": "0.8803 EOS"
     }
 ]
 [
@@ -2198,7 +2198,7 @@
         "owner": "edenmember1h",
         "distribution_time": "2020-08-03T15:30:00.000",
         "rank": 1,
-        "balance": "0.5868 EOS"
+        "balance": "0.8803 EOS"
     }
 ]
 [
@@ -2207,7 +2207,7 @@
         "owner": "edenmember1i",
         "distribution_time": "2020-08-03T15:30:00.000",
         "rank": 1,
-        "balance": "0.5868 EOS"
+        "balance": "0.8803 EOS"
     }
 ]
 [
@@ -2216,7 +2216,7 @@
         "owner": "edenmember1k",
         "distribution_time": "2020-08-03T15:30:00.000",
         "rank": 1,
-        "balance": "0.5868 EOS"
+        "balance": "0.8803 EOS"
     }
 ]
 [
@@ -2225,7 +2225,7 @@
         "owner": "edenmember1m",
         "distribution_time": "2020-08-03T15:30:00.000",
         "rank": 1,
-        "balance": "0.5868 EOS"
+        "balance": "0.8803 EOS"
     }
 ]
 [
@@ -2234,7 +2234,7 @@
         "owner": "edenmember1o",
         "distribution_time": "2020-08-03T15:30:00.000",
         "rank": 1,
-        "balance": "0.5868 EOS"
+        "balance": "0.8803 EOS"
     }
 ]
 [
@@ -2243,7 +2243,7 @@
         "owner": "edenmember1q",
         "distribution_time": "2020-08-03T15:30:00.000",
         "rank": 1,
-        "balance": "0.5868 EOS"
+        "balance": "0.8803 EOS"
     }
 ]
 [
@@ -2252,7 +2252,7 @@
         "owner": "edenmember1u",
         "distribution_time": "2020-08-03T15:30:00.000",
         "rank": 1,
-        "balance": "0.5868 EOS"
+        "balance": "0.8803 EOS"
     }
 ]
 [
@@ -2261,7 +2261,7 @@
         "owner": "edenmember1y",
         "distribution_time": "2020-08-03T15:30:00.000",
         "rank": 1,
-        "balance": "0.5868 EOS"
+        "balance": "0.8803 EOS"
     }
 ]
 [
@@ -2270,7 +2270,7 @@
         "owner": "edenmember23",
         "distribution_time": "2020-08-03T15:30:00.000",
         "rank": 1,
-        "balance": "0.5868 EOS"
+        "balance": "0.8803 EOS"
     }
 ]
 [
@@ -2279,7 +2279,7 @@
         "owner": "edenmember25",
         "distribution_time": "2020-08-03T15:30:00.000",
         "rank": 1,
-        "balance": "0.5868 EOS"
+        "balance": "0.8803 EOS"
     }
 ]
 [
@@ -2288,7 +2288,7 @@
         "owner": "edenmember2a",
         "distribution_time": "2020-08-03T15:30:00.000",
         "rank": 1,
-        "balance": "0.5868 EOS"
+        "balance": "0.8803 EOS"
     }
 ]
 [
@@ -2297,7 +2297,7 @@
         "owner": "edenmember2d",
         "distribution_time": "2020-08-03T15:30:00.000",
         "rank": 1,
-        "balance": "0.5868 EOS"
+        "balance": "0.8803 EOS"
     }
 ]
 [
@@ -2306,7 +2306,7 @@
         "owner": "edenmember2r",
         "distribution_time": "2020-08-03T15:30:00.000",
         "rank": 1,
-        "balance": "0.5868 EOS"
+        "balance": "0.8803 EOS"
     }
 ]
 [
@@ -2315,7 +2315,7 @@
         "owner": "edenmember33",
         "distribution_time": "2020-08-03T15:30:00.000",
         "rank": 1,
-        "balance": "0.5868 EOS"
+        "balance": "0.8803 EOS"
     }
 ]
 [
