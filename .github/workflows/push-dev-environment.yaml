@@ -296,7 +296,7 @@ jobs:
                   make \
                       build-env-files-webapp
                   env:
-                      ENVIRONMENT: dev
+                      ENVIRONMENT = dev
                       # GENERAL APP
                       NEXT_PUBLIC_APP_NAME = Eden Community App
                       NEXT_PUBLIC_APP_SHORT_NAME = eden-community-app
@@ -518,7 +518,7 @@ jobs:
                   make \
                       build-env-files-box
                   env:
-                      ENVIRONMENT: dev
+                      ENVIRONMENT = dev
                       DEV_SERVER_HOST =${{ secrets.DEV_SERVER_HOST }}
                       DEV_SERVER_PORT = ${{ secrets.DEV_SERVER_PORT }}
                       DEV_EOS_CHAIN_ID = ${{ secrets.DEV_EOS_CHAIN_ID }}
