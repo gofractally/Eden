@@ -7,10 +7,6 @@ on:
             - dev
         paths:
             - "docker/eden-builder.Dockerfile"
-    pull_request:
-        types: [assigned, opened, synchronize, reopened, labeled]
-        paths:
-            - "docker/eden-builder.Dockerfile"
 
 jobs:
     eden-builder-container:
