@@ -9,7 +9,9 @@ build-env-files-webapp: ./env-templates
 	@echo "Build dev webapp files..."
 	@rm -Rf $(WEBAPP_BUILD_DIR) && mkdir -p $(WEBAPP_BUILD_DIR)
 	@cp ./env-templates/.env-webapp-$(ENVIRONMENT) $(WEBAPP_BUILD_DIR)/.env-webapp-$(ENVIRONMENT)
+	@echo $(WEBAPP_BUILD_DIR)/.env-webapp-$(ENVIRONMENT)
 	@envsubst <$(WEBAPP_BUILD_DIR)/.env-webapp-$(ENVIRONMENT) >./packages/webapp/.env
+	@echo ./packages/webapp/.env
 	
 build-env-files-box: ##@devops Generate proper dev files box based on the templates
 build-env-files-box: ./env-templates
