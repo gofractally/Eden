@@ -541,9 +541,9 @@ jobs:
             - name: Deploy kubernetes files
               uses: steebchen/kubectl@v1.1.0
               env:
-                  KUBE_CONFIG_DATA: ${{ secrets.DEV_KUBE_CONFIG_DATA }}
-                  ENVIRONMENT: dev
-                  NAMESPACE: eden
+                 KUBE_CONFIG_DATA: ${{ secrets.DEV_KUBE_CONFIG_DATA }}
+                 ENVIRONMENT: dev
+                 NAMESPACE: eden
               with:
-                  args: version && make deploy-kubernetes
+                 args: version && make deploy-kubernetes
             
