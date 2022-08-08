@@ -542,6 +542,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     
+            - name: ✅ Checkout code
+              uses: actions/checkout@v2
+              
             - name: Deploy kubernetes files
               uses: steebchen/kubectl@v1.1.0
               env:
