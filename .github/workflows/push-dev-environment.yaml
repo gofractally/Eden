@@ -290,56 +290,41 @@ jobs:
                   username: ${{ github.repository_owner }}
                   password: ${{ secrets.GITHUB_TOKEN }}
 
-            - name: Build env files webapp
-              id: build_env_files_webapp
+            - name: Build env files box
+              id: build-env-files-box
               run: |
                   make \
-                      build-env-files-webapp
+                      build-env-files-box
               env:
                   ENVIRONMENT: dev
-                  NEXT_PUBLIC_APP_NAME: Eden Community App
-                  NEXT_PUBLIC_APP_SHORT_NAME: eden-community-app
-                  NEXT_PUBLIC_BASE_URL: http://localhost:3000
-                  NEXT_PUBLIC_EOS_CHAIN_ID: ${{ secrets.DEV_NEXT_PUBLIC_EOS_CHAIN_ID }}
-                  NEXT_PUBLIC_EOS_RPC_PROTOCOL: https
-                  NEXT_PUBLIC_EOS_RPC_HOST: waxtest.eosn.io
-                  NEXT_PUBLIC_EOS_RPC_PORT: 443
-                  NEXT_PUBLIC_EOS_READ_RPC_URLS: https://api.waxtest.alohaeos.com,https://wax-testnet.cryptolions.io,https://testnet.wax.pink.gg,https://testnet.waxsweden.org
-                  NEXT_PUBLIC_TABLE_ROWS_MAX_FETCH_PER_SEC: 10
-                  NEXT_PUBLIC_EDEN_CONTRACT_ACCOUNT: test.edev
-                  NEXT_PUBLIC_AA_FETCH_AFTER: 1633883520000
-                  NEXT_PUBLIC_TOKEN_CONTRACT: eosio.token
-                  NEXT_PUBLIC_TOKEN_SYMBOL: WAX
-                  NEXT_PUBLIC_TOKEN_PRECISION: 8
-                  NEXT_PUBLIC_AA_BASE_URL: https://test.wax.api.atomicassets.io/atomicassets/v1
-                  NEXT_PUBLIC_AA_MARKET_URL: https://test.wax.api.atomicassets.io/atomicmarket/v1
-                  NEXT_PUBLIC_AA_HUB_URL: https://wax-test.atomichub.io
-                  NEXT_PUBLIC_AA_CONTRACT: atomicassets
-                  NEXT_PUBLIC_AA_MARKET_CONTRACT: atomicmarket
-                  NEXT_PUBLIC_AA_COLLECTION_NAME: test.edev
-                  NEXT_PUBLIC_AA_SCHEMA_NAME: members
-                  NEXT_PUBLIC_BLOCKEXPLORER_ACCOUNT_BASE_URL: https://wax-test.bloks.io/account
-                  NEXT_PUBLIC_BLOCKEXPLORER_TRANSACTION_BASE_URL: https://wax-test.bloks.io/transaction
-                  NEXT_PUBLIC_APP_MINIMUM_DONATION_AMOUNT: 10.00000000 WAX
-                  NEXT_PUBLIC_ENABLED_WALLETS: ANCHOR,LEDGER,SOFTKEY
-                  NEXT_PUBLIC_IPFS_BASE_URL: https://infura-ipfs.io/ipfs
-                  NEXT_PUBLIC_DEV_USE_FIXTURE_DATA: false
-                  DEV_NEXT_PUBLIC_ZOOM_CLIENT_ID: ${{ secrets.DEV_NEXT_PUBLIC_ZOOM_CLIENT_ID }}
-                  NEXT_PUBLIC_FREEFORM_MEETING_LINKS_ENABLED: false
-                  NEXT_PUBLIC_ELECTION_MEETING_DURATION_MS: 2400000
-                  NEXT_PUBLIC_ELECTION_COMMUNITY_ROOM_URL: NOT SET
-                  NEXT_PUBLIC_SUBCHAIN_WASM_URL: https://eden-box.edenia.cloud/v1/subchain/eden-micro-chain.wasm
-                  NEXT_PUBLIC_SUBCHAIN_STATE_URL: https://eden-box.edenia.cloud/v1/subchain/state
-                  NEXT_PUBLIC_SUBCHAIN_WS_URL: ws://eden-box.edenia.cloud/v1/subchain/eden-microchain
-                  NEXT_PUBLIC_SUBCHAIN_SLOW_MO: false
-                  NEXT_PUBLIC_BOX_ADDRESS: https://eden-box.edenia.cloud
-                  NEXT_PUBLIC_BOX_UPLOAD_IPFS: true
-                  DEV_IPFS_PINATA_JWT: ${{ secrets.DEV_IPFS_PINATA_JWT }}
-                  DEV_IPFS_PINATA_API: ${{ secrets.DEV_IPFS_PINATA_API }}
-                  DEV_JOBS_AUTH_GC: ${{ secrets.DEV_JOBS_AUTH_GC }}
-                  DEV_EOS_PRIVATE_KEY_GC_JOB: ${{ secrets.DEV_EOS_PRIVATE_KEY_GC_JOB }}
-                  DEV_ZOOM_CLIENT_SECRET: ${{ secrets.DEV_ZOOM_CLIENT_SECRET }}
-                  DEV_MEETINGS_SECRET_KEY: ${{ secrets.DEV_MEETINGS_SECRET_KEY }}
+                  DEV_SERVER_HOST: ${{ secrets.DEV_SERVER_HOST }}
+                  DEV_SERVER_PORT: ${{ secrets.DEV_SERVER_PORT }}
+                  DEV_EOS_CHAIN_ID: ${{ secrets.DEV_EOS_CHAIN_ID }}
+                  EOS_RPC_PROTOCOL: https
+                  EOS_RPC_HOST: wax-test.eosdac.io
+                  EOS_RPC_PORT: 443
+                  TAPOS_MANAGER_INTERVAL_MINS: 30
+                  DEV_EDEN_CONTRACT_ACCOUNT: ${{ secrets.DEV_EDEN_CONTRACT_ACCOUNT }}
+                  DEV_IPFS_PINATA_JWT:  ${{ secrets.DEV_IPFS_PINATA_JWT }} 
+                  DEV_SUBCHAIN_EDEN_CONTRACT: ${{ secrets.DEV_SUBCHAIN_EDEN_CONTRACT }}
+                  DEV_SUBCHAIN_TOKEN_CONTRACT: ${{ secrets.DEV_SUBCHAIN_TOKEN_CONTRACT }}
+                  DEV_SUBCHAIN_AA_CONTRACT: ${{ secrets.DEV_SUBCHAIN_AA_CONTRACT }}
+                  DEV_SUBCHAIN_AA_MARKET_CONTRACT: ${{ secrets.DEV_SUBCHAIN_AA_MARKET_CONTRACT }}
+                  DEV_SUBCHAIN_WASM: ${{ secrets.DEV_SUBCHAIN_WASM }}
+                  SUBCHAIN_STATE: state
+                  DFUSE_API_KEY: 
+                  DEV_DFUSE_API_NETWORK: ${{ secrets.DEV_DFUSE_API_NETWORK }}
+                  DFUSE_AUTH_NETWORK: ${{ secrets.DFUSE_AUTH_NETWORK }}
+                  DFUSE_FIRST_BLOCK: 183705819
+                  DEV_DFUSE_JSON_TRX_FILE: ${{ secrets.DEV_DFUSE_JSON_TRX_FILE }}
+                  DFUSE_INTERVAL: 30
+                  DEV_SERVER_PAYS_PRIVATE_KEY: ${{ secrets.DEV_SERVER_PAYS_PRIVATE_KEY }}
+                  DEV_SERVER_PAYS_ACCOUNT: ${{ secrets.DEV_SERVER_PAYS_ACCOUNT }}
+                  DEV_SERVER_PAYS_PERMISSION: ${{ secrets.DEV_SERVER_PAYS_PERMISSION }}
+                  DEV_SERVER_PAYS_NOOP_CONTRACT: ${{ secrets.DEV_SERVER_PAYS_NOOP_CONTRACT }}
+                  DEV_SERVER_PAYS_NOOP_ACTION: ${{ secrets.DEV_SERVER_PAYS_NOOP_ACTION }}
+                  DEV_SERVER_PAYS_CREATE_ABI: ${{ secrets.DEV_SERVER_PAYS_CREATE_ABI }}
+                  SESSIONS_ENABLE: true
            
             - name: 🛠 Build & Publish Image
               # if: steps.filter.outputs.src == 'true'
@@ -493,41 +478,56 @@ jobs:
                   username: ${{ github.repository_owner }}
                   password: ${{ secrets.GITHUB_TOKEN }}
                   
-            - name: Build env files box
-              id: build_env_files_box
+            - name: Build env files webapp
+              id: build-env-files-webapp
               run: |
                   make \
-                      build-env-files-box
+                      build-env-files-webapp
               env:
                   ENVIRONMENT: dev
-                  DEV_SERVER_HOST: ${{ secrets.DEV_SERVER_HOST }}
-                  DEV_SERVER_PORT: ${{ secrets.DEV_SERVER_PORT }}
-                  DEV_EOS_CHAIN_ID: ${{ secrets.DEV_EOS_CHAIN_ID }}
-                  EOS_RPC_PROTOCOL: https
-                  EOS_RPC_HOST: wax-test.eosdac.io
-                  EOS_RPC_PORT: 443
-                  TAPOS_MANAGER_INTERVAL_MINS: 30
-                  DEV_EDEN_CONTRACT_ACCOUNT: ${{ secrets.DEV_EDEN_CONTRACT_ACCOUNT }}
-                  DEV_IPFS_PINATA_JWT:  ${{ secrets.DEV_IPFS_PINATA_JWT }} 
-                  DEV_SUBCHAIN_EDEN_CONTRACT: ${{ secrets.DEV_SUBCHAIN_EDEN_CONTRACT }}
-                  DEV_SUBCHAIN_TOKEN_CONTRACT: ${{ secrets.DEV_SUBCHAIN_TOKEN_CONTRACT }}
-                  DEV_SUBCHAIN_AA_CONTRACT: ${{ secrets.DEV_SUBCHAIN_AA_CONTRACT }}
-                  DEV_SUBCHAIN_AA_MARKET_CONTRACT: ${{ secrets.DEV_SUBCHAIN_AA_MARKET_CONTRACT }}
-                  DEV_SUBCHAIN_WASM: ${{ secrets.DEV_SUBCHAIN_WASM }}
-                  SUBCHAIN_STATE: state
-                  DFUSE_API_KEY: 
-                  DEV_DFUSE_API_NETWORK: ${{ secrets.DEV_DFUSE_API_NETWORK }}
-                  DFUSE_AUTH_NETWORK: ${{ secrets.DFUSE_AUTH_NETWORK }}
-                  DFUSE_FIRST_BLOCK: 183705819
-                  DEV_DFUSE_JSON_TRX_FILE: ${{ secrets.DEV_DFUSE_JSON_TRX_FILE }}
-                  DFUSE_INTERVAL: 30
-                  DEV_SERVER_PAYS_PRIVATE_KEY: ${{ secrets.DEV_SERVER_PAYS_PRIVATE_KEY }}
-                  DEV_SERVER_PAYS_ACCOUNT: ${{ secrets.DEV_SERVER_PAYS_ACCOUNT }}
-                  DEV_SERVER_PAYS_PERMISSION: ${{ secrets.DEV_SERVER_PAYS_PERMISSION }}
-                  DEV_SERVER_PAYS_NOOP_CONTRACT: ${{ secrets.DEV_SERVER_PAYS_NOOP_CONTRACT }}
-                  DEV_SERVER_PAYS_NOOP_ACTION: ${{ secrets.DEV_SERVER_PAYS_NOOP_ACTION }}
-                  DEV_SERVER_PAYS_CREATE_ABI: ${{ secrets.DEV_SERVER_PAYS_CREATE_ABI }}
-                  SESSIONS_ENABLE: true
+                  NEXT_PUBLIC_APP_NAME: Eden Community App
+                  NEXT_PUBLIC_APP_SHORT_NAME: eden-community-app
+                  NEXT_PUBLIC_BASE_URL: http://localhost:3000
+                  NEXT_PUBLIC_EOS_CHAIN_ID: ${{ secrets.DEV_NEXT_PUBLIC_EOS_CHAIN_ID }}
+                  NEXT_PUBLIC_EOS_RPC_PROTOCOL: https
+                  NEXT_PUBLIC_EOS_RPC_HOST: waxtest.eosn.io
+                  NEXT_PUBLIC_EOS_RPC_PORT: 443
+                  NEXT_PUBLIC_EOS_READ_RPC_URLS: https://api.waxtest.alohaeos.com,https://wax-testnet.cryptolions.io,https://testnet.wax.pink.gg,https://testnet.waxsweden.org
+                  NEXT_PUBLIC_TABLE_ROWS_MAX_FETCH_PER_SEC: 10
+                  NEXT_PUBLIC_EDEN_CONTRACT_ACCOUNT: test.edev
+                  NEXT_PUBLIC_AA_FETCH_AFTER: 1633883520000
+                  NEXT_PUBLIC_TOKEN_CONTRACT: eosio.token
+                  NEXT_PUBLIC_TOKEN_SYMBOL: WAX
+                  NEXT_PUBLIC_TOKEN_PRECISION: 8
+                  NEXT_PUBLIC_AA_BASE_URL: https://test.wax.api.atomicassets.io/atomicassets/v1
+                  NEXT_PUBLIC_AA_MARKET_URL: https://test.wax.api.atomicassets.io/atomicmarket/v1
+                  NEXT_PUBLIC_AA_HUB_URL: https://wax-test.atomichub.io
+                  NEXT_PUBLIC_AA_CONTRACT: atomicassets
+                  NEXT_PUBLIC_AA_MARKET_CONTRACT: atomicmarket
+                  NEXT_PUBLIC_AA_COLLECTION_NAME: test.edev
+                  NEXT_PUBLIC_AA_SCHEMA_NAME: members
+                  NEXT_PUBLIC_BLOCKEXPLORER_ACCOUNT_BASE_URL: https://wax-test.bloks.io/account
+                  NEXT_PUBLIC_BLOCKEXPLORER_TRANSACTION_BASE_URL: https://wax-test.bloks.io/transaction
+                  NEXT_PUBLIC_APP_MINIMUM_DONATION_AMOUNT: 10.00000000 WAX
+                  NEXT_PUBLIC_ENABLED_WALLETS: ANCHOR,LEDGER,SOFTKEY
+                  NEXT_PUBLIC_IPFS_BASE_URL: https://infura-ipfs.io/ipfs
+                  NEXT_PUBLIC_DEV_USE_FIXTURE_DATA: false
+                  DEV_NEXT_PUBLIC_ZOOM_CLIENT_ID: ${{ secrets.DEV_NEXT_PUBLIC_ZOOM_CLIENT_ID }}
+                  NEXT_PUBLIC_FREEFORM_MEETING_LINKS_ENABLED: false
+                  NEXT_PUBLIC_ELECTION_MEETING_DURATION_MS: 2400000
+                  NEXT_PUBLIC_ELECTION_COMMUNITY_ROOM_URL: NOT SET
+                  NEXT_PUBLIC_SUBCHAIN_WASM_URL: https://eden-box.edenia.cloud/v1/subchain/eden-micro-chain.wasm
+                  NEXT_PUBLIC_SUBCHAIN_STATE_URL: https://eden-box.edenia.cloud/v1/subchain/state
+                  NEXT_PUBLIC_SUBCHAIN_WS_URL: ws://eden-box.edenia.cloud/v1/subchain/eden-microchain
+                  NEXT_PUBLIC_SUBCHAIN_SLOW_MO: false
+                  NEXT_PUBLIC_BOX_ADDRESS: https://eden-box.edenia.cloud
+                  NEXT_PUBLIC_BOX_UPLOAD_IPFS: true
+                  DEV_IPFS_PINATA_JWT: ${{ secrets.DEV_IPFS_PINATA_JWT }}
+                  DEV_IPFS_PINATA_API: ${{ secrets.DEV_IPFS_PINATA_API }}
+                  DEV_JOBS_AUTH_GC: ${{ secrets.DEV_JOBS_AUTH_GC }}
+                  DEV_EOS_PRIVATE_KEY_GC_JOB: ${{ secrets.DEV_EOS_PRIVATE_KEY_GC_JOB }}
+                  DEV_ZOOM_CLIENT_SECRET: ${{ secrets.DEV_ZOOM_CLIENT_SECRET }}
+                  DEV_MEETINGS_SECRET_KEY: ${{ secrets.DEV_MEETINGS_SECRET_KEY }}
 
             - name: 🛠 Build & Publish Image
               # if: steps.filter.outputs.src == 'true'
