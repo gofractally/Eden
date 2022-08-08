@@ -236,13 +236,12 @@ jobs:
             - name: ✅ Checkout code
               uses: actions/checkout@v2
 
-             - uses: dorny/paths-filter@v2
-               id: filter
-               with:
-                   filters: |
-                       src:
+            - uses: dorny/paths-filter@v2
+              id: filter
+              with:
+                  filters: |
+                  src:
                          - ".github/workflows/push-dev-environment.yml"
-             
                          - ".eslintignore"
                          - ".eslintrc.js"
                          - ".prettierrc.json"
@@ -252,7 +251,6 @@ jobs:
                          - "tsconfig.build.json"
                          - "tsconfig.json"
                          - "yarn.lock"
-             
                          - "docker/eden-box.Dockerfile"
                          - "packages/box/**"
 
@@ -437,9 +435,8 @@ jobs:
               id: filter
               with:
                   filters: |
-                      src:
+                  src:
                         - ".github/workflows/push-dev-environment.yml"
-            
                         - ".eslintignore"
                         - ".eslintrc.js"
                         - ".prettierrc.json"
@@ -449,7 +446,6 @@ jobs:
                         - "tsconfig.build.json"
                         - "tsconfig.json"
                         - "yarn.lock"
-            
                         - "docker/eden-webapp.Dockerfile"
                         - "packages/webapp/**"
 
