@@ -515,7 +515,7 @@ jobs:
                   DEV_NEXT_PUBLIC_ZOOM_CLIENT_ID: ${{ secrets.DEV_NEXT_PUBLIC_ZOOM_CLIENT_ID }}
                   NEXT_PUBLIC_FREEFORM_MEETING_LINKS_ENABLED: false
                   NEXT_PUBLIC_ELECTION_MEETING_DURATION_MS: 2400000
-                  NEXT_PUBLIC_ELECTION_COMMUNITY_ROOM_URL: NOT SET
+                  DEV_NEXT_PUBLIC_ELECTION_COMMUNITY_ROOM_URL: ${{ secrets.DEV_NEXT_PUBLIC_ELECTION_COMMUNITY_ROOM_URL }}
                   NEXT_PUBLIC_SUBCHAIN_WASM_URL: https://eden-box.edenia.cloud/v1/subchain/eden-micro-chain.wasm
                   NEXT_PUBLIC_SUBCHAIN_STATE_URL: https://eden-box.edenia.cloud/v1/subchain/state
                   NEXT_PUBLIC_SUBCHAIN_WS_URL: ws://eden-box.edenia.cloud/v1/subchain/eden-microchain
