@@ -106,7 +106,7 @@ namespace eden
                    uint8_t election_day,
                    const std::string& election_time);
 
-       void setmindonfee(eosio::asset new_minimum_donation);
+      void setmindonfee(eosio::asset new_minimum_donation);
 
       void addtogenesis(eosio::name new_genesis_member, eosio::time_point expiration);
       void gensetexpire(uint64_t induction_id, eosio::time_point new_expiration);
@@ -181,6 +181,8 @@ namespace eden
       void electprocess(uint32_t max_steps);
 
       void distribute(uint32_t max_steps);
+
+      void setdistpct(uint8_t pct);
 
       void fundtransfer(eosio::name from,
                         eosio::block_timestamp distribution_time,
@@ -289,6 +291,7 @@ namespace eden
        action(bylawsapprove, approver, bylaws_hash),
        action(bylawsratify, approver, bylaws_hash),
        action(distribute, max_steps),
+       action(setdistpct, pct),
        action(inductdonate, payer, id, quantity, ricardian_contract(inductdonate_ricardian)),
        eden_verb(inductcancel, 9, account, id, ricardian_contract(inductcancel_ricardian)),
        action(inducted, inductee, ricardian_contract(inducted_ricardian)),
