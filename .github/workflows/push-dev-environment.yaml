@@ -537,7 +537,7 @@ jobs:
 #                  file: docker/eden-webapp.Dockerfile
 #                  tags: ${{ steps.prep.outputs.tags }}
 #                  context: .
-                  
+
             - name: Deploy kubernetes files
               uses: steebchen/kubectl@v1.1.0
               env:
