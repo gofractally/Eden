@@ -19,3 +19,10 @@ build-env-files-box: ./env-templates
 	@rm -Rf $(BOX_BUILD_DIR) && mkdir -p $(BOX_BUILD_DIR)
 	@cp ./env-templates/.env-box-$(ENVIRONMENT) $(BOX_BUILD_DIR)/.env-box-$(ENVIRONMENT)
 	@envsubst <$(BOX_BUILD_DIR)/.env-box-$(ENVIRONMENT) >./packages/box/.env
+	
+deploy-kubernetes: ./kubernetes-$(ENVIRONMENT)
+	@kubectl create ns $(NAMESPACE) || echo "Namespace '$(NAMESPACE)' already exists.";
+	@echo "Applying kubernetes files..."
+	@for file in $(shell find ./kubernetes-$(ENVIRONMENT) -name '*.yaml' | sed 's:./kubernetes-$(ENVIRONMENT)/::g'); do \
+		kubectl apply -f ./kubernetes-$(ENVIRONMENT)/$$file -n $(NAMESPACE) || echo "${file} Cannot be updated."; \
+	done
