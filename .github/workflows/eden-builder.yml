@@ -23,9 +23,7 @@ jobs:
                   REGISTRY="ghcr.io"
                   IMAGE="${REGISTRY}/${{ github.repository_owner }}/eden-builder"
                   TAGS="${IMAGE}:${{ github.sha }}"
-                  if [[ $GITHUB_REF == ref/head/dev ]]; then
-                    TAGS="${TAGS},${IMAGE}:latest"
-                  fi
+                  TAGS="${TAGS},${IMAGE}:latest"
                   echo ::set-output name=tags::${TAGS,,}
 
             - name: Showtag
