@@ -20,6 +20,7 @@ build-env-files-box: ./env-templates
 	@cp ./env-templates/.env-box-$(ENVIRONMENT) $(BOX_BUILD_DIR)/.env-box-$(ENVIRONMENT)
 	@envsubst <$(BOX_BUILD_DIR)/.env-box-$(ENVIRONMENT) >./packages/box/.env
 	
+deploy-kubernetes: ##@devops Publish the build k8s files
 deploy-kubernetes: ./kubernetes-$(ENVIRONMENT)
 	@kubectl create ns $(NAMESPACE) || echo "Namespace '$(NAMESPACE)' already exists.";
 	@echo "Applying kubernetes files..."
