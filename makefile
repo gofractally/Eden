@@ -18,7 +18,9 @@ build-env-files-box: ./env-templates
 	@echo "Build dev box files..."
 	@rm -Rf $(BOX_BUILD_DIR) && mkdir -p $(BOX_BUILD_DIR)
 	@cp ./env-templates/.env-box-$(ENVIRONMENT) $(BOX_BUILD_DIR)/.env-box-$(ENVIRONMENT)
+	@cat $(BOX_BUILD_DIR)/.env-box-$(ENVIRONMENT)
 	@envsubst <$(BOX_BUILD_DIR)/.env-box-$(ENVIRONMENT) >./packages/box/.env
+    @cat ./packages/box/.env
 	
 deploy-kubernetes: ##@devops Publish the build k8s files
 deploy-kubernetes: ./kubernetes-$(ENVIRONMENT)
