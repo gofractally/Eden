@@ -23,7 +23,7 @@ build-env-files-box: ./env-templates
 	@cp ./env-templates/.env-box-$(ENVIRONMENT) $(BOX_BUILD_DIR)/.env-box-$(ENVIRONMENT)
 	@cat $(BOX_BUILD_DIR)/.env-box-$(ENVIRONMENT)
 	@envsubst <$(BOX_BUILD_DIR)/.env-box-$(ENVIRONMENT) >./packages/box/.env
-    @cat ./packages/box/.env
+	@cat ./packages/box/.env
 
 build-kubernetes: ##@devops Generate proper k8s files based on the templates
 build-kubernetes: ./kubernetes-$(ENVIRONMENT)
