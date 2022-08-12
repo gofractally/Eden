@@ -270,7 +270,6 @@ jobs:
                   REGISTRY="ghcr.io"
                   IMAGE="${REGISTRY}/${{ github.repository_owner }}/eden-box"
                   TAGS="${IMAGE}:${{ github.sha }}"
-                  TAGS="${TAGS},${IMAGE}:latest"
                   echo ::set-output name=tags::${TAGS,,}
 
             - name: Showtag
@@ -458,7 +457,6 @@ jobs:
                   REGISTRY="ghcr.io"
                   IMAGE="${REGISTRY}/${{ github.repository_owner }}/eden-webapp"
                   TAGS="${IMAGE}:${{ github.sha }}"
-                  TAGS="${TAGS},${IMAGE}:latest"
                   echo ::set-output name=tags::${TAGS,,}
 
             - name: Showtag
@@ -546,7 +544,17 @@ jobs:
             - name: ✅ Checkout code
               uses: actions/checkout@v2
               
+            - name: Build kubernetes files
+              id: build_kubernetes_files
+              run: |
+              make \
+                  build-kubernetes
+              env:
+              # general
+              ENVIRONMENT: dev
+              
             - name: Deploy kubernetes files
+             
               uses: steebchen/kubectl@v1.1.0
               env:
                   KUBE_CONFIG_DATA: ${{ secrets.DEV_KUBE_CONFIG_DATA }}
