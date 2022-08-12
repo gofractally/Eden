@@ -547,11 +547,12 @@ jobs:
             - name: Build kubernetes files
               id: build_kubernetes_files
               run: |
-              make \
-                  build-kubernetes
+                  make \
+                      build-kubernetes
+                  
               env:
-              # general
-              ENVIRONMENT: dev
+                  # general
+                  ENVIRONMENT: dev
               
             - name: Deploy kubernetes files
              
