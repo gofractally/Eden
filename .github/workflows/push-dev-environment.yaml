@@ -269,7 +269,8 @@ jobs:
               run: |
                   REGISTRY="ghcr.io"
                   IMAGE="${REGISTRY}/${{ github.repository_owner }}/eden-box"
-                  TAGS="${IMAGE}:${{ github.sha }}"
+                  SHA_SHORT = "$(git rev-parse --short HEAD)"
+                  TAGS="${IMAGE}:${SHA_SHORT}"
                   echo ::set-output name=tags::${TAGS,,}
 
             - name: Showtag
@@ -456,7 +457,8 @@ jobs:
               run: |
                   REGISTRY="ghcr.io"
                   IMAGE="${REGISTRY}/${{ github.repository_owner }}/eden-webapp"
-                  TAGS="${IMAGE}:${{ github.sha }}"
+                  SHA_SHORT = "$(git rev-parse --short HEAD)"
+                  TAGS="${IMAGE}:${SHA_SHORT}"
                   echo ::set-output name=tags::${TAGS,,}
 
             - name: Showtag
