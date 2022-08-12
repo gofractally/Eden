@@ -25,7 +25,6 @@ build-env-files-box: ./env-templates
 	@envsubst <$(BOX_BUILD_DIR)/.env-box-$(ENVIRONMENT) >./packages/box/.env
     @cat ./packages/box/.env
 
-
 build-kubernetes: ##@devops Generate proper k8s files based on the templates
 build-kubernetes: ./kubernetes-$(ENVIRONMENT)
 	@echo "Build kubernetes files..."
@@ -34,7 +33,7 @@ build-kubernetes: ./kubernetes-$(ENVIRONMENT)
 		mkdir -p `dirname "$(K8S_BUILD_DIR)/$$file"`; \
 		envsubst <./kubernetes-$(ENVIRONMENT)/$$file >$(K8S_BUILD_DIR)/$$file; \
 	done
-	
+
 deploy-kubernetes: ##@devops Publish the build k8s files
 deploy-kubernetes: $(K8S_BUILD_DIR)
 	@kubectl create ns $(NAMESPACE) || echo "Namespace '$(NAMESPACE)' already exists.";
