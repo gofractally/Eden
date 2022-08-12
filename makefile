@@ -1,9 +1,10 @@
+include utils/meta.mk utils/help.mk
+
 SHELL := /bin/bash
 BLUE   := $(shell tput -Txterm setaf 6)
 RESET  := $(shell tput -Txterm sgr0)
 WEBAPP_BUILD_DIR := ./build-env-webapp
 BOX_BUILD_DIR := ./build-env-box
-VERSION ?= $(shell git rev-parse --short HEAD)
 K8S_BUILD_DIR ?= ./build_k8s
 K8S_FILES := $(shell find ./kubernetes-$(ENVIRONMENT) -name '*.yaml' | sed 's:./kubernetes-$(ENVIRONMENT)/::g')
 
@@ -31,7 +32,8 @@ build-kubernetes: ./kubernetes-$(ENVIRONMENT)
 	@rm -Rf $(K8S_BUILD_DIR) && mkdir -p $(K8S_BUILD_DIR)
 	@for file in $(K8S_FILES); do \
 		mkdir -p `dirname "$(K8S_BUILD_DIR)/$$file"`; \
-		envsubst <./kubernetes-$(ENVIRONMENT)/$$file >$(K8S_BUILD_DIR)/$$file; \
+		$(SHELL_EXPORT) envsubst <./kubernetes-$(ENVIRONMENT)/$$file >$(K8S_BUILD_DIR)/$$file; \
+		cat $(K8S_BUILD_DIR)/$$file; \
 	done
 
 deploy-kubernetes: ##@devops Publish the build k8s files
