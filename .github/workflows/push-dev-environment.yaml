@@ -164,68 +164,68 @@ jobs:
             - name: ✅ Checkout code
               uses: actions/checkout@v2
 
-            #- name: Prepare ccache timestamp
-            #  id: ccache_cache_timestamp
-            #  shell: cmake -P {0}
-            #  run: |
-            #      string(TIMESTAMP current_date "%Y-%m-%d-%H-%M-%S" UTC)
-            #      message("::set-output name=timestamp::${current_date}")
-            #
-            #- name: show_cache
-            #  id: show_cache
-            #  run: echo "${{ runner.os }}-ccache_microchain-${{ steps.ccache_cache_timestamp.outputs.timestamp }}"
-            #
-            #- name: ccache cache files
-            #  uses: actions/cache@v1.1.0
-            #  with:
-            #      path: .ccache
-            #      key: ${{ runner.os }}-ccache_microchain-${{ steps.ccache_cache_timestamp.outputs.timestamp }}
-            #      restore-keys: |
-            #          ${{ runner.os }}-ccache_microchain-
-            #
-            #- name: 🛠 Build
-            #  run: |
-            #      git config --global --add safe.directory "*"
-            #      set -e
-            #      export CCACHE_DIR=${GITHUB_WORKSPACE}/.ccache
-            #      export CCACHE_CONFIGPATH=${GITHUB_WORKSPACE}/.github/ccache.conf
-            #      echo =====
-            #      pwd
-            #      echo ${GITHUB_WORKSPACE}
-            #      echo =====
-            #      ccache -s
-            #      echo =====
-            #
-            #      
-            #      git submodule update --init external/atomicassets-contract
-            #      git submodule update --init external/Catch2
-            #      git submodule update --init external/fmt
-            #      git submodule update --init external/rapidjson
-            #      mkdir build
-            #      cd build
-            #      cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_CXX_COMPILER_LAUNCHER=ccache -DCMAKE_C_COMPILER_LAUNCHER=ccache -DSKIP_TS=Yes -DEDEN_ATOMIC_ASSETS_ACCOUNT=atomicassets -DEDEN_ATOMIC_MARKET_ACCOUNT=atomicmarket -DEDEN_SCHEMA_NAME=members -DBUILD_NATIVE=OFF ..
-            #      make -j$(nproc) wasm-configure
-            #      bash -c "cd wasm && make -j$(nproc) eden-micro-chain"
-            #
-            #      echo =====
-            #      ls -la ${GITHUB_WORKSPACE}
-            #      echo =====
-            #      ccache -s
-            #      echo =====
-            #
-            #- name: 📃 Upload ccache.log
-            #  uses: actions/upload-artifact@v2
-            #  with:
-            #      name: microchain_ccache_log
-            #      path: |
-            #          ccache.log
-            #
-            #- name: 📃 Upload Eden Microchain
-            #  uses: actions/upload-artifact@v2
-            #  with:
-            #      name: Eden Microchain
-            #      path: |
-            #          build/eden-micro-chain.wasm
+            - name: Prepare ccache timestamp
+              id: ccache_cache_timestamp
+              shell: cmake -P {0}
+              run: |
+                  string(TIMESTAMP current_date "%Y-%m-%d-%H-%M-%S" UTC)
+                  message("::set-output name=timestamp::${current_date}")
+            
+            - name: show_cache
+              id: show_cache
+              run: echo "${{ runner.os }}-ccache_microchain-${{ steps.ccache_cache_timestamp.outputs.timestamp }}"
+            
+            - name: ccache cache files
+              uses: actions/cache@v1.1.0
+              with:
+                  path: .ccache
+                  key: ${{ runner.os }}-ccache_microchain-${{ steps.ccache_cache_timestamp.outputs.timestamp }}
+                  restore-keys: |
+                      ${{ runner.os }}-ccache_microchain-
+            
+            - name: 🛠 Build
+              run: |
+                  git config --global --add safe.directory "*"
+                  set -e
+                  export CCACHE_DIR=${GITHUB_WORKSPACE}/.ccache
+                  export CCACHE_CONFIGPATH=${GITHUB_WORKSPACE}/.github/ccache.conf
+                  echo =====
+                  pwd
+                  echo ${GITHUB_WORKSPACE}
+                  echo =====
+                  ccache -s
+                  echo =====
+            
+                  
+                  git submodule update --init external/atomicassets-contract
+                  git submodule update --init external/Catch2
+                  git submodule update --init external/fmt
+                  git submodule update --init external/rapidjson
+                  mkdir build
+                  cd build
+                  cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_CXX_COMPILER_LAUNCHER=ccache -DCMAKE_C_COMPILER_LAUNCHER=ccache -DSKIP_TS=Yes -DEDEN_ATOMIC_ASSETS_ACCOUNT=atomicassets -DEDEN_ATOMIC_MARKET_ACCOUNT=atomicmarket -DEDEN_SCHEMA_NAME=members -DBUILD_NATIVE=OFF ..
+                  make -j$(nproc) wasm-configure
+                  bash -c "cd wasm && make -j$(nproc) eden-micro-chain"
+            
+                  echo =====
+                  ls -la ${GITHUB_WORKSPACE}
+                  echo =====
+                  ccache -s
+                  echo =====
+            
+            - name: 📃 Upload ccache.log
+              uses: actions/upload-artifact@v2
+              with:
+                  name: microchain_ccache_log
+                  path: |
+                      ccache.log
+            
+            - name: 📃 Upload Eden Microchain
+              uses: actions/upload-artifact@v2
+              with:
+                  name: Eden Microchain
+                  path: |
+                      build/eden-micro-chain.wasm
 
     box-build:
         needs: build-micro-chain
