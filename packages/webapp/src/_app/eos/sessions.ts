@@ -1,20 +1,26 @@
 import dayjs from "dayjs";
-import { generateKeyPair, sha256 } from "eosjs/dist/eosjs-key-conversions";
-import { KeyType } from "eosjs/dist/eosjs-numeric";
-import { PrivateKey } from "eosjs/dist/eosjs-jssig";
+import {
+    Key,
+    KeyType,
+    publicKeyToString,
+    signatureToString,
+} from "eosjs/dist/eosjs-numeric";
 import { hexToUint8Array, SerialBuffer } from "eosjs/dist/eosjs-serialize";
 import { get as idbGet, set as idbSet } from "idb-keyval";
 import { SessionSignRequest } from "@edenos/common";
+import { ec as elliptic } from "elliptic";
+import BN from "bn.js";
 
 import { edenContractAccount, box } from "config";
 import { eosDefaultApi, eosJsonRpc } from "_app";
+
+const EC = new elliptic("p256") as any;
 
 const DEFAULT_EXPIRATION_SECONDS = 30 * 24 * 60 * 60; // 30 days
 const DEFAULT_SESSION_DESCRIPTION = "eden login";
 
 interface SessionKeyData {
-    publicKey: string;
-    privateKey: string;
+    subtleKey: CryptoKeyPair;
     expiration: Date;
     lastSequence: number;
 }
@@ -50,16 +56,10 @@ export const sessionKeysStorage = new SessionKeysStorage();
 export const generateSessionKey = async (
     expirationSeconds = DEFAULT_EXPIRATION_SECONDS
 ) => {
-    // TODO: to be replaced with SubtleCrypto Apis
-    const { publicKey, privateKey } = generateKeyPair(KeyType.r1, {
-        secureEnv: true,
-    });
-
+    const subtleKey = await generateSubtleCryptoKeyPair();
     const expiration = dayjs().add(expirationSeconds, "seconds").toDate();
-
     return {
-        publicKey: publicKey.toString(),
-        privateKey: privateKey.toString(),
+        subtleKey,
         lastSequence: 0,
         expiration,
     };
@@ -70,7 +70,10 @@ export const newSessionTransaction = async (
     sessionKeyData: SessionKeyData,
     description = DEFAULT_SESSION_DESCRIPTION
 ) => {
-    const key = sessionKeyData.publicKey;
+    const subtlePubKey = sessionKeyData.subtleKey.publicKey!;
+    const eosKey = await subtleToEosPublicKey(subtlePubKey);
+    const key = publicKeyToString(eosKey);
+
     const expiration =
         sessionKeyData.expiration.toISOString().slice(0, -4) + "000";
 
@@ -129,14 +132,14 @@ export const signSessionTransaction = async (
     const sequence = sessionKey.lastSequence + 1;
     const verbs = convertActionsToVerbs(actions);
 
-    const signatureAuthSha = await makeSignatureAuthSha(
+    const signatureAuthData = await makeSignatureAuthSha(
         edenContractAccount,
         authorizerAccount,
         sequence,
         verbs
     );
 
-    const signature = await signSha(sessionKey, signatureAuthSha);
+    const signature = await signData(sessionKey, signatureAuthData);
 
     const data: SessionSignRequest = {
         signature: signature.toString(),
@@ -152,6 +155,17 @@ export const signSessionTransaction = async (
     return response.json();
 };
 
+// Generates a Subtle Crypto EC P-256 R1 key
+const generateSubtleCryptoKeyPair = () =>
+    crypto.subtle.generateKey(
+        {
+            name: "ECDSA",
+            namedCurve: "P-256",
+        },
+        false, // not extractable
+        ["sign", "verify"]
+    );
+
 const makeSignatureAuthSha = async (
     contract: string,
     account: string,
@@ -164,7 +178,7 @@ const makeSignatureAuthSha = async (
         sequence,
         verbs
     );
-    return sha256(Buffer.from(signatureAuthBytes));
+    return signatureAuthBytes;
 };
 
 const convertActionsToVerbs = (actions: any[]) =>
@@ -194,7 +208,51 @@ const serializeSignatureAuth = async (
     return buffer.asUint8Array();
 };
 
-const signSha = (sessionKey: SessionKeyData, sha: number[]) => {
-    const privateKey = PrivateKey.fromString(sessionKey.privateKey);
-    return privateKey.sign(sha, false);
+const signData = async (
+    sessionKey: SessionKeyData,
+    data: Uint8Array
+): Promise<string> => {
+    const privateKey = sessionKey.subtleKey.privateKey!;
+    const signature = await crypto.subtle.sign(
+        { name: "ECDSA", hash: "SHA-256" },
+        privateKey,
+        data
+    );
+    const signatureBytes = new Uint8Array(signature);
+
+    const eosPubKey = await subtleToEosPublicKey(
+        sessionKey.subtleKey.publicKey!
+    );
+
+    const pubKey = EC.keyFromPublic(eosPubKey.data.subarray(0, 33)).getPublic();
+    const hash = new Uint8Array(await crypto.subtle.digest("SHA-256", data));
+
+    const r = signatureBytes.slice(0, 32);
+    let s = signatureBytes.slice(32, 64);
+    const sBN = new BN(s);
+
+    // flip s-value if bigger than half of curve n
+    if (sBN.gt(EC.n.divn(2))) {
+        const flippedS: BN = EC.n.sub(sBN);
+        const flippedSBytes = new Uint8Array(flippedS.toArray());
+        s = flippedSBytes;
+    }
+
+    const recId = 31 + EC.getKeyRecoveryParam(hash, { r, s }, pubKey);
+    const sigDataWithRecovery = {
+        type: KeyType.r1,
+        data: new Uint8Array([recId].concat(Array.from(r), Array.from(s))),
+    };
+    return signatureToString(sigDataWithRecovery);
+};
+
+const subtleToEosPublicKey = async (
+    subtlePublicKey: CryptoKey
+): Promise<Key> => {
+    const rawKey = await crypto.subtle.exportKey("raw", subtlePublicKey);
+    const x = new Uint8Array(rawKey.slice(1, 33));
+    const y = new Uint8Array(rawKey.slice(33, 65));
+    const data = new Uint8Array([y[31] & 1 ? 3 : 2].concat(Array.from(x)));
+    const key = { type: KeyType.r1, data };
+    return key;
 };

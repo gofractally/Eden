@@ -201,7 +201,7 @@ const deriveEcdhSecret = (
     return eosPrivateKeyA
         .toElliptic()
         .derive(eosPublicKeyB.toElliptic().getPublic())
-        .toArrayLike(Uint8Array).buffer;
+        .toArrayLike(Uint8Array as any).buffer;
 };
 
 const hkdfSha256FromEcdh = async (
