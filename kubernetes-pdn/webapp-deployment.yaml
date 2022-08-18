@@ -15,7 +15,7 @@ spec:
         app: webapp
     spec:
       containers:
-      - image: ghcr.io/edenia/eden-webapp-pdn:latest
+      - image: ghcr.io/edenia/eden-webapp-pdn:${VERSION}
         imagePullPolicy: "Always"
         name: eden-webapp
         ports:

@@ -19,7 +19,7 @@ spec:
         runAsUser: 1001
         fsGroup: 1001
       containers:
-      - image: ghcr.io/edenia/eden-box:latest
+      - image: ghcr.io/edenia/eden-box:${VERSION}
         imagePullPolicy: "Always"
         name: eden-box
         envFrom:
