@@ -492,7 +492,7 @@ jobs:
                   NEXT_PUBLIC_EOS_RPC_PORT: 443
                   NEXT_PUBLIC_EOS_READ_RPC_URLS: https://api.waxtest.alohaeos.com,https://wax-testnet.cryptolions.io,https://testnet.wax.pink.gg,https://testnet.waxsweden.org
                   NEXT_PUBLIC_TABLE_ROWS_MAX_FETCH_PER_SEC: 10
-                  NEXT_PUBLIC_EDEN_CONTRACT_ACCOUNT: test.edev
+                  NEXT_PUBLIC_EDEN_CONTRACT_ACCOUNT: genesisdeden
                   NEXT_PUBLIC_AA_FETCH_AFTER: 1633883520000
                   NEXT_PUBLIC_TOKEN_CONTRACT: eosio.token
                   NEXT_PUBLIC_TOKEN_SYMBOL: WAX
