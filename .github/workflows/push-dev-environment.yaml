@@ -300,7 +300,7 @@ jobs:
                   DEV_SERVER_PORT: ${{ secrets.DEV_SERVER_PORT }}
                   DEV_EOS_CHAIN_ID: ${{ secrets.DEV_EOS_CHAIN_ID }}
                   EOS_RPC_PROTOCOL: https
-                  EOS_RPC_HOST: wax-test.eosdac.io
+                  EOS_RPC_HOST: jungle.edenia.cloud
                   EOS_RPC_PORT: 443
                   TAPOS_MANAGER_INTERVAL_MINS: 30
                   DEV_EDEN_CONTRACT_ACCOUNT: ${{ secrets.DEV_EDEN_CONTRACT_ACCOUNT }}
@@ -488,7 +488,7 @@ jobs:
                   NEXT_PUBLIC_BASE_URL: http://localhost:3000
                   DEV_NEXT_PUBLIC_EOS_CHAIN_ID: ${{ secrets.DEV_NEXT_PUBLIC_EOS_CHAIN_ID }}
                   NEXT_PUBLIC_EOS_RPC_PROTOCOL: https
-                  NEXT_PUBLIC_EOS_RPC_HOST: waxtest.eosn.io
+                  NEXT_PUBLIC_EOS_RPC_HOST: jungle.edenia.cloud
                   NEXT_PUBLIC_EOS_RPC_PORT: 443
                   NEXT_PUBLIC_EOS_READ_RPC_URLS: https://api.waxtest.alohaeos.com,https://wax-testnet.cryptolions.io,https://testnet.wax.pink.gg,https://testnet.waxsweden.org
                   NEXT_PUBLIC_TABLE_ROWS_MAX_FETCH_PER_SEC: 10
