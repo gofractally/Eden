@@ -490,7 +490,7 @@ jobs:
                   NEXT_PUBLIC_EOS_RPC_PROTOCOL: https
                   NEXT_PUBLIC_EOS_RPC_HOST: jungle.edenia.cloud
                   NEXT_PUBLIC_EOS_RPC_PORT: 443
-                  NEXT_PUBLIC_EOS_READ_RPC_URLS: https://api.waxtest.alohaeos.com,https://jungle.edenia.cloud,https://testnet.wax.pink.gg,https://testnet.waxsweden.org
+                  NEXT_PUBLIC_EOS_READ_RPC_URLS: https://jungle4.api.eosnation.io,https://jungle.edenia.cloud
                   NEXT_PUBLIC_TABLE_ROWS_MAX_FETCH_PER_SEC: 10
                   NEXT_PUBLIC_EDEN_CONTRACT_ACCOUNT: genesisdeden
                   NEXT_PUBLIC_AA_FETCH_AFTER: 1633883520000
