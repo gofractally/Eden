@@ -314,7 +314,7 @@ jobs:
                   DFUSE_API_KEY: 
                   DEV_DFUSE_API_NETWORK: ${{ secrets.DEV_DFUSE_API_NETWORK }}
                   DFUSE_AUTH_NETWORK: ${{ secrets.DFUSE_AUTH_NETWORK }}
-                  DFUSE_FIRST_BLOCK: 20000000
+                  DFUSE_FIRST_BLOCK: 183705819
                   DEV_DFUSE_JSON_TRX_FILE: ${{ secrets.DEV_DFUSE_JSON_TRX_FILE }}
                   DFUSE_INTERVAL: 30
                   DEV_SERVER_PAYS_PRIVATE_KEY: ${{ secrets.DEV_SERVER_PAYS_PRIVATE_KEY }}
