@@ -506,7 +506,7 @@ jobs:
                   NEXT_PUBLIC_AA_SCHEMA_NAME: members
                   NEXT_PUBLIC_BLOCKEXPLORER_ACCOUNT_BASE_URL: https://wax-test.bloks.io/account
                   NEXT_PUBLIC_BLOCKEXPLORER_TRANSACTION_BASE_URL: https://wax-test.bloks.io/transaction
-                  NEXT_PUBLIC_APP_MINIMUM_DONATION_AMOUNT: 10.00000000 WAX
+                  NEXT_PUBLIC_APP_MINIMUM_DONATION_AMOUNT: 10.00000000 EOS
                   NEXT_PUBLIC_ENABLED_WALLETS: ANCHOR,LEDGER,SOFTKEY
                   NEXT_PUBLIC_IPFS_BASE_URL: https://infura-ipfs.io/ipfs
                   NEXT_PUBLIC_DEV_USE_FIXTURE_DATA: false
