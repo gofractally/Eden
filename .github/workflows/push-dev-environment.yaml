@@ -314,7 +314,7 @@ jobs:
                   DFUSE_API_KEY: 
                   DEV_DFUSE_API_NETWORK: ${{ secrets.DEV_DFUSE_API_NETWORK }}
                   DFUSE_AUTH_NETWORK: ${{ secrets.DFUSE_AUTH_NETWORK }}
-                  DFUSE_FIRST_BLOCK: 27718662
+                  DFUSE_FIRST_BLOCK: 27855257
                   DEV_DFUSE_JSON_TRX_FILE: ${{ secrets.DEV_DFUSE_JSON_TRX_FILE }}
                   DFUSE_INTERVAL: 30
                   DEV_SERVER_PAYS_PRIVATE_KEY: ${{ secrets.DEV_SERVER_PAYS_PRIVATE_KEY }}
@@ -496,7 +496,7 @@ jobs:
                   NEXT_PUBLIC_AA_FETCH_AFTER: 1633883520000
                   NEXT_PUBLIC_TOKEN_CONTRACT: eosio.token
                   NEXT_PUBLIC_TOKEN_SYMBOL: EOS
-                  NEXT_PUBLIC_TOKEN_PRECISION: 8
+                  NEXT_PUBLIC_TOKEN_PRECISION: 4
                   NEXT_PUBLIC_AA_BASE_URL: https://test.wax.api.atomicassets.io/atomicassets/v1
                   NEXT_PUBLIC_AA_MARKET_URL: https://test.wax.api.atomicassets.io/atomicmarket/v1
                   NEXT_PUBLIC_AA_HUB_URL: https://wax-test.atomichub.io
@@ -506,7 +506,7 @@ jobs:
                   NEXT_PUBLIC_AA_SCHEMA_NAME: members
                   NEXT_PUBLIC_BLOCKEXPLORER_ACCOUNT_BASE_URL: https://wax-test.bloks.io/account
                   NEXT_PUBLIC_BLOCKEXPLORER_TRANSACTION_BASE_URL: https://wax-test.bloks.io/transaction
-                  NEXT_PUBLIC_APP_MINIMUM_DONATION_AMOUNT: 10.00000000 EOS
+                  NEXT_PUBLIC_APP_MINIMUM_DONATION_AMOUNT: 10.0000 EOS
                   NEXT_PUBLIC_ENABLED_WALLETS: ANCHOR,LEDGER,SOFTKEY
                   NEXT_PUBLIC_IPFS_BASE_URL: https://infura-ipfs.io/ipfs
                   NEXT_PUBLIC_DEV_USE_FIXTURE_DATA: false
