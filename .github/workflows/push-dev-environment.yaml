@@ -300,7 +300,7 @@ jobs:
                   DEV_SERVER_PORT: ${{ secrets.DEV_SERVER_PORT }}
                   DEV_EOS_CHAIN_ID: ${{ secrets.DEV_EOS_CHAIN_ID }}
                   EOS_RPC_PROTOCOL: https
-                  EOS_RPC_HOST: wax-test.eosdac.io
+                  EOS_RPC_HOST: jungle4.api.eosnation.io
                   EOS_RPC_PORT: 443
                   TAPOS_MANAGER_INTERVAL_MINS: 30
                   DEV_EDEN_CONTRACT_ACCOUNT: ${{ secrets.DEV_EDEN_CONTRACT_ACCOUNT }}
@@ -314,7 +314,7 @@ jobs:
                   DFUSE_API_KEY: 
                   DEV_DFUSE_API_NETWORK: ${{ secrets.DEV_DFUSE_API_NETWORK }}
                   DFUSE_AUTH_NETWORK: ${{ secrets.DFUSE_AUTH_NETWORK }}
-                  DFUSE_FIRST_BLOCK: 20000000
+                  DFUSE_FIRST_BLOCK: 27855257
                   DEV_DFUSE_JSON_TRX_FILE: ${{ secrets.DEV_DFUSE_JSON_TRX_FILE }}
                   DFUSE_INTERVAL: 30
                   DEV_SERVER_PAYS_PRIVATE_KEY: ${{ secrets.DEV_SERVER_PAYS_PRIVATE_KEY }}
@@ -488,15 +488,15 @@ jobs:
                   NEXT_PUBLIC_BASE_URL: http://localhost:3000
                   DEV_NEXT_PUBLIC_EOS_CHAIN_ID: ${{ secrets.DEV_NEXT_PUBLIC_EOS_CHAIN_ID }}
                   NEXT_PUBLIC_EOS_RPC_PROTOCOL: https
-                  NEXT_PUBLIC_EOS_RPC_HOST: waxtest.eosn.io
+                  NEXT_PUBLIC_EOS_RPC_HOST: jungle4.api.eosnation.io
                   NEXT_PUBLIC_EOS_RPC_PORT: 443
                   NEXT_PUBLIC_EOS_READ_RPC_URLS: https://api.waxtest.alohaeos.com,https://wax-testnet.cryptolions.io,https://testnet.wax.pink.gg,https://testnet.waxsweden.org
                   NEXT_PUBLIC_TABLE_ROWS_MAX_FETCH_PER_SEC: 10
                   NEXT_PUBLIC_EDEN_CONTRACT_ACCOUNT: test.edev
                   NEXT_PUBLIC_AA_FETCH_AFTER: 1633883520000
                   NEXT_PUBLIC_TOKEN_CONTRACT: eosio.token
-                  NEXT_PUBLIC_TOKEN_SYMBOL: WAX
-                  NEXT_PUBLIC_TOKEN_PRECISION: 8
+                  NEXT_PUBLIC_TOKEN_SYMBOL: EOS
+                  NEXT_PUBLIC_TOKEN_PRECISION: 4
                   NEXT_PUBLIC_AA_BASE_URL: https://test.wax.api.atomicassets.io/atomicassets/v1
                   NEXT_PUBLIC_AA_MARKET_URL: https://test.wax.api.atomicassets.io/atomicmarket/v1
                   NEXT_PUBLIC_AA_HUB_URL: https://wax-test.atomichub.io
@@ -506,7 +506,7 @@ jobs:
                   NEXT_PUBLIC_AA_SCHEMA_NAME: members
                   NEXT_PUBLIC_BLOCKEXPLORER_ACCOUNT_BASE_URL: https://wax-test.bloks.io/account
                   NEXT_PUBLIC_BLOCKEXPLORER_TRANSACTION_BASE_URL: https://wax-test.bloks.io/transaction
-                  NEXT_PUBLIC_APP_MINIMUM_DONATION_AMOUNT: 10.00000000 WAX
+                  NEXT_PUBLIC_APP_MINIMUM_DONATION_AMOUNT: 10.0000 EOS
                   NEXT_PUBLIC_ENABLED_WALLETS: ANCHOR,LEDGER,SOFTKEY
                   NEXT_PUBLIC_IPFS_BASE_URL: https://infura-ipfs.io/ipfs
                   NEXT_PUBLIC_DEV_USE_FIXTURE_DATA: false
