@@ -303,7 +303,7 @@ jobs:
                   EOS_RPC_PORT: 443
                   TAPOS_MANAGER_INTERVAL_MINS: 30
                   PDN_EDEN_CONTRACT_ACCOUNT: ${{ secrets.PDN_EDEN_CONTRACT_ACCOUNT }}
-                  PDN_IPFS_PINATA_JWT:  ${{ secrets.PDN_IPFS_PINATA_JWT }} 
+                  PDN_IPFS_PINATA_JWT_BOX:  ${{ secrets.PDN_IPFS_PINATA_JWT_BOX }} 
                   PDN_SUBCHAIN_EDEN_CONTRACT: ${{ secrets.PDN_SUBCHAIN_EDEN_CONTRACT }}
                   PDN_SUBCHAIN_TOKEN_CONTRACT: ${{ secrets.PDN_SUBCHAIN_TOKEN_CONTRACT }}
                   PDN_SUBCHAIN_AA_CONTRACT: ${{ secrets.PDN_SUBCHAIN_AA_CONTRACT }}
@@ -521,7 +521,7 @@ jobs:
                   NEXT_PUBLIC_BOX_ADDRESS: https://edenbox.eoscommunity.org
                   IPFS_UPLOAD_ENDPOINT_URL: https://api.pinata.cloud/pinning/pinFileToIPFS
                   NEXT_PUBLIC_BOX_UPLOAD_IPFS: true
-                  PDN_IPFS_PINATA_JWT: ${{ secrets.PDN_IPFS_PINATA_JWT }}
+                  PDN_IPFS_PINATA_JWT_WEBAPP: ${{ secrets.PDN_IPFS_PINATA_JWT_WEBAPP }}
                   PDN_IPFS_PINATA_API: ${{ secrets.PDN_IPFS_PINATA_API }}
                   PDN_JOBS_AUTH_GC: ${{ secrets.PDN_JOBS_AUTH_GC }}
                   PDN_EOS_PRIVATE_KEY_GC_JOB: ${{ secrets.PDN_EOS_PRIVATE_KEY_GC_JOB }}
