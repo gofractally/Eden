@@ -303,7 +303,7 @@ jobs:
                   EOS_RPC_PORT: 443
                   TAPOS_MANAGER_INTERVAL_MINS: 30
                   PDN_EDEN_CONTRACT_ACCOUNT: ${{ secrets.PDN_EDEN_CONTRACT_ACCOUNT }}
-                  PDN_IPFS_PINATA_JWT_BOX:  ${{ secrets.PDN_IPFS_PINATA_JWT_BOX }} 
+                  PDN_IPFS_PINATA_JWT_BOX:  ${{ secrets.PDN_IPFS_PINATA_JWT_BOX }}
                   PDN_SUBCHAIN_EDEN_CONTRACT: ${{ secrets.PDN_SUBCHAIN_EDEN_CONTRACT }}
                   PDN_SUBCHAIN_TOKEN_CONTRACT: ${{ secrets.PDN_SUBCHAIN_TOKEN_CONTRACT }}
                   PDN_SUBCHAIN_AA_CONTRACT: ${{ secrets.PDN_SUBCHAIN_AA_CONTRACT }}
