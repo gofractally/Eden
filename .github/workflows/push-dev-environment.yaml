@@ -564,6 +564,7 @@ jobs:
                   DEV_EOS_EDEN_ACCOUNT: ${{secrets.DEV_EOS_EDEN_ACCOUNT}}
                   DEV_EOS_PAYER_ACCOUNT: ${{secrets.DEV_EOS_PAYER_ACCOUNT}}
                   DEV_EOS_PAYER_PERMISION: ${{secrets.DEV_EOS_PAYER_PERMISION}}
+                  DEV_EOS_PAYER_PRIVATE_KEY: ${{secrets.DEV_EOS_PAYER_PRIVATE_KEY}}
                   DEV_EOS_WATCH_ACCOUNT: ${{secrets.DEV_EOS_WATCH_ACCOUNT}}
                   DEV_EOS_POWERUP_THRESHOLD: ${{secrets.DEV_EOS_POWERUP_THRESHOLD}}
                   DEV_EOS_NET_FRAC: ${{secrets.DEV_EOS_NET_FRAC}}
@@ -588,6 +589,7 @@ jobs:
                   DEV_EOS_EDEN_ACCOUNT: ${{secrets.DEV_EOS_EDEN_ACCOUNT}}
                   DEV_EOS_PAYER_ACCOUNT: ${{secrets.DEV_EOS_PAYER_ACCOUNT}}
                   DEV_EOS_PAYER_PERMISION: ${{secrets.DEV_EOS_PAYER_PERMISION}}
+                  DEV_EOS_PAYER_PRIVATE_KEY: ${{secrets.DEV_EOS_PAYER_PRIVATE_KEY}}
                   DEV_EOS_WATCH_ACCOUNT: ${{secrets.DEV_EOS_WATCH_ACCOUNT}}
                   DEV_EOS_POWERUP_THRESHOLD: ${{secrets.DEV_EOS_POWERUP_THRESHOLD}}
                   DEV_EOS_NET_FRAC: ${{secrets.DEV_EOS_NET_FRAC}}

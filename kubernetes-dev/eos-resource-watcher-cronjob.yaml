@@ -26,7 +26,7 @@ spec:
             - name: EOS_PAYER_PRIVATE_KEY
               value: "${DEV_EOS_PAYER_PRIVATE_KEY}"
             - name: EOS_WATCH_ACCOUNT
-              value: "{DEV_EOS_WATCH_ACCOUNT}"
+              value: "${DEV_EOS_WATCH_ACCOUNT}"
             - name: EOS_POWERUP_THRESHOLD
               value: "${DEV_EOS_POWERUP_THRESHOLD}"
             - name: EOS_NET_FRAC
