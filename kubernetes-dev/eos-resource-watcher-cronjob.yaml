@@ -5,7 +5,7 @@ metadata:
 spec:
   schedule: "* */4 * * *"
   successfulJobsHistoryLimit: 1
-  failedJobsHistoryLimit: 1  
+  failedJobsHistoryLimit: 1
   jobTemplate:
     spec:
       template:
@@ -35,5 +35,4 @@ spec:
               value: "${DEV_EOS_CPU_FRAC}"
             - name: EOS_POWERUP_AMOUNT
               value: "${DEV_EOS_POWERUP_AMOUNT}"
-            imagePullPolicy: IfNotPresent
           restartPolicy: Never
