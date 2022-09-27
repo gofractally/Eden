@@ -485,7 +485,7 @@ jobs:
                   ENVIRONMENT: dev
                   NEXT_PUBLIC_APP_NAME: Eden Community App
                   NEXT_PUBLIC_APP_SHORT_NAME: eden-community-app
-                  NEXT_PUBLIC_BASE_URL: http://localhost:3000
+                  NEXT_PUBLIC_BASE_URL: https://eden.edenia.cloud
                   DEV_NEXT_PUBLIC_EOS_CHAIN_ID: ${{ secrets.DEV_NEXT_PUBLIC_EOS_CHAIN_ID }}
                   NEXT_PUBLIC_EOS_RPC_PROTOCOL: https
                   NEXT_PUBLIC_EOS_RPC_HOST: jungle4.api.eosnation.io
