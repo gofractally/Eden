@@ -3,7 +3,7 @@ kind: CronJob
 metadata:
   name: eden-distribute
 spec:
-  schedule: "0 17 27 * *"
+  schedule: "0 22 27 * *"
   successfulJobsHistoryLimit: 1
   failedJobsHistoryLimit: 1
   jobTemplate:
