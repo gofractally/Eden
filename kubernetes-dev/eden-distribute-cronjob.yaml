@@ -1,0 +1,32 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: eden-distribute
+spec:
+  schedule: "0 17 27 * *"
+  successfulJobsHistoryLimit: 1
+  failedJobsHistoryLimit: 1
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          containers:
+          - name: eden-distribute
+            image: ghcr.io/eoscostarica/eden-distribute:${VERSION_DISTRIBUTE}
+            imagePullPolicy: IfNotPresent
+            env:
+            - name: EOS_API_ENDPOINT
+              value: "${DEV_EOS_API_ENDPOINT}"
+            - name: EOS_API_CHAIN_ID
+              value: "${DEV_EOS_API_CHAIN_ID}"
+            - name: EOS_DISTRIBUTE_ACCOUNT
+              value: "${DEV_EOS_DISTRIBUTE_ACCOUNT}"
+            - name: EOS_DISTRIBUTE_PERMISSION
+              value: "${DEV_EOS_DISTRIBUTE_PERMISSION}"
+            - name: EOS_DISTRIBUTE_PRIVATE_KEY
+              value: "${DEV_EOS_DISTRIBUTE_PRIVATE_KEY}"
+            - name: EOS_DISTRIBUTE_MAX_STEPS
+              value: "${DEV_EOS_DISTRIBUTE_MAX_STEPS}"
+            - name: EOS_EDEN_ACCOUNT
+              value: "${DEV_EOS_EDEN_ACCOUNT}"
+          restartPolicy: Never

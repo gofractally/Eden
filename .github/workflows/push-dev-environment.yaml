@@ -553,6 +553,23 @@ jobs:
               env:
                   # general
                   ENVIRONMENT: dev
+                  VERSION_DISTRIBUTE: ${{secrets.VERSION_DISTRIBUTE}}
+                  VERSION_WATCHER: ${{secrets.VERSION_WATCHER}}
+                  DEV_EOS_API_ENDPOINT: ${{secrets.DEV_EOS_API_ENDPOINT}}
+                  DEV_EOS_API_CHAIN_ID: ${{secrets.DEV_EOS_API_CHAIN_ID}}
+                  DEV_EOS_DISTRIBUTE_ACCOUNT: ${{secrets.DEV_EOS_DISTRIBUTE_ACCOUNT}}
+                  DEV_EOS_DISTRIBUTE_PERMISSION: ${{secrets.DEV_EOS_DISTRIBUTE_PERMISSION}}
+                  DEV_EOS_DISTRIBUTE_PRIVATE_KEY: ${{secrets.DEV_EOS_DISTRIBUTE_PRIVATE_KEY}}
+                  DEV_EOS_DISTRIBUTE_MAX_STEPS: ${{secrets.DEV_EOS_DISTRIBUTE_MAX_STEPS}}
+                  DEV_EOS_EDEN_ACCOUNT: ${{secrets.DEV_EOS_EDEN_ACCOUNT}}
+                  DEV_EOS_PAYER_ACCOUNT: ${{secrets.DEV_EOS_PAYER_ACCOUNT}}
+                  DEV_EOS_PAYER_PERMISION: ${{secrets.DEV_EOS_PAYER_PERMISION}}
+                  DEV_EOS_PAYER_PRIVATE_KEY: ${{secrets.DEV_EOS_PAYER_PRIVATE_KEY}}
+                  DEV_EOS_WATCH_ACCOUNT: ${{secrets.DEV_EOS_WATCH_ACCOUNT}}
+                  DEV_EOS_POWERUP_THRESHOLD: ${{secrets.DEV_EOS_POWERUP_THRESHOLD}}
+                  DEV_EOS_NET_FRAC: ${{secrets.DEV_EOS_NET_FRAC}}
+                  DEV_EOS_CPU_FRAC: ${{secrets.DEV_EOS_CPU_FRAC}}
+                  DEV_EOS_POWERUP_AMOUNT: ${{secrets.DEV_EOS_POWERUP_AMOUNT}}
               
             - name: Deploy kubernetes files
              
@@ -561,5 +578,22 @@ jobs:
                   KUBE_CONFIG_DATA: ${{ secrets.DEV_KUBE_CONFIG_DATA }}
                   ENVIRONMENT: dev
                   NAMESPACE: eden
+                  VERSION_DISTRIBUTE: ${{secrets.VERSION_DISTRIBUTE}}
+                  VERSION_WATCHER: ${{secrets.VERSION_WATCHER}}
+                  DEV_EOS_API_ENDPOINT: ${{secrets.DEV_EOS_API_ENDPOINT}}
+                  DEV_EOS_API_CHAIN_ID: ${{secrets.DEV_EOS_API_CHAIN_ID}}
+                  DEV_EOS_DISTRIBUTE_ACCOUNT: ${{secrets.DEV_EOS_DISTRIBUTE_ACCOUNT}}
+                  DEV_EOS_DISTRIBUTE_PERMISSION: ${{secrets.DEV_EOS_DISTRIBUTE_PERMISSION}}
+                  DEV_EOS_DISTRIBUTE_PRIVATE_KEY: ${{secrets.DEV_EOS_DISTRIBUTE_PRIVATE_KEY}}
+                  DEV_EOS_DISTRIBUTE_MAX_STEPS: ${{secrets.DEV_EOS_DISTRIBUTE_MAX_STEPS}}
+                  DEV_EOS_EDEN_ACCOUNT: ${{secrets.DEV_EOS_EDEN_ACCOUNT}}
+                  DEV_EOS_PAYER_ACCOUNT: ${{secrets.DEV_EOS_PAYER_ACCOUNT}}
+                  DEV_EOS_PAYER_PERMISION: ${{secrets.DEV_EOS_PAYER_PERMISION}}
+                  DEV_EOS_PAYER_PRIVATE_KEY: ${{secrets.DEV_EOS_PAYER_PRIVATE_KEY}}
+                  DEV_EOS_WATCH_ACCOUNT: ${{secrets.DEV_EOS_WATCH_ACCOUNT}}
+                  DEV_EOS_POWERUP_THRESHOLD: ${{secrets.DEV_EOS_POWERUP_THRESHOLD}}
+                  DEV_EOS_NET_FRAC: ${{secrets.DEV_EOS_NET_FRAC}}
+                  DEV_EOS_CPU_FRAC: ${{secrets.DEV_EOS_CPU_FRAC}}
+                  DEV_EOS_POWERUP_AMOUNT: ${{secrets.DEV_EOS_POWERUP_AMOUNT}}
               with:
                   args: version && make deploy-kubernetes
