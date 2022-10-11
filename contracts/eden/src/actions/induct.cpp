@@ -10,6 +10,22 @@
 
 namespace eden
 {
+   void on_resign(eosio::name contract, eosio::name account, bool check_active = true)
+   {
+      members members{contract};
+      if (check_active)
+      {
+         members.check_active_member(account);
+      }
+      distributions dist{contract};
+      dist.on_resign(members.get_member(account));
+      elections elections{contract};
+      elections.on_resign(account);
+      members.remove(account);
+      bylaws bylaws{contract};
+      bylaws.on_resign(account);
+   }
+
    void eden::inductinit(const eosio::not_in_abi<session_info>& current_session,
                          uint64_t id,
                          eosio::name inviter,
@@ -226,15 +242,13 @@ namespace eden
    void eden::resign(eosio::name account)
    {
       eosio::require_auth(account);
-      members members{get_self()};
-      members.check_active_member(account);
-      distributions dist{get_self()};
-      dist.on_resign(members.get_member(account));
-      elections elections{get_self()};
-      elections.on_resign(account);
-      members.remove(account);
-      bylaws bylaws{get_self()};
-      bylaws.on_resign(account);
+      on_resign(get_self(), account);
+   }
+
+   void eden::expelfor(eosio::name account, const std::string& memo)
+   {
+      eosio::require_auth(get_self());
+      on_resign(get_self(), account, false);
    }
 
    void eden::rename(eosio::name account, eosio::name new_account)

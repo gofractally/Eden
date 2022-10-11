@@ -495,6 +495,16 @@ TEST_CASE("board resignation")
    t.pip.act<actions::resign>("pip"_n);
 }
 
+TEST_CASE("expel member")
+{
+   eden_tester t;
+   t.genesis();
+   t.run_election();
+   t.induct_n(4);
+   expect(t.egeon.trace<actions::expelfor>("egeon"_n, "bad actions"), "Missing required authority");
+   t.eden_gm.act<actions::expelfor>("alice"_n, "bad actions");
+}
+
 TEST_CASE("renaming")
 {
    eden_tester t;

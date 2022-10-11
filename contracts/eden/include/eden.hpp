@@ -149,6 +149,8 @@ namespace eden
 
       void resign(eosio::name member);
 
+      void expelfor(eosio::name account, const std::string& memo);
+
       void rename(eosio::name member, eosio::name newaccount);
 
       void setencpubkey(eosio::name member, const eosio::public_key& key);
@@ -296,6 +298,7 @@ namespace eden
        eden_verb(inductcancel, 9, account, id, ricardian_contract(inductcancel_ricardian)),
        action(inducted, inductee, ricardian_contract(inducted_ricardian)),
        action(resign, account),
+       action(expelfor, account, memo),
        action(rename, old_account, new_account),
        action(gc, limit, ricardian_contract(gc_ricardian)),
        action(migrate, limit),
