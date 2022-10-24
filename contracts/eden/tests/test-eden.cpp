@@ -500,9 +500,10 @@ TEST_CASE("expel member")
    eden_tester t;
    t.genesis();
    t.run_election();
-   t.induct_n(4);
+   CHECK(get_table_size<eden::member_table_type>() == 3);
    expect(t.egeon.trace<actions::expelfor>("egeon"_n, "bad actions"), "Missing required authority");
    t.eden_gm.act<actions::expelfor>("alice"_n, "bad actions");
+   CHECK(get_table_size<eden::member_table_type>() == 2);
 }
 
 TEST_CASE("renaming")
