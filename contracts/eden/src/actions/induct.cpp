@@ -245,7 +245,7 @@ namespace eden
       on_resign(get_self(), account);
    }
 
-   void eden::removeacnt(eosio::name account, const std::string& memo)
+   void eden::removemember(eosio::name account, const std::string& memo)
    {
       eosio::require_auth(get_self());
       on_resign(get_self(), account, false);
