@@ -495,6 +495,18 @@ TEST_CASE("board resignation")
    t.pip.act<actions::resign>("pip"_n);
 }
 
+TEST_CASE("expel member")
+{
+   eden_tester t;
+   t.genesis();
+   t.run_election();
+   CHECK(get_table_size<eden::member_table_type>() == 3);
+   expect(t.egeon.trace<actions::removemember>("egeon"_n, "bad actions"),
+          "Missing required authority");
+   t.eden_gm.act<actions::removemember>("alice"_n, "bad actions");
+   CHECK(get_table_size<eden::member_table_type>() == 2);
+}
+
 TEST_CASE("renaming")
 {
    eden_tester t;
