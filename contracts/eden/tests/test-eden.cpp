@@ -501,8 +501,9 @@ TEST_CASE("expel member")
    t.genesis();
    t.run_election();
    CHECK(get_table_size<eden::member_table_type>() == 3);
-   expect(t.egeon.trace<actions::expelfor>("egeon"_n, "bad actions"), "Missing required authority");
-   t.eden_gm.act<actions::expelfor>("alice"_n, "bad actions");
+   expect(t.egeon.trace<actions::removeacnt>("egeon"_n, "bad actions"),
+          "Missing required authority");
+   t.eden_gm.act<actions::removeacnt>("alice"_n, "bad actions");
    CHECK(get_table_size<eden::member_table_type>() == 2);
 }
 
