@@ -29,7 +29,7 @@ COPY --from=deps /app/packages/webapp/node_modules ./packages/webapp/node_module
 RUN yarn build --stream
 
 # Production image, copy all the files and run next
-FROM node:lts-alpine AS runner
+FROM node:lts-alpine3.14 AS runner
 WORKDIR /app
 
 ENV NODE_ENV production
