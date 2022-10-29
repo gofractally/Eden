@@ -1,5 +1,5 @@
 # Install dependencies only when needed
-FROM node:lts-alpine AS deps
+FROM node:lts-alpine3.14 AS deps
 
 RUN apk add --no-cache libc6-compat
 WORKDIR /app
@@ -14,7 +14,7 @@ COPY ./packages/webapp/package.json ./packages/webapp/
 RUN yarn install --frozen-lockfile
 
 # Rebuild the source code only when needed
-FROM node:lts-alpine AS builder
+FROM node:lts-alpine3.14 AS builder
 WORKDIR /app
 
 COPY ./packages/common ./packages/common
