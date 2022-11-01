@@ -1,7 +1,6 @@
 name: Deploy production environment
 
 on:
-  workflow_dispatch:
   push:
     tags:
       - v*
