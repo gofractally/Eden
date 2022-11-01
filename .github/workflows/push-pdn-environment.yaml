@@ -162,21 +162,21 @@ jobs:
 
         steps:
             - name: ✅ Checkout code
-              uses: actions/checkout@v2
+              uses: actions/checkout@v3
 
             - name: Prepare ccache timestamp
               id: ccache_cache_timestamp
               shell: cmake -P {0}
               run: |
                   string(TIMESTAMP current_date "%Y-%m-%d-%H-%M-%S" UTC)
-                  message("::set-output name=timestamp::${current_date}")
+                  message("name=timestamp>>${current_date}")
 
             - name: show_cache
               id: show_cache
               run: echo "${{ runner.os }}-ccache_microchain-${{ steps.ccache_cache_timestamp.outputs.timestamp }}"
 
             - name: ccache cache files
-              uses: actions/cache@v1.1.0
+              uses: actions/cache@v3
               with:
                   path: .ccache
                   key: ${{ runner.os }}-ccache_microchain-${{ steps.ccache_cache_timestamp.outputs.timestamp }}
@@ -214,14 +214,14 @@ jobs:
                   echo =====
 
             - name: 📃 Upload ccache.log
-              uses: actions/upload-artifact@v2
+              uses: actions/upload-artifact@v3
               with:
                   name: microchain_ccache_log
                   path: |
                       ccache.log
 
             - name: 📃 Upload Eden Microchain
-              uses: actions/upload-artifact@v2
+              uses: actions/upload-artifact@v3
               with:
                   name: Eden Microchain
                   path: |
@@ -234,7 +234,7 @@ jobs:
 
         steps:
             - name: ✅ Checkout code
-              uses: actions/checkout@v2
+              uses: actions/checkout@v3
 
             - uses: dorny/paths-filter@v2
               id: filter
@@ -258,7 +258,7 @@ jobs:
 
             - name: Download Eden Microchain
               # if: steps.filter.outputs.src == 'true'
-              uses: actions/download-artifact@v2
+              uses: actions/download-artifact@v3
               with:
                   name: Eden Microchain
                   path: build
@@ -270,20 +270,20 @@ jobs:
                   REGISTRY="ghcr.io"
                   IMAGE="${REGISTRY}/${{ github.repository_owner }}/eden-box-pdn"
                   TAGS="${IMAGE}:$(git rev-parse --short HEAD)"
-                  echo ::set-output name=tags::${TAGS,,}
+                  echo "tags_box=${TAGS}" >> $GITHUB_OUTPUT
 
             - name: Showtag
               # if: steps.filter.outputs.src == 'true'
               id: showtag
-              run: echo ${{ steps.prep.outputs.tags }}
+              run: echo ${{ steps.prep.outputs.tags_box }}
 
             - name: Docker Buildx setup
               # if: steps.filter.outputs.src == 'true'
-              uses: docker/setup-buildx-action@v1
+              uses: docker/setup-buildx-action@v2
 
             - name: Login in to registry
               # if: steps.filter.outputs.src == 'true'
-              uses: docker/login-action@v1
+              uses: docker/login-action@v2
               with:
                   registry: ghcr.io
                   username: ${{ github.repository_owner }}
@@ -328,11 +328,11 @@ jobs:
            
             - name: 🛠 Build & Publish Image
               # if: steps.filter.outputs.src == 'true'
-              uses: docker/build-push-action@v2
+              uses: docker/build-push-action@v3
               with:
                   push: true
                   file: docker/eden-box.Dockerfile
-                  tags: ${{ steps.prep.outputs.tags }}
+                  tags: ${{ steps.prep.outputs.tags_box }}
                   context: .
 
 #    e2e:
@@ -429,7 +429,7 @@ jobs:
 
         steps:
             - name: ✅ Checkout code
-              uses: actions/checkout@v2
+              uses: actions/checkout@v3
 
             - uses: dorny/paths-filter@v2
               id: filter
@@ -458,20 +458,20 @@ jobs:
                   REGISTRY="ghcr.io"
                   IMAGE="${REGISTRY}/${{ github.repository_owner }}/eden-webapp-pdn"
                   TAGS="${IMAGE}:$(git rev-parse --short HEAD)"
-                  echo ::set-output name=tags::${TAGS,,}
+                  echo "tags_webapp=${TAGS}" >> $GITHUB_OUTPUT
 
             - name: Showtag
               # if: steps.filter.outputs.src == 'true'
               id: showtag
-              run: echo ${{ steps.prep.outputs.tags }}
+              run: echo ${{ steps.prep.outputs.tags_webapp }}
 
             - name: Docker Buildx setup
               # if: steps.filter.outputs.src == 'true'
-              uses: docker/setup-buildx-action@v1
+              uses: docker/setup-buildx-action@v2
 
             - name: Login in to registry
               # if: steps.filter.outputs.src == 'true'
-              uses: docker/login-action@v1
+              uses: docker/login-action@v2
               with:
                   registry: ghcr.io
                   username: ${{ github.repository_owner }}
@@ -531,11 +531,11 @@ jobs:
 
             - name: 🛠 Build & Publish Image
               # if: steps.filter.outputs.src == 'true'
-              uses: docker/build-push-action@v2
+              uses: docker/build-push-action@v3
               with:
                   push: true
                   file: docker/eden-webapp.Dockerfile
-                  tags: ${{ steps.prep.outputs.tags }}
+                  tags: ${{ steps.prep.outputs.tags_webapp }}
                   context: .
 
     deploy-kubernetes-pdn:
@@ -544,7 +544,7 @@ jobs:
       steps:
     
             - name: ✅ Checkout code
-              uses: actions/checkout@v2
+              uses: actions/checkout@v3
               
             - name: Build kubernetes files
               id: build_kubernetes_files
@@ -555,6 +555,23 @@ jobs:
               env:
                   # general
                   ENVIRONMENT: pdn
+                  VERSION_DISTRIBUTE: ${{secrets.VERSION_DISTRIBUTE}}
+                  VERSION_WATCHER: ${{secrets.VERSION_WATCHER}}
+                  PDN_EOS_API_ENDPOINT: ${{secrets.PDN_EOS_API_ENDPOINT}}
+                  PDN_EOS_API_CHAIN_ID: ${{secrets.PDN_EOS_API_CHAIN_ID}}
+                  PDN_EOS_DISTRIBUTE_ACCOUNT: ${{secrets.PDN_EOS_DISTRIBUTE_ACCOUNT}}
+                  PDN_EOS_DISTRIBUTE_PERMISSION: ${{secrets.PDN_EOS_DISTRIBUTE_PERMISSION}}
+                  PDN_EOS_DISTRIBUTE_PRIVATE_KEY: ${{secrets.PDN_EOS_DISTRIBUTE_PRIVATE_KEY}}
+                  PDN_EOS_DISTRIBUTE_MAX_STEPS: ${{secrets.PDN_EOS_DISTRIBUTE_MAX_STEPS}}
+                  PDN_EOS_EDEN_ACCOUNT: ${{secrets.PDN_EOS_EDEN_ACCOUNT}}
+                  PDN_EOS_PAYER_ACCOUNT: ${{secrets.PDN_EOS_PAYER_ACCOUNT}}
+                  PDN_EOS_PAYER_PERMISION: ${{secrets.PDN_EOS_PAYER_PERMISION}}
+                  PDN_EOS_PAYER_PRIVATE_KEY: ${{secrets.PDN_EOS_PAYER_PRIVATE_KEY}}
+                  PDN_EOS_WATCH_ACCOUNT: ${{secrets.PDN_EOS_WATCH_ACCOUNT}}
+                  PDN_EOS_POWERUP_THRESHOLD: ${{secrets.PDN_EOS_POWERUP_THRESHOLD}}
+                  PDN_EOS_NET_FRAC: ${{secrets.PDN_EOS_NET_FRAC}}
+                  PDN_EOS_CPU_FRAC: ${{secrets.PDN_EOS_CPU_FRAC}}
+                  PDN_EOS_POWERUP_AMOUNT: ${{secrets.PDN_EOS_POWERUP_AMOUNT}}
               
             - name: Deploy kubernetes files
               uses: steebchen/kubectl@v1.1.0
@@ -562,6 +579,23 @@ jobs:
                   KUBE_CONFIG_DATA: ${{ secrets.PDN_KUBE_CONFIG_DATA }}
                   ENVIRONMENT: pdn
                   NAMESPACE: eden
+                  VERSION_DISTRIBUTE: ${{secrets.VERSION_DISTRIBUTE}}
+                  VERSION_WATCHER: ${{secrets.VERSION_WATCHER}}
+                  PDN_EOS_API_ENDPOINT: ${{secrets.PDN_EOS_API_ENDPOINT}}
+                  PDN_EOS_API_CHAIN_ID: ${{secrets.PDN_EOS_API_CHAIN_ID}}
+                  PDN_EOS_DISTRIBUTE_ACCOUNT: ${{secrets.PDN_EOS_DISTRIBUTE_ACCOUNT}}
+                  PDN_EOS_DISTRIBUTE_PERMISSION: ${{secrets.PDN_EOS_DISTRIBUTE_PERMISSION}}
+                  PDN_EOS_DISTRIBUTE_PRIVATE_KEY: ${{secrets.PDN_EOS_DISTRIBUTE_PRIVATE_KEY}}
+                  PDN_EOS_DISTRIBUTE_MAX_STEPS: ${{secrets.PDN_EOS_DISTRIBUTE_MAX_STEPS}}
+                  PDN_EOS_EDEN_ACCOUNT: ${{secrets.PDN_EOS_EDEN_ACCOUNT}}
+                  PDN_EOS_PAYER_ACCOUNT: ${{secrets.PDN_EOS_PAYER_ACCOUNT}}
+                  PDN_EOS_PAYER_PERMISION: ${{secrets.PDN_EOS_PAYER_PERMISION}}
+                  PDN_EOS_PAYER_PRIVATE_KEY: ${{secrets.PDN_EOS_PAYER_PRIVATE_KEY}}
+                  PDN_EOS_WATCH_ACCOUNT: ${{secrets.PDN_EOS_WATCH_ACCOUNT}}
+                  PDN_EOS_POWERUP_THRESHOLD: ${{secrets.PDN_EOS_POWERUP_THRESHOLD}}
+                  PDN_EOS_NET_FRAC: ${{secrets.PDN_EOS_NET_FRAC}}
+                  PDN_EOS_CPU_FRAC: ${{secrets.PDN_EOS_CPU_FRAC}}
+                  PDN_EOS_POWERUP_AMOUNT: ${{secrets.PDN_EOS_POWERUP_AMOUNT}}
               with:
                   args: version && make deploy-kubernetes
                   

@@ -1,5 +1,5 @@
 # Install dependencies only when needed
-FROM node:lts-alpine AS deps
+FROM node:lts-alpine3.14 AS deps
 
 RUN apk add --no-cache libc6-compat
 WORKDIR /app
@@ -14,7 +14,7 @@ COPY ./packages/box/package.json ./packages/box/
 RUN yarn install --frozen-lockfile
 
 # Rebuild the source code only when needed
-FROM node:lts-alpine AS builder
+FROM node:lts-alpine3.14 AS builder
 WORKDIR /app
 
 COPY ./packages/common ./packages/common
@@ -30,7 +30,7 @@ COPY ./build/eden-micro-chain.wasm /app/build/
 RUN yarn build --stream
 
 # Production image, copy all the files and run next
-FROM node:lts-alpine AS runner
+FROM node:lts-alpine3.14 AS runner
 WORKDIR /app
 
 ENV NODE_ENV production
