@@ -1,0 +1,14 @@
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: box
+  name: box
+spec:
+  ports:
+  - name: http
+    port: 3032
+    targetPort: 3032
+    protocol: TCP
+  selector:
+    app: box

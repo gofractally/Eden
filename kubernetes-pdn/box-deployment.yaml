@@ -1,0 +1,23 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: box
+  name: box
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: box
+  template:
+    metadata:
+      labels:
+        app: box
+    spec:
+      containers:
+      - image: ghcr.io/edenia/eden-box-pdn:${VERSION}
+        imagePullPolicy: "Always"
+        name: eden-box
+        ports:
+        - containerPort: 3032
+      restartPolicy: Always

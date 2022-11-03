@@ -78,6 +78,7 @@ namespace eden
                            eosio::block_timestamp init = {});
    uint32_t distribute_monthly(eosio::name contract, uint32_t max_steps);
    void init_pools(eosio::name contract);
+   void set_distribution_pct(eosio::name contract, uint8_t pct);
    void process_election_distribution(eosio::name contract);
 
    struct distribution_account_v0

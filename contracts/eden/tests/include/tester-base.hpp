@@ -239,9 +239,9 @@ struct eden_tester
       pip.act<actions::inductprofil>(2, pip_profile);
       egeon.act<actions::inductprofil>(3, egeon_profile);
 
-      alice.act<token::actions::transfer>("alice"_n, "eden.gm"_n, s2a("100.0000 EOS"), "memo");
+      alice.act<token::actions::transfer>("alice"_n, "eden.gm"_n, s2a("10.0000 EOS"), "memo");
       pip.act<token::actions::transfer>("pip"_n, "eden.gm"_n, s2a("10.0000 EOS"), "memo");
-      egeon.act<token::actions::transfer>("egeon"_n, "eden.gm"_n, s2a("10.0000 EOS"), "memo");
+      egeon.act<token::actions::transfer>("egeon"_n, "eden.gm"_n, s2a("100.0000 EOS"), "memo");
 
       alice.act<actions::inductdonate>("alice"_n, 1, s2a("10.0000 EOS"));
       pip.act<actions::inductdonate>("pip"_n, 2, s2a("10.0000 EOS"));
@@ -295,7 +295,8 @@ struct eden_tester
       {
          chain.as(witness).act<actions::inductendors>(witness, induction_id, induction_hash);
       }
-      chain.as(invitee).act<actions::inductdonate>(invitee, induction_id, s2a(!with_minimum_donation ? "10.0000 EOS" : "3.0000 EOS"));
+      chain.as(invitee).act<actions::inductdonate>(
+          invitee, induction_id, s2a(!with_minimum_donation ? "10.0000 EOS" : "3.0000 EOS"));
       CHECK(get_eden_membership(invitee).status() == eden::member_status::active_member);
    };
 
@@ -503,6 +504,26 @@ struct eden_tester
       return get_total_balance(distributions);
    };
 
+   template <typename T>
+   eden::current_distribution get_rank_balance(const T& table)
+   {
+      eden::current_distribution result;
+      for (auto item : table)
+      {
+         if (auto* current = std::get_if<eden::current_distribution>(&item.value))
+         {
+            return *current;
+         }
+      }
+      return result;
+   }
+
+   eden::current_distribution get_rank_budget()
+   {
+      eden::distribution_table_type distributions{"eden.gm"_n, eden::default_scope};
+      return get_rank_balance(distributions);
+   };
+
    auto get_budgets_by_period() const
    {
       std::map<eosio::block_timestamp, eosio::asset> result;
@@ -513,6 +534,19 @@ struct eden_tester
          iter->second += t.balance();
       }
       return result;
+   };
+
+   uint8_t get_pool_ptc(eosio::name pool) const
+   {
+      eden::pool_table_type pool_tb("eden.gm"_n, eden::default_scope);
+      auto pool_iter = pool_tb.find(pool.value);
+
+      if (pool_iter != pool_tb.end())
+      {
+         return pool_iter->monthly_distribution_pct();
+      }
+
+      return 0;
    };
 
    /*
