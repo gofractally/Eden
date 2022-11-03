@@ -64,31 +64,11 @@ export const Footer = () => (
                         <li>
                             <Link
                                 className="text-gray-400"
-                                href="https://edeneos.org"
+                                href="https://edenelections.com"
                                 isExternal
                                 target="_blank"
                             >
                                 Eden on EOS
-                            </Link>
-                        </li>
-                        <li>
-                            <Link
-                                className="text-gray-400"
-                                href="https://www.notion.so/edenos/Eden-d1446453c66c4919b110dfdce20dc56f"
-                                target="_blank"
-                                isExternal
-                            >
-                                Eden Public Wiki
-                            </Link>
-                        </li>
-                        <li>
-                            <Link
-                                className="text-gray-400"
-                                href="https://www.notion.so/edenos/EdenOS-Roadmap-7d75dbcf386c436c9c1738b7a3eea8f2"
-                                target="_blank"
-                                isExternal
-                            >
-                                EdenOS Roadmap
                             </Link>
                         </li>
                         <li>

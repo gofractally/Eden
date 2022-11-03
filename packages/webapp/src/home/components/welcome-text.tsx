@@ -38,8 +38,8 @@ const SecondParagraph = ({ className = "" }: { className?: string }) => (
         </Text>
         <Text>
             To learn more about Eden and how you can get involved, visit{" "}
-            <Link href="https://edeneos.org" target="_blank" isExternal>
-                edeneos.org
+            <Link href="https://edenelections.com" target="_blank" isExternal>
+                edenelections.com
             </Link>
             .
         </Text>
