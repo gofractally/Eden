@@ -68,7 +68,7 @@ export const Footer = () => (
                                 isExternal
                                 target="_blank"
                             >
-                                Eden on EOS
+                                Eden Election Process
                             </Link>
                         </li>
                         <li>
