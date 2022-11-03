@@ -13,7 +13,7 @@ export const LearnMoreCTA = ({ className = "" }: Props) => (
                 property, and justice for all.
             </Heading>
             <Button
-                href="https://edeneos.org"
+                href="https://edenelections.com"
                 className="flex-shrink-0 mt-10 sm:mt-0"
                 target="_blank"
                 isExternal
