@@ -1,4 +1,4 @@
-import { Container, Link, Text } from "_app/ui";
+import { Container, Text } from "_app/ui";
 
 export const ZoomTermsOfUse = () => {
     return (
