@@ -37,9 +37,13 @@ export const Footer = () => (
                             </Link>
                         </li>
                     </nav>
-                    <div className="flex items-center space-x-1 mb-6">
+                    <div className="flex items-center space-x-1 mb-1">
                         <p className="text-gray-400">
-                            A community owned public good. {}
+                            A community owned public good
+                        </p>
+                    </div>
+                    <div className="flex items-center space-x-1 mb-3">
+                        <p className="text-gray-400">
                             <Link
                                 className="text-gray-400"
                                 href="https://edenia.com"
