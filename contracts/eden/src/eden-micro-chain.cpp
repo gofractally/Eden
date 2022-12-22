@@ -1241,14 +1241,16 @@ DistributionFundConnection Member::distributionFunds(std::optional<eosio::block_
 
 void add_genesis_member(const status& status, eosio::name member)
 {
-   db.inductions.emplace([&](auto& obj) {
-      obj.induction.id = available_pk(db.inductions, 1);
-      obj.induction.inviter = {eden_account, false};
-      obj.induction.invitee = member;
-      for (auto witness : status.initialMembers)
-         if (witness != member)
-            obj.induction.witnesses.push_back({witness, false});
-   });
+   db.inductions.emplace(
+       [&](auto& obj)
+       {
+          obj.induction.id = available_pk(db.inductions, 1);
+          obj.induction.inviter = {eden_account, false};
+          obj.induction.invitee = member;
+          for (auto witness : status.initialMembers)
+             if (witness != member)
+                obj.induction.witnesses.push_back({witness, false});
+       });
 }
 
 struct Nft
@@ -1369,16 +1371,18 @@ void delsession(eosio::name eden_account, const eosio::public_key& key)
 eosio::asset add_balance(eosio::name account, const eosio::asset& delta)
 {
    eosio::asset result;
-   add_or_modify<by_pk>(db.balances, account, [&](bool is_new, auto& a) {
-      if (is_new)
-      {
-         a.account = account;
-         a.amount = delta;
-      }
-      else
-         a.amount += delta;
-      result = a.amount;
-   });
+   add_or_modify<by_pk>(db.balances, account,
+                        [&](bool is_new, auto& a)
+                        {
+                           if (is_new)
+                           {
+                              a.account = account;
+                              a.amount = delta;
+                           }
+                           else
+                              a.amount += delta;
+                           result = a.amount;
+                        });
    return result;
 }
 
@@ -1390,22 +1394,26 @@ void transfer_funds(eosio::block_timestamp time,
 {
    auto new_from = add_balance(from, -amount);
    auto new_to = add_balance(to, amount);
-   db.balance_history.emplace([&](auto& h) {
-      h.time = time;
-      h.account = from;
-      h.delta = -amount;
-      h.new_amount = new_from;
-      h.other_account = to;
-      h.description = description;
-   });
-   db.balance_history.emplace([&](auto& h) {
-      h.time = time;
-      h.account = to;
-      h.delta = amount;
-      h.new_amount = new_to;
-      h.other_account = from;
-      h.description = description;
-   });
+   db.balance_history.emplace(
+       [&](auto& h)
+       {
+          h.time = time;
+          h.account = from;
+          h.delta = -amount;
+          h.new_amount = new_from;
+          h.other_account = to;
+          h.description = description;
+       });
+   db.balance_history.emplace(
+       [&](auto& h)
+       {
+          h.time = time;
+          h.account = to;
+          h.delta = amount;
+          h.new_amount = new_to;
+          h.other_account = from;
+          h.description = description;
+       });
 }
 
 void notify_transfer(const action_context& context,
@@ -1499,19 +1507,21 @@ void genesis(std::string community,
 {
    auto& idx = db.status.get<by_id>();
    eosio::check(idx.empty(), "duplicate genesis action");
-   db.status.emplace([&](auto& obj) {
-      obj.status.community = std::move(community);
-      obj.status.communitySymbol = std::move(community_symbol);
-      obj.status.minimumDonation = std::move(minimum_donation);
-      obj.status.initialMembers = std::move(initial_members);
-      obj.status.genesisVideo = std::move(genesis_video);
-      obj.status.collectionAttributes = std::move(collection_attributes);
-      obj.status.auctionStartingBid = std::move(auction_starting_bid);
-      obj.status.auctionDuration = std::move(auction_duration);
-      obj.status.memo = std::move(memo);
-      for (auto& member : obj.status.initialMembers)
-         add_genesis_member(obj.status, member);
-   });
+   db.status.emplace(
+       [&](auto& obj)
+       {
+          obj.status.community = std::move(community);
+          obj.status.communitySymbol = std::move(community_symbol);
+          obj.status.minimumDonation = std::move(minimum_donation);
+          obj.status.initialMembers = std::move(initial_members);
+          obj.status.genesisVideo = std::move(genesis_video);
+          obj.status.collectionAttributes = std::move(collection_attributes);
+          obj.status.auctionStartingBid = std::move(auction_starting_bid);
+          obj.status.auctionDuration = std::move(auction_duration);
+          obj.status.memo = std::move(memo);
+          for (auto& member : obj.status.initialMembers)
+             add_genesis_member(obj.status, member);
+       });
 }
 
 void addtogenesis(eosio::name new_genesis_member)
@@ -1520,9 +1530,10 @@ void addtogenesis(eosio::name new_genesis_member)
    db.status.modify(get_status(),
                     [&](auto& obj) { obj.status.initialMembers.push_back(new_genesis_member); });
    for (auto& obj : db.inductions)
-      db.inductions.modify(obj, [&](auto& obj) {
-         obj.induction.witnesses.push_back({new_genesis_member, false});
-      });
+      db.inductions.modify(obj,
+                           [&](auto& obj) {
+                              obj.induction.witnesses.push_back({new_genesis_member, false});
+                           });
    add_genesis_member(status.status, new_genesis_member);
 }
 
@@ -1543,27 +1554,32 @@ void inductinit(const action_context& context,
       witnesses.push_back(InductionEndorser{witness, false});
    }
 
-   add_or_replace<by_pk>(db.inductions, id, [&](auto& obj) {
-      obj.induction.id = id;
-      obj.induction.inviter = {inviter, false};
-      obj.induction.invitee = invitee;
-      obj.induction.witnesses = witnesses;
-      obj.induction.createdAt = eosio::block_timestamp(context.block.timestamp);
-   });
+   add_or_replace<by_pk>(db.inductions, id,
+                         [&](auto& obj)
+                         {
+                            obj.induction.id = id;
+                            obj.induction.inviter = {inviter, false};
+                            obj.induction.invitee = invitee;
+                            obj.induction.witnesses = witnesses;
+                            obj.induction.createdAt =
+                                eosio::block_timestamp(context.block.timestamp);
+                         });
 }
 
 void inductprofil(uint64_t id, eden::new_member_profile profile)
 {
-   modify<by_pk>(db.inductions, id, [&](auto& obj) {
-      obj.induction.profile = profile;
+   modify<by_pk>(db.inductions, id,
+                 [&](auto& obj)
+                 {
+                    obj.induction.profile = profile;
 
-      // reset endorsements
-      obj.induction.inviter.second = false;
-      for (auto& witness : obj.induction.witnesses)
-      {
-         witness.second = false;
-      }
-   });
+                    // reset endorsements
+                    obj.induction.inviter.second = false;
+                    for (auto& witness : obj.induction.witnesses)
+                    {
+                       witness.second = false;
+                    }
+                 });
 }
 
 void inductmeetin(eosio::name account,
@@ -1576,16 +1592,18 @@ void inductmeetin(eosio::name account,
 
 void inductvideo(eosio::name account, uint64_t id, std::string video)
 {
-   modify<by_pk>(db.inductions, id, [&](auto& obj) {
-      obj.induction.video = video;
+   modify<by_pk>(db.inductions, id,
+                 [&](auto& obj)
+                 {
+                    obj.induction.video = video;
 
-      // reset endorsements
-      obj.induction.inviter.second = false;
-      for (auto& witness : obj.induction.witnesses)
-      {
-         witness.second = false;
-      }
-   });
+                    // reset endorsements
+                    obj.induction.inviter.second = false;
+                    for (auto& witness : obj.induction.witnesses)
+                    {
+                       witness.second = false;
+                    }
+                 });
 }
 
 void inductcancel(eosio::name account, uint64_t id)
@@ -1600,23 +1618,25 @@ void inductdonate(const action_context& context,
 {
    auto& induction = get<by_pk>(db.inductions, id);
 
-   auto& member = db.members.emplace([&](auto& obj) {
-      obj.member.account = induction.induction.invitee;
-      obj.member.inviter = induction.induction.inviter.first;
+   auto& member = db.members.emplace(
+       [&](auto& obj)
+       {
+          obj.member.account = induction.induction.invitee;
+          obj.member.inviter = induction.induction.inviter.first;
 
-      std::vector<eosio::name> inductionWitnesses;
-      for (const auto& witness : induction.induction.witnesses)
-      {
-         inductionWitnesses.push_back(witness.first);
-      }
-      obj.member.inductionWitnesses = std::move(inductionWitnesses);
+          std::vector<eosio::name> inductionWitnesses;
+          for (const auto& witness : induction.induction.witnesses)
+          {
+             inductionWitnesses.push_back(witness.first);
+          }
+          obj.member.inductionWitnesses = std::move(inductionWitnesses);
 
-      obj.member.profile = induction.induction.profile;
-      obj.member.inductionVideo = induction.induction.video;
-      obj.member.createdAt = eosio::block_timestamp(context.block.timestamp);
-      if (obj.member.inductionVideo.empty())
-         obj.member.inductionVideo = get_status().status.genesisVideo;
-   });
+          obj.member.profile = induction.induction.profile;
+          obj.member.inductionVideo = induction.induction.video;
+          obj.member.createdAt = eosio::block_timestamp(context.block.timestamp);
+          if (obj.member.inductionVideo.empty())
+             obj.member.inductionVideo = get_status().status.genesisVideo;
+       });
 
    transfer_funds(context.block.timestamp, payer, master_pool, quantity,
                   history_desc::inductdonate);
@@ -1638,23 +1658,25 @@ void inductendors(const action_context& context,
                   eosio::checksum256 induction_data_hash)
 {
    auto& induction = get<by_pk>(db.inductions, id);
-   modify<by_pk>(db.inductions, id, [&](auto& obj) {
-      if (account == obj.induction.inviter.first)
-      {
-         obj.induction.inviter.second = true;
-      }
-      else
-      {
-         for (auto& witness : obj.induction.witnesses)
-         {
-            if (witness.first == account)
-            {
-               witness.second = true;
-               break;
-            }
-         }
-      }
-   });
+   modify<by_pk>(db.inductions, id,
+                 [&](auto& obj)
+                 {
+                    if (account == obj.induction.inviter.first)
+                    {
+                       obj.induction.inviter.second = true;
+                    }
+                    else
+                    {
+                       for (auto& witness : obj.induction.witnesses)
+                       {
+                          if (witness.first == account)
+                          {
+                             witness.second = true;
+                             break;
+                          }
+                       }
+                    }
+                 });
 }
 
 void resign(eosio::name account)
@@ -1662,15 +1684,20 @@ void resign(eosio::name account)
    remove_if_exists<by_pk>(db.members, account);
 }
 
+void removemember(eosio::name account, const std::string& memo)
+{
+   remove_if_exists<by_pk>(db.members, account);
+}
+
 void rename(eosio::name old_account, eosio::name new_account)
 {
-   auto update = [&](auto& acc) {
+   auto update = [&](auto& acc)
+   {
       if (acc == old_account)
          acc = new_account;
    };
-   auto update_vec = [&](auto& vec) {
-      std::replace(vec.begin(), vec.end(), old_account, new_account);
-   };
+   auto update_vec = [&](auto& vec)
+   { std::replace(vec.begin(), vec.end(), old_account, new_account); };
 
    db.status.modify(get_status(), [&](auto& status) { update_vec(status.status.initialMembers); });
 
@@ -1678,40 +1705,50 @@ void rename(eosio::name old_account, eosio::name new_account)
       db.balances.modify(*obj, [&](auto& obj) { obj.account = new_account; });
 
    for (auto& obj : db.balance_history)
-      db.balance_history.modify(obj, [&](auto& obj) {
-         update(obj.account);
-         update(obj.other_account);
-      });
+      db.balance_history.modify(obj,
+                                [&](auto& obj)
+                                {
+                                   update(obj.account);
+                                   update(obj.other_account);
+                                });
 
    if (auto* obj = get_ptr<by_pk>(db.encryption_keys, old_account))
       db.encryption_keys.modify(*obj, [&](auto& obj) { obj.account = new_account; });
 
    for (auto& obj : db.inductions)
-      db.inductions.modify(obj, [&](auto& obj) {
-         update(obj.induction.inviter.first);
-         for (auto& w : obj.induction.witnesses)
-            update(w.first);
-      });
+      db.inductions.modify(obj,
+                           [&](auto& obj)
+                           {
+                              update(obj.induction.inviter.first);
+                              for (auto& w : obj.induction.witnesses)
+                                 update(w.first);
+                           });
 
    for (auto& obj : db.members)
-      db.members.modify(obj, [&](auto& obj) {
-         update(obj.member.account);
-         update(obj.member.inviter);
-         update_vec(obj.member.inductionWitnesses);
-      });
+      db.members.modify(obj,
+                        [&](auto& obj)
+                        {
+                           update(obj.member.account);
+                           update(obj.member.inviter);
+                           update_vec(obj.member.inductionWitnesses);
+                        });
 
    for (auto& obj : db.election_groups)
-      db.election_groups.modify(obj, [&](auto& obj) {
-         // first_member is kept as is since it's only used by events
-         // which have already occurred, and it isn't exposed to the UI
-         update(obj.winner);
-      });
+      db.election_groups.modify(obj,
+                                [&](auto& obj)
+                                {
+                                   // first_member is kept as is since it's only used by events
+                                   // which have already occurred, and it isn't exposed to the UI
+                                   update(obj.winner);
+                                });
 
    for (auto& obj : db.votes)
-      db.votes.modify(obj, [&](auto& obj) {
-         update(obj.voter);
-         update(obj.candidate);
-      });
+      db.votes.modify(obj,
+                      [&](auto& obj)
+                      {
+                         update(obj.voter);
+                         update(obj.candidate);
+                      });
 
    {
       auto& idx = db.distribution_funds.get<by_pk>();
@@ -1762,9 +1799,8 @@ void clear_participating()
 void electopt(eosio::name voter, bool participating)
 {
    modify<by_pk>(db.members, voter, [&](auto& obj) { obj.member.participating = participating; });
-   db.status.modify(get_status(), [&](auto& status) {
-      status.status.numElectionParticipants += participating ? 1 : -1;
-   });
+   db.status.modify(get_status(), [&](auto& status)
+                    { status.status.numElectionParticipants += participating ? 1 : -1; });
 }
 
 void electvote(uint8_t round, eosio::name voter, eosio::name candidate)
@@ -1797,10 +1833,12 @@ void electvideo(uint8_t round, eosio::name voter, const std::string& video)
 
 void setencpubkey(eosio::name member, eosio::public_key key)
 {
-   add_or_modify<by_pk>(db.encryption_keys, member, [&](bool is_new, auto& row) {
-      row.account = member;
-      row.encryptionKey = key;
-   });
+   add_or_modify<by_pk>(db.encryption_keys, member,
+                        [&](bool is_new, auto& row)
+                        {
+                           row.account = member;
+                           row.encryptionKey = key;
+                        });
 }
 
 void logmint(const action_context& context,
@@ -1834,14 +1872,16 @@ void logmint(const action_context& context,
       template_mint++;
    }
 
-   db.nfts.emplace([&](auto& nft) {
-      nft.member = member_account;
-      nft.owner = new_asset_owner;
-      nft.templateId = template_id;
-      nft.assetId = asset_id;
-      nft.templateMint = template_mint;
-      nft.createdAt = eosio::block_timestamp(context.block.timestamp);
-   });
+   db.nfts.emplace(
+       [&](auto& nft)
+       {
+          nft.member = member_account;
+          nft.owner = new_asset_owner;
+          nft.templateId = template_id;
+          nft.assetId = asset_id;
+          nft.templateMint = template_mint;
+          nft.createdAt = eosio::block_timestamp(context.block.timestamp);
+       });
 }
 
 void logtransfer(const action_context& context,
@@ -1876,10 +1916,12 @@ void handle_event(const eden::migration_event& event)
 
 void handle_event(const eden::election_event_schedule& event)
 {
-   db.status.modify(get_status(), [&](auto& status) {
-      status.status.nextElection = event.election_time;
-      status.status.electionThreshold = event.election_threshold;
-   });
+   db.status.modify(get_status(),
+                    [&](auto& status)
+                    {
+                       status.status.nextElection = event.election_time;
+                       status.status.electionThreshold = event.election_threshold;
+                    });
    for (auto& member : db.members)
    {
       db.members.modify(member, [&](auto& member) { member.member.participating = false; });
@@ -1893,65 +1935,78 @@ void handle_event(const eden::election_event_begin& event)
 
 void handle_event(const eden::election_event_seeding& event)
 {
-   modify<by_pk>(db.elections, event.election_time, [&](auto& election) {
-      election.seeding = true;
-      election.seeding_start_time = event.start_time;
-      election.seeding_end_time = event.end_time;
-      election.seed = event.seed;
-   });
+   modify<by_pk>(db.elections, event.election_time,
+                 [&](auto& election)
+                 {
+                    election.seeding = true;
+                    election.seeding_start_time = event.start_time;
+                    election.seeding_end_time = event.end_time;
+                    election.seed = event.seed;
+                 });
 }
 
 void handle_event(const eden::election_event_end_seeding& event)
 {
-   modify<by_pk>(db.elections, event.election_time, [&](auto& election) {
-      election.seeding = false;
-      election.seeding_start_time = std::nullopt;
-      election.seeding_end_time = std::nullopt;
-   });
+   modify<by_pk>(db.elections, event.election_time,
+                 [&](auto& election)
+                 {
+                    election.seeding = false;
+                    election.seeding_start_time = std::nullopt;
+                    election.seeding_end_time = std::nullopt;
+                 });
 }
 
 void handle_event(const eden::election_event_config_summary& event)
 {
-   modify<by_pk>(db.elections, event.election_time, [&](auto& election) {
-      election.num_rounds = event.num_rounds;
-      election.num_participants = event.num_participants;
-   });
+   modify<by_pk>(db.elections, event.election_time,
+                 [&](auto& election)
+                 {
+                    election.num_rounds = event.num_rounds;
+                    election.num_participants = event.num_participants;
+                 });
 }
 
 void handle_event(const eden::election_event_create_round& event)
 {
-   db.election_rounds.emplace([&](auto& round) {
-      round.election_time = event.election_time;
-      round.round = event.round;
-      round.num_participants = event.num_participants;
-      round.num_groups = event.num_groups;
-      round.requires_voting = event.requires_voting;
-   });
+   db.election_rounds.emplace(
+       [&](auto& round)
+       {
+          round.election_time = event.election_time;
+          round.round = event.round;
+          round.num_participants = event.num_participants;
+          round.num_groups = event.num_groups;
+          round.requires_voting = event.requires_voting;
+       });
 }
 
 void handle_event(const eden::election_event_create_group& event)
 {
    eosio::check(!event.voters.empty(), "group has no voters");
-   auto& group = db.election_groups.emplace([&](auto& group) {
-      group.election_time = event.election_time;
-      group.round = event.round;
-      group.first_member = *std::min_element(event.voters.begin(), event.voters.end());
-   });
+   auto& group = db.election_groups.emplace(
+       [&](auto& group)
+       {
+          group.election_time = event.election_time;
+          group.round = event.round;
+          group.first_member = *std::min_element(event.voters.begin(), event.voters.end());
+       });
    for (auto voter : event.voters)
    {
-      db.votes.emplace([&](auto& vote) {
-         vote.election_time = group.election_time;
-         vote.round = event.round;
-         vote.group_id = group.id._id;
-         vote.voter = voter;
-      });
+      db.votes.emplace(
+          [&](auto& vote)
+          {
+             vote.election_time = group.election_time;
+             vote.round = event.round;
+             vote.group_id = group.id._id;
+             vote.voter = voter;
+          });
    }
 }
 
 void handle_event(const eden::election_event_begin_round_voting& event)
 {
    modify<by_round>(db.election_rounds, ElectionRoundKey{event.election_time, event.round},
-                    [&](auto& round) {
+                    [&](auto& round)
+                    {
                        round.groups_available = true;
                        round.voting_started = true;
                        round.voting_begin = event.voting_begin;
@@ -1968,10 +2023,9 @@ void handle_event(const eden::election_event_end_round_voting& event)
 void handle_event(const eden::election_event_report_group& event)
 {
    eosio::check(!event.votes.empty(), "group has no votes");
-   auto first_member =
-       std::min_element(event.votes.begin(), event.votes.end(), [](auto& a, auto& b) {
-          return a.voter < b.voter;
-       })->voter;
+   auto first_member = std::min_element(event.votes.begin(), event.votes.end(),
+                                        [](auto& a, auto& b) { return a.voter < b.voter; })
+                           ->voter;
    auto& group = get<by_pk>(db.election_groups,
                             ElectionGroupKey{event.election_time, event.round, first_member});
    db.election_groups.modify(group, [&](auto& group) { group.winner = event.winner; });
@@ -1990,17 +2044,19 @@ void handle_event(const eden::election_event_end_round& event)
 
 void handle_event(const eden::election_event_end& event)
 {
-   modify<by_pk>(db.elections, event.election_time, [&](auto& election) {
-      election.results_available = true;
-      if (!election.num_rounds)
-         return;
-      auto& idx = db.election_groups.get<by_pk>();
-      auto it =
-          idx.lower_bound(ElectionGroupKey{event.election_time, *election.num_rounds - 1, ""_n});
-      if (it != idx.end() && it->election_time == event.election_time &&
-          it->round == *election.num_rounds - 1)
-         election.final_group_id = it->id._id;
-   });
+   modify<by_pk>(db.elections, event.election_time,
+                 [&](auto& election)
+                 {
+                    election.results_available = true;
+                    if (!election.num_rounds)
+                       return;
+                    auto& idx = db.election_groups.get<by_pk>();
+                    auto it = idx.lower_bound(
+                        ElectionGroupKey{event.election_time, *election.num_rounds - 1, ""_n});
+                    if (it != idx.end() && it->election_time == event.election_time &&
+                        it->round == *election.num_rounds - 1)
+                       election.final_group_id = it->id._id;
+                 });
    clear_participating();
 }
 
@@ -2011,19 +2067,24 @@ void handle_event(const eden::distribution_event_schedule& event)
 
 void handle_event(const action_context& context, const eden::distribution_event_reserve& event)
 {
-   modify<by_pk>(db.distributions, event.distribution_time, [&](auto& dist) {
-      transfer_funds(context.block.timestamp, pool_account(event.pool), distribution_fund,
-                     event.target_amount, history_desc::reserve_distribution);
-      dist.target_amount = event.target_amount;
-   });
+   modify<by_pk>(db.distributions, event.distribution_time,
+                 [&](auto& dist)
+                 {
+                    transfer_funds(context.block.timestamp, pool_account(event.pool),
+                                   distribution_fund, event.target_amount,
+                                   history_desc::reserve_distribution);
+                    dist.target_amount = event.target_amount;
+                 });
 }
 
 void handle_event(const eden::distribution_event_begin& event)
 {
-   modify<by_pk>(db.distributions, event.distribution_time, [&](auto& dist) {
-      dist.started = true;
-      dist.target_rank_distribution = event.rank_distribution;
-   });
+   modify<by_pk>(db.distributions, event.distribution_time,
+                 [&](auto& dist)
+                 {
+                    dist.started = true;
+                    dist.target_rank_distribution = event.rank_distribution;
+                 });
 }
 
 void handle_event(const action_context& context,
@@ -2044,23 +2105,27 @@ void handle_event(const action_context& context, const eden::distribution_event_
 
 void handle_event(const eden::distribution_event_fund& event)
 {
-   db.distribution_funds.emplace([&](auto& fund) {
-      fund.owner = event.owner;
-      fund.distribution_time = event.distribution_time;
-      fund.rank = event.rank;
-      fund.initial_balance = event.balance;
-      fund.current_balance = event.balance;
-   });
+   db.distribution_funds.emplace(
+       [&](auto& fund)
+       {
+          fund.owner = event.owner;
+          fund.distribution_time = event.distribution_time;
+          fund.rank = event.rank;
+          fund.initial_balance = event.balance;
+          fund.current_balance = event.balance;
+       });
 }
 
 void handle_event(const eden::session_new_event& event)
 {
-   db.sessions.emplace([&](auto& session) {
-      session.eden_account = event.eden_account;
-      session.key = event.key;
-      session.expiration = event.expiration;
-      session.description = event.description;
-   });
+   db.sessions.emplace(
+       [&](auto& session)
+       {
+          session.eden_account = event.eden_account;
+          session.key = event.key;
+          session.expiration = event.expiration;
+          session.description = event.description;
+       });
 }
 
 void handle_event(const eden::session_del_event& event)
@@ -2191,6 +2256,8 @@ bool dispatch(eosio::name action_name, const action_context& context, eosio::inp
       call(inductendors, context, s);
    else if (action_name == "resign"_n)
       call(resign, context, s);
+   else if (action_name == "removemember"_n)
+      call(removemember, context, s);
    else if (action_name == "rename"_n)
       call(rename, context, s);
    else if (action_name == "electopt"_n)
@@ -2261,7 +2328,8 @@ std::vector<subchain::transaction> ship_to_eden_transactions(
    for (const auto& transaction_trace : traces)
    {
       std::visit(
-          [&](const auto& trx_trace) {
+          [&](const auto& trx_trace)
+          {
              subchain::transaction transaction{
                  .id = trx_trace.id,
              };
@@ -2269,14 +2337,17 @@ std::vector<subchain::transaction> ship_to_eden_transactions(
              for (const auto& action_trace : trx_trace.action_traces)
              {
                 std::visit(
-                    [&](const auto& act_trace) {
+                    [&](const auto& act_trace)
+                    {
                        std::optional<subchain::creator_action> creatorAction;
                        if (act_trace.creator_action_ordinal.value > 0)
                        {
                           std::visit(
-                              [&](const auto& creator_action_trace) {
+                              [&](const auto& creator_action_trace)
+                              {
                                  std::visit(
-                                     [&](const auto& receipt) {
+                                     [&](const auto& receipt)
+                                     {
                                         creatorAction = subchain::creator_action{
                                             .seq = receipt.global_sequence,
                                             .receiver = creator_action_trace.receiver,
@@ -2291,7 +2362,8 @@ std::vector<subchain::transaction> ship_to_eden_transactions(
                        eosio::bytes hexData{data};
 
                        std::visit(
-                           [&](const auto& receipt) {
+                           [&](const auto& receipt)
+                           {
                               subchain::action action{
                                   .seq = receipt.global_sequence,
                                   .firstReceiver = act_trace.act.account,

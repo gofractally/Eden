@@ -37,23 +37,27 @@ export const Footer = () => (
                             </Link>
                         </li>
                     </nav>
-                    <div className="flex items-center space-x-1 mb-6">
-                        <Image
-                            src="/images/edenia.svg"
-                            alt="Edenia logo"
-                            className="h-4"
-                        />
+                    <div className="flex items-center space-x-1 mb-1">
                         <p className="text-gray-400">
-                            Community owned, {}
+                            A community owned public good
+                        </p>
+                    </div>
+                    <div className="flex items-center space-x-1 mb-3">
+                        <p className="text-gray-400">
                             <Link
                                 className="text-gray-400"
                                 href="https://edenia.com"
                                 isExternal
                                 target="_blank"
                             >
-                                hosting by Edenia
+                                web3 hosting by Edenia
                             </Link>
                         </p>
+                        <Image
+                            src="/images/edenia.svg"
+                            alt="Edenia logo"
+                            className="h-4"
+                        />
                     </div>
                 </div>
                 <div className="lg:w-1/4 md:w-1/2 w-full">
@@ -79,6 +83,16 @@ export const Footer = () => (
                                 isExternal
                             >
                                 EdenOS Github Repo
+                            </Link>
+                        </li>
+                        <li>
+                            <Link
+                                className="text-gray-400"
+                                href="https://proxy.eden.eoscommunity.org"
+                                target="_blank"
+                                isExternal
+                            >
+                                Eden Smart Proxy
                             </Link>
                         </li>
                     </nav>
