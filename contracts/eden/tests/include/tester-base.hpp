@@ -1,6 +1,7 @@
 #pragma once
 
 #include <accounts.hpp>
+#include <badges.hpp>
 #include <boot/boot.hpp>
 #include <clchain/subchain_tester_dfuse.hpp>
 #include <distributions.hpp>
@@ -209,6 +210,8 @@ struct eden_tester
    user_context bertie = chain.as("bertie"_n);
    user_context ahab = chain.as("ahab"_n);
 
+   user_context organization = chain.as("organization"_n);
+
    explicit eden_tester(std::function<void()> f = [] {})
    {
       chain_setup(chain);
@@ -217,6 +220,7 @@ struct eden_tester
       f();
       eden_setup(chain);
       chain.create_account("payer"_n);
+      chain.create_account("organization"_n);
       for (auto account : {"alice"_n, "pip"_n, "egeon"_n, "bertie"_n, "ahab"_n})
       {
          chain.create_account(account);
@@ -532,6 +536,17 @@ struct eden_tester
       {
          auto [iter, _] = result.insert(std::pair(t.distribution_time(), s2a("0.0000 EOS")));
          iter->second += t.balance();
+      }
+      return result;
+   };
+
+   auto get_badges() const
+   {
+      std::vector<eosio::name> result;
+      eden::badge_table_type badges{"eden.gm"_n, eden::default_scope};
+      for (auto t : badges)
+      {
+         result.push_back(t.account());
       }
       return result;
    };

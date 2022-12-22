@@ -33,6 +33,7 @@ add_executable(eden
     src/bylaws.cpp
     src/distributions.cpp
     src/encrypt.cpp
+    src/badges.cpp
 )
 target_include_directories(eden PUBLIC include ../token/include PRIVATE ../../external/atomicassets-contract/include)
 target_compile_options(eden PUBLIC -flto)

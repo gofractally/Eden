@@ -8,4 +8,5 @@ namespace eden
    inline constexpr eosio::name atomic_assets_account = "${EDEN_ATOMIC_ASSETS_ACCOUNT}"_n;
    inline constexpr eosio::name atomic_market_account = "${EDEN_ATOMIC_MARKET_ACCOUNT}"_n;
    inline constexpr eosio::name schema_name = "${EDEN_SCHEMA_NAME}"_n;
+   inline constexpr eosio::name sbt_account = "${EDEN_SBT_ACCOUNT}"_n;
 }  // namespace eden

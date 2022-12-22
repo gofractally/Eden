@@ -25,6 +25,7 @@ if(DEFINED WASI_SDK_PREFIX)
     set(EDEN_ATOMIC_ASSETS_ACCOUNT atomicassets CACHE STRING "The account holding the atomicassets contract")
     set(EDEN_ATOMIC_MARKET_ACCOUNT atomicmarket CACHE STRING "The account holding the atomicmarket contract")
     set(EDEN_SCHEMA_NAME members CACHE STRING "The atomicassets schema to use for NFTS")
+    set(EDEN_SBT_ACCOUNT organization CACHE STRING "The account holding the sbt contract")
     set(EDEN_ENABLE_SET_TABLE_ROWS "no" CACHE BOOL "Enable the settablerows action")
 
     ExternalProject_Add(wasm
@@ -45,6 +46,7 @@ if(DEFINED WASI_SDK_PREFIX)
             -DEDEN_ATOMIC_ASSETS_ACCOUNT:STRING=${EDEN_ATOMIC_ASSETS_ACCOUNT}
             -DEDEN_ATOMIC_MARKET_ACCOUNT:STRING=${EDEN_ATOMIC_MARKET_ACCOUNT}
             -DEDEN_SCHEMA_NAME:STRING=${EDEN_SCHEMA_NAME}
+            -DEDEN_SBT_ACCOUNT:STRING=${EDEN_SBT_ACCOUNT}
             -DEDEN_ENABLE_SET_TABLE_ROWS:BOOL=${EDEN_ENABLE_SET_TABLE_ROWS}
             -DCMAKE_SYSROOT=${WASI_SDK_PREFIX}/share/wasi-sysroot
             -DFORCE_COLORED_OUTPUT=${FORCE_COLORED_OUTPUT}

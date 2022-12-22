@@ -15,6 +15,7 @@
 #ifdef ENABLE_SET_TABLE_ROWS
 #include <accounts.hpp>
 #include <auctions.hpp>
+#include <badges.hpp>
 #include <boost/mp11/list.hpp>
 #include <bylaws.hpp>
 #include <distributions.hpp>
@@ -183,6 +184,7 @@ namespace eden
       void electprocess(uint32_t max_steps);
 
       void distribute(uint32_t max_steps);
+      void givesbt(uint32_t max_steps);
 
       void setdistpct(uint8_t pct);
 
@@ -293,6 +295,7 @@ namespace eden
        action(bylawsapprove, approver, bylaws_hash),
        action(bylawsratify, approver, bylaws_hash),
        action(distribute, max_steps),
+       action(givesbt, max_steps),
        action(setdistpct, pct),
        action(inductdonate, payer, id, quantity, ricardian_contract(inductdonate_ricardian)),
        eden_verb(inductcancel, 9, account, id, ricardian_contract(inductcancel_ricardian)),

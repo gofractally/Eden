@@ -495,7 +495,7 @@ TEST_CASE("board resignation")
    t.pip.act<actions::resign>("pip"_n);
 }
 
-TEST_CASE("expel member")
+TEST_CASE("remove member by active signature")
 {
    eden_tester t;
    t.genesis();
@@ -1282,6 +1282,48 @@ TEST_CASE("bylaws")
          }
       }
    }
+}
+
+TEST_CASE("distribute sbt on vote")
+{
+   constexpr std::size_t num_accounts = 12;
+   eden_tester t;
+   t.genesis();
+   t.eden_gm.act<actions::electsettime>(s2t("2020-07-04T15:30:00.000"));
+   auto test_accounts = make_names(num_accounts - 3);
+   t.create_accounts(test_accounts);
+
+   for (auto account : test_accounts)
+   {
+      t.chain.start_block();
+      t.alice.act<actions::inductinit>(42, "alice"_n, account, std::vector{"pip"_n, "egeon"_n});
+      t.finish_induction(42, "alice"_n, account, {"pip"_n, "egeon"_n});
+   }
+   t.electdonate_all();
+
+   t.skip_to("2020-07-03T15:30:00.000");
+   t.electseed(eosio::time_point_sec(0x5f009260));
+   t.skip_to("2020-07-04T15:30:00.000");
+   t.setup_election();
+
+   uint8_t round = 0;
+   t.generic_group_vote(t.get_current_groups(), round++);
+
+   std::vector<eosio::name> expected{"edenmember11"_n, "alice"_n,        "egeon"_n,
+                                     "edenmember1c"_n, "edenmember1b"_n, "edenmember1d"_n,
+                                     "edenmember1a"_n, "edenmember15"_n, "edenmember13"_n,
+                                     "edenmember14"_n, "edenmember12"_n, "pip"_n};
+   CHECK(t.get_badges() == expected);
+
+   t.eden_gm.act<actions::givesbt>(2);
+   expected.erase(expected.begin(), expected.begin() + 2);
+
+   CHECK(t.get_badges() == expected);
+
+   t.eden_gm.act<actions::givesbt>(100);
+
+   CHECK(t.get_badges() == std::vector<eosio::name>{});
+   expect(t.eden_gm.trace<actions::givesbt>(1), "Nothing to do");
 }
 
 TEST_CASE("accounting")
