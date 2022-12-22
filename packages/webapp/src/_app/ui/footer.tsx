@@ -85,6 +85,16 @@ export const Footer = () => (
                                 EdenOS Github Repo
                             </Link>
                         </li>
+                        <li>
+                            <Link
+                                className="text-gray-400"
+                                href="https://proxy.eden.eoscommunity.org"
+                                target="_blank"
+                                isExternal
+                            >
+                                Eden Smart Proxy
+                            </Link>
+                        </li>
                     </nav>
                 </div>
             </div>
