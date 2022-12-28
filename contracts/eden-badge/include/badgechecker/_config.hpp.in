@@ -1,0 +1,8 @@
+#pragma once
+
+#include <eosio/name.hpp>
+
+namespace eden
+{
+   inline constexpr eosio::name sbt_account = "${EDEN_SBT_ACCOUNT}"_n;
+}  // namespace eden
