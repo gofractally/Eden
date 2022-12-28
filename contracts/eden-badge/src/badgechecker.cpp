@@ -13,7 +13,7 @@ namespace eden
 
       eosio::check(itr != checks_tb.end(), "Org not found");
 
-      if (itr->org == org && eosio::has_auth(org))
+      if (eosio::has_auth(org))
       {
          return;
       }
