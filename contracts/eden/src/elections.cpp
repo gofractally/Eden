@@ -245,11 +245,13 @@ namespace eden
          const auto& old = group_idx.get((round << 16) | pos);
          group_idx.modify(old, eosio::same_payer, [&](auto& row) { row.index = next_index; });
       }
-      vote_tb.emplace(contract, [&](auto& row) {
-         row.member = member;
-         row.round = round;
-         row.index = pos;
-      });
+      vote_tb.emplace(contract,
+                      [&](auto& row)
+                      {
+                         row.member = member;
+                         row.round = round;
+                         row.index = pos;
+                      });
       ++next_index;
    }
 
@@ -336,7 +338,8 @@ namespace eden
 
    void elections::set_time(uint8_t day, const std::string& time)
    {
-      auto get_digit = [](char ch) {
+      auto get_digit = [](char ch)
+      {
          eosio::check(ch >= '0' && ch <= '9', "Expected HH:MM");
          return ch - '0';
       };
@@ -629,6 +632,23 @@ namespace eden
       return result;
    }
 
+   bool elections::is_round_over(eosio::time_point vote_time)
+   {
+      if (!state_sing.exists())
+      {
+         return false;
+      }
+
+      if (auto* result = std::get_if<current_election_state_active>(&state_sing.get()))
+      {
+         auto max_round_duration = globals.get().election_round_time_sec;
+         return (result->round_end.to_time_point() - vote_time).sec_since_epoch() >=
+                max_round_duration;
+      }
+
+      return true;
+   }
+
    static eosio::checksum256 adjust_seed(const eosio::checksum256& seed)
    {
       char buf[36];
@@ -676,9 +696,9 @@ namespace eden
          }
          iter = group_idx.erase(iter);
       }
-      auto best = std::max_element(
-          votes_by_candidate.begin(), votes_by_candidate.end(),
-          [](const auto& lhs, const auto& rhs) { return lhs.second < rhs.second; });
+      auto best = std::max_element(votes_by_candidate.begin(), votes_by_candidate.end(),
+                                   [](const auto& lhs, const auto& rhs)
+                                   { return lhs.second < rhs.second; });
       if (!votes_by_candidate.empty() && 3 * best->second > (2 * total_votes + 3 * group_size))
       {
          result.winner = best->first;
@@ -720,9 +740,9 @@ namespace eden
       {
          auth.accounts.push_back({{member, "active"_n}, 1});
       }
-      std::sort(auth.accounts.begin(), auth.accounts.end(), [](const auto& lhs, const auto& rhs) {
-         return lhs.permission.actor < rhs.permission.actor;
-      });
+      std::sort(auth.accounts.begin(), auth.accounts.end(),
+                [](const auto& lhs, const auto& rhs)
+                { return lhs.permission.actor < rhs.permission.actor; });
       eosio::action{{contract, "active"_n},
                     "eosio"_n,
                     "updateauth"_n,

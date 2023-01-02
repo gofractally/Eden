@@ -69,8 +69,7 @@ namespace eden
       elections elections(get_self());
       elections.vote(round, voter, candidate);
       badges badges(get_self());
-      auto description = std::string("For sybil check...");
-      badges.create_badge(voter, round, eosio::current_time_point(), description);
+      badges.create_badge(voter, round);
    }
 
    void eden::electvideo(const eosio::not_in_abi<session_info>& current_session,

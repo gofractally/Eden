@@ -1,40 +1,52 @@
 #include <badges.hpp>
+#include <elections.hpp>
 
 namespace eden
 {
-   void badges::create_badge(eosio::name account,
-                             uint8_t round,
-                             eosio::time_point vote_time,
-                             std::string& description)
+   void badges::create_badge(eosio::name account, uint8_t round)
    {
-      badge_tb.emplace(contract,
-                       [&](auto& row)
-                       {
-                          row.value = badge_v0{
-                              .id = badge_tb.available_primary_key(),
-                              .account = account,
-                              .round = round,
-                              .vote_time = vote_time,
-                              .description = description,
-                          };
-                       });
+      auto vote_time = eosio::current_time_point();
+      auto badge_idx = badge_tb.get_index<"byround"_n>();
+      auto badge_iter = badge_idx.find(round_account_key(round, account));
+
+      if (badge_iter == badge_iter.end())
+      {
+         badge_tb.emplace(contract,
+                          [&](auto& row)
+                          {
+                             row.value = badge_v0{.id = badge_tb.available_primary_key(),
+                                                  .account = account,
+                                                  .round = round,
+                                                  .vote_time = vote_time};
+                          });
+      }
+      else
+      {
+         badge_tb.modify(badge_iter, eosio::same_payer,
+                         [&](auto& row) { row.vote_time() = vote_time; });
+      }
    }
 
    uint32_t badges::send_badges(uint32_t max_steps)
    {
-      for (auto itr = badge_tb.begin(); itr != badge_tb.end() && max_steps > 0; --max_steps)
-      {
-         eosio::action{{contract, "active"_n},
-                       sbt_account,
-                       "givesimple"_n,
-                       std::tuple(contract, "voterbadge"_n, contract, itr->account(),
-                                  std::string("election_date:" +
-                                              std::to_string(itr->vote_time().sec_since_epoch()) +
-                                              ",round:" + std::to_string(itr->round()) +
-                                              ",description:" + itr->description()))}
-             .send();
+      elections elections(contract);
 
-         itr = badge_tb.erase(itr);
+      for (auto it = badge_tb.begin(); it != badge_tb.end() && max_steps > 0;)
+      {
+         if (elections.is_round_over(it->vote_time()))
+         {
+            eosio::action{
+                {contract, "active"_n},
+                sbt_account,
+                "givesimple"_n,
+                std::tuple(contract, "voterbadge"_n, contract, it->account(),
+                           std::string("round " + std::to_string(it->round()) + ", " +
+                                       std::to_string(it->vote_time().sec_since_epoch())))}
+                .send();
+
+            it = badge_tb.erase(it);
+            --max_steps;
+         }
       }
 
       return max_steps;

@@ -232,7 +232,8 @@ namespace eden
    T* get_if_derived(current_election_state* state)
    {
       return std::visit(
-          [](auto& s) -> T* {
+          [](auto& s) -> T*
+          {
              if constexpr (std::is_base_of_v<T, std::decay_t<decltype(s)>>)
              {
                 return &s;
@@ -299,6 +300,7 @@ namespace eden
       boost::logic::tribool can_upload_video(uint8_t round, eosio::name voter);
       uint64_t get_group_id(eosio::name voter, uint8_t round);
       std::vector<eosio::name> get_group_members(uint64_t group_id);
+      bool is_round_over(eosio::time_point vote_time);
       void clear_all();
    };
 
