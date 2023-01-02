@@ -1286,6 +1286,7 @@ TEST_CASE("bylaws")
 
 TEST_CASE("distribute sbt on vote")
 {
+   // TODO: cannot issue if the round has not finished
    constexpr std::size_t num_accounts = 12;
    eden_tester t;
    t.genesis();
@@ -1315,7 +1316,7 @@ TEST_CASE("distribute sbt on vote")
                                      "edenmember14"_n, "edenmember12"_n, "pip"_n};
    CHECK(t.get_badges() == expected);
 
-   t.eden_gm.act<actions::givesbt>(2);
+   t.eden_gm.act<actions::givesbt>(3);
    expected.erase(expected.begin(), expected.begin() + 2);
 
    CHECK(t.get_badges() == expected);

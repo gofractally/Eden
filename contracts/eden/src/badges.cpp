@@ -9,7 +9,7 @@ namespace eden
       auto badge_idx = badge_tb.get_index<"byround"_n>();
       auto badge_iter = badge_idx.find(round_account_key(round, account));
 
-      if (badge_iter == badge_iter.end())
+      if (badge_iter == badge_idx.end())
       {
          badge_tb.emplace(contract,
                           [&](auto& row)
@@ -22,13 +22,14 @@ namespace eden
       }
       else
       {
-         badge_tb.modify(badge_iter, eosio::same_payer,
-                         [&](auto& row) { row.vote_time() = vote_time; });
+         badge_idx.modify(badge_iter, eosio::same_payer,
+                          [&](auto& row) { row.vote_time() = vote_time; });
       }
    }
 
    uint32_t badges::send_badges(uint32_t max_steps)
    {
+      eosio::print("SENDING_BADGES\n");
       elections elections(contract);
 
       for (auto it = badge_tb.begin(); it != badge_tb.end() && max_steps > 0;)
