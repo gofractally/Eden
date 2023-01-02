@@ -20,6 +20,15 @@ namespace eden
      public:
       using eosio::contract::contract;
 
+      bool check_authorizer(name org, name creator);
+      void notify_initsimple(name org,
+                             name creator,
+                             name badge,
+                             vector<name> parent_badges,
+                             string offchain_lookup_data,
+                             string onchain_lookup_data,
+                             vector<name> consumers,
+                             string memo);
       void notify_givesimple(eosio::name org,
                              eosio::name badge,
                              eosio::name authorizer,
@@ -27,5 +36,8 @@ namespace eden
                              std::string memo);
    };
 
-   EOSIO_ACTIONS(contract, "badgechecker"_n, notify(sbt_account, givesimple))
+   EOSIO_ACTIONS(contract,
+                 "badgechecker"_n,
+                 notify(sbt_account, initsimple),
+                 notify(sbt_account, givesimple))
 }  // namespace eden
