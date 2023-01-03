@@ -41,8 +41,9 @@ namespace eden
                                     ? round_time_point.sec_since_epoch() - max_round_duration_sec
                                     : eosio::current_time_point().sec_since_epoch();
 
-      for (auto it = badge_idx.lower_bound(eosio::time_point().sec_since_epoch());
-           it != badge_idx.lower_bound(max_round_time) && max_steps > 0; --max_steps)
+      for (auto it = badge_idx.lower_bound(eosio::time_point().sec_since_epoch()),
+                end_it = badge_idx.lower_bound(max_round_time);
+           it != end_it && max_steps > 0; --max_steps)
       {
          eosio::action{{contract, "active"_n},
                        sbt_account,
