@@ -2,7 +2,7 @@
 
 namespace eden
 {
-   bool contract::check_authorizer(name org, name authorizer)
+   void contract::check_authorizer(eosio::name org, eosio::name authorizer)
    {
       checks_table checks_tb(sbt_account, sbt_account.value);
       auto itr = checks_tb.find(org.value);
@@ -19,14 +19,14 @@ namespace eden
                        " is not authorized to issue sbt on behalf of genesis.eden contract");
    }
 
-   void contract::notify_initsimple(name org,
-                                    name creator,
-                                    name badge,
-                                    vector<name> parent_badges,
-                                    string offchain_lookup_data,
-                                    string onchain_lookup_data,
-                                    vector<name> consumers,
-                                    string memo)
+   void contract::notify_initsimple(eosio::name org,
+                                    eosio::name creator,
+                                    eosio::name badge,
+                                    std::vector<eosio::name> parent_badges,
+                                    std::string offchain_lookup_data,
+                                    std::string onchain_lookup_data,
+                                    std::vector<eosio::name> consumers,
+                                    std::string memo)
    {
       check_authorizer(org, creator);
    }

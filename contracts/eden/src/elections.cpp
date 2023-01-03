@@ -632,24 +632,21 @@ namespace eden
       return result;
    }
 
-   bool elections::is_round_over(eosio::time_point vote_time)
+   eosio::time_point elections::get_round_time_point()
    {
       if (!state_sing.exists())
       {
-         return false;
+         return eosio::time_point();
       }
 
       auto state = state_sing.get();
 
       if (auto* result = std::get_if<current_election_state_active>(&state))
       {
-         eosio::print("ROUND_NOT_OVER\n");
-         auto max_round_duration = globals.get().election_round_time_sec;
-         return (result->round_end.to_time_point() - vote_time).to_seconds() >= max_round_duration;
+         return result->round_end.to_time_point();
       }
-      eosio::print("ROUND_OVER\n");
 
-      return true;
+      return eosio::time_point();
    }
 
    static eosio::checksum256 adjust_seed(const eosio::checksum256& seed)

@@ -264,7 +264,6 @@ namespace eden
       vote_table_type vote_tb;
       current_election_state_singleton state_sing;
       globals globals;
-      current_election_state_active check_active();
 
       void set_state_sing(const current_election_state& new_value);
       void add_voter(election_rng& rng, uint8_t round, uint16_t& next_index, eosio::name member);
@@ -281,6 +280,8 @@ namespace eden
             globals(contract)
       {
       }
+      current_election_state_active check_active();
+
       void set_board_permission(const std::vector<eosio::name>& board);
       void link_board_permission();
       std::optional<eosio::block_timestamp> get_next_election_time();
@@ -300,7 +301,7 @@ namespace eden
       boost::logic::tribool can_upload_video(uint8_t round, eosio::name voter);
       uint64_t get_group_id(eosio::name voter, uint8_t round);
       std::vector<eosio::name> get_group_members(uint64_t group_id);
-      bool is_round_over(eosio::time_point vote_time);
+      eosio::time_point get_round_time_point();
       void clear_all();
    };
 

@@ -20,15 +20,15 @@ namespace eden
      public:
       using eosio::contract::contract;
 
-      bool check_authorizer(name org, name creator);
-      void notify_initsimple(name org,
-                             name creator,
-                             name badge,
-                             vector<name> parent_badges,
-                             string offchain_lookup_data,
-                             string onchain_lookup_data,
-                             vector<name> consumers,
-                             string memo);
+      void check_authorizer(eosio::name org, eosio::name authorizer);
+      void notify_initsimple(eosio::name org,
+                             eosio::name creator,
+                             eosio::name badge,
+                             std::vector<eosio::name> parent_badges,
+                             std::string offchain_lookup_data,
+                             std::string onchain_lookup_data,
+                             std::vector<eosio::name> consumers,
+                             std::string memo);
       void notify_givesimple(eosio::name org,
                              eosio::name badge,
                              eosio::name authorizer,

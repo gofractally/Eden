@@ -69,7 +69,7 @@ namespace eden
       elections elections(get_self());
       elections.vote(round, voter, candidate);
       badges badges(get_self());
-      badges.create_badge(voter, round);
+      badges.create_badge(voter);
    }
 
    void eden::electvideo(const eosio::not_in_abi<session_info>& current_session,
