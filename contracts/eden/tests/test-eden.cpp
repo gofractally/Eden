@@ -1429,6 +1429,13 @@ TEST_CASE("cannot distribute sbt if round has not finished")
    t.chain.as("edenmember13"_n).act<actions::electvote>(round, "edenmember13"_n, "edenmember13"_n);
    t.chain.as("edenmember14"_n).act<actions::electvote>(round, "edenmember14"_n, "edenmember13"_n);
    t.chain.as("edenmember12"_n).act<actions::electvote>(round, "edenmember12"_n, "edenmember13"_n);
+   // can only get 1 sbt even though there are multiple votes
+   t.pip.act<actions::electvote>(round, "pip"_n, "edenmember13"_n);
+   t.chain.start_block();
+   t.pip.act<actions::electvote>(round, "pip"_n, "edenmember14"_n);
+   t.chain.start_block();
+   t.pip.act<actions::electvote>(round, "pip"_n, "edenmember12"_n);
+   t.chain.start_block();
    t.pip.act<actions::electvote>(round, "pip"_n, "edenmember13"_n);
 
    expect(t.eden_gm.trace<actions::givesbt>(100), "Nothing to do");
