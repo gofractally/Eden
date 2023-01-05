@@ -35,7 +35,7 @@ namespace eden
      public:
       using eosio::contract::contract;
 
-      void check_authorization(eosio::name action, eosio::name authorizer);
+      void check_authorization(eosio::name action, eosio::name badge, eosio::name authorizer);
       void notify_initsimple(eosio::name org,
                              eosio::name creator,
                              eosio::name badge,

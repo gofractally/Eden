@@ -2,13 +2,13 @@
 
 namespace eden
 {
-   void contract::check_authorization(eosio::name action, eosio::name authorizer)
+   void contract::check_authorization(eosio::name action, eosio::name badge, eosio::name authorizer)
    {
       permission_table_type permission_tb(get_self(), action.value);
-      auto itr = permission_tb.find(action.value);
+      auto itr = permission_tb.find(badge.value);
 
       eosio::check(itr != permission_tb.end(),
-                   "Action is pending to be configured with permissions");
+                   "Badge is pending to be configured with permissions");
 
       bool is_account_authorized =
           std::any_of(itr->accounts().begin(), itr->accounts().end(),
@@ -28,7 +28,7 @@ namespace eden
    {
       if (!eosio::has_auth(org))
       {
-         check_authorization("initsimple"_n, creator);
+         check_authorization("initsimple"_n, badge, creator);
       }
    }
 
@@ -40,7 +40,7 @@ namespace eden
    {
       if (!eosio::has_auth(org))
       {
-         check_authorization("givesimple"_n, authorizer);
+         check_authorization("givesimple"_n, badge, authorizer);
       }
    }
 
