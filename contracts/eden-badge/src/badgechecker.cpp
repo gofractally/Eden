@@ -1,22 +1,20 @@
-#include <badgechecker/badgechecker.hpp>
+#include <badgechecker.hpp>
 
 namespace eden
 {
-   void contract::check_authorizer(eosio::name org, eosio::name authorizer)
+   void contract::check_authorization(eosio::name action, eosio::name authorizer)
    {
-      checks_table checks_tb(sbt_account, sbt_account.value);
-      auto itr = checks_tb.find(org.value);
+      permission_table_type permission_tb(get_self(), action.value);
+      auto itr = permission_tb.find(action.value);
 
-      eosio::check(itr != checks_tb.end(), "Org not found");
+      eosio::check(itr != permission_tb.end(),
+                   "Action is pending to be configured with permissions");
 
-      if (eosio::has_auth(org))
-      {
-         return;
-      }
+      bool is_account_authorized =
+          std::any_of(itr->accounts().begin(), itr->accounts().end(),
+                      [&](eosio::name temp_acc) { return temp_acc == authorizer; });
 
-      eosio::check(itr->checks_contract == authorizer,
-                   authorizer.to_string() +
-                       " is not authorized to issue sbt on behalf of genesis.eden contract");
+      eosio::check(is_account_authorized, "Action denied: missing permission");
    }
 
    void contract::notify_initsimple(eosio::name org,
@@ -28,7 +26,10 @@ namespace eden
                                     std::vector<eosio::name> consumers,
                                     std::string memo)
    {
-      check_authorizer(org, creator);
+      if (!eosio::has_auth(org))
+      {
+         check_authorization("initsimple"_n, creator);
+      }
    }
 
    void contract::notify_givesimple(eosio::name org,
@@ -37,9 +38,43 @@ namespace eden
                                     eosio::name to,
                                     std::string memo)
    {
-      check_authorizer(org, authorizer);
+      if (!eosio::has_auth(org))
+      {
+         check_authorization("givesimple"_n, authorizer);
+      }
+   }
+
+   void contract::setauth(eosio::name action, eosio::name badge, std::vector<eosio::name> accounts)
+   {
+      require_auth(eden_account);
+
+      bool is_valid_action = std::any_of(allowed_actions.begin(), allowed_actions.end(),
+                                         [&](eosio::name temp_act) { return temp_act == action; });
+
+      eosio::check(is_valid_action, "Action " + action.to_string() +
+                                        " is not allowed by: " + eden_account.to_string());
+      eosio::check(accounts.size() <= max_accounts, "An action can only have a maximum of " +
+                                                        std::to_string(max_accounts) + " accounts");
+
+      permission_table_type permission_tb(get_self(), action.value);
+      auto itr = permission_tb.find(badge.value);
+
+      if (itr == permission_tb.end())
+      {
+         permission_tb.emplace(eden_account,
+                               [&](auto& row)
+                               {
+                                  row.badge() = badge;
+                                  row.accounts() = accounts;
+                               });
+      }
+      else
+      {
+         permission_tb.modify(itr, eosio::same_payer,
+                              [&](auto& row) { row.accounts() = accounts; });
+      }
    }
 }  // namespace eden
 
 EOSIO_ACTION_DISPATCHER(eden::actions)
-EOSIO_ABIGEN(actions(eden::actions))
+EOSIO_ABIGEN(actions(eden::actions), table("permission"_n, eden::permission_variant))

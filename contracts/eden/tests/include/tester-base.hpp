@@ -210,7 +210,7 @@ struct eden_tester
    user_context bertie = chain.as("bertie"_n);
    user_context ahab = chain.as("ahab"_n);
 
-   user_context organization = chain.as("organization"_n);
+   user_context organization = chain.as("orgint.rep"_n);
 
    explicit eden_tester(std::function<void()> f = [] {})
    {
@@ -220,7 +220,7 @@ struct eden_tester
       f();
       eden_setup(chain);
       chain.create_account("payer"_n);
-      chain.create_account("organization"_n);
+      chain.create_account("orgint.rep"_n);
       for (auto account : {"alice"_n, "pip"_n, "egeon"_n, "bertie"_n, "ahab"_n})
       {
          chain.create_account(account);
