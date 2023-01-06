@@ -491,7 +491,7 @@ jobs:
                   NEXT_PUBLIC_EOS_RPC_HOST: api.eosn.io
                   NEXT_PUBLIC_EOS_RPC_PORT: 443
                   NEXT_PUBLIC_EOS_READ_RPC_URLS: https://api.eosn.io,https://eos.greymass.com
-                  NEXT_PUBLIC_TABLE_ROWS_MAX_FETCH_PER_SEC: 10
+                  NEXT_PUBLIC_TABLE_ROWS_MAX_FETCH_PER_SEC: 20
                   NEXT_PUBLIC_EDEN_CONTRACT_ACCOUNT: genesis.eden
                   NEXT_PUBLIC_AA_FETCH_AFTER: 1619827201000
                   NEXT_PUBLIC_TOKEN_CONTRACT: eosio.token
