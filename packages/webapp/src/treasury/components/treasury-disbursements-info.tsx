@@ -19,7 +19,7 @@ export const TreasuryDisbursementsInfo = () => {
                 {tokenConfig.symbol} accounts.
             </Text>
             <Text>
-                The overall disbursement is equal to 15% of the Eden treasury at
+                The overall disbursement is equal to 11% of the Eden treasury at
                 the time of disbursement. The amount is then divided equally
                 among the representative levels. At each level, the amount is
                 further divided equally among that level's representatives.
