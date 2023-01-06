@@ -1,10 +1,17 @@
 import dayjs from "dayjs";
 
 import { tokenConfig } from "config";
-import { Container, Heading, Text, useDistributionState } from "_app";
+import {
+    Container,
+    Heading,
+    Text,
+    useDistributionState,
+    useMasterPool,
+} from "_app";
 
 export const TreasuryDisbursementsInfo = () => {
     const { data: distributionState } = useDistributionState();
+    const { data: pool } = useMasterPool();
 
     const nextDisbursementTime =
         distributionState &&
@@ -19,10 +26,12 @@ export const TreasuryDisbursementsInfo = () => {
                 {tokenConfig.symbol} accounts.
             </Text>
             <Text>
-                The overall disbursement is equal to 15% of the Eden treasury at
-                the time of disbursement. The amount is then divided equally
-                among the representative levels. At each level, the amount is
-                further divided equally among that level's representatives.
+                The overall disbursement is equal to{" "}
+                {pool?.monthly_distribution_pct || "..."}% of the Eden treasury
+                at at the time of disbursement. The amount is then divided
+                equally among the representative levels. At each level, the
+                amount is further divided equally among that level's
+                representatives.
             </Text>
             {nextDisbursementTime && (
                 <Text>
