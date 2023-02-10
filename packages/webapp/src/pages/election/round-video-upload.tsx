@@ -87,7 +87,7 @@ export const RoundVideoUploadPage = () => {
                     )}
                 </Container>
                 <MemberGateContainer>
-                    { (!isUploadExpired &&
+                    {!isUploadExpired && (
                         <RoundVideoUploadList
                             electionState={currentElection?.electionState}
                         />
