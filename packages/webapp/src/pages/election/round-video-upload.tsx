@@ -231,10 +231,10 @@ const RoundVideoUploadList = ({ electionState }: { electionState: string }) => {
                                     subtitle=""
                                     action="electvideo"
                                     uploadErrorMessage={
-                                    uploadErrorMessage.roundIndex ===
+                                        uploadErrorMessage.roundIndex ===
                                         vote.roundIndex
-                                        ? uploadErrorMessage.message
-                                        : undefined
+                                            ? uploadErrorMessage.message
+                                            : undefined
                                     }
                                     uploadCompleteMessage={
                                         uploadCompleteMessage.roundIndex ===
