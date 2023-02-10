@@ -185,7 +185,7 @@ const RoundVideoUploadList = ({ electionState }: { electionState: string }) => {
                 message:
                     "There was an error uploading your video. Please try again.",
             });
-        }
+            }
     };
 
     return (
@@ -231,14 +231,14 @@ const RoundVideoUploadList = ({ electionState }: { electionState: string }) => {
                                     subtitle=""
                                     action="electvideo"
                                     uploadErrorMessage={
-                                        uploadErrorMessage.roundIndex ===
-                                            vote.roundIndex
-                                            ? uploadErrorMessage.message
-                                            : undefined
+                                    uploadErrorMessage.roundIndex ===
+                                        vote.roundIndex
+                                        ? uploadErrorMessage.message
+                                        : undefined
                                     }
                                     uploadCompleteMessage={
                                         uploadCompleteMessage.roundIndex ===
-                                            vote.roundIndex
+                                        vote.roundIndex
                                             ? uploadCompleteMessage.message
                                             : undefined
                                     }
@@ -277,8 +277,8 @@ const Header = ({
         winner && isValidDelegate(winner.account)
             ? `Delegate: ${winner.name}`
             : roundStartTime && roundEndTime
-                ? `${roundStartTime.format("LT")} - ${roundEndTime.format("LT z")}`
-                : "Consensus not achieved";
+            ? `${roundStartTime.format("LT")} - ${roundEndTime.format("LT z")}`
+            : "Consensus not achieved";
 
     return (
         <RoundHeader
