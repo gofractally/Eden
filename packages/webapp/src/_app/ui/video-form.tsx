@@ -18,6 +18,7 @@ interface Props {
     action: string;
     uploadCompleteMessage?: string;
     uploadErrorMessage?: string;
+    disableByElectionState?: boolean;
 }
 
 export const VideoSubmissionFormAndPreview = ({
@@ -32,6 +33,7 @@ export const VideoSubmissionFormAndPreview = ({
     subtitle = "",
     uploadCompleteMessage = "",
     uploadErrorMessage = "",
+    disableByElectionState = false,
 }: Props) => {
     const [isLoading, setIsLoading] = useState(false);
     const [uploadedVideo, setUploadedVideo] = useState<File | undefined>(
@@ -126,7 +128,11 @@ export const VideoSubmissionFormAndPreview = ({
                         <div>
                             <Button
                                 isSubmit
-                                disabled={isLoading || !uploadedVideo}
+                                disabled={
+                                    isLoading ||
+                                    !uploadedVideo ||
+                                    disableByElectionState
+                                }
                                 isLoading={isLoading}
                                 type="secondary"
                             >

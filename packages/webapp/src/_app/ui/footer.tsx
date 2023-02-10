@@ -88,11 +88,11 @@ export const Footer = () => (
                         <li>
                             <Link
                                 className="text-gray-400"
-                                href="https://proxy.eden.eoscommunity.org"
+                                href="https://spending.eden.eoscommunity.org/"
                                 target="_blank"
                                 isExternal
                             >
-                                Eden Smart Proxy
+                                Spend Explorer
                             </Link>
                         </li>
                     </nav>

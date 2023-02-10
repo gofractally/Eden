@@ -87,7 +87,11 @@ export const RoundVideoUploadPage = () => {
                     )}
                 </Container>
                 <MemberGateContainer>
-                    {!isUploadExpired && <RoundVideoUploadList />}
+                    {!isUploadExpired && (
+                        <RoundVideoUploadList
+                            electionState={currentElection?.electionState}
+                        />
+                    )}
                 </MemberGateContainer>
             </div>
         </SideNavLayout>
@@ -96,7 +100,7 @@ export const RoundVideoUploadPage = () => {
 
 export default RoundVideoUploadPage;
 
-const RoundVideoUploadList = () => {
+const RoundVideoUploadList = ({ electionState }: { electionState: string }) => {
     const [ualAccount] = useUALAccount();
     const {
         data: currentMemberElectionVotingData,
@@ -181,7 +185,7 @@ const RoundVideoUploadList = () => {
                 message:
                     "There was an error uploading your video. Please try again.",
             });
-        }
+            }
     };
 
     return (
@@ -212,6 +216,9 @@ const RoundVideoUploadList = () => {
                                     onSubmit={submitElectionRoundVideo(
                                         vote.roundIndex
                                     )}
+                                    disableByElectionState={
+                                        electionState !== ElectionStatus.Final
+                                    }
                                     submissionPhase={videoSubmissionPhase}
                                     submitButtonIcon={
                                         <RiVideoUploadLine
