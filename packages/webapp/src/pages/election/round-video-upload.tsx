@@ -87,7 +87,10 @@ export const RoundVideoUploadPage = () => {
                     )}
                 </Container>
                 <MemberGateContainer>
-                    {!isUploadExpired && <RoundVideoUploadList electionState={currentElection?.electionState} />}
+                    {!isUploadExpired &&
+                        <RoundVideoUploadList
+                            electionState={currentElection?.electionState}
+                        />}
                 </MemberGateContainer>
             </div>
         </SideNavLayout>
@@ -212,7 +215,9 @@ const RoundVideoUploadList = ({ electionState }: { electionState: string }) => {
                                     onSubmit={submitElectionRoundVideo(
                                         vote.roundIndex
                                     )}
-                                    disableByElectionState={electionState !== ElectionStatus.Final}
+                                    disableByElectionState={
+                                        electionState !== ElectionStatus.Final
+                                    }
                                     submissionPhase={videoSubmissionPhase}
                                     submitButtonIcon={
                                         <RiVideoUploadLine
@@ -225,7 +230,9 @@ const RoundVideoUploadList = ({ electionState }: { electionState: string }) => {
                                     subtitle=""
                                     action="electvideo"
                                     uploadErrorMessage={
-                                        uploadErrorMessage.roundIndex === vote.roundIndex ? uploadErrorMessage.message : undefined
+                                        uploadErrorMessage.roundIndex ===
+                                            vote.roundIndex
+                                            ? uploadErrorMessage.message : undefined
                                     }
                                     uploadCompleteMessage={
                                         uploadCompleteMessage.roundIndex === vote.roundIndex ? uploadCompleteMessage.message : undefined
@@ -265,8 +272,7 @@ const Header = ({
         winner && isValidDelegate(winner.account)
             ? `Delegate: ${winner.name}`
             : roundStartTime && roundEndTime
-                ? `${roundStartTime.format("LT")} - ${roundEndTime.format("LT z")}`
-                : "Consensus not achieved";
+                ? `${roundStartTime.format("LT")} - ${roundEndTime.format("LT z")}` : "Consensus not achieved";
 
     return (
         <RoundHeader
