@@ -92,7 +92,7 @@ export const Footer = () => (
                                 target="_blank"
                                 isExternal
                             >
-                                Spend Explorer
+                                Eden Spend Explorer
                             </Link>
                         </li>
                     </nav>
