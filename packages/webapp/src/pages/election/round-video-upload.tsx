@@ -217,7 +217,10 @@ const RoundVideoUploadList = ({ electionState }: { electionState: string }) => {
                                         vote.roundIndex
                                     )}
                                     disableByElectionState={
-                                        electionState !== ElectionStatus.Final
+                                        electionState !==
+                                            ElectionStatus.Final &&
+                                        electionState !==
+                                            ElectionStatus.Registration
                                     }
                                     submissionPhase={videoSubmissionPhase}
                                     submitButtonIcon={
