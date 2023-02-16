@@ -185,7 +185,7 @@ const RoundVideoUploadList = ({ electionState }: { electionState: string }) => {
                 message:
                     "There was an error uploading your video. Please try again.",
             });
-        }
+            }
     };
 
     return (
