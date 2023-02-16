@@ -185,7 +185,7 @@ const RoundVideoUploadList = ({ electionState }: { electionState: string }) => {
                 message:
                     "There was an error uploading your video. Please try again.",
             });
-            }
+        }
     };
 
     return (
@@ -217,7 +217,10 @@ const RoundVideoUploadList = ({ electionState }: { electionState: string }) => {
                                         vote.roundIndex
                                     )}
                                     disableByElectionState={
-                                        electionState !== ElectionStatus.Final
+                                        electionState !==
+                                            ElectionStatus.Final &&
+                                        electionState !==
+                                            ElectionStatus.Registration
                                     }
                                     submissionPhase={videoSubmissionPhase}
                                     submitButtonIcon={
