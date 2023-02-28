@@ -18,6 +18,7 @@ interface Props {
     action: string;
     uploadCompleteMessage?: string;
     uploadErrorMessage?: string;
+    disableByElectionState?: boolean;
 }
 
 export const VideoSubmissionFormAndPreview = ({
@@ -32,6 +33,7 @@ export const VideoSubmissionFormAndPreview = ({
     subtitle = "",
     uploadCompleteMessage = "",
     uploadErrorMessage = "",
+    disableByElectionState = false,
 }: Props) => {
     const [isLoading, setIsLoading] = useState(false);
     const [uploadedVideo, setUploadedVideo] = useState<File | undefined>(
@@ -124,15 +126,27 @@ export const VideoSubmissionFormAndPreview = ({
 
                     {onSubmit && (
                         <div>
-                            <Button
-                                isSubmit
-                                disabled={isLoading || !uploadedVideo}
-                                isLoading={isLoading}
-                                type="secondary"
-                            >
-                                {submitButtonIcon}
-                                {getSubmissionText()}
-                            </Button>
+                            <div className="tooltip">
+                                <Button
+                                    isSubmit
+                                    disabled={
+                                        isLoading ||
+                                        !uploadedVideo ||
+                                        disableByElectionState
+                                    }
+                                    isLoading={isLoading}
+                                    type="secondary"
+                                >
+                                    {submitButtonIcon}
+                                    {getSubmissionText()}
+                                </Button>
+                                {disableByElectionState && (
+                                    <span className="tooltiptext">
+                                        Video uploads will be enabled once the
+                                        election rounds have finished
+                                    </span>
+                                )}
+                            </div>
                         </div>
                     )}
                 </div>
