@@ -93,9 +93,9 @@ export const ParticipationCard = ({ election }: Props) => {
 
     const electionDate = electionDates.startDateTime.utc().format("LL");
     const electionStartTime = electionDates.startDateTime.utc().format("LT");
-    const electionParticipationLimitTime = electionDates.participationTimeLimit.utc().format(
-        "LLL"
-    );
+    const electionParticipationLimitTime = electionDates.participationTimeLimit
+        .utc()
+        .format("LLL");
 
     const isPastElectionParticipationTimeLimit = dayjs().isAfter(
         electionDates.participationTimeLimit
