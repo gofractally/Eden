@@ -36,7 +36,7 @@ export const ElectionScheduleSegment = () => {
                 turn into an epic watch party that you might not want to miss!
             </Text>
             <Text type="info">
-                All times are local ({electionDates.startDateTime.format("z")})
+                All times are UTC ({electionDates.startDateTime})
             </Text>
             <Schedule>
                 <ScheduleEntry timeUtc="12:00">

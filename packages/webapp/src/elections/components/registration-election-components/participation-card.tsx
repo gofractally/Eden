@@ -1,9 +1,6 @@
 import React, { useState } from "react";
 import { useQueryClient } from "react-query";
 import dayjs from "dayjs";
-import utc from "dayjs/plugin/utc";
-
-dayjs.extend(utc);
 
 import {
     delay,
@@ -91,11 +88,11 @@ export const ParticipationCard = ({ election }: Props) => {
         return <Text>{(e as Error).message}</Text>;
     }
 
-    const electionDate = electionDates.startDateTime.utc().format("LL");
-    const electionStartTime = electionDates.startDateTime.utc().format("LT");
-    const electionParticipationLimitTime = electionDates.participationTimeLimit
-        .utc()
-        .format("LLL");
+    const electionDate = electionDates.startDateTime.format("LL");
+    const electionStartTime = `${electionDates.startDateTime.format("LT")} UTC`;
+    const electionParticipationLimitTime = `${electionDates.participationTimeLimit.format(
+        "LLL"
+    )} UTC`;
 
     const isPastElectionParticipationTimeLimit = dayjs().isAfter(
         electionDates.participationTimeLimit
