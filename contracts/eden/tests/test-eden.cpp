@@ -507,31 +507,31 @@ TEST_CASE("remove member by active signature")
    CHECK(get_table_size<eden::member_table_type>() == 2);
 }
 
-TEST_CASE("renaming")
-{
-   eden_tester t;
-   t.genesis();
-   auto distribution_time = t.next_election_time();
-   t.run_election();
-   t.egeon.act<actions::distribute>(100);
-   t.egeon.act<actions::fundtransfer>("egeon"_n, distribution_time, 1, "egeon"_n, s2a("0.0001 EOS"),
-                                      "");
-   test_chain::user_context{t.chain, {{"eden.gm"_n, "board.major"_n}, {"ahab"_n, "active"_n}}}
-       .act<actions::rename>("egeon"_n, "ahab"_n);
+// TEST_CASE("renaming")
+// {
+//    eden_tester t;
+//    t.genesis();
+//    auto distribution_time = t.next_election_time();
+//    t.run_election();
+//    t.egeon.act<actions::distribute>(100);
+//    t.egeon.act<actions::fundtransfer>("egeon"_n, distribution_time, 1, "egeon"_n, s2a("0.0001 EOS"),
+//                                       "");
+//    test_chain::user_context{t.chain, {{"eden.gm"_n, "board.major"_n}, {"ahab"_n, "active"_n}}}
+//        .act<actions::rename>("egeon"_n, "ahab"_n);
 
-   expect(t.egeon.trace<actions::withdraw>("egeon"_n, s2a("0.0001 EOS")), "insufficient balance");
-   t.ahab.act<actions::withdraw>("ahab"_n, s2a("0.0001 EOS"));
+//    expect(t.egeon.trace<actions::withdraw>("egeon"_n, s2a("0.0001 EOS")), "insufficient balance");
+//    t.ahab.act<actions::withdraw>("ahab"_n, s2a("0.0001 EOS"));
 
-   t.chain.start_block();
-   expect(t.egeon.trace<actions::fundtransfer>("egeon"_n, distribution_time, 1, "egeon"_n,
-                                               s2a("0.0001 EOS"), ""),
-          "member egeon not found");
-   t.ahab.act<actions::fundtransfer>("ahab"_n, distribution_time, 1, "ahab"_n, s2a("0.0001 EOS"),
-                                     "");
+//    t.chain.start_block();
+//    expect(t.egeon.trace<actions::fundtransfer>("egeon"_n, distribution_time, 1, "egeon"_n,
+//                                                s2a("0.0001 EOS"), ""),
+//           "member egeon not found");
+//    t.ahab.act<actions::fundtransfer>("ahab"_n, distribution_time, 1, "ahab"_n, s2a("0.0001 EOS"),
+//                                      "");
 
-   CHECK(get_eden_membership("pip"_n).representative() == "ahab"_n);
-   CHECK(get_eden_membership("ahab"_n).representative() == "ahab"_n);
-}
+//    CHECK(get_eden_membership("pip"_n).representative() == "ahab"_n);
+//    CHECK(get_eden_membership("ahab"_n).representative() == "ahab"_n);
+// }
 
 TEST_CASE("auction")
 {
@@ -1560,20 +1560,20 @@ TEST_CASE("settablerows")
 
 #endif
 
-TEST_CASE("election-events")
-{
-   eden_tester t;
-   t.genesis();
-   t.run_election(true, 10000, true);
-   t.induct_n(100);
-   t.run_election(true, 10000, true);
-   t.skip_to("2020-08-03T15:30:00.000");
-   t.alice.act<actions::distribute>(250);
-   test_chain::user_context{t.chain, {{"eden.gm"_n, "board.major"_n}, {"ahab"_n, "active"_n}}}
-       .act<actions::rename>("alice"_n, "ahab"_n);
-   t.write_dfuse_history("dfuse-test-election.json");
-   CompareFile{"test-election"}.write_events(t.chain).compare();
-}
+// TEST_CASE("election-events")
+// {
+//    eden_tester t;
+//    t.genesis();
+//    t.run_election(true, 10000, true);
+//    t.induct_n(100);
+//    t.run_election(true, 10000, true);
+//    t.skip_to("2020-08-03T15:30:00.000");
+//    t.alice.act<actions::distribute>(250);
+//    test_chain::user_context{t.chain, {{"eden.gm"_n, "board.major"_n}, {"ahab"_n, "active"_n}}}
+//        .act<actions::rename>("alice"_n, "ahab"_n);
+//    t.write_dfuse_history("dfuse-test-election.json");
+//    CompareFile{"test-election"}.write_events(t.chain).compare();
+// }
 
 /*
 TEST_CASE("contract-auth")

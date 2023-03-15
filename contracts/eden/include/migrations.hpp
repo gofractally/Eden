@@ -5,6 +5,7 @@
 #include <boost/mp11/algorithm.hpp>
 #include <eosio/name.hpp>
 #include <eosio/singleton.hpp>
+#include <globals.hpp>
 #include <members.hpp>
 #include <variant>
 
@@ -28,7 +29,8 @@ namespace eden
                                           no_migration<0>,
                                           migrate_member_v0,
                                           no_migration<1>,
-                                          fix_inductdonate_expiration_check>;
+                                          fix_inductdonate_expiration_check,
+                                          migrate_global_v0>;
 
    using migration_singleton = eosio::singleton<"migration"_n, migration_variant>;
 

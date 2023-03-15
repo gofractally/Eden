@@ -14,7 +14,14 @@ namespace eden
       active
    };
 
-   struct global_data_v1;
+   struct migrate_global_v0
+   {
+      uint32_t migrate_some(eosio::name contract, uint32_t max_steps);
+   };
+   EOSIO_REFLECT(migrate_global_v0)
+
+   // struct global_data_v1;
+   struct global_data_v2;
 
    struct global_data_v0
    {
@@ -23,7 +30,7 @@ namespace eden
       eosio::asset auction_starting_bid;
       uint32_t auction_duration;
       contract_stage_type stage;
-      global_data_v1 upgrade() const;
+      global_data_v2 upgrade() const;
    };
    EOSIO_REFLECT(global_data_v0,
                  community,
@@ -36,11 +43,18 @@ namespace eden
    {
       uint32_t election_start_time = 0xffffffffu;  // seconds from the start of Sunday
       uint32_t election_round_time_sec = 60 * 60;
-      auto upgrade() const { return *this; }
+      global_data_v2 upgrade() const;
    };
    EOSIO_REFLECT(global_data_v1, base global_data_v0, election_start_time, election_round_time_sec);
 
-   using global_variant = std::variant<global_data_v0, global_data_v1>;
+   struct global_data_v2 : global_data_v1
+   {
+      uint8_t max_month_withdraw = 3;
+      global_data_v2 upgrade() const { return *this; }
+   };
+   EOSIO_REFLECT(global_data_v2, base global_data_v1, max_month_withdraw);
+
+   using global_variant = std::variant<global_data_v0, global_data_v1, global_data_v2>;
    using global_singleton = eosio::singleton<"global"_n, global_variant>;
 
    global_singleton& get_global_singleton(eosio::name contract);
@@ -52,12 +66,12 @@ namespace eden
    {
      private:
       eosio::name contract;
-      global_data_v1 data;
+      global_data_v2 data;
 
      public:
       explicit globals(eosio::name contract);
-      explicit globals(eosio::name contract, const global_data_v1& initial_value);
-      const global_data_v1& get() { return data; }
+      explicit globals(eosio::name contract, const global_data_v2& initial_value);
+      const global_data_v2& get() { return data; }
       void check_active() const;
       eosio::symbol default_token() const { return data.minimum_donation.symbol; }
       void set_stage(contract_stage stage);
