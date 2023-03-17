@@ -71,6 +71,6 @@ namespace eden
       void set_election_start_time(uint32_t time);
       void set_election_round_duration(uint32_t duration);
       void set_minimum_donation_fee(eosio::asset new_minimum_donation);
-      void set_max_month_widthdraw(uint8_t months);
+      void set_max_month_withdraw(uint8_t months);
    };
 }  // namespace eden

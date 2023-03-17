@@ -23,7 +23,8 @@ namespace eden
    {
       require_auth(get_self());
       // validate if it is required that no distribution is in progress
-      globals{get_self()}.set_max_month_widthdraw(months);
+      eosio::check(months > 0, "Max months to collect the funds should be at least 1");
+      globals{get_self()}.set_max_month_withdraw(months);
    }
 
 }  // namespace eden

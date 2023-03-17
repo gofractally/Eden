@@ -68,7 +68,7 @@ namespace eden
       get_global_singleton(contract).set(data, eosio::same_payer);
    }
 
-   void globals::set_max_month_widthdraw(uint8_t months)
+   void globals::set_max_month_withdraw(uint8_t months)
    {
       data.max_month_withdraw = months;
       get_global_singleton(contract).set(data, eosio::same_payer);

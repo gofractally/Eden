@@ -1505,6 +1505,8 @@ TEST_CASE("change the max month to transfer funds")
    const uint8_t new_max_month_withdraw = 6;
 
    CHECK(get_globals().max_month_withdraw == default_max_month_withdraw);
+   expect(t.eden_gm.trace<actions::setcoltime>(0),
+          "Max months to collect the funds should be at least 1");
    t.eden_gm.act<actions::setcoltime>(new_max_month_withdraw);
    CHECK(get_globals().max_month_withdraw == new_max_month_withdraw);
 }
@@ -1560,6 +1562,17 @@ TEST_CASE("return funds to master by collecting them")
    expected[s2t("2020-10-02T15:30:00.000")] = s2a("1.4834 EOS");
    CHECK(t.get_budgets_by_period() == expected);
    CHECK(accounts{"eden.gm"_n, "owned"_n}.get_account("master"_n)->balance() == s2a("29.8095 EOS"));
+
+   t.eden_gm.act<actions::setcoltime>(1);
+   t.skip_to("2020-11-01T15:30:00.000");
+   t.egeon.act<actions::collectfunds>(100);
+   expected.erase(s2t("2020-07-03T15:30:00.000"));
+   expected.erase(s2t("2020-07-04T15:30:00.000"));
+   expected.erase(s2t("2020-08-03T15:30:00.000"));
+   expected.erase(s2t("2020-09-02T15:30:00.000"));
+   expected[s2t("2020-11-01T15:30:00.000")] = s2a("1.4904 EOS");
+   CHECK(t.get_budgets_by_period() == expected);
+   CHECK(accounts{"eden.gm"_n, "owned"_n}.get_account("master"_n)->balance() == s2a("33.0262 EOS"));
 }
 
 TEST_CASE("account migration")
