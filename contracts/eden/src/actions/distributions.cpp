@@ -15,8 +15,8 @@ namespace eden
 
    void eden::collectfunds(uint32_t max_steps)
    {
-      eosio::check(migrations{get_self()}.is_completed<migrate_global_v0>(),
-                   "Tables must be migrated to enable collecting funds");
+      // eosio::check(migrations{get_self()}.is_completed<migrate_global_v0>(),
+      //              "Global must be migrated to enable collecting funds");
       eosio::check(distributions{get_self()}.on_collectfunds(max_steps) != max_steps,
                    "Nothing to do");
    }

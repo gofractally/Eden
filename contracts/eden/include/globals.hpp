@@ -14,13 +14,6 @@ namespace eden
       active
    };
 
-   struct migrate_global_v0
-   {
-      uint32_t migrate_some(eosio::name contract, uint32_t max_steps);
-   };
-   EOSIO_REFLECT(migrate_global_v0)
-
-   // struct global_data_v1;
    struct global_data_v2;
 
    struct global_data_v0

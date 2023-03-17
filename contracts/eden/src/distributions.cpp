@@ -504,7 +504,10 @@ namespace eden
 
    uint32_t distributions::on_collectfunds(uint32_t max_steps)
    {
+      eosio::print("ON_COLLECTFUNDS\n\n");
+
       // TODO: validate if is required that there is no pending distribution
+      // CHECK: unit-test "budget distribution triggered by donation"
 
       auto months_to_withdraw = globals{contract}.get().max_month_withdraw;
 
@@ -517,6 +520,12 @@ namespace eden
          if (iter->distribution_time() <
              eosio::current_time_point() - eosio::days(30 * months_to_withdraw))
          {
+            eosio::print("distribution_time: ",
+                         iter->distribution_time().to_time_point().sec_since_epoch(), "\n");
+            eosio::print("curr - 90 days: ",
+                         (eosio::current_time_point() - eosio::days(30 * months_to_withdraw))
+                             .sec_since_epoch(),
+                         "\n\n");
             push_event(
                 distribution_event_return{
                     .owner = iter->owner(),
@@ -528,6 +537,10 @@ namespace eden
                 contract);
             owned_accounts.add_balance("master"_n, iter->balance(), false);
             iter = member_idx.erase(iter);
+         }
+         else
+         {
+            ++iter;
          }
       }
 

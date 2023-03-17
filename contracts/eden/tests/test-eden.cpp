@@ -507,31 +507,31 @@ TEST_CASE("remove member by active signature")
    CHECK(get_table_size<eden::member_table_type>() == 2);
 }
 
-// TEST_CASE("renaming")
-// {
-//    eden_tester t;
-//    t.genesis();
-//    auto distribution_time = t.next_election_time();
-//    t.run_election();
-//    t.egeon.act<actions::distribute>(100);
-//    t.egeon.act<actions::fundtransfer>("egeon"_n, distribution_time, 1, "egeon"_n, s2a("0.0001 EOS"),
-//                                       "");
-//    test_chain::user_context{t.chain, {{"eden.gm"_n, "board.major"_n}, {"ahab"_n, "active"_n}}}
-//        .act<actions::rename>("egeon"_n, "ahab"_n);
+TEST_CASE("renaming")
+{
+   eden_tester t;
+   t.genesis();
+   auto distribution_time = t.next_election_time();
+   t.run_election();
+   t.egeon.act<actions::distribute>(100);
+   t.egeon.act<actions::fundtransfer>("egeon"_n, distribution_time, 1, "egeon"_n, s2a("0.0001 EOS"),
+                                      "");
+   test_chain::user_context{t.chain, {{"eden.gm"_n, "board.major"_n}, {"ahab"_n, "active"_n}}}
+       .act<actions::rename>("egeon"_n, "ahab"_n);
 
-//    expect(t.egeon.trace<actions::withdraw>("egeon"_n, s2a("0.0001 EOS")), "insufficient balance");
-//    t.ahab.act<actions::withdraw>("ahab"_n, s2a("0.0001 EOS"));
+   expect(t.egeon.trace<actions::withdraw>("egeon"_n, s2a("0.0001 EOS")), "insufficient balance");
+   t.ahab.act<actions::withdraw>("ahab"_n, s2a("0.0001 EOS"));
 
-//    t.chain.start_block();
-//    expect(t.egeon.trace<actions::fundtransfer>("egeon"_n, distribution_time, 1, "egeon"_n,
-//                                                s2a("0.0001 EOS"), ""),
-//           "member egeon not found");
-//    t.ahab.act<actions::fundtransfer>("ahab"_n, distribution_time, 1, "ahab"_n, s2a("0.0001 EOS"),
-//                                      "");
+   t.chain.start_block();
+   expect(t.egeon.trace<actions::fundtransfer>("egeon"_n, distribution_time, 1, "egeon"_n,
+                                               s2a("0.0001 EOS"), ""),
+          "member egeon not found");
+   t.ahab.act<actions::fundtransfer>("ahab"_n, distribution_time, 1, "ahab"_n, s2a("0.0001 EOS"),
+                                     "");
 
-//    CHECK(get_eden_membership("pip"_n).representative() == "ahab"_n);
-//    CHECK(get_eden_membership("ahab"_n).representative() == "ahab"_n);
-// }
+   CHECK(get_eden_membership("pip"_n).representative() == "ahab"_n);
+   CHECK(get_eden_membership("ahab"_n).representative() == "ahab"_n);
+}
 
 TEST_CASE("auction")
 {
@@ -1484,6 +1484,68 @@ TEST_CASE("clearall")
                       std::tuple("eden.gm"_n, "eden.gm"_n, "rename"_n)}});
    t.chain.start_block();
    t.genesis();
+}
+
+TEST_CASE("migrate to include max_month_withdraw")
+{
+   eden_tester t;
+   t.genesis();
+
+   const uint8_t default_max_month_withdraw = 3;
+
+   CHECK(get_globals().max_month_withdraw == default_max_month_withdraw);
+}
+
+TEST_CASE("change the max month withdraw")
+{
+   eden_tester t;
+   t.genesis();
+
+   // TOOD: implement the action to modify the max months to withdraw
+
+   // const uint8_t new_max_month_withdraw = 5;
+
+   // t.eden_gm.act<actions::setmaxmonthwithdraw>(new_max_month_withdraw);
+
+   // CHECK(get_globals().max_month_withdraw == new_max_month_withdraw);
+}
+
+TEST_CASE("return funds to master by collecting them")
+{
+   eden_tester t;
+   t.genesis();
+   t.set_balance(s2a("36.0000 EOS"));
+
+   t.run_election();
+
+   t.egeon.act<actions::distribute>(250);
+   t.skip_to("2020-05-04T15:30:00.000");
+   t.egeon.act<actions::distribute>(250);
+   t.skip_to("2020-07-04T15:30:00.000");
+   t.egeon.act<actions::distribute>(250);
+
+   std::map<eosio::block_timestamp, eosio::asset> expected{
+       {s2t("2020-04-04T15:30:00.000"), s2a("1.8000 EOS")},
+       {s2t("2020-05-04T15:30:00.000"), s2a("1.7100 EOS")},
+       {s2t("2020-06-03T15:30:00.000"), s2a("1.6245 EOS")},
+       {s2t("2020-07-03T15:30:00.000"), s2a("0.0514 EOS")},
+       {s2t("2020-07-04T15:30:00.000"), s2a("1.5407 EOS")}};
+   CHECK(t.get_budgets_by_period() == expected);
+   CHECK(accounts{"eden.gm"_n, "owned"_n}.get_account("master"_n)->balance() == s2a("29.2734 EOS"));
+
+   t.egeon.act<actions::collectfunds>(100);
+   expected.erase(s2t("2020-04-04T15:30:00.000"));
+   // validate funds are returned to master: 29.2734 EOS + 1.8000 EOS = 31.0734 EOS
+   CHECK(t.get_budgets_by_period() == expected);
+   CHECK(accounts{"eden.gm"_n, "owned"_n}.get_account("master"_n)->balance() == s2a("31.0734 EOS"));
+
+   t.skip_to("2020-08-03T15:30:00.000");
+   t.egeon.act<actions::collectfunds>(100);
+   expected.erase(s2t("2020-05-04T15:30:00.000"));
+   expected[s2t("2020-08-03T15:30:00.000")] = s2a("1.5536 EOS");
+   CHECK(t.get_budgets_by_period() == expected);
+   // validate funds are returned to master: 31.0734 EOS + 1.7100 EOS = 32.7834 EOS - 1.5536 EOS = 31.2298 EOS
+   CHECK(accounts{"eden.gm"_n, "owned"_n}.get_account("master"_n)->balance() == s2a("31.2298 EOS"));
 }
 
 TEST_CASE("account migration")

@@ -13,20 +13,6 @@ namespace eden
       return {*this};
    }
 
-   uint32_t migrate_global_v0::migrate_some(eosio::name contract, uint32_t max_steps)
-   {
-      auto& singleton = get_global_singleton(contract);
-      auto data_sing = singleton.get();
-
-      if (const auto* data_v1 = std::get_if<global_data_v1>(&data_sing))
-      {
-         singleton.set(global_data_v2{*data_v1}, contract);
-         --max_steps;
-      }
-
-      return max_steps;
-   }
-
    static std::optional<global_singleton> global_singleton_inst;
 
    global_singleton& get_global_singleton(eosio::name contract)
