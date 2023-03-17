@@ -1506,7 +1506,7 @@ TEST_CASE("change the max month to transfer funds")
 
    CHECK(get_globals().max_month_withdraw == default_max_month_withdraw);
    expect(t.eden_gm.trace<actions::setcoltime>(0),
-          "Max months to collect the funds should be at least 1");
+          "Max months to withdraw the funds should be at least 1");
    t.eden_gm.act<actions::setcoltime>(new_max_month_withdraw);
    CHECK(get_globals().max_month_withdraw == new_max_month_withdraw);
 }
