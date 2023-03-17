@@ -67,4 +67,10 @@ namespace eden
       data.minimum_donation = new_minimum_donation;
       get_global_singleton(contract).set(data, eosio::same_payer);
    }
+
+   void globals::set_max_month_widthdraw(uint8_t months)
+   {
+      data.max_month_withdraw = months;
+      get_global_singleton(contract).set(data, eosio::same_payer);
+   }
 }  // namespace eden

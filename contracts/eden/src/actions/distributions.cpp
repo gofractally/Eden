@@ -1,7 +1,7 @@
 #include <accounts.hpp>
 #include <distributions.hpp>
 #include <eden.hpp>
-#include <migrations.hpp>
+#include <globals.hpp>
 
 namespace eden
 {
@@ -15,10 +15,15 @@ namespace eden
 
    void eden::collectfunds(uint32_t max_steps)
    {
-      // eosio::check(migrations{get_self()}.is_completed<migrate_global_v0>(),
-      //              "Global must be migrated to enable collecting funds");
       eosio::check(distributions{get_self()}.on_collectfunds(max_steps) != max_steps,
                    "Nothing to do");
+   }
+
+   void eden::setcoltime(uint8_t months)
+   {
+      require_auth(get_self());
+      // validate if it is required that no distribution is in progress
+      globals{get_self()}.set_max_month_widthdraw(months);
    }
 
 }  // namespace eden

@@ -1496,18 +1496,17 @@ TEST_CASE("migrate to include max_month_withdraw")
    CHECK(get_globals().max_month_withdraw == default_max_month_withdraw);
 }
 
-TEST_CASE("change the max month withdraw")
+TEST_CASE("change the max month to transfer funds")
 {
    eden_tester t;
    t.genesis();
 
-   // TOOD: implement the action to modify the max months to withdraw
+   const uint8_t default_max_month_withdraw = 3;
+   const uint8_t new_max_month_withdraw = 6;
 
-   // const uint8_t new_max_month_withdraw = 5;
-
-   // t.eden_gm.act<actions::setmaxmonthwithdraw>(new_max_month_withdraw);
-
-   // CHECK(get_globals().max_month_withdraw == new_max_month_withdraw);
+   CHECK(get_globals().max_month_withdraw == default_max_month_withdraw);
+   t.eden_gm.act<actions::setcoltime>(new_max_month_withdraw);
+   CHECK(get_globals().max_month_withdraw == new_max_month_withdraw);
 }
 
 TEST_CASE("return funds to master by collecting them")
@@ -1546,6 +1545,21 @@ TEST_CASE("return funds to master by collecting them")
    CHECK(t.get_budgets_by_period() == expected);
    // validate funds are returned to master: 31.0734 EOS + 1.7100 EOS = 32.7834 EOS - 1.5536 EOS = 31.2298 EOS
    CHECK(accounts{"eden.gm"_n, "owned"_n}.get_account("master"_n)->balance() == s2a("31.2298 EOS"));
+
+   t.eden_gm.act<actions::setcoltime>(4);
+   t.skip_to("2020-09-02T15:30:00.000");
+   t.egeon.act<actions::collectfunds>(100);
+   // no deletion is required since the max month to transfer funds has changed to 4
+   expected[s2t("2020-09-02T15:30:00.000")] = s2a("1.5614 EOS");
+   CHECK(t.get_budgets_by_period() == expected);
+   CHECK(accounts{"eden.gm"_n, "owned"_n}.get_account("master"_n)->balance() == s2a("29.6684 EOS"));
+
+   t.skip_to("2020-10-02T15:30:00.000");
+   t.egeon.act<actions::collectfunds>(100);
+   expected.erase(s2t("2020-06-03T15:30:00.000"));
+   expected[s2t("2020-10-02T15:30:00.000")] = s2a("1.4834 EOS");
+   CHECK(t.get_budgets_by_period() == expected);
+   CHECK(accounts{"eden.gm"_n, "owned"_n}.get_account("master"_n)->balance() == s2a("29.8095 EOS"));
 }
 
 TEST_CASE("account migration")
