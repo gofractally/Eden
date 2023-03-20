@@ -1502,11 +1502,13 @@ TEST_CASE("change the max month to transfer funds")
    t.genesis();
 
    const uint8_t default_max_month_withdraw = 3;
-   const uint8_t new_max_month_withdraw = 6;
+   const uint8_t new_max_month_withdraw = 1;
 
    CHECK(get_globals().max_month_withdraw == default_max_month_withdraw);
    expect(t.eden_gm.trace<actions::setcoltime>(0),
-          "Max months to withdraw the funds should be at least 1");
+          "Proposed collecting time is out of the valid range");
+   expect(t.eden_gm.trace<actions::setcoltime>(4),
+          "Proposed collecting time is out of the valid range");
    t.eden_gm.act<actions::setcoltime>(new_max_month_withdraw);
    CHECK(get_globals().max_month_withdraw == new_max_month_withdraw);
 }
@@ -1519,6 +1521,7 @@ TEST_CASE("return funds to master by collecting them")
 
    t.run_election();
 
+   t.eden_gm.act<actions::setcoltime>(2);
    t.egeon.act<actions::distribute>(250);
    t.skip_to("2020-05-04T15:30:00.000");
    t.egeon.act<actions::distribute>(250);
@@ -1531,48 +1534,30 @@ TEST_CASE("return funds to master by collecting them")
        {s2t("2020-06-03T15:30:00.000"), s2a("1.6245 EOS")},
        {s2t("2020-07-03T15:30:00.000"), s2a("0.0514 EOS")},
        {s2t("2020-07-04T15:30:00.000"), s2a("1.5407 EOS")}};
-   CHECK(t.get_budgets_by_period() == expected);
-   CHECK(accounts{"eden.gm"_n, "owned"_n}.get_account("master"_n)->balance() == s2a("29.2734 EOS"));
 
+   // remove because the max time to collect the funds is 2 months
    t.egeon.act<actions::collectfunds>(100);
    expected.erase(s2t("2020-04-04T15:30:00.000"));
-   // validate funds are returned to master: 29.2734 EOS + 1.8000 EOS = 31.0734 EOS
+   expected.erase(s2t("2020-05-04T15:30:00.000"));
+   // validate funds are returned to master: 29.2734 EOS + 1.8000 EOS + 1.7100 EOS = 32.7834 EOS
    CHECK(t.get_budgets_by_period() == expected);
-   CHECK(accounts{"eden.gm"_n, "owned"_n}.get_account("master"_n)->balance() == s2a("31.0734 EOS"));
+   CHECK(accounts{"eden.gm"_n, "owned"_n}.get_account("master"_n)->balance() == s2a("32.7834 EOS"));
 
    t.skip_to("2020-08-03T15:30:00.000");
    t.egeon.act<actions::collectfunds>(100);
-   expected.erase(s2t("2020-05-04T15:30:00.000"));
-   expected[s2t("2020-08-03T15:30:00.000")] = s2a("1.5536 EOS");
+   // from 2020-06-03T15:30:00.000 to 2020-08-03T15:30:00.000 there are 61 days
+   expected.erase(s2t("2020-06-03T15:30:00.000"));
+   expected[s2t("2020-08-03T15:30:00.000")] = s2a("1.6391 EOS");
    CHECK(t.get_budgets_by_period() == expected);
-   // validate funds are returned to master: 31.0734 EOS + 1.7100 EOS = 32.7834 EOS - 1.5536 EOS = 31.2298 EOS
-   CHECK(accounts{"eden.gm"_n, "owned"_n}.get_account("master"_n)->balance() == s2a("31.2298 EOS"));
+   CHECK(accounts{"eden.gm"_n, "owned"_n}.get_account("master"_n)->balance() == s2a("32.7688 EOS"));
 
-   t.eden_gm.act<actions::setcoltime>(4);
+   t.eden_gm.act<actions::setcoltime>(3);
    t.skip_to("2020-09-02T15:30:00.000");
    t.egeon.act<actions::collectfunds>(100);
-   // no deletion is required since the max month to transfer funds has changed to 4
-   expected[s2t("2020-09-02T15:30:00.000")] = s2a("1.5614 EOS");
+   // no deletion is required since the max month to withdraw funds has changed to 90 days
+   expected[s2t("2020-09-02T15:30:00.000")] = s2a("1.6384 EOS");
    CHECK(t.get_budgets_by_period() == expected);
-   CHECK(accounts{"eden.gm"_n, "owned"_n}.get_account("master"_n)->balance() == s2a("29.6684 EOS"));
-
-   t.skip_to("2020-10-02T15:30:00.000");
-   t.egeon.act<actions::collectfunds>(100);
-   expected.erase(s2t("2020-06-03T15:30:00.000"));
-   expected[s2t("2020-10-02T15:30:00.000")] = s2a("1.4834 EOS");
-   CHECK(t.get_budgets_by_period() == expected);
-   CHECK(accounts{"eden.gm"_n, "owned"_n}.get_account("master"_n)->balance() == s2a("29.8095 EOS"));
-
-   t.eden_gm.act<actions::setcoltime>(1);
-   t.skip_to("2020-11-01T15:30:00.000");
-   t.egeon.act<actions::collectfunds>(100);
-   expected.erase(s2t("2020-07-03T15:30:00.000"));
-   expected.erase(s2t("2020-07-04T15:30:00.000"));
-   expected.erase(s2t("2020-08-03T15:30:00.000"));
-   expected.erase(s2t("2020-09-02T15:30:00.000"));
-   expected[s2t("2020-11-01T15:30:00.000")] = s2a("1.4904 EOS");
-   CHECK(t.get_budgets_by_period() == expected);
-   CHECK(accounts{"eden.gm"_n, "owned"_n}.get_account("master"_n)->balance() == s2a("33.0262 EOS"));
+   CHECK(accounts{"eden.gm"_n, "owned"_n}.get_account("master"_n)->balance() == s2a("31.1304 EOS"));
 }
 
 TEST_CASE("account migration")
@@ -1649,20 +1634,20 @@ TEST_CASE("settablerows")
 
 #endif
 
-// TEST_CASE("election-events")
-// {
-//    eden_tester t;
-//    t.genesis();
-//    t.run_election(true, 10000, true);
-//    t.induct_n(100);
-//    t.run_election(true, 10000, true);
-//    t.skip_to("2020-08-03T15:30:00.000");
-//    t.alice.act<actions::distribute>(250);
-//    test_chain::user_context{t.chain, {{"eden.gm"_n, "board.major"_n}, {"ahab"_n, "active"_n}}}
-//        .act<actions::rename>("alice"_n, "ahab"_n);
-//    t.write_dfuse_history("dfuse-test-election.json");
-//    CompareFile{"test-election"}.write_events(t.chain).compare();
-// }
+TEST_CASE("election-events")
+{
+   eden_tester t;
+   t.genesis();
+   t.run_election(true, 10000, true);
+   t.induct_n(100);
+   t.run_election(true, 10000, true);
+   t.skip_to("2020-08-03T15:30:00.000");
+   t.alice.act<actions::distribute>(250);
+   test_chain::user_context{t.chain, {{"eden.gm"_n, "board.major"_n}, {"ahab"_n, "active"_n}}}
+       .act<actions::rename>("alice"_n, "ahab"_n);
+   t.write_dfuse_history("dfuse-test-election.json");
+   CompareFile{"test-election"}.write_events(t.chain).compare();
+}
 
 /*
 TEST_CASE("contract-auth")

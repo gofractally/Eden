@@ -23,7 +23,8 @@ namespace eden
    {
       require_auth(get_self());
 
-      eosio::check(months > 0, "Max months to withdraw the funds should be at least 1");
+      eosio::check(months >= 1 && months <= 3,
+                   "Proposed collecting time is out of the valid range");
       globals{get_self()}.set_max_month_withdraw(months);
    }
 
