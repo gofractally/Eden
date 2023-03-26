@@ -128,6 +128,7 @@ namespace eden
       uint32_t on_election_kick(eosio::name member, uint32_t max_steps);
       void on_resign(const member& member);
       void on_rename(eosio::name old_account, eosio::name new_account);
+      uint32_t on_collectfunds(uint32_t max_steps);
       void clear_all();
    };
 }  // namespace eden

@@ -2,6 +2,7 @@
 #include <distributions.hpp>
 #include <elections.hpp>
 #include <events.hpp>
+#include <globals.hpp>
 #include <members.hpp>
 #include <numeric>
 
@@ -499,6 +500,39 @@ namespace eden
          member_idx.modify(iter, contract, [&](auto& acct) { acct.owner() = new_account; });
          iter = next;
       }
+   }
+
+   uint32_t distributions::on_collectfunds(uint32_t max_steps)
+   {
+      auto months_to_withdraw = globals{contract}.get().max_month_withdraw;
+
+      accounts owned_accounts{contract, "owned"_n};
+      setup_distribution(contract, owned_accounts);
+      for (auto iter = distribution_account_tb.begin(), end = distribution_account_tb.end();
+           max_steps > 0 && iter != end; --max_steps)
+      {
+         if (iter->distribution_time() <
+             eosio::current_time_point() - eosio::days(30 * months_to_withdraw))
+         {
+            push_event(
+                distribution_event_return{
+                    .owner = iter->owner(),
+                    .distribution_time = iter->distribution_time(),
+                    .rank = iter->rank(),
+                    .amount = iter->balance(),
+                    .pool = "master"_n,
+                },
+                contract);
+            owned_accounts.add_balance("master"_n, iter->balance(), false);
+            iter = distribution_account_tb.erase(iter);
+         }
+         else
+         {
+            ++iter;
+         }
+      }
+
+      return max_steps;
    }
 
    void distributions::clear_all()
