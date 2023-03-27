@@ -1,5 +1,6 @@
 import { chainConfig, shortAppName } from "config";
 import { Anchor } from "ual-anchor";
+import { Scatter } from "ual-scatter";
 import { Ledger } from "ual-ledger";
 
 export const anchor = new Anchor([chainConfig], {
@@ -20,5 +21,7 @@ export const anchor = new Anchor([chainConfig], {
     // Optional: Whether or not to verify the signatures during user login, defaults to false (disabled)
     // verifyProofs: false,
 });
+
+export const scatter = new Scatter([chainConfig], { appName: shortAppName });
 
 export const ledger = new Ledger([chainConfig]);

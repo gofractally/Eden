@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 
 import { appName, availableWallets, chainConfig } from "config";
-import { anchor, ledger } from "./config";
+import { anchor, scatter, ledger } from "./config";
 import { useUALSoftkeyLogin, SoftkeyAuthenticator } from "./softkey";
 
 export const EdenUALProvider: React.FC = ({ children }) => {
@@ -13,6 +13,9 @@ export const EdenUALProvider: React.FC = ({ children }) => {
         const newAuthenticators = [];
         if (availableWallets.includes("ANCHOR")) {
             newAuthenticators.push(anchor);
+        }
+        if (availableWallets.includes("SCATTER")) {
+            newAuthenticators.push(scatter);
         }
         if (availableWallets.includes("LEDGER")) {
             newAuthenticators.push(ledger);
