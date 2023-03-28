@@ -507,7 +507,7 @@ jobs:
                   NEXT_PUBLIC_BLOCKEXPLORER_ACCOUNT_BASE_URL: https://bloks.io/account
                   NEXT_PUBLIC_BLOCKEXPLORER_TRANSACTION_BASE_URL: https://bloks.io/transaction
                   NEXT_PUBLIC_APP_MINIMUM_DONATION_AMOUNT: 3.0000 EOS
-                  NEXT_PUBLIC_ENABLED_WALLETS: ANCHOR,SCATTER,LEDGER
+                  NEXT_PUBLIC_ENABLED_WALLETS: ANCHOR,LEDGER
                   NEXT_PUBLIC_IPFS_BASE_URL: https://eden-genesis.mypinata.cloud/ipfs
                   NEXT_PUBLIC_DEV_USE_FIXTURE_DATA: false
                   PDN_NEXT_PUBLIC_ZOOM_CLIENT_ID: ${{ secrets.PDN_NEXT_PUBLIC_ZOOM_CLIENT_ID }}
