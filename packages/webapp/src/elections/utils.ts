@@ -1,7 +1,4 @@
 import dayjs, { Dayjs } from "dayjs";
-import utc from "dayjs/plugin/utc";
-
-dayjs.extend(utc);
 
 import { ActiveStateConfigType, SimpleVoteData } from "./interfaces";
 import { getMemberGroupFromIndex } from "./api";
@@ -16,7 +13,7 @@ export const extractElectionDates = (election: any) => {
         throw new Error("Error parsing the Election start date.");
     }
 
-    const startDateTime = dayjs(rawStartDateTime).utc();
+    const startDateTime = dayjs(rawStartDateTime);
     const participationTimeLimit = startDateTime.subtract(24, "hour");
     const estimatedEndDateTime = startDateTime.add(
         10, // TODO: estimate and calculate this value properly based on round numbers

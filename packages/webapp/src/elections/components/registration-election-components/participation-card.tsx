@@ -89,10 +89,10 @@ export const ParticipationCard = ({ election }: Props) => {
     }
 
     const electionDate = electionDates.startDateTime.format("LL");
-    const electionStartTime = `${electionDates.startDateTime.format("LT")} UTC`;
-    const electionParticipationLimitTime = `${electionDates.participationTimeLimit.format(
-        "LLL"
-    )} UTC`;
+    const electionStartTime = electionDates.startDateTime.format("LT z");
+    const electionParticipationLimitTime = electionDates.participationTimeLimit.format(
+        "LLL z"
+    );
 
     const isPastElectionParticipationTimeLimit = dayjs().isAfter(
         electionDates.participationTimeLimit
