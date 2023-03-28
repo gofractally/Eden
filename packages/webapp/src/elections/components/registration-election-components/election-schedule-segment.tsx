@@ -36,7 +36,7 @@ export const ElectionScheduleSegment = () => {
                 turn into an epic watch party that you might not want to miss!
             </Text>
             <Text type="info">
-                All times are local ({electionDates.startDateTime.format("z")})
+                All times are UTC
             </Text>
             <Schedule>
                 <ScheduleEntry timeUtc="12:00">
@@ -76,7 +76,7 @@ interface ScheduleEntry {
 }
 
 const ScheduleEntry = ({ timeUtc, children }: ScheduleEntry) => {
-    const timeString = dayjs(`2021-10-09T${timeUtc}:00.000Z`).format("LT");
+    const timeString = dayjs(`2021-10-09T${timeUtc}:00.000Z`).utc().format("LT");
     return (
         <li>
             <div className="flex flex-col sm:flex-row sm:space-x-1">
