@@ -1537,6 +1537,8 @@ TEST_CASE("return funds to master by collecting them")
 
    // remove because the max time to collect the funds is 2 months
    t.egeon.act<actions::collectfunds>(100);
+   t.chain.start_block();
+   expect(t.egeon.trace<actions::collectfunds>(100), "Nothing to do");
    expected.erase(s2t("2020-04-04T15:30:00.000"));
    expected.erase(s2t("2020-05-04T15:30:00.000"));
    // validate funds are returned to master: 29.2734 EOS + 1.8000 EOS + 1.7100 EOS = 32.7834 EOS
@@ -1553,11 +1555,9 @@ TEST_CASE("return funds to master by collecting them")
 
    t.eden_gm.act<actions::setcoltime>(3);
    t.skip_to("2020-09-02T15:30:00.000");
-   t.egeon.act<actions::collectfunds>(100);
+   expect(t.egeon.trace<actions::collectfunds>(100), "Nothing to do");
    // no deletion is required since the max month to withdraw funds has changed to 90 days
-   expected[s2t("2020-09-02T15:30:00.000")] = s2a("1.6384 EOS");
-   CHECK(t.get_budgets_by_period() == expected);
-   CHECK(accounts{"eden.gm"_n, "owned"_n}.get_account("master"_n)->balance() == s2a("31.1304 EOS"));
+   // and no distribution is done since no funds to return are available
 }
 
 TEST_CASE("account migration")

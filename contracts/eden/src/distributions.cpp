@@ -504,6 +504,8 @@ namespace eden
 
    uint32_t distributions::on_collectfunds(uint32_t max_steps)
    {
+      uint32_t copy_max_steps = max_steps;
+      bool has_returned = false;
       auto months_to_withdraw = globals{contract}.get().max_month_withdraw;
 
       accounts owned_accounts{contract, "owned"_n};
@@ -525,6 +527,8 @@ namespace eden
                 contract);
             owned_accounts.add_balance("master"_n, iter->balance(), false);
             iter = distribution_account_tb.erase(iter);
+
+            has_returned = true;
          }
          else
          {
@@ -532,7 +536,7 @@ namespace eden
          }
       }
 
-      return max_steps;
+      return has_returned ? max_steps : copy_max_steps;
    }
 
    void distributions::clear_all()
