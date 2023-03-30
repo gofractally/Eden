@@ -48,7 +48,7 @@ namespace eden
          eosio::action{{contract, "active"_n},
                        sbt_account,
                        "givesimple"_n,
-                       std::tuple(contract, "epv"_n, contract, it->account(),
+                       std::tuple(contract, "epvi"_n, contract, it->account(),
                                   std::string("round " + std::to_string(it->round()) + ", " +
                                               std::to_string(it->vote_time().sec_since_epoch())))}
              .send();
