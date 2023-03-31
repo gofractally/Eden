@@ -280,7 +280,9 @@ const Header = ({
         winner && isValidDelegate(winner.account)
             ? `Delegate: ${winner.name}`
             : roundStartTime && roundEndTime
-            ? `${roundStartTime.utc().format("LT")} - ${roundEndTime.utc().format("LT")} UTC`
+            ? `${roundStartTime.utc().format("LT")} - ${roundEndTime
+                .utc()
+                .format("LT")} UTC`
             : "Consensus not achieved";
 
     return (
