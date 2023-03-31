@@ -185,7 +185,7 @@ const RoundVideoUploadList = ({ electionState }: { electionState: string }) => {
                 message:
                     "There was an error uploading your video. Please try again.",
             });
-            }
+        }
     };
 
     return (
@@ -280,7 +280,9 @@ const Header = ({
         winner && isValidDelegate(winner.account)
             ? `Delegate: ${winner.name}`
             : roundStartTime && roundEndTime
-            ? `${roundStartTime.format("LT")} - ${roundEndTime.format("LT z")}`
+            ? `${roundStartTime
+                  .utc()
+                  .format("LT")} - ${roundEndTime.utc().format("LT")} UTC`
             : "Consensus not achieved";
 
     return (
