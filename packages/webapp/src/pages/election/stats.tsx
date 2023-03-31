@@ -138,10 +138,7 @@ const GlobalRoundHeader = ({ round }: GlobalRoundHeaderProps) => {
         }
     };
 
-    const subText = `${round.votingBegin
-        .utc().format("LT")} - ${round.votingEnd
-        .utc()
-        .format("LT")} UTC`;
+    const subText = `${round.votingBegin.utc().format("LT")} - ${round.votingEnd.utc().format("LT")} UTC`;
 
     return (
         <RoundHeader
