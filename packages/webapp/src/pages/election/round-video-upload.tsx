@@ -281,8 +281,8 @@ const Header = ({
             ? `Delegate: ${winner.name}`
             : roundStartTime && roundEndTime
             ? `${roundStartTime.utc().format("LT")} - ${roundEndTime
-                .utc()
-                .format("LT")} UTC`
+                  .utc()
+                  .format("LT")} UTC`
             : "Consensus not achieved";
 
     return (
