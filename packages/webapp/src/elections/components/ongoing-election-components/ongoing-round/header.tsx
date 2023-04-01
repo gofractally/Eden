@@ -39,8 +39,8 @@ export const Header = ({
             }
             sublineComponent={
                 <Text size="sm" className="tracking-tight">
-                    {roundStartTime.format("LT")} -{" "}
-                    {roundEndTime.format("LT z")}
+                    {roundStartTime.utc().format("LT")} -{" "}
+                    {roundEndTime.utc().format("LT")} UTC
                 </Text>
             }
         >
