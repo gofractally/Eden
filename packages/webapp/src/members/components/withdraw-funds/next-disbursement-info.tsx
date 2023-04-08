@@ -16,8 +16,8 @@ export const NextDisbursementInfo = () => {
             return (
                 <Text>
                     Delegate funds are disbursed monthly. Check back on{" "}
-                    {nextDisbursementTime.format("LL")} after{" "}
-                    {nextDisbursementTime.format("LT z")} for your next
+                    {nextDisbursementTime.utc().format("LL")} UTC after{" "}
+                    {nextDisbursementTime.utc().format("LT")} UTC for your next
                     disbursement.
                 </Text>
             );
