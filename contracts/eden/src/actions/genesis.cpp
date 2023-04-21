@@ -117,11 +117,11 @@ namespace eden
       migrations{get_self()}.init();
 
       globals{get_self(),
-              {{.community = community,
-                .minimum_donation = minimum_donation,
-                .auction_starting_bid = auction_starting_bid,
-                .auction_duration = auction_duration,
-                .stage = contract_stage::genesis}}};
+              {{{.community = community,
+                 .minimum_donation = minimum_donation,
+                 .auction_starting_bid = auction_starting_bid,
+                 .auction_duration = auction_duration,
+                 .stage = contract_stage::genesis}}}};
       members members{get_self()};
       inductions inductions{get_self()};
 

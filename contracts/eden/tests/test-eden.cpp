@@ -1486,6 +1486,80 @@ TEST_CASE("clearall")
    t.genesis();
 }
 
+TEST_CASE("migrate to include max_month_withdraw")
+{
+   eden_tester t;
+   t.genesis();
+
+   const uint8_t default_max_month_withdraw = 3;
+
+   CHECK(get_globals().max_month_withdraw == default_max_month_withdraw);
+}
+
+TEST_CASE("change the max month to transfer funds")
+{
+   eden_tester t;
+   t.genesis();
+
+   const uint8_t default_max_month_withdraw = 3;
+   const uint8_t new_max_month_withdraw = 1;
+
+   CHECK(get_globals().max_month_withdraw == default_max_month_withdraw);
+   expect(t.eden_gm.trace<actions::setcoltime>(0),
+          "Proposed collecting time is out of the valid range");
+   expect(t.eden_gm.trace<actions::setcoltime>(4),
+          "Proposed collecting time is out of the valid range");
+   t.eden_gm.act<actions::setcoltime>(new_max_month_withdraw);
+   CHECK(get_globals().max_month_withdraw == new_max_month_withdraw);
+}
+
+TEST_CASE("return funds to master by collecting them")
+{
+   eden_tester t;
+   t.genesis();
+   t.set_balance(s2a("36.0000 EOS"));
+
+   t.run_election();
+
+   t.eden_gm.act<actions::setcoltime>(2);
+   t.egeon.act<actions::distribute>(250);
+   t.skip_to("2020-05-04T15:30:00.000");
+   t.egeon.act<actions::distribute>(250);
+   t.skip_to("2020-07-04T15:30:00.000");
+   t.egeon.act<actions::distribute>(250);
+
+   std::map<eosio::block_timestamp, eosio::asset> expected{
+       {s2t("2020-04-04T15:30:00.000"), s2a("1.8000 EOS")},
+       {s2t("2020-05-04T15:30:00.000"), s2a("1.7100 EOS")},
+       {s2t("2020-06-03T15:30:00.000"), s2a("1.6245 EOS")},
+       {s2t("2020-07-03T15:30:00.000"), s2a("0.0514 EOS")},
+       {s2t("2020-07-04T15:30:00.000"), s2a("1.5407 EOS")}};
+
+   // remove because the max time to collect the funds is 2 months
+   t.egeon.act<actions::collectfunds>(100);
+   t.chain.start_block();
+   expect(t.egeon.trace<actions::collectfunds>(100), "Nothing to do");
+   expected.erase(s2t("2020-04-04T15:30:00.000"));
+   expected.erase(s2t("2020-05-04T15:30:00.000"));
+   // validate funds are returned to master: 29.2734 EOS + 1.8000 EOS + 1.7100 EOS = 32.7834 EOS
+   CHECK(t.get_budgets_by_period() == expected);
+   CHECK(accounts{"eden.gm"_n, "owned"_n}.get_account("master"_n)->balance() == s2a("32.7834 EOS"));
+
+   t.skip_to("2020-08-03T15:30:00.000");
+   t.egeon.act<actions::collectfunds>(100);
+   // from 2020-06-03T15:30:00.000 to 2020-08-03T15:30:00.000 there are 61 days
+   expected.erase(s2t("2020-06-03T15:30:00.000"));
+   expected[s2t("2020-08-03T15:30:00.000")] = s2a("1.6391 EOS");
+   CHECK(t.get_budgets_by_period() == expected);
+   CHECK(accounts{"eden.gm"_n, "owned"_n}.get_account("master"_n)->balance() == s2a("32.7688 EOS"));
+
+   t.eden_gm.act<actions::setcoltime>(3);
+   t.skip_to("2020-09-02T15:30:00.000");
+   expect(t.egeon.trace<actions::collectfunds>(100), "Nothing to do");
+   // no deletion is required since the max month to withdraw funds has changed to 90 days
+   // and no distribution is done since no funds to return are available
+}
+
 TEST_CASE("account migration")
 {
    eden_tester t;
