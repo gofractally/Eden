@@ -299,7 +299,7 @@ jobs:
                   PDN_SERVER_PORT: ${{ secrets.PDN_SERVER_PORT }}
                   PDN_EOS_CHAIN_ID: ${{ secrets.PDN_EOS_CHAIN_ID }}
                   EOS_RPC_PROTOCOL: https
-                  EOS_RPC_HOST: api.eosn.io
+                  EOS_RPC_HOST: eos.api.eosnation.io
                   EOS_RPC_PORT: 443
                   TAPOS_MANAGER_INTERVAL_MINS: 30
                   PDN_EDEN_CONTRACT_ACCOUNT: ${{ secrets.PDN_EDEN_CONTRACT_ACCOUNT }}
@@ -488,9 +488,9 @@ jobs:
                   NEXT_PUBLIC_BASE_URL: https://genesis.eden.eoscommunity.org
                   PDN_NEXT_PUBLIC_EOS_CHAIN_ID: ${{ secrets.PDN_NEXT_PUBLIC_EOS_CHAIN_ID }}
                   NEXT_PUBLIC_EOS_RPC_PROTOCOL: https
-                  NEXT_PUBLIC_EOS_RPC_HOST: api.eosn.io
+                  NEXT_PUBLIC_EOS_RPC_HOST: eos.api.eosnation.io
                   NEXT_PUBLIC_EOS_RPC_PORT: 443
-                  NEXT_PUBLIC_EOS_READ_RPC_URLS: https://api.eosn.io,https://eos.greymass.com
+                  NEXT_PUBLIC_EOS_READ_RPC_URLS: https://eos.api.eosnation.io,https://eos.greymass.com
                   NEXT_PUBLIC_TABLE_ROWS_MAX_FETCH_PER_SEC: 25
                   NEXT_PUBLIC_EDEN_CONTRACT_ACCOUNT: genesis.eden
                   NEXT_PUBLIC_AA_FETCH_AFTER: 1619827201000
