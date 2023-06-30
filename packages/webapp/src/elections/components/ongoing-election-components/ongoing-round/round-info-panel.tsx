@@ -1,7 +1,7 @@
 import React from "react";
 import dayjs from "dayjs";
 
-import { Container, Heading, Text } from "_app/ui";
+import { Button, Container, Heading, Text } from "_app/ui";
 import {
     ActiveStateConfigType,
     RoundStage,
@@ -9,7 +9,7 @@ import {
 } from "elections/interfaces";
 
 import { Consensometer } from "./round-info";
-import { MeetingLink } from "./round-info/meeting-link";
+// import { MeetingLink } from "./round-info/meeting-link";
 import { VideoUploadButton } from "../video-upload-button";
 
 interface RoundInfoPanelProps {
@@ -36,12 +36,15 @@ export const RoundInfoPanel = ({
                     stage
                 ) && (
                     <div>
-                        <MeetingLink
+                        {/* <MeetingLink
                             stage={stage}
                             roundIndex={roundIndex}
                             meetingStartTime={meetingStartTime}
                             electionConfig={electionConfig!}
-                        />
+                        /> */}
+                        <Button target="_blank" href='https://t.me/Up_Vote_Bot'>
+                            Go to Telegram
+                        </Button>
                     </div>
                 )}
                 {[RoundStage.Meeting, RoundStage.PostMeeting].includes(
