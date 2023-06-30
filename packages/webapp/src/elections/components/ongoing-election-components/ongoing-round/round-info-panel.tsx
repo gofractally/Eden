@@ -45,7 +45,7 @@ export const RoundInfoPanel = ({
                         {console.log({
                             roundIndex,
                             meetingStartTime,
-                            electionConfig
+                            electionConfig,
                         })}
                         <Button target="_blank" href="https://t.me/Up_Vote_Bot">
                             Go to Telegram
