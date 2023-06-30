@@ -68,8 +68,8 @@ namespace eden
       current_session.value.require_auth(voter);
       elections elections(get_self());
       elections.vote(round, voter, candidate);
-      badges badges(get_self());
-      badges.create_badge(voter);
+      // badges badges(get_self());
+      // badges.create_badge(voter);
    }
 
    void eden::electvideo(const eosio::not_in_abi<session_info>& current_session,
