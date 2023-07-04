@@ -108,7 +108,7 @@ export const getRoundTimes = (
 } => {
     const roundDurationSec = communityGlobals.election_round_time_sec;
     const roundEndTimeRaw =
-        currentElection.round_end ?? currentElection.seed.end_time;
+        currentElection?.round_end ?? currentElection?.seed?.end_time;
     const roundDurationMs = roundDurationSec * 1000;
     const roundEndTime = dayjs(roundEndTimeRaw + "Z");
     return {
