@@ -28,7 +28,7 @@ export const MembersList = ({ searchValue }: Props) => {
         return <LoadingContainer />;
     }
 
-    if (isError) {
+    if (isError && data.length === 0) {
         return (
             <MessageContainer
                 title="Error loading member information"

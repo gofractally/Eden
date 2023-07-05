@@ -63,7 +63,7 @@ export const Consensometer = ({ voteData, className = "" }: Props) => {
         leadTally >= totalVotesRequiredForConsensus &&
         !leaderIsVotingForSelf
     ) {
-        helpText = "Leader must vote for themself";
+        helpText = "Leader Candidates must vote for themselves";
     } else if (leadCandidates.length === 1) {
         helpText = `Leader needs ${
             remainingVotesRequiredForConsensus > 1
