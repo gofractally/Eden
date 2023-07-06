@@ -1,4 +1,4 @@
-# Install dependencies only when needed.
+# Install dependencies only when needed
 FROM node:lts-alpine3.14 AS deps
 
 RUN apk add --no-cache libc6-compat
@@ -13,7 +13,7 @@ COPY ./packages/webapp/package.json ./packages/webapp/
 
 RUN yarn install --frozen-lockfile
 
-# Rebuild the source code only when needed.
+# Rebuild the source code only when needed
 FROM node:lts-alpine3.14 AS builder
 WORKDIR /app
 
@@ -28,13 +28,13 @@ COPY --from=deps /app/packages/webapp/node_modules ./packages/webapp/node_module
 
 RUN yarn build --stream
 
-# Production image, copy all the files and run next.
+# Production image, copy all the files and run next
 FROM node:lts-alpine3.14 AS runner
 WORKDIR /app
 
 ENV NODE_ENV production
 
-# You only need to copy next.config.js if you are NOT using the default configuration.
+# You only need to copy next.config.js if you are NOT using the default configuration
 COPY --from=builder /app .
 
 RUN addgroup -g 1001 -S nodejs
@@ -44,8 +44,8 @@ USER nextjs
 
 EXPOSE 3000
 
-# Next.js collects completely anonymous telemetry data about general usage.
+# Next.js collects completely anonymous telemetry data about general usage
 # Learn more here: https://nextjs.org/telemetry
-# Uncomment the following line in case you want to disable telemetry.
+# Uncomment the following line in case you want to disable telemetry
 # RUN npx next telemetry disable
 CMD ["yarn", "start", "--stream"]
