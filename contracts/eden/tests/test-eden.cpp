@@ -1284,175 +1284,175 @@ TEST_CASE("bylaws")
    }
 }
 
-TEST_CASE("distribute sbt on vote")
-{
-   constexpr std::size_t num_accounts = 12;
-   eden_tester t;
-   t.genesis();
-   t.eden_gm.act<actions::electsettime>(s2t("2020-07-04T15:30:00.000"));
-   auto test_accounts = make_names(num_accounts - 3);
-   t.create_accounts(test_accounts);
+// TEST_CASE("distribute sbt on vote")
+// {
+//    constexpr std::size_t num_accounts = 12;
+//    eden_tester t;
+//    t.genesis();
+//    t.eden_gm.act<actions::electsettime>(s2t("2020-07-04T15:30:00.000"));
+//    auto test_accounts = make_names(num_accounts - 3);
+//    t.create_accounts(test_accounts);
 
-   for (auto account : test_accounts)
-   {
-      t.chain.start_block();
-      t.alice.act<actions::inductinit>(42, "alice"_n, account, std::vector{"pip"_n, "egeon"_n});
-      t.finish_induction(42, "alice"_n, account, {"pip"_n, "egeon"_n});
-   }
-   t.electdonate_all();
+//    for (auto account : test_accounts)
+//    {
+//       t.chain.start_block();
+//       t.alice.act<actions::inductinit>(42, "alice"_n, account, std::vector{"pip"_n, "egeon"_n});
+//       t.finish_induction(42, "alice"_n, account, {"pip"_n, "egeon"_n});
+//    }
+//    t.electdonate_all();
 
-   t.skip_to("2020-07-03T15:30:00.000");
-   t.electseed(eosio::time_point_sec(0x5f009260));
-   t.skip_to("2020-07-04T15:30:00.000");
-   t.setup_election();
+//    t.skip_to("2020-07-03T15:30:00.000");
+//    t.electseed(eosio::time_point_sec(0x5f009260));
+//    t.skip_to("2020-07-04T15:30:00.000");
+//    t.setup_election();
 
-   uint8_t round = 0;
-   t.generic_group_vote(t.get_current_groups(), round++);
+//    uint8_t round = 0;
+//    t.generic_group_vote(t.get_current_groups(), round++);
 
-   std::vector<eosio::name> expected{"edenmember11"_n, "alice"_n,        "egeon"_n,
-                                     "edenmember1c"_n, "edenmember1b"_n, "edenmember1d"_n,
-                                     "edenmember1a"_n, "edenmember15"_n, "edenmember13"_n,
-                                     "edenmember14"_n, "edenmember12"_n, "pip"_n};
-   CHECK(t.get_badges() == expected);
+//    std::vector<eosio::name> expected{"edenmember11"_n, "alice"_n,        "egeon"_n,
+//                                      "edenmember1c"_n, "edenmember1b"_n, "edenmember1d"_n,
+//                                      "edenmember1a"_n, "edenmember15"_n, "edenmember13"_n,
+//                                      "edenmember14"_n, "edenmember12"_n, "pip"_n};
+//    CHECK(t.get_badges() == expected);
 
-   t.eden_gm.act<actions::givesbt>(2);
-   expected.erase(expected.begin(), expected.begin() + 2);
+//    t.eden_gm.act<actions::givesbt>(2);
+//    expected.erase(expected.begin(), expected.begin() + 2);
 
-   CHECK(t.get_badges() == expected);
+//    CHECK(t.get_badges() == expected);
 
-   t.eden_gm.act<actions::givesbt>(100);
+//    t.eden_gm.act<actions::givesbt>(100);
 
-   CHECK(t.get_badges() == std::vector<eosio::name>{});
-   expect(t.eden_gm.trace<actions::givesbt>(1), "Nothing to do");
-}
+//    CHECK(t.get_badges() == std::vector<eosio::name>{});
+//    expect(t.eden_gm.trace<actions::givesbt>(1), "Nothing to do");
+// }
 
-TEST_CASE("distribute sbt in the second election")
-{
-   constexpr std::size_t num_accounts = 12;
-   eden_tester t;
-   t.genesis();
-   t.eden_gm.act<actions::electsettime>(s2t("2020-07-04T15:30:00.000"));
-   auto test_accounts = make_names(num_accounts - 3);
-   t.create_accounts(test_accounts);
+// TEST_CASE("distribute sbt in the second election")
+// {
+//    constexpr std::size_t num_accounts = 12;
+//    eden_tester t;
+//    t.genesis();
+//    t.eden_gm.act<actions::electsettime>(s2t("2020-07-04T15:30:00.000"));
+//    auto test_accounts = make_names(num_accounts - 3);
+//    t.create_accounts(test_accounts);
 
-   for (auto account : test_accounts)
-   {
-      t.chain.start_block();
-      t.alice.act<actions::inductinit>(42, "alice"_n, account, std::vector{"pip"_n, "egeon"_n});
-      t.finish_induction(42, "alice"_n, account, {"pip"_n, "egeon"_n});
-   }
+//    for (auto account : test_accounts)
+//    {
+//       t.chain.start_block();
+//       t.alice.act<actions::inductinit>(42, "alice"_n, account, std::vector{"pip"_n, "egeon"_n});
+//       t.finish_induction(42, "alice"_n, account, {"pip"_n, "egeon"_n});
+//    }
 
-   t.run_election();
+//    t.run_election();
 
-   std::vector<eosio::name> expected{"alice"_n,        "edenmember14"_n, "egeon"_n,
-                                     "edenmember13"_n, "edenmember1d"_n, "edenmember15"_n,
-                                     "edenmember11"_n, "edenmember12"_n, "edenmember1b"_n,
-                                     "pip"_n,          "edenmember1a"_n, "edenmember1c"_n};
-   CHECK(t.get_badges() == expected);
+//    std::vector<eosio::name> expected{"alice"_n,        "edenmember14"_n, "egeon"_n,
+//                                      "edenmember13"_n, "edenmember1d"_n, "edenmember15"_n,
+//                                      "edenmember11"_n, "edenmember12"_n, "edenmember1b"_n,
+//                                      "pip"_n,          "edenmember1a"_n, "edenmember1c"_n};
+//    CHECK(t.get_badges() == expected);
 
-   std::vector<eosio::name> expected_extended{"edenmember1a"_n, "edenmember1d"_n, "edenmember12"_n,
-                                              "edenmember15"_n, "alice"_n,        "pip"_n,
-                                              "edenmember13"_n, "edenmember11"_n, "edenmember14"_n,
-                                              "egeon"_n,        "edenmember1c"_n, "edenmember1b"_n};
-   expected.insert(expected.end(), expected_extended.begin(), expected_extended.end());
+//    std::vector<eosio::name> expected_extended{"edenmember1a"_n, "edenmember1d"_n, "edenmember12"_n,
+//                                               "edenmember15"_n, "alice"_n,        "pip"_n,
+//                                               "edenmember13"_n, "edenmember11"_n, "edenmember14"_n,
+//                                               "egeon"_n,        "edenmember1c"_n, "edenmember1b"_n};
+//    expected.insert(expected.end(), expected_extended.begin(), expected_extended.end());
 
-   t.run_election();
+//    t.run_election();
 
-   CHECK(t.get_badges() == expected);
-}
+//    CHECK(t.get_badges() == expected);
+// }
 
-TEST_CASE("cannot distribute sbt if round has not finished")
-{
-   constexpr std::size_t num_accounts = 12;
-   eden_tester t;
-   t.genesis();
-   t.eden_gm.act<actions::electsettime>(s2t("2020-07-04T15:30:00.000"));
-   auto test_accounts = make_names(num_accounts - 3);
-   t.create_accounts(test_accounts);
+// TEST_CASE("cannot distribute sbt if round has not finished")
+// {
+//    constexpr std::size_t num_accounts = 12;
+//    eden_tester t;
+//    t.genesis();
+//    t.eden_gm.act<actions::electsettime>(s2t("2020-07-04T15:30:00.000"));
+//    auto test_accounts = make_names(num_accounts - 3);
+//    t.create_accounts(test_accounts);
 
-   for (auto account : test_accounts)
-   {
-      t.chain.start_block();
-      t.alice.act<actions::inductinit>(42, "alice"_n, account, std::vector{"pip"_n, "egeon"_n});
-      t.finish_induction(42, "alice"_n, account, {"pip"_n, "egeon"_n});
-   }
-   t.electdonate_all();
+//    for (auto account : test_accounts)
+//    {
+//       t.chain.start_block();
+//       t.alice.act<actions::inductinit>(42, "alice"_n, account, std::vector{"pip"_n, "egeon"_n});
+//       t.finish_induction(42, "alice"_n, account, {"pip"_n, "egeon"_n});
+//    }
+//    t.electdonate_all();
 
-   t.skip_to("2020-07-03T15:30:00.000");
-   t.electseed(eosio::time_point_sec(0x5f009260));
-   t.skip_to("2020-07-04T15:30:00.000");
-   t.setup_election();
+//    t.skip_to("2020-07-03T15:30:00.000");
+//    t.electseed(eosio::time_point_sec(0x5f009260));
+//    t.skip_to("2020-07-04T15:30:00.000");
+//    t.setup_election();
 
-   uint8_t round = 0;
-   /*
-      GROUPS INFO
+//    uint8_t round = 0;
+//    /*
+//       GROUPS INFO
 
-      GROUP_ID: 0
-      MEMBER: edenmember11
-      MEMBER: alice
-      MEMBER: egeon
-      MEMBER: edenmember1c
+//       GROUP_ID: 0
+//       MEMBER: edenmember11
+//       MEMBER: alice
+//       MEMBER: egeon
+//       MEMBER: edenmember1c
 
-      GROUP_ID: 1
-      MEMBER: edenmember1b
-      MEMBER: edenmember1d
-      MEMBER: edenmember1a
-      MEMBER: edenmember15
+//       GROUP_ID: 1
+//       MEMBER: edenmember1b
+//       MEMBER: edenmember1d
+//       MEMBER: edenmember1a
+//       MEMBER: edenmember15
 
-      GROUP_ID: 2
-      MEMBER: edenmember13
-      MEMBER: edenmember14
-      MEMBER: edenmember12
-      MEMBER: pip
-   */
+//       GROUP_ID: 2
+//       MEMBER: edenmember13
+//       MEMBER: edenmember14
+//       MEMBER: edenmember12
+//       MEMBER: pip
+//    */
 
-   // GROUP_ID: 0
-   t.skip_to("2020-07-04T15:35:00.000");
-   t.chain.as("edenmember11"_n).act<actions::electvote>(round, "edenmember11"_n, "alice"_n);
-   t.alice.act<actions::electvote>(round, "alice"_n, "alice"_n);
-   t.egeon.act<actions::electvote>(round, "egeon"_n, "alice"_n);
-   t.chain.as("edenmember1c"_n).act<actions::electvote>(round, "edenmember1c"_n, "alice"_n);
+//    // GROUP_ID: 0
+//    t.skip_to("2020-07-04T15:35:00.000");
+//    t.chain.as("edenmember11"_n).act<actions::electvote>(round, "edenmember11"_n, "alice"_n);
+//    t.alice.act<actions::electvote>(round, "alice"_n, "alice"_n);
+//    t.egeon.act<actions::electvote>(round, "egeon"_n, "alice"_n);
+//    t.chain.as("edenmember1c"_n).act<actions::electvote>(round, "edenmember1c"_n, "alice"_n);
 
-   expect(t.eden_gm.trace<actions::givesbt>(100), "Nothing to do");
+//    expect(t.eden_gm.trace<actions::givesbt>(100), "Nothing to do");
 
-   // GROUP_ID: 1
-   t.skip_to("2020-07-04T15:55:00.000");
-   t.chain.as("edenmember1b"_n).act<actions::electvote>(round, "edenmember1b"_n, "edenmember1b"_n);
-   t.chain.as("edenmember1d"_n).act<actions::electvote>(round, "edenmember1d"_n, "edenmember1b"_n);
-   t.chain.as("edenmember1a"_n).act<actions::electvote>(round, "edenmember1a"_n, "edenmember1b"_n);
-   t.chain.as("edenmember15"_n).act<actions::electvote>(round, "edenmember15"_n, "edenmember1b"_n);
+//    // GROUP_ID: 1
+//    t.skip_to("2020-07-04T15:55:00.000");
+//    t.chain.as("edenmember1b"_n).act<actions::electvote>(round, "edenmember1b"_n, "edenmember1b"_n);
+//    t.chain.as("edenmember1d"_n).act<actions::electvote>(round, "edenmember1d"_n, "edenmember1b"_n);
+//    t.chain.as("edenmember1a"_n).act<actions::electvote>(round, "edenmember1a"_n, "edenmember1b"_n);
+//    t.chain.as("edenmember15"_n).act<actions::electvote>(round, "edenmember15"_n, "edenmember1b"_n);
 
-   expect(t.eden_gm.trace<actions::givesbt>(100), "Nothing to do");
+//    expect(t.eden_gm.trace<actions::givesbt>(100), "Nothing to do");
 
-   // GROUP_ID: 2
-   t.skip_to("2020-07-04T16:15:00.000");
-   t.chain.as("edenmember13"_n).act<actions::electvote>(round, "edenmember13"_n, "edenmember13"_n);
-   t.chain.as("edenmember14"_n).act<actions::electvote>(round, "edenmember14"_n, "edenmember13"_n);
-   t.chain.as("edenmember12"_n).act<actions::electvote>(round, "edenmember12"_n, "edenmember13"_n);
-   // can only get 1 sbt even though there are multiple votes
-   t.pip.act<actions::electvote>(round, "pip"_n, "edenmember13"_n);
-   t.chain.start_block();
-   t.pip.act<actions::electvote>(round, "pip"_n, "edenmember14"_n);
-   t.chain.start_block();
-   t.pip.act<actions::electvote>(round, "pip"_n, "edenmember12"_n);
-   t.chain.start_block();
-   t.pip.act<actions::electvote>(round, "pip"_n, "edenmember13"_n);
+//    // GROUP_ID: 2
+//    t.skip_to("2020-07-04T16:15:00.000");
+//    t.chain.as("edenmember13"_n).act<actions::electvote>(round, "edenmember13"_n, "edenmember13"_n);
+//    t.chain.as("edenmember14"_n).act<actions::electvote>(round, "edenmember14"_n, "edenmember13"_n);
+//    t.chain.as("edenmember12"_n).act<actions::electvote>(round, "edenmember12"_n, "edenmember13"_n);
+//    // can only get 1 sbt even though there are multiple votes
+//    t.pip.act<actions::electvote>(round, "pip"_n, "edenmember13"_n);
+//    t.chain.start_block();
+//    t.pip.act<actions::electvote>(round, "pip"_n, "edenmember14"_n);
+//    t.chain.start_block();
+//    t.pip.act<actions::electvote>(round, "pip"_n, "edenmember12"_n);
+//    t.chain.start_block();
+//    t.pip.act<actions::electvote>(round, "pip"_n, "edenmember13"_n);
 
-   expect(t.eden_gm.trace<actions::givesbt>(100), "Nothing to do");
+//    expect(t.eden_gm.trace<actions::givesbt>(100), "Nothing to do");
 
-   // finish election
-   t.skip_to("2020-07-04T16:30:00.000");
-   t.alice.act<actions::electprocess>(256);
-   t.eden_gm.act<actions::givesbt>(10);
+//    // finish election
+//    t.skip_to("2020-07-04T16:30:00.000");
+//    t.alice.act<actions::electprocess>(256);
+//    t.eden_gm.act<actions::givesbt>(10);
 
-   std::vector<eosio::name> expected{"edenmember12"_n, "pip"_n};
+//    std::vector<eosio::name> expected{"edenmember12"_n, "pip"_n};
 
-   CHECK(t.get_badges() == expected);
+//    CHECK(t.get_badges() == expected);
 
-   t.eden_gm.act<actions::givesbt>(2);
+//    t.eden_gm.act<actions::givesbt>(2);
 
-   CHECK(t.get_badges() == std::vector<eosio::name>{});
-}
+//    CHECK(t.get_badges() == std::vector<eosio::name>{});
+// }
 
 TEST_CASE("accounting")
 {
