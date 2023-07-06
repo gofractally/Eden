@@ -497,8 +497,8 @@ jobs:
                   NEXT_PUBLIC_TOKEN_CONTRACT: eosio.token
                   NEXT_PUBLIC_TOKEN_SYMBOL: EOS
                   NEXT_PUBLIC_TOKEN_PRECISION: 4
-                  NEXT_PUBLIC_AA_BASE_URL: https://jungle-aa.edenia.cloud/atomicassets/v1
-                  NEXT_PUBLIC_AA_MARKET_URL: https://jungle-aa.edenia.cloud/atomicmarket/v1
+                  NEXT_PUBLIC_AA_BASE_URL: https://eden-eos-aa.global.binfra.one/atomicassets/v1
+                  NEXT_PUBLIC_AA_MARKET_URL: https://eden-eos-aa.global.binfra.one/atomicmarket/v1
                   NEXT_PUBLIC_AA_HUB_URL: https://eos.atomichub.io
                   NEXT_PUBLIC_AA_CONTRACT: atomicassets
                   NEXT_PUBLIC_AA_MARKET_CONTRACT: atomicmarket
