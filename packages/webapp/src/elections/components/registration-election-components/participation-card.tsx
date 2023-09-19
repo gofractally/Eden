@@ -109,7 +109,8 @@ export const ParticipationCard = ({ election }: Props) => {
     let statusButton = null;
 
     if (!ualAccount) {
-        participationCallLabel = "Sign in to participate.";
+        participationActionLabel = "I want to participate";
+        participationCallLabel = `Sign in to participate. You must choose "${participationActionLabel}" by ${electionParticipationLimitTime} to vote in the election.`;
         statusButton = (
             <Button onClick={ualShowModal}>Sign in to participate</Button>
         );
