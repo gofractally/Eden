@@ -31,7 +31,10 @@ export const TreasuryDelegateLevelsInfo = () => {
 
     // we don't care about the initial round, it just indicates
     // how many people participated in the election, the real
-    // delegates starts from the index 1
+    // delegates starts from the index 1 and
+    // excludes the HCD rank when it is equal or grater than 3
+
+    const rankFactor = memberStats.ranks.length >= 3 ? 1 : 0;
     const electedRanks = memberStats.ranks.slice(1);
     const electedRanksSize = electedRanks.length;
 
@@ -39,13 +42,17 @@ export const TreasuryDelegateLevelsInfo = () => {
         ? scheduled.quantity
         : (treasuryStats.quantity * pool.monthly_distribution_pct) / 100;
 
-    const levelDistribution = totalDistributionAmount / electedRanksSize;
+    const levelDistribution =
+        totalDistributionAmount / (electedRanksSize - rankFactor);
 
     const calculateAndRenderRankLevelComponent = (
         rankDelegatesCount: number,
         index: number
     ) => {
         const currentRank = index + 1;
+
+        // Exclude HCD rank when rank factor is 1
+        if (currentRank === electedRanksSize && rankFactor) return;
 
         // we need to consider all the next rank delegates in the distribution
         const nextRankDelegatesCount = electedRanks
@@ -91,7 +98,8 @@ const RankLevelDistribution = ({
     amount,
     level,
 }: RankLevelDistributionProps) => {
-    const labelText = label === RankLabel.NumberedLevel ? `Level ${level}` : label;
+    const labelText =
+        label === RankLabel.NumberedLevel ? `Level ${level}` : label;
 
     return (
         <div className="flex justify-between">

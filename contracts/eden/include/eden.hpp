@@ -15,6 +15,7 @@
 #ifdef ENABLE_SET_TABLE_ROWS
 #include <accounts.hpp>
 #include <auctions.hpp>
+#include <badges.hpp>
 #include <boost/mp11/list.hpp>
 #include <bylaws.hpp>
 #include <distributions.hpp>
@@ -106,6 +107,8 @@ namespace eden
                    uint8_t election_day,
                    const std::string& election_time);
 
+      void setmindonfee(eosio::asset new_minimum_donation);
+
       void addtogenesis(eosio::name new_genesis_member, eosio::time_point expiration);
       void gensetexpire(uint64_t induction_id, eosio::time_point new_expiration);
 
@@ -147,6 +150,8 @@ namespace eden
 
       void resign(eosio::name member);
 
+      void removemember(eosio::name account, const std::string& memo);
+
       void rename(eosio::name member, eosio::name newaccount);
 
       void setencpubkey(eosio::name member, const eosio::public_key& key);
@@ -179,6 +184,11 @@ namespace eden
       void electprocess(uint32_t max_steps);
 
       void distribute(uint32_t max_steps);
+      void givesbt(uint32_t max_steps);
+
+      void setdistpct(uint8_t pct);
+      void collectfunds(uint32_t max_steps);
+      void setcoltime(uint8_t months);
 
       void fundtransfer(eosio::name from,
                         eosio::block_timestamp distribution_time,
@@ -250,6 +260,7 @@ namespace eden
               election_day,
               election_time,
               ricardian_contract(genesis_ricardian)),
+       action(setmindonfee, new_minimum_donation),
        action(addtogenesis, account, expiration),
        action(gensetexpire, id, new_expiration),
        action(clearall, ricardian_contract(clearall_ricardian)),
@@ -286,10 +297,15 @@ namespace eden
        action(bylawsapprove, approver, bylaws_hash),
        action(bylawsratify, approver, bylaws_hash),
        action(distribute, max_steps),
+       action(givesbt, max_steps),
+       action(setdistpct, pct),
+       action(collectfunds, max_steps),
+       action(setcoltime, months),
        action(inductdonate, payer, id, quantity, ricardian_contract(inductdonate_ricardian)),
        eden_verb(inductcancel, 9, account, id, ricardian_contract(inductcancel_ricardian)),
        action(inducted, inductee, ricardian_contract(inducted_ricardian)),
        action(resign, account),
+       action(removemember, account, memo),
        action(rename, old_account, new_account),
        action(gc, limit, ricardian_contract(gc_ricardian)),
        action(migrate, limit),

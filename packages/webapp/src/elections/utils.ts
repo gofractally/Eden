@@ -1,4 +1,7 @@
 import dayjs, { Dayjs } from "dayjs";
+import utc from "dayjs/plugin/utc";
+
+dayjs.extend(utc);
 
 import { ActiveStateConfigType, SimpleVoteData } from "./interfaces";
 import { getMemberGroupFromIndex } from "./api";
@@ -13,7 +16,7 @@ export const extractElectionDates = (election: any) => {
         throw new Error("Error parsing the Election start date.");
     }
 
-    const startDateTime = dayjs(rawStartDateTime);
+    const startDateTime = dayjs(rawStartDateTime).utc();
     const participationTimeLimit = startDateTime.subtract(24, "hour");
     const estimatedEndDateTime = startDateTime.add(
         10, // TODO: estimate and calculate this value properly based on round numbers
@@ -105,7 +108,7 @@ export const getRoundTimes = (
 } => {
     const roundDurationSec = communityGlobals.election_round_time_sec;
     const roundEndTimeRaw =
-        currentElection.round_end ?? currentElection.seed.end_time;
+        currentElection?.round_end ?? currentElection?.seed?.end_time;
     const roundDurationMs = roundDurationSec * 1000;
     const roundEndTime = dayjs(roundEndTimeRaw + "Z");
     return {

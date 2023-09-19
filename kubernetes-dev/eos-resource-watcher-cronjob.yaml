@@ -1,0 +1,38 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: eos-resource-watcher
+spec:
+  schedule: "* */4 * * *"
+  successfulJobsHistoryLimit: 1
+  failedJobsHistoryLimit: 1
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          containers:
+          - name: eos-resource-watcher
+            image: ghcr.io/eoscostarica/eos-resource-watcher:${VERSION_WATCHER}
+            imagePullPolicy: IfNotPresent
+            env:
+            - name: EOS_API_ENDPOINT
+              value: "${DEV_EOS_API_ENDPOINT}"
+            - name: EOS_API_CHAIN_ID
+              value: "${DEV_EOS_API_CHAIN_ID}"
+            - name: EOS_PAYER_ACCOUNT
+              value: "${DEV_EOS_PAYER_ACCOUNT}"
+            - name: EOS_PAYER_PERMISION
+              value: "${DEV_EOS_PAYER_PERMISION}"
+            - name: EOS_PAYER_PRIVATE_KEY
+              value: "${DEV_EOS_PAYER_PRIVATE_KEY}"
+            - name: EOS_WATCH_ACCOUNT
+              value: "${DEV_EOS_WATCH_ACCOUNT}"
+            - name: EOS_POWERUP_THRESHOLD
+              value: "${DEV_EOS_POWERUP_THRESHOLD}"
+            - name: EOS_NET_FRAC
+              value: "${DEV_EOS_NET_FRAC}"
+            - name: EOS_CPU_FRAC
+              value: "${DEV_EOS_CPU_FRAC}"
+            - name: EOS_POWERUP_AMOUNT
+              value: "${DEV_EOS_POWERUP_AMOUNT}"
+          restartPolicy: Never

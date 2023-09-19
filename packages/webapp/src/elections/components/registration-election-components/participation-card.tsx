@@ -89,10 +89,10 @@ export const ParticipationCard = ({ election }: Props) => {
     }
 
     const electionDate = electionDates.startDateTime.format("LL");
-    const electionStartTime = electionDates.startDateTime.format("LT z");
-    const electionParticipationLimitTime = electionDates.participationTimeLimit.format(
-        "LLL z"
-    );
+    const electionStartTime = `${electionDates.startDateTime.format("LT")} UTC`;
+    const electionParticipationLimitTime = `${electionDates.participationTimeLimit.format(
+        "LLL"
+    )} UTC`;
 
     const isPastElectionParticipationTimeLimit = dayjs().isAfter(
         electionDates.participationTimeLimit
@@ -109,7 +109,8 @@ export const ParticipationCard = ({ election }: Props) => {
     let statusButton = null;
 
     if (!ualAccount) {
-        participationCallLabel = "Sign in to participate.";
+        participationActionLabel = "I want to participate";
+        participationCallLabel = `Sign in to participate. You must choose "${participationActionLabel}" by ${electionParticipationLimitTime} to vote in the election.`;
         statusButton = (
             <Button onClick={ualShowModal}>Sign in to participate</Button>
         );

@@ -2,6 +2,7 @@
 #include <distributions.hpp>
 #include <elections.hpp>
 #include <events.hpp>
+#include <globals.hpp>
 #include <members.hpp>
 #include <numeric>
 
@@ -19,6 +20,22 @@ namespace eden
       pool_tb.emplace(contract, [](auto& row) { row.value = pool_v0{"master"_n, 5}; });
    }
 
+   void set_distribution_pct(eosio::name contract, uint8_t pct)
+   {
+      pool_table_type pool_tb{contract, default_scope};
+      auto pool_iter = pool_tb.find("master"_n.value);
+
+      eosio::check(pool_iter != pool_tb.end(), "Distribution pool does not exist");
+
+      push_event(
+          set_pool_event{
+              .pool = "master"_n,
+              .monthly_distribution_pct = pct,
+          },
+          contract);
+      pool_tb.modify(pool_iter, contract, [&](auto& row) { row.value = pool_v0{"master"_n, pct}; });
+   }
+
    static current_distribution make_distribution(eosio::name contract,
                                                  eosio::block_timestamp start_time,
                                                  eosio::asset& amount)
@@ -26,22 +43,30 @@ namespace eden
       members members{contract};
       current_distribution result{start_time, eosio::name()};
       auto ranks = members.stats().ranks;
-      auto per_rank = amount / (ranks.size() - 1);
+      // Exclude paid HCD rank if election ended and took more than 1 round
+      uint16_t rank_factor = ranks.size() >= 3 && ranks.back() == 1 ? 1 : 0;
+      auto per_rank = amount / (ranks.size() - 1 - rank_factor);
       eosio::asset used{0, amount.symbol};
       uint16_t total = 0;
       for (auto iter = ranks.end() - 1, end = ranks.begin(); iter != end; --iter)
       {
          total += *iter;
-         if (total > 0)
+         if (total > rank_factor)
          {
             auto this_rank = per_rank / total;
             used += this_rank * total;
             result.rank_distribution.push_back(this_rank);
          }
+         else
+         {
+            // Pay 0 to HCD rank
+            result.rank_distribution.push_back(used);
+         }
       }
       std::reverse(result.rank_distribution.begin(), result.rank_distribution.end());
       if (ranks.back() != 0)
       {
+         // HCD rank may receive a fractional difference amount
          result.rank_distribution.back() += (amount - used);
       }
       else
@@ -247,30 +272,34 @@ namespace eden
          for (uint8_t rank = 0; rank < iter->election_rank(); ++rank)
          {
             auto amount = dist.rank_distribution[rank];
-            dist_accounts_tb.emplace(contract, [&](auto& row) {
-               auto fund = distribution_account_v0{.id = dist_accounts_tb.available_primary_key(),
-                                                   .owner = iter->account(),
-                                                   .distribution_time = dist.distribution_time,
-                                                   .rank = static_cast<uint8_t>(rank + 1),
-                                                   .balance = amount};
-               push_event(
-                   distribution_event_fund{
-                       .owner = fund.owner,
-                       .distribution_time = fund.distribution_time,
-                       .rank = fund.rank,
-                       .balance = fund.balance,
-                   },
-                   contract);
-               row.value = fund;
-            });
-            if (dist_iter != dist_idx.end())
+            // Exclude HCD rank which its value is 0 unless HCD rank receive the fractional difference
+            if (amount.amount > 0)
             {
-               dist_accounts_tb.modify(*dist_iter, contract,
-                                       [&](auto& row) { row.balance() -= amount; });
-            }
-            else
-            {
-               eosio::check(amount.amount == 0, "Overdrawn balance");
+               dist_accounts_tb.emplace(contract, [&](auto& row) {
+                  auto fund = distribution_account_v0{.id = dist_accounts_tb.available_primary_key(),
+                                                      .owner = iter->account(),
+                                                      .distribution_time = dist.distribution_time,
+                                                      .rank = static_cast<uint8_t>(rank + 1),
+                                                      .balance = amount};
+                  push_event(
+                     distribution_event_fund{
+                        .owner = fund.owner,
+                        .distribution_time = fund.distribution_time,
+                        .rank = fund.rank,
+                        .balance = fund.balance,
+                     },
+                     contract);
+                  row.value = fund;
+               });
+               if (dist_iter != dist_idx.end())
+               {
+                  dist_accounts_tb.modify(*dist_iter, contract,
+                                          [&](auto& row) { row.balance() -= amount; });
+               }
+               else
+               {
+                  eosio::check(amount.amount == 0, "Overdrawn balance");
+               }
             }
          }
          dist.last_processed = iter->account();
@@ -471,6 +500,43 @@ namespace eden
          member_idx.modify(iter, contract, [&](auto& acct) { acct.owner() = new_account; });
          iter = next;
       }
+   }
+
+   uint32_t distributions::on_collectfunds(uint32_t max_steps)
+   {
+      uint32_t copy_max_steps = max_steps;
+      bool has_returned = false;
+      auto months_to_withdraw = globals{contract}.get().max_month_withdraw;
+
+      accounts owned_accounts{contract, "owned"_n};
+      setup_distribution(contract, owned_accounts);
+      for (auto iter = distribution_account_tb.begin(), end = distribution_account_tb.end();
+           max_steps > 0 && iter != end; --max_steps)
+      {
+         if (iter->distribution_time() <
+             eosio::current_time_point() - eosio::days(30 * months_to_withdraw))
+         {
+            push_event(
+                distribution_event_return{
+                    .owner = iter->owner(),
+                    .distribution_time = iter->distribution_time(),
+                    .rank = iter->rank(),
+                    .amount = iter->balance(),
+                    .pool = "master"_n,
+                },
+                contract);
+            owned_accounts.add_balance("master"_n, iter->balance(), false);
+            iter = distribution_account_tb.erase(iter);
+
+            has_returned = true;
+         }
+         else
+         {
+            ++iter;
+         }
+      }
+
+      return has_returned ? max_steps : copy_max_steps;
    }
 
    void distributions::clear_all()

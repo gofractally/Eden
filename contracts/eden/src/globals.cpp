@@ -3,7 +3,15 @@
 
 namespace eden
 {
-   global_data_v1 global_data_v0::upgrade() const { return {*this}; }
+   global_data_v2 global_data_v0::upgrade() const
+   {
+      return {{*this}};
+   }
+
+   global_data_v2 global_data_v1::upgrade() const
+   {
+      return {*this};
+   }
 
    static std::optional<global_singleton> global_singleton_inst;
 
@@ -23,7 +31,7 @@ namespace eden
    {
    }
 
-   globals::globals(eosio::name contract, const global_data_v1& initial_value)
+   globals::globals(eosio::name contract, const global_data_v2& initial_value)
        : contract(contract), data(initial_value)
    {
       auto& singleton = get_global_singleton(contract);
@@ -51,6 +59,18 @@ namespace eden
    void globals::set_election_round_duration(uint32_t duration)
    {
       data.election_round_time_sec = duration;
+      get_global_singleton(contract).set(data, eosio::same_payer);
+   }
+
+   void globals::set_minimum_donation_fee(eosio::asset new_minimum_donation)
+   {
+      data.minimum_donation = new_minimum_donation;
+      get_global_singleton(contract).set(data, eosio::same_payer);
+   }
+
+   void globals::set_max_month_withdraw(uint8_t months)
+   {
+      data.max_month_withdraw = months;
       get_global_singleton(contract).set(data, eosio::same_payer);
    }
 }  // namespace eden

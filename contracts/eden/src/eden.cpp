@@ -1,5 +1,6 @@
 #include <accounts.hpp>
 #include <auctions.hpp>
+#include <badges.hpp>
 #include <bylaws.hpp>
 #include <distributions.hpp>
 #include <eden.hpp>
@@ -58,6 +59,7 @@ EOSIO_ABIGEN(
     table("bylaws"_n, eden::bylaws_variant),
     table("distaccount"_n, eden::distribution_account_variant),
     table("distribution"_n, eden::distribution_variant),
+    table("badge"_n, eden::badge_variant),
     table("endorsement"_n, eden::endorsement_variant),
     table("elect.curr"_n, eden::current_election_state),
     table("elect.state"_n, eden::election_state_variant),

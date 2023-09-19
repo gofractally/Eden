@@ -1,0 +1,23 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: webapp
+  name: webapp
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: webapp
+  template:
+    metadata:
+      labels:
+        app: webapp
+    spec:
+      containers:
+      - image: ghcr.io/edenia/eden-webapp-pdn:${VERSION}
+        imagePullPolicy: "Always"
+        name: eden-webapp
+        ports:
+        - containerPort: 3000
+      restartPolicy: Always

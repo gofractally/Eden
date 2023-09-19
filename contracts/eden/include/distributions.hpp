@@ -78,6 +78,7 @@ namespace eden
                            eosio::block_timestamp init = {});
    uint32_t distribute_monthly(eosio::name contract, uint32_t max_steps);
    void init_pools(eosio::name contract);
+   void set_distribution_pct(eosio::name contract, uint8_t pct);
    void process_election_distribution(eosio::name contract);
 
    struct distribution_account_v0
@@ -127,6 +128,7 @@ namespace eden
       uint32_t on_election_kick(eosio::name member, uint32_t max_steps);
       void on_resign(const member& member);
       void on_rename(eosio::name old_account, eosio::name new_account);
+      uint32_t on_collectfunds(uint32_t max_steps);
       void clear_all();
    };
 }  // namespace eden

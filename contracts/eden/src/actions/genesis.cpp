@@ -117,11 +117,11 @@ namespace eden
       migrations{get_self()}.init();
 
       globals{get_self(),
-              {{.community = community,
-                .minimum_donation = minimum_donation,
-                .auction_starting_bid = auction_starting_bid,
-                .auction_duration = auction_duration,
-                .stage = contract_stage::genesis}}};
+              {{{.community = community,
+                 .minimum_donation = minimum_donation,
+                 .auction_starting_bid = auction_starting_bid,
+                 .auction_duration = auction_duration,
+                 .stage = contract_stage::genesis}}}};
       members members{get_self()};
       inductions inductions{get_self()};
 
@@ -159,6 +159,18 @@ namespace eden
       const auto collection_name = get_self();
       atomicassets::init_collection(atomic_assets_account, get_self(), collection_name, schema_name,
                                     initial_market_fee, collection_attributes);
+   }
+
+   void eden::setmindonfee(eosio::asset new_minimum_donation)
+   {
+      require_auth(get_self());
+
+      globals globals{get_self()};
+
+      eosio::check(globals.get().minimum_donation.symbol == new_minimum_donation.symbol,
+                   "community symbol does not match minimum donation");
+
+      globals.set_minimum_donation_fee(new_minimum_donation);
    }
 
 }  // namespace eden

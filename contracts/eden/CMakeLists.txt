@@ -3,34 +3,37 @@ include_directories(${CMAKE_BINARY_DIR}/generated/)
 
 set(extra-sources)
 set(EDEN_ENABLE_SET_TABLE_ROWS "no" CACHE BOOL "Enable the settablerows action")
+
 if(EDEN_ENABLE_SET_TABLE_ROWS)
-  add_definitions(-DENABLE_SET_TABLE_ROWS)
+    add_definitions(-DENABLE_SET_TABLE_ROWS)
 endif()
 
 add_executable(eden
-   src/actions/accounts.cpp
-   src/actions/genesis.cpp
-   src/actions/induct.cpp
-   src/actions/elect.cpp
-   src/actions/notify_assets.cpp
-   src/actions/bylaws.cpp
-   src/actions/migrate.cpp
-   src/actions/encrypt.cpp
-   src/actions/tables.cpp
-   src/actions/sessions.cpp
-   src/eden.cpp
-   src/events.cpp
-   src/accounts.cpp
-   src/globals.cpp
-   src/inductions.cpp
-   src/members.cpp
-   src/auctions.cpp
-   src/migrations.cpp
-   src/atomicassets.cpp
-   src/elections.cpp
-   src/bylaws.cpp
-   src/distributions.cpp
-   src/encrypt.cpp
+    src/actions/accounts.cpp
+    src/actions/genesis.cpp
+    src/actions/induct.cpp
+    src/actions/elect.cpp
+    src/actions/notify_assets.cpp
+    src/actions/bylaws.cpp
+    src/actions/migrate.cpp
+    src/actions/encrypt.cpp
+    src/actions/tables.cpp
+    src/actions/sessions.cpp
+    src/actions/distributions.cpp
+    src/eden.cpp
+    src/events.cpp
+    src/accounts.cpp
+    src/globals.cpp
+    src/inductions.cpp
+    src/members.cpp
+    src/auctions.cpp
+    src/migrations.cpp
+    src/atomicassets.cpp
+    src/elections.cpp
+    src/bylaws.cpp
+    src/distributions.cpp
+    src/encrypt.cpp
+    src/badges.cpp
 )
 target_include_directories(eden PUBLIC include ../token/include PRIVATE ../../external/atomicassets-contract/include)
 target_compile_options(eden PUBLIC -flto)
@@ -92,5 +95,7 @@ function(add_eden_microchain suffix)
     )
     add_dependencies(eden-micro-chain${suffix} eden)
 endfunction()
+
 add_eden_microchain("")
+
 # add_eden_microchain("-debug")

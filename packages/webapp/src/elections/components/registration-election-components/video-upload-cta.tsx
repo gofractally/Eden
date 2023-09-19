@@ -23,7 +23,8 @@ export const ElectionVideoUploadCTA = () => {
             <Heading size={3}>Election video upload service</Heading>
             <Text>
                 View and upload your meeting videos from the last election. All
-                election videos must be uploaded by {deadline.format("LLL z")}.
+                election videos must be uploaded by{" "}
+                {deadline.utc().format("LLL")} UTC.
             </Text>
             <Button
                 size="xs"

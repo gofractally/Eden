@@ -1,0 +1,63 @@
+apiVersion: traefik.containo.us/v1alpha1
+kind: IngressRoute
+metadata:
+  name: http
+spec:
+  entryPoints:
+    - web
+  routes:
+  - kind: Rule
+    match: Host(`genesis.eden.eoscommunity.org`)
+    services:
+    - kind: Service
+      name: webapp
+      port: 3000
+---
+apiVersion: traefik.containo.us/v1alpha1
+kind: IngressRoute
+metadata:
+  name: https
+spec:
+  entryPoints:
+    - websecure
+  routes:
+  - kind: Rule
+    match: Host(`genesis.eden.eoscommunity.org`)
+    services:
+    - kind: Service
+      name: webapp
+      port: 3000
+  tls:
+    certResolver: myresolver
+---
+apiVersion: traefik.containo.us/v1alpha1
+kind: IngressRoute
+metadata:
+  name: box-http
+spec:
+  entryPoints:
+    - web
+  routes:
+  - kind: Rule
+    match: Host(`edenbox.eoscommunity.org`)
+    services:
+    - kind: Service
+      name: box
+      port: 3032
+---
+apiVersion: traefik.containo.us/v1alpha1
+kind: IngressRoute
+metadata:
+  name: box-https
+spec:
+  entryPoints:
+    - websecure
+  routes:
+  - kind: Rule
+    match: Host(`edenbox.eoscommunity.org`)
+    services:
+    - kind: Service
+      name: box
+      port: 3032
+  tls:
+    certResolver: myresolver

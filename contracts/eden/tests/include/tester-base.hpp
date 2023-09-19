@@ -1,6 +1,7 @@
 #pragma once
 
 #include <accounts.hpp>
+#include <badges.hpp>
 #include <boot/boot.hpp>
 #include <clchain/subchain_tester_dfuse.hpp>
 #include <distributions.hpp>
@@ -209,6 +210,8 @@ struct eden_tester
    user_context bertie = chain.as("bertie"_n);
    user_context ahab = chain.as("ahab"_n);
 
+   user_context organization = chain.as("orgint.rep"_n);
+
    explicit eden_tester(std::function<void()> f = [] {})
    {
       chain_setup(chain);
@@ -217,6 +220,7 @@ struct eden_tester
       f();
       eden_setup(chain);
       chain.create_account("payer"_n);
+      chain.create_account("orgint.rep"_n);
       for (auto account : {"alice"_n, "pip"_n, "egeon"_n, "bertie"_n, "ahab"_n})
       {
          chain.create_account(account);
@@ -239,9 +243,9 @@ struct eden_tester
       pip.act<actions::inductprofil>(2, pip_profile);
       egeon.act<actions::inductprofil>(3, egeon_profile);
 
-      alice.act<token::actions::transfer>("alice"_n, "eden.gm"_n, s2a("100.0000 EOS"), "memo");
+      alice.act<token::actions::transfer>("alice"_n, "eden.gm"_n, s2a("10.0000 EOS"), "memo");
       pip.act<token::actions::transfer>("pip"_n, "eden.gm"_n, s2a("10.0000 EOS"), "memo");
-      egeon.act<token::actions::transfer>("egeon"_n, "eden.gm"_n, s2a("10.0000 EOS"), "memo");
+      egeon.act<token::actions::transfer>("egeon"_n, "eden.gm"_n, s2a("100.0000 EOS"), "memo");
 
       alice.act<actions::inductdonate>("alice"_n, 1, s2a("10.0000 EOS"));
       pip.act<actions::inductdonate>("pip"_n, 2, s2a("10.0000 EOS"));
@@ -259,6 +263,11 @@ struct eden_tester
       }
    }
 
+   void set_minimum_donation_fee(eosio::asset amount)
+   {
+      eden_gm.act<actions::setmindonfee>(amount);
+   }
+
    auto hash_induction(const std::string& video, const eden::new_member_profile& profile)
    {
       auto hash_data = eosio::convert_to_bin(std::tuple(video, profile));
@@ -268,7 +277,8 @@ struct eden_tester
    void finish_induction(uint64_t induction_id,
                          eosio::name inviter,
                          eosio::name invitee,
-                         const std::vector<eosio::name>& witnesses)
+                         const std::vector<eosio::name>& witnesses,
+                         bool with_minimum_donation = false)
    {
       chain.as(invitee).act<token::actions::transfer>(invitee, "eden.gm"_n, s2a("10.0000 EOS"),
                                                       "memo");
@@ -289,24 +299,25 @@ struct eden_tester
       {
          chain.as(witness).act<actions::inductendors>(witness, induction_id, induction_hash);
       }
-      chain.as(invitee).act<actions::inductdonate>(invitee, induction_id, s2a("10.0000 EOS"));
+      chain.as(invitee).act<actions::inductdonate>(
+          invitee, induction_id, s2a(!with_minimum_donation ? "10.0000 EOS" : "3.0000 EOS"));
       CHECK(get_eden_membership(invitee).status() == eden::member_status::active_member);
    };
 
-   void induct(eosio::name account)
+   void induct(eosio::name account, bool with_minimum_donation = false)
    {
       alice.act<actions::inductinit>(42, "alice"_n, account, std::vector{"pip"_n, "egeon"_n});
-      finish_induction(42, "alice"_n, account, {"pip"_n, "egeon"_n});
+      finish_induction(42, "alice"_n, account, {"pip"_n, "egeon"_n}, with_minimum_donation);
    }
 
-   void induct_n(std::size_t count)
+   void induct_n(std::size_t count, bool with_minimum_donation = false)
    {
       auto members = make_names(count);
       create_accounts(members);
       for (auto a : members)
       {
          chain.start_block();
-         induct(a);
+         induct(a, with_minimum_donation);
       }
    }
 
@@ -497,6 +508,26 @@ struct eden_tester
       return get_total_balance(distributions);
    };
 
+   template <typename T>
+   eden::current_distribution get_rank_balance(const T& table)
+   {
+      eden::current_distribution result;
+      for (auto item : table)
+      {
+         if (auto* current = std::get_if<eden::current_distribution>(&item.value))
+         {
+            return *current;
+         }
+      }
+      return result;
+   }
+
+   eden::current_distribution get_rank_budget()
+   {
+      eden::distribution_table_type distributions{"eden.gm"_n, eden::default_scope};
+      return get_rank_balance(distributions);
+   };
+
    auto get_budgets_by_period() const
    {
       std::map<eosio::block_timestamp, eosio::asset> result;
@@ -507,6 +538,30 @@ struct eden_tester
          iter->second += t.balance();
       }
       return result;
+   };
+
+   auto get_badges() const
+   {
+      std::vector<eosio::name> result;
+      eden::badge_table_type badges{"eden.gm"_n, eden::default_scope};
+      for (auto t : badges)
+      {
+         result.push_back(t.account());
+      }
+      return result;
+   };
+
+   uint8_t get_pool_ptc(eosio::name pool) const
+   {
+      eden::pool_table_type pool_tb("eden.gm"_n, eden::default_scope);
+      auto pool_iter = pool_tb.find(pool.value);
+
+      if (pool_iter != pool_tb.end())
+      {
+         return pool_iter->monthly_distribution_pct();
+      }
+
+      return 0;
    };
 
    /*
